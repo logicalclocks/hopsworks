@@ -1,10 +1,6 @@
 package se.kth.meta.wscomm;
 
-import se.kth.meta.db.Dbao;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -22,6 +18,7 @@ import javax.websocket.server.ServerEndpoint;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeamFacade;
+import se.kth.meta.db.Dbao;
 import se.kth.meta.wscomm.message.Message;
 import se.kth.meta.wscomm.message.TextMessage;
 

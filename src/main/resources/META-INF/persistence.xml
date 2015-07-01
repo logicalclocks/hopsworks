@@ -29,7 +29,6 @@
     <class>se.kth.bbc.project.samples.AnatomicalPart</class>
     <class>se.kth.bbc.project.Project</class>
     <class>se.kth.bbc.project.services.ProjectServices</class>
-    
     <class>se.kth.bbc.project.fb.InodeOps</class>
     <class>se.kth.meta.entity.FieldPredefinedValues</class>
     <class>se.kth.meta.entity.FieldTypes</class>
@@ -49,4 +48,5 @@
       <property name="eclipselink.logging.parameters" value="true"/>
     </properties>
   </persistence-unit>
+
 </persistence>

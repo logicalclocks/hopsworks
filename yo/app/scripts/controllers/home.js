@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ActivityService',
-          function (ProjectService, ModalService, growl, ActivityService) {
+        .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ActivityService', 'UtilsService',
+          function (ProjectService, ModalService, growl, ActivityService, UtilsService) {
 
             var self = this;
             self.projects = [];

@@ -1,6 +1,5 @@
 package se.kth.meta.entity;
 
-import se.kth.meta.entity.listener.EntityListener;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +21,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import se.kth.meta.entity.listener.EntityListener;
 
 /**
  *

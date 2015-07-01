@@ -17,18 +17,16 @@ import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.Constants;
-import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectRoleTypes;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.bbc.project.ProjectTeamPK;
-import se.kth.bbc.project.fb.Inode;
-import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
+import se.kth.bbc.security.ua.UserManager;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.rest.AppException;
 
 /**
@@ -55,8 +53,6 @@ public class ProjectController {
   private FileOperations fileOps;
   @EJB
   private ProjectServiceFacade projectServicesFacade;
-  @EJB
-  private InodeFacade inodes;
 
 
   /**
@@ -314,17 +310,6 @@ public class ProjectController {
       }
     }
     return failedList;
-  }
-
-  private boolean isProjectPresentInHdfs(String projectname) {
-    Inode root = inodes.getProjectRoot(projectname);
-    if (root == null) {
-      logger.log(Level.INFO,
-              "Project folder not found in HDFS for project {0} .",
-              projectname);
-      return false;
-    }
-    return true;
   }
 
   /**

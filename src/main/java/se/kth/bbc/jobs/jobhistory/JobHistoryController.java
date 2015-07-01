@@ -15,7 +15,7 @@ import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.adam.AdamController;
-import se.kth.bbc.jobs.cuneiform.CuneiformController;
+import se.kth.bbc.jobs.cuneiform.CuneiformMB;
 import se.kth.bbc.jobs.spark.SparkController;
 import se.kth.bbc.jobs.yarn.YarnController;
 import se.kth.bbc.lims.ClientSessionState;
@@ -44,7 +44,7 @@ public class JobHistoryController implements Serializable {
 
   // for loading specific history 
   @ManagedProperty(value = "#{cuneiformController}")
-  private CuneiformController cfCont;
+  private CuneiformMB cfCont;
   @ManagedProperty(value = "#{adamController}")
   private AdamController adamCont;
   @ManagedProperty(value = "#{sparkController}")
@@ -56,7 +56,7 @@ public class JobHistoryController implements Serializable {
     this.sessionState = sessionState;
   }
 
-  public void setCfCont(CuneiformController cfCont) {
+  public void setCfCont(CuneiformMB cfCont) {
     this.cfCont = cfCont;
   }
 

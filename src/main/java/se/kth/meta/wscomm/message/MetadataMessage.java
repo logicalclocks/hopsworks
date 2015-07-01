@@ -1,7 +1,5 @@
 package se.kth.meta.wscomm.message;
 
-import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.RawData;
 import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,7 +11,9 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
+import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.Fields;
+import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.Tables;
 
 /**

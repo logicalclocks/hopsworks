@@ -1,6 +1,5 @@
 package se.kth.bbc.upload;
 
-import java.io.*;
 import java.util.HashMap;
 
 /**

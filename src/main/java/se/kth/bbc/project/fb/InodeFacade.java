@@ -148,6 +148,13 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return getInode("/" + Constants.DIR_ROOT + "/" + name);
   }
 
+  /**
+   * Find an Inode by its parent Inode and its name (i.e. its primary key).
+   * <p>
+   * @param parent
+   * @param name
+   * @return
+   */
   public Inode findByParentAndName(Inode parent, String name) {
 
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey",
@@ -210,7 +217,6 @@ public class InodeFacade extends AbstractFacade<Inode> {
     Inode projectRoot = getProjectRootForInode(i);
     return projectRoot.getInodePK().getName();
   }
-
 
   /**
    * Get a list of NavigationPath objects representing the project-relative path

@@ -29,6 +29,15 @@ public final class Utils {
     }
   }
 
+  public static String stripExtension(String filename) {
+    int lastDot = filename.lastIndexOf(".");
+    if (lastDot < 0) {
+      return filename;
+    } else {
+      return filename.substring(0, lastDot);
+    }
+  }
+
   public static String getDirectoryPart(String path) {
     int lastSlash = path.lastIndexOf("/");
     int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
@@ -47,7 +56,7 @@ public final class Utils {
   }
 
   public static String getHdfsRootPath(String projectname) {
-    return "/Projects/" + projectname + "/";
+    return "/" + Constants.DIR_ROOT + "/" + projectname + "/";
   }
 
   public static String getYarnUser() {

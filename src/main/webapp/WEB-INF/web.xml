@@ -186,7 +186,27 @@
       <role-name>BBC_USER</role-name>
     </auth-constraint>
   </security-constraint>
-   
+
+    
+  <!--    <security-constraint>
+      <display-name>SocketConstraint</display-name>
+      <web-resource-collection>
+          <web-resource-name>MetadataWebSocket</web-resource-name>
+          <description>Security constraint for  metadata designer websocket endpoint</description>
+          <url-pattern>/wspoint/*</url-pattern>
+          <http-method>GET</http-method>
+      </web-resource-collection>
+      <auth-constraint>
+          <description>definition of which roles  may access the quote endpoint</description>
+          <role-name>SYS_ADMIN</role-name>
+          <role-name>BBC_USER</role-name>
+      </auth-constraint>
+      user-data-constraint>
+          <description>WSS required</description>
+          <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+      </user-data-constraint
+  </security-constraint>-->
+ 
   <security-constraint>
     <web-resource-collection>
       <web-resource-name>Viewpoint Secure URLs</web-resource-name>

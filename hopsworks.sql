@@ -146,7 +146,9 @@ CREATE TABLE `jobhistory` (
   `stdout_path` VARCHAR(255) DEFAULT NULL,
   `stderr_path` VARCHAR(255) DEFAULT NULL,
   `type` VARCHAR(128) NOT NULL,
+  `app_id` char(30) DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE (`app_id`),
   FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   FOREIGN KEY (`user`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
@@ -283,9 +285,10 @@ CREATE TABLE `meta_tuple_to_file` (
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_template_to_inode` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `template_id` int(11) NOT NULL,
-  `inode_id` int(11) NOT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `template_id` INT(11) NOT NULL,
+  `inode_pid` INT(11) NOT NULL,
+  `inode_name` VARCHAR(250) NOT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;

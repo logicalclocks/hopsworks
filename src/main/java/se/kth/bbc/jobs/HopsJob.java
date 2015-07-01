@@ -1,7 +1,10 @@
 package se.kth.bbc.jobs;
 
+import java.util.Collection;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.JobInputFile;
+import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.project.Project;
@@ -20,7 +23,7 @@ public abstract class HopsJob {
 
   private JobHistoryFacade jobHistoryFacade;
   private boolean initialized = false;
-  private Long jobId;
+  private JobHistory history;
 
   public HopsJob(JobHistoryFacade facade) {
     this.jobHistoryFacade = facade;
@@ -38,16 +41,31 @@ public abstract class HopsJob {
     return initialized;
   }
 
-  public final Long getJobId() {
-    return jobId;
+  /**
+   * Returns a copy of the current history object. Should not be used for
+   * updating.
+   * <p>
+   * @return
+   */
+  public final JobHistory getHistory() {
+    return new JobHistory(history);
   }
 
   protected final void updateState(JobState newState) {
-    jobHistoryFacade.update(jobId, newState);
+    history = jobHistoryFacade.update(history, newState);
   }
 
   protected final void updateArgs(String args) {
-    jobHistoryFacade.updateArgs(jobId, args);
+    history = jobHistoryFacade.updateArgs(history, args);
+  }
+
+  protected final void updateHistory(String name, JobState state,
+          long executionDuration, String args, String stdoutPath,
+          String stderrPath, String appId, Collection<JobInputFile> inputFiles,
+          Collection<JobOutputFile> outputFiles) {
+    history = jobHistoryFacade.update(history, name, state,
+            executionDuration, args, stdoutPath, stderrPath, appId, inputFiles,
+            outputFiles);
   }
 
   /**
@@ -72,9 +90,8 @@ public abstract class HopsJob {
    * Request a unique job id by creating a JobHistory object. Creates
    * and persists a JobHistory object that should ultimately enable this job to
    * be rerun. The object is in the state INITIALIZING. Upon success, returns
-   * the
-   * unique id of the created JobHistory object to allow tracking.
-   * This method must be called before attempting to run it.
+   * the created JobHistory object to allow tracking.
+   * This method must be called before attempting to run the actual job.
    * <p>
    * @param jobname The (optional) name for the job.
    * @param userEmail The email of the user running the job.
@@ -82,13 +99,13 @@ public abstract class HopsJob {
    * @param jobType The type of job.
    * @return Unique id of the JobHistory object associated with this job.
    */
-  public final Long requestJobId(String jobname, String userEmail,
+  public final JobHistory requestJobId(String jobname, String userEmail,
           Project project,
           JobType jobType) {
-    jobId = jobHistoryFacade.create(jobname, userEmail, project, jobType,
+    history = jobHistoryFacade.create(jobname, userEmail, project, jobType,
             null, JobState.INITIALIZING, null, null, null, null);
     initialized = true;
-    return jobId;
+    return history;
   }
 
   /*

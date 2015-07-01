@@ -5,17 +5,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 import se.kth.bbc.lims.Constants;
 
 /**
@@ -41,22 +39,13 @@ public class FileSystemOperations {
     }
   }
 
-  /**
-   * Copy a file to HDFS. The file will end up at <i>location</i>. The
-   * InputStream represents the file.
-   *
-   * @param location Location to which the file should be copied. Includes the
-   * filename.
-   * @param is The inputstream representing the file.
-   * @throws IOException
-   * @throws URISyntaxException
-   */
-  public void copyToHDFS(Path location, InputStream is) throws IOException,
-          URISyntaxException {
-    // Write file
-    if (!fs.exists(location)) {
-      try (FSDataOutputStream os = fs.create(location, false)) {
-        IOUtils.copyBytes(is, os, 131072, true); //TODO: check what this 131072 means...
+  @PreDestroy
+  public void closeFs() {
+    if (fs != null) {
+      try {
+        fs.close();
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, "Error while closing file system.", ex);
       }
     }
   }
@@ -66,6 +55,7 @@ public class FileSystemOperations {
    *
    * @param location The location of the file.
    * @return An InputStream for the file.
+   * @throws java.io.IOException When an error occurs upon HDFS opening.
    */
   public InputStream getInputStream(Path location) throws IOException {
     return fs.open(location, 1048576); //TODO: undo hard coding of weird constant here...
@@ -97,6 +87,12 @@ public class FileSystemOperations {
     return true;
   }
 
+  /**
+   * Get the HDFS file system with the Hadoop config files.
+   * <p>
+   * @return
+   * @throws IOException
+   */
   private FileSystem getFs() throws IOException {
 
     String coreConfDir = System.getenv("HADOOP_CONF_DIR");
@@ -139,6 +135,13 @@ public class FileSystemOperations {
     return fs;
   }
 
+  /**
+   * Get the contents of the file at the given path.
+   * <p>
+   * @param file
+   * @return
+   * @throws IOException
+   */
   public String cat(Path file) throws IOException {
     StringBuilder out = new StringBuilder();
     try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.
@@ -153,10 +156,26 @@ public class FileSystemOperations {
     }
   }
 
-  public void copyFromLocal(Path source, Path destination) throws IOException {
-    fs.copyFromLocalFile(false, source, destination);
+  /**
+   * Copy a file from one filesystem to the other.
+   * <p>
+   * @param deleteSource If true, the file at the source path will be deleted
+   * after copying.
+   * @param source
+   * @param destination
+   * @throws IOException
+   */
+  public void copyFromLocal(boolean deleteSource, Path source, Path destination)
+          throws IOException {
+    fs.copyFromLocalFile(deleteSource, source, destination);
   }
 
+  /**
+   * Move a file in HDFS from one path to another.
+   * @param source
+   * @param destination
+   * @throws IOException 
+   */
   public void moveWithinHdfs(Path source, Path destination) throws IOException {
     fs.rename(source, destination);
   }
@@ -179,6 +198,12 @@ public class FileSystemOperations {
     }
   }
 
+  /**
+   * Copy the file at the HDFS source path to the local destination.
+   * @param src
+   * @param dst
+   * @throws IOException 
+   */
   public void copyToLocal(Path src, Path dst) throws IOException {
     fs.copyToLocalFile(src, dst);
   }

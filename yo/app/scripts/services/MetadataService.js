@@ -8,7 +8,7 @@ angular.module('hopsWorksApp')
 
           // Keep all pending requests here until they get responses
           var callbacks = [];
-          var projectID = 47;
+          var projectID = 1;
 
           //generic
           var ws = $websocket("ws://" + $location.host() + ":8080/hopsworks/wspoint/" + projectID);

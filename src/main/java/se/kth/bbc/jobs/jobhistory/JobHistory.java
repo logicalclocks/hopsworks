@@ -24,8 +24,6 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.security.ua.model.User;
 
@@ -121,6 +119,10 @@ public class JobHistory implements Serializable {
   @Enumerated(EnumType.STRING)
   private JobType type;
 
+  @Size(max = 30)
+  @Column(name = "app_id")
+  private String appId;
+
   @JoinColumn(name = "user",
           referencedColumnName = "EMAIL")
   @ManyToOne(optional = false)
@@ -149,6 +151,23 @@ public class JobHistory implements Serializable {
   public JobHistory(Date submissionTime, JobState state) {
     this.submissionTime = submissionTime;
     this.state = state;
+  }
+
+  public JobHistory(JobHistory jh) {
+    this(jh.submissionTime, jh.state);
+    this.id = jh.id;
+    this.name = jh.name;
+    this.executionDuration = jh.executionDuration;
+    this.args = jh.args;
+    this.stderrPath = jh.stderrPath;
+    this.stdoutPath = jh.stdoutPath;
+    this.type = jh.type;
+    this.appId = jh.appId;
+    this.user = jh.user;
+    this.project = jh.project;
+    this.jobInputFileCollection = jh.jobInputFileCollection;
+    this.jobOutputFileCollection = jh.jobOutputFileCollection;
+    this.jobExecutionFileCollection = jh.jobExecutionFileCollection;
   }
 
   public Long getId() {
@@ -223,8 +242,14 @@ public class JobHistory implements Serializable {
     this.type = type;
   }
 
-  @XmlTransient
-  @JsonIgnore
+  public String getAppId() {
+    return appId;
+  }
+
+  public void setAppId(String appId) {
+    this.appId = appId;
+  }
+
   public Collection<JobOutputFile> getJobOutputFileCollection() {
     return jobOutputFileCollection;
   }
@@ -250,8 +275,6 @@ public class JobHistory implements Serializable {
     this.project = project;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public Collection<JobInputFile> getJobInputFileCollection() {
     return jobInputFileCollection;
   }
@@ -261,8 +284,6 @@ public class JobHistory implements Serializable {
     this.jobInputFileCollection = jobInputFileCollection;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public Collection<JobExecutionFile> getJobExecutionFileCollection() {
     return jobExecutionFileCollection;
   }
@@ -300,7 +321,7 @@ public class JobHistory implements Serializable {
   }
 
   public boolean isFinished() {
-    return this.state == JobState.FINISHED;
+    return this.state.isFinalState();
   }
 
 }

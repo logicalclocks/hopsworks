@@ -3,7 +3,6 @@ package se.kth.bbc.activity;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -11,7 +10,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import org.primefaces.model.LazyDataModel;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.project.Project;
 import se.kth.kthfsdashboard.user.Gravatar;
 
