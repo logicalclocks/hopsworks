@@ -144,11 +144,6 @@ public class Inode implements Serializable {
   @Column(name = "subtree_lock_owner")
   private BigInteger subtreeLockOwner;
 
-  public Inode() {
-  }
-  @Column(name = "subtree_lock_owner")
-  private BigInteger subtreeLockOwner;
-
   @ManyToMany(mappedBy = "inodes",
           cascade = CascadeType.PERSIST,
           fetch = FetchType.EAGER)

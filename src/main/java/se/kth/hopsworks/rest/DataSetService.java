@@ -256,7 +256,7 @@ public class DataSetService {
 
       //the inode has been created in the file system
       if (success) {
-        ServletContext context = request.getSession().getServletContext();
+        ServletContext context = req.getSession().getServletContext();
         Dbao db = (Dbao) context.getAttribute("db");
 
         //get the newly created inode and the template it comes with

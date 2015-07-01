@@ -27,8 +27,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.activity.Activity;
 import se.kth.bbc.security.ua.model.User;
-import se.kth.bbc.project.metadata.ProjectMeta;
-import se.kth.bbc.project.samples.Samplecollection;
 import se.kth.bbc.project.services.ProjectServices;
 
 /**
@@ -116,13 +114,6 @@ public class Project implements Serializable {
   @Column(name = "description")
   private String description;
 
-  @OneToMany(mappedBy = "project")
-  private Collection<Samplecollection> samplecollectionCollection;
-
-  @OneToOne(cascade = CascadeType.ALL,
-          mappedBy = "project")
-  private ProjectMeta projectMeta;
-
   public Project() {
   }
 
@@ -194,29 +185,10 @@ public class Project implements Serializable {
     this.description = description;
   }
 
-  public ProjectMeta getProjectMeta() {
-    return projectMeta;
-  }
-
-  public void setProjectMeta(ProjectMeta projectMeta) {
-    this.projectMeta = projectMeta;
-  }
-
   @Override
   public String toString() {
     return "se.kth.bbc.project.Project[ name=" + name + " archived=" + archived
             + " ]";
-  }
-
-  @XmlTransient
-  @JsonIgnore
-  public Collection<Samplecollection> getSamplecollectionCollection() {
-    return samplecollectionCollection;
-  }
-
-  public void setSamplecollectionCollection(
-          Collection<Samplecollection> samplecollectionCollection) {
-    this.samplecollectionCollection = samplecollectionCollection;
   }
 
   public Project(Integer id) {
