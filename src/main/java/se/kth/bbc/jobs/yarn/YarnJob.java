@@ -169,7 +169,7 @@ public class YarnJob extends HopsJob {
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
-          fops.copyToHDFSFromPath(runner.getStdOutPath(),
+          fops.copyToHDFSFromLocal(true, runner.getStdOutPath(),
                   stdOutFinalDestination);
         } else {
           fops.renameInHdfs(runner.getStdOutPath(), stdOutFinalDestination);
@@ -177,7 +177,7 @@ public class YarnJob extends HopsJob {
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
-          fops.copyToHDFSFromPath(runner.getStdErrPath(),
+          fops.copyToHDFSFromLocal(true, runner.getStdErrPath(),
                   stdErrFinalDestination);
         } else {
           fops.renameInHdfs(runner.getStdErrPath(), stdErrFinalDestination);
