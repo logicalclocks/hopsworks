@@ -68,8 +68,9 @@ public class CuneiformController {
       throw new IllegalArgumentException("No such file.");
     } else if (fops.isDir(path)) {
       throw new IllegalArgumentException("Specified path is a directory.");
-    } else if (!path.endsWith(".cf")){
-      throw new IllegalArgumentException("Specified path does not point to .cf file.");
+    } else if (!path.endsWith(".cf")) {
+      throw new IllegalArgumentException(
+              "Specified path does not point to .cf file.");
     }
     // Get the workflow name.
     String wfName = Utils.getFileName(path);

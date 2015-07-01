@@ -167,5 +167,4 @@ public final class SparkMB extends JobMB {
   public void setFileSelectionController(FileSelectionController fs) {
     this.fileSelectionController = fs;
   }
-
 }

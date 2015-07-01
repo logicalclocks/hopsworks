@@ -5,134 +5,66 @@
 
 'use strict';
 
-
 angular.module('hopsWorksApp')
         .controller('CuneiformCtrl', ['$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$location', '$routeParams', 'growl', 'ModalService', 'JobHistoryService', 'CuneiformService', '$interval',
           function ($scope, $timeout, $mdSidenav, $mdUtil, $log, $location, $routeParams, growl, ModalService, JobHistoryService, CuneiformService, $interval) {
-
+            //Set all the variables required to be a jobcontroller:
+            //For fetching job history
             var self = this;
+            this.JobHistoryService = JobHistoryService;
+            this.projectId = $routeParams.projectID;
+            this.jobType = 'CUNEIFORM';
+            this.growl = growl;
+            //For letting the user select a file
+            this.ModalService = ModalService;
+            this.selectFileRegex = /.cf\b/;
+            this.selectFileErrorMsg = "Please select a Cuneiform workflow. The file should have the extension '.cf'.";
+            this.onFileSelected = function (path) {
+              CuneiformService.inspectStoredWorkflow(this.projectId, path).then(
+                      function (success) {
+                        self.workflow = success.data.wf;
+                        self.yarnConfig = success.data.yarnConfig;
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+              });
+            };
+            //For job execution
+            this.$interval = $interval;
+            this.callExecute = function () {
+              return CuneiformService.runWorkflow(
+                      self.projectId,
+                      {"wf": self.workflow, "yarnConfig": self.yarnConfig});
+            };
+            this.onExecuteSuccess = function (success) {
+              self.workflow = null;
+              self.yarnConfig = null;
+            };
 
-            self.pId = $routeParams.projectID;
+            this.getHistory = function () {
+              getHistory(this);
+            };
 
-            self.toggleLeft = buildToggler('left');
-            self.toggleRight = buildToggler('right');
+            this.selectFile = function () {
+              selectFile(this);
+            };
+
+            this.execute = function () {
+              execute(this);
+            };
+
+            this.selectJob = function (job) {
+              selectJob(this, job);
+            };
+
             /**
-             * Build handler to open/close a SideNav; when animation finishes
-             * report completion in console
+             * Close the poller if the controller is destroyed.
              */
-            function buildToggler(navID) {
-              var debounceFn = $mdUtil.debounce(function () {
-                $mdSidenav(navID)
-                        .toggle()
-                        .then(function () {
-                          $log.debug("toggle " + navID + " is done");
-                        });
-              }, 300);
-              return debounceFn;
-            }
-            ;
-
-            self.close = function () {
-              $mdSidenav('right').close()
-                      .then(function () {
-                        $log.debug("close RIGHT is done");
-                      });
-            };
-
-            /*
-             * Get all Cuneiform job history objects for this project.
-             */
-            var getCuneiformHistory = function () {
-              JobHistoryService.getByProjectAndType(self.pId, 'CUNEIFORM').then(function (success) {
-                //Upon success, fill in jobs
-                self.jobs = success.data;
-              }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                self.jobs = null;
-              });
-            };
-
-            getCuneiformHistory();
-
-            self.selectFile = function () {
-              ModalService.selectFile('lg').then(
-                      function (success) {
-                        CuneiformService.inspectStoredWorkflow(self.pId, success).then(
-                                function (success) {
-                                  self.workflow = success.data.wf;
-                                  self.yarnConfig = success.data.yarnConfig;
-                                }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-
-                        })
-                      }, function (error) {
-              });
-            };
-
-            self.execute = function () {
-              //First: stop polling for previous jobs.
-              $interval.cancel(poller);
-              //Then: submit job.
-              CuneiformService.runWorkflow(self.pId, {"wf": self.workflow, "yarnConfig": self.yarnConfig}).then(
-                      function (success) {
-                        //get the resulting job
-                        self.job = success.data;
-                        //Add it to the history array
-                        self.jobs.unshift(self.job);
-                        //Reset the configuration data
-                        self.workflow = null;
-                        self.yarnConfig = null;
-                        //Start polling
-                        poller = $interval(pollStatus, 3000);
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-              })
-            };
-
-            var pollStatus = function () {
-              JobHistoryService.pollStatus(self.pId, self.job.id).then(
-                      function (success) {
-                        var oldindex = self.jobs.indexOf(self.job);
-                        self.job = success.data;
-                        //Replace the old element in the jobs array
-                        if (oldindex !== -1) {
-                          self.jobs[oldindex] = self.job;
-                        }
-                        //check if job finished
-                        if (self.job.state == 'FINISHED'
-                                || self.job.state == 'FAILED'
-                                || self.job.state == 'KILLED'
-                                || self.job.state == 'FRAMEWORK_FAILURE'
-                                || self.job.state == 'APP_MASTER_START_FAILED') {
-                          //if so: stop executing
-                          $interval.cancel(poller);
-                        }
-                      }, function (error) {
-                $interval.cancel(poller);
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-              })
-            };
-            var poller;
-
             $scope.$on('$destroy', function () {
-              $interval.cancel(poller);
+              $interval.cancel(this.poller);
             });
 
-            self.selectJob = function (job) {
-              //Stop polling
-              $interval.cancel(poller);
-              //Set self.job
-              self.job = job;
-              //check if need to start polling
-              if (self.job.state !== 'FINISHED'
-                      && self.job.state !== 'FAILED'
-                      && self.job.state !== 'KILLED'
-                      && self.job.state !== 'FRAMEWORK_FAILURE'
-                      && self.job.state !== 'APP_MASTER_START_FAILED') {
-                //if so: start executing
-                poller = $interval(pollStatus, 3000);
-              }
-            };
+            //Load the job history
+            this.getHistory();
 
           }]);
 

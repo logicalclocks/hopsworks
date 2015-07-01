@@ -380,7 +380,7 @@ public final class CuneiformMB extends JobMB {
           fops.copyWithinHdfs(getFilePath(cp.getValue()), absoluteHDFSfoldername
                   + File.separator + cp.getValue());
         } else {
-          fops.copyToHDFSFromPath(getFilePath(cp.getValue()),
+          fops.copyToHDFSFromLocal(true, getFilePath(cp.getValue()),
                   absoluteHDFSfoldername + File.separator + cp.getValue());
         }
         //add a line to the workflow file
