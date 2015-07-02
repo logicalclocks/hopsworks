@@ -33,9 +33,9 @@ import se.kth.bbc.lims.Utils;
  */
 @ManagedBean
 @ViewScoped
-public final class AdamController extends JobMB {
+public final class AdamMB extends JobMB {
 
-  private static final Logger logger = Logger.getLogger(AdamController.class.
+  private static final Logger logger = Logger.getLogger(AdamMB.class.
           getName());
 
   private String jobName;
