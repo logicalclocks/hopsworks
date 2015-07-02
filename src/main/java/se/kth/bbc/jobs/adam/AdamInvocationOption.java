@@ -8,7 +8,7 @@ public class AdamInvocationOption {
 
   private final AdamOption opt;
   private String stringValue;
-  private boolean booleanValue = false;
+  private boolean booleanValue;
   private final boolean usesBoolean;
 
   public AdamInvocationOption(AdamOption opt) {

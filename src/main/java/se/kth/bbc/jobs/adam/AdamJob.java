@@ -1,7 +1,6 @@
 package se.kth.bbc.jobs.adam;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import se.kth.bbc.fileoperations.FileOperations;
@@ -22,12 +21,12 @@ public class AdamJob extends YarnJob {
 
   private static final Logger logger = Logger.getLogger(AdamJob.class.getName());
 
-  private final List<AdamInvocationArgument> invocationArguments;
-  private final List<AdamInvocationOption> invocationOptions;
+  private final AdamArgumentDTO[] invocationArguments;
+  private final AdamOptionDTO[] invocationOptions;
 
   public AdamJob(JobHistoryFacade facade, YarnRunner runner, FileOperations fops,
-          List<AdamInvocationArgument> invocationArguments,
-          List<AdamInvocationOption> invocationOptions) {
+          AdamArgumentDTO[] invocationArguments,
+          AdamOptionDTO[] invocationOptions) {
     super(facade, runner, fops);
     this.invocationArguments = invocationArguments;
     this.invocationOptions = invocationOptions;
@@ -69,33 +68,34 @@ public class AdamJob extends YarnJob {
    * create entries in the DB.
    */
   private void makeOutputAvailable() {
-    for (AdamInvocationArgument aia : invocationArguments) {
-      if (aia.getArg().isOutputPath() && aia.getArg().isRequired()) {
+    for (AdamArgumentDTO arg : invocationArguments) {
+      if (arg.isOutputPath() && !(arg.getValue() == null || arg.getValue().
+              isEmpty())) {
         try {
-          if (getFileOperations().exists(aia.getValue())) {
+          if (getFileOperations().exists(arg.getValue())) {
             getJobHistoryFacade().persist(new JobOutputFile(new JobOutputFilePK(
                     getHistory().getId(), Utils.
-                    getFileName(aia.getValue())), aia.getValue()));
+                    getFileName(arg.getValue())), arg.getValue()));
           }
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
-                  + aia.getValue() + ".", e);
+                  + arg.getValue() + ".", e);
         }
       }
     }
 
-    for (AdamInvocationOption aio : invocationOptions) {
-      if (aio.getOpt().isOutputPath() && aio.getStringValue() != null && !aio.
-              getStringValue().isEmpty()) {
+    for (AdamOptionDTO opt : invocationOptions) {
+      if (opt.isOutputPath() && opt.getValue() != null && !opt.getValue().
+              isEmpty()) {
         try {
-          if (getFileOperations().exists(aio.getStringValue())) {
+          if (getFileOperations().exists(opt.getValue())) {
             getJobHistoryFacade().persist(new JobOutputFile(new JobOutputFilePK(
                     getHistory().getId(), Utils.
-                    getFileName(aio.getStringValue())), aio.getStringValue()));
+                    getFileName(opt.getValue())), opt.getValue()));
           }
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
-                  + aio.getStringValue() + ".", e);
+                  + opt.getValue() + ".", e);
         }
       }
     }

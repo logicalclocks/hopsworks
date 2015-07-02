@@ -14,18 +14,15 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.FileSelectionController;
 import se.kth.bbc.jobs.JobMB;
+import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
-import se.kth.bbc.jobs.jobhistory.JobType;
-import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
-import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.ClientSessionState;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
+import se.kth.hopsworks.controller.AdamController;
 
 /**
  *
@@ -60,7 +57,7 @@ public final class AdamMB extends JobMB {
   private StagingManager stagingManager;
 
   @EJB
-  private AsynchronousJobExecutor submitter;
+  private AdamController adamController;
 
   @EJB
   private ActivityFacade activityFacade;
@@ -125,190 +122,39 @@ public final class AdamMB extends JobMB {
   }
 
   public void startJob() {
-    if (!areJarsAvailable()) {
-      MessagesController.addErrorMessage("Failed to start application master.",
-              "Some jars are not in HDFS and could not be copied over.");
-      return;
+    //Format some path stuff.
+    for (AdamInvocationArgument aia : args) {
+      if (aia.getArg().isPath()) {
+        String filepath = getFilePath(aia.getValue());
+        if (!aia.getArg().isOutputPath() && !filepath.startsWith("hdfs:")) {
+          filepath = "file:" + filepath;
+        }
+        aia.setValue(filepath);
+      }
     }
-    //First: check if all required arguments have been filled in
-    if (!checkIfRequiredPresent()) {
-      return;
+    for (AdamInvocationOption aio : opts) {
+      if (aio.getOpt().isValuePath()) {
+        String filepath = getFilePath(aio.getStringValue());
+        if (!aio.getOpt().isOutputPath() && !filepath.startsWith("hdfs:")) {
+          filepath = "file:" + filepath;
+        }
+        aio.setStringValue(filepath);
+      }
     }
-    //Second: for all output path arguments and options: translate to internal format
-    translateOutputPaths();
-    //Third: submit ADAM job
-    if (jobName == null || jobName.isEmpty()) {
-      jobName = "Untitled ADAM Job";
-    }
-    SparkYarnRunnerBuilder builder = new SparkYarnRunnerBuilder(
-            Constants.ADAM_DEFAULT_JAR_HDFS_PATH, Constants.ADAM_MAINCLASS);
-    //Set some ADAM-specific property values   
-    builder.addSystemProperty("spark.serializer",
-            "org.apache.spark.serializer.KryoSerializer");
-    builder.addSystemProperty("spark.kryo.registrator",
-            "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
-    builder.addSystemProperty("spark.kryoserializer.buffer.mb", "4");
-    builder.addSystemProperty("spark.kryo.referenceTracking", "true");
-    builder.setExecutorMemoryGB(1);
-
-    builder.addAllJobArgs(constructArgs());
-
-    //Add all ADAM jars to local resources
-    addAllAdamJarsToLocalResourcesAndClasspath(builder);
-
-    //Set the job name
-    builder.setJobName(jobName);
-
-    YarnRunner r;
+    //Construct an AdamJobConfiguration object
+    AdamJobConfiguration config = new AdamJobConfiguration(new AdamCommandDTO(
+            selectedCommand, args.toArray(new AdamInvocationArgument[0]), opts.
+            toArray(new AdamInvocationOption[0])));
     try {
-      r = builder.getYarnRunner();
-    } catch (IOException e) {
-      logger.log(Level.SEVERE,
-              "Failed to create YarnRunner.", e);
-      MessagesController.addErrorMessage("Failed to start Yarn client.", e.
-              getLocalizedMessage());
-      return;
-    }
-
-    AdamJob job = new AdamJob(history, r, fops, args, opts);
-    setSelectedJob(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveProject(), JobType.ADAM));
-    if (isJobSelected()) {
-      String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveProjectname())
-              + Constants.ADAM_DEFAULT_OUTPUT_PATH + getSelectedJob().getId()
-              + File.separator + "stdout.log";
-      String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveProjectname())
-              + Constants.ADAM_DEFAULT_OUTPUT_PATH + getSelectedJob().getId()
-              + File.separator + "stderr.log";
-      job.setStdOutFinalDestination(stdOutFinalDestination);
-      job.setStdErrFinalDestination(stdErrFinalDestination);
-      submitter.startExecution(job);
+      JobHistory jh = adamController.startJob(config, sessionState.
+              getLoggedInUsername(), sessionState.getActiveProject().getId());
+      setSelectedJob(jh);
       MessagesController.addInfoMessage("Job submitted!");
       resetArguments();
-    } else {
-      logger.log(Level.SEVERE,
-              "Failed to persist JobHistory. Aborting execution.");
-      MessagesController.addErrorMessage(
-              "Failed to write job history. Aborting execution.");
-      return;
-    }
-    writeJobStartedActivity(sessionState.getActiveProject(), sessionState.
-            getLoggedInUsername());
-  }
-
-  /**
-   * Check if all required arguments have been filled in.
-   * <p>
-   * @return False if not all required arguments are present, true if they are.
-   */
-  private boolean checkIfRequiredPresent() {
-    boolean retval = true;
-    for (AdamInvocationArgument aia : args) {
-      if (aia.getArg().isRequired() && (aia.getValue() == null
-              || aia.getValue().isEmpty())) {
-        //Required attribute is empty
-        MessagesController.addInfoMessage("Argument required.", "The argument "
-                + aia.getArg().getName() + " is required.");
-        retval = false;
-      }
-    }
-    return retval;
-  }
-
-  /**
-   * Translate all output paths to their internal representation. I.e.:
-   * - The path the user specified should begin with the projectname. If it does
-   * not, we prepend it.
-   * - The final path should start with
-   */
-  private void translateOutputPaths() {
-    for (AdamInvocationArgument aia : args) {
-      if (aia.getArg().isOutputPath() && aia.getValue() != null && !aia.
-              getValue().isEmpty()) {
-        aia.setValue(getPathForString(aia.getValue()));
-      }
-    }
-    for (AdamInvocationOption aio : opts) {
-      if (aio.getOpt().isValuePath() && aio.getStringValue() != null && !aio.
-              getStringValue().isEmpty()) {
-        aio.setStringValue(getPathForString(aio.getStringValue()));
-      }
-    }
-  }
-
-  private String getPathForString(String t) {
-    t = t.replaceAll("\\\\", "/");
-    while (t.startsWith("/")) {
-      t = t.substring(1);
-    }
-    String strippedPath;
-    if (t.equals(sessionState.getActiveProjectname())) {
-      strippedPath = t;
-    } else if (t.startsWith(sessionState.getActiveProjectname() + "/")) {
-      strippedPath = t;
-    } else {
-      strippedPath = sessionState.getActiveProjectname() + "/" + t;
-    }
-    return File.separator + Constants.DIR_ROOT + File.separator + strippedPath;
-  }
-
-  private List<String> constructArgs() {
-    List<String> adamargs = new ArrayList<>();
-    //First: add command
-    adamargs.add(selectedCommand.getCommand());
-    //Loop over arguments
-    for (AdamInvocationArgument aia : args) {
-      if (aia.getArg().isPath() && !aia.getArg().isOutputPath()) {
-        String filepath = getFilePath(aia.getValue());
-        if (filepath.startsWith("hdfs:")) {
-          adamargs.add(filepath);
-        } else {
-          adamargs.add("file:" + filepath);
-        }
-      } else {
-        adamargs.add(aia.getValue());
-      }
-    }
-    //Loop over options
-    for (AdamInvocationOption aio : opts) {
-      if (aio.getOpt().isFlag()) {
-        //flag: just add the name of the flag
-        if (aio.getBooleanValue()) {
-          adamargs.add(aio.getOpt().getCliVal());
-        }
-      } else if (aio.getStringValue() != null && !aio.getStringValue().isEmpty()) {
-        //Not a flag: add the name of the option
-        adamargs.add(aio.getOpt().getCliVal());
-        if (aio.getOpt().isValuePath() && !aio.getOpt().isOutputPath()) {
-          String filepath = getFilePath(aio.getStringValue());
-          if (filepath.startsWith("hdfs:")) {
-            adamargs.add(filepath);
-          } else {
-            adamargs.add("file:" + filepath);
-          }
-        } else {
-          //output path or string or sthn: add option value
-          adamargs.add(aio.getStringValue());
-        }
-      }
-    }
-    return adamargs;
-  }
-
-  /**
-   * Add all the ADAM jar to the local resources and to the classpath.
-   * <p>
-   * @param builder
-   */
-  private void addAllAdamJarsToLocalResourcesAndClasspath(
-          SparkYarnRunnerBuilder builder) {
-    //Add all to local resources and to classpath
-    for (String sourcePath : Constants.ADAM_HDFS_JARS) {
-      String filename = Utils.getFileName(sourcePath);
-      builder.addExtraFile(filename, sourcePath);
-      builder.addToClassPath(filename);
+    } catch (IllegalStateException | IllegalArgumentException | IOException e) {
+      MessagesController.addErrorMessage("Failed to start application master: "
+              + e.getLocalizedMessage());
+      logger.log(Level.WARNING, "Failed to start Adam job.", e);
     }
   }
 
@@ -409,53 +255,6 @@ public final class AdamMB extends JobMB {
       }
     }
     return null;
-  }
-
-  /**
-   * Check if the Spark jar is in HDFS. If it's not, try and copy it there from
-   * the local filesystem. If it's still not there, then return false.
-   * <p>
-   * @return
-   */
-  private boolean areJarsAvailable() {
-    try {
-      boolean adamJarMissing = false;
-      for (String s : Constants.ADAM_HDFS_JARS) {
-        if (!fops.exists(s)) {
-          adamJarMissing = true;
-          logger.log(Level.WARNING, "Missing Adam jar: {0}", s);
-        }
-      }
-      if (adamJarMissing) {
-        return false;
-      }
-    } catch (IOException e) {
-      return false;
-    }
-
-    boolean isInHdfs;
-    try {
-      isInHdfs = fops.exists(Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
-    } catch (IOException e) {
-      //Can't connect to HDFS: return false
-      return false;
-    }
-    if (isInHdfs) {
-      return true;
-    }
-
-    File localSparkJar = new File(Constants.DEFAULT_SPARK_JAR_PATH);
-    if (localSparkJar.exists()) {
-      try {
-        fops.copyToHDFSFromLocal(false, Constants.DEFAULT_SPARK_JAR_PATH,
-                Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
-      } catch (IOException e) {
-        return false;
-      }
-    } else {
-      return false;
-    }
-    return true;
   }
 
 }
