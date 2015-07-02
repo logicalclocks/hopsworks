@@ -10,11 +10,13 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.bbc.jobs.adam.AdamCommand;
 import se.kth.bbc.jobs.adam.AdamCommandDTO;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
@@ -42,7 +44,7 @@ public class AdamService {
   }
 
   /**
-   * Get a list of the available Adam commands.
+   * Get a list of the available Adam commands. This returns a list of command names.
    * <p>
    * @param sc
    * @param req
@@ -54,9 +56,28 @@ public class AdamService {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response getAdamCommands(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    AdamCommandDTO[] commands = AdamCommandDTO.values();
+    String[] commands = AdamCommandDTO.getAllCommandNames();
     return Response.ok(commands).build();
   }
+    
+  /**
+   * Returns a AdamJobConfiguration for the selected command.
+   * @param commandName
+   * @param sc
+   * @param req
+   * @return 
+   */
+  @GET
+  @Path("/commands/{name}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getCommandDetails(@PathParam("name") String commandName, @Context SecurityContext sc,
+          @Context HttpServletRequest req) {
+    AdamCommandDTO selected = new AdamCommandDTO(AdamCommand.getFromCommand(
+            commandName));
+    AdamJobConfiguration config = new AdamJobConfiguration(selected);
+    return Response.ok(config).build();
+  }  
 
   /**
    * Run an ADAM job. Accepts a JSONized AdamJobConfiguration, which contains

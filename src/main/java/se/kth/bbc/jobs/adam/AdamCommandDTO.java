@@ -78,11 +78,11 @@ public class AdamCommandDTO {
     return AdamCommand.getFromCommand(command);
   }
   
-  public static AdamCommandDTO[] values(){
+  public static String[] getAllCommandNames(){
     AdamCommand[] acs = AdamCommand.values();
-    AdamCommandDTO[] ret = new AdamCommandDTO[acs.length];
+    String[] ret = new String[acs.length];
     for(int i=0;i<acs.length;i++){
-      ret[i] = new AdamCommandDTO(acs[i]);
+      ret[i] = acs[i].getCommand();
     }    
     return ret;
   }
