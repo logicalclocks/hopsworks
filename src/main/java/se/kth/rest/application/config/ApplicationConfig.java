@@ -41,6 +41,9 @@ public class ApplicationConfig extends Application {
     resources.add(se.kth.hopsworks.rest.TransactionExceptionMapper.class);
     resources.add(se.kth.hopsworks.rest.UploadService.class);
     resources.add(se.kth.hopsworks.rest.UserService.class);
+    resources.add(se.kth.hopsworks.zeppelin.rest.InterpreterRestApi.class);
+    resources.add(se.kth.hopsworks.zeppelin.rest.NotebookRestApi.class);
+    resources.add(se.kth.hopsworks.zeppelin.rest.ZeppelinRestApi.class);
   }
 
 }

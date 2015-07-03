@@ -64,6 +64,15 @@
     <servlet-name>UploadServlet</servlet-name>
     <url-pattern>/bbc/uploader</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <servlet-name>AppScriptServlet</servlet-name>
+    <servlet-class>se.kth.hopsworks.zeppelin.server.AppScriptServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AppScriptServlet</servlet-name>
+    <url-pattern>/zeppelin/scripts/scripts.js</url-pattern>
+    <url-pattern>/zeppelin/scripts/app.js</url-pattern>
+  </servlet-mapping>
   <!-- declare the roles relevant for our webapp -->
   <security-role>
     <role-name>SYS_ADMIN</role-name>
@@ -187,7 +196,7 @@
     </auth-constraint>
   </security-constraint>
     
-  <!--    <security-constraint>
+   <security-constraint>
       <display-name>SocketConstraint</display-name>
       <web-resource-collection>
           <web-resource-name>MetadataWebSocket</web-resource-name>
@@ -200,11 +209,30 @@
           <role-name>SYS_ADMIN</role-name>
           <role-name>BBC_USER</role-name>
       </auth-constraint>
-      user-data-constraint>
+      <!-- <user-data-constraint>
           <description>WSS required</description>
           <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-      </user-data-constraint
-  </security-constraint>-->
+      </user-data-constraint>-->
+  </security-constraint>
+   
+    <security-constraint>
+      <display-name>SocketConstraint</display-name>
+      <web-resource-collection>
+          <web-resource-name>ZeppelinWebSocket</web-resource-name>
+          <description>Security constraint for  Zeppelin websocket endpoint</description>
+          <url-pattern>/websocket/*</url-pattern>
+          <http-method>GET</http-method>
+      </web-resource-collection>
+      <auth-constraint>
+          <description>definition of which roles  may access the endpoint</description>
+          <role-name>SYS_ADMIN</role-name>
+          <role-name>BBC_USER</role-name>
+      </auth-constraint>
+      <!-- <user-data-constraint>
+          <description>WSS required</description>
+          <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+      </user-data-constraint>-->
+  </security-constraint> 
  
   <security-constraint>
     <web-resource-collection>

@@ -76,6 +76,24 @@
       <artifactId>json</artifactId>
       <version>20140107</version>
     </dependency>
+    <!--Zeppelin dependencies -->
+    <dependency>
+      <groupId>org.apache.zeppelin</groupId>
+      <artifactId>zeppelin-interpreter</artifactId>
+      <version>0.5.0-incubating-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.zeppelin</groupId>
+      <artifactId>zeppelin-zengine</artifactId>
+      <version>0.5.0-incubating-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.zeppelin</groupId>
+      <artifactId>zeppelin-web</artifactId>
+      <version>0.5.0-incubating-SNAPSHOT</version>
+      <type>war</type>
+    </dependency>
+    <!--End of Zeppelin dependencies -->
   </dependencies>
   <build>
     <finalName>hop-dashboard</finalName>
@@ -105,7 +123,22 @@
           </execution>
         </executions>
       </plugin>
-      
+      <!--maven war plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>2.6</version>
+        <configuration>
+          <overlays>
+            <overlay>
+              <groupId>org.apache.zeppelin</groupId>
+              <artifactId>zeppelin-web</artifactId>
+              <type>war</type>
+              <targetPath>zeppelin</targetPath>
+            </overlay>
+          </overlays>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-clean-plugin</artifactId>
         <version>2.5</version>

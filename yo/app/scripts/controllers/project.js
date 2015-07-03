@@ -121,7 +121,12 @@ angular.module('hopsWorksApp')
             };
 
             self.goToService = function (service) {
-              $location.path('project/' + self.pId + '/' + service.toLowerCase());
+              if(service === "Zeppelin"){
+                window.open("http://localhost:8080/hopsworks/zeppelin");
+              }else{
+                $location.path('project/' + self.pId + '/' + service.toLowerCase());
+              }
+              
             };
 
             self.goToSpecificDataset = function (name) {
