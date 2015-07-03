@@ -40,7 +40,7 @@ angular.module('hopsWorksApp')
              * Get all datasets under the current project.
              * @returns {undefined}
              */
-            var getAll = function () {
+            self.getAll = function () {
               dataSetService.getAll().then(
                       function (success) {
                         self.datasets = success.data;
@@ -66,7 +66,7 @@ angular.module('hopsWorksApp')
               } else if (datasetName) {
                 newPath = datasetName;
               } else {
-                getAll();
+                self.getAll();
               }
               //Reset the selected file
               self.selected = null;
@@ -144,7 +144,7 @@ angular.module('hopsWorksApp')
               if (path) {
                 getDir(path);
               } else {
-                getAll();
+                self.getAll();
               }
             };
             load(currentDS);
