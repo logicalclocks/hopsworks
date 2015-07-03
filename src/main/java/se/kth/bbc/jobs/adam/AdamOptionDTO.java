@@ -110,6 +110,14 @@ public class AdamOptionDTO {
       this.value = value;
     }
   }
+  
+  public void setValue(boolean value){
+    if(!flag){
+      throw new IllegalStateException("Cannot set a boolean value for a String field.");
+    }else{
+      isSet = value;
+    }
+  }
 
   public AdamOption toAdamOption() {
     return new AdamOption(name, description, valueIsPath, flag, isOutputPath);

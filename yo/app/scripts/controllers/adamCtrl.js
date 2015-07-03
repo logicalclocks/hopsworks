@@ -5,9 +5,9 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('AdamCtrl', ['$scope','$routeParams','growl', 'JobHistoryService','$interval','AdamService', 'ModalService',
-          function ($scope, $routeParams, growl, JobHistoryService, $interval,AdamService, ModalService) {
-            
+        .controller('AdamCtrl', ['$scope', '$routeParams', 'growl', 'JobHistoryService', '$interval', 'AdamService', 'ModalService',
+          function ($scope, $routeParams, growl, JobHistoryService, $interval, AdamService, ModalService) {
+
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
             var self = this;
@@ -21,10 +21,22 @@ angular.module('hopsWorksApp')
             this.selectFileErrorMsg = "Please select a file or folder.";
             this.onFileSelected = function (path) {
               //Set the path in the arguments.
-              if(self.fileSelectionIsArgument){
-                self.selectedCommand.arguments[self.fileSelectionName].value = path;
-              }else{
-                self.selectedCommand.options[self.fileSelectionName].value = path;
+              if (self.fileSelectionIsArgument) {
+                var args = self.runConfig.selectedCommand.arguments;
+                var arg;
+                for(arg in args){
+                  if(args[arg]===self.fileSelectionName){
+                    self.runConfig.selectedCommand.arguments[arg].value = path;
+                  }
+                }
+              } else {
+                var opts = self.runConfig.selectedCommand.options;
+                var opt;
+                for(opt in opts){
+                  if(opts[opt]===self.fileSelectionName){
+                    self.runConfig.selectedCommand.options[opt].value = path;
+                  }
+                }
               }
               self.fileSelectionName = null;
             };
@@ -32,22 +44,45 @@ angular.module('hopsWorksApp')
             this.$interval = $interval;
             this.callExecute = function () {
               return AdamService.runJob(
-                      self.selectedCommand);
+                      self.projectId, self.runConfig);
             };
             this.onExecuteSuccess = function (success) {
-              self.selectedCommand = null;
+              self.runConfig = null;
             };
 
-            
+
             /*
              * Get all Spark job history objects for this project.
              */
-            this.getSparkHistory = function () {
+            this.getAdamHistory = function () {
               getHistory(this);
             };
 
-            this.getSparkHistory();
+            this.getAdamHistory();
+
+            /**
+             * Get a list of commands from the server.
+             * @returns {undefined}
+             */
+            this.getCommandList = function () {
+              AdamService.getCommandList(self.projectId).then(
+                      function (success) {
+                        self.commandList = success.data.commands;
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+              });
+            };
             
+            this.getCommandList();
+
+            /**
+             * Select a file from HDFS.
+             * @param {boolean} isArgument True if the file is to be used as an 
+             * argument, false if it serves as an option.
+             * @param {string} name The name of the argument or option for which 
+             * the file is selected.
+             * @returns {undefined}
+             */
             this.selectFile = function (isArgument, name) {
               self.fileSelectionIsArgument = isArgument;
               self.fileSelectionName = name;
@@ -62,11 +97,22 @@ angular.module('hopsWorksApp')
               selectJob(this, job);
             };
             
-            this.selectCommand = function(command) {
+            /**
+             * Select a command by sending the name to the server, gets an 
+             * AdamJobConfiguration back.
+             * @param {string} command
+             * @returns {undefined}
+             */
+            this.selectCommand = function () {
               self.fileSelectionIsArgument = null;
               self.fileSelectionName = null;
-              self.selectedCommand = command;
-            }
+              AdamService.getCommand(self.projectId, this.selectedCommand).then(
+                      function (success) {
+                        self.runConfig = success.data;
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+              });
+            };
 
             /**
              * Close the poller if the controller is destroyed.

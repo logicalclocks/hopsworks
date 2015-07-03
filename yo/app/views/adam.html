@@ -1,0 +1,184 @@
+<!-- HTML file for the Adam job running interface -->
+<link rel="stylesheet" href="styles/timeline.css">
+<link rel="stylesheet" href="styles/cuneiform.css">
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div id="wrapper" class="toggled" ng-controller="AdamCtrl as adamCtrl">
+    <div class="overlay"></div>
+
+    <div ng-include="'navProject.html'"></div>
+
+    <section>
+      <div class="content-wrapper">
+        <h3 id="projectBread" style="display: none;">
+          {{ projectCtrl.currentProject.projectName}} / Adam
+        </h3>
+
+
+        <!-- Page Content -->
+
+        <div class="widget-body col-md-4">
+          <h3> History </h3>
+          <div class="timeline clearfix">
+            <div class="mid-line"></div>
+
+            <div ng-repeat="job in adamCtrl.jobs">
+
+              <div class="right" ng-click="adamCtrl.selectJob(job)">
+                <div class="r-arrow"></div>
+                <div class="about-task">
+                  <div class="header"> {{job.name}}
+                    <small class="muted" ng-show="job.user">
+                      Run by {{job.user.fname + ' ' + job.user.lname}} on {{job.submissionTime}}
+                    </small>
+                  </div>
+                  <p class="no-margin">
+                    <span ng-show="job.state"> 
+                      State: {{job.state}} 
+                    </span>
+                    <span ng-show="job.executionDuration">
+                      Took {{job.executionDuration}}ms.
+                    </span>
+                    Logs:
+                  <ul>
+                    <li>
+                      <a ng-click="" ng-show="job.stdoutPath">
+                        {{job.stdoutPath}}
+                      </a>
+                    </li>
+                    <li>
+                      <a ng-click="" ng-show="job.stderrPath">
+                        {{job.stderrPath}}
+                      </a>
+                    </li>
+                  </ul>
+                  Results:
+                  <ul>
+                    <li ng-repeat="result in job.jobOutputFileCollection" 
+                        ng-show="job.jobOutputFileCollection">
+                      <a ng-click="">
+                        {{result.jobOutputFilePK.name}} 
+                      </a>
+                    </li>
+                  </ul>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="widget-body col-md-4">
+          <div class="timeline clearfix">
+
+            <h3> Job </h3>
+            <select ng-change="adamCtrl.selectCommand()" 
+                    ng-model="adamCtrl.selectedCommand" 
+                    ng-options="command as command for command in adamCtrl.commandList">
+            </select>
+            <div ng-show="adamCtrl.runConfig">
+              {{adamCtrl.runConfig.selectedCommand.description}}
+            </div>
+            
+            <div ng-show="adamCtrl.runConfig">
+              <h3>Arguments</h3>
+              <table>
+                <tr ng-repeat="arg in adamCtrl.runConfig.selectedCommand.arguments">
+                  <td class="firstColumn">
+                    {{arg.name}} <span ng-show="arg.required">*</span> 
+                  </td>
+                  <td class="secondColumn">
+                    <input type="text" ng-model="arg.value" ng-hide="arg.path && !arg.value">
+                    <button ng-show="arg.path && !arg.value" ng-click="adamCtrl.selectFile(true,arg.name)">Select</button>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            
+            <div ng-show="adamCtrl.runConfig">
+              <h3>Options</h3>
+              <table>
+                <tr ng-repeat="opt in adamCtrl.runConfig.selectedCommand.options">
+                  <td class="firstColumn">
+                    {{opt.name}}
+                  </td>
+                  <td class="secondColumn">
+                    <input type="text" ng-model="opt.value" ng-hide="opt.valueIsPath && !opt.value">
+                    <button ng-show="opt.valueIsPath && !opt.value" ng-click="adamCtrl.selectFile(false,opt.name)">Select</button>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <button ng-click="adamCtrl.execute()">
+              <span>Execute</span>
+            </button>
+
+            <div ng-show="adamCtrl.runConfig">
+              <h3>Job configuration</h3>
+              <table>
+                <tr>
+                  <td class="firstColumn">Job name</td>
+                  <td class="secondColumn">
+                    <input type="text" ng-model="adamCtrl.runConfig.appName">
+                  </td>
+                </tr>
+                <tr>
+                  <td class="firstColumn">Application master memory</td>
+                  <td class="secondColumn">
+                    <input type="number" ng-model="adamCtrl.runConfig.amMemory" min="0">
+                  </td>
+                </tr>
+                <tr>
+                  <td class="firstColumn">Application master vcores</td>
+                  <td class="secondColumn">
+                    <input type="number" ng-model="adamCtrl.runConfig.amVCores" min="1">
+                  </td>
+                </tr>
+                <tr>
+                  <td class="firstColumn">ResourceManager queue</td>
+                  <td class="secondColumn">
+                    <input type="text" ng-model="adamCtrl.runConfig.amQueue">
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="widget-body col-md-4">
+          <div class="timeline clearfix">
+
+            <h3>Selected job</h3>
+            <div ng-show="adamCtrl.job">
+              <div class="about-task">
+                <div class="header"> {{adamCtrl.job.name}}
+                  <small class="muted" ng-show="adamCtrl.job.user">Run by {{adamCtrl.job.user.fname + ' ' + adamCtrl.job.user.lname}} on {{adamCtrl.job.submissionTime}}
+                  </small>
+                </div>
+                <p class="no-margin">
+                  <span ng-show="adamCtrl.job.state">State: {{adamCtrl.job.state}}</span>
+                  <span ng-show="adamCtrl.job.executionDuration">Took {{adamCtrl.job.executionDuration}}ms.</span>
+                  Logs:
+                <ul>
+                  <li><a ng-click="" ng-show="adamCtrl.job.stdoutPath">{{adamCtrl.job.stdoutPath}}</a></li>
+                  <li><a ng-click="" ng-show="adamCtrl.job.stderrPath">{{adamCtrl.job.stderrPath}}</a></li>
+                </ul>
+                Results:
+                <ul>
+                  <li ng-repeat="result in adamCtrl.job.jobOutputFileCollection" ng-show="adamCtrl.job.jobOutputFileCollection"><a ng-click="">{{result.jobOutputFilePK.name}} </a></li>
+                </ul>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /#page-content-wrapper -->
+      </div>
+    </section>
+  </div>
+  <!-- /#wrapper -->
+</div>

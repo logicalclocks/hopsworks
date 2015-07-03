@@ -16,6 +16,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.adam.AdamCommand;
 import se.kth.bbc.jobs.adam.AdamCommandDTO;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
@@ -56,8 +58,9 @@ public class AdamService {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response getAdamCommands(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    String[] commands = AdamCommandDTO.getAllCommandNames();
-    return Response.ok(commands).build();
+    CommandListWrapper wrap = new CommandListWrapper();
+    wrap.list = AdamCommandDTO.getAllCommandNames();
+    return Response.ok(wrap).build();
   }
     
   /**
@@ -104,10 +107,22 @@ public class AdamService {
       JobHistory jh = adamController.startJob(config, req.getUserPrincipal().
               getName(), projectId);
       return Response.ok(jh).build();
-    } catch (IOException ex) {
+    } catch (IOException|IllegalStateException|IllegalArgumentException ex) {
       logger.log(Level.SEVERE, "Error running ADAM job.", ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error running job: " + ex.getLocalizedMessage());
+    }
+  }
+  
+  @XmlRootElement(name="commands")
+  private static class CommandListWrapper{
+    @XmlElement(name="commands")
+    String[] list;
+
+    public CommandListWrapper() {
+    }
+    public void setList(String[] array){
+      this.list = array;
     }
   }
 }
