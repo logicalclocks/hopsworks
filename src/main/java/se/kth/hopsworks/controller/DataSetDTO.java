@@ -59,9 +59,8 @@ public class DataSetDTO {
 
   @Override
   public String toString() {
-    return "DataSetDTO{" + "template=" + this.template + "name=" + name
-            + ", description=" + description + ", searchable=" + searchable
-            + '}';
+    return "DataSetDTO{" + "name=" + name + ", description=" + description
+            + ", searchable=" + searchable + ", template=" + this.template + '}';
   }
 
 }
