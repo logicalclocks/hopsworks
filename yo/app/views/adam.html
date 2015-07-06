@@ -106,8 +106,9 @@
                     {{opt.name}}
                   </td>
                   <td class="secondColumn">
-                    <input type="text" ng-model="adamCtrl.options[opt.name]" ng-hide="opt.valueIsPath && !adamCtrl.options[opt.name]">
+                    <input type="text" ng-model="adamCtrl.options[opt.name]" ng-hide="(opt.valueIsPath && !adamCtrl.options[opt.name]) || opt.flag">
                     <button ng-show="opt.valueIsPath && !adamCtrl.options[opt.name]" ng-click="adamCtrl.selectFile(false,opt.name)">Select</button>
+                    <input type="checkbox" ng-model="adamCtrl.options[opt.name]" ng-show="opt.flag">
                   </td>
                 </tr>
               </table>
