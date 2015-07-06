@@ -11,6 +11,8 @@ angular.module('hopsWorksApp')
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
             var self = this;
+            self.arguments = [];
+            self.options = [];
             this.JobHistoryService = JobHistoryService;
             this.projectId = $routeParams.projectID;
             this.jobType = 'ADAM';
@@ -22,21 +24,9 @@ angular.module('hopsWorksApp')
             this.onFileSelected = function (path) {
               //Set the path in the arguments.
               if (self.fileSelectionIsArgument) {
-                var args = self.runConfig.selectedCommand.arguments;
-                var arg;
-                for(arg in args){
-                  if(args[arg]===self.fileSelectionName){
-                    self.runConfig.selectedCommand.arguments[arg].value = path;
-                  }
-                }
+                self.arguments[self.fileSelectionName] = path;
               } else {
-                var opts = self.runConfig.selectedCommand.options;
-                var opt;
-                for(opt in opts){
-                  if(opts[opt]===self.fileSelectionName){
-                    self.runConfig.selectedCommand.options[opt].value = path;
-                  }
-                }
+                self.options[self.fileSelectionName] = path;
               }
               self.fileSelectionName = null;
             };
@@ -48,6 +38,8 @@ angular.module('hopsWorksApp')
             };
             this.onExecuteSuccess = function (success) {
               self.runConfig = null;
+              self.arguments = [];
+              self.options = [];
             };
 
 
@@ -90,6 +82,37 @@ angular.module('hopsWorksApp')
             };
 
             this.execute = function () {
+              //First: fill in the runConfig
+              for( var x in this.runConfig.selectedCommand.arguments){
+                var name = this.runConfig.selectedCommand.arguments[x].name;
+                if(this.arguments[name]){
+                  this.runConfig.selectedCommand.arguments[x].value = this.arguments[name];
+                }
+              }
+              for( var x in this.runConfig.selectedCommand.options){
+                var name = this.runConfig.selectedCommand.options[x].name;
+                if(this.options[name]){
+                  this.runConfig.selectedCommand.options[x].value = this.options[name];
+                }
+              }
+              //if (self.fileSelectionIsArgument) {
+//                var args = self.runConfig.selectedCommand.arguments;
+//                var arg;
+//                for(arg in args){
+//                  if(args[arg]===self.fileSelectionName){
+//                    self.runConfig.selectedCommand.arguments[arg].value = path;
+//                  }
+//                }
+               // self.arguments[self.fileSelectionName] = path;
+             // } else {
+//                var opts = self.runConfig.selectedCommand.options;
+//                var opt;
+//                for(opt in opts){
+//                  if(opts[opt]===self.fileSelectionName){
+//                    self.runConfig.selectedCommand.options[opt].value = path;
+//                  }
+//                }
+             //   self.options[self.fileSelectionName] = path;
               execute(this);
             };
 

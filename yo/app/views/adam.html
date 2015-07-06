@@ -91,8 +91,8 @@
                     {{arg.name}} <span ng-show="arg.required">*</span> 
                   </td>
                   <td class="secondColumn">
-                    <input type="text" ng-model="arg.value" ng-hide="arg.path && !arg.value">
-                    <button ng-show="arg.path && !arg.value" ng-click="adamCtrl.selectFile(true,arg.name)">Select</button>
+                    <input type="text" ng-model="adamCtrl.arguments[arg.name]" ng-hide="arg.path && !adamCtrl.arguments[arg.name]">
+                    <button ng-show="arg.path && !adamCtrl.arguments[arg.name]" ng-click="adamCtrl.selectFile(true,arg.name)">Select</button>
                   </td>
                 </tr>
               </table>
@@ -106,8 +106,8 @@
                     {{opt.name}}
                   </td>
                   <td class="secondColumn">
-                    <input type="text" ng-model="opt.value" ng-hide="opt.valueIsPath && !opt.value">
-                    <button ng-show="opt.valueIsPath && !opt.value" ng-click="adamCtrl.selectFile(false,opt.name)">Select</button>
+                    <input type="text" ng-model="adamCtrl.options[opt.name]" ng-hide="opt.valueIsPath && !adamCtrl.options[opt.name]">
+                    <button ng-show="opt.valueIsPath && !adamCtrl.options[opt.name]" ng-click="adamCtrl.selectFile(false,opt.name)">Select</button>
                   </td>
                 </tr>
               </table>
