@@ -22,19 +22,26 @@ import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 import org.apache.zeppelin.notebook.JobListenerFactory;
 import org.apache.zeppelin.notebook.Note;
-import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.Paragraph;
 import org.apache.zeppelin.scheduler.Job;
 import org.apache.zeppelin.scheduler.JobListener;
 import org.apache.zeppelin.scheduler.Job.Status;
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
+import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import se.kth.hopsworks.zeppelin.socket.Message.OP;
 import org.quartz.SchedulerException;
-
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
+import java.lang.reflect.Constructor;
 import java.util.Set;
+import javax.ejb.EJB;
 import javax.websocket.EndpointConfig;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
+import se.kth.bbc.project.ProjectTeamFacade;
+import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
+import se.kth.hopsworks.zeppelin.notebook.Notebook;
 
 /**
  * Zeppelin websocket service.
@@ -51,13 +58,24 @@ public class NotebookServer implements
   private final ZeppelinSingleton zeppelin = ZeppelinSingleton.SINGLETON;
 
   Gson gson = new Gson();
-  private static final Map<String, List<Session>> noteSocketMap = new HashMap<>();
+  private static final Map<String, List<Session>> noteSocketMap
+          = new HashMap<>();
   private static final List<Session> connectedSockets = new LinkedList<>();
+  private String sender;
+  private Project project;
+  private String userRole;
+  private Notebook notebook;
+  private Session session;
+  @EJB
+  private ProjectTeamFacade projectTeamBean;
+  @EJB
+  private ProjectFacade projectBean;
 
-  public NotebookServer() {}
-  
+  public NotebookServer() {
+  }
+
   private Notebook notebook() {
-    return zeppelin.getNotebook();
+    return this.notebook;
   }
 
   @OnOpen
@@ -65,9 +83,16 @@ public class NotebookServer implements
     logger.log(Level.INFO, "Create zeppelin websocket on port {0}:{1}",
             new Object[]{conn.getRequestURI().getHost(), conn.
               getRequestURI().getPort()});
+    this.session = conn;
+    this.sender = (String) config.getUserProperties().get("user");
+    this.project = getProject((String) config.getUserProperties().get(
+            "projectID"));
+    authenticateUser(conn, this.project, this.sender);
+    this.notebook = setupNotebook(this.project);
     synchronized (connectedSockets) {
       connectedSockets.add(conn);
     }
+    this.session.getUserProperties().put("projectID", this.project.getId());
   }
 
   @OnMessage
@@ -81,7 +106,7 @@ public class NotebookServer implements
        */
       switch (messagereceived.op) {
         case LIST_NOTES:
-          broadcastNoteList();
+          sendNoteList(conn);
           break;
         case GET_NOTE:
           sendNote(conn, notebook, messagereceived);
@@ -123,7 +148,7 @@ public class NotebookServer implements
           angularObjectUpdated(conn, notebook, messagereceived);
           break;
         default:
-          broadcastNoteList();
+          sendNoteList(conn);
           break;
       }
     } catch (Exception e) {
@@ -228,6 +253,7 @@ public class NotebookServer implements
     }
   }
 
+  //broadcasts to sockets in the noteId list
   private void broadcast(String noteId, Message m) {
     synchronized (noteSocketMap) {
       List<Session> socketLists = noteSocketMap.get(noteId);
@@ -247,11 +273,15 @@ public class NotebookServer implements
     }
   }
 
+  //broadcast to every one in the same project as this.project.id
   private void broadcastAll(Message m) {
     synchronized (connectedSockets) {
       for (Session conn : connectedSockets) {
         try {
-          conn.getBasicRemote().sendText(serializeMessage(m));
+          if (conn.getUserProperties().get("projectID").equals(
+                  this.project.getId())) {
+            conn.getBasicRemote().sendText(serializeMessage(m));
+         }
         } catch (IOException ex) {
           logger.log(Level.SEVERE, "Unable to send message " + m, ex);
         }
@@ -259,13 +289,31 @@ public class NotebookServer implements
     }
   }
 
+  private void sendNoteList(Session conn) {
+    Notebook notebook = notebook();
+    List<Note> notes = notebook.getAllNotes();
+    List<Map<String, String>> notesInfo = new LinkedList<>();
+    for (Note note : notes) {
+      Map<String, String> info = new HashMap<>();
+      info.put("id", note.id());
+      info.put("name", note.getName());
+      notesInfo.add(info);
+    }
+    Message m = new Message(OP.NOTES_INFO).put("notes", notesInfo);
+    try {
+      conn.getBasicRemote().sendText(serializeMessage(m));
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Unable to send message " + m, ex);
+    }
+  }
+  
   private void broadcastNote(Note note) {
     broadcast(note.id(), new Message(OP.NOTE).put("note", note));
   }
 
   private void broadcastNoteList() {
     Notebook notebook = notebook();
-    List<Note> notes = notebook.getAllNotes();
+    List<Note> notes = notebook.getAllNotes();//returns notes in project
     List<Map<String, String>> notesInfo = new LinkedList<>();
     for (Note note : notes) {
       Map<String, String> info = new HashMap<>();
@@ -281,7 +329,7 @@ public class NotebookServer implements
     if (noteId == null) {
       return;
     }
-    Note note = notebook.getNote(noteId);
+    Note note = notebook.getNoteInProject(noteId);
 
     if (note != null) {
       addConnectionToNote(note.id(), conn);
@@ -308,7 +356,7 @@ public class NotebookServer implements
     if (config == null) {
       return;
     }
-    Note note = notebook.getNote(noteId);
+    Note note = notebook.getNoteInProject(noteId);
     if (note != null) {
       boolean cronUpdated = isCronUpdated(config, note.getConfig());
       note.setName(name);
@@ -348,11 +396,14 @@ public class NotebookServer implements
 
   private void removeNote(Session conn, Notebook notebook, Message fromMessage)
           throws IOException {
+    if (!this.userRole.equals(AllowedRoles.DATA_OWNER)) {
+      return;
+    }
     String noteId = (String) fromMessage.get("id");
     if (noteId == null) {
       return;
     }
-    Note note = notebook.getNote(noteId);
+    Note note = notebook.getNoteInProject(noteId);
     note.unpersist();
     notebook.removeNote(noteId);
     removeNote(noteId);
@@ -368,7 +419,7 @@ public class NotebookServer implements
     }
     Map<String, Object> params = (Map<String, Object>) fromMessage.get("params");
     Map<String, Object> config = (Map<String, Object>) fromMessage.get("config");
-    final Note note = notebook.getNote(getOpenNoteId(conn));
+    final Note note = notebook.getNoteInProject(getOpenNoteId(conn));
     Paragraph p = note.getParagraph(paragraphId);
     p.settings.setParams(params);
     p.setConfig(config);
@@ -381,11 +432,14 @@ public class NotebookServer implements
   private void removeParagraph(Session conn, Notebook notebook,
           Message fromMessage)
           throws IOException {
+    if (!this.userRole.equals(AllowedRoles.DATA_OWNER)) {
+      return;
+    }
     final String paragraphId = (String) fromMessage.get("id");
     if (paragraphId == null) {
       return;
     }
-    final Note note = notebook.getNote(getOpenNoteId(conn));
+    final Note note = notebook.getNoteInProject(getOpenNoteId(conn));
     /**
      * We dont want to remove the last paragraph
      */
@@ -411,7 +465,7 @@ public class NotebookServer implements
       return;
     }
 
-    final Note note = notebook.getNote(getOpenNoteId(conn));
+    final Note note = notebook.getNoteInProject(getOpenNoteId(conn));
     List<String> candidates = note.completion(paragraphId, buffer, cursor);
     resp.put("completions", candidates);
     try {
@@ -436,7 +490,7 @@ public class NotebookServer implements
     Object varValue = fromMessage.get("value");
 
     // propagate change to (Remote) AngularObjectRegistry
-    Note note = notebook.getNote(noteId);
+    Note note = notebook.getNoteInProject(noteId);
     if (note != null) {
       List<InterpreterSetting> settings = note.getNoteReplLoader().
               getInterpreterSettings();
@@ -493,7 +547,7 @@ public class NotebookServer implements
 
     final int newIndex = (int) Double.parseDouble(fromMessage.get("index").
             toString());
-    final Note note = notebook.getNote(getOpenNoteId(conn));
+    final Note note = notebook.getNoteInProject(getOpenNoteId(conn));
     note.moveParagraph(paragraphId, newIndex);
     note.persist();
     broadcastNote(note);
@@ -505,7 +559,7 @@ public class NotebookServer implements
     final int index = (int) Double.parseDouble(fromMessage.get("index").
             toString());
 
-    final Note note = notebook.getNote(getOpenNoteId(conn));
+    final Note note = notebook.getNoteInProject(getOpenNoteId(conn));
     note.insertParagraph(index);
     note.persist();
     broadcastNote(note);
@@ -519,7 +573,7 @@ public class NotebookServer implements
       return;
     }
 
-    final Note note = notebook.getNote(getOpenNoteId(conn));
+    final Note note = notebook.getNoteInProject(getOpenNoteId(conn));
     Paragraph p = note.getParagraph(paragraphId);
     p.abort();
   }
@@ -531,7 +585,7 @@ public class NotebookServer implements
     if (paragraphId == null) {
       return;
     }
-    final Note note = notebook.getNote(getOpenNoteId(conn));
+    final Note note = notebook.getNoteInProject(getOpenNoteId(conn));
     Paragraph p = note.getParagraph(paragraphId);
     String text = (String) fromMessage.get("paragraph");
     p.setText(text);
@@ -683,5 +737,52 @@ public class NotebookServer implements
         }
       }
     }
+  }
+
+  private Notebook setupNotebook(Project project) {
+    ZeppelinConfiguration conf = zeppelin.getConf();
+    Class<?> notebookStorageClass;
+    NotebookRepo notebookRepo;
+    Notebook notebook = null;
+    try {
+      notebookStorageClass = Class.forName(conf.getString(
+              ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE));
+      Constructor<?> constructor = notebookStorageClass.getConstructor(
+              ZeppelinConfiguration.class, Project.class);
+      notebookRepo = (NotebookRepo) constructor.newInstance(conf, project);
+
+      notebook = new Notebook(notebookRepo);
+    } catch (Exception ex) {
+      logger.log(Level.SEVERE, "Could not instantiate notebook", ex);
+    }
+
+    return notebook;
+  }
+
+  private void authenticateUser(Session session, Project project, String user) {
+    //returns the user role in project. Null if the user has no role in project
+    this.userRole = projectTeamBean.findCurrentRole(project, user);
+    logger.log(Level.SEVERE, "User role in this projuct {0}", this.userRole);
+
+    if (this.userRole == null) {
+      try {
+        session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY,
+                "You do not have a role in this project."));
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, null, ex);
+      }
+    }
+  }
+
+  private Project getProject(String projectId) {
+    Integer pId;
+    Project proj;
+    try {
+      pId = Integer.valueOf(projectId);
+      proj = projectBean.find(pId);
+    } catch (NumberFormatException e) {
+      return null;
+    }
+    return proj;
   }
 }

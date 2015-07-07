@@ -13,7 +13,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.zeppelin.interpreter.InterpreterSetting;
-import org.apache.zeppelin.notebook.Notebook;
 import se.kth.hopsworks.zeppelin.rest.message.InterpreterSettingListForNoteBind;
 import se.kth.hopsworks.zeppelin.server.JsonResponse;
 import org.slf4j.Logger;
@@ -21,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import se.kth.hopsworks.zeppelin.notebook.Notebook;
 import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
 
 /**
@@ -32,11 +32,10 @@ public class NotebookRestApi {
 
   Logger logger = LoggerFactory.getLogger(NotebookRestApi.class);
   Gson gson = new Gson();
-  private Notebook notebook;
-  private final ZeppelinSingleton zeppelin = ZeppelinSingleton.SINGLETON;
+  private final Notebook notebook;
 
   public NotebookRestApi() {
-    this.notebook = zeppelin.getNotebook();
+    this.notebook = new Notebook();
   }
 
   public NotebookRestApi(Notebook notebook) {

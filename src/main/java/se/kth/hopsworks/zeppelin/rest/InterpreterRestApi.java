@@ -51,7 +51,6 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
  */
 @Path("/interpreter")
 @Produces("application/json")
-//@Api(value = "/interpreter", description = "Zeppelin Interpreter REST API")
 public class InterpreterRestApi {
 
   Logger logger = LoggerFactory.getLogger(InterpreterRestApi.class);
@@ -76,8 +75,6 @@ public class InterpreterRestApi {
    */
   @GET
   @Path("setting")
-  //@ApiOperation(httpMethod = "GET", value = "List all interpreter setting")
-  //@ApiResponses(value = {@ApiResponse(code = 500, message = "When something goes wrong")})
   public Response listSettings() {
     List<InterpreterSetting> interpreterSettings;
     interpreterSettings = interpreterFactory.get();
@@ -94,8 +91,6 @@ public class InterpreterRestApi {
    */
   @POST
   @Path("setting")
-  //@ApiOperation(httpMethod = "GET", value = "Create new interpreter setting")
-  //@ApiResponses(value = {@ApiResponse(code = 201, message = "On success")})
   public Response newSettings(String message) throws InterpreterException,
           IOException {
     NewInterpreterSettingRequest request = gson.fromJson(message,
@@ -133,8 +128,6 @@ public class InterpreterRestApi {
 
   @DELETE
   @Path("setting/{settingId}")
-  //@ApiOperation(httpMethod = "GET", value = "Remove interpreter setting")
-  //@ApiResponses(value = {@ApiResponse(code = 500, message = "When something goes wrong")})
   public Response removeSetting(@PathParam("settingId") String settingId) throws
           IOException {
     logger.info("Remove interpreterSetting {}", settingId);
@@ -144,9 +137,6 @@ public class InterpreterRestApi {
 
   @PUT
   @Path("setting/restart/{settingId}")
-  //@ApiOperation(httpMethod = "GET", value = "restart interpreter setting")
-  //@ApiResponses(value = {
-  //@ApiResponse(code = 404, message = "Not found")})
   public Response restartSetting(@PathParam("settingId") String settingId) {
     logger.info("Restart interpreterSetting {}", settingId);
     try {

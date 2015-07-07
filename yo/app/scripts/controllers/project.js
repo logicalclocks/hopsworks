@@ -2,8 +2,8 @@
 
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams'
-                  , 'growl', 'ProjectService', 'ModalService', 'ActivityService',
-          function ($scope, $modalStack, $location, $routeParams, growl, ProjectService, ModalService, ActivityService) {
+                  , 'growl', 'ProjectService', 'ModalService', 'ActivityService','$cookies',
+          function ($scope, $modalStack, $location, $routeParams, growl, ProjectService, ModalService, ActivityService, $cookies) {
 
             var self = this;
             self.currentProject = [];
@@ -36,7 +36,7 @@ angular.module('hopsWorksApp')
                           var index = self.projectTypes.indexOf(entry.toUpperCase());
                           self.projectTypes.splice(index, 1);
                         });
-
+                        $cookies.projectID = self.pId;
                       }, function (error) {
                 $location.path('/');
               }
