@@ -264,12 +264,11 @@ public class DataSetService {
             json).build();
 
   }
-  
 
   @Path("upload/{path: .+}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public UploadService upload(
-          @PathParam("path") String path) throws AppException{
+          @PathParam("path") String path) throws AppException {
     String uploadPath;
     if (path == null) {
       path = "";
@@ -280,7 +279,7 @@ public class DataSetService {
       uploadPath = this.path + path + File.separator;
     }
     this.uploader.setPath(uploadPath);
-    
+
     return this.uploader;
   }
 }

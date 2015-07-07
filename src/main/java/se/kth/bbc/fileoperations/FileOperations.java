@@ -52,15 +52,17 @@ public class FileOperations {
     Path location = new Path(path);
     return fsOps.mkdir(location);
   }
-  
+
   /**
    * Copy a file from the local path to the HDFS destination.
+   * <p>
    * @param deleteSource If true, deletes the source file after copying.
    * @param src
    * @param destination
-   * @throws IOException 
+   * @throws IOException
    */
-  public void copyToHDFSFromLocal(boolean deleteSource, String src, String destination)
+  public void copyToHDFSFromLocal(boolean deleteSource, String src,
+          String destination)
           throws IOException {
     //Make sure the directories exist
     String dirs = Utils.getDirectoryPart(destination);
@@ -98,9 +100,10 @@ public class FileOperations {
 
   /**
    * Get the contents of the file at the given path.
+   * <p>
    * @param path
    * @return
-   * @throws IOException 
+   * @throws IOException
    */
   public String cat(String path) throws IOException {
     Path p = new Path(path);
@@ -109,9 +112,10 @@ public class FileOperations {
 
   /**
    * Move the file from the source path to the destination path.
+   * <p>
    * @param source
    * @param destination
-   * @throws IOException 
+   * @throws IOException
    */
   public void renameInHdfs(String source, String destination) throws IOException {
     //Check if source and destination are the same
@@ -142,8 +146,9 @@ public class FileOperations {
 
   /**
    * Check if the inode at the given path is a directory.
+   * <p>
    * @param path
-   * @return 
+   * @return
    */
   public boolean isDir(String path) {
     Inode i = inodes.getInodeAtPath(path);
@@ -174,9 +179,10 @@ public class FileOperations {
 
   /**
    * Copy from HDFS to the local file system.
+   * <p>
    * @param hdfsPath
    * @param localPath
-   * @throws IOException 
+   * @throws IOException
    */
   public void copyToLocal(String hdfsPath, String localPath) throws IOException {
     if (!hdfsPath.startsWith("hdfs:")) {
@@ -190,9 +196,10 @@ public class FileOperations {
 
   /**
    * Check if the path exists in HDFS.
+   * <p>
    * @param path
    * @return
-   * @throws IOException 
+   * @throws IOException
    */
   public boolean exists(String path) throws IOException {
     return inodes.existsPath(path);
