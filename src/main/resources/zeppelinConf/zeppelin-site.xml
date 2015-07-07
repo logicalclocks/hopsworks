@@ -61,7 +61,9 @@
 
 <property>
   <name>zeppelin.notebook.storage</name>
-  <value>org.apache.zeppelin.notebook.repo.VFSNotebookRepo</value>
+  <!--use "se.kth.hopsworks.zeppelin.notebook.repo.FSNotebookRepo" for file system -->
+  <!--use "se.kth.hopsworks.zeppelin.notebook.repo.NDBNotebookRepo" for database -->
+  <value>se.kth.hopsworks.zeppelin.notebook.repo.FSNotebookRepo</value>
   <description>notebook persistence layer implementation</description>
 </property>
 
