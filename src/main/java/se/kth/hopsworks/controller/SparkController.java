@@ -80,9 +80,8 @@ public class SparkController {
     runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
-    
-    //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
 
+    //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
     YarnRunner r;
     try {
       r = runnerbuilder.getYarnRunner();

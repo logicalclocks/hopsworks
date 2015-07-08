@@ -110,7 +110,7 @@ public class SparkYarnRunnerBuilder {
       amargs.append(" --arg ").append(s);
     }
     builder.amArgs(amargs.toString());
-    
+
     //Set up Yarn properties
     builder.amMemory(driverMemory);
     builder.amVCores(driverCores);
