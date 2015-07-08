@@ -21,7 +21,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author Ermias<ermiasg@kth.se>
  */
 @Entity
-@Table(name = "vangelis_kthfs.bbc_group")
+@Table(name = "hopsworks_kthfs.bbc_group")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "BbcGroup.findAll",

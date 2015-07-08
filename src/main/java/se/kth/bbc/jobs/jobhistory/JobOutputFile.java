@@ -21,7 +21,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author stig
  */
 @Entity
-@Table(name = "vangelis_kthfs.job_output_files")
+@Table(name = "hopsworks_kthfs.job_output_files")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "JobOutputFile.findAll",

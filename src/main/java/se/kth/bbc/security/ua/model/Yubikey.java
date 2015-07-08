@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "vangelis_kthfs.yubikey")
+@Table(name = "hopsworks_kthfs.yubikey")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Yubikey.findAll",

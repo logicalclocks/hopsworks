@@ -33,7 +33,7 @@ import se.kth.bbc.security.ua.model.User;
  * @author roshan
  */
 @Entity
-@Table(name = "vangelis_kthfs.project")
+@Table(name = "hopsworks_kthfs.project")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Project.findAll",

@@ -45,7 +45,7 @@ public class UserFacade extends AbstractFacade<Users> {
   }
 
   public List<Users> findAllUsers() {
-    Query query = em.createNativeQuery("SELECT * FROM vangelis_kthfs.users",
+    Query query = em.createNativeQuery("SELECT * FROM hopsworks_kthfs.users",
             Users.class);
     return query.getResultList();
   }
@@ -53,7 +53,7 @@ public class UserFacade extends AbstractFacade<Users> {
   public List<Users> filterUsersBasedOnProject(String name) {
 
     Query query = em.createNativeQuery(
-            "SELECT * FROM vangelis_kthfs.users WHERE email NOT IN (SELECT team_member FROM vangelis_kthfs.ProjectTeam WHERE name=?)",
+            "SELECT * FROM hopsworks_kthfs.users WHERE email NOT IN (SELECT team_member FROM hopsworks_kthfs.ProjectTeam WHERE name=?)",
             Users.class).setParameter(1, name);
     return query.getResultList();
   }
@@ -65,7 +65,7 @@ public class UserFacade extends AbstractFacade<Users> {
   public int lastUserID() {
 
     Query query = em.createNativeQuery(
-            "SELECT MAX(p.uid) FROM vangelis_kthfs.users p");
+            "SELECT MAX(p.uid) FROM hopsworks_kthfs.users p");
     Object obj = query.getSingleResult();
 
     if (obj == null) {

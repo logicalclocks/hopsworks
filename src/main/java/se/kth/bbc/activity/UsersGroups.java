@@ -17,7 +17,7 @@ import se.kth.bbc.security.ua.model.User;
  */
 @Entity
 
-@Table(name = "vangelis_kthfs.users_groups")
+@Table(name = "hopsworks_kthfs.users_groups")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "UsersGroups.findAll",

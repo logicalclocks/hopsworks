@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "vangelis_kthfs.people_group")
+@Table(name = "hopsworks_kthfs.people_group")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "PeopleGroup.findAll",
