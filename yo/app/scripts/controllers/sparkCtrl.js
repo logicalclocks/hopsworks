@@ -5,9 +5,9 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('SparkCtrl', ['$scope','$routeParams','growl', 'JobHistoryService','$interval','SparkService', 'ModalService',
-          function ($scope, $routeParams, growl, JobHistoryService, $interval,SparkService, ModalService) {
-            
+        .controller('SparkCtrl', ['$scope', '$routeParams', 'growl', 'JobHistoryService', '$interval', 'SparkService', 'ModalService',
+          function ($scope, $routeParams, growl, JobHistoryService, $interval, SparkService, ModalService) {
+
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
             var self = this;
@@ -40,7 +40,7 @@ angular.module('hopsWorksApp')
               self.selectedJar = null;
             };
 
-            
+
             /*
              * Get all Spark job history objects for this project.
              */
@@ -49,7 +49,7 @@ angular.module('hopsWorksApp')
             };
 
             this.getSparkHistory();
-            
+
             this.selectFile = function () {
               selectFile(this);
             };

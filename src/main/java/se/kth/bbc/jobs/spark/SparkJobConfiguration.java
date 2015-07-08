@@ -16,6 +16,10 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String mainClass;
   private String args;
 
+  private int numberOfExecutors = 1;
+  private int executorCores = 1;
+  private String executorMemory = "1g";
+
   public String getJarPath() {
     return jarPath;
   }
@@ -53,6 +57,46 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
    */
   public void setArgs(String args) {
     this.args = args;
+  }
+
+  public int getNumberOfExecutors() {
+    return numberOfExecutors;
+  }
+
+  /**
+   * Set the number of executors to be requested for this job.
+   * <p>
+   * @param numberOfExecutors
+   */
+  public void setNumberOfExecutors(int numberOfExecutors) {
+    this.numberOfExecutors = numberOfExecutors;
+  }
+
+  public int getExecutorCores() {
+    return executorCores;
+  }
+
+  /**
+   * Set the number of cores to be requested for each executor.
+   * <p>
+   * @param executorCores
+   */
+  public void setExecutorCores(int executorCores) {
+    this.executorCores = executorCores;
+  }
+
+  public String getExecutorMemory() {
+    return executorMemory;
+  }
+
+  /**
+   * Set the memory requested for each executor. The given string should have
+   * the form of a number followed by a 'm' or 'g' signifying the metric.
+   * <p>
+   * @param executorMemory
+   */
+  public void setExecutorMemory(String executorMemory) {
+    this.executorMemory = executorMemory;
   }
 
 }

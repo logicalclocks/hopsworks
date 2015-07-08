@@ -30,7 +30,9 @@ public class SparkYarnRunnerBuilder {
   private int numberOfExecutors = 1;
   private int executorCores = 1;
   private String executorMemory = "512m";
-  private String driverMemory = "1024m";
+  private int driverMemory = 1024; // in MB
+  private int driverCores = 1;
+  private String driverQueue;
   private final Map<String, String> envVars = new HashMap<>();
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
@@ -108,6 +110,11 @@ public class SparkYarnRunnerBuilder {
       amargs.append(" --arg ").append(s);
     }
     builder.amArgs(amargs.toString());
+
+    //Set up Yarn properties
+    builder.amMemory(driverMemory);
+    builder.amVCores(driverCores);
+    builder.amQueue(driverQueue);
 
     //Set app name
     builder.appName(jobName);
@@ -193,23 +200,56 @@ public class SparkYarnRunnerBuilder {
     return this;
   }
 
+  /**
+   * Set the memory requested for each executor. The given string should have
+   * the form of a number followed by a 'm' or 'g' signifying the metric.
+   * <p>
+   * @param memory
+   * @return
+   */
+  public SparkYarnRunnerBuilder setExecutorMemory(String memory) {
+    memory = memory.toLowerCase();
+    if (!memory.endsWith("m") && !memory.endsWith("g")) {
+      throw new IllegalArgumentException(
+              "Memory string does not follow the necessary format.");
+    } else {
+      String memnum = memory.substring(0, memory.length() - 1);
+      try {
+        Integer.parseInt(memnum);
+      } catch (NumberFormatException e) {
+        throw new IllegalArgumentException(
+                "Memory string does not follow the necessary format.", e);
+      }
+    }
+    this.executorMemory = memory;
+    return this;
+  }
+
   public SparkYarnRunnerBuilder setDriverMemoryMB(int driverMemoryMB) {
     if (driverMemoryMB < 1) {
       throw new IllegalArgumentException(
               "Driver memory must be greater than zero.");
     }
-    this.driverMemory = "" + driverMemory + "m";
+    this.driverMemory = driverMemoryMB;
     return this;
   }
 
-  public SparkYarnRunnerBuilder setDriverMemoryGB(float driverMemoryGB) {
+  public SparkYarnRunnerBuilder setDriverMemoryGB(int driverMemoryGB) {
     if (driverMemoryGB <= 0) {
       throw new IllegalArgumentException(
               "Driver memory must be greater than zero.");
     }
-    int mem = (int) (driverMemoryGB * 1024);
-    this.driverMemory = "" + mem + "m";
+    int mem = driverMemoryGB * 1024;
+    this.driverMemory = mem;
     return this;
+  }
+
+  public void setDriverCores(int driverCores) {
+    this.driverCores = driverCores;
+  }
+
+  public void setDriverQueue(String driverQueue) {
+    this.driverQueue = driverQueue;
   }
 
   public SparkYarnRunnerBuilder addEnvironmentVariable(String name, String value) {

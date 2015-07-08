@@ -178,7 +178,7 @@
           </h:panelGroup>
         </h:form>
       </p:dialog>
-            <!-- Edit services dialog -->
+      <!-- Edit services dialog -->
       <p:dialog id="editServicesDialog" styleClass="projectDialog" widgetVar="editServicesDlg" closable="true" draggable="false" modal="true" resizable="false" header="Edit services">
         <h:form class="dialogForm">
           <p:selectManyCheckbox layout="grid" value="#{projectManagedBean.selectedServices}" columns="3">
@@ -191,7 +191,7 @@
           </h:panelGroup>
         </h:form>
       </p:dialog>
-      
+
       <!-- Choose file dialog-->
       <p:dialog id="chooseFileDialog" styleClass="projectDialog" widgetVar="chooseFileDlg" closable="false" draggable="false" modal="true" resizable="false" header="Choose file" rendered="#{projectManagedBean.currentRoleInProject() != null}">
         <h:form class="dialogForm">

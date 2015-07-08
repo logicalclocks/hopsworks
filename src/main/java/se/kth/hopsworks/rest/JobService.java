@@ -109,7 +109,7 @@ public class JobService {
   public CuneiformService cuneiform() {
     return this.cuneiform.setProjectId(projectId);
   }
-  
+
   @Path("/spark")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public SparkService spark() {
