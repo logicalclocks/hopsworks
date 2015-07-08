@@ -30,30 +30,30 @@
             </h3>
             <p:growl autoUpdate="true" showDetail="true"/>
             <p:tooltip showDelay="1"/>
-            <p:selectOneMenu id="adamCommandChoice" value="#{adamController.selectedCommand}">
+            <p:selectOneMenu id="adamCommandChoice" value="#{adamMB.selectedCommand}">
               <f:converter converterId="adamCommandConverter"/>
               <f:selectItem itemLabel="Select command" itemValue=""/>
-              <f:selectItems value="#{adamController.adamCommands}" var="command" itemValue="#{command}" itemLabel="#{command.command}"/>
+              <f:selectItems value="#{adamMB.adamCommands}" var="command" itemValue="#{command}" itemLabel="#{command.command}"/>
               <p:ajax event="change" update="@form" process="@form"/>
             </p:selectOneMenu>
-            <p:commandButton value="Execute" styleClass="right_button" rendered="#{adamController.selectedCommand != null}" action="#{adamController.startJob()}" update="@(.historyForm) @(.resultsForm) @(.runConfForm)"/> 
+            <p:commandButton value="Execute" styleClass="right_button" rendered="#{adamMB.selectedCommand != null}" action="#{adamMB.startJob()}" update="@(.historyForm) @(.resultsForm) @(.runConfForm)"/> 
             <div>
-              <h:outputText value="#{adamController.selectedCommand.description}" rendered="#{adamController.selectedCommand != null}"/>
+              <h:outputText value="#{adamMB.selectedCommand.description}" rendered="#{adamMB.selectedCommand != null}"/>
             </div>
 
             <!-- JOBNAME -->
             <div class="ui-datatable ui-widget adamTable">
               <div class="ui-datatable-tablewrapper">
                 <div class="ui-datatable-data ui-widget-content">
-                  <h:panelGrid columns="2" styleClass="jobNameTable" rendered="#{adamController.selectedCommand != null}">
+                  <h:panelGrid columns="2" styleClass="jobNameTable" rendered="#{adamMB.selectedCommand != null}">
                     <h:outputText value="Job name"/>
-                    <p:inputText value="#{adamController.jobName}" label="Untitled ADAM job"/>
+                    <p:inputText value="#{adamMB.jobName}" label="Untitled ADAM job"/>
                   </h:panelGrid>
                 </div>
               </div>
             </div>
             <!-- ARGUMENTS -->
-            <p:dataTable id="argumentsTable" var="arg" value="#{adamController.selectedCommandArgs}" rendered="#{adamController.selectedCommand != null}" styleClass="adamTable argumentsTable">
+            <p:dataTable id="argumentsTable" var="arg" value="#{adamMB.selectedCommandArgs}" rendered="#{adamMB.selectedCommand != null}" styleClass="adamTable argumentsTable">
               <f:facet name="header">
                 Arguments
               </f:facet>
@@ -65,20 +65,20 @@
                 <p:inputText value="#{arg.value}" style="width:100%" label="Path" rendered="#{arg.arg.path and arg.arg.outputPath}"/>
                 <p:commandButton value="Select..."
                                  oncomplete="PF('chooseFileDlg').show()"
-                                 actionListener="#{adamController.prepareFileSelector(false,'type argument name ' += arg.arg.name)}" 
-                                 rendered="#{arg.arg.path and not arg.arg.outputPath and not adamController.isFileUploadedForArg(arg.arg.name)}">
+                                 actionListener="#{adamMB.prepareFileSelector(false,'type argument name ' += arg.arg.name)}" 
+                                 rendered="#{arg.arg.path and not arg.arg.outputPath and not adamMB.isFileUploadedForArg(arg.arg.name)}">
                 </p:commandButton>
-                <h:panelGroup rendered="#{arg.arg.path and not arg.arg.outputPath and adamController.isFileUploadedForArg(arg.arg.name)}">
-                  <p:outputLabel value="#{adamController.getFileNameForArg(arg.arg.name)}" />
+                <h:panelGroup rendered="#{arg.arg.path and not arg.arg.outputPath and adamMB.isFileUploadedForArg(arg.arg.name)}">
+                  <p:outputLabel value="#{adamMB.getFileNameForArg(arg.arg.name)}" />
                   <p:commandButton value="Change" styleClass="changeUpload"
                                    oncomplete="PF('chooseFileDlg').show()"
-                                   actionListener="#{adamController.prepareFileSelector(false,'type argument name ' += arg.arg.name)}" >
+                                   actionListener="#{adamMB.prepareFileSelector(false,'type argument name ' += arg.arg.name)}" >
                   </p:commandButton>
                 </h:panelGroup> 
               </p:column>
             </p:dataTable>
             <!-- OPTIONS -->
-            <p:dataTable id="optionsTable" var="opt" value="#{adamController.selectedCommandOpts}" rendered="#{adamController.selectedCommand != null}" styleClass="adamTable optionsTable">
+            <p:dataTable id="optionsTable" var="opt" value="#{adamMB.selectedCommandOpts}" rendered="#{adamMB.selectedCommand != null}" styleClass="adamTable optionsTable">
               <f:facet name="header">
                 Options
               </f:facet>
@@ -90,14 +90,14 @@
                 <p:inputText value="#{opt.stringValue}" style="width:100%" label="Path" rendered="#{opt.opt.valuePath and opt.opt.outputPath}"/>
                 <p:commandButton value="Select..."
                                  oncomplete="PF('chooseFileDlg').show()"
-                                 actionListener="#{adamController.prepareFileSelector(false,'type option name ' += opt.opt.name)}" 
-                                 rendered="#{opt.opt.valuePath and not opt.opt.outputPath and not adamController.isFileUploadedForOpt(opt.opt.name)}">
+                                 actionListener="#{adamMB.prepareFileSelector(false,'type option name ' += opt.opt.name)}" 
+                                 rendered="#{opt.opt.valuePath and not opt.opt.outputPath and not adamMB.isFileUploadedForOpt(opt.opt.name)}">
                 </p:commandButton>
-                <h:panelGroup rendered="#{opt.opt.valuePath and not opt.opt.outputPath and adamController.isFileUploadedForOpt(opt.opt.name)}">
-                  <p:outputLabel value="#{adamController.getFileNameForOpt(opt.opt.name)}" />
+                <h:panelGroup rendered="#{opt.opt.valuePath and not opt.opt.outputPath and adamMB.isFileUploadedForOpt(opt.opt.name)}">
+                  <p:outputLabel value="#{adamMB.getFileNameForOpt(opt.opt.name)}" />
                   <p:commandButton value="Change" styleClass="changeUpload"
                                    oncomplete="PF('chooseFileDlg').show()"
-                                   actionListener="#{adamController.prepareFileSelector(false,'type option name ' += opt.opt.name)}" >
+                                   actionListener="#{adamMB.prepareFileSelector(false,'type option name ' += opt.opt.name)}" >
                   </p:commandButton>
                 </h:panelGroup>
                 <p:selectBooleanButton value="#{opt.booleanValue}" onLabel="True" offLabel="False" rendered="#{opt.opt.flag}"/>
@@ -110,19 +110,19 @@
               Results
             </h3>
             <h:panelGrid columns="2">
-              <h:outputLabel value="Current state:" for="curr_state" rendered="#{adamController.selectedJobRunning or adamController.selectedJobHasFinished}"/>
-              <h:outputText id="curr_state" value="#{adamController.selectedJob.state}" styleClass="stateSpan"/>
+              <h:outputLabel value="Current state:" for="curr_state" rendered="#{adamMB.selectedJobRunning or adamMB.selectedJobHasFinished}"/>
+              <h:outputText id="curr_state" value="#{adamMB.selectedJob.state}" styleClass="stateSpan"/>
             </h:panelGrid>
-            <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{adamController.selectedJobRunning}"/>
+            <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{adamMB.selectedJobRunning}"/>
 
             <div>
-              <h:panelGroup id="outputFilesGroup" rendered="#{adamController.selectedJobHasFinished and adamController.selectedJob.jobOutputFileCollection.size()>0}" >
+              <h:panelGroup id="outputFilesGroup" rendered="#{adamMB.selectedJobHasFinished and adamMB.selectedJob.jobOutputFileCollection.size()>0}" >
                 <h:outputText value="Results:"/>
-                <ui:repeat value="#{adamController.selectedJob.jobOutputFileCollection}" var="file">
+                <ui:repeat value="#{adamMB.selectedJob.jobOutputFileCollection}" var="file">
                   <div>
-                    <p:commandLink ajax="false" rendered="#{not adamController.isDir(file.path)}">
+                    <p:commandLink ajax="false" rendered="#{not adamMB.isDir(file.path)}">
                       <strong>#{file.jobOutputFilePK.name}</strong>
-                      <p:fileDownload value="#{adamController.downloadFile(file.path)}"/>
+                      <p:fileDownload value="#{adamMB.downloadFile(file.path)}"/>
                     </p:commandLink>
                     <p:commandLink rendered="#{jobHistoryController.isDir(file.path)}" action="#{InodesMB.cdGlobal(file.path)}" oncomplete="PF('projectTabs').select(2)">
                       <strong>#{file.jobOutputFilePK.name}</strong>
@@ -132,20 +132,20 @@
               </h:panelGroup>
             </div>
 
-            <h:panelGroup rendered="#{adamController.selectedJobHasFinished}" >
+            <h:panelGroup rendered="#{adamMB.selectedJobHasFinished}" >
               <div>
                 <h:outputText value="Logs:"/>
               </div>
               <div>
                 <p:commandLink ajax="false">
                   <strong>stdout.log</strong>
-                  <p:fileDownload value="#{adamController.downloadStdout()}" rendered="#{adamController.selectedJob.stdoutPath != null}"/>
+                  <p:fileDownload value="#{adamMB.downloadStdout()}" rendered="#{adamMB.selectedJob.stdoutPath != null}"/>
                 </p:commandLink>
               </div>
               <div>
                 <p:commandLink ajax="false">
                   <strong>stderr.log</strong>
-                  <p:fileDownload value="#{adamController.downloadStderr()}" rendered="#{adamController.selectedJob.stderrPath != null}"/>
+                  <p:fileDownload value="#{adamMB.downloadStderr()}" rendered="#{adamMB.selectedJob.stderrPath != null}"/>
                 </p:commandLink>
               </div>
             </h:panelGroup>

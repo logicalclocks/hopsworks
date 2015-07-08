@@ -203,6 +203,12 @@ public class FileOperations {
    * @throws IOException
    */
   public boolean exists(String path) throws IOException {
+    if (path.startsWith("hdfs:")) {
+      path = path.substring(5);
+      while (path.charAt(1) == '/') {
+        path = path.substring(1);
+      }
+    }
     return inodes.existsPath(path);
   }
 
