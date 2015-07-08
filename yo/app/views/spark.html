@@ -101,6 +101,18 @@
                   <td class="firstColumn">ResourceManager queue</td>
                   <td class="secondColumn"><input type="text" ng-model="sparkCtrl.sparkConfig.amQueue"></td>
                 </tr>
+                <tr>
+                  <td class="firstColumn">Number of executors</td>
+                  <td class="secondColumn"><input type="number" ng-model="sparkCtrl.sparkConfig.numberOfExecutors"></td>
+                </tr>
+                <tr>
+                  <td class="firstColumn">Number of executor cores</td>
+                  <td class="secondColumn"><input type="number" ng-model="sparkCtrl.sparkConfig.executorCores"></td>
+                </tr>
+                <tr>
+                  <td class="firstColumn">Executor memory</td>
+                  <td class="secondColumn"><input type="text" ng-model="sparkCtrl.sparkConfig.executorMemory"></td>
+                </tr>
               </table>
             </div>
           </div>
