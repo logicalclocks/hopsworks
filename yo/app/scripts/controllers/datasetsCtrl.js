@@ -231,6 +231,17 @@ angular.module('hopsWorksApp')
               });
             };
 
+            self.attachTemplate = function (file) {
+              var templateId = -1;
+              console.log(JSON.stringify(file));
+
+              ModalService.selectTemplate('sm', templateId).then(
+                      function (success) {
+                        templateId = success.templateId;
+                        console.log("RETURNED TEMPLATE ID " + templateId);
+                      });
+            };
+
             self.deleteFile = function (fileName) {
               if (currentDS) {
                 removeDataSetDir(self.currentPath + '/' + fileName);
@@ -246,7 +257,7 @@ angular.module('hopsWorksApp')
                       function (success) {
                         templateId = success.templateId;
                         console.log("RETURNED TEMPLATE ID " + templateId);
-                        
+
                         ModalService.upload('lg', self.currentProject.projectId, self.currentPath, templateId).then(
                                 function (success) {
                                   growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
