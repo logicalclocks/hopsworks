@@ -80,8 +80,9 @@ public class UploadServlet extends HttpServlet {
     if (finished) {
       try {
         uploadPath = Utils.ensurePathEndsInSlash(uploadPath);
-        fileOps.copyToHDFSFromLocal(true, new File(stagingManager.getStagingPath(), info.getResumableFilename()).
-            getAbsolutePath(), uploadPath
+        fileOps.copyToHDFSFromLocal(true, new File(stagingManager.
+                getStagingPath(), info.getResumableFilename()).
+                getAbsolutePath(), uploadPath
                 + info.getResumableFilename());
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Failed to write to HDSF", e);

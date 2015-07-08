@@ -14,7 +14,7 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.FileSelectionController;
-import se.kth.bbc.jobs.JobController;
+import se.kth.bbc.jobs.JobMB;
 import se.kth.bbc.jobs.JobControllerEvent;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
@@ -30,7 +30,7 @@ import se.kth.bbc.lims.Utils;
  */
 @ManagedBean
 @ViewScoped
-public class YarnController extends JobController {
+public class YarnController extends JobMB {
 
   private static final Logger logger = Logger.getLogger(YarnController.class.
           getName());

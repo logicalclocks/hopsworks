@@ -44,6 +44,8 @@ public class JobService {
   private JobHistoryFacade jobHistoryFacade;
   @Inject
   private CuneiformService cuneiform;
+  @Inject
+  private SparkService spark;
 
   private Integer projectId;
 
@@ -102,7 +104,13 @@ public class JobService {
 
   @Path("/cuneiform")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public CuneiformService jobs() {
+  public CuneiformService cuneiform() {
     return this.cuneiform.setProjectId(projectId);
+  }
+
+  @Path("/spark")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public SparkService spark() {
+    return this.spark.setProjectId(projectId);
   }
 }
