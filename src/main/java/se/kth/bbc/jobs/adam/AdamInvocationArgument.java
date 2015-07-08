@@ -10,7 +10,12 @@ public class AdamInvocationArgument {
   private String value;
 
   public AdamInvocationArgument(AdamArgument arg) {
+    this(arg, null);
+  }
+
+  public AdamInvocationArgument(AdamArgument arg, String value) {
     this.arg = arg;
+    this.value = value;
   }
 
   public String getValue() {

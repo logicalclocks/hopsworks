@@ -1,4 +1,4 @@
-<!-- HTML file for the Cuneiform job running interface -->
+<!-- HTML file for the Spark job running interface -->
 <link rel="stylesheet" href="styles/timeline.css">
 <link rel="stylesheet" href="styles/cuneiform.css">
 <div ng-controller="MainCtrl as mainCtrl">
@@ -12,7 +12,9 @@
 
     <section>
       <div class="content-wrapper">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Cuneiform</h3>
+        <h3 id="projectBread" style="display: none;"> 
+          {{ projectCtrl.currentProject.projectName}} / Spark
+        </h3>
 
 
         <!-- Page Content -->
@@ -41,7 +43,7 @@
                   </ul>
                   Results:
                   <ul>
-                    <li ng-repeat="result in job.jobOutputFileCollection" ng-show="job.jobOutputFileCollection"><a ng-click="">{{result.jobOutputFilePK.name}} </a></li>
+                    <li ng-repeat="result in job.jobOutputFileCollection" ng-show="job.jobOutputFileCollection"><a ng-click="">{{result.path}} </a></li>
                   </ul>
                   </p>
                 </div>
@@ -138,7 +140,7 @@
                 </ul>
                 Results:
                 <ul>
-                  <li ng-repeat="result in sparkCtrl.job.jobOutputFileCollection" ng-show="sparkCtrl.job.jobOutputFileCollection"><a ng-click="">{{result.jobOutputFilePK.name}} </a></li>
+                  <li ng-repeat="result in sparkCtrl.job.jobOutputFileCollection" ng-show="sparkCtrl.job.jobOutputFileCollection"><a ng-click="">{{result.path}} </a></li>
                 </ul>
                 </p>
               </div>

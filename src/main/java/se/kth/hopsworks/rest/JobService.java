@@ -46,6 +46,8 @@ public class JobService {
   private CuneiformService cuneiform;
   @Inject
   private SparkService spark;
+  @Inject
+  private AdamService adam;
 
   private Integer projectId;
 
@@ -112,5 +114,11 @@ public class JobService {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public SparkService spark() {
     return this.spark.setProjectId(projectId);
+  }
+
+  @Path("/adam")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public AdamService adam() {
+    return this.adam.setProjectId(projectId);
   }
 }
