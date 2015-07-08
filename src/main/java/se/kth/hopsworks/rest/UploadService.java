@@ -5,14 +5,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -34,6 +33,9 @@ import se.kth.bbc.upload.ResumableInfoStorage;
 import se.kth.hopsworks.controller.FolderNameValidator;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.meta.db.Dbao;
+import se.kth.meta.entity.Templates;
+import se.kth.meta.exception.DatabaseException;
 
 /**
  *
@@ -56,9 +58,12 @@ public class UploadService {
   private StagingManager stagingManager;
   @EJB
   private FolderNameValidator datasetNameValidator;
+  @Inject
+  private Dbao db;
 
   private String path;
   private Inode fileParent;
+  private int templateId;
 
   public UploadService() {
   }
@@ -101,6 +106,16 @@ public class UploadService {
     this.path = uploadPath;
   }
 
+  /**
+   * Sets the template id to be attached to the file that's being uploaded.
+   * <p>
+   * <p>
+   * @param templateId
+   */
+  public void setTemplateId(int templateId) {
+    this.templateId = templateId;
+  }
+
   @GET
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
@@ -109,7 +124,7 @@ public class UploadService {
           @Context HttpServletRequest request)
           throws AppException {
     String fileName = request.getParameter("flowFilename");
-    logger.log(Level.SEVERE, "File parent. {0}", this.fileParent);
+    logger.log(Level.INFO, "File parent. {0}", this.fileParent);
     Inode parent;
     if (this.fileParent != null) {
       parent = inodes.findByParentAndName(this.fileParent, fileName);
@@ -121,7 +136,7 @@ public class UploadService {
 
     JsonResponse json = new JsonResponse();
     int resumableChunkNumber = getResumableChunkNumber(request);
-    ResumableInfo info = getResumableInfo(request, this.path);
+    ResumableInfo info = getResumableInfo(request, this.path, this.templateId);
 
     if (info.isUploaded(new ResumableInfo.ResumableChunkNumber(
             resumableChunkNumber))) {
@@ -157,16 +172,18 @@ public class UploadService {
 
     int resumableChunkNumber = HttpUtils.toInt(flowChunkNumber, -1);
     ResumableInfo info = getResumableInfo(flowChunkSize, flowFilename,
-            flowIdentifier, flowRelativePath, flowTotalSize, this.path);
-    String fileName = info.resumableFilename;
+            flowIdentifier, flowRelativePath, flowTotalSize, this.path,
+            this.templateId);
+    String fileName = info.getResumableFilename();
+    int templateid = info.getResumableTemplateId();
 
     long content_length;
     //Seek to position
     try (RandomAccessFile raf
-            = new RandomAccessFile(info.resumableFilePath, "rw");
+            = new RandomAccessFile(info.getResumableFilePath(), "rw");
             InputStream is = uploadedInputStream) {
       //Seek to position
-      raf.seek((resumableChunkNumber - 1) * (long) info.resumableChunkSize);
+      raf.seek((resumableChunkNumber - 1) * (long) info.getResumableChunkSize());
       //Save to file
       long readed = 0;
       content_length = HttpUtils.toLong(flowCurrentChunkSize, -1);
@@ -187,10 +204,10 @@ public class UploadService {
     if (info.addChuckAndCheckIfFinished(new ResumableInfo.ResumableChunkNumber(
             resumableChunkNumber), content_length)) { //Check if all chunks uploaded, and change filename
       ResumableInfoStorage.getInstance().remove(info);
-      logger.log(Level.SEVERE, "All finished.");
+      logger.log(Level.INFO, "All finished.");
       finished = true;
     } else {
-      logger.log(Level.SEVERE, "Upload");
+      logger.log(Level.INFO, "Upload");
       json.setSuccessMessage("Upload");//This Chunk has been Uploaded.
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(json).build();
@@ -202,13 +219,16 @@ public class UploadService {
         fileOps.copyToHDFSFromLocal(true, stagingManager.getStagingPath()
                 + this.path + fileName, this.path
                 + fileName);
-        logger.log(Level.SEVERE, "Copied to HDFS");
-        
+        logger.log(Level.INFO, "Copied to HDFS");
+
+        if (templateid != 0) {
+          this.attachTemplateToInode(info, this.path + fileName);
+        }
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(json).build();
       } catch (IOException e) {
-        logger.log(Level.SEVERE, "Failed to write to HDFS", e);
+        logger.log(Level.INFO, "Failed to write to HDFS", e);
         json.setErrorMsg("Failed to write to HDFS");
         return noCacheResponse.getNoCacheResponseBuilder(
                 Response.Status.BAD_REQUEST).entity(json).build();
@@ -220,12 +240,31 @@ public class UploadService {
             json).build();
   }
 
+  private void attachTemplateToInode(ResumableInfo info, String path) {
+    //find the inode
+    System.out.println("GETTING INODE AT PATH " + path);
+    //filePath is the temporary path /tmp/1436282377581-0/Projects/Test/TestDataset/<fileName>.temp
+    Inode inode = inodes.getInodeAtPath(path);
+
+    Templates template = db.findTemplateById(info.getResumableTemplateId());
+    template.getInodes().add(inode);
+
+    System.out.println("INODE FOUND " + inode.getId());
+    try {
+      //persist the relationship table
+      db.updateTemplatesInodesMxN(template);
+      System.out.println("Persisting inode " + inode.getId() + " attaching template " + template.getId() + " - " + template.getName());
+    } catch (DatabaseException e) {
+      System.err.println(e.getMessage());
+    }
+  }
+
   private int getResumableChunkNumber(HttpServletRequest request) {
     return HttpUtils.toInt(request.getParameter("flowChunkNumber"), -1);
   }
 
   private ResumableInfo getResumableInfo(HttpServletRequest request,
-          String hdfsPath) throws
+          String hdfsPath, int templateId) throws
           AppException {
     //this will give us a tmp folder
     String base_dir = stagingManager.getStagingPath();
@@ -265,8 +304,8 @@ public class UploadService {
 
     ResumableInfo info = storage.get(resumableChunkSize, resumableTotalSize,
             resumableIdentifier, resumableFilename, resumableRelativePath,
-            resumableFilePath);
-    if (!info.vaild()) {
+            resumableFilePath, templateId);
+    if (!info.valid()) {
       storage.remove(info);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Invalid request params.");
@@ -279,7 +318,8 @@ public class UploadService {
           String flowIdentifier,
           String flowRelativePath,
           String flowTotalSize,
-          String hdfsPath) throws AppException {
+          String hdfsPath,
+          int templateId) throws AppException {
     //this will give us a tmp folder
     String base_dir = stagingManager.getStagingPath();
     //this will create a folder if it doesnot exist inside the tmp folder 
@@ -316,8 +356,8 @@ public class UploadService {
 
     ResumableInfo info = storage.get(resumableChunkSize, resumableTotalSize,
             resumableIdentifier, resumableFilename, resumableRelativePath,
-            resumableFilePath);
-    if (!info.vaild()) {
+            resumableFilePath, templateId);
+    if (!info.valid()) {
       storage.remove(info);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Invalid request params.");

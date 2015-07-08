@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
+import javax.enterprise.context.RequestScoped;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -31,6 +32,7 @@ import se.kth.meta.exception.DatabaseException;
  *
  * @author Vangelis
  */
+@RequestScoped
 @PersistenceContext(unitName = "kthfsPU",
         name = "persistence/em")
 @Resource(type = javax.transaction.UserTransaction.class,
@@ -39,7 +41,6 @@ public class Dbao {
 
   private static final Logger logger = Logger.getLogger(Dbao.class.getName());
 
-  private Tables table;
   private Context ic;
   private EntityManager em;
   private UserTransaction utx;

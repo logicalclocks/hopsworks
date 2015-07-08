@@ -61,7 +61,6 @@ public class Templates implements Serializable, EntityIntf {
           cascade = CascadeType.ALL)
   private List<Tables> tables;
 
-
   @JoinTable(name = "vangelis_kthfs.meta_template_to_inode",
           inverseJoinColumns = {
             @JoinColumn(name = "inode_pid",

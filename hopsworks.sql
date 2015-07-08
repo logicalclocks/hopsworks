@@ -249,13 +249,6 @@ CREATE TABLE `meta_fields` (
   FOREIGN KEY (`fieldtypeid`) REFERENCES `meta_field_types` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `meta_tuple_to_file` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `inodeid` INT(11) DEFAULT NULL,
-  `tupleid` INT(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=ndbcluster;
-
 CREATE TABLE `meta_raw_data` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `data` LONGTEXT NOT NULL,

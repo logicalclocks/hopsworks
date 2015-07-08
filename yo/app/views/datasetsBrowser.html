@@ -108,11 +108,21 @@
                                     Share...</span>
                                 </a>
                               </li>
-
+                              
                               <li>
                                 <a class="pointer"
                                    role="menuitem"
                                    tabindex="3"
+                                   ng-click="datasetsCtrl.attachTemplate(file)">
+                                  <span><i class="fa fa-share-alt"></i>
+                                    Share...</span>
+                                </a>
+                              </li>
+
+                              <li>
+                                <a class="pointer"
+                                   role="menuitem"
+                                   tabindex="4"
                                    ng-click="datasetsCtrl.deleteFile(file.name)">
                                   <span><i class="fa fa-trash"></i>
                                     Remove</span>

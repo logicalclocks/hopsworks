@@ -1,6 +1,10 @@
 /*jshint undef: false, unused: false, indent: 2*/
 /*global angular: false */
 
+/*
+ * Used by home.js, main.js and project.js to set/define the elastic index 
+ * where the searches will be directed to
+ */
 'use strict';
 
 angular.module('hopsWorksApp')

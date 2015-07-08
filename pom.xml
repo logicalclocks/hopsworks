@@ -71,6 +71,11 @@
       <artifactId>hadoop-client</artifactId>
       <version>2.4.0</version>
     </dependency>
+    <!--HADOOP HDFS TO ENABLE FILE OPS LOGGING-->
+<!--    <dependency>
+      <artifactId>hadoop-hdfs</artifactId>
+      <version>2.4.0</version>
+    </dependency>-->
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>

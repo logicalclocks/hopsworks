@@ -41,8 +41,7 @@ angular.module('hopsWorksApp')
                       self.currentProject = success;
                     }, function (error) {
               $location.path('/');
-            }
-            );
+            });
 
             var getAll = function () {
               dataSetService.getAll().then(
@@ -76,9 +75,9 @@ angular.module('hopsWorksApp')
                         }
                         console.log(success);
                       }, function (error) {
-                        console.log("getDir error");
-                        console.log(error);
-                      });
+                console.log("getDir error");
+                console.log(error);
+              });
             };
 
             self.setMetadataTemplate = function (file) {
@@ -183,9 +182,9 @@ angular.module('hopsWorksApp')
                         console.log("download success");
                         console.log(success);
                       }, function (error) {
-                        console.log("download error");
-                        console.log(error);
-                      });
+                console.log("download error");
+                console.log(error);
+              });
             };
 
             var upload = function (path) {
@@ -194,9 +193,9 @@ angular.module('hopsWorksApp')
                         console.log("upload success");
                         console.log(success);
                       }, function (error) {
-                        console.log("upload error");
-                        console.log(error);
-                      });
+                console.log("upload error");
+                console.log(error);
+              });
             };
 
             var removeDataSetDir = function (path) {
@@ -227,9 +226,9 @@ angular.module('hopsWorksApp')
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
                         getDir();
                       }, function (error) {
-                        growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
-                        getDir();
-                      });
+                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+                getDir();
+              });
             };
 
             self.deleteFile = function (fileName) {
@@ -241,15 +240,23 @@ angular.module('hopsWorksApp')
             };
 
             self.uploadFile = function () {
-              ModalService.upload('lg', self.currentProject.projectId, self.currentPath).then(
-                      function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
-                        getDir();
-                      }, function (error) {
-                getDir();
-              });
-            };
+              var templateId = -1;
 
+              ModalService.selectTemplate('sm', templateId).then(
+                      function (success) {
+                        templateId = success.templateId;
+                        console.log("RETURNED TEMPLATE ID " + templateId);
+                        
+                        ModalService.upload('lg', self.currentProject.projectId, self.currentPath, templateId).then(
+                                function (success) {
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                                  getDir();
+                                }, function (error) {
+                          growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+                          getDir();
+                        });
+                      });
+            };
 
             self.openDir = function (name, isDir) {
               if (isDir) {
@@ -308,7 +315,8 @@ angular.module('hopsWorksApp')
                         });
               }, 300);
               return debounceFn;
-            };
+            }
+            ;
 
             self.close = function () {
               $mdSidenav('right').close()
@@ -442,22 +450,22 @@ angular.module('hopsWorksApp')
                 controller: 'NewCardCtrl',
                 scope: $scope
               })
-                .result.then(function (card) {
+                      .result.then(function (card) {
 
-                  console.log('Created card, ready to send:');
-                  console.log(JSON.stringify(card));
+                        console.log('Created card, ready to send:');
+                        console.log(JSON.stringify(card));
 
-                  MetadataActionService.storeCard(self.currentTemplateID, column, card)
-                          .then(function (success) {
-                            console.log(success);
-                            self.fetchTemplate(self.currentTemplateID);
-                          }, function (error) {
-                            console.log(error);
-                          });
+                        MetadataActionService.storeCard(self.currentTemplateID, column, card)
+                                .then(function (success) {
+                                  console.log(success);
+                                  self.fetchTemplate(self.currentTemplateID);
+                                }, function (error) {
+                                  console.log(error);
+                                });
 
-                }, function (error) {
-                  console.log(error);
-                });
+                      }, function (error) {
+                        console.log(error);
+                      });
             };
 
 
@@ -510,31 +518,29 @@ angular.module('hopsWorksApp')
                 controller: 'NewlistCtrl',
                 scope: $scope
               })
-              .result.then(function (list) {
+                      .result.then(function (list) {
 
-                if (!angular.isUndefined(list)) {
+                        if (!angular.isUndefined(list)) {
 
-                  //{tempid:2,bd:{name:MainBoard,numberOfColumns:3,columns:[{id:-1,name:newTable,cards:[]}],backlogs:[]}}}
-                  //we need to add the new table into the mainboard object
-                  self.currentBoard.columns.push(list);
-                  //console.log("CURRENT LIST AFTER TABLE ADDITION " + JSON.stringify(self.currentBoard));
+                          //{tempid:2,bd:{name:MainBoard,numberOfColumns:3,columns:[{id:-1,name:newTable,cards:[]}],backlogs:[]}}}
+                          //we need to add the new table into the mainboard object
+                          self.currentBoard.columns.push(list);
+                          //console.log("CURRENT LIST AFTER TABLE ADDITION " + JSON.stringify(self.currentBoard));
 
-                  MetadataActionService.storeTemplate(self.currentTemplateID, self.currentBoard)
-                          .then(function (response) {
-                            console.log("TEMPLATE STORED SUCCESSFULLY " /*+ JSON.stringify(response)*/);
-                            self.currentBoard = JSON.parse(response.board);
-                            //defer.resolve($rootScope.mainBoard);
-                          }, function (error) {
-                            console.log(error);
-                          });
-                }
-              });
+                          MetadataActionService.storeTemplate(self.currentTemplateID, self.currentBoard)
+                                  .then(function (response) {
+                                    console.log("TEMPLATE STORED SUCCESSFULLY " /*+ JSON.stringify(response)*/);
+                                    self.currentBoard = JSON.parse(response.board);
+                                    //defer.resolve($rootScope.mainBoard);
+                                  }, function (error) {
+                                    console.log(error);
+                                  });
+                        }
+                      });
             };
-
 
             /* CARD MANIPULATION FUNCTIONS */
             self.makeSearchable = function (card) {
-
               card.find = !card.find;
               console.log("Card " + card.title + " became searchable " + card.find);
             };
@@ -584,7 +590,6 @@ angular.module('hopsWorksApp')
                                 });
                       }, function (dialogResponse) {
                         console.log("don't modify " + JSON.stringify(dialogResponse));
-                        //hand off the control back to the caller
                       });
 
               return defer.promise;

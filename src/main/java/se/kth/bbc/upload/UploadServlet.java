@@ -44,10 +44,10 @@ public class UploadServlet extends HttpServlet {
     long content_length;
     //Seek to position
     try (RandomAccessFile raf
-            = new RandomAccessFile(info.resumableFilePath, "rw");
+            = new RandomAccessFile(info.getResumableFilePath(), "rw");
             InputStream is = request.getInputStream()) {
       //Seek to position
-      raf.seek((resumableChunkNumber - 1) * (long) info.resumableChunkSize);
+      raf.seek((resumableChunkNumber - 1) * (long) info.getResumableChunkSize());
       //Save to file
       long readed = 0;
       content_length = request.getContentLength();
@@ -80,9 +80,9 @@ public class UploadServlet extends HttpServlet {
     if (finished) {
       try {
         uploadPath = Utils.ensurePathEndsInSlash(uploadPath);
-        fileOps.copyToHDFSFromLocal(true, new File(stagingManager.getStagingPath(), info.resumableFilename).
+        fileOps.copyToHDFSFromLocal(true, new File(stagingManager.getStagingPath(), info.getResumableFilename()).
             getAbsolutePath(), uploadPath
-                + info.resumableFilename);
+                + info.getResumableFilename());
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Failed to write to HDSF", e);
       }
@@ -129,8 +129,8 @@ public class UploadServlet extends HttpServlet {
 
     ResumableInfo info = storage.get(resumableChunkSize, resumableTotalSize,
             resumableIdentifier, resumableFilename, resumableRelativePath,
-            resumableFilePath);
-    if (!info.vaild()) {
+            resumableFilePath, -1);
+    if (!info.valid()) {
       storage.remove(info);
       throw new ServletException("Invalid request params.");
     }

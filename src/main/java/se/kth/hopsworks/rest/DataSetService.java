@@ -20,6 +20,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -311,12 +312,13 @@ public class DataSetService {
             json).build();
 
   }
-  
 
   @Path("upload/{path: .+}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public UploadService upload(
-          @PathParam("path") String path) throws AppException{
+          @PathParam("path") String path,
+          @QueryParam("templateId") int templateId) throws AppException {
+        
     String uploadPath;
     if (path == null) {
       path = "";
@@ -327,8 +329,13 @@ public class DataSetService {
       uploadPath = this.path + path + File.separator;
     }
 
-    this.uploader.setPath(uploadPath);
+    if(templateId != 0){
+      this.uploader.setTemplateId(templateId);
+    }
     
+    System.out.println("THE UPLOAD PATH IS " + uploadPath);
+    this.uploader.setPath(uploadPath);
+
     return this.uploader;
   }
 }

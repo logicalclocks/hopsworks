@@ -1,4 +1,4 @@
-<div flow-init="{target:'/hopsworks/api/project/'+ fileUploadCtrl.projectId  +'/dataset/upload/'+ fileUploadCtrl.path}"
+<div flow-object="fileUploadCtrl.existingFlowObject" flow-init
      flow-file-error="fileUploadCtrl.fileErrorHandler( $file, $message, $flow )"
      flow-error="fileUploadCtrl.errorHandler( $file, $message, $flow )"
      flow-file-added="fileUploadCtrl.fileAddedHandler($file, $flow)">
@@ -22,6 +22,7 @@
             <i class="glyphicon glyphicon-folder-open"></i>
             &nbsp Upload Folder
           </span>
+          
         </div>
       </div>
       <hr class="soften">

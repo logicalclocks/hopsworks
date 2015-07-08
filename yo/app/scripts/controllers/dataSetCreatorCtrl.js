@@ -27,8 +27,8 @@ angular.module('hopsWorksApp')
                     var temps = JSON.parse(response.board);
                     angular.forEach(temps.templates, function(value, key){
                         self.templates.push(value);
-                        console.log("TEMPLATES FETCHED " + JSON.stringify(self.templates));
                     });
+                    console.log("FETCHED TEMPLATES " + JSON.stringify(self.templates));
                 },function(error){
                     console.log("ERROR " + JSON.stringify(error));
                 });
