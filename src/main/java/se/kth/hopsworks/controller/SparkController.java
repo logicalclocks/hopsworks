@@ -72,6 +72,15 @@ public class SparkController {
     runnerbuilder.setJobName(jobconfig.getAppName());
     String[] jobArgs = jobconfig.getArgs().trim().split(" ");
     runnerbuilder.addAllJobArgs(jobArgs);
+    //Set spark runner options
+    runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
+    runnerbuilder.setExecutorMemory(jobconfig.getExecutorMemory());
+    runnerbuilder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
+    //Set Yarn running options
+    runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
+    runnerbuilder.setDriverCores(jobconfig.getAmVCores());
+    runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
+    
     //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
 
     YarnRunner r;
