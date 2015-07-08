@@ -59,10 +59,8 @@ public class AdamController {
     //First: check if all required arguments have been filled in
     checkIfRequiredPresent(config); //thows an IllegalArgumentException if not ok.
 
-    //Second: for all output path arguments and options: translate to internal format
     Project project = projects.find(projectId);
-    translateOutputPaths(config, project.getName());
-    //Third: submit ADAM job
+    //Then: submit ADAM job
     if (config.getAppName() == null || config.getAppName().isEmpty()) {
       config.setAppName("Untitled ADAM Job");
     }
@@ -73,7 +71,7 @@ public class AdamController {
             "org.apache.spark.serializer.KryoSerializer");
     builder.addSystemProperty("spark.kryo.registrator",
             "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
-    builder.addSystemProperty("spark.kryoserializer.buffer.mb", "4");
+    builder.addSystemProperty("spark.kryoserializer.buffer", "4m");
     builder.addSystemProperty("spark.kryo.referenceTracking", "true");
     builder.setExecutorMemoryGB(1);
 
@@ -132,26 +130,6 @@ public class AdamController {
       String vals = missing.substring(0, missing.length());
       throw new IllegalArgumentException("Argument(s) " + vals
               + " is (are) missing.");
-    }
-  }
-
-  /**
-   * Translate all output paths to their internal representation. I.e.:
-   * - The path the user specified should begin with the projectname. If it does
-   * not, we prepend it.
-   */
-  private void translateOutputPaths(AdamJobConfiguration ajc, String projectname) {
-    for (AdamArgumentDTO arg : ajc.getSelectedCommand().getArguments()) {
-      if (arg.isOutputPath() && arg.getValue() != null && !arg.getValue().
-              isEmpty()) {
-        arg.setValue(getPathForString(projectname, arg.getValue()));
-      }
-    }
-    for (AdamOptionDTO opt : ajc.getSelectedCommand().getOptions()) {
-      if (opt.isOutputPath() && opt.getValue() != null && !opt.getValue().
-              isEmpty()) {
-        opt.setValue(getPathForString(projectname, opt.getValue()));
-      }
     }
   }
 
