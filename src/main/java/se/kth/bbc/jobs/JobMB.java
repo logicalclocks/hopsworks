@@ -29,9 +29,9 @@ import se.kth.bbc.project.Project;
  *
  * @author stig
  */
-public abstract class JobController implements Serializable {
+public abstract class JobMB implements Serializable {
 
-  private static final Logger logger = Logger.getLogger(JobController.class.
+  private static final Logger logger = Logger.getLogger(JobMB.class.
           getName());
 
   private static final String KEY_MAIN_FILE = "MAIN_FILE";

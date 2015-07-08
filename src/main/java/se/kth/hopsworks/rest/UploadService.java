@@ -224,6 +224,7 @@ public class UploadService {
         if (templateid != 0) {
           this.attachTemplateToInode(info, this.path + fileName);
         }
+
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(json).build();

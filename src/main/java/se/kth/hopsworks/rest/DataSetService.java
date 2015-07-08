@@ -318,7 +318,6 @@ public class DataSetService {
   public UploadService upload(
           @PathParam("path") String path,
           @QueryParam("templateId") int templateId) throws AppException {
-        
     String uploadPath;
     if (path == null) {
       path = "";

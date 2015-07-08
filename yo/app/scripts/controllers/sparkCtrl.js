@@ -1,29 +1,29 @@
 /**
- * Created by stig on 2015-05-25.
- * Controller for the Cuneiform jobs page.
+ * Controller for the Spark fatjar jobs page.
  */
 
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('CuneiformCtrl', ['$scope', '$routeParams', 'growl', 'ModalService', 'JobHistoryService', 'CuneiformService', '$interval',
-          function ($scope, $routeParams, growl, ModalService, JobHistoryService, CuneiformService, $interval) {
+        .controller('SparkCtrl', ['$scope', '$routeParams', 'growl', 'JobHistoryService', '$interval', 'SparkService', 'ModalService',
+          function ($scope, $routeParams, growl, JobHistoryService, $interval, SparkService, ModalService) {
+
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
             var self = this;
             this.JobHistoryService = JobHistoryService;
             this.projectId = $routeParams.projectID;
-            this.jobType = 'CUNEIFORM';
+            this.jobType = 'SPARK';
             this.growl = growl;
             //For letting the user select a file
             this.ModalService = ModalService;
-            this.selectFileRegex = /.cf\b/;
-            this.selectFileErrorMsg = "Please select a Cuneiform workflow. The file should have the extension '.cf'.";
+            this.selectFileRegex = /.jar\b/;
+            this.selectFileErrorMsg = "Please select a jar file.";
             this.onFileSelected = function (path) {
-              CuneiformService.inspectStoredWorkflow(this.projectId, path).then(
+              this.selectedJar = getFileName(path);
+              SparkService.inspectJar(this.projectId, path).then(
                       function (success) {
-                        self.workflow = success.data.wf;
-                        self.yarnConfig = success.data.yarnConfig;
+                        self.sparkConfig = success.data;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
@@ -31,18 +31,24 @@ angular.module('hopsWorksApp')
             //For job execution
             this.$interval = $interval;
             this.callExecute = function () {
-              return CuneiformService.runWorkflow(
+              return SparkService.runJob(
                       self.projectId,
-                      {"wf": self.workflow, "yarnConfig": self.yarnConfig});
+                      self.sparkConfig);
             };
             this.onExecuteSuccess = function (success) {
-              self.workflow = null;
-              self.yarnConfig = null;
+              self.sparkConfig = null;
+              self.selectedJar = null;
             };
 
-            this.getHistory = function () {
+
+            /*
+             * Get all Spark job history objects for this project.
+             */
+            this.getSparkHistory = function () {
               getHistory(this);
             };
+
+            this.getSparkHistory();
 
             this.selectFile = function () {
               selectFile(this);
@@ -62,9 +68,6 @@ angular.module('hopsWorksApp')
             $scope.$on('$destroy', function () {
               $interval.cancel(this.poller);
             });
-
-            //Load the job history
-            this.getHistory();
 
           }]);
 
