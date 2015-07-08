@@ -95,24 +95,6 @@ angular.module('hopsWorksApp')
                   this.runConfig.selectedCommand.options[x].value = this.options[name];
                 }
               }
-              //if (self.fileSelectionIsArgument) {
-//                var args = self.runConfig.selectedCommand.arguments;
-//                var arg;
-//                for(arg in args){
-//                  if(args[arg]===self.fileSelectionName){
-//                    self.runConfig.selectedCommand.arguments[arg].value = path;
-//                  }
-//                }
-              // self.arguments[self.fileSelectionName] = path;
-              // } else {
-//                var opts = self.runConfig.selectedCommand.options;
-//                var opt;
-//                for(opt in opts){
-//                  if(opts[opt]===self.fileSelectionName){
-//                    self.runConfig.selectedCommand.options[opt].value = path;
-//                  }
-//                }
-              //   self.options[self.fileSelectionName] = path;
               execute(this);
             };
 
