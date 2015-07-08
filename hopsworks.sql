@@ -275,7 +275,7 @@ CREATE TABLE `meta_template_to_inode` (
   FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`,`name`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster CHARSET=latin1;
 
--- elastic jdbc-importer buffer tables ------
+-- elastic jdbc-importer buffer tables -------
 
 CREATE TABLE `meta_inodes_ops_children_deleted` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
