@@ -46,7 +46,8 @@ public class AdamService {
   }
 
   /**
-   * Get a list of the available Adam commands. This returns a list of command names.
+   * Get a list of the available Adam commands. This returns a list of command
+   * names.
    * <p>
    * @param sc
    * @param req
@@ -62,25 +63,27 @@ public class AdamService {
     wrap.list = AdamCommandDTO.getAllCommandNames();
     return Response.ok(wrap).build();
   }
-    
+
   /**
    * Returns a AdamJobConfiguration for the selected command.
+   * <p>
    * @param commandName
    * @param sc
    * @param req
-   * @return 
+   * @return
    */
   @GET
   @Path("/commands/{name}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response getCommandDetails(@PathParam("name") String commandName, @Context SecurityContext sc,
+  public Response getCommandDetails(@PathParam("name") String commandName,
+          @Context SecurityContext sc,
           @Context HttpServletRequest req) {
     AdamCommandDTO selected = new AdamCommandDTO(AdamCommand.getFromCommand(
             commandName));
     AdamJobConfiguration config = new AdamJobConfiguration(selected);
     return Response.ok(config).build();
-  }  
+  }
 
   /**
    * Run an ADAM job. Accepts a JSONized AdamJobConfiguration, which contains
@@ -107,21 +110,23 @@ public class AdamService {
       JobHistory jh = adamController.startJob(config, req.getUserPrincipal().
               getName(), projectId);
       return Response.ok(jh).build();
-    } catch (IOException|IllegalStateException|IllegalArgumentException ex) {
+    } catch (IOException | IllegalStateException | IllegalArgumentException ex) {
       logger.log(Level.SEVERE, "Error running ADAM job.", ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error running job: " + ex.getLocalizedMessage());
     }
   }
-  
-  @XmlRootElement(name="commands")
-  private static class CommandListWrapper{
-    @XmlElement(name="commands")
+
+  @XmlRootElement(name = "commands")
+  private static class CommandListWrapper {
+
+    @XmlElement(name = "commands")
     String[] list;
 
     public CommandListWrapper() {
     }
-    public void setList(String[] array){
+
+    public void setList(String[] array) {
       this.list = array;
     }
   }

@@ -82,7 +82,7 @@
             <div ng-show="adamCtrl.runConfig">
               {{adamCtrl.runConfig.selectedCommand.description}}
             </div>
-            
+
             <div ng-show="adamCtrl.runConfig">
               <h3>Arguments</h3>
               <table>
@@ -92,12 +92,12 @@
                   </td>
                   <td class="secondColumn">
                     <input type="text" ng-model="adamCtrl.arguments[arg.name]" ng-hide="arg.path && !adamCtrl.arguments[arg.name]" ng-required="arg.required">
-                    <button ng-show="arg.path && !adamCtrl.arguments[arg.name]" ng-click="adamCtrl.selectFile(true,arg.name)">Select</button>
+                    <button ng-show="arg.path && !adamCtrl.arguments[arg.name]" ng-click="adamCtrl.selectFile(true, arg.name)">Select</button>
                   </td>
                 </tr>
               </table>
             </div>
-            
+
             <div ng-show="adamCtrl.runConfig">
               <h3>Options</h3>
               <table>
@@ -107,7 +107,7 @@
                   </td>
                   <td class="secondColumn">
                     <input type="text" ng-model="adamCtrl.options[opt.name]" ng-hide="(opt.valueIsPath && !adamCtrl.options[opt.name]) || opt.flag">
-                    <button ng-show="opt.valueIsPath && !adamCtrl.options[opt.name]" ng-click="adamCtrl.selectFile(false,opt.name)">Select</button>
+                    <button ng-show="opt.valueIsPath && !adamCtrl.options[opt.name]" ng-click="adamCtrl.selectFile(false, opt.name)">Select</button>
                     <input type="checkbox" ng-model="adamCtrl.options[opt.name]" ng-show="opt.flag">
                   </td>
                 </tr>

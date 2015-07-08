@@ -7,7 +7,7 @@ import se.kth.bbc.jobs.spark.SparkJobConfiguration;
  * @author stig
  */
 public class AdamJobConfiguration extends SparkJobConfiguration {
-  
+
   private AdamCommandDTO selectedCommand;
 
   public AdamJobConfiguration() {
@@ -24,5 +24,5 @@ public class AdamJobConfiguration extends SparkJobConfiguration {
   public void setSelectedCommand(AdamCommandDTO selectedCommand) {
     this.selectedCommand = selectedCommand;
   }
-  
+
 }

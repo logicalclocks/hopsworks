@@ -64,7 +64,7 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
-            
+
             this.getCommandList();
 
             /**
@@ -83,15 +83,15 @@ angular.module('hopsWorksApp')
 
             this.execute = function () {
               //First: fill in the runConfig
-              for( var x in this.runConfig.selectedCommand.arguments){
+              for (var x in this.runConfig.selectedCommand.arguments) {
                 var name = this.runConfig.selectedCommand.arguments[x].name;
-                if(this.arguments[name]){
+                if (this.arguments[name]) {
                   this.runConfig.selectedCommand.arguments[x].value = this.arguments[name];
                 }
               }
-              for( var x in this.runConfig.selectedCommand.options){
+              for (var x in this.runConfig.selectedCommand.options) {
                 var name = this.runConfig.selectedCommand.options[x].name;
-                if(this.options[name]){
+                if (this.options[name]) {
                   this.runConfig.selectedCommand.options[x].value = this.options[name];
                 }
               }
@@ -103,8 +103,8 @@ angular.module('hopsWorksApp')
 //                    self.runConfig.selectedCommand.arguments[arg].value = path;
 //                  }
 //                }
-               // self.arguments[self.fileSelectionName] = path;
-             // } else {
+              // self.arguments[self.fileSelectionName] = path;
+              // } else {
 //                var opts = self.runConfig.selectedCommand.options;
 //                var opt;
 //                for(opt in opts){
@@ -112,14 +112,14 @@ angular.module('hopsWorksApp')
 //                    self.runConfig.selectedCommand.options[opt].value = path;
 //                  }
 //                }
-             //   self.options[self.fileSelectionName] = path;
+              //   self.options[self.fileSelectionName] = path;
               execute(this);
             };
 
             this.selectJob = function (job) {
               selectJob(this, job);
             };
-            
+
             /**
              * Select a command by sending the name to the server, gets an 
              * AdamJobConfiguration back.

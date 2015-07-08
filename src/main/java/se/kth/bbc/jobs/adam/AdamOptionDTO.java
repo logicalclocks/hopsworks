@@ -22,9 +22,9 @@ public class AdamOptionDTO {
     this(aio.getOpt().getName(), aio.getOpt().getDescription(), null, aio.
             getOpt().isValuePath(), aio.getOpt().isFlag(), aio.getOpt().
             isOutputPath(), false);
-    if(flag){
+    if (flag) {
       this.isSet = aio.getBooleanValue();
-    }else{
+    } else {
       this.value = aio.getStringValue();
     }
   }
@@ -110,11 +110,12 @@ public class AdamOptionDTO {
       this.value = value;
     }
   }
-  
-  public void setValue(boolean value){
-    if(!flag){
-      throw new IllegalStateException("Cannot set a boolean value for a String field.");
-    }else{
+
+  public void setValue(boolean value) {
+    if (!flag) {
+      throw new IllegalStateException(
+              "Cannot set a boolean value for a String field.");
+    } else {
       isSet = value;
     }
   }

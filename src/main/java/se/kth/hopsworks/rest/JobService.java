@@ -115,7 +115,7 @@ public class JobService {
   public SparkService spark() {
     return this.spark.setProjectId(projectId);
   }
-  
+
   @Path("/adam")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public AdamService adam() {
