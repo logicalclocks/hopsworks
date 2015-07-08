@@ -51,7 +51,7 @@ public class Constants {
           = "/srv/hadoop/etc/hadoop";
 
   //Spark constants
-  public static final String SPARK_VERSION = "1.2.1";
+  public static final String SPARK_VERSION = "1.2.0";
   public static final String SPARK_STAGING_DIR = ".sparkStaging";
   public static final String SPARK_LOCRSC_SPARK_JAR = "__spark__.jar";
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";

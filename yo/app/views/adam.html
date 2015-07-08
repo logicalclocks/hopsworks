@@ -59,7 +59,7 @@
                     <li ng-repeat="result in job.jobOutputFileCollection" 
                         ng-show="job.jobOutputFileCollection">
                       <a ng-click="">
-                        {{result.jobOutputFilePK.name}} 
+                        {{result.path}} 
                       </a>
                     </li>
                   </ul>
@@ -170,7 +170,7 @@
                 </ul>
                 Results:
                 <ul>
-                  <li ng-repeat="result in adamCtrl.job.jobOutputFileCollection" ng-show="adamCtrl.job.jobOutputFileCollection"><a ng-click="">{{result.jobOutputFilePK.name}} </a></li>
+                  <li ng-repeat="result in adamCtrl.job.jobOutputFileCollection" ng-show="adamCtrl.job.jobOutputFileCollection"><a ng-click="">{{result.path}} </a></li>
                 </ul>
                 </p>
               </div>

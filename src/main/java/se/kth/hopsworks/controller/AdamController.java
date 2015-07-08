@@ -133,22 +133,6 @@ public class AdamController {
     }
   }
 
-  private String getPathForString(String projectname, String t) {
-    t = t.replaceAll("\\\\", "/");
-    while (t.startsWith("/")) {
-      t = t.substring(1);
-    }
-    String strippedPath;
-    if (t.equals(projectname)) {
-      strippedPath = t;
-    } else if (t.startsWith(projectname + "/")) {
-      strippedPath = t;
-    } else {
-      strippedPath = projectname + "/" + t;
-    }
-    return File.separator + Constants.DIR_ROOT + File.separator + strippedPath;
-  }
-
   private List<String> constructArgs(AdamJobConfiguration ajc) {
     List<String> adamargs = new ArrayList<>();
     //First: add command

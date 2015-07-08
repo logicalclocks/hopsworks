@@ -43,7 +43,7 @@
                   </ul>
                   Results:
                   <ul>
-                    <li ng-repeat="result in job.jobOutputFileCollection" ng-show="job.jobOutputFileCollection"><a ng-click="">{{result.jobOutputFilePK.name}} </a></li>
+                    <li ng-repeat="result in job.jobOutputFileCollection" ng-show="job.jobOutputFileCollection"><a ng-click="">{{result.path}} </a></li>
                   </ul>
                   </p>
                 </div>
@@ -128,7 +128,7 @@
                 </ul>
                 Results:
                 <ul>
-                  <li ng-repeat="result in sparkCtrl.job.jobOutputFileCollection" ng-show="sparkCtrl.job.jobOutputFileCollection"><a ng-click="">{{result.jobOutputFilePK.name}} </a></li>
+                  <li ng-repeat="result in sparkCtrl.job.jobOutputFileCollection" ng-show="sparkCtrl.job.jobOutputFileCollection"><a ng-click="">{{result.path}} </a></li>
                 </ul>
                 </p>
               </div>
