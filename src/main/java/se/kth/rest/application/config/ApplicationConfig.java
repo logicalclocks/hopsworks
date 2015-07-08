@@ -32,13 +32,11 @@ public class ApplicationConfig extends Application {
     resources.add(se.kth.hopsworks.rest.AuthExceptionMapper.class);
     resources.add(se.kth.hopsworks.rest.AuthService.class);
     resources.add(se.kth.hopsworks.rest.CuneiformService.class);
-    resources.add(se.kth.hopsworks.rest.DataSetService.class);
     resources.add(se.kth.hopsworks.rest.JobService.class);
     resources.add(se.kth.hopsworks.rest.ProjectMembers.class);
     resources.add(se.kth.hopsworks.rest.ProjectService.class);
     resources.add(se.kth.hopsworks.rest.ThrowableExceptionMapper.class);
     resources.add(se.kth.hopsworks.rest.TransactionExceptionMapper.class);
-    resources.add(se.kth.hopsworks.rest.UploadService.class);
     resources.add(se.kth.hopsworks.rest.UserService.class);
   }
 }

@@ -206,18 +206,16 @@ CREATE TABLE `organization` (
 -- Metadata --------------
 -- ------------------------
 
-CREATE TABLE `meta_field_predefined_values` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `fieldid` INT(11) NOT NULL,
-  `valuee` VARCHAR(250) NOT NULL,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=ndbcluster;
-
 CREATE TABLE `meta_templates` (
   `templateid` INT(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(250) NOT NULL,
   PRIMARY KEY (`templateid`)
+) ENGINE=ndbcluster;
+
+CREATE TABLE `meta_field_types` (
+  `id` MEDIUMINT(9) NOT NULL AUTO_INCREMENT,
+  `description` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_tables` (
@@ -225,13 +223,7 @@ CREATE TABLE `meta_tables` (
   `name` VARCHAR(255) DEFAULT NULL,
   `templateid` INT(11) NOT NULL,
   PRIMARY KEY (`tableid`),
-  FOREIGN KEY (`templateid`) REFERENCES `templates` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=ndbcluster;
-
-CREATE TABLE `meta_field_types` (
-  `id` MEDIUMINT(9) NOT NULL AUTO_INCREMENT,
-  `description` VARCHAR(50) NOT NULL,
-  PRIMARY KEY (`id`)
+  FOREIGN KEY (`templateid`) REFERENCES `meta_templates` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_fields` (
@@ -243,10 +235,24 @@ CREATE TABLE `meta_fields` (
   `tableid` INT(11) DEFAULT NULL,
   `type` VARCHAR(255) DEFAULT NULL,
   `description` VARCHAR(250) NOT NULL,
-  `fieldtypeid` INT(11) NOT NULL,
+  `fieldtypeid` MEDIUMINT(11) NOT NULL,
   PRIMARY KEY (`fieldid`),
-  FOREIGN KEY (`tableid`) REFERENCES `tables` (`tableid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`tableid`) REFERENCES `meta_tables` (`tableid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   FOREIGN KEY (`fieldtypeid`) REFERENCES `meta_field_types` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
+
+CREATE TABLE `meta_field_predefined_values` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `fieldid` INT(11) NOT NULL,
+  `valuee` VARCHAR(250) NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
+
+CREATE TABLE `meta_tuple_to_file` (
+  `inodeid` INT(11) DEFAULT NULL,
+  `tupleid` INT(11) DEFAULT NULL,
+  PRIMARY KEY (`tupleid`)
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_raw_data` (
@@ -255,9 +261,21 @@ CREATE TABLE `meta_raw_data` (
   `fieldid` INT(11) DEFAULT NULL,
   `tupleid` INT(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   FOREIGN KEY (`tupleid`) REFERENCES `meta_tuple_to_file` (`tupleid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
+
+CREATE TABLE `meta_template_to_inode` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `template_id` INT(11) NOT NULL,
+  `inode_pid` INT(11) NOT NULL,
+  `inode_name` VARCHAR(3000) NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`,`name`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=ndbcluster CHARSET=latin1;
+
+-- elastic jdbc-importer assisting tables ------
 
 CREATE TABLE `meta_inodes_ops_children_deleted` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -270,22 +288,6 @@ CREATE TABLE `meta_inodes_ops_parents_deleted` (
   `inodeid` INT(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=ndbcluster;
-
-CREATE TABLE `meta_tuple_to_file` (
-  `inodeid` INT(11) DEFAULT NULL,
-  `tupleid` INT(11) DEFAULT NULL,
-  PRIMARY KEY (`tupleid`)
-) ENGINE=ndbcluster;
-
-CREATE TABLE `meta_template_to_inode` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `template_id` INT(11) NOT NULL,
-  `inode_pid` INT(11) NOT NULL,
-  `inode_name` VARCHAR(250) NOT NULL,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=ndbcluster;
-
 
 -- VIEWS --------------
 -- ---------------------
