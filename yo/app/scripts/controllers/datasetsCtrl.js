@@ -43,6 +43,10 @@ angular.module('hopsWorksApp')
               $location.path('/');
             });
 
+            /*
+             * Get all datasets under the current project.
+             * @returns {undefined}
+             */
             var getAll = function () {
               dataSetService.getAll().then(
                       function (success) {
@@ -54,6 +58,11 @@ angular.module('hopsWorksApp')
               });
             };
 
+            /**
+             * Get all directories under the DS with given name.
+             * @param {type} datasetName
+             * @returns {undefined}
+             */
             var getDir = function (name) {
               var newPath = "";
               if (self.currentPath && name) {
@@ -176,6 +185,11 @@ angular.module('hopsWorksApp')
               self.metaData = {};
             };
 
+            /**
+             * Download a file.
+             * @param {type} file Can either be a filename or a path.
+             * @returns {undefined}
+             */
             var download = function (file) {
               dataSetService.download(file).then(
                       function (success) {
@@ -187,6 +201,11 @@ angular.module('hopsWorksApp')
               });
             };
 
+            /**
+             * Upload a file to the specified path.
+             * @param {type} path
+             * @returns {undefined}
+             */
             var upload = function (path) {
               dataSetService.upload(path).then(
                       function (success) {
@@ -208,8 +227,11 @@ angular.module('hopsWorksApp')
               });
             };
 
-            //if in dataset browser show current dataset content
-            //else show datasets in project
+            /*
+             * Load the datasets/folder contents to be displayed.
+             * if in dataset browser show current dataset content
+             * else show datasets in project
+             */
             var load = function (path) {
               if (path) {
                 getDir(path);
@@ -220,6 +242,10 @@ angular.module('hopsWorksApp')
 
             load(currentDS);
 
+            /**
+             * Open a modal dialog for DS creation.
+             * @returns {undefined}
+             */
             self.newDataSetModal = function () {
               ModalService.newDataSet('md', self.currentPath).then(
                       function (success) {
@@ -242,6 +268,14 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            /**
+             * Delete the file with the given name. If currently in a Dataset, 
+             * will prepend the current path, otherwise will remove the dataset 
+             * with given name. If called on a folder, will remove the folder 
+             * and all its contents recursively.
+             * @param {type} fileName
+             * @returns {undefined}
+             */
             self.deleteFile = function (fileName) {
               if (currentDS) {
                 removeDataSetDir(self.currentPath + '/' + fileName);
@@ -250,6 +284,10 @@ angular.module('hopsWorksApp')
               }
             };
 
+            /**
+             * Opens a modal dialog for file upload.
+             * @returns {undefined}
+             */
             self.uploadFile = function () {
               var templateId = -1;
 
@@ -269,6 +307,14 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            /**
+             * Upon click on a inode in the browser:
+             *  + If folder: open folder, fetch contents from server and display.
+             *  + If file: open a confirm dialog prompting for download.
+             * @param {type} name
+             * @param {type} isDir
+             * @returns {undefined}
+             */
             self.openDir = function (name, isDir) {
               if (isDir) {
                 getDir(name);
@@ -281,6 +327,10 @@ angular.module('hopsWorksApp')
               }
             };
 
+            /**
+             * Go up to parent directory.
+             * @returns {undefined}
+             */
             self.back = function () {
 
               if (self.pathParts.length > 1) {
@@ -295,6 +345,11 @@ angular.module('hopsWorksApp')
               }
             };
 
+            /**
+             * Go to the folder at the index in the pathparts array.
+             * @param {type} index
+             * @returns {undefined}
+             */
             self.goToFolder = function (index) {
               var parts = self.currentPath.split('/');
               if (index > -1) {
@@ -307,6 +362,12 @@ angular.module('hopsWorksApp')
               }
             };
 
+            /**
+             * Select an inode; updates details panel.
+             * @param {type} selectedIndex
+             * @param {type} file
+             * @returns {undefined}
+             */
             self.select = function (selectedIndex, file) {
               self.selected = selectedIndex;
               self.fileDetail = file;
