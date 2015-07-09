@@ -32,6 +32,7 @@ angular.module('hopsWorksApp')
               dataSetService.getContents(path).then(
                       function (success) {
                         self.files = success.data;
+                        self.pathArray = [];
                         console.log(success);
                       }, function (error) {
                 console.log("Error getting all datasets in project " + self.projectId);
