@@ -106,11 +106,12 @@ public class DataSetService {
 
   /**
    * Get the inodes in the given project-relative path.
+   * <p>
    * @param path
    * @param sc
    * @param req
    * @return
-   * @throws AppException 
+   * @throws AppException
    */
   @GET
   @Path("/{path: .+}")
@@ -121,15 +122,16 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     //Strip leading slashes.
-    while(path.startsWith("/")){
+    while (path.startsWith("/")) {
       path = path.substring(1);
     }
-    String fullpath = "/"+Constants.DIR_ROOT+"/"+project.getName()+"/"+path;
+    String fullpath = "/" + Constants.DIR_ROOT + "/" + project.getName() + "/"
+            + path;
     List<Inode> cwdChildren;
     try {
       cwdChildren = inodes.getChildren(fullpath);
     } catch (IllegalArgumentException ex) {
-      logger.log(Level.WARNING, "Trying to access children of file.",ex);
+      logger.log(Level.WARNING, "Trying to access children of file.", ex);
       throw new AppException(Response.Status.NO_CONTENT.getStatusCode(),
               "Cannot list the directory contents of a regular file.");
     } catch (FileNotFoundException ex) {

@@ -46,11 +46,11 @@ angular.module('hopsWorksApp')
                 self.confirmSelection();
               }
             };
-            
-            self.back = function(datasetsCtrl){
+
+            self.back = function (datasetsCtrl) {
               if (datasetsCtrl.pathArray.length <= 1) {
                 datasetsCtrl.getAllDatasets();
-              }else{
+              } else {
                 datasetsCtrl.back();
               }
             };

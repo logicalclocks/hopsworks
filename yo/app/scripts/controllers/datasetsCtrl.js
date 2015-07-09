@@ -82,7 +82,7 @@ angular.module('hopsWorksApp')
               }
               getDirContents();
             }
-            
+
             init();
 
             /**
