@@ -109,8 +109,6 @@ public class MetadataMessage implements Message {
       list.add(table);
       return list;
     } catch (NullPointerException e) {
-
-      System.err.println("MetadataMessage:parseSchema() " + e.getMessage());
     }
 
     Set<Entry<String, JsonValue>> set = obj.entrySet();

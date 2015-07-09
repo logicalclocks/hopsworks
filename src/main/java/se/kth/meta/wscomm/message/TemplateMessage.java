@@ -225,7 +225,6 @@ public class TemplateMessage extends ContentMessage {
           table.addField(f);
 
         } catch (NullPointerException e) {
-          System.err.println("-- find is null mapping to " + (false));
           searchable = false;
           required = false;
         }

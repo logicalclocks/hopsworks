@@ -58,8 +58,6 @@ public class WebSocketEndpoint {
 
     this.project = getProject(projectId);
     
-    System.out.println("PROJECT RETRIEVED " + project);
-    
     if (this.project == null) {
       try {
         sendError(session, "Project does not exist.");
@@ -127,7 +125,6 @@ public class WebSocketEndpoint {
 
   @OnError
   public void error(Session session, Throwable t) {
-    //t.printStackTrace();
     logger.log(Level.SEVERE, t.getMessage(), t);
   }
 

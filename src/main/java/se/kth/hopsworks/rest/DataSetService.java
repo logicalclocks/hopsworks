@@ -345,7 +345,6 @@ public class DataSetService {
       this.uploader.setTemplateId(templateId);
     }
     
-    System.out.println("THE UPLOAD PATH IS " + uploadPath);
     this.uploader.setPath(uploadPath);
 
     return this.uploader;

@@ -210,8 +210,6 @@ public class Protocol {
         for (RawData rawdata : raw) {
           TupleToFile ttf = this.db.getTupletofile(rawdata.getTupleid());
           rawdata.setInodeid(ttf.getInodeid());
-          System.err.println("SETTING THE INODE FOR TUPLE TO FILE " + ttf.
-                  getInodeid());
         }
       }
 
@@ -255,7 +253,6 @@ public class Protocol {
 
           //keep only the data related to the specific inode
           if (ttf.getInodeid() == inodeid) {
-            //System.err.println("GOING TO KEEP RAW RECORD " + ttf.getTupleid());
             raw.setInodeid(ttf.getInodeid());
             toKeep.add(raw);
           }

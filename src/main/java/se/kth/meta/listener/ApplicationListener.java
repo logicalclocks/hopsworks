@@ -61,8 +61,6 @@ public class ApplicationListener implements ServletContextListener,
 
   @Override
   public void contextDestroyed(ServletContextEvent servletContextEvent) {
-    System.err.println("METAHOPS WS DESTROYED");
-
     try {
       this.db.shutdown();
     } catch (NullPointerException | DatabaseException e) {
