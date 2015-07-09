@@ -6,7 +6,6 @@
 
 
 angular.module('hopsWorksApp')
-<<<<<<< HEAD
         .controller('DatasetsCtrl', ['$rootScope', '$modal', '$scope', '$q', '$timeout', '$mdSidenav', '$mdUtil', '$log', 'WSComm',
           'DataSetService', '$routeParams', 'ModalService', 'growl', 'ProjectService', 'MetadataActionService', '$location',
           function ($rootScope, $modal, $scope, $q, $timeout, $mdSidenav, $mdUtil, $log, WSComm, DataSetService, $routeParams,
