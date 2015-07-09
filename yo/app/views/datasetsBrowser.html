@@ -12,12 +12,12 @@
       <md-content flex="" layout-padding="">
         <div ng-include="'navProject.html'"></div>
         <div layout="column" layout-fill="" layout-align="top center">
-          <div class="content-wrapper">
+          <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl">
             <h3>
-              <a href="#/project/{{datasetsCtrl.currentProject.projectId}}/datasets">
-                {{ datasetsCtrl.currentProject.projectName}}
+              <a href="#/project/{{datasetsCtrl.projectId}}/datasets">
+                {{ projectCtrl.currentProject.projectName}}
               </a>
-              <span data-ng-repeat="path in datasetsCtrl.pathParts track by $index">/
+              <span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/
                 <a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>
             </h3>
             <div class="row">
@@ -25,7 +25,7 @@
                 <table id="mytable" class="table table-bordred table-striped" style="margin-bottom:0px;">
                   <thead>
                   <th style="border-bottom: 1px solid #e7eaec; color: #2e353d; font-size: 22px">
-                    <i class="glyphicon glyphicon-folder-open" style="padding-right: 10px;"></i>{{datasetsCtrl.currentDataSet}}
+                    <i class="glyphicon glyphicon-folder-open" style="padding-right: 10px;"></i>{{datasetsCtrl.pathArray[0]}}
                   </th>
                   </thead>
                 </table>

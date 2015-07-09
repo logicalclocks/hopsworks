@@ -48,7 +48,7 @@ angular.module('hopsWorksApp')
             
             self.back = function(datasetsCtrl){
               if (datasetsCtrl.pathParts.length <= 1) {
-                datasetsCtrl.getAll();
+                datasetsCtrl.getAllDatasets();
               }else{
                 datasetsCtrl.back();
               }
