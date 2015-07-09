@@ -1,5 +1,6 @@
 package se.kth.bbc.project.fb;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -264,6 +265,25 @@ public class InodeFacade extends AbstractFacade<Inode> {
       path.append("/").append(pathComponents.get(j));
     }
     return path.toString();
+  }
+
+  /**
+   * Get the inodes in the directory pointed to by the given absolute HDFS path.
+   * <p>
+   * @param path
+   * @return
+   * @throws IllegalArgumentException If the path does not point to a directory.
+   * @throws java.io.FileNotFoundException If the path does not exist.
+   */
+  public List<Inode> getChildren(String path) throws IllegalArgumentException,
+          FileNotFoundException {
+    Inode parent = getInode(path);
+    if (parent == null) {
+      throw new FileNotFoundException("No inode exists at " + path + ".");
+    } else if (!parent.isDir()) {
+      throw new IllegalArgumentException("Path does not point to a directory.");
+    }
+    return getChildren(parent);
   }
 
 }
