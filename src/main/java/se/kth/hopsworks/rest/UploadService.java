@@ -203,7 +203,7 @@ public class UploadService {
                 + this.path + fileName, this.path
                 + fileName);
         logger.log(Level.SEVERE, "Copied to HDFS");
-        
+
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(json).build();
