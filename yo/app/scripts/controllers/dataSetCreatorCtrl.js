@@ -8,8 +8,8 @@
 
 
 angular.module('hopsWorksApp')
-    .controller('DataSetCreatorCtrl', ['$modalInstance','DataSetService', 'MetadataActionService', '$routeParams','growl', 'dataSet',
-        function ($modalInstance, DataSetService, MetadataActionService, $routeParams, growl, dataSet) {
+    .controller('DataSetCreatorCtrl', ['$modalInstance','DataSetService', 'MetadataActionService', '$routeParams','growl', 'path',
+        function ($modalInstance, DataSetService, MetadataActionService, $routeParams, growl, path) {
 
             var self = this;
 
@@ -50,9 +50,8 @@ angular.module('hopsWorksApp')
             };
 
             self.saveDataSetDir = function () {
-                if (dataSet) {
-                    
-                    self.dataSet.name = dataSet + '/' + self.dataSet.name;
+                if (path) {                    
+                    self.dataSet.name = path + '/' + self.dataSet.name;
                     self.dataSet.template = self.selectedTemplate.id;
                     
                          console.log("SELECTED THE TEMPLATE 1 " + JSON.stringify(self.selectedTemplate));               

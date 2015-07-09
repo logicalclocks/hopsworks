@@ -110,8 +110,13 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              
-              newDataSet: function (size, dataSet) {
+              /**
+               * Open a dialog to allow creating a new folder at the given path (excluding the new folder's name).
+               * @param {type} size
+               * @param {type} location
+               * @returns {$modal@call;open.result}
+               */
+              newFolder: function (size, path) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/newDataSet.html',
                   controller: 'DataSetCreatorCtrl as datasetCreatorCtrl',
@@ -128,9 +133,9 @@ angular.module('hopsWorksApp')
                                   return $q.reject(err);
                                 });
                       }],
-                  dataSet: function () {
-                    return dataSet;
-                  }
+                    path: function () {
+                      return path;
+                    }
                   }
                 });
                 return modalInstance.result;

@@ -14,6 +14,11 @@
 
     <table class="table table-bordred table-hover" >
       <tbody ui-sortable ng-model="datasetsCtrl.files">
+        <tr>
+          <td style="padding: 0px">&nbsp &nbsp
+            <a ng-click="selectFileCtrl.back(datasetsCtrl)" style="font-size:25px">..</a>
+          </td>
+        </tr>
         <tr ng-repeat="file in datasetsCtrl.files"
             context-menu
             data-target="menu-{{ $index}}"

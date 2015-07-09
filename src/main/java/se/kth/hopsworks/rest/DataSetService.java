@@ -1,6 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -111,6 +112,15 @@ public class DataSetService {
             inodViews).build();
   }
 
+  /**
+   * Get the inodes in the given project-relative path.
+   * <p>
+   * @param path
+   * @param sc
+   * @param req
+   * @return
+   * @throws AppException
+   */
   @GET
   @Path("/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -119,21 +129,24 @@ public class DataSetService {
           @PathParam("path") String path,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-
-    Inode parent = inodes.getProjectRoot(this.project.getName());
-    String[] pathArray = path.split(File.separator);
-
-    for (String p : pathArray) {
-      parent = inodes.findByParentAndName(parent, p);
+    //Strip leading slashes.
+    while (path.startsWith("/")) {
+      path = path.substring(1);
     }
-
-    if (parent == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              ResponseMessages.FILE_NOT_FOUND);
-    }
-
+    String fullpath = "/" + Constants.DIR_ROOT + "/" + project.getName() + "/"
+            + path;
     List<Inode> cwdChildren;
-    cwdChildren = inodes.findByParent(parent);
+    try {
+      cwdChildren = inodes.getChildren(fullpath);
+    } catch (IllegalArgumentException ex) {
+      logger.log(Level.WARNING, "Trying to access children of file.", ex);
+      throw new AppException(Response.Status.NO_CONTENT.getStatusCode(),
+              "Cannot list the directory contents of a regular file.");
+    } catch (FileNotFoundException ex) {
+      logger.log(Level.WARNING, "Trying to access non-existent path.", ex);
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              "Path not found.");
+    }
     List<InodeView> kids = new ArrayList<>();
     for (Inode i : cwdChildren) {
       kids.add(new InodeView(i, inodes.getPath(i)));

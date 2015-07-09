@@ -10,8 +10,8 @@
       <md-content flex="" layout-padding="">
         <div ng-include="'navProject.html'"></div>
         <div layout="column" layout-fill="" layout-align="top center">
-          <div class="content-wrapper">
-            <h3 id="projectBread" style="display: none;"> {{datasetsCtrl.currentProject.projectName}} /{{datasetsCtrl.currentDataSet}}</h3>
+          <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl">
+            <h3 id="projectBread" style="display: none;"> {{projectCtrl.currentProject.projectName}} /{{datasetsCtrl.pathArray[0]}}</h3>
             <div class="row">
               <div class="col-lg-2" style="max-width: 250px">
                 <div class="ibox float-e-margins">
@@ -45,7 +45,7 @@
                 </div>
               </div>
               <div class="col-lg-10">
-                <div ng-repeat="dataset in datasetsCtrl.datasets">
+                <div ng-repeat="dataset in datasetsCtrl.files">
                   <div ng-if="($index % 6 == 0) && ($index !== 0)" class="row"></div>
                   <div ng-click="projectCtrl.goToSpecificDataset(dataset.name)"
                        ng-init="(iscollapsed$index) = true"

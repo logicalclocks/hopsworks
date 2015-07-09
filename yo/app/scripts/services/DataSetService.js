@@ -7,11 +7,21 @@ angular.module('hopsWorksApp')
         .factory('DataSetService', ['$http', function ($http) {
             return function (id) {
               var services = {
-                getAll: function () {
+                /**
+                 * Get the listing of all datasets under the current project.
+                 * @returns {unresolved}
+                 */
+                getAllDatasets: function () {
                   return $http.get('/api/project/' + id + '/dataset/');
                 },
-                getDir: function (dirName) {
-                  return $http.get('/api/project/' + id + '/dataset/' + dirName);
+                /**
+                 * Get the contents of the folder to which the path points. 
+                 * The parameter is a path relative to the project root folder.
+                 * @param {type} relativePath
+                 * @returns {unresolved}
+                 */
+                getContents: function (relativePath) {
+                  return $http.get('/api/project/' + id + '/dataset/' + relativePath);
                 },
                 download: function (fileName) {
                   return $http.get('/api/project/' + id + '/dataset/download/' + fileName, {responseType: 'arraybuffer'});
