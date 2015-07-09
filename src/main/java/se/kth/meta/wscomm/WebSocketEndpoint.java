@@ -57,7 +57,7 @@ public class WebSocketEndpoint {
     logger.log(Level.INFO, "PROJECT ID {0}", projectId);
 
     this.project = getProject(projectId);
-    
+
     if (this.project == null) {
       try {
         sendError(session, "Project does not exist.");

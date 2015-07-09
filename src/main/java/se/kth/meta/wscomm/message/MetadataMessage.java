@@ -96,7 +96,6 @@ public class MetadataMessage implements Message {
             readObject();
     List<EntityIntf> data = new LinkedList<>();
 
-
     int inodeid = -1;
 
     try {

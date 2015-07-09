@@ -252,7 +252,7 @@ public class UploadService {
       //persist the relationship table
       db.updateTemplatesInodesMxN(template);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE,"Something went wrong.",e);
+      logger.log(Level.SEVERE, "Something went wrong.", e);
     }
   }
 

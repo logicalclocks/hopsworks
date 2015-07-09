@@ -14,7 +14,7 @@ angular.module('hopsWorksApp').controller('TemplateDropdownCtrl',
             self.templates = [];
 
             MetadataActionService.fetchTemplates()
-              .then(function (response) {
+                    .then(function (response) {
                       var temps = JSON.parse(response.board);
                       angular.forEach(temps.templates, function (value, key) {
                         self.templates.push(value);

@@ -91,7 +91,9 @@ public class ResumableInfo {
     return uploadedChunks.contains(rcn);
   }
 
-  /* getters */
+  /*
+   * getters
+   */
   public int getResumableChunkSize() {
     return this.resumableChunkSize;
   }
@@ -124,7 +126,9 @@ public class ResumableInfo {
     return this.resumableFilePath;
   }
 
-  /* setters */
+  /*
+   * setters
+   */
   public void setResumableChunkSize(int resumableChunkSize) {
     this.resumableChunkSize = resumableChunkSize;
   }
@@ -156,5 +160,5 @@ public class ResumableInfo {
   public void setResumableFilePath(String resumableFilePath) {
     this.resumableFilePath = resumableFilePath;
   }
-  
+
 }

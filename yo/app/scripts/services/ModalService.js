@@ -19,7 +19,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-
               createProject: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/projectModal.html',
@@ -41,7 +40,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-
               projectSettings: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/projectSettingsModal.html',
@@ -63,7 +61,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-
               profile: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/profile.html',
@@ -85,7 +82,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-
               projectMembers: function (size, projectId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/members.html',
@@ -140,7 +136,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-
               upload: function (size, projectId, path, templateId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/fileUpload.html',
@@ -164,15 +159,14 @@ angular.module('hopsWorksApp')
                     path: function () {
                       return path;
                     },
-                    templateId: function(){
+                    templateId: function () {
                       return templateId;
                     }
                   }
                 });
                 return modalInstance.result;
               },
-              
-              selectTemplate: function(size, templateId){
+              selectTemplate: function (size, templateId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/templateDropdown.html',
                   controller: 'TemplateDropdownCtrl as templateDropdownCtrl',

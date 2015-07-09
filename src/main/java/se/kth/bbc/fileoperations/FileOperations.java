@@ -11,7 +11,6 @@ import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 
-
 /**
  * Session bean for file operations. Translates high-level operations into
  * operations on both the file system (HDFS) and the backing DB model (table

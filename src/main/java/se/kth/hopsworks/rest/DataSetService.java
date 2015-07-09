@@ -341,10 +341,10 @@ public class DataSetService {
       uploadPath = this.path + path + File.separator;
     }
 
-    if(templateId != 0){
+    if (templateId != 0) {
       this.uploader.setTemplateId(templateId);
     }
-    
+
     this.uploader.setPath(uploadPath);
 
     return this.uploader;

@@ -33,7 +33,7 @@ function Phase(name) {
   };
 }
 
-function Card(id, title, list, details, editing, 
+function Card(id, title, list, details, editing,
         find, required, sizefield, description, fieldtypeid, fieldtypeContent) {
   this.id = id;
   this.title = title;

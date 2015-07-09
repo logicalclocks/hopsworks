@@ -286,13 +286,13 @@ angular.module('hopsWorksApp')
                         templateId = success.templateId;
                         console.log("RETURNED TEMPLATE ID " + templateId);
 
-              ModalService.upload('lg', self.projectId, getPath(self.pathArray),templateId).then(
+                        ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
                                 function (success) {
                                   growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
-                        getDirContents();
+                                  getDirContents();
                                 }, function (error) {
                           growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
-                getDirContents();
+                          getDirContents();
                         });
                       });
             };

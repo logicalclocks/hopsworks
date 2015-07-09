@@ -199,7 +199,6 @@ public class Dbao {
 //                throw new DatabaseException("Table '" + t.getName() + "' has fields "
 //                        + "associated to it");
 //            }
-
       //first remove all the child elements of this table to avoid foreign key violation
       List<Fields> fields = t.getFields();
       for (Fields field : fields) {
