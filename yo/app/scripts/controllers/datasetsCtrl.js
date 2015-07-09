@@ -6,10 +6,10 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('DatasetsCtrl', ['$rootScope', '$modal', '$scope', '$q', '$timeout', '$mdSidenav', '$mdUtil', '$log', 'WSComm',
-          'DataSetService', '$routeParams', 'ModalService', 'growl', 'ProjectService', 'MetadataActionService', '$location',
-          function ($rootScope, $modal, $scope, $q, $timeout, $mdSidenav, $mdUtil, $log, WSComm, DataSetService, $routeParams,
-                  ModalService, growl, ProjectService, MetadataActionService, $location) {
+        .controller('DatasetsCtrl', ['$rootScope', '$modal', '$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
+          'DataSetService', '$routeParams', 'ModalService', 'growl', 'MetadataActionService', '$location',
+          function ($rootScope, $modal, $scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, $routeParams,
+                  ModalService, growl, MetadataActionService, $location) {
 
             var self = this;
 
