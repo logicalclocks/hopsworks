@@ -67,6 +67,9 @@
                         </thead>
 
                         <tbody ui-sortable ng-model="datasetsCtrl.files">
+                          <td style="padding: 0px">&nbsp &nbsp
+-                          <a ng-click="datasetsCtrl.back()" style="font-size:25px">..</a></td>
+
                           <tr ng-repeat="file in datasetsCtrl.files"
                               context-menu
                               data-target="menu-{{ $index}}"
@@ -115,7 +118,7 @@
                                        tabindex="3"
                                        ng-click="datasetsCtrl.attachTemplate(file)">
                                       <span><i class="fa fa-camera-retro"></i>
-                                        Share...</span>
+                                        Attach template</span>
                                     </a>
                                   </li>
 
