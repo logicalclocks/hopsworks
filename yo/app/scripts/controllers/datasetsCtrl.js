@@ -525,38 +525,6 @@ angular.module('hopsWorksApp')
                       });
             };
 
-
-            self.back = function () {
-
-              if (self.pathParts.length > 1) {
-                self.pathParts.pop();
-                self.currentPath = self.pathParts.join('/');
-                self.currentDataSet = self.pathParts[self.pathParts.length - 1];
-                if (self.currentPath) {
-                  getDir();
-                }
-              } else {
-                $location.path('/project/' + self.currentProject.projectId + '/datasets');
-              }
-            };
-
-            self.goToFolder = function (index) {
-              var parts = self.currentPath.split('/');
-              if (index > -1) {
-                var newPath = self.pathParts.splice(0, index + 1);
-                self.currentPath = newPath.join('/');
-                self.currentDataSet = parts[index];
-                if (self.currentPath) {
-                  getDir();
-                }
-              }
-            };
-
-            self.select = function (selectedIndex, file) {
-              self.selected = selectedIndex;
-              self.fileDetail = file;
-            };
-
             /* Metadata designer */
             self.deleteCard = function (column, card) {
               MetadataActionService.deleteCard(self.currentTemplateID, column, card)
