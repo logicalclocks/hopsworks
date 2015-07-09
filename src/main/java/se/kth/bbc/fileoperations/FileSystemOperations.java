@@ -65,33 +65,6 @@ public class FileSystemOperations {
     return dfs.open(location, 1048576); //TODO: undo hard coding of weird constant here...
   }
 
- public void testCreate() throws Exception {
-//    Configuration conf = new HdfsConfiguration();
-//    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-//        .numDataNodes(2)
-//        .build();
-//    try {
-//      DistributedFileSystem dfs = cluster.getFileSystem();
-//      Path projects = new Path("/projects");
-//      Path project = new Path(projects, "project");
-//      final Path dataset = new Path(project, "dataset");
-//      final Path subdir = new Path(dataset, "subdir");
-//      Path file = new Path(subdir, "file");
-//      dfs.mkdirs(dataset, FsPermission.getDefault());
-//      dfs.setMetaEnabled(dataset, true);
-//      dfs.mkdirs(subdir);
-//      assertTrue(checkLog(TestUtil.getINodeId(cluster.getNameNode(), subdir),
-//          MetadataLogEntry.Operation.ADD));
-//      HdfsDataOutputStream out = TestFileCreation.create(dfs, file, 1);
-//      out.close();
-//      assertTrue(checkLog(TestUtil.getINodeId(cluster.getNameNode(), file),
-//          MetadataLogEntry.Operation.ADD));
-//    } finally {
-//      if (cluster != null) {
-//        cluster.shutdown();
-//      }
-//    }
-  }
   /**
    * Create a new folder on the given path. Equivalent to mkdir -p.
    *

@@ -152,10 +152,6 @@ public class Inode implements Serializable {
   public Inode() {
   }
 
-  public Inode(Integer id) {
-    this.id = id;
-  }
-
   public Inode(InodePK inodePK) {
     this.inodePK = inodePK;
   }

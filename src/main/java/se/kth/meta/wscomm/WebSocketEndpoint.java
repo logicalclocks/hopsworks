@@ -62,7 +62,6 @@ public class WebSocketEndpoint {
     
     if (this.project == null) {
       try {
-        System.out.println("CLOSING THE FUCKING SESSION");
         sendError(session, "Project does not exist.");
         session.close();
         return;
