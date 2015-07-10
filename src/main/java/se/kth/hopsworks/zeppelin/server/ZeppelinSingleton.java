@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
-import org.apache.zeppelin.notebook.Notebook;
+import org.apache.zeppelin.interpreter.InterpreterOption;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import se.kth.hopsworks.zeppelin.socket.NotebookServer;
@@ -27,7 +27,6 @@ public enum ZeppelinSingleton {
           = "/zeppelinConf/zeppelin-site.xml";
   private ZeppelinConfiguration conf;
   private SchedulerFactory schedulerFactory;
-  private Notebook notebook;
 
   private NotebookServer notebookServer;
 
@@ -38,21 +37,10 @@ public enum ZeppelinSingleton {
     try {
       this.conf = loadConfig();
       this.schedulerFactory = new SchedulerFactory();
-      this.replFactory = new InterpreterFactory(conf, notebookServer);
       this.notebookServer = setupNotebookServer();
-
-//      Class<?> notebookStorageClass = Class.forName(conf.getString(
-//              ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE));
-//      Constructor<?> constructor = notebookStorageClass.getConstructor(
-//              ZeppelinConfiguration.class);
-//      this.notebookRepo = (NotebookRepo) constructor.newInstance(conf);
-//
-//      this.notebook = new Notebook(conf, notebookRepo, schedulerFactory,
-//              replFactory,
-//              notebookServer);
+      this.replFactory = new InterpreterFactory(conf, new InterpreterOption(true), notebookServer);
     } catch (Exception e) {
-      Logger.getLogger(ZeppelinSingleton.class.getName()).log(Level.SEVERE,
-              "Error in initializing singleton class.", e);
+      logger.log(Level.SEVERE, "Error in initializing singleton class.", e);
     }
   }
 
@@ -68,14 +56,10 @@ public enum ZeppelinSingleton {
   public NotebookRepo getNotebookRepo() {
     return notebookRepo;
   }
-  
+
   public SchedulerFactory getSchedulerFactory() {
     return this.schedulerFactory;
   }
-
-//  public Notebook getNotebook() {
-//    return this.notebook;
-//  }
 
   public NotebookServer getNotebookServer() {
     return this.notebookServer;

@@ -88,6 +88,9 @@ public class NotebookServer implements
     this.project = getProject((String) config.getUserProperties().get(
             "projectID"));
     authenticateUser(conn, this.project, this.sender);
+    if(this.userRole == null){
+      return;
+    }
     this.notebook = setupNotebook(this.project);
     synchronized (connectedSockets) {
       connectedSockets.add(conn);

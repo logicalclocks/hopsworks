@@ -48,14 +48,14 @@
 
 <property>
   <name>zeppelin.conf.dir</name>
-  <value>../incubator-zeppelin/conf</value>
+  <value>/srv/zeppelin/conf</value>
   <description>path for config directory</description>
 </property>
 
 
 <property>
   <name>zeppelin.notebook.dir</name>
-  <value>../incubator-zeppelin/notebook</value>
+  <value>/srv/zeppelin/notebook</value>
   <description>path or URI for notebook persist</description>
 </property>
 
@@ -69,13 +69,13 @@
 
 <property>
   <name>zeppelin.interpreter.dir</name>
-  <value>../incubator-zeppelin/interpreter</value>
+  <value>/srv/zeppelin/interpreter</value>
   <description>Interpreter implementation base directory</description>
 </property>
 
 <property>
   <name>zeppelin.interpreter.remoterunner</name>
-  <value>../incubator-zeppelin/bin/interpreter.sh</value>
+  <value>/srv/zeppelin/bin/interpreter.sh</value>
   <description>Interpreter implementation base directory</description>
 </property>
 
