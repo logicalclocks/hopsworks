@@ -7,7 +7,7 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldTypes;
+import se.kth.meta.entity.FieldType;
 
 /**
  *
@@ -84,12 +84,12 @@ public class FieldTypesMessage extends PlainMessage {
   @Override
   public String buildSchema(List<EntityIntf> list) {
 
-    List<FieldTypes> ft = (List<FieldTypes>) (List<?>) list;
+    List<FieldType> ft = (List<FieldType>) (List<?>) list;
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
     JsonArrayBuilder fieldTypes = Json.createArrayBuilder();
 
-    for (FieldTypes fi : ft) {
+    for (FieldType fi : ft) {
       JsonObjectBuilder field = Json.createObjectBuilder();
       field.add("id", fi.getId());
       field.add("description", fi.getDescription());

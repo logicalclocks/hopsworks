@@ -186,8 +186,7 @@ public class Project implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.project.Project[ name=" + name + " archived=" + archived
-            + " ]";
+    return "se.kth.bbc.project.Project[ name=" + name + " ]";
   }
 
   public Project(Integer id) {

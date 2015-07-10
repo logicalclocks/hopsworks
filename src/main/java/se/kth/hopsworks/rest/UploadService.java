@@ -243,20 +243,16 @@ public class UploadService {
 
   private void attachTemplateToInode(ResumableInfo info, String path) {
     //find the inode
-    System.out.println("GETTING INODE AT PATH " + path);
-    //filePath is the temporary path /tmp/1436282377581-0/Projects/Test/TestDataset/<fileName>.temp
     Inode inode = inodes.getInodeAtPath(path);
 
     Templates template = db.findTemplateById(info.getResumableTemplateId());
     template.getInodes().add(inode);
 
-    System.out.println("INODE FOUND " + inode.getId());
     try {
       //persist the relationship table
       db.updateTemplatesInodesMxN(template);
-      System.out.println("Persisting inode " + inode.getId() + " attaching template " + template.getId() + " - " + template.getName());
     } catch (DatabaseException e) {
-      System.err.println(e.getMessage());
+      logger.log(Level.SEVERE, "Something went wrong.", e);
     }
   }
 

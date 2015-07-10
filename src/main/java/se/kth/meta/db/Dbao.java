@@ -18,11 +18,11 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
-import se.kth.meta.entity.FieldPredefinedValues;
-import se.kth.meta.entity.FieldTypes;
-import se.kth.meta.entity.Fields;
+import se.kth.meta.entity.FieldPredefinedValue;
+import se.kth.meta.entity.FieldType;
+import se.kth.meta.entity.Field;
 import se.kth.meta.entity.RawData;
-import se.kth.meta.entity.Tables;
+import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.Templates;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.DatabaseException;
@@ -65,11 +65,11 @@ public class Dbao {
    * @return the id of the newly inserted table or -1 in case of error
    * @throws se.kth.meta.exception.DatabaseException
    */
-  public int addTable(Tables table) throws DatabaseException {
+  public int addTable(MTable table) throws DatabaseException {
 
     try {
       this.utx.begin();
-      Tables t = getTable(table.getId());
+      MTable t = getTable(table.getId());
 
       if (t != null) {
         /*
@@ -115,11 +115,11 @@ public class Dbao {
    * @return
    * @throws se.kth.meta.exception.DatabaseException
    */
-  public int addField(Fields field) throws DatabaseException {
+  public int addField(Field field) throws DatabaseException {
 
     try {
       this.utx.begin();
-      Fields f = getField(field.getId());
+      Field f = getField(field.getId());
       if (f != null) {
         f.copy(field);
         this.em.merge(f);
@@ -142,7 +142,7 @@ public class Dbao {
     }
   }
 
-  public void addFieldPredefinedValue(FieldPredefinedValues value) throws
+  public void addFieldPredefinedValue(FieldPredefinedValue value) throws
           DatabaseException {
     try {
       this.utx.begin();
@@ -158,14 +158,14 @@ public class Dbao {
     }
   }
 
-  public Tables getTable(int tableid) throws DatabaseException {
+  public MTable getTable(int tableid) throws DatabaseException {
 
-    return this.em.find(Tables.class, tableid);
+    return this.em.find(MTable.class, tableid);
   }
 
-  public Fields getField(int fieldid) throws DatabaseException {
+  public Field getField(int fieldid) throws DatabaseException {
 
-    return this.em.find(Fields.class, fieldid);
+    return this.em.find(Field.class, fieldid);
   }
 
   public TupleToFile getTupletofile(int tupleid) throws DatabaseException {
@@ -188,21 +188,20 @@ public class Dbao {
    * @param table The table object that's going to be removed
    * @throws se.kth.meta.exception.DatabaseException
    */
-  public void deleteTable(Tables table) throws DatabaseException {
+  public void deleteTable(MTable table) throws DatabaseException {
 
     try {
-      Tables t = this.getTable(table.getId());
+      MTable t = this.getTable(table.getId());
 
 //    NEEDS TO BE REEMPLOYED
 //            t.setForceDelete(table.forceDelete());
 //            if (!t.getFields().isEmpty() && !t.forceDelete()) {
-//                throw new DatabaseException("Table '" + t.getName() + "' has fields "
+//                throw new DatabaseException("MTable '" + t.getName() + "' has fields "
 //                        + "associated to it");
 //            }
-
       //first remove all the child elements of this table to avoid foreign key violation
-      List<Fields> fields = t.getFields();
-      for (Fields field : fields) {
+      List<Field> fields = t.getFields();
+      for (Field field : fields) {
         field.setForceDelete(true);
         this.deleteField(field);
       }
@@ -279,10 +278,10 @@ public class Dbao {
    * @throws se.kth.meta.exception.DatabaseException when the field to be
    * deleted is associated to raw data
    */
-  public void deleteField(Fields field) throws DatabaseException {
+  public void deleteField(Field field) throws DatabaseException {
 
     try {
-      Fields f = this.em.find(Fields.class, field.getId());
+      Field f = this.em.find(Field.class, field.getId());
       f.setForceDelete(field.forceDelete());
       if (!f.getRawData().isEmpty() && !f.forceDelete()) {
         throw new DatabaseException("Field '" + f.getName() + "' has data "
@@ -323,9 +322,9 @@ public class Dbao {
     Query query = this.em.
             createNamedQuery("FieldPredefinedValues.findByFieldid");
     query.setParameter("fieldid", fieldid);
-    List<FieldPredefinedValues> valueList = query.getResultList();
+    List<FieldPredefinedValue> valueList = query.getResultList();
 
-    for (FieldPredefinedValues value : valueList) {
+    for (FieldPredefinedValue value : valueList) {
       try {
 
         this.utx.begin();
@@ -407,7 +406,7 @@ public class Dbao {
     return query.getResultList();
   }
 
-  public List<Tables> loadTemplateContent(int templateId) {
+  public List<MTable> loadTemplateContent(int templateId) {
 
     String queryString = "Tables.fetchTemplate";
     //this.em.clear();
@@ -416,7 +415,7 @@ public class Dbao {
     return query.getResultList();
   }
 
-  public List<FieldTypes> loadFieldTypes() {
+  public List<FieldType> loadFieldTypes() {
 
     String queryString = "FieldTypes.findAll";
     Query query = this.em.createNamedQuery(queryString);

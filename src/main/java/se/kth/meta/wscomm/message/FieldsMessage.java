@@ -10,10 +10,10 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldPredefinedValues;
-import se.kth.meta.entity.FieldTypes;
-import se.kth.meta.entity.Fields;
-import se.kth.meta.entity.Tables;
+import se.kth.meta.entity.FieldPredefinedValue;
+import se.kth.meta.entity.FieldType;
+import se.kth.meta.entity.Field;
+import se.kth.meta.entity.MTable;
 
 /**
  *
@@ -65,8 +65,8 @@ public class FieldsMessage extends ContentMessage {
   }
 
   /**
-   * Returns a list with just one Tables object containing all its fields,
-   * based on the contents of the JSON incoming message. It's the opposite of
+   * Returns a list with just one MTable object containing all its fields,
+ based on the contents of the JSON incoming message. It's the opposite of
    * buildSchema()
    *
    * @return the created schema
@@ -101,17 +101,17 @@ public class FieldsMessage extends ContentMessage {
     String description = obj.getString("description");
     int fieldtypeid = obj.getInt("fieldtypeid");
 
-    Fields field = new Fields(fieldId, tableId, name, type,
+    Field field = new Field(fieldId, tableId, name, type,
             Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0),
             (short) ((required) ? 1 : 0), description, fieldtypeid);
     field.setForceDelete(forceDelete);
-    field.setFieldTypes(new FieldTypes(fieldtypeid));
+    field.setFieldTypes(new FieldType(fieldtypeid));
 
     //get the predefined values of the field if it is a yes/no field or a dropdown list field
     if (fieldtypeid != 1) {
 
       JsonArray predefinedFieldValues = obj.getJsonArray("fieldtypeContent");
-      List<FieldPredefinedValues> ll = new LinkedList<>();
+      List<FieldPredefinedValue> ll = new LinkedList<>();
 
       for (JsonValue predefinedFieldValue : predefinedFieldValues) {
 
@@ -119,7 +119,7 @@ public class FieldsMessage extends ContentMessage {
                 predefinedFieldValue.toString())).readObject();
         String defaultValue = defaultt.getString("value");
 
-        FieldPredefinedValues predefValue = new FieldPredefinedValues(-1, field.
+        FieldPredefinedValue predefValue = new FieldPredefinedValue(-1, field.
                 getId(), defaultValue);
         //predefValue.setFields(field);
         ll.add(predefValue);
@@ -128,7 +128,7 @@ public class FieldsMessage extends ContentMessage {
       field.setFieldPredefinedValues(ll);
     }
 
-    Tables table = new Tables(tableId, tableName);
+    MTable table = new MTable(tableId, tableName);
     table.setTemplateid(super.getTemplateid());
     //field.setTables(table);
     table.addField(field);

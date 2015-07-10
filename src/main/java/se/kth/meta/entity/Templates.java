@@ -56,10 +56,10 @@ public class Templates implements Serializable, EntityIntf {
   private String name;
 
   @OneToMany(mappedBy = "templates",
-          targetEntity = Tables.class,
+          targetEntity = MTable.class,
           fetch = FetchType.LAZY,
           cascade = CascadeType.ALL)
-  private List<Tables> tables;
+  private List<MTable> tables;
 
   @JoinTable(name = "hopsworks_kthfs.meta_template_to_inode",
           inverseJoinColumns = {
@@ -117,11 +117,11 @@ public class Templates implements Serializable, EntityIntf {
     this.name = name;
   }
 
-  public List<Tables> getTables() {
+  public List<MTable> getMTables() {
     return this.tables;
   }
 
-  public void setTables(List<Tables> tables) {
+  public void setMTables(List<MTable> tables) {
     this.tables = tables;
   }
 

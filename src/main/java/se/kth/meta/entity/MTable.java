@@ -38,7 +38,7 @@ import javax.validation.constraints.Size;
   @NamedQuery(name = "Tables.fetchTemplate",
           query
           = "SELECT DISTINCT t FROM Tables t WHERE t.templateid = :templateid")})
-public class Tables implements Serializable, EntityIntf {
+public class MTable implements Serializable, EntityIntf {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -65,10 +65,10 @@ public class Tables implements Serializable, EntityIntf {
   private Templates templates;
 
   @OneToMany(mappedBy = "tables",
-          targetEntity = Fields.class,
+          targetEntity = Field.class,
           fetch = FetchType.LAZY,
           cascade = CascadeType.ALL) //cascade type all updates the child entities
-  private List<Fields> fields;
+  private List<Field> fields;
 
   @Transient
   private int inodeid;
@@ -80,15 +80,15 @@ public class Tables implements Serializable, EntityIntf {
   @Transient
   private boolean forceDelete;
 
-  public Tables() {
+  public MTable() {
   }
 
-  public Tables(Integer id) {
+  public MTable(Integer id) {
     this.id = id;
     this.fields = new LinkedList<>();
   }
 
-  public Tables(Integer id, String name) {
+  public MTable(Integer id, String name) {
     this.id = id;
     this.name = name;
     this.fields = new LinkedList<>();
@@ -96,7 +96,7 @@ public class Tables implements Serializable, EntityIntf {
 
   @Override
   public void copy(EntityIntf table) {
-    Tables t = (Tables) table;
+    MTable t = (MTable) table;
 
     this.id = t.getId();
     this.templateid = t.getTemplateid();
@@ -130,25 +130,25 @@ public class Tables implements Serializable, EntityIntf {
     this.name = name;
   }
 
-  public List<Fields> getFields() {
+  public List<Field> getFields() {
     return this.fields;
   }
 
-  public void setFields(List<Fields> fields) {
+  public void setFields(List<Field> fields) {
     this.fields = fields;
   }
 
-  public void addField(Fields field) {
+  public void addField(Field field) {
     this.fields.add(field);
     if (field != null) {
-      field.setTables(this);
+      field.setMTable(this);
     }
   }
 
-  public void removeField(Fields field) {
+  public void removeField(Field field) {
     this.fields.remove(field);
     if (field != null) {
-      field.setTables(null);
+      field.setMTable(null);
     }
   }
 
@@ -190,10 +190,10 @@ public class Tables implements Serializable, EntityIntf {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof Tables)) {
+    if (!(object instanceof MTable)) {
       return false;
     }
-    Tables other = (Tables) object;
+    MTable other = (MTable) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
             equals(other.id))) {
       return false;

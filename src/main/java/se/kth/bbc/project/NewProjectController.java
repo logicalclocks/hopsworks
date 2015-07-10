@@ -184,7 +184,6 @@ public class NewProjectController implements Serializable {
       logger.log(Level.FINE, "{0} - added the project owner as a master.",
               newProjectName);
     } catch (EJBException ejb) {
-      System.out.println("Add project master failed" + ejb.getMessage());
       logger.log(Level.SEVERE,
               "{0} - adding the project owner as a master failed.", ejb.
               getMessage());

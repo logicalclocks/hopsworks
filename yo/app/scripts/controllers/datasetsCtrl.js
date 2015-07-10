@@ -6,85 +6,73 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('DatasetsCtrl', ['$rootScope', '$modal', '$scope', '$q', '$timeout', '$mdSidenav', '$mdUtil', '$log', 'WSComm',
-          'DataSetService', '$routeParams', 'ModalService', 'growl', 'ProjectService', 'MetadataActionService',
-          function ($rootScope, $modal, $scope, $q, $timeout, $mdSidenav, $mdUtil, $log, WSComm, DataSetService, $routeParams,
-                  ModalService, growl, ProjectService, MetadataActionService) {
+        .controller('DatasetsCtrl', ['$rootScope', '$modal', '$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
+          'DataSetService', '$routeParams', 'ModalService', 'growl', 'MetadataActionService', '$location',
+          function ($rootScope, $modal, $scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, $routeParams,
+                  ModalService, growl, MetadataActionService, $location) {
 
             var self = this;
 
-            self.datasets = [];
+            //Some variables to keep track of state.
+            self.files = []; //A list of files currently displayed to the user.
+            self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
+            self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
+            self.selected; //The index of the selected file in the files array.
+            self.fileDetail; //The details about the currently selected file.
+
+            var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
+
             self.tabs = [];
-            self.currentDataSet = "";
-            self.currentProject = "";
             self.currentFile = {};
             self.metaData = {};
             self.meta = [];
             self.metadataView = {};
-            self.currentPath;
-            self.pathParts;
-            self.selected;
-            self.fileDetail;
-
-            self.dataSet = {};
-            var file = {name: "", owner: 'Some One', modified: "", filesize: '4 GB', path: "", dir: ""};
-
-            self.files = [file];
-            var pId = $routeParams.projectID;
-            var currentDS = $routeParams.datasetName;
-            var dataSetService = DataSetService(pId);
-
-            //this can be removed if we use project name instead of project id
-            ProjectService.get({}, {'id': pId}).$promise.then(
-                    function (success) {
-                      console.log(success);
-                      self.currentProject = success;
-                    }, function (error) {
-              $location.path('/');
-            });
 
             /*
              * Get all datasets under the current project.
              * @returns {undefined}
              */
-            var getAll = function () {
-              dataSetService.getAll().then(
+            self.getAllDatasets = function () {
+              //Get the path for an empty patharray: will get the datasets
+              var path = getPath([]);
+              dataSetService.getContents(path).then(
                       function (success) {
-                        self.datasets = success.data;
+                        self.files = success.data;
+                        self.pathArray = [];
                         console.log(success);
                       }, function (error) {
-                console.log("getAll error");
+                console.log("Error getting all datasets in project " + self.projectId);
                 console.log(error);
               });
             };
 
             /**
-             * Get all directories under the DS with given name.
-             * @param {type} datasetName
+             * Get the contents of the directory at the path with the given path components and load it into the frontend.
+             * @param {type} The array of path compontents to fetch. If empty, fetches the current path.
              * @returns {undefined}
              */
-            var getDir = function (name) {
-              var newPath = "";
-              if (self.currentPath && name) {
-                newPath = self.currentPath + '/' + name;
-              } else if (self.currentPath) {
-                newPath = self.currentPath;
-              } else if (name) {
-                newPath = name;
+            var getDirContents = function (pathComponents) {
+              //Construct the new path array
+              var newPathArray;
+              if (pathComponents) {
+                newPathArray = pathComponents;
               } else {
-                getAll();
+                newPathArray = self.pathArray;
               }
-              dataSetService.getDir(newPath).then(
+              //Convert into a path
+              var newPath = getPath(newPathArray);
+              //Get the contents and load them
+              dataSetService.getContents(newPath).then(
                       function (success) {
+                        //Reset the selected file
+                        self.selected = null;
+                        self.fileDetail = null;
+                        //Set the current files and path
                         self.files = success.data;
-                        self.currentPath = newPath;
-                        self.pathParts = newPath.split('/');
-                        if (name) {
-                          self.currentDataSet = name;
-                        }
+                        self.pathArray = newPathArray;
                         console.log(success);
                       }, function (error) {
-                console.log("getDir error");
+                console.log("Error getting the contents of the path " + getPath(newPathArray));
                 console.log(error);
               });
             };
@@ -185,6 +173,20 @@ angular.module('hopsWorksApp')
               self.metaData = {};
             };
 
+            var init = function () {
+              //Check if the current dataset is set
+              if ($routeParams.datasetName) {
+                //Dataset is set: get the contents
+                self.pathArray = [$routeParams.datasetName];
+              } else {
+                //No current dataset is set: get all datasets.
+                self.pathArray = [];
+              }
+              getDirContents();
+            }
+
+            init();
+
             /**
              * Download a file.
              * @param {type} file Can either be a filename or a path.
@@ -196,7 +198,7 @@ angular.module('hopsWorksApp')
                         console.log("download success");
                         console.log(success);
                       }, function (error) {
-                console.log("download error");
+                console.log("Error downloading file " + file);
                 console.log(error);
               });
             };
@@ -211,49 +213,41 @@ angular.module('hopsWorksApp')
                       function (success) {
                         console.log("upload success");
                         console.log(success);
+                        getDirContents();
                       }, function (error) {
                 console.log("upload error");
                 console.log(error);
               });
             };
 
-            var removeDataSetDir = function (path) {
+            /**
+             * Remove the inode at the given path. If called on a folder, will 
+             * remove the folder and all its contents recursively.
+             * @param {type} path. The project-relative path to the inode to be removed.
+             * @returns {undefined}
+             */
+            var removeInode = function (path) {
               dataSetService.removeDataSetDir(path).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
-                        getDir();
+                        getDirContents();
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
 
-            /*
-             * Load the datasets/folder contents to be displayed.
-             * if in dataset browser show current dataset content
-             * else show datasets in project
-             */
-            var load = function (path) {
-              if (path) {
-                getDir(path);
-              } else {
-                getAll();
-              }
-            };
-
-            load(currentDS);
-
             /**
-             * Open a modal dialog for DS creation.
+             * Open a modal dialog for folder creation. The folder is created at the current path.
              * @returns {undefined}
              */
             self.newDataSetModal = function () {
-              ModalService.newDataSet('md', self.currentPath).then(
+              ModalService.newFolder('md', getPath(self.pathArray)).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
-                        getDir();
+                        getDirContents();
                       }, function (error) {
-                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
-                getDir();
+                //The user changed his/her mind. Don't really need to do anything.
+                getDirContents();
               });
             };
 
@@ -269,19 +263,15 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Delete the file with the given name. If currently in a Dataset, 
-             * will prepend the current path, otherwise will remove the dataset 
-             * with given name. If called on a folder, will remove the folder 
+             * Delete the file with the given name under the current path. If called on a folder, will remove the folder 
              * and all its contents recursively.
              * @param {type} fileName
              * @returns {undefined}
              */
             self.deleteFile = function (fileName) {
-              if (currentDS) {
-                removeDataSetDir(self.currentPath + '/' + fileName);
-              } else {
-                removeDataSetDir(fileName);
-              }
+              var removePathArray = self.pathArray.slice(0);
+              removePathArray.push(fileName);
+              removeInode(getPath(removePathArray));
             };
 
             /**
@@ -296,13 +286,13 @@ angular.module('hopsWorksApp')
                         templateId = success.templateId;
                         console.log("RETURNED TEMPLATE ID " + templateId);
 
-                        ModalService.upload('lg', self.currentProject.projectId, self.currentPath, templateId).then(
+                        ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
                                 function (success) {
                                   growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
-                                  getDir();
+                                  getDirContents();
                                 }, function (error) {
                           growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
-                          getDir();
+                          getDirContents();
                         });
                       });
             };
@@ -317,11 +307,15 @@ angular.module('hopsWorksApp')
              */
             self.openDir = function (name, isDir) {
               if (isDir) {
-                getDir(name);
+                var newPathArray = self.pathArray.slice(0);
+                newPathArray.push(name);
+                getDirContents(newPathArray);
               } else {
                 ModalService.confirm('sm', 'Confirm', 'Do you want to download this file?').then(
                         function (success) {
-                          download(self.currentPath + '/' + name);
+                          var downloadPathArray = self.pathArray.slice(0);
+                          downloadPathArray.push(name);
+                          download(getPath(downloadPathArray));
                         }
                 );
               }
@@ -332,34 +326,24 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.back = function () {
-
-              if (self.pathParts.length > 1) {
-                self.pathParts.pop();
-                self.currentPath = self.pathParts.join('/');
-                self.currentDataSet = self.pathParts[self.pathParts.length - 1];
-                if (self.currentPath) {
-                  getDir();
-                }
+              var newPathArray = self.pathArray.slice(0);
+              newPathArray.pop();
+              if (newPathArray.length == 0) {
+                $location.path('/project/' + self.projectId + '/datasets');
               } else {
-                $location.path('/project/' + self.currentProject.projectId + '/datasets');
+                getDirContents(newPathArray);
               }
             };
 
             /**
-             * Go to the folder at the index in the pathparts array.
+             * Go to the folder at the index in the pathArray array.
              * @param {type} index
              * @returns {undefined}
              */
             self.goToFolder = function (index) {
-              var parts = self.currentPath.split('/');
-              if (index > -1) {
-                var newPath = self.pathParts.splice(0, index + 1);
-                self.currentPath = newPath.join('/');
-                self.currentDataSet = parts[index];
-                if (self.currentPath) {
-                  getDir();
-                }
-              }
+              var newPathArray = self.pathArray.slice(0);
+              newPathArray.splice(index + 1, newPathArray.length - index - 1);
+              getDirContents(newPathArray);
             };
 
             /**
@@ -372,6 +356,7 @@ angular.module('hopsWorksApp')
               self.selected = selectedIndex;
               self.fileDetail = file;
             };
+
 
             /* Metadata designer */
 
@@ -540,38 +525,6 @@ angular.module('hopsWorksApp')
                       });
             };
 
-
-            self.back = function () {
-
-              if (self.pathParts.length > 1) {
-                self.pathParts.pop();
-                self.currentPath = self.pathParts.join('/');
-                self.currentDataSet = self.pathParts[self.pathParts.length - 1];
-                if (self.currentPath) {
-                  getDir();
-                }
-              } else {
-                $location.path('/project/' + self.currentProject.projectId + '/datasets');
-              }
-            };
-
-            self.goToFolder = function (index) {
-              var parts = self.currentPath.split('/');
-              if (index > -1) {
-                var newPath = self.pathParts.splice(0, index + 1);
-                self.currentPath = newPath.join('/');
-                self.currentDataSet = parts[index];
-                if (self.currentPath) {
-                  getDir();
-                }
-              }
-            };
-
-            self.select = function (selectedIndex, file) {
-              self.selected = selectedIndex;
-              self.fileDetail = file;
-            };
-
             /* Metadata designer */
             self.deleteCard = function (column, card) {
               MetadataActionService.deleteCard(self.currentTemplateID, column, card)
@@ -667,3 +620,12 @@ angular.module('hopsWorksApp')
               return defer.promise;
             };
           }]);
+
+/**
+ * Turn the array <i>pathArray</i> containing, path components, into a path string.
+ * @param {type} pathArray
+ * @returns {String}
+ */
+var getPath = function (pathArray) {
+  return pathArray.join("/");
+};

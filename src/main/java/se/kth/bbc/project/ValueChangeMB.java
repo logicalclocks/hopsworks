@@ -45,7 +45,6 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
 
   public synchronized String updateProjectTeamRole(String email,
           ProjectRoleTypes role) {
-    System.out.println("Update " + email + " to " + role);
     try {
       projectTeamController.updateTeamRole(sessionState.getActiveProject(),
               email, role.getTeam());

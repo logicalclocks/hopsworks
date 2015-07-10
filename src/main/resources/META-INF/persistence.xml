@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
-    
   <persistence-unit name="kthfsPU" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-    <jta-data-source>jdbc/kthfs</jta-data-source>    
+    <jta-data-source>jdbc/kthfs</jta-data-source>
     <class>se.kth.bbc.activity.ActivityDetail</class>
     <class>se.kth.bbc.activity.UsersGroups</class>
     <class>se.kth.bbc.jobs.jobhistory.JobExecutionFile</class>
@@ -30,15 +29,14 @@
     <class>se.kth.bbc.project.Project</class>
     <class>se.kth.bbc.project.services.ProjectServices</class>
     <class>se.kth.bbc.project.fb.InodeOps</class>
-    <class>se.kth.meta.entity.FieldPredefinedValues</class>
-    <class>se.kth.meta.entity.FieldTypes</class>
-    <class>se.kth.meta.entity.Fields</class>
     <class>se.kth.meta.entity.RawData</class>
-    <class>se.kth.meta.entity.Tables</class>
     <class>se.kth.meta.entity.Templates</class>
     <class>se.kth.meta.entity.TupleToFile</class>
     <class>se.kth.bbc.project.fb.Inode</class>
-    
+    <class>se.kth.meta.entity.FieldPredefinedValue</class>
+    <class>se.kth.meta.entity.FieldType</class>
+    <class>se.kth.meta.entity.Field</class>
+    <class>se.kth.meta.entity.MTable</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
@@ -48,5 +46,4 @@
       <property name="eclipselink.logging.parameters" value="true"/>
     </properties>
   </persistence-unit>
-
 </persistence>

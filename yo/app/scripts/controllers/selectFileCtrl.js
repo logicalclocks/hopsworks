@@ -39,10 +39,19 @@ angular.module('hopsWorksApp')
 
             self.dblClick = function (datasetsCtrl, file) {
               if (file.dir) {
+                self.select(file.path);
                 datasetsCtrl.openDir(file.name, file.dir);
               } else {
                 self.select(file.path);
                 self.confirmSelection();
+              }
+            };
+
+            self.back = function (datasetsCtrl) {
+              if (datasetsCtrl.pathArray.length <= 1) {
+                datasetsCtrl.getAllDatasets();
+              } else {
+                datasetsCtrl.back();
               }
             };
 

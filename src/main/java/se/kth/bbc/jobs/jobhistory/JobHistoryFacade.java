@@ -76,7 +76,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
             outputFiles);
   }
 
-
   public JobHistory update(JobHistory history,
           Collection<JobOutputFile> extraOutputFiles) {
     return update(history, null, null, -1, null, null, null, null, null,

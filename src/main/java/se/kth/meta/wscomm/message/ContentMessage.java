@@ -6,9 +6,9 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldPredefinedValues;
-import se.kth.meta.entity.Fields;
-import se.kth.meta.entity.Tables;
+import se.kth.meta.entity.FieldPredefinedValue;
+import se.kth.meta.entity.Field;
+import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.Templates;
 import se.kth.meta.exception.ApplicationException;
 
@@ -56,7 +56,7 @@ public abstract class ContentMessage implements Message {
    * message action. It's the inverse of parseSchema()
    * <p>
    *
-   * @param entities Entities is a list of Tables objects
+   * @param entities Entities is a list of MTable objects
    * @return the schema as a JSON string
    */
   @Override
@@ -113,18 +113,18 @@ public abstract class ContentMessage implements Message {
     //create the columns/lists/tables of the board
     for (EntityIntf ta : entities) {
 
-      Tables t = (Tables) ta;
+      MTable t = (MTable) ta;
       JsonObjectBuilder column = Json.createObjectBuilder();
 
       column.add("id", t.getId());
       column.add("name", t.getName());
 
-      List<Fields> fields = t.getFields();
+      List<Field> fields = t.getFields();
       //array holding the cards
       JsonArrayBuilder cards = Json.createArrayBuilder();
 
       //create the column cards
-      for (Fields c : fields) {
+      for (Field c : fields) {
         JsonObjectBuilder card = Json.createObjectBuilder();
         card.add("id", c.getId());
         card.add("title", c.getName());
@@ -140,7 +140,7 @@ public abstract class ContentMessage implements Message {
         card.add("sizefield", temp);
 
         JsonArrayBuilder arr = Json.createArrayBuilder();
-        for (FieldPredefinedValues value : c.getFieldPredefinedValues()) {
+        for (FieldPredefinedValue value : c.getFieldPredefinedValues()) {
           JsonObjectBuilder obj = Json.createObjectBuilder();
           obj.add("id", value.getId());
           obj.add("fieldid", value.getFieldid());

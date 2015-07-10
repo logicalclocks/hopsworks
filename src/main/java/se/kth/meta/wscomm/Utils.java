@@ -6,10 +6,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import se.kth.meta.db.Dbao;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldPredefinedValues;
-import se.kth.meta.entity.Fields;
+import se.kth.meta.entity.FieldPredefinedValue;
+import se.kth.meta.entity.Field;
 import se.kth.meta.entity.RawData;
-import se.kth.meta.entity.Tables;
+import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.Templates;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.ApplicationException;
@@ -53,10 +53,10 @@ public class Utils {
   public void addTables(List<EntityIntf> list) throws ApplicationException {
 
     for (EntityIntf entry : list) {
-      Tables t = (Tables) entry;
+      MTable t = (MTable) entry;
       String tableName = t.getName();
 
-      List<Fields> tableFields = new LinkedList<>(t.getFields());
+      List<Field> tableFields = new LinkedList<>(t.getFields());
       t.resetFields();
 
       try {
@@ -65,7 +65,7 @@ public class Utils {
 
         logger.log(Level.INFO, "TABLE: {0}", tableName);
 
-        for (Fields field : tableFields) {
+        for (Field field : tableFields) {
           //associate each field(child) with the table(parent) it belongs to
           field.setTableid(tableId);
 
@@ -93,7 +93,7 @@ public class Utils {
 
     try {
       for (EntityIntf entry : list) {
-        FieldPredefinedValues predefval = (FieldPredefinedValues) entry;
+        FieldPredefinedValue predefval = (FieldPredefinedValue) entry;
 
         //associate each child with its parent
         predefval.setFieldid(fieldId);
@@ -107,7 +107,7 @@ public class Utils {
     }
   }
 
-  public void deleteTable(Tables table) throws ApplicationException {
+  public void deleteTable(MTable table) throws ApplicationException {
     try {
       logger.log(Level.SEVERE, "DELETING TABLE {0} ", table.getName());
       this.db.deleteTable(table);
@@ -118,7 +118,7 @@ public class Utils {
     }
   }
 
-  public void deleteField(Fields field) throws ApplicationException {
+  public void deleteField(Field field) throws ApplicationException {
 
     try {
       logger.log(Level.SEVERE, "DELETING FIELD {0} ", field);

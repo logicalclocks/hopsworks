@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.Tables;
+import se.kth.meta.entity.MTable;
 
 /**
  *
@@ -75,7 +75,7 @@ public class TablesMessage extends ContentMessage {
     } catch (NullPointerException e) {
     }
 
-    Tables table = new Tables(tableId, tableName);
+    MTable table = new MTable(tableId, tableName);
     table.setForceDelete(forceDelete);
     List<EntityIntf> list = new LinkedList<>();
     list.add(table);

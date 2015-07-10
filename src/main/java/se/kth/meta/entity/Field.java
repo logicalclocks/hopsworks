@@ -46,7 +46,7 @@ import javax.validation.constraints.Size;
           query = "SELECT f FROM Fields f WHERE f.required = :required"),
   @NamedQuery(name = "Fields.findByFieldTypeId",
           query = "SELECT f FROM Fields f WHERE f.fieldtypeid = :fieldtypeid")})
-public class Fields implements Serializable, EntityIntf {
+public class Field implements Serializable, EntityIntf {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -63,7 +63,7 @@ public class Fields implements Serializable, EntityIntf {
   @ManyToOne(optional = false)
   @PrimaryKeyJoinColumn(name = "tableid",
           referencedColumnName = "tableid")
-  private Tables tables;
+  private MTable table;
 
   @OneToMany(mappedBy = "fields",
           targetEntity = RawData.class,
@@ -79,13 +79,13 @@ public class Fields implements Serializable, EntityIntf {
   @ManyToOne(optional = false)
   @PrimaryKeyJoinColumn(name = "fieldtypeid",
           referencedColumnName = "id")
-  private FieldTypes fieldTypes;
+  private FieldType fieldTypes;
 
   @OneToMany(mappedBy = "fields",
-          targetEntity = FieldPredefinedValues.class,
+          targetEntity = FieldPredefinedValue.class,
           fetch = FetchType.LAZY,
           cascade = CascadeType.ALL)
-  private List<FieldPredefinedValues> fieldPredefinedValues;
+  private List<FieldPredefinedValue> fieldPredefinedValues;
 
   @Basic(optional = false)
   @NotNull
@@ -128,15 +128,15 @@ public class Fields implements Serializable, EntityIntf {
   @Transient
   private boolean forceDelete;
 
-  public Fields() {
+  public Field() {
   }
 
-  public Fields(Integer id) {
+  public Field(Integer id) {
     this.id = id;
     this.raw = new LinkedList<>();
   }
 
-  public Fields(Integer id, int tableid, String name, String type, int maxsize,
+  public Field(Integer id, int tableid, String name, String type, int maxsize,
           short searchable, short required, String description, int fieldtypeid) {
     this.id = id;
     this.tableid = tableid;
@@ -153,7 +153,7 @@ public class Fields implements Serializable, EntityIntf {
 
   @Override
   public void copy(EntityIntf fields) {
-    Fields f = ((Fields) fields);
+    Field f = ((Field) fields);
 
     this.id = f.getId();
     this.tableid = f.getTableid();
@@ -197,19 +197,19 @@ public class Fields implements Serializable, EntityIntf {
   /*
    * get and set the parent entities
    */
-  public Tables getTables() {
-    return this.tables;
+  public MTable getMTable() {
+    return this.table;
   }
 
-  public void setTables(Tables tables) {
-    this.tables = tables;
+  public void setMTable(MTable table) {
+    this.table = table;
   }
 
-  public FieldTypes getFieldTypes() {
+  public FieldType getFieldTypes() {
     return this.fieldTypes;
   }
 
-  public void setFieldTypes(FieldTypes fieldTypes) {
+  public void setFieldTypes(FieldType fieldTypes) {
     this.fieldTypes = fieldTypes;
   }
   /*
@@ -230,11 +230,11 @@ public class Fields implements Serializable, EntityIntf {
     this.raw = raw;
   }
 
-  public List<FieldPredefinedValues> getFieldPredefinedValues() {
+  public List<FieldPredefinedValue> getFieldPredefinedValues() {
     return this.fieldPredefinedValues;
   }
 
-  public void setFieldPredefinedValues(List<FieldPredefinedValues> pValues) {
+  public void setFieldPredefinedValues(List<FieldPredefinedValue> pValues) {
     this.fieldPredefinedValues = pValues;
   }
 
@@ -242,14 +242,14 @@ public class Fields implements Serializable, EntityIntf {
     this.fieldPredefinedValues.clear();
   }
 
-  public void addPredefinedValue(FieldPredefinedValues value) {
+  public void addPredefinedValue(FieldPredefinedValue value) {
     this.fieldPredefinedValues.add(value);
     if (value != null) {
       value.setFields(this);
     }
   }
 
-  public void removePredefinedValue(FieldPredefinedValues value) {
+  public void removePredefinedValue(FieldPredefinedValue value) {
     this.fieldPredefinedValues.remove(value);
     if (value != null) {
       value.setFields(null);
@@ -339,10 +339,10 @@ public class Fields implements Serializable, EntityIntf {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof Fields)) {
+    if (!(object instanceof Field)) {
       return false;
     }
-    Fields other = (Fields) object;
+    Field other = (Field) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
             equals(other.id))) {
       return false;

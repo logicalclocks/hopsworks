@@ -12,9 +12,9 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.Fields;
+import se.kth.meta.entity.Field;
 import se.kth.meta.entity.RawData;
-import se.kth.meta.entity.Tables;
+import se.kth.meta.entity.MTable;
 
 /**
  * Represents a message carrying the actual metadata
@@ -96,21 +96,18 @@ public class MetadataMessage implements Message {
             readObject();
     List<EntityIntf> data = new LinkedList<>();
 
-
     int inodeid = -1;
 
     try {
       inodeid = obj.getInt("inodeid");
       int tableId = obj.getInt("tableid");
 
-      Tables table = new Tables(tableId);
+      MTable table = new MTable(tableId);
       table.setInodeid(inodeid);
       List<EntityIntf> list = new LinkedList<>();
       list.add(table);
       return list;
     } catch (NullPointerException e) {
-
-      System.err.println("MetadataMessage:parseSchema() " + e.getMessage());
     }
 
     Set<Entry<String, JsonValue>> set = obj.entrySet();
@@ -144,14 +141,14 @@ public class MetadataMessage implements Message {
   public String buildSchema(List<EntityIntf> entities) {
     JsonObjectBuilder builder = Json.createObjectBuilder();
 
-    Tables table = (Tables) entities.get(0);
+    MTable table = (MTable) entities.get(0);
     builder.add("table", table.getName());
 
     JsonArrayBuilder fields = Json.createArrayBuilder();
 
-    List<Fields> f = table.getFields();
+    List<Field> f = table.getFields();
 
-    for (Fields fi : f) {
+    for (Field fi : f) {
       JsonObjectBuilder field = Json.createObjectBuilder();
       field.add("id", fi.getId());
       field.add("name", fi.getName());
