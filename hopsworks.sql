@@ -206,19 +206,19 @@ CREATE TABLE `organization` (
 -- Metadata --------------
 -- ------------------------
 
-CREATE TABLE `meta_template` (
+CREATE TABLE `meta_templates` (
   `templateid` INT(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(250) NOT NULL,
   PRIMARY KEY (`templateid`)
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `meta_field_type` (
+CREATE TABLE `meta_field_types` (
   `id` MEDIUMINT(9) NOT NULL AUTO_INCREMENT,
   `description` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `meta_table` (
+CREATE TABLE `meta_tables` (
   `tableid` INT(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) DEFAULT NULL,
   `templateid` INT(11) NOT NULL,
@@ -226,7 +226,7 @@ CREATE TABLE `meta_table` (
   FOREIGN KEY (`templateid`) REFERENCES `meta_template` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `meta_field` (
+CREATE TABLE `meta_fields` (
   `fieldid` INT(11) NOT NULL AUTO_INCREMENT,
   `maxsize` INT(11) DEFAULT NULL,
   `name` VARCHAR(255) DEFAULT NULL,
@@ -241,7 +241,7 @@ CREATE TABLE `meta_field` (
   FOREIGN KEY (`fieldtypeid`) REFERENCES `meta_field_type` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `meta_field_predefined_value` (
+CREATE TABLE `meta_field_predefined_values` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `fieldid` INT(11) NOT NULL,
   `valuee` VARCHAR(250) NOT NULL,
