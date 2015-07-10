@@ -79,11 +79,6 @@
     <!--Zeppelin dependencies -->
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
-      <artifactId>zeppelin-interpreter</artifactId>
-      <version>0.5.0-incubating-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-zengine</artifactId>
       <version>0.5.0-incubating-SNAPSHOT</version>
     </dependency>
