@@ -24,16 +24,16 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_field_types")
+@Table(name = "hopsworks_kthfs.meta_field_type")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "FieldTypes.findAll",
-          query = "SELECT f FROM FieldTypes f"),
-  @NamedQuery(name = "FieldTypes.findById",
-          query = "SELECT f FROM FieldTypes f WHERE f.id = :id"),
-  @NamedQuery(name = "FieldTypes.findByDescription",
+  @NamedQuery(name = "FieldType.findAll",
+          query = "SELECT f FROM FieldType f"),
+  @NamedQuery(name = "FieldType.findById",
+          query = "SELECT f FROM FieldType f WHERE f.id = :id"),
+  @NamedQuery(name = "FieldType.findByDescription",
           query
-          = "SELECT f FROM FieldTypes f WHERE f.description = :description")})
+          = "SELECT f FROM FieldType f WHERE f.description = :description")})
 public class FieldType implements Serializable, EntityIntf {
 
   private static final long serialVersionUID = 1L;

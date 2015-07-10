@@ -10,7 +10,7 @@ import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
-import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.Template;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.exception.DatabaseException;
@@ -29,7 +29,7 @@ public class Utils {
     this.db = db;
   }
 
-  public void addNewTemplate(Templates template) throws ApplicationException {
+  public void addNewTemplate(Template template) throws ApplicationException {
 
     try {
       this.db.addTemplate(template);
@@ -40,7 +40,7 @@ public class Utils {
     }
   }
 
-  public void removeTemplate(Templates template) throws ApplicationException {
+  public void removeTemplate(Template template) throws ApplicationException {
     try {
       this.db.removeTemplate(template);
     } catch (DatabaseException e) {

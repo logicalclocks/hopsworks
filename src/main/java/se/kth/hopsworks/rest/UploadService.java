@@ -34,7 +34,7 @@ import se.kth.hopsworks.controller.FolderNameValidator;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.meta.db.Dbao;
-import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.Template;
 import se.kth.meta.exception.DatabaseException;
 
 /**
@@ -245,7 +245,7 @@ public class UploadService {
     //find the inode
     Inode inode = inodes.getInodeAtPath(path);
 
-    Templates template = db.findTemplateById(info.getResumableTemplateId());
+    Template template = db.findTemplateById(info.getResumableTemplateId());
     template.getInodes().add(inode);
 
     try {

@@ -30,16 +30,16 @@ import se.kth.bbc.project.fb.Inode;
  * @author vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_templates")
+@Table(name = "hopsworks_kthfs.meta_template")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "Templates.findAll",
-          query = "SELECT t FROM Templates t"),
-  @NamedQuery(name = "Templates.findByTemplateid",
-          query = "SELECT t FROM Templates t WHERE t.id = :templateid"),
-  @NamedQuery(name = "Templates.findByName",
-          query = "SELECT t FROM Templates t WHERE t.name = :name")})
-public class Templates implements Serializable, EntityIntf {
+  @NamedQuery(name = "Template.findAll",
+          query = "SELECT t FROM Template t"),
+  @NamedQuery(name = "Template.findByTemplateid",
+          query = "SELECT t FROM Template t WHERE t.id = :templateid"),
+  @NamedQuery(name = "Template.findByName",
+          query = "SELECT t FROM Template t WHERE t.name = :name")})
+public class Template implements Serializable, EntityIntf {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -75,16 +75,16 @@ public class Templates implements Serializable, EntityIntf {
   @ManyToMany(fetch = FetchType.EAGER)
   private Collection<Inode> inodes;
 
-  public Templates() {
+  public Template() {
   }
 
-  public Templates(Integer templateid) {
+  public Template(Integer templateid) {
     this.id = templateid;
     this.tables = new LinkedList<>();
     this.inodes = new LinkedList<>();
   }
 
-  public Templates(Integer templateid, String name) {
+  public Template(Integer templateid, String name) {
     this.id = templateid;
     this.name = name;
     this.tables = new LinkedList<>();
@@ -93,7 +93,7 @@ public class Templates implements Serializable, EntityIntf {
 
   @Override
   public void copy(EntityIntf template) {
-    Templates t = (Templates) template;
+    Template t = (Template) template;
 
     this.id = t.getId();
     this.name = t.getName();
@@ -144,10 +144,10 @@ public class Templates implements Serializable, EntityIntf {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof Templates)) {
+    if (!(object instanceof Template)) {
       return false;
     }
-    Templates other = (Templates) object;
+    Template other = (Template) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
             equals(other.id))) {
       return false;

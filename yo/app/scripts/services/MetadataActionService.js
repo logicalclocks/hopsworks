@@ -59,7 +59,7 @@ angular.module('hopsWorksApp')
             deleteList: function (templateId, column) {
               return WSComm.send({
                 sender: 'evsav',
-                type: 'TablesMessage',
+                type: 'TableMessage',
                 action: 'delete_table',
                 message: JSON.stringify({
                   tempid: templateId,
@@ -72,7 +72,7 @@ angular.module('hopsWorksApp')
             storeCard: function (templateId, column, card) {
               return WSComm.send({
                 sender: 'evsav',
-                type: 'FieldsMessage',
+                type: 'FieldMessage',
                 action: 'store_field',
                 message: JSON.stringify({
                   tempid: templateId,
@@ -93,7 +93,7 @@ angular.module('hopsWorksApp')
             deleteCard: function (templateId, column, card) {
               return WSComm.send({
                 sender: 'evsav',
-                type: 'FieldsMessage',
+                type: 'FieldMessage',
                 action: 'delete_field',
                 message: JSON.stringify({
                   tempid: templateId,
@@ -115,7 +115,7 @@ angular.module('hopsWorksApp')
             fetchFieldTypes: function () {
               return WSComm.send({
                 sender: 'evsav',
-                type: 'FieldTypesMessage',
+                type: 'FieldTypeMessage',
                 action: 'fetch_field_types',
                 message: 'null'
               });

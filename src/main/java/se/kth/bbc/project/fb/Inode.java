@@ -24,7 +24,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.Template;
 import org.eclipse.persistence.annotations.Convert;
 import org.eclipse.persistence.annotations.Converter;
 
@@ -147,7 +147,7 @@ public class Inode implements Serializable {
   @ManyToMany(mappedBy = "inodes",
           cascade = CascadeType.PERSIST,
           fetch = FetchType.EAGER)
-  private Collection<Templates> templates;
+  private Collection<Template> templates;
 
   public Inode() {
   }
@@ -296,15 +296,15 @@ public class Inode implements Serializable {
   }
 
   @XmlTransient
-  public Collection<Templates> getTemplates() {
+  public Collection<Template> getTemplates() {
     return this.templates;
   }
 
-  public void setTemplates(Collection<Templates> templates) {
+  public void setTemplates(Collection<Template> templates) {
     this.templates = templates;
   }
 
-  public void addTemplate(Templates template) {
+  public void addTemplate(Template template) {
     if (template != null) {
       this.templates.add(template);
     }
@@ -323,7 +323,7 @@ public class Inode implements Serializable {
 
     if (this.templates != null && !this.templates.isEmpty()) {
       Iterator it = this.templates.iterator();
-      Templates template = (Templates) it.next();
+      Template template = (Template) it.next();
       templateId = template.getId();
     }
 

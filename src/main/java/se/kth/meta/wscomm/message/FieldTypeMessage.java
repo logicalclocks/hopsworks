@@ -13,18 +13,18 @@ import se.kth.meta.entity.FieldType;
  *
  * @author vangelis
  */
-public class FieldTypesMessage extends PlainMessage {
+public class FieldTypeMessage extends PlainMessage {
 
   private static final Logger logger = Logger.
-          getLogger(FieldTypesMessage.class.getName());
+          getLogger(FieldTypeMessage.class.getName());
 
-  private String TYPE = "FieldTypesMessage";
+  private String TYPE = "FieldTypeMessage";
   private String sender;
   private String message;
   private String action;
   private String status;
 
-  public FieldTypesMessage() {
+  public FieldTypeMessage() {
     this.status = "OK";
     this.action = "fetch_field_types";
   }

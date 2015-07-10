@@ -26,18 +26,18 @@ import javax.validation.constraints.Size;
  * @author Vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_tables")
+@Table(name = "hopsworks_kthfs.meta_table")
 
 @NamedQueries({
-  @NamedQuery(name = "Tables.findAll",
-          query = "SELECT t FROM Tables t"),
+  @NamedQuery(name = "MTable.findAll",
+          query = "SELECT t FROM MTable t"),
   @NamedQuery(name = "Tables.findById",
-          query = "SELECT t FROM Tables t WHERE t.id = :id"),
+          query = "SELECT t FROM MTable t WHERE t.id = :id"),
   @NamedQuery(name = "Tables.findByName",
-          query = "SELECT t FROM Tables t WHERE t.name = :name"),
-  @NamedQuery(name = "Tables.fetchTemplate",
+          query = "SELECT t FROM MTable t WHERE t.name = :name"),
+  @NamedQuery(name = "MTable.fetchTemplate",
           query
-          = "SELECT DISTINCT t FROM Tables t WHERE t.templateid = :templateid")})
+          = "SELECT DISTINCT t FROM MTable t WHERE t.templateid = :templateid")})
 public class MTable implements Serializable, EntityIntf {
 
   private static final long serialVersionUID = 1L;
@@ -62,9 +62,9 @@ public class MTable implements Serializable, EntityIntf {
   @ManyToOne(optional = false)
   @PrimaryKeyJoinColumn(name = "templateid",
           referencedColumnName = "templateid")
-  private Templates templates;
+  private Template templates;
 
-  @OneToMany(mappedBy = "tables",
+  @OneToMany(mappedBy = "table",
           targetEntity = Field.class,
           fetch = FetchType.LAZY,
           cascade = CascadeType.ALL) //cascade type all updates the child entities
@@ -164,11 +164,11 @@ public class MTable implements Serializable, EntityIntf {
     return this.forceDelete;
   }
 
-  public Templates getTemplates() {
+  public Template getTemplates() {
     return this.templates;
   }
 
-  public void setTemplates(Templates templates) {
+  public void setTemplates(Template templates) {
     this.templates = templates;
   }
 

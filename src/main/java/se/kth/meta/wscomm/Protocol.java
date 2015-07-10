@@ -11,14 +11,14 @@ import se.kth.meta.entity.FieldType;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
-import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.Template;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.exception.DatabaseException;
 import se.kth.meta.wscomm.message.Command;
 import se.kth.meta.wscomm.message.ContentMessage;
 import se.kth.meta.wscomm.message.ErrorMessage;
-import se.kth.meta.wscomm.message.FieldTypesMessage;
+import se.kth.meta.wscomm.message.FieldTypeMessage;
 import se.kth.meta.wscomm.message.Message;
 import se.kth.meta.wscomm.message.MetadataMessage;
 import se.kth.meta.wscomm.message.TextMessage;
@@ -130,7 +130,7 @@ public class Protocol {
   private Message addNewTemplate(Message message) throws ApplicationException {
     ContentMessage cmsg = (ContentMessage) message;
 
-    Templates template = cmsg.getTemplate();
+    Template template = cmsg.getTemplate();
     this.utils.addNewTemplate(template);
 
     return this.fetchTemplates(message);
@@ -139,7 +139,7 @@ public class Protocol {
   private Message removeTemplate(Message message) throws ApplicationException {
     ContentMessage cmsg = (ContentMessage) message;
 
-    Templates template = cmsg.getTemplate();
+    Template template = cmsg.getTemplate();
     this.utils.removeTemplate(template);
 
     return this.fetchTemplates(message);
@@ -152,7 +152,7 @@ public class Protocol {
 
   private Message fetchTemplates(Message message) {
 
-    List<Templates> templates = this.db.loadTemplates();
+    List<Template> templates = this.db.loadTemplates();
 
     String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) templates);
     message.setMessage(jsonMsg);
@@ -164,7 +164,7 @@ public class Protocol {
 
     List<FieldType> ftypes = this.db.loadFieldTypes();
 
-    FieldTypesMessage newMsg = new FieldTypesMessage();
+    FieldTypeMessage newMsg = new FieldTypeMessage();
 
     String jsonMsg = newMsg.buildSchema((List<EntityIntf>) (List<?>) ftypes);
 

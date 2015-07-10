@@ -30,13 +30,13 @@
     <class>se.kth.bbc.project.services.ProjectServices</class>
     <class>se.kth.bbc.project.fb.InodeOps</class>
     <class>se.kth.meta.entity.RawData</class>
-    <class>se.kth.meta.entity.Templates</class>
     <class>se.kth.meta.entity.TupleToFile</class>
     <class>se.kth.bbc.project.fb.Inode</class>
     <class>se.kth.meta.entity.FieldPredefinedValue</class>
     <class>se.kth.meta.entity.FieldType</class>
     <class>se.kth.meta.entity.Field</class>
     <class>se.kth.meta.entity.MTable</class>
+    <class>se.kth.meta.entity.Template</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

@@ -21,19 +21,19 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_field_predefined_values")
+@Table(name = "hopsworks_kthfs.meta_field_predefined_value")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "FieldPredefinedValues.findAll",
-          query = "SELECT f FROM FieldPredefinedValues f"),
-  @NamedQuery(name = "FieldPredefinedValues.findById",
-          query = "SELECT f FROM FieldPredefinedValues f WHERE f.id = :id"),
-  @NamedQuery(name = "FieldPredefinedValues.findByFieldid",
+  @NamedQuery(name = "FieldPredefinedValue.findAll",
+          query = "SELECT f FROM FieldPredefinedValue f"),
+  @NamedQuery(name = "FieldPredefinedValue.findById",
+          query = "SELECT f FROM FieldPredefinedValue f WHERE f.id = :id"),
+  @NamedQuery(name = "FieldPredefinedValue.findByFieldid",
           query
-          = "SELECT f FROM FieldPredefinedValues f WHERE f.fieldid = :fieldid"),
-  @NamedQuery(name = "FieldPredefinedValues.findByValue",
+          = "SELECT f FROM FieldPredefinedValue f WHERE f.fieldid = :fieldid"),
+  @NamedQuery(name = "FieldPredefinedValue.findByValue",
           query
-          = "SELECT f FROM FieldPredefinedValues f WHERE f.valuee = :valuee")})
+          = "SELECT f FROM FieldPredefinedValue f WHERE f.valuee = :valuee")})
 public class FieldPredefinedValue implements Serializable, EntityIntf {
 
   private static final long serialVersionUID = 1L;

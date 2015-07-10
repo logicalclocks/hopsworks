@@ -17,7 +17,6 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -26,26 +25,26 @@ import javax.validation.constraints.Size;
  * @author Vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_fields")
+@Table(name = "hopsworks_kthfs.meta_field")
 @NamedQueries({
-  @NamedQuery(name = "Fields.findAll",
-          query = "SELECT f FROM Fields f"),
-  @NamedQuery(name = "Fields.findById",
-          query = "SELECT f FROM Fields f WHERE f.id = :id"),
-  @NamedQuery(name = "Fields.findByTableid",
-          query = "SELECT f FROM Fields f WHERE f.tableid = :tableid"),
-  @NamedQuery(name = "Fields.findByName",
-          query = "SELECT f FROM Fields f WHERE f.name = :name"),
-  @NamedQuery(name = "Fields.findByType",
-          query = "SELECT f FROM Fields f WHERE f.type = :type"),
-  @NamedQuery(name = "Fields.findByMaxsize",
-          query = "SELECT f FROM Fields f WHERE f.maxsize = :maxsize"),
-  @NamedQuery(name = "Fields.findBySearchable",
-          query = "SELECT f FROM Fields f WHERE f.searchable = :searchable"),
-  @NamedQuery(name = "Fields.findByRequired",
-          query = "SELECT f FROM Fields f WHERE f.required = :required"),
-  @NamedQuery(name = "Fields.findByFieldTypeId",
-          query = "SELECT f FROM Fields f WHERE f.fieldtypeid = :fieldtypeid")})
+  @NamedQuery(name = "Field.findAll",
+          query = "SELECT f FROM Field f"),
+  @NamedQuery(name = "Field.findById",
+          query = "SELECT f FROM Field f WHERE f.id = :id"),
+  @NamedQuery(name = "Field.findByTableid",
+          query = "SELECT f FROM Field f WHERE f.tableid = :tableid"),
+  @NamedQuery(name = "Field.findByName",
+          query = "SELECT f FROM Field f WHERE f.name = :name"),
+  @NamedQuery(name = "Field.findByType",
+          query = "SELECT f FROM Field f WHERE f.type = :type"),
+  @NamedQuery(name = "Field.findByMaxsize",
+          query = "SELECT f FROM Field f WHERE f.maxsize = :maxsize"),
+  @NamedQuery(name = "Field.findBySearchable",
+          query = "SELECT f FROM Field f WHERE f.searchable = :searchable"),
+  @NamedQuery(name = "Field.findByRequired",
+          query = "SELECT f FROM Field f WHERE f.required = :required"),
+  @NamedQuery(name = "Field.findByFieldTypeId",
+          query = "SELECT f FROM Field f WHERE f.fieldtypeid = :fieldtypeid")})
 public class Field implements Serializable, EntityIntf {
 
   private static final long serialVersionUID = 1L;
@@ -120,13 +119,6 @@ public class Field implements Serializable, EntityIntf {
   @NotNull
   @Column(name = "description")
   private String description;
-
-  /*
-   * indicates whether a field associated with raw data should be deleted along
-   * with its data or not
-   */
-  @Transient
-  private boolean forceDelete;
 
   public Field() {
   }
@@ -212,12 +204,6 @@ public class Field implements Serializable, EntityIntf {
   public void setFieldTypes(FieldType fieldTypes) {
     this.fieldTypes = fieldTypes;
   }
-  /*
-   * -------------------------------
-   */
-  /*
-   * -------------------------------
-   */
 
   /*
    * get and set the child entities
@@ -319,14 +305,6 @@ public class Field implements Serializable, EntityIntf {
 
   public void setRequired(short required) {
     this.required = required;
-  }
-
-  public void setForceDelete(boolean delete) {
-    this.forceDelete = delete;
-  }
-
-  public boolean forceDelete() {
-    return this.forceDelete;
   }
 
   @Override

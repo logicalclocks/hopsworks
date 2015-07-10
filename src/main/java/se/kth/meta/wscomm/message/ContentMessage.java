@@ -9,7 +9,7 @@ import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.MTable;
-import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.Template;
 import se.kth.meta.exception.ApplicationException;
 
 /**
@@ -23,13 +23,13 @@ public abstract class ContentMessage implements Message {
 
   protected int templateId;
   protected String action;
-  protected Templates template;
+  protected Template template;
 
-  public void setTemplate(Templates template) {
+  public void setTemplate(Template template) {
     this.template = template;
   }
 
-  public Templates getTemplate() throws ApplicationException {
+  public Template getTemplate() throws ApplicationException {
     return this.template;
   }
 
@@ -87,7 +87,7 @@ public abstract class ContentMessage implements Message {
     JsonArrayBuilder templates = Json.createArrayBuilder();
     for (EntityIntf e : entities) {
 
-      Templates te = (Templates) e;
+      Template te = (Template) e;
       JsonObjectBuilder template = Json.createObjectBuilder();
 
       template.add("id", te.getId());

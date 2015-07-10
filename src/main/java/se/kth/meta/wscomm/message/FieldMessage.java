@@ -19,12 +19,12 @@ import se.kth.meta.entity.MTable;
  *
  * @author Vangelis
  */
-public class FieldsMessage extends ContentMessage {
+public class FieldMessage extends ContentMessage {
 
-  private static final Logger logger = Logger.getLogger(FieldsMessage.class.
+  private static final Logger logger = Logger.getLogger(FieldMessage.class.
           getName());
 
-  private final String TYPE = "FieldsMessage";
+  private final String TYPE = "FieldMessage";
   private String sender;
   private String message;
   private String status;
@@ -104,7 +104,8 @@ public class FieldsMessage extends ContentMessage {
     Field field = new Field(fieldId, tableId, name, type,
             Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0),
             (short) ((required) ? 1 : 0), description, fieldtypeid);
-    field.setForceDelete(forceDelete);
+    //FORCE DELETE NEEDS TO BE REFACTORED
+//    field.setForceDelete(forceDelete);
     field.setFieldTypes(new FieldType(fieldtypeid));
 
     //get the predefined values of the field if it is a yes/no field or a dropdown list field

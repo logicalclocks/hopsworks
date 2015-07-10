@@ -23,7 +23,7 @@ import se.kth.meta.entity.FieldType;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
-import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.Template;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.DatabaseException;
 
@@ -193,7 +193,7 @@ public class Dbao {
     try {
       MTable t = this.getTable(table.getId());
 
-//    NEEDS TO BE REEMPLOYED
+//    FORCE DELETE NEEDS TO BE REFACTORED
 //            t.setForceDelete(table.forceDelete());
 //            if (!t.getFields().isEmpty() && !t.forceDelete()) {
 //                throw new DatabaseException("MTable '" + t.getName() + "' has fields "
@@ -202,7 +202,8 @@ public class Dbao {
       //first remove all the child elements of this table to avoid foreign key violation
       List<Field> fields = t.getFields();
       for (Field field : fields) {
-        field.setForceDelete(true);
+        //FORCE DELETE NEEDS TO BE REFACTORED
+//        field.setForceDelete(true);
         this.deleteField(field);
       }
 
@@ -230,7 +231,7 @@ public class Dbao {
    * @param template The template name to be added
    * @throws se.kth.meta.exception.DatabaseException
    */
-  public void addTemplate(Templates template) throws DatabaseException {
+  public void addTemplate(Template template) throws DatabaseException {
 
     try {
       this.utx.begin();
@@ -246,9 +247,9 @@ public class Dbao {
     }
   }
 
-  public void removeTemplate(Templates template) throws DatabaseException {
+  public void removeTemplate(Template template) throws DatabaseException {
     try {
-      Templates t = this.em.find(Templates.class, template.getId());
+      Template t = this.em.find(Template.class, template.getId());
 
       //now move on to remove the table
       this.utx.begin();
@@ -281,12 +282,13 @@ public class Dbao {
   public void deleteField(Field field) throws DatabaseException {
 
     try {
+      //FORCE DELETE NEEDS TO BE REFACTORED
       Field f = this.em.find(Field.class, field.getId());
-      f.setForceDelete(field.forceDelete());
-      if (!f.getRawData().isEmpty() && !f.forceDelete()) {
-        throw new DatabaseException("Field '" + f.getName() + "' has data "
-                + "associated to it");
-      }
+//      f.setForceDelete(field.forceDelete());
+//      if (!f.getRawData().isEmpty() && !f.forceDelete()) {
+//        throw new DatabaseException("Field '" + f.getName() + "' has data "
+//                + "associated to it");
+//      }
       this.utx.begin();
 
       if (this.em.contains(f)) {
@@ -399,7 +401,7 @@ public class Dbao {
     return (!list.isEmpty()) ? list.get(0).getId() : 0;
   }
 
-  public List<Templates> loadTemplates() {
+  public List<Template> loadTemplates() {
 
     String queryString = "Templates.findAll";
     Query query = this.em.createNamedQuery(queryString);
@@ -429,10 +431,9 @@ public class Dbao {
    * @param templateid
    * @return
    */
-  public Templates findTemplateById(int templateid) {
-    TypedQuery<Templates> query = em.createNamedQuery(
-            "Templates.findByTemplateid",
-            Templates.class);
+  public Template findTemplateById(int templateid) {
+    TypedQuery<Template> query = em.createNamedQuery("Templates.findByTemplateid",
+            Template.class);
 
     query.setParameter("templateid", templateid);
     return query.getSingleResult();
@@ -444,7 +445,7 @@ public class Dbao {
    * @param template
    * @throws se.kth.meta.exception.DatabaseException
    */
-  public void updateTemplatesInodesMxN(Templates template) throws
+  public void updateTemplatesInodesMxN(Template template) throws
           DatabaseException {
     try {
       this.utx.begin();

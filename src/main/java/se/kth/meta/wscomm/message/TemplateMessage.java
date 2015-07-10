@@ -16,7 +16,7 @@ import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.FieldType;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.MTable;
-import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.Template;
 import se.kth.meta.exception.ApplicationException;
 
 /**
@@ -86,18 +86,18 @@ public class TemplateMessage extends ContentMessage {
    * @throws se.kth.meta.exception.ApplicationException
    */
   @Override
-  public Templates getTemplate() throws ApplicationException {
-    Templates temp = null;
+  public Template getTemplate() throws ApplicationException {
+    Template temp = null;
     JsonObject object = Json.createReader(new StringReader(this.message)).
             readObject();
 
     try {
       switch (Command.valueOf(this.action.toUpperCase())) {
         case ADD_NEW_TEMPLATE:
-          temp = new Templates(-1, object.getString("templateName"));
+          temp = new Template(-1, object.getString("templateName"));
           break;
         case REMOVE_TEMPLATE:
-          temp = new Templates(object.getInt("templateId"));
+          temp = new Template(object.getInt("templateId"));
           break;
         default:
           throw new ApplicationException("Unknown command in received message");

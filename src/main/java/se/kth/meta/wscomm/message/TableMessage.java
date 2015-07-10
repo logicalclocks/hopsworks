@@ -14,12 +14,12 @@ import se.kth.meta.entity.MTable;
  *
  * @author Vangelis
  */
-public class TablesMessage extends ContentMessage {
+public class TableMessage extends ContentMessage {
 
-  private static final Logger logger = Logger.getLogger(TablesMessage.class.
+  private static final Logger logger = Logger.getLogger(TableMessage.class.
           getName());
 
-  private final String TYPE = "TablesMessage";
+  private final String TYPE = "TableMessage";
   private String sender;
   private String message;
   private String action;

@@ -38,7 +38,7 @@ import se.kth.bbc.project.fb.InodeView;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.FolderNameValidator;
 import se.kth.meta.db.Dbao;
-import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.Template;
 import se.kth.meta.exception.DatabaseException;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
@@ -267,7 +267,7 @@ public class DataSetService {
         Inode neww = inodes.findByParentAndName(lastVisitedParent,
                 pathArray[pathArray.length - 1]);
 
-        Templates template = db.findTemplateById(dataSetName.getTemplate());
+        Template template = db.findTemplateById(dataSetName.getTemplate());
         template.getInodes().add(neww);
 
         //persist the relationship table
