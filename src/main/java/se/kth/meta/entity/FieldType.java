@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_field_type")
+@Table(name = "hopsworks_kthfs.meta_field_types")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "FieldType.findAll",

@@ -86,7 +86,7 @@ public class FieldMessage extends ContentMessage {
     boolean forceDelete = false;
     try {
       forceDelete = obj.getBoolean("forceDelete");
-      logger.log(Level.SEVERE, "FORCE DELETE ON THE FIELD {0}", forceDelete);
+      logger.log(Level.INFO, "FORCE DELETE ON THE FIELD {0}", forceDelete);
     } catch (NullPointerException e) {
     }
     try {
@@ -96,6 +96,7 @@ public class FieldMessage extends ContentMessage {
     } catch (NumberFormatException e) {
       maxsize = "0";
     }
+    
     boolean searchable = obj.getBoolean("searchable");
     boolean required = obj.getBoolean("required");
     String description = obj.getString("description");
@@ -106,7 +107,13 @@ public class FieldMessage extends ContentMessage {
             (short) ((required) ? 1 : 0), description, fieldtypeid);
     //FORCE DELETE NEEDS TO BE REFACTORED
 //    field.setForceDelete(forceDelete);
-    field.setFieldTypes(new FieldType(fieldtypeid));
+    
+    //-- ATTACH the field's parent entity (FieldType)
+    //FieldType fieldtype = new FieldType(fieldtypeid);
+    field.setFieldTypeId(fieldtypeid);
+    
+    //-- ATTACH fieldtype's child entity (Field)
+    //fieldtype.getFields().add(field);
 
     //get the predefined values of the field if it is a yes/no field or a dropdown list field
     if (fieldtypeid != 1) {
@@ -122,16 +129,22 @@ public class FieldMessage extends ContentMessage {
 
         FieldPredefinedValue predefValue = new FieldPredefinedValue(-1, field.
                 getId(), defaultValue);
-        //predefValue.setFields(field);
+        
+        //-- ATTACH predefinedValue's parent entity (Field)
+        //predefValue.setFieldid(field.getId());
         ll.add(predefValue);
       }
 
+      //-- ATTACH the field's children entities (FieldPredefinedValue)
       field.setFieldPredefinedValues(ll);
     }
 
     MTable table = new MTable(tableId, tableName);
     table.setTemplateid(super.getTemplateid());
-    //field.setTables(table);
+    
+    //-- ATTACH the field's parent entity (MTable)
+    field.setTableid(table.getId());
+    //-- ATTACH the table's child entity (Field)
     table.addField(field);
 
     List<EntityIntf> list = new LinkedList<>();

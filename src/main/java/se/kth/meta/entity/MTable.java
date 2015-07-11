@@ -26,7 +26,7 @@ import javax.validation.constraints.Size;
  * @author Vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_table")
+@Table(name = "hopsworks_kthfs.meta_tables")
 
 @NamedQueries({
   @NamedQuery(name = "MTable.findAll",
@@ -35,7 +35,7 @@ import javax.validation.constraints.Size;
           query = "SELECT t FROM MTable t WHERE t.id = :id"),
   @NamedQuery(name = "Tables.findByName",
           query = "SELECT t FROM MTable t WHERE t.name = :name"),
-  @NamedQuery(name = "MTable.fetchTemplate",
+  @NamedQuery(name = "MTable.findByTemplateId",
           query
           = "SELECT DISTINCT t FROM MTable t WHERE t.templateid = :templateid")})
 public class MTable implements Serializable, EntityIntf {
@@ -62,7 +62,7 @@ public class MTable implements Serializable, EntityIntf {
   @ManyToOne(optional = false)
   @PrimaryKeyJoinColumn(name = "templateid",
           referencedColumnName = "templateid")
-  private Template templates;
+  private Template template;
 
   @OneToMany(mappedBy = "table",
           targetEntity = Field.class,
@@ -164,12 +164,12 @@ public class MTable implements Serializable, EntityIntf {
     return this.forceDelete;
   }
 
-  public Template getTemplates() {
-    return this.templates;
+  public Template getTemplate() {
+    return this.template;
   }
 
-  public void setTemplates(Template templates) {
-    this.templates = templates;
+  public void setTemplate(Template template) {
+    this.template = template;
   }
 
   public void setInodeid(int inodeid) {

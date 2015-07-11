@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_field_predefined_value")
+@Table(name = "hopsworks_kthfs.meta_field_predefined_values")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "FieldPredefinedValue.findAll",
@@ -92,11 +92,11 @@ public class FieldPredefinedValue implements Serializable, EntityIntf {
     this.id = id;
   }
 
-  public void setFields(Field fields) {
+  public void setField(Field fields) {
     this.fields = fields;
   }
 
-  public Field getFields() {
+  public Field getField() {
     return this.fields;
   }
 

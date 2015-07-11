@@ -12,7 +12,6 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.servlet.ServletContext;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -37,11 +36,11 @@ import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.FolderNameValidator;
-import se.kth.meta.db.Dbao;
 import se.kth.meta.entity.Template;
 import se.kth.meta.exception.DatabaseException;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.meta.db.TemplateFacade;
 
 /**
  * @author André<amore@kth.se>
@@ -66,6 +65,8 @@ public class DataSetService {
   private FolderNameValidator datasetNameValidator;
   @Inject
   private UploadService uploader;
+  @EJB
+  private TemplateFacade template;
 
   private Integer projectId;
   private Project project;
@@ -260,18 +261,16 @@ public class DataSetService {
 
       //the inode has been created in the file system
       if (success) {
-        ServletContext context = req.getSession().getServletContext();
-        Dbao db = (Dbao) context.getAttribute("db");
 
         //get the newly created inode and the template it comes with
         Inode neww = inodes.findByParentAndName(lastVisitedParent,
                 pathArray[pathArray.length - 1]);
 
-        Template template = db.findTemplateById(dataSetName.getTemplate());
-        template.getInodes().add(neww);
+        Template templ = this.template.findByTemplateId(dataSetName.getTemplate());
+        templ.getInodes().add(neww);
 
         //persist the relationship table
-        db.updateTemplatesInodesMxN(template);
+        this.template.updateTemplatesInodesMxN(templ);
       }
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);

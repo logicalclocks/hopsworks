@@ -25,7 +25,7 @@ import javax.validation.constraints.Size;
  * @author Vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_field")
+@Table(name = "hopsworks_kthfs.meta_fields")
 @NamedQueries({
   @NamedQuery(name = "Field.findAll",
           query = "SELECT f FROM Field f"),
@@ -145,7 +145,7 @@ public class Field implements Serializable, EntityIntf {
 
   @Override
   public void copy(EntityIntf fields) {
-    Field f = ((Field) fields);
+    Field f = (Field) fields;
 
     this.id = f.getId();
     this.tableid = f.getTableid();
@@ -231,14 +231,14 @@ public class Field implements Serializable, EntityIntf {
   public void addPredefinedValue(FieldPredefinedValue value) {
     this.fieldPredefinedValues.add(value);
     if (value != null) {
-      value.setFields(this);
+      value.setField(this);
     }
   }
 
   public void removePredefinedValue(FieldPredefinedValue value) {
     this.fieldPredefinedValues.remove(value);
     if (value != null) {
-      value.setFields(null);
+      value.setField(null);
     }
   }
 

@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -108,6 +109,7 @@ public class MetadataMessage implements Message {
       list.add(table);
       return list;
     } catch (NullPointerException e) {
+      logger.log(Level.SEVERE, "Inodeid or tableid not present in the message");
     }
 
     Set<Entry<String, JsonValue>> set = obj.entrySet();

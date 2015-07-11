@@ -42,6 +42,7 @@ public class WebSocketEndpoint {
   private Project project;
   private String userRole;
   private HttpSession httpSession;//this might be used to check the underlying http session
+  @EJB
   private Protocol protocol;
 
   @OnOpen
@@ -51,7 +52,6 @@ public class WebSocketEndpoint {
     this.sender = (String) config.getUserProperties().get("user");
     this.httpSession = (HttpSession) config.getUserProperties().get(
             "httpSession");
-    this.protocol = (Protocol) config.getUserProperties().get("protocol");
 
     logger.log(Level.INFO, "CONNECTED USER {0}", this.sender);
     logger.log(Level.INFO, "PROJECT ID {0}", projectId);

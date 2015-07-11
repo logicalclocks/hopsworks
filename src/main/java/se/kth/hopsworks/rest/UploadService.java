@@ -11,7 +11,6 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -33,7 +32,7 @@ import se.kth.bbc.upload.ResumableInfoStorage;
 import se.kth.hopsworks.controller.FolderNameValidator;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.meta.db.Dbao;
+import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.entity.Template;
 import se.kth.meta.exception.DatabaseException;
 
@@ -58,8 +57,8 @@ public class UploadService {
   private StagingManager stagingManager;
   @EJB
   private FolderNameValidator datasetNameValidator;
-  @Inject
-  private Dbao db;
+  @EJB
+  private TemplateFacade template;
 
   private String path;
   private Inode fileParent;
@@ -245,12 +244,12 @@ public class UploadService {
     //find the inode
     Inode inode = inodes.getInodeAtPath(path);
 
-    Template template = db.findTemplateById(info.getResumableTemplateId());
-    template.getInodes().add(inode);
+    Template templ = template.findByTemplateId(info.getResumableTemplateId());
+    templ.getInodes().add(inode);
 
     try {
       //persist the relationship table
-      db.updateTemplatesInodesMxN(template);
+      template.updateTemplatesInodesMxN(templ);
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, "Something went wrong.", e);
     }

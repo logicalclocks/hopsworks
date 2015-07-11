@@ -30,12 +30,12 @@ import se.kth.bbc.project.fb.Inode;
  * @author vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_template")
+@Table(name = "hopsworks_kthfs.meta_templates")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Template.findAll",
           query = "SELECT t FROM Template t"),
-  @NamedQuery(name = "Template.findByTemplateid",
+  @NamedQuery(name = "Template.findById",
           query = "SELECT t FROM Template t WHERE t.id = :templateid"),
   @NamedQuery(name = "Template.findByName",
           query = "SELECT t FROM Template t WHERE t.name = :name")})
@@ -55,7 +55,7 @@ public class Template implements Serializable, EntityIntf {
   @Column(name = "name")
   private String name;
 
-  @OneToMany(mappedBy = "templates",
+  @OneToMany(mappedBy = "template",
           targetEntity = MTable.class,
           fetch = FetchType.LAZY,
           cascade = CascadeType.ALL)

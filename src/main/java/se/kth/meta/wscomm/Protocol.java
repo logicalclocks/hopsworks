@@ -1,14 +1,21 @@
 package se.kth.meta.wscomm;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import se.kth.meta.db.Dbao;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import se.kth.meta.db.FieldFacade;
+import se.kth.meta.db.FieldPredefinedValueFacade;
+import se.kth.meta.db.FieldTypeFacade;
+import se.kth.meta.db.MTableFacade;
+import se.kth.meta.db.TemplateFacade;
+import se.kth.meta.db.TupleToFileFacade;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldType;
 import se.kth.meta.entity.Field;
+import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.Template;
@@ -27,21 +34,29 @@ import se.kth.meta.wscomm.message.TextMessage;
  *
  * @author Vangelis
  */
+@Stateless(name = "protocol")
 public class Protocol {
 
   private static final Logger logger = Logger.
           getLogger(Protocol.class.getName());
 
-  private Dbao db;
+  @EJB
   private Utils utils;
+  @EJB
+  private TemplateFacade templateFacade;
+  @EJB
+  private MTableFacade tableFacade;
+  @EJB
+  private TupleToFileFacade tupletofileFacade;
+  @EJB
+  private FieldTypeFacade fieldTypeFacade;
+  @EJB
+  private FieldFacade fieldFacade;
+  @EJB
+  private FieldPredefinedValueFacade fpf;
 
   public Protocol() {
-  }
-
-  public Protocol(Dbao db) {
-    this.db = db;
-    this.utils = new Utils(db);
-    logger.log(Level.SEVERE, "Protocol initialized");
+    logger.log(Level.INFO, "Protocol initialized");
   }
 
   /**
@@ -152,7 +167,7 @@ public class Protocol {
 
   private Message fetchTemplates(Message message) {
 
-    List<Template> templates = this.db.loadTemplates();
+    List<Template> templates = this.templateFacade.loadTemplates();
 
     String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) templates);
     message.setMessage(jsonMsg);
@@ -162,7 +177,7 @@ public class Protocol {
 
   private Message fetchFieldTypes(Message message) {
 
-    List<FieldType> ftypes = this.db.loadFieldTypes();
+    List<FieldType> ftypes = this.fieldTypeFacade.loadFieldTypes();
 
     FieldTypeMessage newMsg = new FieldTypeMessage();
 
@@ -178,7 +193,8 @@ public class Protocol {
 
     ContentMessage cmsg = (ContentMessage) message;
 
-    List<MTable> tables = this.db.loadTemplateContent(cmsg.getTemplateid());
+    List<MTable> tables = this.templateFacade.loadTemplateContent(cmsg.
+            getTemplateid());
 
     String jsonMsg = cmsg.buildSchema((List<EntityIntf>) (List<?>) tables);
     message.setMessage(jsonMsg);
@@ -197,7 +213,7 @@ public class Protocol {
 
     try {
       MetadataMessage message = new MetadataMessage("Server", "");
-      MTable t = this.db.getTable(table.getId());
+      MTable t = this.tableFacade.getTable(table.getId());
 
       List<Field> fields = t.getFields();
       for (Field field : fields) {
@@ -208,7 +224,8 @@ public class Protocol {
         List<RawData> raw = field.getRawData();
 
         for (RawData rawdata : raw) {
-          TupleToFile ttf = this.db.getTupletofile(rawdata.getTupleid());
+          TupleToFile ttf = this.tupletofileFacade.getTupletofile(rawdata.
+                  getTupleid());
           rawdata.setInodeid(ttf.getInodeid());
         }
       }
@@ -236,7 +253,7 @@ public class Protocol {
 
     try {
       MetadataMessage message = new MetadataMessage("Server", "");
-      MTable t = this.db.getTable(table.getId());
+      MTable t = this.tableFacade.getTable(table.getId());
 
       List<Field> fields = t.getFields();
 
@@ -249,7 +266,8 @@ public class Protocol {
         List<RawData> toKeep = new LinkedList<>();
 
         for (RawData raw : rawList) {
-          TupleToFile ttf = this.db.getTupletofile(raw.getTupleid());
+          TupleToFile ttf = this.tupletofileFacade.getTupletofile(raw.
+                  getTupleid());
 
           //keep only the data related to the specific inode
           if (ttf.getInodeid() == inodeid) {

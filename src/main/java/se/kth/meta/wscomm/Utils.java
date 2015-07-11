@@ -4,7 +4,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import se.kth.meta.db.Dbao;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import se.kth.meta.db.FieldFacade;
+import se.kth.meta.db.FieldPredefinedValueFacade;
+import se.kth.meta.db.MTableFacade;
+import se.kth.meta.db.RawDataFacade;
+import se.kth.meta.db.TemplateFacade;
+import se.kth.meta.db.TupleToFileFacade;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.Field;
@@ -19,21 +26,33 @@ import se.kth.meta.exception.DatabaseException;
  *
  * @author Vangelis
  */
+@Stateless(name="utils")
 public class Utils {
 
   private static final Logger logger = Logger.getLogger(Utils.class.getName());
 
-  private Dbao db;
-
-  public Utils(Dbao db) {
-    this.db = db;
+  @EJB
+  private TemplateFacade templateFacade;
+  @EJB
+  private MTableFacade tableFacade;
+  @EJB
+  private FieldFacade fieldFacade;
+  @EJB
+  private FieldPredefinedValueFacade fieldPredefinedValueFacade;
+  @EJB
+  private RawDataFacade rawDataFacade;
+  @EJB
+  private TupleToFileFacade tupletoFileFacade;
+  
+  public Utils() {
   }
 
   public void addNewTemplate(Template template) throws ApplicationException {
 
     try {
-      this.db.addTemplate(template);
+      this.templateFacade.addTemplate(template);
     } catch (DatabaseException e) {
+      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException("Could not add new template " + template.
               getName() + ""
               + " " + e.getMessage());
@@ -42,8 +61,9 @@ public class Utils {
 
   public void removeTemplate(Template template) throws ApplicationException {
     try {
-      this.db.removeTemplate(template);
+      this.templateFacade.removeTemplate(template);
     } catch (DatabaseException e) {
+      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException("Could not remove template " + template.
               getName() + ""
               + " " + e.getMessage());
@@ -61,29 +81,30 @@ public class Utils {
 
       try {
         //persist the parent
-        int tableId = this.db.addTable(t);
+        int tableId = this.tableFacade.addTable(t);
 
-        logger.log(Level.INFO, "TABLE: {0}", tableName);
+        logger.log(Level.INFO, "STORE/UPDATE TABLE: {0}", tableName);
 
         for (Field field : tableFields) {
-          //associate each field(child) with the table(parent) it belongs to
+          //associate each field(child) with its table(parent)
           field.setTableid(tableId);
 
           List<EntityIntf> predef = new LinkedList<>(
                   (List<EntityIntf>) (List<?>) field.getFieldPredefinedValues());
 
+
           field.resetFieldPredefinedValues();
           //persist the child
-          int fieldid = this.db.addField(field);
+          int fieldid = this.fieldFacade.addField(field);
           //remove any previous predefined values
           this.removeFieldPredefinedValues(fieldid);
           //add the new predefined values
           this.addFieldsPredefinedValues(predef, fieldid);
         }
-      } catch (DatabaseException ex) {
-        logger.log(Level.SEVERE, null, ex);
+      } catch (DatabaseException e) {
+        logger.log(Level.SEVERE, null, e);
         throw new ApplicationException("Could not add table " + t.getName()
-                + " " + ex.getMessage());
+                + " " + e.getMessage());
       }
     }
   }
@@ -98,7 +119,7 @@ public class Utils {
         //associate each child with its parent
         predefval.setFieldid(fieldId);
         //persist the entity
-        this.db.addFieldPredefinedValue(predefval);
+        this.fieldPredefinedValueFacade.addFieldPredefinedValue(predefval);
       }
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, null, e);
@@ -109,9 +130,10 @@ public class Utils {
 
   public void deleteTable(MTable table) throws ApplicationException {
     try {
-      logger.log(Level.SEVERE, "DELETING TABLE {0} ", table.getName());
-      this.db.deleteTable(table);
+      logger.log(Level.INFO, "DELETING TABLE {0} ", table.getName());
+      this.tableFacade.deleteTable(table);
     } catch (DatabaseException e) {
+      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
               "Utils.java: method deleteTable "
               + "encountered a problem");
@@ -121,9 +143,10 @@ public class Utils {
   public void deleteField(Field field) throws ApplicationException {
 
     try {
-      logger.log(Level.SEVERE, "DELETING FIELD {0} ", field);
-      this.db.deleteField(field);
+      logger.log(Level.INFO, "DELETING FIELD {0} ", field);
+      this.fieldFacade.deleteField(field);
     } catch (DatabaseException e) {
+      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
               "Utils.java: method deleteField "
               + "encountered a problem");
@@ -133,10 +156,11 @@ public class Utils {
   public void removeFieldPredefinedValues(int fieldid) throws
           ApplicationException {
     try {
-      logger.log(Level.SEVERE, "DELETING PREDEFINED VALUES FOR FIELD {0} ",
+      logger.log(Level.INFO, "DELETING PREDEFINED VALUES FOR FIELD {0} ",
               fieldid);
-      this.db.deleteFieldPredefinedValues(fieldid);
+      this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
+      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
               "Utils.java: method deleteField "
               + "encountered a problem");
@@ -146,7 +170,7 @@ public class Utils {
   public void storeMetadata(List<EntityIntf> list) throws ApplicationException {
 
     try {
-      int tupleid = this.db.getLastInsertedTupleId() + 1;
+      int tupleid = this.rawDataFacade.getLastInsertedTupleId() + 1;
       int inodeid = -1;
 
       //every rawData entity carries the same inodeid
@@ -158,13 +182,14 @@ public class Utils {
         inodeid = r.getInodeid();
 
         logger.log(Level.INFO, r.toString());
-        ((Dbao) this.db).addRawData(r);
+        this.rawDataFacade.addRawData(r);
       }
 
       TupleToFile ttf = new TupleToFile(tupleid, inodeid);
-      ((Dbao) this.db).addTupleToFile(ttf);
+      this.tupletoFileFacade.addTupleToFile(ttf);
 
     } catch (DatabaseException e) {
+      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
               "Utils.java: storeMetadata(List<?> list) "
               + "encountered a problem");
