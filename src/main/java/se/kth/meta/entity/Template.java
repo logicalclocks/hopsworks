@@ -30,7 +30,7 @@ import se.kth.bbc.project.fb.Inode;
  * @author vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_templates")
+@Table(name = "hopsworks.meta_templates")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Template.findAll",
@@ -61,7 +61,7 @@ public class Template implements Serializable, EntityIntf {
           cascade = CascadeType.ALL)
   private List<MTable> tables;
 
-  @JoinTable(name = "hopsworks_kthfs.meta_template_to_inode",
+  @JoinTable(name = "hopsworks.meta_template_to_inode",
           inverseJoinColumns = {
             @JoinColumn(name = "inode_pid",
                     referencedColumnName = "parent_id"),

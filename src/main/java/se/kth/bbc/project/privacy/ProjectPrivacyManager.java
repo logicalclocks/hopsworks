@@ -98,7 +98,7 @@ public class ProjectPrivacyManager {
 
   public Consent getActiveConsent(String projectName) {
     return (Consent) em.createQuery(
-            "SELECT c FROM hopsworks_kthfs.Consent c WHERE c.status ='APPROVED' AND c.projectName = '"
+            "SELECT c FROM hopsworks.Consent c WHERE c.status ='APPROVED' AND c.projectName = '"
             + projectName + "'").getSingleResult();
   }
 

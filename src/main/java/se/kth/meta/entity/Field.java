@@ -25,7 +25,7 @@ import javax.validation.constraints.Size;
  * @author Vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_fields")
+@Table(name = "hopsworks.meta_fields")
 @NamedQueries({
   @NamedQuery(name = "Field.findAll",
           query = "SELECT f FROM Field f"),

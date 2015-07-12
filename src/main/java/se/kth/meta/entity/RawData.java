@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Vangelis
  */
 @Entity
-@Table(name = "hopsworks_kthfs.meta_raw_data")
+@Table(name = "hopsworks.meta_raw_data")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "RawData.findAll",

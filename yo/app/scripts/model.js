@@ -1,6 +1,11 @@
 /*jshint undef: false, unused: false, indent: 2*/
 /*global angular: false */
 
+/*
+ * Defines the objects used by the angular front end to represent the 
+ * metadata tables, fields, and the whole board (or template) which contains
+ * the aforementioned objects.
+ */
 'use strict';
 function Board(name, numberOfColumns) {
   return {

@@ -25,7 +25,7 @@ import se.kth.bbc.project.Project;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "hopsworks_kthfs.consent")
+@Table(name = "hopsworks.consent")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Consent.findAll",
