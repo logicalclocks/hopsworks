@@ -156,8 +156,8 @@ public class Utils {
   public void removeFieldPredefinedValues(int fieldid) throws
           ApplicationException {
     try {
-      logger.log(Level.INFO, "DELETING PREDEFINED VALUES FOR FIELD {0} ",
-              fieldid);
+//      logger.log(Level.INFO, "DELETING PREDEFINED VALUES FOR FIELD {0} ",
+//              fieldid);
       this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, null, e);
@@ -170,23 +170,26 @@ public class Utils {
   public void storeMetadata(List<EntityIntf> list) throws ApplicationException {
 
     try {
-      int tupleid = this.rawDataFacade.getLastInsertedTupleId() + 1;
-      int inodeid = -1;
-
+      /*
+       * get the inodeid present in the entities in the list. It is the
+       * same for all the entities, since they constitute a single tuple
+       */
+      RawData r = (RawData) list.get(0);
+      
+      //create a metadata tuple attached to an inodeid
+      TupleToFile ttf = new TupleToFile(-1, r.getInodeid());
+      int tupleid = this.tupletoFileFacade.addTupleToFile(ttf);
+      
       //every rawData entity carries the same inodeid
       for (EntityIntf raw : list) {
 
-        RawData r = (RawData) raw;
+        r = (RawData) raw;
         r.setData(r.getData().replaceAll("\"", ""));
         r.setTupleid(tupleid);
-        inodeid = r.getInodeid();
 
         logger.log(Level.INFO, r.toString());
         this.rawDataFacade.addRawData(r);
       }
-
-      TupleToFile ttf = new TupleToFile(tupleid, inodeid);
-      this.tupletoFileFacade.addTupleToFile(ttf);
 
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, null, e);

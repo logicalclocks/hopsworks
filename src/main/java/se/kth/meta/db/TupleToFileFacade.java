@@ -42,9 +42,12 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
 //    return result.get(0);
   }
 
-  public void addTupleToFile(TupleToFile ttf) throws DatabaseException {
+  public int addTupleToFile(TupleToFile ttf) throws DatabaseException {
 
     this.em.persist(ttf);
+    this.em.flush();
+    
+    return ttf.getId();
   }
 
 }

@@ -24,8 +24,6 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "TupleToFile.findAll",
           query = "SELECT t FROM TupleToFile t"),
   @NamedQuery(name = "TupleToFile.findById",
-          query = "SELECT t FROM TupleToFile t WHERE t.id = :id"),
-  @NamedQuery(name = "TupleToFile.findByTupleid",
           query = "SELECT t FROM TupleToFile t WHERE t.tupleid = :tupleid"),
   @NamedQuery(name = "TupleToFile.findByInodeid",
           query = "SELECT t FROM TupleToFile t WHERE t.inodeid = :inodeid"),
@@ -40,13 +38,9 @@ public class TupleToFile implements Serializable {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
-  @Column(name = "id")
-  private Integer id;
-
-  @Basic(optional = false)
   @NotNull
   @Column(name = "tupleid")
-  private int tupleid;
+  private Integer tupleid;
 
   @Basic(optional = false)
   @NotNull
@@ -61,30 +55,16 @@ public class TupleToFile implements Serializable {
     this.inodeid = inodeid;
   }
 
-  public TupleToFile(Integer id) {
-    this.id = id;
-  }
-
-  public TupleToFile(Integer id, int tupleid, int inodeid) {
-    this.id = id;
+  public TupleToFile(Integer tupleid) {
     this.tupleid = tupleid;
-    this.inodeid = inodeid;
   }
 
   public Integer getId() {
-    return id;
+    return this.tupleid;
   }
 
   public void setId(Integer id) {
-    this.id = id;
-  }
-
-  public int getTupleid() {
-    return tupleid;
-  }
-
-  public void setTupleid(int tupleid) {
-    this.tupleid = tupleid;
+    this.tupleid = id;
   }
 
   public int getInodeid() {
@@ -98,7 +78,7 @@ public class TupleToFile implements Serializable {
   @Override
   public int hashCode() {
     int hash = 0;
-    hash += (id != null ? id.hashCode() : 0);
+    hash += (tupleid != null ? tupleid.hashCode() : 0);
     return hash;
   }
 
@@ -109,8 +89,9 @@ public class TupleToFile implements Serializable {
       return false;
     }
     TupleToFile other = (TupleToFile) object;
-    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
-            equals(other.id))) {
+    if ((this.tupleid == null && other.tupleid != null) || (this.tupleid != null
+            && !this.tupleid.
+            equals(other.tupleid))) {
       return false;
     }
     return true;
@@ -118,7 +99,7 @@ public class TupleToFile implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.meta.entity.TupleToFile[ id=" + id + " ]";
+    return "se.kth.meta.entity.TupleToFile[ id=" + tupleid + " ]";
   }
 
 }
