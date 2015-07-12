@@ -223,7 +223,7 @@ CREATE TABLE `meta_tables` (
   `name` VARCHAR(255) DEFAULT NULL,
   `templateid` INT(11) NOT NULL,
   PRIMARY KEY (`tableid`),
-  FOREIGN KEY (`templateid`) REFERENCES `meta_template` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`templateid`) REFERENCES `meta_templates` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_fields` (
@@ -237,8 +237,8 @@ CREATE TABLE `meta_fields` (
   `description` VARCHAR(250) NOT NULL,
   `fieldtypeid` MEDIUMINT(11) NOT NULL,
   PRIMARY KEY (`fieldid`),
-  FOREIGN KEY (`tableid`) REFERENCES `meta_table` (`tableid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  FOREIGN KEY (`fieldtypeid`) REFERENCES `meta_field_type` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`tableid`) REFERENCES `meta_tables` (`tableid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`fieldtypeid`) REFERENCES `meta_field_types` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_field_predefined_values` (
@@ -246,12 +246,12 @@ CREATE TABLE `meta_field_predefined_values` (
   `fieldid` INT(11) NOT NULL,
   `valuee` VARCHAR(250) NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`fieldid`) REFERENCES `meta_field` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_tuple_to_file` (
+  `tupleid` INT(11) NOT NULL AUTO_INCREMENT,
   `inodeid` INT(11) DEFAULT NULL,
-  `tupleid` INT(11) DEFAULT NULL,
   PRIMARY KEY (`tupleid`)
 ) ENGINE=ndbcluster;
 
@@ -261,7 +261,7 @@ CREATE TABLE `meta_raw_data` (
   `fieldid` INT(11) DEFAULT NULL,
   `tupleid` INT(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`fieldid`) REFERENCES `meta_field` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   FOREIGN KEY (`tupleid`) REFERENCES `meta_tuple_to_file` (`tupleid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
@@ -271,7 +271,7 @@ CREATE TABLE `meta_template_to_inode` (
   `inode_pid` INT(11) NOT NULL,
   `inode_name` VARCHAR(3000) NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`template_id`) REFERENCES `meta_template` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`,`name`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster CHARSET=latin1;
 
