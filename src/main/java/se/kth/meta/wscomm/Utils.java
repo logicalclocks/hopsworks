@@ -156,8 +156,7 @@ public class Utils {
   public void removeFieldPredefinedValues(int fieldid) throws
           ApplicationException {
     try {
-//      logger.log(Level.INFO, "DELETING PREDEFINED VALUES FOR FIELD {0} ",
-//              fieldid);
+
       this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, null, e);
