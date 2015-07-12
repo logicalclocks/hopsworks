@@ -11,7 +11,6 @@ import javax.json.JsonObject;
 import javax.json.JsonValue;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldPredefinedValue;
-import se.kth.meta.entity.FieldType;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.MTable;
 
@@ -109,7 +108,6 @@ public class FieldMessage extends ContentMessage {
 //    field.setForceDelete(forceDelete);
     
     //-- ATTACH the field's parent entity (FieldType)
-    //FieldType fieldtype = new FieldType(fieldtypeid);
     field.setFieldTypeId(fieldtypeid);
     
     //-- ATTACH fieldtype's child entity (Field)

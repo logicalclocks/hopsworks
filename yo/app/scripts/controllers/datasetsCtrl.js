@@ -608,10 +608,11 @@ angular.module('hopsWorksApp')
                         //PERSIST THE CARD TO THE DATABASE - dialogResponse is the modified field
                         self.storeCard(self.currentTemplateID, column, dialogResponse)
                                 .then(function (response) {
-                                  $rootScope.mainBoard = JSON.parse(response.board);
+                                  self.currentBoard = JSON.parse(response.board);
 
                                   defer.resolve($rootScope.mainBoard);
-                                  $rootScope.$broadcast('refreshApp', $rootScope.mainBoard);
+                                  console.log("MODIFIED FIELD " + JSON.stringify(self.currentBoard));
+                                  //$rootScope.$broadcast('refreshApp', $rootScope.mainBoard);
                                 });
                       }, function (dialogResponse) {
                         console.log("don't modify " + JSON.stringify(dialogResponse));

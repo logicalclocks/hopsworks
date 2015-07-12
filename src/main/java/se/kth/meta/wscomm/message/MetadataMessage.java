@@ -28,7 +28,7 @@ public class MetadataMessage implements Message {
   private static final Logger logger = Logger.
           getLogger(MetadataMessage.class.getName());
 
-  private final String TYPE = "MetadataMessage";
+  protected String TYPE = "MetadataMessage";
   protected String sender;
   protected String message;
   protected String action;

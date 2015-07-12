@@ -77,8 +77,11 @@ public class TemplateFacade extends AbstractFacade<Template> {
 
   public List<MTable> loadTemplateContent(int templateId) {
 
+    //refresh the entitymanager
+    this.em.getEntityManagerFactory().getCache().evictAll();
+            
     String queryString = "MTable.findByTemplateId";
-    //this.em.clear();
+
     Query query = this.em.createNamedQuery(queryString);
     query.setParameter("templateid", templateId);
     return query.getResultList();

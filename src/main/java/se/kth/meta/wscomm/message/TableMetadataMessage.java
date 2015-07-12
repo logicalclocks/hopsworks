@@ -18,10 +18,9 @@ public class TableMetadataMessage extends MetadataMessage {
   private static final Logger logger = Logger.
           getLogger(TableMetadataMessage.class.getName());
 
-  private final String TYPE = "TableMetadataMessage";
-
   public TableMetadataMessage() {
     super();
+    super.TYPE = "TableMetadataMessage";
   }
 
   /**
