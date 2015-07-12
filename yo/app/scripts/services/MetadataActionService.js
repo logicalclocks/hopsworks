@@ -129,6 +129,15 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({tableid: tableId, inodeid: inodeId})
               });
             },
+            fetchTableMetadata: function(tableId){
+              console.log("fetching metadata for table " + tableId);
+              return WSComm.send({
+                sender: 'evsav',
+                type: 'TableMetadataMessage',
+                action: 'fetch_table_metadata',
+                message: JSON.stringify({tableid: tableId})
+              });
+            },
             storeMetadata: function (data) {
               return WSComm.send({
                 sender: 'evsav',

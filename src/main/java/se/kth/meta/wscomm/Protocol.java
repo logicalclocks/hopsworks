@@ -15,7 +15,6 @@ import se.kth.meta.db.TupleToFileFacade;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldType;
 import se.kth.meta.entity.Field;
-import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.Template;
@@ -28,6 +27,7 @@ import se.kth.meta.wscomm.message.ErrorMessage;
 import se.kth.meta.wscomm.message.FieldTypeMessage;
 import se.kth.meta.wscomm.message.Message;
 import se.kth.meta.wscomm.message.MetadataMessage;
+import se.kth.meta.wscomm.message.TableMetadataMessage;
 import se.kth.meta.wscomm.message.TextMessage;
 
 /**
@@ -119,10 +119,14 @@ public class Protocol {
         return this.createSchema(message);
 
       case FETCH_METADATA:
-        table = (MTable) message.parseSchema().get(0);
-        //return this.fetchTableMetadata(table);
-        return this.fetchTableMetadataForInode(table, table.getInodeid());
+        //SHOULD BE REFACTORED TO RETURN TUPLE_TO_FILE AS ENTITY. NOT TABLE
+//        table = (MTable) message.parseSchema().get(0);
+//        //return this.fetchTableMetadata(table);
+//        return this.fetchTableMetadataForInode(table, table.getInodeid());
 
+      case FETCH_TABLE_METADATA:
+        table = (MTable) message.parseSchema().get(0);
+        return this.fetchTableMetadata(table);
       case FETCH_FIELD_TYPES:
         return this.fetchFieldTypes(message);
 
@@ -212,7 +216,7 @@ public class Protocol {
   private Message fetchTableMetadata(MTable table) {
 
     try {
-      MetadataMessage message = new MetadataMessage("Server", "");
+      TableMetadataMessage message = new TableMetadataMessage("Server", "");
       MTable t = this.tableFacade.getTable(table.getId());
 
       List<Field> fields = t.getFields();

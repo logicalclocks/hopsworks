@@ -76,7 +76,8 @@ public class TableMessage extends ContentMessage {
     }
 
     MTable table = new MTable(tableId, tableName);
-    table.setForceDelete(forceDelete);
+    //FORCE DELETE NEEDS TO BE REFACTORED
+    //table.setForceDelete(forceDelete);
     List<EntityIntf> list = new LinkedList<>();
     list.add(table);
 

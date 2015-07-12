@@ -70,16 +70,6 @@ public class MTable implements Serializable, EntityIntf {
           cascade = CascadeType.ALL) //cascade type all updates the child entities
   private List<Field> fields;
 
-  @Transient
-  private int inodeid;
-
-  /*
-   * indicates whether a table containing fields can be deleted along
-   * with its fields or not
-   */
-  @Transient
-  private boolean forceDelete;
-
   public MTable() {
   }
 
@@ -156,28 +146,12 @@ public class MTable implements Serializable, EntityIntf {
     this.fields = new LinkedList<>();
   }
 
-  public void setForceDelete(boolean forceDelete) {
-    this.forceDelete = forceDelete;
-  }
-
-  public boolean forceDelete() {
-    return this.forceDelete;
-  }
-
   public Template getTemplate() {
     return this.template;
   }
 
   public void setTemplate(Template template) {
     this.template = template;
-  }
-
-  public void setInodeid(int inodeid) {
-    this.inodeid = inodeid;
-  }
-
-  public int getInodeid() {
-    return this.inodeid;
   }
 
   @Override

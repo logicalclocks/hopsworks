@@ -18,7 +18,8 @@ import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
 
 /**
- * Represents a message carrying the actual metadata
+ * Represents a message carrying the actual metadata or a message 
+ * asking for stored metadata
  *
  * @author Vangelis
  */
@@ -28,10 +29,10 @@ public class MetadataMessage implements Message {
           getLogger(MetadataMessage.class.getName());
 
   private final String TYPE = "MetadataMessage";
-  private String sender;
-  private String message;
-  private String action;
-  private String status;
+  protected String sender;
+  protected String message;
+  protected String action;
+  protected String status;
 
   /**
    * Default constructor. Vital for the class loader
@@ -104,7 +105,6 @@ public class MetadataMessage implements Message {
       int tableId = obj.getInt("tableid");
 
       MTable table = new MTable(tableId);
-      table.setInodeid(inodeid);
       List<EntityIntf> list = new LinkedList<>();
       list.add(table);
       return list;

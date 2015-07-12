@@ -21,7 +21,7 @@ public class MessageEncoder implements Encoder.Text<Message> {
 
     String value = msg.encode();
 
-    logger.log(Level.SEVERE, "RETURNED VALUE IS {0}", value);
+    logger.log(Level.INFO, "RETURNED VALUE IS {0}", value);
     return value;
   }
 
