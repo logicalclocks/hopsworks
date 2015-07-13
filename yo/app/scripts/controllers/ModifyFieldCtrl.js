@@ -15,7 +15,7 @@ var mainModule = angular.module('hopsWorksApp')
 
                     $scope.fieldSelectItems = [];
                     $scope.yesNoItems = [];
-                    $scope.selectedItem = "";
+                    $scope.selectedItem = "1";
                     $scope.existingRawData = false;
 
                     $scope.items = [];

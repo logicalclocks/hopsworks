@@ -36,7 +36,7 @@
       <label class="control-label" ng-disabled="existingRawData === true" for="newCardType">New field type</label>
       <div>
         <select id="newCardType" ng-disabled="existingRawData === true" ng-model="selectedItem" 
-                ng-change="update()" ng-options="item as item.name for item in items"></select>
+                ng-change="update()" ng-options="item as item.name for item in items | orderBy:'id'"></select>
       </div>
     </div>
 
