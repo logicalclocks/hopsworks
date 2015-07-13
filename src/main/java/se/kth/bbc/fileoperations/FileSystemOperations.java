@@ -14,10 +14,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.HdfsConfiguration;
-import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import se.kth.bbc.lims.Constants;
 
 /**
@@ -37,6 +34,8 @@ public class FileSystemOperations {
   @PostConstruct
   public void init() {
     try {
+      DistributedFileSystem ddd = (DistributedFileSystem) dfs;
+      
       dfs = getFs();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
