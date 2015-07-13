@@ -54,8 +54,7 @@ public class Utils {
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, null, e);
       throw new ApplicationException("Could not add new template " + template.
-              getName() + ""
-              + " " + e.getMessage());
+              getName() + " " + e.getMessage());
     }
   }
 
@@ -65,8 +64,7 @@ public class Utils {
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, null, e);
       throw new ApplicationException("Could not remove template " + template.
-              getName() + ""
-              + " " + e.getMessage());
+              getName() + " " + e.getMessage());
     }
   }
 
@@ -135,8 +133,7 @@ public class Utils {
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteTable "
-              + "encountered a problem");
+              "Utils.java: method deleteTable encountered a problem");
     }
   }
 
@@ -148,8 +145,7 @@ public class Utils {
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteField "
-              + "encountered a problem");
+              "Utils.java: method deleteField encountered a problem");
     }
   }
 
@@ -161,8 +157,7 @@ public class Utils {
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteField "
-              + "encountered a problem");
+              "Utils.java: method deleteField encountered a problem");
     }
   }
 
@@ -193,8 +188,7 @@ public class Utils {
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: storeMetadata(List<?> list) "
-              + "encountered a problem");
+              "Utils.java: storeMetadata(List<?> list) encountered a problem");
     }
   }
 

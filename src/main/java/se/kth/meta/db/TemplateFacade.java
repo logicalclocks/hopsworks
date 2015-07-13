@@ -47,7 +47,7 @@ public class TemplateFacade extends AbstractFacade<Template> {
    */
   public void addTemplate(Template template) throws DatabaseException {
 
-      this.em.persist(template);
+    this.em.persist(template);
   }
 
   public void removeTemplate(Template template) throws DatabaseException {
@@ -77,14 +77,18 @@ public class TemplateFacade extends AbstractFacade<Template> {
 
   public List<MTable> loadTemplateContent(int templateId) {
 
-    //refresh the entitymanager
-    this.em.getEntityManagerFactory().getCache().evictAll();
-            
     String queryString = "MTable.findByTemplateId";
 
     Query query = this.em.createNamedQuery(queryString);
     query.setParameter("templateid", templateId);
-    return query.getResultList();
+
+    List<MTable> modifiedEntities = query.getResultList();
+
+    //force em to fetch the changed entities from the database
+    for (MTable table : modifiedEntities) {
+      this.em.refresh(table);
+    }
+    return modifiedEntities;
   }
 
   /**
@@ -110,8 +114,8 @@ public class TemplateFacade extends AbstractFacade<Template> {
    */
   public void updateTemplatesInodesMxN(Template template) throws
           DatabaseException {
-    
-      this.em.merge(template);
+
+    this.em.merge(template);
   }
 
 }
