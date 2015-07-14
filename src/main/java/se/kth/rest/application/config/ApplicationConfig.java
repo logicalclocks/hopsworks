@@ -28,6 +28,7 @@ public class ApplicationConfig extends Application {
   private void addRestResourceClasses(Set<Class<?>> resources) {
     resources.add(se.kth.hopsworks.filters.RequestAuthFilter.class);
     resources.add(se.kth.hopsworks.rest.ActivityService.class);
+    resources.add(se.kth.hopsworks.rest.AdamService.class);
     resources.add(se.kth.hopsworks.rest.AppExceptionMapper.class);
     resources.add(se.kth.hopsworks.rest.AuthExceptionMapper.class);
     resources.add(se.kth.hopsworks.rest.AuthService.class);

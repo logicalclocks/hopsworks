@@ -173,9 +173,10 @@ public class FileSystemOperations {
 
   /**
    * Move a file in HDFS from one path to another.
+   * <p>
    * @param source
    * @param destination
-   * @throws IOException 
+   * @throws IOException
    */
   public void moveWithinHdfs(Path source, Path destination) throws IOException {
     fs.rename(source, destination);
@@ -201,9 +202,10 @@ public class FileSystemOperations {
 
   /**
    * Copy the file at the HDFS source path to the local destination.
+   * <p>
    * @param src
    * @param dst
-   * @throws IOException 
+   * @throws IOException
    */
   public void copyToLocal(Path src, Path dst) throws IOException {
     fs.copyToLocalFile(src, dst);

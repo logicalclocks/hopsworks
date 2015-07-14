@@ -1,4 +1,4 @@
-<!-- HTML file for the Cuneiform job running interface -->
+<!-- HTML file for the Spark job running interface -->
 <link rel="stylesheet" href="styles/timeline.css">
 <link rel="stylesheet" href="styles/cuneiform.css">
 <div ng-controller="MainCtrl as mainCtrl">
@@ -12,7 +12,9 @@
 
     <section>
       <div class="content-wrapper">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Cuneiform</h3>
+        <h3 id="projectBread" style="display: none;"> 
+          {{ projectCtrl.currentProject.projectName}} / Spark
+        </h3>
 
 
         <!-- Page Content -->
@@ -41,7 +43,7 @@
                   </ul>
                   Results:
                   <ul>
-                    <li ng-repeat="result in job.jobOutputFileCollection" ng-show="job.jobOutputFileCollection"><a ng-click="">{{result.jobOutputFilePK.name}} </a></li>
+                    <li ng-repeat="result in job.jobOutputFileCollection" ng-show="job.jobOutputFileCollection"><a ng-click="">{{result.path}} </a></li>
                   </ul>
                   </p>
                 </div>
@@ -101,6 +103,18 @@
                   <td class="firstColumn">ResourceManager queue</td>
                   <td class="secondColumn"><input type="text" ng-model="sparkCtrl.sparkConfig.amQueue"></td>
                 </tr>
+                <tr>
+                  <td class="firstColumn">Number of executors</td>
+                  <td class="secondColumn"><input type="number" ng-model="sparkCtrl.sparkConfig.numberOfExecutors"></td>
+                </tr>
+                <tr>
+                  <td class="firstColumn">Number of executor cores</td>
+                  <td class="secondColumn"><input type="number" ng-model="sparkCtrl.sparkConfig.executorCores"></td>
+                </tr>
+                <tr>
+                  <td class="firstColumn">Executor memory</td>
+                  <td class="secondColumn"><input type="text" ng-model="sparkCtrl.sparkConfig.executorMemory"></td>
+                </tr>
               </table>
             </div>
           </div>
@@ -126,7 +140,7 @@
                 </ul>
                 Results:
                 <ul>
-                  <li ng-repeat="result in sparkCtrl.job.jobOutputFileCollection" ng-show="sparkCtrl.job.jobOutputFileCollection"><a ng-click="">{{result.jobOutputFilePK.name}} </a></li>
+                  <li ng-repeat="result in sparkCtrl.job.jobOutputFileCollection" ng-show="sparkCtrl.job.jobOutputFileCollection"><a ng-click="">{{result.path}} </a></li>
                 </ul>
                 </p>
               </div>

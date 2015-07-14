@@ -5,8 +5,8 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('DataSetCreatorCtrl', ['$modalInstance', 'DataSetService', '$routeParams', 'growl', 'dataSet',
-          function ($modalInstance, DataSetService, $routeParams, growl, dataSet) {
+        .controller('DataSetCreatorCtrl', ['$modalInstance', 'DataSetService', '$routeParams', 'growl', 'path',
+          function ($modalInstance, DataSetService, $routeParams, growl, path) {
 
             var self = this;
 
@@ -32,8 +32,8 @@ angular.module('hopsWorksApp')
             };
 
             self.saveDataSetDir = function () {
-              if (dataSet) {
-                self.dataSet.name = dataSet + '/' + self.dataSet.name;
+              if (path) {
+                self.dataSet.name = path + '/' + self.dataSet.name;
                 createDataSetDir(self.dataSet);
               } else {
                 createDataSetDir(self.dataSet);
