@@ -87,9 +87,7 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000, referenceId: 1});
               }
               );
-
             };
-
 
             self.close = function () {
               $modalInstance.dismiss('cancel');

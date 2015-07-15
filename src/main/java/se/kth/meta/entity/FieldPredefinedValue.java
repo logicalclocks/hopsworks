@@ -21,20 +21,20 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author vangelis
  */
 @Entity
-@Table(name = "field_predefined_values")
+@Table(name = "hopsworks.meta_field_predefined_values")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "FieldPredefinedValues.findAll",
-          query = "SELECT f FROM FieldPredefinedValues f"),
-  @NamedQuery(name = "FieldPredefinedValues.findById",
-          query = "SELECT f FROM FieldPredefinedValues f WHERE f.id = :id"),
-  @NamedQuery(name = "FieldPredefinedValues.findByFieldid",
+  @NamedQuery(name = "FieldPredefinedValue.findAll",
+          query = "SELECT f FROM FieldPredefinedValue f"),
+  @NamedQuery(name = "FieldPredefinedValue.findById",
+          query = "SELECT f FROM FieldPredefinedValue f WHERE f.id = :id"),
+  @NamedQuery(name = "FieldPredefinedValue.findByFieldid",
           query
-          = "SELECT f FROM FieldPredefinedValues f WHERE f.fieldid = :fieldid"),
-  @NamedQuery(name = "FieldPredefinedValues.findByValue",
+          = "SELECT f FROM FieldPredefinedValue f WHERE f.fieldid = :fieldid"),
+  @NamedQuery(name = "FieldPredefinedValue.findByValue",
           query
-          = "SELECT f FROM FieldPredefinedValues f WHERE f.valuee = :valuee")})
-public class FieldPredefinedValues implements Serializable, EntityIntf {
+          = "SELECT f FROM FieldPredefinedValue f WHERE f.valuee = :valuee")})
+public class FieldPredefinedValue implements Serializable, EntityIntf {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -58,16 +58,16 @@ public class FieldPredefinedValues implements Serializable, EntityIntf {
   @ManyToOne(optional = false)
   @PrimaryKeyJoinColumn(name = "fieldid",
           referencedColumnName = "fieldid")
-  private Fields fields;
+  private Field fields;
 
-  public FieldPredefinedValues() {
+  public FieldPredefinedValue() {
   }
 
-  public FieldPredefinedValues(Integer id) {
+  public FieldPredefinedValue(Integer id) {
     this.id = id;
   }
 
-  public FieldPredefinedValues(Integer id, int fieldid, String valuee) {
+  public FieldPredefinedValue(Integer id, int fieldid, String valuee) {
     this.id = id;
     this.fieldid = fieldid;
     this.valuee = valuee;
@@ -75,7 +75,7 @@ public class FieldPredefinedValues implements Serializable, EntityIntf {
 
   @Override
   public void copy(EntityIntf entity) {
-    FieldPredefinedValues fpfv = (FieldPredefinedValues) entity;
+    FieldPredefinedValue fpfv = (FieldPredefinedValue) entity;
 
     this.id = fpfv.getId();
     this.fieldid = fpfv.getFieldid();
@@ -92,11 +92,11 @@ public class FieldPredefinedValues implements Serializable, EntityIntf {
     this.id = id;
   }
 
-  public void setFields(Fields fields) {
+  public void setField(Field fields) {
     this.fields = fields;
   }
 
-  public Fields getFields() {
+  public Field getField() {
     return this.fields;
   }
 
@@ -126,10 +126,10 @@ public class FieldPredefinedValues implements Serializable, EntityIntf {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof FieldPredefinedValues)) {
+    if (!(object instanceof FieldPredefinedValue)) {
       return false;
     }
-    FieldPredefinedValues other = (FieldPredefinedValues) object;
+    FieldPredefinedValue other = (FieldPredefinedValue) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
             equals(other.id))) {
       return false;

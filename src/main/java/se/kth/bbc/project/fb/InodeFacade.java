@@ -18,7 +18,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 @Stateless
 public class InodeFacade extends AbstractFacade<Inode> {
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   @Override
@@ -157,6 +157,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @return
    */
   public Inode findByParentAndName(Inode parent, String name) {
+
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey",
             Inode.class);
     q.setParameter("inodePk", new InodePK(parent.getId(), name));

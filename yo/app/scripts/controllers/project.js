@@ -1,9 +1,14 @@
+/*jshint undef: false, unused: false, indent: 2*/
+/*global angular: false */
+
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams'
-                  , 'growl', 'ProjectService', 'ModalService', 'ActivityService','$cookies',
-          function ($scope, $modalStack, $location, $routeParams, growl, ProjectService, ModalService, ActivityService, $cookies) {
+        .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams', 'UtilsService',
+          'growl', 'ProjectService', 'ModalService', 'ActivityService','$cookies',
+          function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies) {
+
+            UtilsService.setIndex("child");
 
             var self = this;
             self.currentProject = [];
@@ -37,6 +42,9 @@ angular.module('hopsWorksApp')
                           self.projectTypes.splice(index, 1);
                         });
                         $cookies.projectID = self.pId;
+                        //set the project name under which the search is performed
+                        UtilsService.setProjectName(self.currentProject.projectName);
+
                       }, function (error) {
                 $location.path('/');
               }
@@ -69,6 +77,24 @@ angular.module('hopsWorksApp')
               }
             };
 
+
+            self.projectSettingModal = function () {
+              ModalService.projectSettings('md').then(
+                      function (success) {
+                        getAllActivities();
+                        getCurrentProject();
+
+                        // Check if the service exists and otherwise add it or remove it depending on the previous choice
+                        self.exists = function (projectType) {
+                          var idx = self.selectionProjectTypes.indexOf(projectType);
+                          if (idx > -1) {
+                            self.selectionProjectTypes.splice(idx, 1);
+                          } else {
+                            self.selectionProjectTypes.push(projectType);
+                          }
+                        };
+                      });
+            };
 
             self.projectSettingModal = function () {
               ModalService.projectSettings('md').then(
@@ -161,6 +187,3 @@ angular.module('hopsWorksApp')
 
 
           }]);
-
-
-

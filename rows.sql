@@ -1,3 +1,4 @@
+
 --
 -- Dumping data for table `bbc_group`
 --
@@ -8,10 +9,10 @@ INSERT INTO `bbc_group` (`group_name`, `group_desc`, `gid`) VALUES
 
 -- --------------------------------------------------------
 --
--- Dumping data for table `field_types`
+-- Dumping data for table `meta_field_types`
 --
 
-INSERT INTO `field_types` (`id`, `description`) VALUES
+INSERT INTO `meta_field_types` (`id`, `description`) VALUES
 (1, 'text'),
 (2, 'value list'),
 (3, 'yes/no');
@@ -34,6 +35,7 @@ INSERT INTO `users`
 INSERT INTO `organization` (`id`, `uid`, `org_name`, `website`, `contact_person`, `contact_email`, `department`, `phone`, `fax`) VALUES
 (1, 10000, 'KI', 'www.ki.se', 'Admin Admin', 'admin@kth.se', 'MEB', '+4670080010', '+4670080015');
 
+
 -- --------------------------------------------------------
 --
 -- Dumping data for table `people_group`
@@ -41,5 +43,3 @@ INSERT INTO `organization` (`id`, `uid`, `org_name`, `website`, `contact_person`
 
 INSERT INTO `people_group` (`uid`, `gid`) VALUES
 (10000, 1005);
-
--- --------------------------------------------------------

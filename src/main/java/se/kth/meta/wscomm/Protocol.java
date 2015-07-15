@@ -4,50 +4,65 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import se.kth.meta.db.Dbao;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import se.kth.meta.db.FieldFacade;
+import se.kth.meta.db.FieldPredefinedValueFacade;
+import se.kth.meta.db.FieldTypeFacade;
+import se.kth.meta.db.MTableFacade;
+import se.kth.meta.db.TemplateFacade;
+import se.kth.meta.db.TupleToFileFacade;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldTypes;
-import se.kth.meta.entity.Fields;
+import se.kth.meta.entity.FieldType;
+import se.kth.meta.entity.Field;
 import se.kth.meta.entity.RawData;
-import se.kth.meta.entity.Tables;
-import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.MTable;
+import se.kth.meta.entity.Template;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.exception.DatabaseException;
 import se.kth.meta.wscomm.message.Command;
 import se.kth.meta.wscomm.message.ContentMessage;
 import se.kth.meta.wscomm.message.ErrorMessage;
-import se.kth.meta.wscomm.message.FieldTypesMessage;
+import se.kth.meta.wscomm.message.FieldTypeMessage;
 import se.kth.meta.wscomm.message.Message;
 import se.kth.meta.wscomm.message.MetadataMessage;
+import se.kth.meta.wscomm.message.TableMetadataMessage;
 import se.kth.meta.wscomm.message.TextMessage;
 
 /**
  *
  * @author Vangelis
  */
+@Stateless(name = "protocol")
 public class Protocol {
 
   private static final Logger logger = Logger.
           getLogger(Protocol.class.getName());
 
-  private Dbao db;
+  @EJB
   private Utils utils;
+  @EJB
+  private TemplateFacade templateFacade;
+  @EJB
+  private MTableFacade tableFacade;
+  @EJB
+  private TupleToFileFacade tupletofileFacade;
+  @EJB
+  private FieldTypeFacade fieldTypeFacade;
+  @EJB
+  private FieldFacade fieldFacade;
+  @EJB
+  private FieldPredefinedValueFacade fpf;
 
   public Protocol() {
-  }
-
-  public Protocol(Dbao db) {
-    this.db = db;
-    this.utils = new Utils(db);
-    logger.log(Level.SEVERE, "Protocol initialized");
+    logger.log(Level.INFO, "Protocol initialized");
   }
 
   /**
    * Process an incoming message and create and send back the response
-   * <p>
+   *
    * @param message the incoming message
-   * <p>
    * @return a new response message or an error message
    */
   public Message GFR(Message message) {
@@ -91,22 +106,27 @@ public class Protocol {
         return this.fetchTemplates(message);
 
       case DELETE_TABLE:
-        Tables table = (Tables) message.parseSchema().get(0);
+        MTable table = (MTable) message.parseSchema().get(0);
         this.utils.deleteTable(table);
 
         return this.createSchema(message);
 
       case DELETE_FIELD:
-        Fields field = ((Tables) message.parseSchema().get(0)).getFields().
+        Field field = ((MTable) message.parseSchema().get(0)).getFields().
                 get(0);
         this.utils.deleteField(field);
 
         return this.createSchema(message);
 
       case FETCH_METADATA:
-        table = (Tables) message.parseSchema().get(0);
-        return this.fetchTableMetadata(table);
+        //SHOULD BE REFACTORED TO RETURN TUPLE_TO_FILE AS ENTITY. NOT TABLE
+//        table = (MTable) message.parseSchema().get(0);
+//        //return this.fetchTableMetadata(table);
+//        return this.fetchTableMetadataForInode(table, table.getInodeid());
 
+      case FETCH_TABLE_METADATA:
+        table = (MTable) message.parseSchema().get(0);
+        return this.fetchTableMetadata(table);
       case FETCH_FIELD_TYPES:
         return this.fetchFieldTypes(message);
 
@@ -129,7 +149,7 @@ public class Protocol {
   private Message addNewTemplate(Message message) throws ApplicationException {
     ContentMessage cmsg = (ContentMessage) message;
 
-    Templates template = cmsg.getTemplate();
+    Template template = cmsg.getTemplate();
     this.utils.addNewTemplate(template);
 
     return this.fetchTemplates(message);
@@ -138,7 +158,7 @@ public class Protocol {
   private Message removeTemplate(Message message) throws ApplicationException {
     ContentMessage cmsg = (ContentMessage) message;
 
-    Templates template = cmsg.getTemplate();
+    Template template = cmsg.getTemplate();
     this.utils.removeTemplate(template);
 
     return this.fetchTemplates(message);
@@ -151,7 +171,7 @@ public class Protocol {
 
   private Message fetchTemplates(Message message) {
 
-    List<Templates> templates = this.db.loadTemplates();
+    List<Template> templates = this.templateFacade.loadTemplates();
 
     String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) templates);
     message.setMessage(jsonMsg);
@@ -161,9 +181,9 @@ public class Protocol {
 
   private Message fetchFieldTypes(Message message) {
 
-    List<FieldTypes> ftypes = this.db.loadFieldTypes();
+    List<FieldType> ftypes = this.fieldTypeFacade.loadFieldTypes();
 
-    FieldTypesMessage newMsg = new FieldTypesMessage();
+    FieldTypeMessage newMsg = new FieldTypeMessage();
 
     String jsonMsg = newMsg.buildSchema((List<EntityIntf>) (List<?>) ftypes);
 
@@ -177,7 +197,8 @@ public class Protocol {
 
     ContentMessage cmsg = (ContentMessage) message;
 
-    List<Tables> tables = this.db.loadTemplateContent(cmsg.getTemplateid());
+    List<MTable> tables = this.templateFacade.loadTemplateContent(cmsg.
+            getTemplateid());
 
     String jsonMsg = cmsg.buildSchema((List<EntityIntf>) (List<?>) tables);
     message.setMessage(jsonMsg);
@@ -185,26 +206,86 @@ public class Protocol {
     return message;
   }
 
-  private Message fetchTableMetadata(Tables table) {
+  /**
+   * Fetches ALL the metadata a metadata table carries. It does not do any
+   * filtering
+   *
+   * @param table
+   * @return
+   */
+  private Message fetchTableMetadata(MTable table) {
 
     try {
-      MetadataMessage message = new MetadataMessage("Server", "");
-      Tables t = this.db.getTable(table.getId());
+      TableMetadataMessage message = new TableMetadataMessage("Server", "");
+      MTable t = this.tableFacade.getTable(table.getId());
 
-      List<Fields> fields = t.getFields();
-      for (Fields field : fields) {
+      List<Field> fields = t.getFields();
+      for (Field field : fields) {
+        /*
+         * Load raw data based on the field id. Need to filter this further
+         * according to tupleid and inodeid
+         */
         List<RawData> raw = field.getRawData();
 
         for (RawData rawdata : raw) {
-          TupleToFile ttf = this.db.getTupletofile(rawdata.getTupleid());
+          TupleToFile ttf = this.tupletofileFacade.getTupletofile(rawdata.
+                  getTupleid());
           rawdata.setInodeid(ttf.getInodeid());
         }
       }
 
-      List<Tables> tables = new LinkedList<>();
+      List<MTable> tables = new LinkedList<>();
       tables.add(t);
       String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
-      //System.out.println("JSONMSG " + jsonMsg);
+
+      message.setMessage(jsonMsg);
+
+      return message;
+
+    } catch (DatabaseException e) {
+      return new ErrorMessage("Server", e.getMessage());
+    }
+  }
+
+  /**
+   * Fetches the metadata a metadata table carries ONLY for a specific inodeid
+   *
+   * @param table
+   * @return
+   */
+  private Message fetchTableMetadataForInode(MTable table, int inodeid) {
+
+    try {
+      MetadataMessage message = new MetadataMessage("Server", "");
+      MTable t = this.tableFacade.getTable(table.getId());
+
+      List<Field> fields = t.getFields();
+
+      for (Field field : fields) {
+        /*
+         * Load raw data based on the field id. Need to filter this further
+         * according to tupleid and inodeid
+         */
+        List<RawData> rawList = field.getRawData();
+        List<RawData> toKeep = new LinkedList<>();
+
+        for (RawData raw : rawList) {
+          TupleToFile ttf = this.tupletofileFacade.getTupletofile(raw.
+                  getTupleid());
+
+          //keep only the data related to the specific inode
+          if (ttf.getInodeid() == inodeid) {
+            raw.setInodeid(ttf.getInodeid());
+            toKeep.add(raw);
+          }
+        }
+
+        field.setRawData(toKeep);
+      }
+
+      List<MTable> tables = new LinkedList<>();
+      tables.add(t);
+      String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
 
       message.setMessage(jsonMsg);
 

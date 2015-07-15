@@ -12,11 +12,11 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldPredefinedValues;
-import se.kth.meta.entity.FieldTypes;
-import se.kth.meta.entity.Fields;
-import se.kth.meta.entity.Tables;
-import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.FieldPredefinedValue;
+import se.kth.meta.entity.FieldType;
+import se.kth.meta.entity.Field;
+import se.kth.meta.entity.MTable;
+import se.kth.meta.entity.Template;
 import se.kth.meta.exception.ApplicationException;
 
 /**
@@ -86,18 +86,18 @@ public class TemplateMessage extends ContentMessage {
    * @throws se.kth.meta.exception.ApplicationException
    */
   @Override
-  public Templates getTemplate() throws ApplicationException {
-    Templates temp = null;
+  public Template getTemplate() throws ApplicationException {
+    Template temp = null;
     JsonObject object = Json.createReader(new StringReader(this.message)).
             readObject();
 
     try {
       switch (Command.valueOf(this.action.toUpperCase())) {
         case ADD_NEW_TEMPLATE:
-          temp = new Templates(-1, object.getString("templateName"));
+          temp = new Template(-1, object.getString("templateName"));
           break;
         case REMOVE_TEMPLATE:
-          temp = new Templates(object.getInt("templateId"));
+          temp = new Template(object.getInt("templateId"));
           break;
         default:
           throw new ApplicationException("Unknown command in received message");
@@ -146,7 +146,7 @@ public class TemplateMessage extends ContentMessage {
         tableId = -1;
       }
 
-      Tables table = new Tables(tableId, tableName);
+      MTable table = new MTable(tableId, tableName);
       table.setTemplateid(super.getTemplateid());
 
       //get the table attributes/fields
@@ -188,24 +188,24 @@ public class TemplateMessage extends ContentMessage {
           try {
             //just in case the user has entered shit
             Double.parseDouble(maxsize);
-            //sanitize fucking maxsize
+            //sanitize maxsize
             maxsize = (!"".equals(maxsize)) ? maxsize : "0";
           } catch (NumberFormatException e) {
             maxsize = "0";
           }
 
-          Fields f = new Fields(fieldId, tableId, fieldName,
+          Field f = new Field(fieldId, tableId, fieldName,
                   "VARCHAR(50)", Integer.parseInt(maxsize),
                   (short) ((searchable) ? 1 : 0), (short) ((required) ? 1 : 0),
                   description, fieldtypeid);
-          f.setFieldTypes(new FieldTypes(fieldtypeid));
+          f.setFieldTypes(new FieldType(fieldtypeid));
 
           //get the predefined values of the field if it is a yes/no field or a dropdown list field
           if (fieldtypeid != 1) {
 
             JsonArray predefinedFieldValues = field.getJsonArray(
                     "fieldtypeContent");
-            List<FieldPredefinedValues> ll = new LinkedList<>();
+            List<FieldPredefinedValue> ll = new LinkedList<>();
 
             for (JsonValue predefinedFieldValue : predefinedFieldValues) {
 
@@ -213,7 +213,7 @@ public class TemplateMessage extends ContentMessage {
                       predefinedFieldValue.toString())).readObject();
               String defaultValue = defaultt.getString("value");
 
-              FieldPredefinedValues predefValue = new FieldPredefinedValues(-1,
+              FieldPredefinedValue predefValue = new FieldPredefinedValue(-1,
                       f.getId(), defaultValue);
               //predefValue.setFields(field);
               ll.add(predefValue);
@@ -225,7 +225,6 @@ public class TemplateMessage extends ContentMessage {
           table.addField(f);
 
         } catch (NullPointerException e) {
-          System.err.println("-- find is null mapping to " + (false));
           searchable = false;
           required = false;
         }

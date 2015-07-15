@@ -5,28 +5,34 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.Fields;
+import se.kth.meta.entity.Field;
 import se.kth.meta.entity.RawData;
-import se.kth.meta.entity.Tables;
+import se.kth.meta.entity.MTable;
 
 /**
- * Represents a message carrying the actual metadata
+ * Represents a message carrying the actual metadata or a message 
+ * asking for stored metadata
  *
  * @author Vangelis
  */
 public class MetadataMessage implements Message {
 
-  private final String TYPE = "MetadataMessage";
-  private String sender;
-  private String message;
-  private String action;
-  private String status;
+  private static final Logger logger = Logger.
+          getLogger(MetadataMessage.class.getName());
+
+  protected String TYPE = "MetadataMessage";
+  protected String sender;
+  protected String message;
+  protected String action;
+  protected String status;
 
   /**
    * Default constructor. Vital for the class loader
@@ -92,17 +98,20 @@ public class MetadataMessage implements Message {
             readObject();
     List<EntityIntf> data = new LinkedList<>();
 
+    int inodeid = -1;
+
     try {
+      inodeid = obj.getInt("inodeid");
       int tableId = obj.getInt("tableid");
-      Tables table = new Tables(tableId);
+
+      MTable table = new MTable(tableId);
       List<EntityIntf> list = new LinkedList<>();
       list.add(table);
       return list;
     } catch (NullPointerException e) {
-
+      logger.log(Level.SEVERE, "Inodeid or tableid not present in the message");
     }
 
-    int inodeid = 1367; //Integer.parseInt(obj.getString("inodeid"));
     Set<Entry<String, JsonValue>> set = obj.entrySet();
 
     for (Entry<String, JsonValue> entry : set) {
@@ -134,14 +143,14 @@ public class MetadataMessage implements Message {
   public String buildSchema(List<EntityIntf> entities) {
     JsonObjectBuilder builder = Json.createObjectBuilder();
 
-    Tables table = (Tables) entities.get(0);
+    MTable table = (MTable) entities.get(0);
     builder.add("table", table.getName());
 
     JsonArrayBuilder fields = Json.createArrayBuilder();
 
-    List<Fields> f = table.getFields();
+    List<Field> f = table.getFields();
 
-    for (Fields fi : f) {
+    for (Field fi : f) {
       JsonObjectBuilder field = Json.createObjectBuilder();
       field.add("id", fi.getId());
       field.add("name", fi.getName());

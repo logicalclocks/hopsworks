@@ -2,6 +2,11 @@
   <div ng-include="'nav.html'"></div>
   <div class="row">
     <div class="col-md-8" style="padding-left:56px; min-width: 500px">
+
+      <div align="center" id="projectSearchResults">
+        <p ng-bind-html="mainCtrl.searchResult"></p>
+      </div>
+
       <div class="">
         <div class="widget-body">
           <div class="timeline clearfix">
@@ -47,6 +52,7 @@
       </div>
     </div>
     <div class="col-md-4 sidebar" style="min-width: 390px; max-width: 390px">
+
       <span class="list-group-item active">
         <span class="badge pull-left" style="margin-right: 10px;">{{homeCtrl.projects.length}}</span> Projects
 
@@ -69,7 +75,8 @@
             <span id="search_concept">Filter by</span>
             <span class="caret"></span>
           </button>
-          <ul class="dropdown-menu">
+
+          <ul class="dropdown-menu" role="menu">
             <li><a href="#its_equal"> My own</a></li>
             <li><a href="#greather_than"> Private</a></li>
             <li><a href="#less_than"> Public </a></li>

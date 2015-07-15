@@ -1,0 +1,26 @@
+<div>
+
+  <span>
+    <div class="controls">
+      Select a template
+      <ui-select ng-model="templateDropdownCtrl.selectedTemplate" theme="select2"
+                 on-select="templateDropdownCtrl.update()" style="min-width: 300px;">
+
+        <ui-select-match placeholder="Add a template...">{{$select.selected.name}}</ui-select-match>
+
+        <ui-select-choices repeat="template in templateDropdownCtrl.templates | filter: $select.search">
+          <small>
+            <span ng-bind-html="'' + template.name | highlight: $select.search"></span>
+          </small>
+        </ui-select-choices>
+      </ui-select>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" ng-click="templateDropdownCtrl.close()">Close</button>
+        <button type="button" class="btn btn-primary" ng-click="templateDropdownCtrl.getTemplate()">OK</button>
+      </div>
+
+    </div>
+  </span>
+
+</div>

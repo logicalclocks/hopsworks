@@ -28,8 +28,3 @@ angular.module('hopsWorksApp')
             }
             );
           }]);
-/**
- * ,
- *data:$.param({wipeData:true}),
- *headers: {'Content-Type': 'application/x-www-form-urlencoded'}
- **/

@@ -1,7 +1,6 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-
         .factory('UserService', ['$http', 'TransformRequest', function ($http, TransformRequest) {
             return {
               UpdateProfile: function (user) {

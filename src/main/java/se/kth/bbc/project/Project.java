@@ -33,7 +33,7 @@ import se.kth.bbc.security.ua.model.User;
  * @author roshan
  */
 @Entity
-@Table(name = "project")
+@Table(name = "hopsworks.project")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Project.findAll",
@@ -118,12 +118,14 @@ public class Project implements Serializable {
 
   public Project(String name) {
     this.name = name;
+    this.archived = false;
   }
 
   public Project(String name, User owner, Date timestamp) {
     this.name = name;
     this.owner = owner;
     this.created = timestamp;
+    this.archived = false;
   }
 
   public Date getCreated() {

@@ -6,9 +6,10 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('DatasetsCtrl', ['$rootScope', '$modal', '$scope', '$mdSidenav', '$mdUtil', '$log', 'WSComm',
-          'DataSetService', '$routeParams', 'ModalService', 'growl', 'ProjectService', '$location',
-          function ($rootScope, $modal, $scope, $mdSidenav, $mdUtil, $log, WSComm, DataSetService, $routeParams, ModalService, growl, ProjectService, $location) {
+        .controller('DatasetsCtrl', ['$rootScope', '$modal', '$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
+          'DataSetService', '$routeParams', 'ModalService', 'growl', 'MetadataActionService', '$location',
+          function ($rootScope, $modal, $scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, $routeParams,
+                  ModalService, growl, MetadataActionService, $location) {
 
             var self = this;
 
@@ -21,6 +22,11 @@ angular.module('hopsWorksApp')
 
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
+            self.tabs = [];
+            self.currentFile = {};
+            self.metaData = {};
+            self.meta = [];
+            self.metadataView = {};
 
             /*
              * Get all datasets under the current project.
@@ -71,6 +77,102 @@ angular.module('hopsWorksApp')
               });
             };
 
+            self.setMetadataTemplate = function (file) {
+
+              console.log("SELECTED FILE " + JSON.stringify(file));
+
+              var templateId = file.template;
+              self.currentTemplateID = templateId;
+              self.currentFile = file;
+
+              MetadataActionService.fetchTemplate(templateId)
+                      .then(function (response) {
+                        console.log("LOADED TEMPLATE " + JSON.stringify(response.board) + " template id " + templateId);
+                        self.currentBoard = JSON.parse(response.board);
+                        self.initializeMetadataTabs(JSON.parse(response.board));
+
+                        self.fetchMetadataForTemplate();
+                      });
+            };
+
+            self.fetchMetadataForTemplate = function () {
+              //columns are the tables in the template
+              self.meta = [];
+
+              var tables = self.currentBoard.columns;
+              angular.forEach(tables, function (table, key) {
+                //console.log("value " + JSON.stringify(table));
+                MetadataActionService.fetchMetadata(table.id, self.currentFile.id)
+                        .then(function (response) {
+                          //console.log("METADATA FOR TABLE " + table.name);
+                          //console.log("ARE " + JSON.stringify(response.board));
+                          self.reconstructMetadata(table.name, JSON.parse(response.board));
+                          //self.meta = JSON.parse(response.board);
+                        });
+              });
+            };
+
+            self.reconstructMetadata = function (tableName, rawdata) {
+
+              $scope.tableName = rawdata.table;
+//                    self.metadataView = results;
+//                    self.meta.push({name: tableName, tuples: self.metadataView});
+
+              self.meta.push({name: tableName, rest: rawdata});
+              self.metadataView = {};
+              console.log(JSON.stringify(self.meta));
+              //self.print(self.meta);
+              console.log("RECONSTRUCTED ARRAY  " + JSON.stringify(self.meta));
+            };
+
+            self.print = function (meta) {
+              angular.forEach(meta, function (table) {
+                var field = table.tuples.headers;
+                console.log("IN TABLE " + table.name);
+
+                angular.forEach(field, function (fieldName) {
+
+                  console.log("IN FIELD " + fieldName);
+
+                  var valueArray = table.tuples.values;
+
+                  angular.forEach(valueArray, function (value) {
+                    console.log("printing " + JSON.stringify(value[0].raw));
+                  });
+                });
+              });
+            };
+
+            self.initializeMetadataTabs = function () {
+              self.tabs = [];
+
+              angular.forEach(self.currentBoard.columns, function (value, key) {
+                console.log(key + ': ' + value.name);
+                self.tabs.push({title: value.name, cards: value.cards});
+              });
+              //console.log("initialized tabs " + JSON.stringify(self.tabs));
+            };
+
+            /*
+             * submit form data when the 'save' button is clicked
+             */
+            self.submitMetadata = function () {
+              if (!self.metaData) {
+                return;
+              }
+
+              self.metaData.inodeid = self.currentFile.id;
+              console.log("saving " + JSON.stringify(self.metaData));
+
+              MetadataActionService.storeMetadata(self.metaData)
+                      .then(function (response) {
+                        console.log("Metadata saved " + response.status);
+                      });
+
+              //truncate metaData object
+              self.metaData = {};
+            };
+
             var init = function () {
               //Check if the current dataset is set
               if ($routeParams.datasetName) {
@@ -92,9 +194,9 @@ angular.module('hopsWorksApp')
              */
             var download = function (file) {
               dataSetService.download(file).then(
-                      function (data) {
-                        var file = new Blob([data], {type: 'application/txt'});
-                        //saveAs(file, 'filename');
+                      function (success) {
+                        console.log("download success");
+                        console.log(success);
                       }, function (error) {
                 console.log("Error downloading file " + file);
                 console.log(error);
@@ -149,6 +251,17 @@ angular.module('hopsWorksApp')
               });
             };
 
+            self.attachTemplate = function (file) {
+              var templateId = -1;
+              console.log(JSON.stringify(file));
+
+              ModalService.selectTemplate('sm', templateId).then(
+                      function (success) {
+                        templateId = success.templateId;
+                        console.log("RETURNED TEMPLATE ID " + templateId);
+                      });
+            };
+
             /**
              * Delete the file with the given name under the current path. If called on a folder, will remove the folder 
              * and all its contents recursively.
@@ -166,13 +279,22 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.uploadFile = function () {
-              ModalService.upload('lg', self.projectId, getPath(self.pathArray)).then(
+              var templateId = -1;
+
+              ModalService.selectTemplate('sm', templateId).then(
                       function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
-                        getDirContents();
-                      }, function (error) {
-                getDirContents();
-              });
+                        templateId = success.templateId;
+                        console.log("RETURNED TEMPLATE ID " + templateId);
+
+                        ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
+                                function (success) {
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                                  getDirContents();
+                                }, function (error) {
+                          growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+                          getDirContents();
+                        });
+                      });
             };
 
             /**
@@ -259,71 +381,47 @@ angular.module('hopsWorksApp')
                         $log.debug("Closed metadata designer");
                       });
             };
+
             self.availableTemplates = [];
             self.newTemplateName = "";
             $scope.extendedFrom = {};
+
             self.extendedFromBoard = {};
 
             self.currentTemplateID = "";
             self.currentBoard = {};
 
+            self.editedField = null;
+
             self.getAllTemplates = function () {
-              WSComm.send({
-                sender: 'evsav',
-                type: 'TemplateMessage',
-                action: 'fetch_templates',
-                message: JSON.stringify({})
-              }).then(
-                      function (data) {
+              MetadataActionService.fetchTemplates()
+                      .then(function (data) {
                         self.availableTemplates = JSON.parse(data.board).templates;
-                      }
-              );
-            }
+                      });
+            };
 
             self.addNewTemplate = function () {
-              return WSComm.send({
-                sender: 'evsav',
-                type: 'TemplateMessage',
-                action: 'add_new_template',
-                message: JSON.stringify({templateName: self.newTemplateName})
-              }).then(
-                      function (data) {
+              MetadataActionService.addNewTemplate(self.newTemplateName)
+                      .then(function (data) {
                         self.newTemplateName = "";
                         self.getAllTemplates();
                         console.log(data);
-                      }
-              );
-            }
+                      });
+            };
 
             self.removeTemplate = function (templateId) {
-              return WSComm.send({
-                sender: 'evsav',
-                type: 'TemplateMessage',
-                action: 'remove_template',
-                message: JSON.stringify({templateId: templateId})
-              }).then(
-                      function (data) {
+              MetadataActionService.removeTemplate(templateId)
+                      .then(function (data) {
                         self.getAllTemplates();
                         console.log(data);
-                      }
-              );
-            }
-
-            $scope.$watch('extendedFrom', function (newID) {
-              if (typeof newID == "string") {
-                self.selectChanged(newID);
-              }
-            });
+                      });
+            };
 
             self.selectChanged = function (extendFromThisID) {
               console.log('selectChanged - start: ' + extendFromThisID);
-              return WSComm.send({
-                sender: 'evsav',
-                type: 'TemplateMessage',
-                action: 'fetch_template',
-                message: JSON.stringify({tempid: parseInt(extendFromThisID)})
-              }).then(
-                      function (success) {
+
+              MetadataActionService.fetchTemplate(parseInt(extendFromThisID))
+                      .then(function (success) {
                         console.log('Fetched data - success.board.column:');
                         self.extendedFromBoard = JSON.parse(success.board);
                         console.log(self.extendedFromBoard);
@@ -332,20 +430,14 @@ angular.module('hopsWorksApp')
                         console.log(success);
 
                       }, function (error) {
-                console.log('Fetched data - error:');
-                console.log(error);
-              }
-              )
-            }
+                        console.log('Fetched data - error:');
+                        console.log(error);
+                      });
+            };
 
             self.extendTemplate = function () {
-              return WSComm.send({
-                sender: 'evsav',
-                type: 'TemplateMessage',
-                action: 'add_new_template',
-                message: JSON.stringify({templateName: self.newTemplateName})
-              }).then(
-                      function (data) {
+              MetadataActionService.addNewTemplate(self.newTemplateName)
+                      .then(function (data) {
                         var tempTemplates = JSON.parse(data.board);
                         var newlyCreatedID = tempTemplates.templates[tempTemplates.numberOfTemplates - 1].id;
                         console.log('add_new_templatE');
@@ -354,180 +446,180 @@ angular.module('hopsWorksApp')
                         console.log('Sent message: ');
                         console.log(self.extendedFromBoard);
 
-                        return WSComm.send({
-                          sender: 'evsav',
-                          type: 'TemplateMessage',
-                          action: 'extend_template',
-                          message: JSON.stringify({tempid: newlyCreatedID, bd: self.extendedFromBoard})
-                        }).then(
-                                function (data) {
+                        MetadataActionService.extendTemplate(newlyCreatedID, self.extendedFromBoard)
+                                .then(function (data) {
                                   self.newTemplateName = "";
                                   self.getAllTemplates();
 
                                   console.log('Response from extending template: ');
                                   console.log(data);
-                                }
-                        );
-                      }
-              );
-            }
+                                });
+                      });
+            };
 
             self.fetchTemplate = function (templateId) {
               self.currentTemplateID = templateId;
-              return WSComm.send({
-                sender: 'evsav',
-                type: 'TemplateMessage',
-                action: 'fetch_template',
-                message: JSON.stringify({tempid: templateId})
-              }).then(
-                      function (success) {
-                        console.log('fetchTemplate - success');
+
+              MetadataActionService.fetchTemplate(templateId)
+                      .then(function (success) {
+                        //update the currentBoard upon template retrieval
                         self.currentBoard = JSON.parse(success.board);
-                        console.log(self.currentBoard);
+                        //console.log('fetchTemplate - success CURRENTBOARD ' + JSON.stringify(self.currentBoard));
                       }, function (error) {
-                console.log('fetchTemplate - error');
-                console.log(JSON.parse(error));
-              }
-              );
+                        console.log('fetchTemplate - error');
+                        console.log(JSON.parse(error));
+                      });
             };
 
-            self.storeTemplate = function () {
-              return WSComm.send({
-                sender: 'evsav',
-                type: 'TemplateMessage',
-                action: 'store_template',
-                message: JSON.stringify({tempid: self.currentTemplateID, bd: self.currentBoard})
-              }).then(
-                      function (success) {
-                        console.log(success);
-                      }, function (error) {
-                console.log(error);
-              }
-              );
-            }
-            self.deleteList = function (column) {
-              return WSComm.send({
-                sender: 'evsav',
-                type: 'TablesMessage',
-                action: 'delete_table',
-                message: JSON.stringify({
-                  tempid: self.currentTemplateID,
-                  id: column.id,
-                  name: column.name,
-                  forceDelete: column.forceDelete
-                })
-              }).then(
-                      function (success) {
-                        console.log(success);
-                        self.fetchTemplate(self.currentTemplateID)
-                      }, function (error) {
-                console.log(error);
-              }
-              );
-            }
+            self.storeTemplate = function (closeSlideout) {
 
-            self.storeCard = function (column, card) {
-              return WSComm.send({
-                sender: 'evsav',
-                type: 'FieldsMessage',
-                action: 'store_field',
-                message: JSON.stringify({
-                  tempid: self.currentTemplateID,
-                  tableid: column.id,
-                  tablename: column.name,
-                  id: card.id,
-                  name: card.title,
-                  type: 'VARCHAR(50)',
-                  searchable: card.find,
-                  required: card.required,
-                  sizefield: card.sizefield,
-                  description: card.description,
-                  fieldtypeid: card.fieldtypeid,
-                  fieldtypeContent: card.fieldtypeContent
-                })
-              })
-            }
+              MetadataActionService.storeTemplate(self.currentTemplateID, self.currentBoard)
+                      .then(function (response) {
+                        console.log("TEMPLATE SAVED SUCCESSFULLY " + JSON.stringify(response));
+                        self.currentBoard = JSON.parse(response.board);
+                        if (closeSlideout === 'true') {
+                          self.close();
+                        }
+                      }, function (error) {
+                        console.log(error);
+                      });
+            };
+
+            self.deleteList = function (column) {
+              MetadataActionService.deleteList(self.currentTemplateID, column)
+                      .then(function (success) {
+                        console.log(success);
+                        self.fetchTemplate(self.currentTemplateID);
+                      }, function (error) {
+                        console.log(error);
+                      });
+            };
+
+            self.storeCard = function (templateId, column, card) {
+
+              return MetadataActionService.storeCard(templateId, column, card);
+            };
 
             self.addCard = function (column) {
               $scope.currentColumn = column;
-
-              $modal.open({
+              var modalInstance = $modal.open({
                 templateUrl: 'views/metadata/newCardModal.html',
                 controller: 'NewCardCtrl',
                 scope: $scope
-              }).result.then(
-                      function (card) {
+              })
+                      .result.then(function (card) {
 
                         console.log('Created card, ready to send:');
-                        console.log(card);
+                        console.log(JSON.stringify(card));
 
-                        self.storeCard(column, card).then(
-                                function (success) {
+                        MetadataActionService.storeCard(self.currentTemplateID, column, card)
+                                .then(function (success) {
                                   console.log(success);
-                                  self.fetchTemplate(self.currentTemplateID)
+                                  self.fetchTemplate(self.currentTemplateID);
                                 }, function (error) {
-                          console.log(error);
-                        }
-                        );
+                                  console.log(error);
+                                });
 
                       }, function (error) {
-                console.log(error);
-              }
-              );
+                        console.log(error);
+                      });
             };
 
+            /* Metadata designer */
             self.deleteCard = function (column, card) {
-              return WSComm.send({
-                sender: 'evsav',
-                type: 'FieldsMessage',
-                action: 'delete_field',
-                message: JSON.stringify({
-                  tempid: self.currentTemplateID,
-                  id: card.id,
-                  tableid: column.id,
-                  tablename: column.name,
-                  name: card.title,
-                  type: 'VARCHAR(50)',
-                  sizefield: card.sizefield,
-                  searchable: card.find,
-                  required: card.required,
-                  forceDelete: card.forceDelete,
-                  description: card.description,
-                  fieldtypeid: card.fieldtypeid,
-                  fieldtypeContent: card.fieldtypeContent
-                })
-              }).then(
-                      function (success) {
+              MetadataActionService.deleteCard(self.currentTemplateID, column, card)
+                      .then(function (success) {
                         console.log(success);
-                        self.fetchTemplate(self.currentTemplateID)
+                        self.fetchTemplate(self.currentTemplateID);
                       }, function (error) {
-                console.log(error);
-              });
-            }
+                        console.log(error);
+                      });
+            };
 
             self.addNewList = function () {
               $scope.template = self.currentTemplateID;
               $modal.open({
                 templateUrl: 'views/metadata/newListModal.html',
-                controller: 'NewListCtrl',
+                controller: 'NewlistCtrl',
                 scope: $scope
-              }).result.then(
-                      function (card) {
-                        console.log('Created card, ready to send:');
-                        console.log(card);
+              })
+                      .result.then(function (list) {
 
-                      }, function (error) {
-                console.log(error);
-              }
-              );
-            }
+                        if (!angular.isUndefined(list)) {
 
-            /* TESTING RECEIVE BROADCAST FROM WEBSOCKET SERVICE */
-            $rootScope.$on('andreTesting', function (event, data) {
-              console.log('BroadcastReceived BOARD:');
-              console.log(JSON.parse(data.response.board));
-              //self.getAllTemplates();
-            });
+                          //{tempid:2,bd:{name:MainBoard,numberOfColumns:3,columns:[{id:-1,name:newTable,cards:[]}],backlogs:[]}}}
+                          //we need to add the new table into the mainboard object
+                          self.currentBoard.columns.push(list);
+                          //console.log("CURRENT LIST AFTER TABLE ADDITION " + JSON.stringify(self.currentBoard));
+
+                          MetadataActionService.storeTemplate(self.currentTemplateID, self.currentBoard)
+                                  .then(function (response) {
+                                    console.log("TEMPLATE STORED SUCCESSFULLY " /*+ JSON.stringify(response)*/);
+                                    self.currentBoard = JSON.parse(response.board);
+                                    //defer.resolve($rootScope.mainBoard);
+                                  }, function (error) {
+                                    console.log(error);
+                                  });
+                        }
+                      });
+            };
+
+            /* CARD MANIPULATION FUNCTIONS */
+            self.makeSearchable = function (card) {
+              card.find = !card.find;
+              console.log("Card " + card.title + " became searchable " + card.find);
+            };
+
+            self.makeRequired = function (card) {
+              card.required = !card.required;
+              console.log("Card " + card.title + " became required " + card.required);
+            };
+
+            self.editSizeField = function (card) {
+
+              card.sizefield.showing = !card.sizefield.showing;
+              console.log("Card " + card.title + " showing " + card.sizefield.showing + " max size " + card.sizefield.value);
+
+              self.editedField = card;
+            };
+
+            self.doneEditingSizeField = function (card) {
+
+              card.sizefield.showing = false;
+              self.editedField = null;
+            };
+
+            self.modifyField = function (column, field) {
+              console.log("SAVING " + JSON.stringify(column));
+              $scope.tableid = column.id;
+              $scope.field = field;
+
+              var defer = $q.defer();
+
+              //necessary data to modify the field definition
+              //data: {table: column.id, field: field}};
+
+              $modal.open({
+                templateUrl: 'views/partials/modifyFieldDialog.html',
+                controller: 'ModifyFieldCtrl',
+                scope: $scope
+              })
+                      .result.then(function (dialogResponse) {
+                        //PERSIST THE CARD TO THE DATABASE - dialogResponse is the modified field
+                        self.storeCard(self.currentTemplateID, column, dialogResponse)
+                                .then(function (response) {
+                                  self.currentBoard = JSON.parse(response.board);
+
+                                  defer.resolve($rootScope.mainBoard);
+                                  console.log("MODIFIED FIELD " + JSON.stringify(self.currentBoard));
+                                  //$rootScope.$broadcast('refreshApp', $rootScope.mainBoard);
+                                });
+                      }, function (dialogResponse) {
+                        console.log("don't modify " + JSON.stringify(dialogResponse));
+                      });
+
+              return defer.promise;
+            };
           }]);
 
 /**

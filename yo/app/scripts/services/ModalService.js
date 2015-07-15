@@ -115,7 +115,7 @@ angular.module('hopsWorksApp')
               newFolder: function (size, path) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/newDataSet.html',
-                  controller: 'DataSetCreatorCtrl as datasetsCtrl',
+                  controller: 'DataSetCreatorCtrl as datasetCreatorCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',
@@ -136,7 +136,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              upload: function (size, projectId, path) {
+              upload: function (size, projectId, path, templateId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/fileUpload.html',
                   controller: 'FileUploadCtrl as fileUploadCtrl',
@@ -158,6 +158,34 @@ angular.module('hopsWorksApp')
                     },
                     path: function () {
                       return path;
+                    },
+                    templateId: function () {
+                      return templateId;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
+              selectTemplate: function (size, templateId) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/templateDropdown.html',
+                  controller: 'TemplateDropdownCtrl as templateDropdownCtrl',
+                  size: size,
+                  backdrop: 'static',
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    templateId: function () {
+                      return templateId;
                     }
                   }
                 });

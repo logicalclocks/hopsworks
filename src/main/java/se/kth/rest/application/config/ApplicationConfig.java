@@ -46,5 +46,4 @@ public class ApplicationConfig extends Application {
     resources.add(se.kth.hopsworks.zeppelin.rest.NotebookRestApi.class);
     resources.add(se.kth.hopsworks.zeppelin.rest.ZeppelinRestApi.class);
   }
-
 }

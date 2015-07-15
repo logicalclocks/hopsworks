@@ -21,8 +21,8 @@ import se.kth.bbc.project.fb.InodeFacade;
 @Stateless
 public class FileOperations {
 
-  private static final Logger logger = Logger.getLogger(
-          FileOperationsManagedBean.class.getName());
+  private static final Logger logger = Logger.getLogger(FileOperations.class.
+          getName());
 
   @EJB
   private FileSystemOperations fsOps;

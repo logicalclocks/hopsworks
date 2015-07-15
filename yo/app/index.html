@@ -31,9 +31,6 @@
     <link rel="stylesheet" href="styles/filebrowser.css">
     <link rel="stylesheet" href="styles/board.css">
     <!-- endbuild -->
-
-
-
   </head>
   <body  ng-app="hopsWorksApp">
     <!--[if lt IE 7]>
@@ -43,7 +40,6 @@
     <div style="margin-top:50px;">
       <div ng-view=""></div>
     </div>
-
 
     <!-- build:js(.) scripts/vendor.js -->
     <!-- bower:js -->
@@ -84,7 +80,7 @@
     <script src="scripts/directives/passwordMatch.js"></script>
 
     <script src="scripts/controllers/cuneiformCtrl.js"></script>
-    <script src="scripts/controllers/dataSetCreator.js"></script>
+    <script src="scripts/controllers/dataSetCreatorCtrl.js"></script>
     <script src="scripts/controllers/datasetsCtrl.js"></script>
     <script src="scripts/controllers/fileUpload.js"></script>
     <script src="scripts/controllers/memberCtrl.js"></script>
@@ -99,13 +95,21 @@
     <script src="scripts/controllers/project.js"></script>
     <script src="scripts/controllers/projectCreator.js"></script>
     <script src="scripts/controllers/recoverCtrl.js"></script>
+    <script src="scripts/controllers/NewlistCtrl.js"></script>
+    <script src="scripts/controllers/ModifyFieldCtrl.js"></script>
     <script src="scripts/controllers/registration.js"></script>
     <script src="scripts/controllers/selectFileCtrl.js"></script>
+    <script src="scripts/controllers/templateDropdownCtrl.js"></script>
     <script src="scripts/controllers/sparkCtrl.js"></script>
     <script src="scripts/controllers/adamCtrl.js"></script>
 
+    <!-- Services -->
     <script src="scripts/services/AuthInterceptorService.js"></script>
     <script src="scripts/services/AuthService.js"></script>
+    <script src="scripts/services/UtilsService.js"></script>
+    <script src="scripts/services/ElasticService.js"></script>
+    <script src="scripts/services/MetadataService.js"></script>
+    <script src="scripts/services/DataSetService.js"></script>
     <script src="scripts/services/ProjectService.js"></script>
     <script src="scripts/services/UserService.js"></script>
     <script src="scripts/services/RequestInterceptorService.js"></script>
@@ -116,6 +120,7 @@
     <script src="scripts/services/SecurityQuestions.js"></script>
     <script src="scripts/services/MembersService.js"></script>
     <script src="scripts/services/MetadataService.js"></script>
+    <script src="scripts/services/MetadataActionService.js"></script>
     <script src="scripts/services/DataSetService.js"></script>
     <script src="scripts/services/CuneiformService.js"></script>
     <script src="scripts/services/SparkService.js"></script>
