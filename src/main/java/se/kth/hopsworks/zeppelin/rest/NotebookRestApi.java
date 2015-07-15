@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import se.kth.hopsworks.zeppelin.notebook.Notebook;
-import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
 
 /**
  * Rest api endpoint for the noteBook.
