@@ -8,18 +8,18 @@ import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.Tables;
+import se.kth.meta.entity.MTable;
 
 /**
  *
  * @author Vangelis
  */
-public class TablesMessage extends ContentMessage {
+public class TableMessage extends ContentMessage {
 
-  private static final Logger logger = Logger.getLogger(TablesMessage.class.
+  private static final Logger logger = Logger.getLogger(TableMessage.class.
           getName());
 
-  private final String TYPE = "TablesMessage";
+  private final String TYPE = "TableMessage";
   private String sender;
   private String message;
   private String action;
@@ -75,8 +75,9 @@ public class TablesMessage extends ContentMessage {
     } catch (NullPointerException e) {
     }
 
-    Tables table = new Tables(tableId, tableName);
-    table.setForceDelete(forceDelete);
+    MTable table = new MTable(tableId, tableName);
+    //FORCE DELETE NEEDS TO BE REFACTORED
+    //table.setForceDelete(forceDelete);
     List<EntityIntf> list = new LinkedList<>();
     list.add(table);
 

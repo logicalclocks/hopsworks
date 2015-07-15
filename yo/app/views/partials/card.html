@@ -1,0 +1,52 @@
+<!-- Item template -->
+
+<div as-sortable-item-handle>
+  <div class="row" style="width: 60em;">
+    <div class="col-sm-10">
+
+      <!--<span class="btn-link"><a data-no-drag target=_top href="https://github.com/a5hik/ng-sortable">test no-drag href</a></span>-->
+      <span ng-hide="card.editing" class="card-title" class=" removeCard pull-left btn btn-xs"
+            ng-dblclick="editCardText(card);"> 
+        {{card.title}}
+        <span ng-show="card.required" class="asteriskRed glyphicon glyphicon-asterisk"
+              title="required field"></span>
+      </span>
+
+      <input type="text" ng-show="card.editing" ng-model="card.title" ng-blur="doneEditing(card)"
+             ng-enter="doneEditing(card)" ng-focus="card == editedItem"/>
+    </div>
+
+    <div class="col-xs-5">
+
+      <a data-no-drag class="removeButton pull-left btn btn-xs" tooltips title="delete card" ng-click="removeCard(column, card)">
+        <span class="glyphicon glyphicon-remove"></span></a>
+
+      <!-- experiment starts here -->
+      <!-- add a find button in each card. Means that the card/attribute is going to be searchable -->
+      <a data-no-drag class="pull-left btn btn-xs">
+        <span class="searchable-{{card.find}} glyphicon glyphicon-search" ng-click="makeSearchable(card)"
+              tooltips title="make a card available to search"> find</span></a>
+
+      <a data-no-drag class="pull-left btn btn-xs">
+        <span class="required-{{card.required}} glyphicon glyphicon-asterisk" ng-click="makeRequired(card)"
+              tooltips title="required field"> req</span></a>
+
+      <div ng-if="card.fieldtypeid === 1">
+        <a data-no-drag class="pull-left btn btn-xs" ng-click="editSizeField(card)" ng-show="!card.sizefield.showing">
+          <span class="glyphicon glyphicon-chevron-right" tooltips title="data field max length"> length</span></a>
+
+        <a data-no-drag class="pull-left btn btn-xs" ng-click="doneEditingSizeField(card)" ng-show="card.sizefield.showing">
+          <span class="glyphicon glyphicon-chevron-down" tooltips title="data field max length"> length</span></a>
+
+        <input size="10" id="sizeFieldInput" type="text" ng-show="card.sizefield.showing" ng-model="card.sizefield.value"
+               ng-blur="doneEditingSizeField(card)" ng-enter="doneEditingSizeField(card)" ng-focus="card == editedField"/>
+
+      </div>
+      <!--class = "cardMaxSize-{{card.size}}"-->
+
+      <a data-no-drag class="pull-left btn btn-xs" ng-click="modifyField(column, card)">
+        <span class="glyphicon glyphicon-edit" tooltips title="modify field"> mod</span></a>
+    </div>
+  </div>
+</div>
+

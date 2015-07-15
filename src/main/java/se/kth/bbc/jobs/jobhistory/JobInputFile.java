@@ -21,7 +21,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author stig
  */
 @Entity
-@Table(name = "job_input_files")
+@Table(name = "hopsworks.job_input_files")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "JobInputFile.findAll",

@@ -1,0 +1,36 @@
+<!-- New Card template -->
+
+<form ng-submit="addNewCard()" class="noMargin" name="newCardForm">
+  <div class="modal-header">
+    <button type="button" class="close" ng-click="cancel()">&times;</button>
+    <h4 class="modal-title">Create new template from an existing one</h4>
+  </div>
+  <div class="modal-body">
+
+    <div class="form-group">
+      <label class="control-label" ng-show="availableTemplates" for="noTemplatesAvailable">
+        <font color="red">There are no templates available. Create one first</font>
+      </label>
+      <p></p>
+      <label class="control-label" ng-disabled="availableTemplates === true" for="templateName">Template name</label>
+      <div>
+        <input type="text" id="templateName" placeholder="Name of the template" ng-model="templateName" required
+               focus-me class="cardInputs form-control" ng-disabled="availableTemplates === true" ng-keyup="hitEnter($event)"/>
+      </div>
+
+      <label class="control-label" ng-disabled="availableTemplates === true" for="existingTemplates">Select existing template to extend</label>
+      <div>
+        <select id="existingTemplates" ng-disabled="availableTemplates === true" ng-model="selectedTemplate" ng-change="loadTemplateBoard()" 
+                ng-options="template.name for template in templates"
+                required>
+          <option value="">Select template</option>
+        </select>
+      </div>
+    </div>
+
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" ng-click="cancel()">Close</button>
+    <button type="button" class="btn btn-primary" ng-click="createTemplate()">Create</button>
+  </div>
+</form>

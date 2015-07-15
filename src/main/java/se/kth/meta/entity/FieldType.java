@@ -24,17 +24,17 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author vangelis
  */
 @Entity
-@Table(name = "field_types")
+@Table(name = "hopsworks.meta_field_types")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "FieldTypes.findAll",
-          query = "SELECT f FROM FieldTypes f"),
-  @NamedQuery(name = "FieldTypes.findById",
-          query = "SELECT f FROM FieldTypes f WHERE f.id = :id"),
-  @NamedQuery(name = "FieldTypes.findByDescription",
+  @NamedQuery(name = "FieldType.findAll",
+          query = "SELECT f FROM FieldType f"),
+  @NamedQuery(name = "FieldType.findById",
+          query = "SELECT f FROM FieldType f WHERE f.id = :id"),
+  @NamedQuery(name = "FieldType.findByDescription",
           query
-          = "SELECT f FROM FieldTypes f WHERE f.description = :description")})
-public class FieldTypes implements Serializable, EntityIntf {
+          = "SELECT f FROM FieldType f WHERE f.description = :description")})
+public class FieldType implements Serializable, EntityIntf {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -51,20 +51,20 @@ public class FieldTypes implements Serializable, EntityIntf {
   private String description;
 
   @OneToMany(mappedBy = "fieldTypes",
-          targetEntity = Fields.class,
+          targetEntity = Field.class,
           fetch = FetchType.LAZY,
           cascade = CascadeType.ALL) //cascade type all updates the child entities
-  private List<Fields> fields;
+  private List<Field> fields;
 
-  public FieldTypes() {
+  public FieldType() {
   }
 
-  public FieldTypes(Integer id) {
+  public FieldType(Integer id) {
     this.id = id;
     this.fields = new LinkedList<>();
   }
 
-  public FieldTypes(Integer id, String description) {
+  public FieldType(Integer id, String description) {
     this.id = id;
     this.description = description;
     this.fields = new LinkedList<>();
@@ -88,11 +88,11 @@ public class FieldTypes implements Serializable, EntityIntf {
     this.description = description;
   }
 
-  public List<Fields> getFields() {
+  public List<Field> getFields() {
     return this.fields;
   }
 
-  public void setFields(List<Fields> fields) {
+  public void setFields(List<Field> fields) {
     this.fields = fields;
   }
 
@@ -106,10 +106,10 @@ public class FieldTypes implements Serializable, EntityIntf {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof FieldTypes)) {
+    if (!(object instanceof FieldType)) {
       return false;
     }
-    FieldTypes other = (FieldTypes) object;
+    FieldType other = (FieldType) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
             equals(other.id))) {
       return false;
@@ -124,7 +124,7 @@ public class FieldTypes implements Serializable, EntityIntf {
 
   @Override
   public void copy(EntityIntf entity) {
-    FieldTypes ft = (FieldTypes) entity;
+    FieldType ft = (FieldType) entity;
 
     this.id = ft.getId();
     this.description = ft.getDescription();

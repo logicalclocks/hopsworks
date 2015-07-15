@@ -17,7 +17,6 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -26,27 +25,27 @@ import javax.validation.constraints.Size;
  * @author Vangelis
  */
 @Entity
-@Table(name = "fields")
+@Table(name = "hopsworks.meta_fields")
 @NamedQueries({
-  @NamedQuery(name = "Fields.findAll",
-          query = "SELECT f FROM Fields f"),
-  @NamedQuery(name = "Fields.findById",
-          query = "SELECT f FROM Fields f WHERE f.id = :id"),
-  @NamedQuery(name = "Fields.findByTableid",
-          query = "SELECT f FROM Fields f WHERE f.tableid = :tableid"),
-  @NamedQuery(name = "Fields.findByName",
-          query = "SELECT f FROM Fields f WHERE f.name = :name"),
-  @NamedQuery(name = "Fields.findByType",
-          query = "SELECT f FROM Fields f WHERE f.type = :type"),
-  @NamedQuery(name = "Fields.findByMaxsize",
-          query = "SELECT f FROM Fields f WHERE f.maxsize = :maxsize"),
-  @NamedQuery(name = "Fields.findBySearchable",
-          query = "SELECT f FROM Fields f WHERE f.searchable = :searchable"),
-  @NamedQuery(name = "Fields.findByRequired",
-          query = "SELECT f FROM Fields f WHERE f.required = :required"),
-  @NamedQuery(name = "Fields.findByFieldTypeId",
-          query = "SELECT f FROM Fields f WHERE f.fieldtypeid = :fieldtypeid")})
-public class Fields implements Serializable, EntityIntf {
+  @NamedQuery(name = "Field.findAll",
+          query = "SELECT f FROM Field f"),
+  @NamedQuery(name = "Field.findById",
+          query = "SELECT f FROM Field f WHERE f.id = :id"),
+  @NamedQuery(name = "Field.findByTableid",
+          query = "SELECT f FROM Field f WHERE f.tableid = :tableid"),
+  @NamedQuery(name = "Field.findByName",
+          query = "SELECT f FROM Field f WHERE f.name = :name"),
+  @NamedQuery(name = "Field.findByType",
+          query = "SELECT f FROM Field f WHERE f.type = :type"),
+  @NamedQuery(name = "Field.findByMaxsize",
+          query = "SELECT f FROM Field f WHERE f.maxsize = :maxsize"),
+  @NamedQuery(name = "Field.findBySearchable",
+          query = "SELECT f FROM Field f WHERE f.searchable = :searchable"),
+  @NamedQuery(name = "Field.findByRequired",
+          query = "SELECT f FROM Field f WHERE f.required = :required"),
+  @NamedQuery(name = "Field.findByFieldTypeId",
+          query = "SELECT f FROM Field f WHERE f.fieldtypeid = :fieldtypeid")})
+public class Field implements Serializable, EntityIntf {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -63,7 +62,7 @@ public class Fields implements Serializable, EntityIntf {
   @ManyToOne(optional = false)
   @PrimaryKeyJoinColumn(name = "tableid",
           referencedColumnName = "tableid")
-  private Tables tables;
+  private MTable table;
 
   @OneToMany(mappedBy = "fields",
           targetEntity = RawData.class,
@@ -79,13 +78,13 @@ public class Fields implements Serializable, EntityIntf {
   @ManyToOne(optional = false)
   @PrimaryKeyJoinColumn(name = "fieldtypeid",
           referencedColumnName = "id")
-  private FieldTypes fieldTypes;
+  private FieldType fieldTypes;
 
   @OneToMany(mappedBy = "fields",
-          targetEntity = FieldPredefinedValues.class,
+          targetEntity = FieldPredefinedValue.class,
           fetch = FetchType.LAZY,
           cascade = CascadeType.ALL)
-  private List<FieldPredefinedValues> fieldPredefinedValues;
+  private List<FieldPredefinedValue> fieldPredefinedValues;
 
   @Basic(optional = false)
   @NotNull
@@ -121,22 +120,15 @@ public class Fields implements Serializable, EntityIntf {
   @Column(name = "description")
   private String description;
 
-  /*
-   * indicates whether a field associated with raw data should be deleted along
-   * with its data or not
-   */
-  @Transient
-  private boolean forceDelete;
-
-  public Fields() {
+  public Field() {
   }
 
-  public Fields(Integer id) {
+  public Field(Integer id) {
     this.id = id;
     this.raw = new LinkedList<>();
   }
 
-  public Fields(Integer id, int tableid, String name, String type, int maxsize,
+  public Field(Integer id, int tableid, String name, String type, int maxsize,
           short searchable, short required, String description, int fieldtypeid) {
     this.id = id;
     this.tableid = tableid;
@@ -153,7 +145,7 @@ public class Fields implements Serializable, EntityIntf {
 
   @Override
   public void copy(EntityIntf fields) {
-    Fields f = ((Fields) fields);
+    Field f = (Field) fields;
 
     this.id = f.getId();
     this.tableid = f.getTableid();
@@ -197,27 +189,21 @@ public class Fields implements Serializable, EntityIntf {
   /*
    * get and set the parent entities
    */
-  public Tables getTables() {
-    return this.tables;
+  public MTable getMTable() {
+    return this.table;
   }
 
-  public void setTables(Tables tables) {
-    this.tables = tables;
+  public void setMTable(MTable table) {
+    this.table = table;
   }
 
-  public FieldTypes getFieldTypes() {
+  public FieldType getFieldTypes() {
     return this.fieldTypes;
   }
 
-  public void setFieldTypes(FieldTypes fieldTypes) {
+  public void setFieldTypes(FieldType fieldTypes) {
     this.fieldTypes = fieldTypes;
   }
-  /*
-   * -------------------------------
-   */
-  /*
-   * -------------------------------
-   */
 
   /*
    * get and set the child entities
@@ -230,11 +216,11 @@ public class Fields implements Serializable, EntityIntf {
     this.raw = raw;
   }
 
-  public List<FieldPredefinedValues> getFieldPredefinedValues() {
+  public List<FieldPredefinedValue> getFieldPredefinedValues() {
     return this.fieldPredefinedValues;
   }
 
-  public void setFieldPredefinedValues(List<FieldPredefinedValues> pValues) {
+  public void setFieldPredefinedValues(List<FieldPredefinedValue> pValues) {
     this.fieldPredefinedValues = pValues;
   }
 
@@ -242,17 +228,17 @@ public class Fields implements Serializable, EntityIntf {
     this.fieldPredefinedValues.clear();
   }
 
-  public void addPredefinedValue(FieldPredefinedValues value) {
+  public void addPredefinedValue(FieldPredefinedValue value) {
     this.fieldPredefinedValues.add(value);
     if (value != null) {
-      value.setFields(this);
+      value.setField(this);
     }
   }
 
-  public void removePredefinedValue(FieldPredefinedValues value) {
+  public void removePredefinedValue(FieldPredefinedValue value) {
     this.fieldPredefinedValues.remove(value);
     if (value != null) {
-      value.setFields(null);
+      value.setField(null);
     }
   }
 
@@ -321,14 +307,6 @@ public class Fields implements Serializable, EntityIntf {
     this.required = required;
   }
 
-  public void setForceDelete(boolean delete) {
-    this.forceDelete = delete;
-  }
-
-  public boolean forceDelete() {
-    return this.forceDelete;
-  }
-
   @Override
   public int hashCode() {
     int hash = 0;
@@ -339,10 +317,10 @@ public class Fields implements Serializable, EntityIntf {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof Fields)) {
+    if (!(object instanceof Field)) {
       return false;
     }
-    Fields other = (Fields) object;
+    Field other = (Field) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
             equals(other.id))) {
       return false;

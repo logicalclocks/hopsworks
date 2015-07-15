@@ -7,7 +7,6 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -18,30 +17,27 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import se.kth.meta.entity.listener.EntityListener;
 
 /**
  *
  * @author Vangelis
  */
 @Entity
-@Table(name = "tables")
-@EntityListeners(EntityListener.class)
+@Table(name = "hopsworks.meta_tables")
 
 @NamedQueries({
-  @NamedQuery(name = "Tables.findAll",
-          query = "SELECT t FROM Tables t"),
+  @NamedQuery(name = "MTable.findAll",
+          query = "SELECT t FROM MTable t"),
   @NamedQuery(name = "Tables.findById",
-          query = "SELECT t FROM Tables t WHERE t.id = :id"),
+          query = "SELECT t FROM MTable t WHERE t.id = :id"),
   @NamedQuery(name = "Tables.findByName",
-          query = "SELECT t FROM Tables t WHERE t.name = :name"),
-  @NamedQuery(name = "Tables.fetchTemplate",
+          query = "SELECT t FROM MTable t WHERE t.name = :name"),
+  @NamedQuery(name = "MTable.findByTemplateId",
           query
-          = "SELECT DISTINCT t FROM Tables t WHERE t.templateid = :templateid")})
-public class Tables implements Serializable, EntityIntf {
+          = "SELECT DISTINCT t FROM MTable t WHERE t.templateid = :templateid")})
+public class MTable implements Serializable, EntityIntf {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -65,30 +61,23 @@ public class Tables implements Serializable, EntityIntf {
   @ManyToOne(optional = false)
   @PrimaryKeyJoinColumn(name = "templateid",
           referencedColumnName = "templateid")
-  private Templates templates;
+  private Template template;
 
-  @OneToMany(mappedBy = "tables",
-          targetEntity = Fields.class,
+  @OneToMany(mappedBy = "table",
+          targetEntity = Field.class,
           fetch = FetchType.LAZY,
           cascade = CascadeType.ALL) //cascade type all updates the child entities
-  private List<Fields> fields;
+  private List<Field> fields;
 
-  /*
-   * indicates whether a table containing fields can be deleted along
-   * with its fields or not
-   */
-  @Transient
-  private boolean forceDelete;
-
-  public Tables() {
+  public MTable() {
   }
 
-  public Tables(Integer id) {
+  public MTable(Integer id) {
     this.id = id;
     this.fields = new LinkedList<>();
   }
 
-  public Tables(Integer id, String name) {
+  public MTable(Integer id, String name) {
     this.id = id;
     this.name = name;
     this.fields = new LinkedList<>();
@@ -96,7 +85,7 @@ public class Tables implements Serializable, EntityIntf {
 
   @Override
   public void copy(EntityIntf table) {
-    Tables t = (Tables) table;
+    MTable t = (MTable) table;
 
     this.id = t.getId();
     this.templateid = t.getTemplateid();
@@ -130,25 +119,25 @@ public class Tables implements Serializable, EntityIntf {
     this.name = name;
   }
 
-  public List<Fields> getFields() {
+  public List<Field> getFields() {
     return this.fields;
   }
 
-  public void setFields(List<Fields> fields) {
+  public void setFields(List<Field> fields) {
     this.fields = fields;
   }
 
-  public void addField(Fields field) {
+  public void addField(Field field) {
     this.fields.add(field);
     if (field != null) {
-      field.setTables(this);
+      field.setMTable(this);
     }
   }
 
-  public void removeField(Fields field) {
+  public void removeField(Field field) {
     this.fields.remove(field);
     if (field != null) {
-      field.setTables(null);
+      field.setMTable(null);
     }
   }
 
@@ -156,20 +145,12 @@ public class Tables implements Serializable, EntityIntf {
     this.fields = new LinkedList<>();
   }
 
-  public void setForceDelete(boolean forceDelete) {
-    this.forceDelete = forceDelete;
+  public Template getTemplate() {
+    return this.template;
   }
 
-  public boolean forceDelete() {
-    return this.forceDelete;
-  }
-
-  public Templates getTemplates() {
-    return this.templates;
-  }
-
-  public void setTemplates(Templates templates) {
-    this.templates = templates;
+  public void setTemplate(Template template) {
+    this.template = template;
   }
 
   @Override
@@ -182,10 +163,10 @@ public class Tables implements Serializable, EntityIntf {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof Tables)) {
+    if (!(object instanceof MTable)) {
       return false;
     }
-    Tables other = (Tables) object;
+    MTable other = (MTable) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
             equals(other.id))) {
       return false;

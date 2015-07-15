@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ActivityService',
-          function (ProjectService, ModalService, growl, ActivityService) {
+        .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ActivityService', 'UtilsService',
+          function (ProjectService, ModalService, growl, ActivityService, UtilsService) {
 
             var self = this;
             self.projects = [];
@@ -47,9 +47,10 @@ angular.module('hopsWorksApp')
 
             };
 
+            //define the elastic index where the searches will be directed to
+            UtilsService.setIndex("parent");
+
             loadProjects();
-
-
             self.histories = [];
             var histories = [];
 
@@ -161,9 +162,6 @@ angular.module('hopsWorksApp')
               loadProjects();
               loadActivity();
             };
-
-
-
           }]);
 
 

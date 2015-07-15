@@ -43,5 +43,4 @@ public class ApplicationConfig extends Application {
     resources.add(se.kth.hopsworks.rest.UploadService.class);
     resources.add(se.kth.hopsworks.rest.UserService.class);
   }
-
 }

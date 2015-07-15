@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Vangelis
  */
 @Entity
-@Table(name = "raw_data")
+@Table(name = "hopsworks.meta_raw_data")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "RawData.findAll",
@@ -54,7 +54,7 @@ public class RawData implements Serializable, EntityIntf {
   @ManyToOne(optional = false)
   @PrimaryKeyJoinColumn(name = "fieldid",
           referencedColumnName = "fieldid")
-  private Fields fields;
+  private Field fields;
 
   @Basic(optional = false)
   @NotNull
@@ -116,11 +116,11 @@ public class RawData implements Serializable, EntityIntf {
   /*
    * get and set the parent entity
    */
-  public void setFields(Fields fields) {
+  public void setFields(Field fields) {
     this.fields = fields;
   }
 
-  public Fields getFields() {
+  public Field getFields() {
     return this.fields;
   }
   /*

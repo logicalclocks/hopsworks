@@ -1,26 +1,30 @@
 package se.kth.meta.wscomm.message;
 
 import java.util.List;
+import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldTypes;
+import se.kth.meta.entity.FieldType;
 
 /**
  *
  * @author vangelis
  */
-public class FieldTypesMessage extends PlainMessage {
+public class FieldTypeMessage extends PlainMessage {
 
-  private String TYPE = "FieldTypesMessage";
+  private static final Logger logger = Logger.
+          getLogger(FieldTypeMessage.class.getName());
+
+  private String TYPE = "FieldTypeMessage";
   private String sender;
   private String message;
   private String action;
   private String status;
 
-  public FieldTypesMessage() {
+  public FieldTypeMessage() {
     this.status = "OK";
     this.action = "fetch_field_types";
   }
@@ -80,13 +84,12 @@ public class FieldTypesMessage extends PlainMessage {
   @Override
   public String buildSchema(List<EntityIntf> list) {
 
-    List<FieldTypes> ft = (List<FieldTypes>) (List<?>) list;
-    System.out.println("LIST SIZE " + list.size());
+    List<FieldType> ft = (List<FieldType>) (List<?>) list;
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
     JsonArrayBuilder fieldTypes = Json.createArrayBuilder();
 
-    for (FieldTypes fi : ft) {
+    for (FieldType fi : ft) {
       JsonObjectBuilder field = Json.createObjectBuilder();
       field.add("id", fi.getId());
       field.add("description", fi.getDescription());

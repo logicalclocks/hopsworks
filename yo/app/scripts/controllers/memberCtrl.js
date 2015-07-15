@@ -147,4 +147,3 @@ angular.module('hopsWorksApp')
               $modalStack.getTop().key.dismiss();
             };
           }]);
-

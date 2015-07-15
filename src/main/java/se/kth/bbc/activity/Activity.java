@@ -26,7 +26,7 @@ import se.kth.bbc.security.ua.model.User;
  * @author roshan
  */
 @Entity
-@Table(name = "activity")
+@Table(name = "hopsworks.activity")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Activity.findAll",

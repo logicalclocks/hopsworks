@@ -32,7 +32,7 @@ import se.kth.bbc.security.ua.SecurityQuestion;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "users")
+@Table(name = "hopsworks.users")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "User.findAll",

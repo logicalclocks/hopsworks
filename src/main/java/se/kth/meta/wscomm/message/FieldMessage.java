@@ -10,21 +10,20 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldPredefinedValues;
-import se.kth.meta.entity.FieldTypes;
-import se.kth.meta.entity.Fields;
-import se.kth.meta.entity.Tables;
+import se.kth.meta.entity.FieldPredefinedValue;
+import se.kth.meta.entity.Field;
+import se.kth.meta.entity.MTable;
 
 /**
  *
  * @author Vangelis
  */
-public class FieldsMessage extends ContentMessage {
+public class FieldMessage extends ContentMessage {
 
-  private static final Logger logger = Logger.getLogger(FieldsMessage.class.
+  private static final Logger logger = Logger.getLogger(FieldMessage.class.
           getName());
 
-  private final String TYPE = "FieldsMessage";
+  private final String TYPE = "FieldMessage";
   private String sender;
   private String message;
   private String status;
@@ -65,8 +64,8 @@ public class FieldsMessage extends ContentMessage {
   }
 
   /**
-   * Returns a list with just one Tables object containing all its fields,
-   * based on the contents of the JSON incoming message. It's the opposite of
+   * Returns a list with just one MTable object containing all its fields,
+ based on the contents of the JSON incoming message. It's the opposite of
    * buildSchema()
    *
    * @return the created schema
@@ -86,32 +85,39 @@ public class FieldsMessage extends ContentMessage {
     boolean forceDelete = false;
     try {
       forceDelete = obj.getBoolean("forceDelete");
-      logger.log(Level.SEVERE, "FORCE DELETE ON THE FIELD {0}", forceDelete);
+      logger.log(Level.INFO, "FORCE DELETE ON THE FIELD {0}", forceDelete);
     } catch (NullPointerException e) {
     }
     try {
-      //sanitize fucking maxsize in case the user has entered shit
+      //sanitize maxsize in case the user has entered shit
       maxsize = (!"".equals(maxsize)) ? maxsize : "0";
       Integer.parseInt(maxsize);
     } catch (NumberFormatException e) {
       maxsize = "0";
     }
+    
     boolean searchable = obj.getBoolean("searchable");
     boolean required = obj.getBoolean("required");
     String description = obj.getString("description");
     int fieldtypeid = obj.getInt("fieldtypeid");
 
-    Fields field = new Fields(fieldId, tableId, name, type,
+    Field field = new Field(fieldId, tableId, name, type,
             Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0),
             (short) ((required) ? 1 : 0), description, fieldtypeid);
-    field.setForceDelete(forceDelete);
-    field.setFieldTypes(new FieldTypes(fieldtypeid));
+    //FORCE DELETE NEEDS TO BE REFACTORED
+//    field.setForceDelete(forceDelete);
+    
+    //-- ATTACH the field's parent entity (FieldType)
+    field.setFieldTypeId(fieldtypeid);
+    
+    //-- ATTACH fieldtype's child entity (Field)
+    //fieldtype.getFields().add(field);
 
     //get the predefined values of the field if it is a yes/no field or a dropdown list field
     if (fieldtypeid != 1) {
 
       JsonArray predefinedFieldValues = obj.getJsonArray("fieldtypeContent");
-      List<FieldPredefinedValues> ll = new LinkedList<>();
+      List<FieldPredefinedValue> ll = new LinkedList<>();
 
       for (JsonValue predefinedFieldValue : predefinedFieldValues) {
 
@@ -119,18 +125,24 @@ public class FieldsMessage extends ContentMessage {
                 predefinedFieldValue.toString())).readObject();
         String defaultValue = defaultt.getString("value");
 
-        FieldPredefinedValues predefValue = new FieldPredefinedValues(-1, field.
+        FieldPredefinedValue predefValue = new FieldPredefinedValue(-1, field.
                 getId(), defaultValue);
-        //predefValue.setFields(field);
+        
+        //-- ATTACH predefinedValue's parent entity (Field)
+        //predefValue.setFieldid(field.getId());
         ll.add(predefValue);
       }
 
+      //-- ATTACH the field's children entities (FieldPredefinedValue)
       field.setFieldPredefinedValues(ll);
     }
 
-    Tables table = new Tables(tableId, tableName);
+    MTable table = new MTable(tableId, tableName);
     table.setTemplateid(super.getTemplateid());
-    //field.setTables(table);
+    
+    //-- ATTACH the field's parent entity (MTable)
+    field.setTableid(table.getId());
+    //-- ATTACH the table's child entity (Field)
     table.addField(field);
 
     List<EntityIntf> list = new LinkedList<>();

@@ -14,6 +14,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import se.kth.bbc.lims.Constants;
 
 /**
@@ -27,13 +28,15 @@ public class FileSystemOperations {
   //TODO: use fs.copyFromLocalFile
   private static final Logger logger = Logger.getLogger(
           FileSystemOperations.class.getName());
-  private FileSystem fs;
+  private FileSystem dfs;
   private Configuration conf;
 
   @PostConstruct
   public void init() {
     try {
-      fs = getFs();
+      DistributedFileSystem ddd = (DistributedFileSystem) dfs;
+      
+      dfs = getFs();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
     }
@@ -41,9 +44,9 @@ public class FileSystemOperations {
 
   @PreDestroy
   public void closeFs() {
-    if (fs != null) {
+    if (dfs != null) {
       try {
-        fs.close();
+        dfs.close();
       } catch (IOException ex) {
         logger.log(Level.SEVERE, "Error while closing file system.", ex);
       }
@@ -58,7 +61,7 @@ public class FileSystemOperations {
    * @throws java.io.IOException When an error occurs upon HDFS opening.
    */
   public InputStream getInputStream(Path location) throws IOException {
-    return fs.open(location, 1048576); //TODO: undo hard coding of weird constant here...
+    return dfs.open(location, 1048576); //TODO: undo hard coding of weird constant here...
   }
 
   /**
@@ -68,7 +71,7 @@ public class FileSystemOperations {
    * @return True if successful.
    */
   public boolean mkdir(Path location) throws IOException {
-    return fs.mkdirs(location, null);
+    return dfs.mkdirs(location, null);
   }
 
   /**
@@ -81,11 +84,10 @@ public class FileSystemOperations {
    * @throws IOException
    */
   public boolean rm(Path location, boolean recursive) throws IOException {
-    if (fs.exists(location)) {
-      return fs.delete(location, recursive);
-    } else {
-      return true;
+    if (dfs.exists(location)) {
+      return dfs.delete(location, recursive);
     }
+    return true;
   }
 
   /**
@@ -133,6 +135,8 @@ public class FileSystemOperations {
     conf.addResource(yarnPath);
     conf.addResource(hdfsPath);
     FileSystem fs = FileSystem.get(conf);
+    //DistributedFileSystem dFs = (DistributedFileSystem) fs;
+    //dFs.set
     return fs;
   }
 
@@ -145,7 +149,7 @@ public class FileSystemOperations {
    */
   public String cat(Path file) throws IOException {
     StringBuilder out = new StringBuilder();
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(dfs.
             open(file)));) {
       String line;
       line = br.readLine();
@@ -168,7 +172,7 @@ public class FileSystemOperations {
    */
   public void copyFromLocal(boolean deleteSource, Path source, Path destination)
           throws IOException {
-    fs.copyFromLocalFile(deleteSource, source, destination);
+    dfs.copyFromLocalFile(deleteSource, source, destination);
   }
 
   /**
@@ -179,7 +183,7 @@ public class FileSystemOperations {
    * @throws IOException
    */
   public void moveWithinHdfs(Path source, Path destination) throws IOException {
-    fs.rename(source, destination);
+    dfs.rename(source, destination);
   }
 
   /**
@@ -190,13 +194,13 @@ public class FileSystemOperations {
    * @throws IOException
    */
   public void copyInHdfs(Path src, Path dst) throws IOException {
-    Path[] srcs = FileUtil.stat2Paths(fs.globStatus(src), src);
-    if (srcs.length > 1 && !fs.isDirectory(dst)) {
+    Path[] srcs = FileUtil.stat2Paths(dfs.globStatus(src), src);
+    if (srcs.length > 1 && !dfs.isDirectory(dst)) {
       throw new IOException("When copying multiple files, "
               + "destination should be a directory.");
     }
     for (Path src1 : srcs) {
-      FileUtil.copy(fs, src1, fs, dst, false, conf);
+      FileUtil.copy(dfs, src1, dfs, dst, false, conf);
     }
   }
 
@@ -208,7 +212,7 @@ public class FileSystemOperations {
    * @throws IOException
    */
   public void copyToLocal(Path src, Path dst) throws IOException {
-    fs.copyToLocalFile(src, dst);
+    dfs.copyToLocalFile(src, dst);
   }
 
 }

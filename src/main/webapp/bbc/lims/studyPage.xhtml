@@ -33,6 +33,7 @@
                     <h2>#{projectManagedBean.projectName} </h2>
                     <!--SEARCH BAR-->
                     <h:inputHidden id="hiddenProjectName" value="#{projectManagedBean.projectName} "/>
+
                     <ui:include src="/bbc/lims/searcher.xhtml"/>
                   </td></tr>
               </table>
@@ -191,7 +192,6 @@
           </h:panelGroup>
         </h:form>
       </p:dialog>
-
       <!-- Choose file dialog-->
       <p:dialog id="chooseFileDialog" styleClass="projectDialog" widgetVar="chooseFileDlg" closable="false" draggable="false" modal="true" resizable="false" header="Choose file" rendered="#{projectManagedBean.currentRoleInProject() != null}">
         <h:form class="dialogForm">

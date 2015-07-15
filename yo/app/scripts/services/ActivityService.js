@@ -1,7 +1,6 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-
         .factory('ActivityService', ['$http', function ($http) {
             var service = {
               getByUser: function () {

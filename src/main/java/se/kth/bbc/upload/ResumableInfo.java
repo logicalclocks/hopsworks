@@ -9,12 +9,17 @@ import java.util.HashSet;
  */
 public class ResumableInfo {
 
-  public int resumableChunkSize;
-  public long resumableTotalSize;
-  public String resumableIdentifier;
-  public String resumableFilename;
-  public String resumableRelativePath;
+  private int resumableChunkSize;
+  private long resumableTotalSize;
+  private String resumableIdentifier;
+  private String resumableFilename;
+  private String resumableRelativePath;
+  private int resumableTemplateId;
   private long uploadedContentLength = 0;
+  private String resumableFilePath;
+
+  //Chunks uploaded. Private to enable atomically add and check if finished
+  private HashSet<ResumableChunkNumber> uploadedChunks = new HashSet<>();
 
   public static class ResumableChunkNumber {
 
@@ -36,12 +41,7 @@ public class ResumableInfo {
     }
   }
 
-  //Chunks uploaded. Private to enable atomically add and check if finished
-  private HashSet<ResumableChunkNumber> uploadedChunks = new HashSet<>();
-
-  public String resumableFilePath;
-
-  public boolean vaild() {
+  public boolean valid() {
     if (resumableChunkSize < 0 || resumableTotalSize < 0
             || HttpUtils.isEmpty(resumableIdentifier)
             || HttpUtils.isEmpty(resumableFilename)
@@ -89,6 +89,76 @@ public class ResumableInfo {
    */
   public boolean isUploaded(ResumableChunkNumber rcn) {
     return uploadedChunks.contains(rcn);
+  }
+
+  /*
+   * getters
+   */
+  public int getResumableChunkSize() {
+    return this.resumableChunkSize;
+  }
+
+  public long getResumableTotalSize() {
+    return this.resumableTotalSize;
+  }
+
+  public String getResumableIdentifier() {
+    return this.resumableIdentifier;
+  }
+
+  public String getResumableFilename() {
+    return this.resumableFilename;
+  }
+
+  public String getResumableRelativePath() {
+    return this.resumableRelativePath;
+  }
+
+  public int getResumableTemplateId() {
+    return this.resumableTemplateId;
+  }
+
+  public long getUploadedContentLength() {
+    return this.uploadedContentLength;
+  }
+
+  public String getResumableFilePath() {
+    return this.resumableFilePath;
+  }
+
+  /*
+   * setters
+   */
+  public void setResumableChunkSize(int resumableChunkSize) {
+    this.resumableChunkSize = resumableChunkSize;
+  }
+
+  public void setResumableTotalSize(long resumableTotalSize) {
+    this.resumableTotalSize = resumableTotalSize;
+  }
+
+  public void setResumableIdentifier(String resumableIdentifier) {
+    this.resumableIdentifier = resumableIdentifier;
+  }
+
+  public void setResumableFilename(String resumableFilename) {
+    this.resumableFilename = resumableFilename;
+  }
+
+  public void setResumableRelativePath(String resumableRelativePath) {
+    this.resumableRelativePath = resumableRelativePath;
+  }
+
+  public void setResumableTemplateId(int resumableTemplateId) {
+    this.resumableTemplateId = resumableTemplateId;
+  }
+
+  public void setUploadedContentLength(long uploadedContentLength) {
+    this.uploadedContentLength = uploadedContentLength;
+  }
+
+  public void setResumableFilePath(String resumableFilePath) {
+    this.resumableFilePath = resumableFilePath;
   }
 
 }
