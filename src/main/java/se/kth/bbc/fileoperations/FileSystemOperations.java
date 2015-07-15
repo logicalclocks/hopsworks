@@ -28,14 +28,12 @@ public class FileSystemOperations {
   //TODO: use fs.copyFromLocalFile
   private static final Logger logger = Logger.getLogger(
           FileSystemOperations.class.getName());
-  private FileSystem dfs;
+  private DistributedFileSystem dfs;
   private Configuration conf;
 
   @PostConstruct
   public void init() {
-    try {
-      DistributedFileSystem ddd = (DistributedFileSystem) dfs;
-      
+    try {      
       dfs = getFs();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
@@ -66,11 +64,16 @@ public class FileSystemOperations {
 
   /**
    * Create a new folder on the given path. Equivalent to mkdir -p.
-   *
+   * setMetaEnabled allows added/deleted/renamed files to be written to 
+   * hdfs_metadata_log table so that they can be picked up and dumped into elastic
+   * 
    * @param location The path to the new folder, its name included.
    * @return True if successful.
+   * 
+   * @throws java.io.IOException
    */
   public boolean mkdir(Path location) throws IOException {
+    dfs.setMetaEnabled(location, true);
     return dfs.mkdirs(location, null);
   }
 
@@ -96,7 +99,7 @@ public class FileSystemOperations {
    * @return
    * @throws IOException
    */
-  private FileSystem getFs() throws IOException {
+  private DistributedFileSystem getFs() throws IOException {
 
     String coreConfDir = System.getenv("HADOOP_CONF_DIR");
     //If still not found: throw exception
@@ -134,10 +137,10 @@ public class FileSystemOperations {
     conf.addResource(hadoopPath);
     conf.addResource(yarnPath);
     conf.addResource(hdfsPath);
+    //Need a different type of instantiation to get statistics object initialized
     FileSystem fs = FileSystem.get(conf);
-    //DistributedFileSystem dFs = (DistributedFileSystem) fs;
-    //dFs.set
-    return fs;
+    //fs.
+    return (DistributedFileSystem) fs;
   }
 
   /**

@@ -67,7 +67,7 @@
       <version>5.1</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
+      <groupId>io.hops</groupId>
       <artifactId>hadoop-client</artifactId>
       <version>2.4.0</version>
     </dependency>
@@ -81,12 +81,6 @@
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-zengine</artifactId>
       <version>0.5.0-incubating-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.zeppelin</groupId>
-      <artifactId>zeppelin-web</artifactId>
-      <version>0.5.0-incubating-SNAPSHOT</version>
-      <type>war</type>
     </dependency>
     <!--End of Zeppelin dependencies -->
   </dependencies>
@@ -105,7 +99,7 @@
           </compilerArguments>
         </configuration>
       </plugin>
-      <!--yeoman-maven-plugin -->
+      <!--yeoman-maven-plugin 
       <plugin>    
         <groupId>com.github.trecloux</groupId>
         <artifactId>yeoman-maven-plugin</artifactId>
@@ -117,8 +111,8 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <!--maven war plugin -->
+      </plugin>-->
+      <!--maven war plugin 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
@@ -144,8 +138,8 @@
             </fileset>
           </filesets>
         </configuration>
-      </plugin>
-      <!--end yeoman-maven-plugin -->
+      </plugin>-->
+      <!--end yeoman-maven-plugin 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
@@ -158,7 +152,7 @@
             </resource>
           </webResources>
         </configuration>
-      </plugin>
+      </plugin>-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
