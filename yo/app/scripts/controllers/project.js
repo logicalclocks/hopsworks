@@ -5,8 +5,8 @@
 
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams', 'UtilsService',
-          'growl', 'ProjectService', 'ModalService', 'ActivityService',
-          function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService) {
+          'growl', 'ProjectService', 'ModalService', 'ActivityService','$cookies',
+          function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies) {
 
             UtilsService.setIndex("child");
 
@@ -41,8 +41,7 @@ angular.module('hopsWorksApp')
                           var index = self.projectTypes.indexOf(entry.toUpperCase());
                           self.projectTypes.splice(index, 1);
                         });
-
-
+                        $cookies.projectID = self.pId;
                         //set the project name under which the search is performed
                         UtilsService.setProjectName(self.currentProject.projectName);
 
@@ -148,7 +147,12 @@ angular.module('hopsWorksApp')
             };
 
             self.goToService = function (service) {
-              $location.path('project/' + self.pId + '/' + service.toLowerCase());
+              if(service === "Zeppelin"){
+                window.open("http://localhost:8080/hopsworks/zeppelin");
+              }else{
+                $location.path('project/' + self.pId + '/' + service.toLowerCase());
+              }
+              
             };
 
             self.goToSpecificDataset = function (name) {
