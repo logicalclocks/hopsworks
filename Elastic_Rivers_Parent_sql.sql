@@ -13,7 +13,7 @@ FROM hopsworks.hdfs_metadata_log ops,
 	FROM hopsworks.hdfs_inodes i, 
 		(SELECT inn.id AS rootid 
 		FROM hops.hdfs_inodes inn 
-		WHERE inn.parent_id = 0) AS temp 
+		WHERE inn.parent_id = 1) AS temp 
 
 	WHERE i.parent_id = temp.rootid) as inodeinn 
 
@@ -29,7 +29,7 @@ SELECT ops.inode_id as _id, ops.*
 FROM hopsworks.hdfs_metadata_log ops, 
 	(SELECT inn.id AS rootid 
 	FROM hopsworks.hdfs_inodes inn 
-	WHERE inn.parent_id = 0) AS temp 
+	WHERE inn.parent_id = 1) AS temp 
 
 WHERE ops.operation = 1 AND ops.dataset_id = temp.rootid 
 AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_parents_deleted)
@@ -41,7 +41,7 @@ UPDATE hopsworks.meta_inodes_ops_parents_deleted m,
 
 	(SELECT inn.id AS rootid 
 	FROM hopsworks.hdfs_inodes inn 
-	WHERE inn.parent_id = 0) AS temp
+	WHERE inn.parent_id = 1) AS temp
 
 SET m.processed = 1
 WHERE m.parentid = temp.rootid AND m.inodeid IN (SELECT inode_id FROM hopsworks.hdfs_metadata_log)

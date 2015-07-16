@@ -17,7 +17,7 @@ FROM hopsworks.hdfs_metadata_log ops,
 
 			(SELECT inn.id AS rootid
 			FROM hopsworks.hdfs_inodes inn
-			WHERE inn.parent_id = 0) AS temp
+			WHERE inn.parent_id = 1) AS temp
 
 		WHERE i.parent_id = temp.rootid) AS parent
 
@@ -44,7 +44,7 @@ UPDATE hopsworks.meta_inodes_ops_children_deleted m,
 
 	(SELECT inn.id AS rootid 
 	FROM hopsworks.hdfs_inodes inn 
-	WHERE inn.parent_id = 0) AS root
+	WHERE inn.parent_id = 1) AS root
 
 WHERE p.parent_id = root.rootid) AS parent
 

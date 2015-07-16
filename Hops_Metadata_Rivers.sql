@@ -19,11 +19,11 @@ curl -XPUT 'localhost:9200/_river/parent/_meta' -d '{
 },
 
 {
-"statement": "SELECT ops.inode_id as _id, ops.* FROM hopsworks.hdfs_metadata_log ops, (SELECT inn.id AS rootid FROM hopsworks.hdfs_inodes inn WHERE inn.parent_id = 0) AS temp WHERE ops.operation = 1 AND ops.dataset_id = temp.rootid AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_parents_deleted)"
+"statement": "SELECT ops.inode_id as _id, ops.* FROM hopsworks.hdfs_metadata_log ops, (SELECT inn.id AS rootid FROM hopsworks.hdfs_inodes inn WHERE inn.parent_id = 1) AS temp WHERE ops.operation = 1 AND ops.dataset_id = temp.rootid AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_parents_deleted)"
 },
 
 {
-"statement": "UPDATE hopsworks.meta_inodes_ops_parents_deleted m, (SELECT inn.id AS rootid FROM hopsworks.hdfs_inodes inn WHERE inn.parent_id = 0) AS temp SET m.processed = 1 WHERE m.parentid = temp.rootid AND m.inodeid IN (SELECT inode_id FROM hopsworks.hdfs_metadata_log)"
+"statement": "UPDATE hopsworks.meta_inodes_ops_parents_deleted m, (SELECT inn.id AS rootid FROM hopsworks.hdfs_inodes inn WHERE inn.parent_id = 1) AS temp SET m.processed = 1 WHERE m.parentid = temp.rootid AND m.inodeid IN (SELECT inode_id FROM hopsworks.hdfs_metadata_log)"
 },
 
 {
@@ -73,7 +73,7 @@ curl -XPUT 'localhost:9200/_river/child/_meta' -d '{
 },
 
 {
-"statement" : "UPDATE hopsworks.meta_inodes_ops_children_deleted m, (SELECT p.id AS id FROM hopsworks.hdfs_inodes p, (SELECT inn.id AS rootid FROM hopsworks.hdfs_inodes inn WHERE inn.parent_id = 0) AS root WHERE p.parent_id = root.rootid) AS parent SET m.processed = 1 WHERE m.parentid = parent.id AND m.inodeid IN (SELECT inode_id FROM hopsworks.hdfs_metadata_log)"
+"statement" : "UPDATE hopsworks.meta_inodes_ops_children_deleted m, (SELECT p.id AS id FROM hopsworks.hdfs_inodes p, (SELECT inn.id AS rootid FROM hopsworks.hdfs_inodes inn WHERE inn.parent_id = 1) AS root WHERE p.parent_id = root.rootid) AS parent SET m.processed = 1 WHERE m.parentid = parent.id AND m.inodeid IN (SELECT inode_id FROM hopsworks.hdfs_metadata_log)"
 },
 
 {
