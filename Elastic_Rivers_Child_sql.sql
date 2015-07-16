@@ -6,25 +6,41 @@ INSERT INTO hopsworks.meta_inodes_ops_children_deleted (inodeid, parentid, proce
 
 -- SELECT ALL CHILDREN THAT HAVE BEEN ADDED (OPERATION 0) -- DB NAME MUST CHANGE TO POINT TO HOPS (for hdfs_metadata_log and hdfs_inodes)
 
-SELECT DISTINCT ops.inode_id as _id, ops.dataset_id as _parent, inodeinn.name, ops.* 
-FROM hopsworks.hdfs_metadata_log ops,
+SELECT composite.*, metadata.EXTENDED_METADATA
 
-	(SELECT outt.id as nodeinn_id, outt.parent_id as _parent, outt.* 
-	FROM hopsworks.hdfs_inodes outt,
+FROM (
+	SELECT DISTINCT ops.inode_id as _id, ops.dataset_id as _parent, inodeinn.name as inode_name, ops.*
+	FROM hopsworks.hdfs_metadata_log ops,
 
-		(SELECT i.id as parentid
-		FROM hopsworks.hdfs_inodes i,
+		(SELECT outt.id as nodeinn_id, outt.parent_id as _parent, outt.* 
+		FROM hopsworks.hdfs_inodes outt,
 
-			(SELECT inn.id AS rootid
-			FROM hopsworks.hdfs_inodes inn
-			WHERE inn.parent_id = 1) AS temp
+			(SELECT i.id as parentid
+			FROM hopsworks.hdfs_inodes i,
 
-		WHERE i.parent_id = temp.rootid) AS parent
+				(SELECT inn.id AS rootid
+				FROM hopsworks.hdfs_inodes inn
+				WHERE inn.parent_id = 1) AS temp
 
-	WHERE outt.parent_id = parent.parentid) as inodeinn
+			WHERE i.parent_id = temp.rootid) AS parent
 
-WHERE ops.operation = 0 AND ops.inode_id = inodeinn.nodeinn_id 
-AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_deleted) LIMIT 100
+		WHERE outt.parent_id = parent.parentid) as inodeinn
+
+	WHERE ops.operation = 0 AND ops.inode_id = inodeinn.nodeinn_id 
+	AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_deleted) LIMIT 100
+
+)as composite
+
+LEFT JOIN (
+	SELECT mtt.inodeid, GROUP_CONCAT( mrd.data SEPARATOR  '|' ) AS EXTENDED_METADATA
+	FROM meta_tuple_to_file mtt, meta_raw_data mrd
+	WHERE mrd.tupleid = mtt.tupleid
+	GROUP BY (mtt.inodeid)
+	LIMIT 0 , 30
+
+) as metadata
+
+ON metadata.inodeid = composite._id
 
 
 -- SELECT ALL CHILDREN THAT HAVE BEEN DELETED/RENAMED (OPERATION 1) AND ARE NOT YET PROCESSED -- DB NAME MUST CHANGE TO POINT TO HOPS (for hdfs_metadata_log and hdfs_inodes)
