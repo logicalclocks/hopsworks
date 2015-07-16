@@ -15,7 +15,7 @@ curl -XPUT 'localhost:9200/_river/parent/_meta' -d '{
 },
 
 {
-"statement": "SELECT ops.inode_id as _id, inodeinn.name, inodeinn.meta_enabled, ops.* FROM hopsworks.hdfs_metadata_log ops, (SELECT i.id, i.name, i.meta_enabled FROM hopsworks.hdfs_inodes i, (SELECT inn.id AS rootid FROM hops.hdfs_inodes inn WHERE inn.parent_id = 0) AS temp WHERE i.parent_id = temp.rootid) as inodeinn WHERE ops.operation = 0 AND ops.inode_id = inodeinn.id AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_parents_deleted) LIMIT 100"
+"statement": "SELECT ops.inode_id as _id, inodeinn.name, inodeinn.meta_enabled, ops.* FROM hopsworks.hdfs_metadata_log ops, (SELECT i.id, i.name, i.meta_enabled FROM hopsworks.hdfs_inodes i, (SELECT inn.id AS rootid FROM hops.hdfs_inodes inn WHERE inn.parent_id = 1) AS temp WHERE i.parent_id = temp.rootid) as inodeinn WHERE ops.operation = 0 AND ops.inode_id = inodeinn.id AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_parents_deleted) LIMIT 100"
 },
 
 {
@@ -65,7 +65,7 @@ curl -XPUT 'localhost:9200/_river/child/_meta' -d '{
 },
 
 {
-"statement": "SELECT DISTINCT ops.inode_id as _id, ops.dataset_id as _parent, inodeinn.name, ops.* FROM hopsworks.hdfs_metadata_log ops, (SELECT outt.id as nodeinn_id, outt.parent_id as _parent, outt.* FROM hopsworks.hdfs_inodes outt, (SELECT i.id as parentid FROM hopsworks.hdfs_inodes i, (SELECT inn.id AS rootid FROM hopsworks.hdfs_inodes inn WHERE inn.parent_id = 0) AS temp WHERE i.parent_id = temp.rootid) AS parent WHERE outt.parent_id = parent.parentid) as inodeinn WHERE ops.operation = 0 AND ops.inode_id = inodeinn.nodeinn_id AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_deleted) LIMIT 100"
+"statement": "SELECT DISTINCT ops.inode_id as _id, ops.dataset_id as _parent, inodeinn.name, ops.* FROM hopsworks.hdfs_metadata_log ops, (SELECT outt.id as nodeinn_id, outt.parent_id as _parent, outt.* FROM hopsworks.hdfs_inodes outt, (SELECT i.id as parentid FROM hopsworks.hdfs_inodes i, (SELECT inn.id AS rootid FROM hopsworks.hdfs_inodes inn WHERE inn.parent_id = 1) AS temp WHERE i.parent_id = temp.rootid) AS parent WHERE outt.parent_id = parent.parentid) as inodeinn WHERE ops.operation = 0 AND ops.inode_id = inodeinn.nodeinn_id AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_deleted) LIMIT 100"
 },
 
 {
