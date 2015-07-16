@@ -82,6 +82,12 @@
       <artifactId>zeppelin-zengine</artifactId>
       <version>0.5.0-incubating-SNAPSHOT</version>
     </dependency>
+    <dependency>		
+      <groupId>org.apache.zeppelin</groupId>		
+      <artifactId>zeppelin-web</artifactId>		
+      <version>0.5.0-incubating-SNAPSHOT</version>		
+      <type>war</type>		
+    </dependency>
     <!--End of Zeppelin dependencies -->
   </dependencies>
   <build>
