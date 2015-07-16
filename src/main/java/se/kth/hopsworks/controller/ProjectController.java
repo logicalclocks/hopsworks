@@ -208,6 +208,13 @@ public class ProjectController {
 
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator + projectName;
+    
+    if(!fileOps.isDir(Constants.DIR_ROOT)){
+      //if the base path does not exist in the file system, create it first so
+      //that subsequent folders are metadata enabled
+      fileOps.mkDir(Constants.DIR_ROOT);
+    }
+    
     fileOps.mkDir(projectPath);
   }
 

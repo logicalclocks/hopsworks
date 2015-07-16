@@ -14,6 +14,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import se.kth.bbc.lims.Constants;
 
 /**
@@ -27,7 +29,7 @@ public class FileSystemOperations {
   //TODO: use fs.copyFromLocalFile
   private static final Logger logger = Logger.getLogger(
           FileSystemOperations.class.getName());
-  private FileSystem dfs;
+  private DistributedFileSystem dfs;
   private Configuration conf;
 
   @PostConstruct
@@ -63,9 +65,9 @@ public class FileSystemOperations {
 
   /**
    * Create a new folder on the given path. Equivalent to mkdir -p.
-   * NEED YET TO INVOKE setMetaEnabled to allow added/deleted/renamed files to
-   * be written to hdfs_metadata_log table so that they can be picked up and
-   * dumped into elasticsearch
+   * setMetaEnabled allows added/deleted/renamed folders/files from the current
+   * location down the path, to be written to hdfs_metadata_log table so that
+   * they can be picked up and dumped into elasticsearch
    * <p>
    * @param location The path to the new folder, its name included.
    * @return True if successful.
@@ -73,7 +75,11 @@ public class FileSystemOperations {
    * @throws java.io.IOException
    */
   public boolean mkdir(Path location) throws IOException {
-    return dfs.mkdirs(location, null);
+
+    boolean response = dfs.mkdirs(location, null);
+    this.dfs.setMetaEnabled(location, true);
+
+    return response;
   }
 
   /**
@@ -98,7 +104,7 @@ public class FileSystemOperations {
    * @return
    * @throws IOException
    */
-  private FileSystem getFs() throws IOException {
+  private DistributedFileSystem getFs() throws IOException {
 
     String coreConfDir = System.getenv("HADOOP_CONF_DIR");
     //If still not found: throw exception
@@ -138,7 +144,7 @@ public class FileSystemOperations {
     conf.addResource(hdfsPath);
     //Need a different type of instantiation to get statistics object initialized
     FileSystem fs = FileSystem.get(conf);
-    return fs;
+    return (DistributedFileSystem) fs;
   }
 
   /**
