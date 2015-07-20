@@ -76,10 +76,7 @@ public class FileSystemOperations {
    */
   public boolean mkdir(Path location) throws IOException {
 
-    boolean response = dfs.mkdirs(location, null);
-    this.dfs.setMetaEnabled(location, true);
-
-    return response;
+    return dfs.mkdirs(location, null);
   }
 
   /**
