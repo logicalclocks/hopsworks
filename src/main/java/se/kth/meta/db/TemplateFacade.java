@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -95,7 +96,7 @@ public class TemplateFacade extends AbstractFacade<Template> {
    * Find the Template that has <i>templateid</i> as id.
    * <p>
    * @param templateid
-   * @return
+   * @return Null if no such template was found.
    */
   public Template findByTemplateId(int templateid) {
     TypedQuery<Template> query = em.
@@ -103,7 +104,12 @@ public class TemplateFacade extends AbstractFacade<Template> {
                     Template.class);
 
     query.setParameter("templateid", templateid);
-    return query.getSingleResult();
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      //There is no such id.
+      return null;
+    }
   }
 
   /**

@@ -256,7 +256,7 @@ public class DataSetService {
 
     try {
       success = fileOps.mkDir(dsPath);
-      logger.log(Level.SEVERE, "DATASET RECEIVED {0} ", dataSetName.
+      logger.log(Level.FINEST, "DATASET RECEIVED {0} ", dataSetName.
               getTemplate());
 
       //the inode has been created in the file system
@@ -266,11 +266,13 @@ public class DataSetService {
         Inode neww = inodes.findByParentAndName(lastVisitedParent,
                 pathArray[pathArray.length - 1]);
 
-        Template templ = this.template.findByTemplateId(dataSetName.getTemplate());
-        templ.getInodes().add(neww);
-
-        //persist the relationship table
-        this.template.updateTemplatesInodesMxN(templ);
+        Template templ = this.template.findByTemplateId(dataSetName.
+                getTemplate());
+        if (templ != null) {
+          templ.getInodes().add(neww);
+          //persist the relationship table
+          this.template.updateTemplatesInodesMxN(templ);
+        }
       }
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);

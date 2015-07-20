@@ -21,5 +21,5 @@ cd app/
 perl -pi -e "s/bower_components/..\/bower_components/g" index.html
 
 #Open a new firefox tab
-#firefox -new-tab http://localhost:8080/app
-google-chrome -new-tab http://localhost:8080/app
+firefox -new-tab http://localhost:8080/app
+#google-chrome -new-tab http://localhost:8080/app
