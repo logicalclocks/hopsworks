@@ -3,6 +3,8 @@ package se.kth.bbc.jobs.yarn;
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.JsonReducable;
 import se.kth.bbc.jobs.jobhistory.JobType;
 
 /**
@@ -11,7 +13,7 @@ import se.kth.bbc.jobs.jobhistory.JobType;
  * @author stig
  */
 @XmlRootElement
-public class YarnJobConfiguration {
+public class YarnJobConfiguration implements JsonReducable {
 
   private String amQueue = "default";
   // Memory for App master (in MB)
@@ -20,6 +22,12 @@ public class YarnJobConfiguration {
   private int amVCores = 1;
   // Application name
   private String appName = "";
+  
+  protected final static String KEY_TYPE = "type";
+  protected final static String KEY_QUEUE = "QUEUE";
+  protected final static String KEY_AMMEM = "AMMEM";
+  protected final static String KEY_AMCORS = "AMCORS";
+  protected final static String KEY_APPNAME = "APPNAME";
 
   public final String getAmQueue() {
     return amQueue;
@@ -113,6 +121,44 @@ public class YarnJobConfiguration {
     builder.add("amVCores", amVCores);
     builder.add("appName", appName);
     return builder;
+  }
+
+  @Override
+  public DatabaseJsonObject getReducedJsonObject() {
+    DatabaseJsonObject obj = new DatabaseJsonObject();
+    obj.set(KEY_AMCORS, ""+amVCores);
+    obj.set(KEY_AMMEM, ""+amMemory);
+    obj.set(KEY_APPNAME, appName);
+    obj.set(KEY_QUEUE, amQueue);
+    obj.set(KEY_TYPE, JobType.YARN.name());
+    return obj;
+  }
+
+  @Override
+  public void updateFromJson(DatabaseJsonObject json) throws
+          IllegalArgumentException {
+    //First: make sure the given object is valid by getting the type and AdamCommandDTO
+    JobType type;
+    String jsonCors, jsonMem, jsonName, jsonQueue;
+    try {
+      String jsonType = json.getString(KEY_TYPE);
+      type = JobType.valueOf(jsonType);
+      if (type != JobType.YARN) {
+        throw new IllegalArgumentException("JobType must be YARN.");
+      }
+      jsonCors = json.getString(KEY_AMCORS);      
+      jsonMem = json.getString(KEY_AMMEM);      
+      jsonName = json.getString(KEY_APPNAME);      
+      jsonQueue = json.getString(KEY_QUEUE);      
+    } catch (Exception e) {
+      throw new IllegalArgumentException(
+              "Cannot convert object into YarnJobConfiguration.", e);
+    }
+    //Second: we're now sure everything is valid: actually update the state
+    this.amMemory = Integer.parseInt(jsonMem);
+    this.amQueue = jsonQueue;
+    this.amVCores = Integer.parseInt(jsonCors);
+    this.appName = jsonName;
   }
 
 }

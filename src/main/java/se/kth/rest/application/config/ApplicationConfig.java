@@ -28,10 +28,10 @@ public class ApplicationConfig extends Application {
   private void addRestResourceClasses(Set<Class<?>> resources) {
     resources.add(se.kth.hopsworks.filters.RequestAuthFilter.class);
     resources.add(se.kth.hopsworks.rest.ActivityService.class);
+    resources.add(se.kth.hopsworks.rest.AdamService.class);
     resources.add(se.kth.hopsworks.rest.AppExceptionMapper.class);
     resources.add(se.kth.hopsworks.rest.AuthExceptionMapper.class);
     resources.add(se.kth.hopsworks.rest.AuthService.class);
-    resources.add(se.kth.hopsworks.rest.CuneiformService.class);
     resources.add(se.kth.hopsworks.rest.ProjectService.class);
     resources.add(se.kth.hopsworks.rest.SparkService.class);
     resources.add(se.kth.hopsworks.rest.ThrowableExceptionMapper.class);

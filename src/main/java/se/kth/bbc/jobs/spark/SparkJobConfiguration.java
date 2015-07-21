@@ -2,6 +2,8 @@ package se.kth.bbc.jobs.spark;
 
 import javax.json.JsonObjectBuilder;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.adam.AdamCommandDTO;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 
@@ -12,7 +14,7 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
  * @author stig
  */
 @XmlRootElement
-public class SparkJobConfiguration extends YarnJobConfiguration {
+public class SparkJobConfiguration extends YarnJobConfiguration{
 
   private String jarPath;
   private String mainClass;
@@ -21,6 +23,13 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private int numberOfExecutors = 1;
   private int executorCores = 1;
   private String executorMemory = "1g";
+  
+  protected static final String KEY_JARPATH = "JARPATH";
+  protected static final String KEY_MAINCLASS = "MAINCLASS";
+  protected static final String KEY_ARGS = "ARGS";
+  protected static final String KEY_NUMEXECS = "NUMEXECS";
+  protected static final String KEY_EXECCORES = "EXECCORES";
+  protected static final String KEY_EXECMEM = "EXECMEM";
 
   public String getJarPath() {
     return jarPath;
@@ -118,6 +127,53 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     builder.add("executorCores", executorCores);
     builder.add("executorMemory", executorMemory);
     return builder;
+  }
+  
+  @Override
+  public DatabaseJsonObject getReducedJsonObject() {
+    DatabaseJsonObject obj = super.getReducedJsonObject();
+    obj.set(KEY_ARGS, args);
+    obj.set(KEY_EXECCORES, ""+executorCores);
+    obj.set(KEY_EXECMEM, executorMemory);
+    obj.set(KEY_JARPATH, jarPath);
+    obj.set(KEY_MAINCLASS, mainClass);
+    obj.set(KEY_NUMEXECS, ""+numberOfExecutors);    
+    obj.set(KEY_TYPE, JobType.SPARK.name());
+    return obj;
+  }
+
+  @Override
+  public void updateFromJson(DatabaseJsonObject json) throws
+          IllegalArgumentException {
+    //First: make sure the given object is valid by getting the type and AdamCommandDTO
+    JobType type;
+    String jsonArgs,jsonExeccors, jsonExecmem, jsonJarpath, jsonMainclass, jsonNumexecs;
+    try {
+      String jsonType = json.getString(KEY_TYPE);
+      type = JobType.valueOf(jsonType);
+      if (type != JobType.SPARK) {
+        throw new IllegalArgumentException("JobType must be SPARK.");
+      }
+      jsonArgs = json.getString(KEY_ARGS);
+      jsonExeccors = json.getString(KEY_EXECCORES);
+      jsonExecmem = json.getString(KEY_EXECMEM);
+      jsonJarpath = json.getString(KEY_JARPATH);
+      jsonMainclass = json.getString(KEY_MAINCLASS);
+      jsonNumexecs = json.getString(KEY_NUMEXECS);      
+    } catch (Exception e) {
+      throw new IllegalArgumentException(
+              "Cannot convert object into SparkJobConfiguration.", e);
+    }
+    //Second: allow all superclasses to check validity. To do this: make sure that the type will get recognized correctly.
+    json.set(KEY_TYPE, JobType.YARN.name());
+    super.updateFromJson(json);
+    //Third: we're now sure everything is valid: actually update the state
+    this.args = jsonArgs;
+    this.executorCores = Integer.parseInt(jsonExeccors);
+    this.executorMemory = jsonExecmem;
+    this.jarPath = jsonJarpath;
+    this.mainClass = jsonMainclass;
+    this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
   }
 
 }
