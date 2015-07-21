@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp').controller('TemplateDropdownCtrl',
-        ['$scope', '$modalInstance', 'templateId', 'MetadataActionService',
-          function ($scope, $modalInstance, templateId, MetadataActionService) {
+        ['$scope', '$modalInstance', 'showSkipButton', 'templateId', 'MetadataActionService',
+          function ($scope, $modalInstance, showSkipButton, templateId, MetadataActionService) {
 
             var self = this;
 
@@ -13,6 +13,7 @@ angular.module('hopsWorksApp').controller('TemplateDropdownCtrl',
             self.selectedTemplate = {};
             self.templates = [];
             self.skipTemplate = false;
+            self.showSkipButton = showSkipButton;
 
             MetadataActionService.fetchTemplates()
                     .then(function (response) {
@@ -36,7 +37,6 @@ angular.module('hopsWorksApp').controller('TemplateDropdownCtrl',
             };
 
             self.skipThisStep = function(){
-              console.log("SKIPPING TEMPLATE " + self.skipTemplate);
               self.skipTemplate = true;
             };
             

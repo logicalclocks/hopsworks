@@ -119,7 +119,7 @@
                                     <a class="pointer"
                                        role="menuitem"
                                        tabindex="3"
-                                       ng-click="datasetsCtrl.attachTemplate(file)">
+                                       ng-click="datasetsCtrl.attachTemplate(file); $event.stopPropagation();">
                                       <span><i class="fa fa-camera-retro"></i>
                                         Attach template</span>
                                     </a>

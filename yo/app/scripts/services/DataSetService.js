@@ -44,8 +44,17 @@ angular.module('hopsWorksApp')
                 removeDataSetDir: function (fileName) {
                   return $http.delete('/api/project/' + id + '/dataset/' + fileName);
                 },
-                attachTemplate: function (fileId, templateId) {
-                  return $http.post('/api/project/' + id + '/dataset/attachTemplate/' + fileId + '/' + templateId);
+                attachTemplate: function (fileTemplateData) {
+                  var regReq = {
+                    method: 'POST',
+                    url: '/api/project/' + id + '/dataset/attachTemplate',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    data: fileTemplateData
+                  };
+
+                  return $http(regReq);
                 }
               };
               return services;

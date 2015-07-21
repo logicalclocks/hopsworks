@@ -166,7 +166,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              selectTemplate: function (size, templateId) {
+              selectTemplate: function (size, showSkipButton, templateId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/templateDropdown.html',
                   controller: 'TemplateDropdownCtrl as templateDropdownCtrl',
@@ -186,6 +186,9 @@ angular.module('hopsWorksApp')
                       }],
                     templateId: function () {
                       return templateId;
+                    },
+                    showSkipButton: function(){
+                      return showSkipButton;
                     }
                   }
                 });
