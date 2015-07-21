@@ -73,14 +73,12 @@ public class CuneiformController {
       throw new IllegalArgumentException(
               "Specified path does not point to .cf file.");
     }
-    // Get the workflow name.
-    String wfName = Utils.getFileName(path);
 
     // Get the contents
     String txt = fops.cat(path);
 
     //Create the workflowDTO
-    WorkflowDTO wf = new WorkflowDTO(wfName, txt);
+    WorkflowDTO wf = new WorkflowDTO(path, txt);
     wf.inspect();
     return wf;
   }

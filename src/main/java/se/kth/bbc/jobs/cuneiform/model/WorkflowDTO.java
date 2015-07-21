@@ -6,6 +6,7 @@ import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.lims.Utils;
 
 /**
  * Represents a (Cuneiform) workflow. It has a name, the contents of the
@@ -18,6 +19,7 @@ public class WorkflowDTO {
 
   private String name;
   private String contents;
+  private String path;
   private List<InputParameter> inputParams;
   private List<OutputParameter> outputParams;
 
@@ -30,21 +32,22 @@ public class WorkflowDTO {
   /**
    * Creates a new WorkflowDTO with the given name.
    * <p>
-   * @param name
+   * @param path
    */
-  public WorkflowDTO(String name) {
-    this(name, null);
+  public WorkflowDTO(String path) {
+    this(path, null);
   }
 
   /**
    * Creates a new WorkflowDTO with the given name, contents.
    * <p>
-   * @param name
+   * @param path
    * @param contents
    */
-  public WorkflowDTO(String name, String contents) {
-    this.name = name;
+  public WorkflowDTO(String path, String contents) {
+    this.name = Utils.getFileName(path);
     this.contents = contents;
+    this.path = path;
   }
 
   /**
@@ -189,6 +192,18 @@ public class WorkflowDTO {
       }
     }
     return false;
+  }
+
+  public String getPath() {
+    return path;
+  }
+
+  /**
+   * Set the path where the base workflow, before content alterations, resides.
+   * @param path 
+   */
+  public void setPath(String path) {
+    this.path = path;
   }
 
   /**
