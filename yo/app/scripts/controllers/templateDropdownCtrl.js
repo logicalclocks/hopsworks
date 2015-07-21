@@ -12,6 +12,7 @@ angular.module('hopsWorksApp').controller('TemplateDropdownCtrl',
             self.templateId = templateId;
             self.selectedTemplate = {};
             self.templates = [];
+            self.skipTemplate = false;
 
             MetadataActionService.fetchTemplates()
                     .then(function (response) {
@@ -34,8 +35,13 @@ angular.module('hopsWorksApp').controller('TemplateDropdownCtrl',
               $modalInstance.dismiss('cancelled');
             };
 
+            self.skipThisStep = function(){
+              console.log("SKIPPING TEMPLATE " + self.skipTemplate);
+              self.skipTemplate = true;
+            };
+            
             self.getTemplate = function () {
-              if (self.templateId === -1) {
+              if(self.skipTemplate === false && self.templateId === -1) {
                 return false;
               }
 

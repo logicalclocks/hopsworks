@@ -342,7 +342,7 @@ public class DataSetService {
       uploadPath = this.path + path + File.separator;
     }
 
-    if (templateId != 0) {
+    if (templateId != 0 && templateId != -1) {
       this.uploader.setTemplateId(templateId);
     }
 
