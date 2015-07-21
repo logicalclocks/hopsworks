@@ -22,8 +22,7 @@ angular.module('hopsWorksApp')
             this.onFileSelected = function (path) {
               CuneiformService.inspectStoredWorkflow(this.projectId, path).then(
                       function (success) {
-                        self.workflow = success.data.wf;
-                        self.yarnConfig = success.data.yarnConfig;
+                        self.runConfig = success.data;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
@@ -32,12 +31,10 @@ angular.module('hopsWorksApp')
             this.$interval = $interval;
             this.callExecute = function () {
               return CuneiformService.runWorkflow(
-                      self.projectId,
-                      {"wf": self.workflow, "yarnConfig": self.yarnConfig});
+                      self.projectId, self.runConfig);
             };
             this.onExecuteSuccess = function (success) {
-              self.workflow = null;
-              self.yarnConfig = null;
+              self.runConfig = null;
             };
 
             this.getHistory = function () {

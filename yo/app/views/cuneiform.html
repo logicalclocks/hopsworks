@@ -66,13 +66,13 @@
               </tr>
               <tr>
                 <td class="firstColumn">Selected file </td>
-                <td class="secondColumn">{{cuneiformCtrl.workflow.name}}</td>
+                <td class="secondColumn">{{cuneiformCtrl.runConfig.wf.name}}</td>
               </tr>
             </table>
 
-            <h3 ng-show="cuneiformCtrl.workflow.inputParams.length > 0"> Input Parameters </h3>
+            <h3 ng-show="cuneiformCtrl.runConfig.wf.inputParams.length > 0"> Input Parameters </h3>
             <table>
-              <tr ng-repeat="param in cuneiformCtrl.workflow.inputParams">
+              <tr ng-repeat="param in cuneiformCtrl.runConfig.wf.inputParams">
                 <td class="firstColumn">{{param.name}}</td>
                 <td class="secondColumn"> <input type="text" ng-model="param.value"></td>
               </tr>
@@ -82,24 +82,24 @@
               <span>Execute</span>
             </button>
 
-            <div ng-show="cuneiformCtrl.yarnConfig">
+            <div ng-show="cuneiformCtrl.runConfig">
               <h3>Job configuration</h3>
               <table>
                 <tr>
                   <td class="firstColumn">Job name</td>
-                  <td class="secondColumn"><input type="text" ng-model="cuneiformCtrl.yarnConfig.appName"></td>
+                  <td class="secondColumn"><input type="text" ng-model="cuneiformCtrl.runConfig.appName"></td>
                 </tr>
                 <tr>
                   <td class="firstColumn">Application master memory</td>
-                  <td class="secondColumn"><input type="number" ng-model="cuneiformCtrl.yarnConfig.amMemory" min="0"></td>
+                  <td class="secondColumn"><input type="number" ng-model="cuneiformCtrl.runConfig.amMemory" min="0"></td>
                 </tr>
                 <tr>
                   <td class="firstColumn">Application master vcores</td>
-                  <td class="secondColumn"><input type="number" ng-model="cuneiformCtrl.yarnConfig.amVCores" min="1"></td>
+                  <td class="secondColumn"><input type="number" ng-model="cuneiformCtrl.runConfig.amVCores" min="1"></td>
                 </tr>
                 <tr>
                   <td class="firstColumn">ResourceManager queue</td>
-                  <td class="secondColumn"><input type="text" ng-model="cuneiformCtrl.yarnConfig.amQueue"></td>
+                  <td class="secondColumn"><input type="text" ng-model="cuneiformCtrl.runConfig.amQueue"></td>
                 </tr>
               </table>
             </div>

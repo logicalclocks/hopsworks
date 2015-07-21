@@ -1,5 +1,6 @@
 package se.kth.hopsworks.controller;
 
+import com.google.common.base.Strings;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import java.io.File;
 import java.io.FileWriter;
@@ -14,7 +15,7 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.cuneiform.CuneiformJob;
-import se.kth.bbc.jobs.cuneiform.model.CuneiformRunWrapper;
+import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
@@ -94,12 +95,11 @@ public class CuneiformController {
    * @return The job history object for the started job.
    * @throws IOException
    */
-  public JobHistory startWorkflow(CuneiformRunWrapper runData, String user,
+  public JobHistory startWorkflow(CuneiformJobConfiguration runData, String user,
           Integer projectId) throws IOException {
     WorkflowDTO wf = runData.getWf();
-    if (runData.getYarnConfig().getAppName() == null
-            || runData.getYarnConfig().getAppName().isEmpty()) {
-      runData.getYarnConfig().setAppName("Untitled Cuneiform job");
+    if (Strings.isNullOrEmpty(runData.getAppName())) {
+      runData.setAppName("Untitled Cuneiform job");
     }
     // Set the job name if necessary.
     String wfLocation;
@@ -139,7 +139,7 @@ public class CuneiformController {
     b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");
 
     //Set Yarn configuration
-    b.setConfig(runData.getYarnConfig());
+    b.setConfig(runData);
     YarnRunner r;
 
     try {
@@ -160,7 +160,7 @@ public class CuneiformController {
     Project project = projects.find(projectId);
 
     //TODO: include input and execution files
-    JobHistory jh = job.requestJobId(runData.getYarnConfig().getAppName(), user,
+    JobHistory jh = job.requestJobId(runData.getAppName(), user,
             project, JobType.CUNEIFORM);
     if (jh != null) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(project.getName())

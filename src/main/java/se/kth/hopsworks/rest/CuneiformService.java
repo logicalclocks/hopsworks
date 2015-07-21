@@ -19,7 +19,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.jobs.cuneiform.model.CuneiformRunWrapper;
+import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
@@ -47,7 +47,7 @@ public class CuneiformService {
   }
 
   /**
-   * Inspect the workflow stored at the given path. Returns a CuneiformWrapper
+   * Inspect the workflow stored at the given path. Returns a CuneiformJobConfiguration
    * containing a WorkflowDTO with the workflow details and a
    * YarnJobConfiguration with Yarn job config.
    * <p>
@@ -66,8 +66,7 @@ public class CuneiformService {
           throws AppException {
     try {
       WorkflowDTO wf = cfCtrl.inspectWorkflow(path);
-      CuneiformRunWrapper ret = new CuneiformRunWrapper(
-              new YarnJobConfiguration(), wf);
+      CuneiformJobConfiguration ret = new CuneiformJobConfiguration(wf);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(ret).build();
     } catch (IOException |
@@ -102,7 +101,7 @@ public class CuneiformService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response runWorkFlow(CuneiformRunWrapper runData,
+  public Response runWorkFlow(CuneiformJobConfiguration runData,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     try {

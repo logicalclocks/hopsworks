@@ -10,25 +10,15 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
  * @author stig
  */
 @XmlRootElement
-public class CuneiformRunWrapper {
+public class CuneiformJobConfiguration extends YarnJobConfiguration{
 
-  private YarnJobConfiguration yarnConfig;
   private WorkflowDTO wf;
+  
+  public CuneiformJobConfiguration() {
+  }
 
-  public CuneiformRunWrapper(YarnJobConfiguration yjc, WorkflowDTO wf) {
-    this.yarnConfig = yjc;
+  public CuneiformJobConfiguration(WorkflowDTO wf) {
     this.wf = wf;
-  }
-
-  public CuneiformRunWrapper() {
-  }
-
-  public YarnJobConfiguration getYarnConfig() {
-    return yarnConfig;
-  }
-
-  public void setYarnConfig(YarnJobConfiguration yarnConfig) {
-    this.yarnConfig = yarnConfig;
   }
 
   public WorkflowDTO getWf() {
