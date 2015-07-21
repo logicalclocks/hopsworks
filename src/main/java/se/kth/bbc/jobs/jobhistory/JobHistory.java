@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs.jobhistory;
 
+import se.kth.bbc.jobs.yarn.YarnJobConfigurationConverter;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Collection;
@@ -7,6 +8,7 @@ import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -14,6 +16,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -24,6 +27,7 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.security.ua.model.User;
 
@@ -122,6 +126,12 @@ public class JobHistory implements Serializable {
   @Size(max = 30)
   @Column(name = "app_id")
   private String appId;
+  
+  @Lob
+  @Size(max = 65535)
+  @Column(name = "json_config")
+  @Convert(converter = YarnJobConfigurationConverter.class)
+  private YarnJobConfiguration jobConfig;
 
   @JoinColumn(name = "user",
           referencedColumnName = "EMAIL")
@@ -248,6 +258,14 @@ public class JobHistory implements Serializable {
 
   public void setAppId(String appId) {
     this.appId = appId;
+  }  
+
+  public YarnJobConfiguration getJobConfig() {
+    return jobConfig;
+  }
+
+  public void setJobConfig(YarnJobConfiguration jobConfig) {
+    this.jobConfig = jobConfig;
   }
 
   public Collection<JobOutputFile> getJobOutputFileCollection() {

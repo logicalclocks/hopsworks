@@ -1,6 +1,9 @@
 package se.kth.bbc.jobs.yarn;
 
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.jobs.jobhistory.JobType;
 
 /**
  * Contains user-setable configuration parameters for a Yarn job.
@@ -84,6 +87,32 @@ public class YarnJobConfiguration {
   public final boolean equals(Object o) {
     throw new UnsupportedOperationException(
             "YarnJobConfiguration objects should not be compared.");
+  }
+
+  /**
+   * Convert this instance into a JSON object.
+   * <p>
+   * @return
+   */
+  public String toJson() {
+    JsonObjectBuilder builder = getTypeLessJsonBuilder();
+    builder.add("type", JobType.YARN.name());
+    return builder.build().toString();
+  }
+
+  /**
+   * Return a JsonObjectBuilder object that incorporates all the basic fields of
+   * this class.
+   * <p>
+   * @return
+   */
+  protected JsonObjectBuilder getTypeLessJsonBuilder() {
+    JsonObjectBuilder builder = Json.createObjectBuilder();
+    builder.add("amQueue", amQueue);
+    builder.add("amMemory", amMemory);
+    builder.add("amVCores", amVCores);
+    builder.add("appName", appName);
+    return builder;
   }
 
 }

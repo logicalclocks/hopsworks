@@ -1,6 +1,8 @@
 package se.kth.bbc.jobs.spark;
 
+import javax.json.JsonObjectBuilder;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 
 /**
@@ -97,6 +99,25 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
    */
   public void setExecutorMemory(String executorMemory) {
     this.executorMemory = executorMemory;
+  }
+  
+  @Override
+  public String toJson(){
+    JsonObjectBuilder builder = getTypeLessJsonBuilder();
+    builder.add("type",JobType.SPARK.name());
+    return builder.build().toString();
+  }
+  
+  @Override
+  public JsonObjectBuilder getTypeLessJsonBuilder(){
+    JsonObjectBuilder builder = super.getTypeLessJsonBuilder();
+    builder.add("jarPath", jarPath);
+    builder.add("mainClass", mainClass);
+    builder.add("args", args);
+    builder.add("numberOfExecutors",numberOfExecutors);
+    builder.add("executorCores", executorCores);
+    builder.add("executorMemory", executorMemory);
+    return builder;
   }
 
 }
