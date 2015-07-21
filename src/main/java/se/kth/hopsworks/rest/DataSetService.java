@@ -35,6 +35,7 @@ import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
 import se.kth.hopsworks.controller.DataSetDTO;
+import se.kth.hopsworks.controller.FileTemplateDTO;
 import se.kth.hopsworks.controller.FolderNameValidator;
 import se.kth.meta.entity.Template;
 import se.kth.meta.exception.DatabaseException;
@@ -349,5 +350,44 @@ public class DataSetService {
     this.uploader.setPath(uploadPath);
 
     return this.uploader;
+  }
+
+  @POST
+  @Path("/attachTemplate")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response attachTemplate(FileTemplateDTO filetemplateData) throws
+          AppException {
+
+    if (filetemplateData == null || filetemplateData.getInodePath() == null
+            || filetemplateData.getInodePath().equals("")) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.TEMPLATE_INODEID_EMPTY);
+    }
+
+    String inodePath = filetemplateData.getInodePath();
+    int templateid = filetemplateData.getTemplateId();
+
+    Inode inode = inodes.getInodeAtPath(inodePath);
+    Template temp = template.findByTemplateId(templateid);
+    temp.getInodes().add(inode);
+
+    logger.log(Level.INFO, "ATTACHING TEMPLATE {0} TO INODE {0}",
+            new Object[]{templateid, inode.getId()});
+
+    try {
+      //persist the relationship
+      this.template.updateTemplatesInodesMxN(temp);
+    } catch (DatabaseException e) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              ResponseMessages.TEMPLATE_NOT_ATTACHED);
+    }
+
+    JsonResponse json = new JsonResponse();
+    json.setSuccessMessage("The template was attached to file "
+            + inode.getId());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
   }
 }
