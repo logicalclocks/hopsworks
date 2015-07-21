@@ -97,32 +97,6 @@ public class YarnJobConfiguration implements JsonReducable {
             "YarnJobConfiguration objects should not be compared.");
   }
 
-  /**
-   * Convert this instance into a JSON object.
-   * <p>
-   * @return
-   */
-  public String toJson() {
-    JsonObjectBuilder builder = getTypeLessJsonBuilder();
-    builder.add("type", JobType.YARN.name());
-    return builder.build().toString();
-  }
-
-  /**
-   * Return a JsonObjectBuilder object that incorporates all the basic fields of
-   * this class.
-   * <p>
-   * @return
-   */
-  protected JsonObjectBuilder getTypeLessJsonBuilder() {
-    JsonObjectBuilder builder = Json.createObjectBuilder();
-    builder.add("amQueue", amQueue);
-    builder.add("amMemory", amMemory);
-    builder.add("amVCores", amVCores);
-    builder.add("appName", appName);
-    return builder;
-  }
-
   @Override
   public DatabaseJsonObject getReducedJsonObject() {
     DatabaseJsonObject obj = new DatabaseJsonObject();
