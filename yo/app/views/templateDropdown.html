@@ -16,6 +16,8 @@
       </ui-select>
 
       <div class="modal-footer">
+        <button type="button" class="btn btn-default" 
+                ng-click="templateDropdownCtrl.skipThisStep();templateDropdownCtrl.getTemplate()">Skip</button>
         <button type="button" class="btn btn-default" ng-click="templateDropdownCtrl.close()">Close</button>
         <button type="button" class="btn btn-primary" ng-click="templateDropdownCtrl.getTemplate()">OK</button>
       </div>
