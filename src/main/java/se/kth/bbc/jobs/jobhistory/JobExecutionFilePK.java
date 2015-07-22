@@ -18,6 +18,7 @@ public class JobExecutionFilePK implements Serializable {
   @NotNull
   @Column(name = "job_id")
   private long jobId;
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,

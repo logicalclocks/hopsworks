@@ -50,13 +50,13 @@ public class JobInputFile implements Serializable {
   @Column(name = "path")
   private String path;
 
-  @JoinColumn(name = "job_id",
+  @JoinColumn(name = "execution_id",
           referencedColumnName = "id",
           insertable = false,
           updatable
           = false)
   @ManyToOne(optional = false)
-  private JobHistory jobHistory;
+  private Execution execution;
 
   public JobInputFile() {
   }
@@ -92,12 +92,12 @@ public class JobInputFile implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public JobHistory getJobHistory() {
-    return jobHistory;
+  public Execution getExecution() {
+    return execution;
   }
 
-  public void setJobHistory(JobHistory jobHistory) {
-    this.jobHistory = jobHistory;
+  public void setExecution(Execution execution) {
+    this.execution = execution;
   }
 
   @Override

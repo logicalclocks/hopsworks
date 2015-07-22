@@ -134,47 +134,57 @@ CREATE TABLE `userlogins` (
   FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `jobhistory` (
+CREATE TABLE `jobs` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(128) DEFAULT NULL,
-  `submission_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `creation_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `project_id` INT(11) NOT NULL,
+  `creator` VARCHAR(45) NOT NULL,
+  `type` VARCHAR(128) NOT NULL,
+  `json_config` TEXT DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`creator`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
+
+CREATE TABLE `executions` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `submission_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `user` VARCHAR(45) NOT NULL,
   `state` VARCHAR(128) NOT NULL,
   `execution_duration` BIGINT(20) DEFAULT NULL,
   `stdout_path` VARCHAR(255) DEFAULT NULL,
   `stderr_path` VARCHAR(255) DEFAULT NULL,
-  `type` VARCHAR(128) NOT NULL,
   `app_id` CHAR(30) DEFAULT NULL,
-  `json_config` TEXT DEFAULT NULL,
+  `job_id` INT(11) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE (`app_id`),
-  FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`job_id`) REFERENCES `jobs` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   FOREIGN KEY (`user`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `job_output_files` (
-  `job_id` INT(11) NOT NULL,
+  `execution_id` INT(11) NOT NULL,
   `path` VARCHAR(255) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`job_id`,`name`),
-  FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+  PRIMARY KEY (`execution_id`,`name`),
+  FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `job_input_files` (
-  `job_id` INT(11) NOT NULL,
+  `execution_id` INT(11) NOT NULL,
   `path` VARCHAR(255) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`job_id`,`name`),
-  FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+  PRIMARY KEY (`execution_id`,`name`),
+  FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `job_execution_files` (
   `job_id` INT(11) NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
   `path` VARCHAR(255) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`job_id`,`name`),
-  FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+  FOREIGN KEY (`job_id`) REFERENCES `jobs` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `consent` (

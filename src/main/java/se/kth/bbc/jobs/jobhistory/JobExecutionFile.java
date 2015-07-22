@@ -54,7 +54,7 @@ public class JobExecutionFile implements Serializable {
           updatable
           = false)
   @ManyToOne(optional = false)
-  private JobHistory jobHistory;
+  private Job job;
 
   public JobExecutionFile() {
   }
@@ -88,12 +88,12 @@ public class JobExecutionFile implements Serializable {
     this.path = path;
   }
 
-  public JobHistory getJobHistory() {
-    return jobHistory;
+  public Job getJob() {
+    return job;
   }
 
-  public void setJobHistory(JobHistory jobHistory) {
-    this.jobHistory = jobHistory;
+  public void setJob(Job jobHistory) {
+    this.job = jobHistory;
   }
 
   @Override
