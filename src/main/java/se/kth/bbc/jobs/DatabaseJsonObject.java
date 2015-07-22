@@ -3,10 +3,12 @@ package se.kth.bbc.jobs;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
 
 /**
  * Represents a mutable JSON object with only String values.
@@ -24,6 +26,34 @@ public class DatabaseJsonObject {
   public DatabaseJsonObject() {
     internalStrings = new HashMap<>();
     internalJsons = new HashMap<>();
+  }
+
+  /**
+   * Convert a JsonObject into a DatabaseJsonObject. Note that a
+   * DatabaseJsonObject cannot contain a Json array or Null. Other types are converted.
+   * <p>
+   * @param object
+   * @throws IllegalArgumentException
+   */
+  public DatabaseJsonObject(JsonObject object) throws IllegalArgumentException {
+    this();
+    for (Entry<String, JsonValue> k : object.entrySet()) {
+      String key = k.getKey();
+      JsonValue val = k.getValue();
+      switch(val.getValueType()){
+        case FALSE:
+        case NUMBER:
+        case STRING:
+        case TRUE:
+          internalStrings.put(key, val.toString());
+          break;
+        case OBJECT:
+          internalJsons.put(key,new DatabaseJsonObject((JsonObject)val));
+          break;
+        default:
+          throw new IllegalArgumentException("DatabaseJsonObject can only convert JsonObject, boolean, string and number.");
+      }
+    }
   }
 
   /**
