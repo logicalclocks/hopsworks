@@ -69,9 +69,6 @@ public final class CuneiformJob extends YarnJob {
 
   @Override
   protected void runJobInternal() {
-    //Update job history object first
-    super.updateArgs();
-
     //Can only be called if this job has a valid id.
     long startTime = System.currentTimeMillis();
     //Try to start the application master.
@@ -93,7 +90,7 @@ public final class CuneiformJob extends YarnJob {
     //Update execution time and final state
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    updateHistory(null, getFinalState(), duration, null, null, null, null, null,
+    updateHistory(null, getFinalState(), duration, null, null, null, null,
             null);
   }
 
@@ -130,7 +127,7 @@ public final class CuneiformJob extends YarnJob {
       getFileOperations().renameInHdfs(stdOutPath, getStdOutFinalDestination());
       stdErrPath = stdErrPath.replaceAll(APPID_REGEX, getHistory().getAppId());
       getFileOperations().renameInHdfs(stdErrPath, getStdErrFinalDestination());
-      updateHistory(null, null, -1, null, getStdOutFinalDestination(),
+      updateHistory(null, null, -1, getStdOutFinalDestination(),
               getStdErrFinalDestination(), null, null, null);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Error while copying logs for job "

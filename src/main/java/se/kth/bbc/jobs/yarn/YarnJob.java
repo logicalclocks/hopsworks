@@ -53,10 +53,6 @@ public class YarnJob extends HopsJob {
     return this.stdErrFinalDestination;
   }
 
-  protected final void updateArgs() {
-    super.updateArgs(runner.getAmArgs());
-  }
-
   protected final boolean appFinishedSuccessfully() {
     return finalState == JobState.FINISHED;
   }
@@ -81,8 +77,8 @@ public class YarnJob extends HopsJob {
       updateState(JobState.STARTING_APP_MASTER);
       monitor = runner.startAppMaster();
       started = true;
-      updateHistory(null, null, -1, null, null, null,
-              monitor.getApplicationId().toString(), null, null);
+      updateHistory(null, null, -1, null, null, monitor.getApplicationId().
+              toString(), null, null);
       return true;
     } catch (YarnException | IOException e) {
       logger.log(Level.SEVERE,
@@ -183,7 +179,7 @@ public class YarnJob extends HopsJob {
           fops.renameInHdfs(runner.getStdErrPath(), stdErrFinalDestination);
         }
       }
-      updateHistory(null, null, -1, null, stdOutFinalDestination,
+      updateHistory(null, null, -1, stdOutFinalDestination,
               stdErrFinalDestination, null, null, null);
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Exception while trying to write logs for job "
@@ -198,9 +194,6 @@ public class YarnJob extends HopsJob {
 
   @Override
   protected void runJobInternal() {
-    //Update job history object
-    updateArgs();
-
     //Keep track of time and start job
     long startTime = System.currentTimeMillis();
     // Try to start the AM
@@ -212,7 +205,7 @@ public class YarnJob extends HopsJob {
     copyLogs();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    updateHistory(null, getFinalState(), duration, null, null, null, null, null,
+    updateHistory(null, getFinalState(), duration, null, null, null, null,
             null);
   }
 }

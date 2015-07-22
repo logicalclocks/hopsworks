@@ -142,7 +142,6 @@ CREATE TABLE `jobhistory` (
   `user` VARCHAR(45) NOT NULL,
   `state` VARCHAR(128) NOT NULL,
   `execution_duration` BIGINT(20) DEFAULT NULL,
-  `args` VARCHAR(255) DEFAULT NULL,
   `stdout_path` VARCHAR(255) DEFAULT NULL,
   `stderr_path` VARCHAR(255) DEFAULT NULL,
   `type` VARCHAR(128) NOT NULL,

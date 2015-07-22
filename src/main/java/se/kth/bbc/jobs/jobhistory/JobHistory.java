@@ -105,10 +105,6 @@ public class JobHistory implements Serializable {
   private BigInteger executionDuration;
 
   @Size(max = 255)
-  @Column(name = "args")
-  private String args;
-
-  @Size(max = 255)
   @Column(name = "stdout_path")
   private String stdoutPath;
 
@@ -164,7 +160,6 @@ public class JobHistory implements Serializable {
     this.id = jh.id;
     this.name = jh.name;
     this.executionDuration = jh.executionDuration;
-    this.args = jh.args;
     this.stderrPath = jh.stderrPath;
     this.stdoutPath = jh.stdoutPath;
     this.type = jh.type;
@@ -214,14 +209,6 @@ public class JobHistory implements Serializable {
 
   public void setExecutionDuration(BigInteger executionDuration) {
     this.executionDuration = executionDuration;
-  }
-
-  public String getArgs() {
-    return args;
-  }
-
-  public void setArgs(String args) {
-    this.args = args;
   }
 
   public String getStdoutPath() {

@@ -31,9 +31,6 @@ public final class SparkJob extends YarnJob {
 
   @Override
   protected void runJobInternal() {
-    //Update job history object
-    super.updateArgs();
-
     //Keep track of time and start job
     long startTime = System.currentTimeMillis();
     //Try to start the AM
@@ -50,7 +47,7 @@ public final class SparkJob extends YarnJob {
     super.copyLogs();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    updateHistory(null, getFinalState(), duration, null, null, null, null, null,
+    updateHistory(null, getFinalState(), duration, null, null, null, null,
             null);
   }
 

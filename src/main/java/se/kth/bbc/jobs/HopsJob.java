@@ -56,16 +56,12 @@ public abstract class HopsJob {
     history = jobHistoryFacade.update(history, newState);
   }
 
-  protected final void updateArgs(String args) {
-    history = jobHistoryFacade.updateArgs(history, args);
-  }
-
   protected final void updateHistory(String name, JobState state,
-          long executionDuration, String args, String stdoutPath,
+          long executionDuration, String stdoutPath,
           String stderrPath, String appId, Collection<JobInputFile> inputFiles,
           Collection<JobOutputFile> outputFiles) {
     history = jobHistoryFacade.update(history, name, state,
-            executionDuration, args, stdoutPath, stderrPath, appId, inputFiles,
+            executionDuration, stdoutPath, stderrPath, appId, inputFiles,
             outputFiles);
   }
 
@@ -105,7 +101,7 @@ public abstract class HopsJob {
           Project project,
           JobType jobType) {
     history = jobHistoryFacade.create(config.getAppName(), userEmail, project,
-            jobType, null, JobState.INITIALIZING, null, null, null, null, config);
+            jobType, JobState.INITIALIZING, null, null, null, null, config);
     initialized = true;
     return history;
   }

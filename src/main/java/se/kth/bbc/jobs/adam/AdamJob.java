@@ -39,9 +39,6 @@ public class AdamJob extends YarnJob {
 
   @Override
   protected void runJobInternal() {
-    //Update job history object
-    super.updateArgs();
-
     //Keep track of time and start job
     long startTime = System.currentTimeMillis();
     //Try to start the AM
@@ -59,7 +56,7 @@ public class AdamJob extends YarnJob {
     makeOutputAvailable();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    updateHistory(null, getFinalState(), duration, null, null, null, null, null,
+    updateHistory(null, getFinalState(), duration, null, null, null, null,
             null);
   }
 
