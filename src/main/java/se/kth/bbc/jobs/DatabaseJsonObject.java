@@ -8,6 +8,7 @@ import java.util.Set;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.json.JsonString;
 import javax.json.JsonValue;
 
 /**
@@ -30,7 +31,8 @@ public class DatabaseJsonObject {
 
   /**
    * Convert a JsonObject into a DatabaseJsonObject. Note that a
-   * DatabaseJsonObject cannot contain a Json array or Null. Other types are converted.
+   * DatabaseJsonObject cannot contain a Json array or Null. Other types are
+   * converted.
    * <p>
    * @param object
    * @throws IllegalArgumentException
@@ -40,18 +42,21 @@ public class DatabaseJsonObject {
     for (Entry<String, JsonValue> k : object.entrySet()) {
       String key = k.getKey();
       JsonValue val = k.getValue();
-      switch(val.getValueType()){
+      switch (val.getValueType()) {
         case FALSE:
         case NUMBER:
-        case STRING:
         case TRUE:
           internalStrings.put(key, val.toString());
           break;
+        case STRING:
+          internalStrings.put(key, ((JsonString)val).getString());
+          break;
         case OBJECT:
-          internalJsons.put(key,new DatabaseJsonObject((JsonObject)val));
+          internalJsons.put(key, new DatabaseJsonObject((JsonObject) val));
           break;
         default:
-          throw new IllegalArgumentException("DatabaseJsonObject can only convert JsonObject, boolean, string and number.");
+          throw new IllegalArgumentException(
+                  "DatabaseJsonObject can only convert JsonObject, boolean, string and number.");
       }
     }
   }
@@ -89,7 +94,34 @@ public class DatabaseJsonObject {
    */
   public String getString(String key) throws IllegalArgumentException {
     try {
-      return internalStrings.get(key);
+      String ret = internalStrings.get(key);
+      if (ret == null) {
+        throw new IllegalArgumentException("No such key.");
+      }
+      return ret;
+    } catch (Exception e) {
+      throw new IllegalArgumentException("Cannot find String for key " + key
+              + ".", e);
+    }
+  }
+
+  /**
+   * Get the string for the given key, or the given default if this key is not
+   * present.
+   * <p>
+   * @param key
+   * @param defaultvalue
+   * @return
+   * @throws IllegalArgumentException If the given key does not map to a String.
+   */
+  public String getString(String key, String defaultvalue) throws
+          IllegalArgumentException {
+    try {
+      String ret = internalStrings.get(key);
+      if (ret == null) {
+        return defaultvalue;
+      }
+      return ret;
     } catch (Exception e) {
       throw new IllegalArgumentException("Cannot find String for key " + key
               + ".", e);

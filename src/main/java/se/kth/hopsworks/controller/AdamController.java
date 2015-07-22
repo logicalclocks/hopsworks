@@ -88,7 +88,7 @@ public class AdamController {
 
     AdamJob job = new AdamJob(history, r, fops, config.getSelectedCommand().
             getArguments(), config.getSelectedCommand().getOptions());
-    JobHistory jh = job.requestJobId(config.getAppName(), user, project,
+    JobHistory jh = job.requestJobId(config, user, project,
             JobType.ADAM);
     if (jh != null) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(project.getName())

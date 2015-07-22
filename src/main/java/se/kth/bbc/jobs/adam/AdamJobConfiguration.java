@@ -31,6 +31,9 @@ public class AdamJobConfiguration extends SparkJobConfiguration {
 
   @Override
   public DatabaseJsonObject getReducedJsonObject() {
+    if(selectedCommand == null){
+      throw new NullPointerException("Null command in AdamJobConfiguration.");
+    }
     DatabaseJsonObject obj = super.getReducedJsonObject();
     obj.set(KEY_TYPE, JobType.ADAM.name());
     obj.set(KEY_COMMAND, selectedCommand.getReducedJsonObject());

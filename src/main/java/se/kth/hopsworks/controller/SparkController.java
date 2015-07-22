@@ -93,7 +93,7 @@ public class SparkController {
 
     SparkJob job = new SparkJob(history, r, fops);
     Project project = projects.find(projectId);
-    JobHistory jh = job.requestJobId(jobconfig.getAppName(), user, project,
+    JobHistory jh = job.requestJobId(jobconfig, user, project,
             JobType.SPARK);
     if (jh != null) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(project.getName())

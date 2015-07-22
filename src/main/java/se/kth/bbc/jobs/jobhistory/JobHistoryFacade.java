@@ -13,6 +13,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
@@ -95,7 +96,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
           JobType type,
           String args, JobState state, String stdOutPath, String stdErrPath,
           Collection<JobExecutionFile> execFiles,
-          Collection<JobInputFile> inputFiles) {
+          Collection<JobInputFile> inputFiles, YarnJobConfiguration config) {
     User user = users.findByEmail(userEmail);
     Date submission = new Date(); //now
     if (state == null) {
@@ -112,6 +113,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     jh.setStderrPath(stdErrPath);
     jh.setJobExecutionFileCollection(execFiles);
     jh.setJobInputFileCollection(inputFiles);
+    jh.setJobConfig(config);
 
     em.persist(jh);
     em.flush(); //To get the id.

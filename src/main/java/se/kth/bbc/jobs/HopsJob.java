@@ -7,6 +7,7 @@ import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 import se.kth.bbc.project.Project;
 
 /**
@@ -93,17 +94,18 @@ public abstract class HopsJob {
    * the created JobHistory object to allow tracking.
    * This method must be called before attempting to run the actual job.
    * <p>
-   * @param jobname The (optional) name for the job.
+   * @param config The configuration object with which this job is run.
    * @param userEmail The email of the user running the job.
    * @param project The project under which the job is being run.
    * @param jobType The type of job.
    * @return Unique id of the JobHistory object associated with this job.
    */
-  public final JobHistory requestJobId(String jobname, String userEmail,
+  public final JobHistory requestJobId(YarnJobConfiguration config,
+          String userEmail,
           Project project,
           JobType jobType) {
-    history = jobHistoryFacade.create(jobname, userEmail, project, jobType,
-            null, JobState.INITIALIZING, null, null, null, null);
+    history = jobHistoryFacade.create(config.getAppName(), userEmail, project,
+            jobType, null, JobState.INITIALIZING, null, null, null, null, config);
     initialized = true;
     return history;
   }

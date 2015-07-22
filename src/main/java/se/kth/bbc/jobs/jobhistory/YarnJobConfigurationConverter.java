@@ -1,6 +1,6 @@
-package se.kth.bbc.jobs.yarn;
+package se.kth.bbc.jobs.jobhistory;
 
-import com.google.gson.Gson;
+import com.google.common.base.Strings;
 import java.io.StringReader;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -10,8 +10,8 @@ import javax.persistence.Converter;
 import se.kth.bbc.jobs.DatabaseJsonObject;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
-import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
+import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 
 /**
  *
@@ -28,6 +28,9 @@ public class YarnJobConfigurationConverter implements
 
   @Override
   public YarnJobConfiguration convertToEntityAttribute(String config) {
+    if(Strings.isNullOrEmpty(config)){
+      return null;
+    }
     try (JsonReader reader = Json.createReader(new StringReader(config))) {
       JsonObject obj = reader.readObject();
       DatabaseJsonObject json = new DatabaseJsonObject(obj);

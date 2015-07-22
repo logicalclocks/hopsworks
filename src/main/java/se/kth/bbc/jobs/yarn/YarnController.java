@@ -110,7 +110,9 @@ public class YarnController extends JobMB {
 
     //Set up job
     YarnJob job = new YarnJob(history, runner, fops);
-    setSelectedJob(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
+    YarnJobConfiguration config = new YarnJobConfiguration();
+    config.setAppName(jobName);
+    setSelectedJob(job.requestJobId(config, sessionState.getLoggedInUsername(),
             sessionState.getActiveProject(), JobType.YARN));
     if (isJobSelected()) {
       //Set log paths

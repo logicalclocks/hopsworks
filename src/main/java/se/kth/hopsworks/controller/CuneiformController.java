@@ -158,7 +158,7 @@ public class CuneiformController {
     Project project = projects.find(projectId);
 
     //TODO: include input and execution files
-    JobHistory jh = job.requestJobId(runData.getAppName(), user,
+    JobHistory jh = job.requestJobId(runData, user,
             project, JobType.CUNEIFORM);
     if (jh != null) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(project.getName())

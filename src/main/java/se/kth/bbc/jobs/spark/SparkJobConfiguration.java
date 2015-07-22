@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs.spark;
 
+import com.google.common.base.Strings;
 import javax.json.JsonObjectBuilder;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.DatabaseJsonObject;
@@ -13,7 +14,7 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
  * @author stig
  */
 @XmlRootElement
-public class SparkJobConfiguration extends YarnJobConfiguration{
+public class SparkJobConfiguration extends YarnJobConfiguration {
 
   private String jarPath;
   private String mainClass;
@@ -22,7 +23,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration{
   private int numberOfExecutors = 1;
   private int executorCores = 1;
   private String executorMemory = "1g";
-  
+
   protected static final String KEY_JARPATH = "JARPATH";
   protected static final String KEY_MAINCLASS = "MAINCLASS";
   protected static final String KEY_ARGS = "ARGS";
@@ -74,11 +75,18 @@ public class SparkJobConfiguration extends YarnJobConfiguration{
   }
 
   /**
-   * Set the number of executors to be requested for this job.
+   * Set the number of executors to be requested for this job. This should be
+   * greater than or equal to 1.
    * <p>
    * @param numberOfExecutors
+   * @throws IllegalArgumentException If the argument is smaller than 1.
    */
-  public void setNumberOfExecutors(int numberOfExecutors) {
+  public void setNumberOfExecutors(int numberOfExecutors) throws
+          IllegalArgumentException {
+    if (numberOfExecutors < 1) {
+      throw new IllegalArgumentException(
+              "Number of executors has to be greater than or equal to 1.");
+    }
     this.numberOfExecutors = numberOfExecutors;
   }
 
@@ -90,8 +98,14 @@ public class SparkJobConfiguration extends YarnJobConfiguration{
    * Set the number of cores to be requested for each executor.
    * <p>
    * @param executorCores
+   * @throws IllegalArgumentException If the number of cores is smaller than 1.
    */
-  public void setExecutorCores(int executorCores) {
+  public void setExecutorCores(int executorCores) throws
+          IllegalArgumentException {
+    if (executorCores < 1) {
+      throw new IllegalArgumentException(
+              "Number of executor cores has to be greater than or equal to 1.");
+    }
     this.executorCores = executorCores;
   }
 
@@ -104,20 +118,34 @@ public class SparkJobConfiguration extends YarnJobConfiguration{
    * the form of a number followed by a 'm' or 'g' signifying the metric.
    * <p>
    * @param executorMemory
+   * @throws IllegalArgumentException If the given string is null or empty.
    */
-  public void setExecutorMemory(String executorMemory) {
+  public void setExecutorMemory(String executorMemory) throws
+          IllegalArgumentException {
+    if (Strings.isNullOrEmpty(executorMemory)) {
+      throw new IllegalArgumentException(
+              "Executor memory string cannot be empty.");
+    }
     this.executorMemory = executorMemory;
   }
-  
+
   @Override
   public DatabaseJsonObject getReducedJsonObject() {
     DatabaseJsonObject obj = super.getReducedJsonObject();
-    obj.set(KEY_ARGS, args);
-    obj.set(KEY_EXECCORES, ""+executorCores);
+    //First: fields that are possibly null or empty:
+    if(!Strings.isNullOrEmpty(args)){
+      obj.set(KEY_ARGS, args);
+    }
+    if(!Strings.isNullOrEmpty(mainClass)){
+      obj.set(KEY_MAINCLASS, mainClass);
+    }
+    if(!Strings.isNullOrEmpty(mainClass)){
+      obj.set(KEY_JARPATH, jarPath);
+    }
+    //Then: fields that can never be null or emtpy.
+    obj.set(KEY_EXECCORES, "" + executorCores);
     obj.set(KEY_EXECMEM, executorMemory);
-    obj.set(KEY_JARPATH, jarPath);
-    obj.set(KEY_MAINCLASS, mainClass);
-    obj.set(KEY_NUMEXECS, ""+numberOfExecutors);    
+    obj.set(KEY_NUMEXECS, "" + numberOfExecutors);
     obj.set(KEY_TYPE, JobType.SPARK.name());
     return obj;
   }
@@ -127,19 +155,21 @@ public class SparkJobConfiguration extends YarnJobConfiguration{
           IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
-    String jsonArgs,jsonExeccors, jsonExecmem, jsonJarpath, jsonMainclass, jsonNumexecs;
+    String jsonArgs, jsonExeccors, jsonExecmem, jsonJarpath, jsonMainclass, jsonNumexecs;
     try {
       String jsonType = json.getString(KEY_TYPE);
       type = JobType.valueOf(jsonType);
       if (type != JobType.SPARK) {
         throw new IllegalArgumentException("JobType must be SPARK.");
       }
-      jsonArgs = json.getString(KEY_ARGS);
+      //First: fields that can be null or empty
+      jsonArgs = json.getString(KEY_ARGS,null);
+      jsonJarpath = json.getString(KEY_JARPATH,null);
+      jsonMainclass = json.getString(KEY_MAINCLASS,null);
+      //Then: fields that cannot be null or emtpy.
       jsonExeccors = json.getString(KEY_EXECCORES);
       jsonExecmem = json.getString(KEY_EXECMEM);
-      jsonJarpath = json.getString(KEY_JARPATH);
-      jsonMainclass = json.getString(KEY_MAINCLASS);
-      jsonNumexecs = json.getString(KEY_NUMEXECS);      
+      jsonNumexecs = json.getString(KEY_NUMEXECS);
     } catch (Exception e) {
       throw new IllegalArgumentException(
               "Cannot convert object into SparkJobConfiguration.", e);

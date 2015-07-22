@@ -110,8 +110,10 @@ public class AdamCommandDTO implements JsonReducable {
     DatabaseJsonObject opts = new DatabaseJsonObject();
     for (AdamOptionDTO opt : options) {
       //If a flag: only set if set
-      if (opt.isFlag() && opt.getSet()) {
-        opts.set(opt.getName(), "true");
+      if (opt.isFlag()) {
+        if (opt.getSet()) {
+          opts.set(opt.getName(), "true");
+        }
       } //If not a flag: only set if not empty
       else if (!Strings.isNullOrEmpty(opt.getValue())) {
         opts.set(opt.getName(), opt.getValue());
@@ -122,7 +124,8 @@ public class AdamCommandDTO implements JsonReducable {
   }
 
   @Override
-  public void updateFromJson(DatabaseJsonObject json) throws IllegalArgumentException {
+  public void updateFromJson(DatabaseJsonObject json) throws
+          IllegalArgumentException {
     String jsonCommand;
     AdamCommand ac;
     DatabaseJsonObject jsonArgs, jsonOpts;
@@ -131,26 +134,28 @@ public class AdamCommandDTO implements JsonReducable {
       ac = AdamCommand.getFromCommand(jsonCommand);
       jsonArgs = json.getJsonObject("arguments");
       jsonOpts = json.getJsonObject("options");
-      
+
       //Count the number of arguments found in the JSON
       int cnt = 0;
-      for(AdamArgument aa : ac.getArguments()){
-        if(jsonArgs.containsKey(aa.getName())){
+      for (AdamArgument aa : ac.getArguments()) {
+        if (jsonArgs.containsKey(aa.getName())) {
           cnt++;
         }
       }
-      if(cnt != jsonArgs.size()){
-        throw new IllegalArgumentException("Some of the arguments in the JSON object are not valid for the given command.");
+      if (cnt != jsonArgs.size()) {
+        throw new IllegalArgumentException(
+                "Some of the arguments in the JSON object are not valid for the given command.");
       }
       //Count the number of options found in the JSON
       cnt = 0;
-      for(AdamOption ao : ac.getOptions()){
-        if(jsonOpts.containsKey(ao.getName())){
+      for (AdamOption ao : ac.getOptions()) {
+        if (jsonOpts.containsKey(ao.getName())) {
           cnt++;
         }
       }
-      if(cnt != jsonOpts.size()){
-        throw new IllegalArgumentException("Some of the options in the JSON object are not valid for the given command.");
+      if (cnt != jsonOpts.size()) {
+        throw new IllegalArgumentException(
+                "Some of the options in the JSON object are not valid for the given command.");
       }
     } catch (Exception e) {
       throw new IllegalArgumentException(

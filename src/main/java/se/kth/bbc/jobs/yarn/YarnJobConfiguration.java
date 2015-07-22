@@ -1,7 +1,6 @@
 package se.kth.bbc.jobs.yarn;
 
-import javax.json.Json;
-import javax.json.JsonObjectBuilder;
+import com.google.common.base.Strings;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.DatabaseJsonObject;
 import se.kth.bbc.jobs.JsonReducable;
@@ -22,7 +21,7 @@ public class YarnJobConfiguration implements JsonReducable {
   private int amVCores = 1;
   // Application name
   private String appName = "";
-  
+
   protected final static String KEY_TYPE = "type";
   protected final static String KEY_QUEUE = "QUEUE";
   protected final static String KEY_AMMEM = "AMMEM";
@@ -100,9 +99,13 @@ public class YarnJobConfiguration implements JsonReducable {
   @Override
   public DatabaseJsonObject getReducedJsonObject() {
     DatabaseJsonObject obj = new DatabaseJsonObject();
-    obj.set(KEY_AMCORS, ""+amVCores);
-    obj.set(KEY_AMMEM, ""+amMemory);
-    obj.set(KEY_APPNAME, appName);
+    //First: fields that can be null or empty:
+    if (!Strings.isNullOrEmpty(appName)) {
+      obj.set(KEY_APPNAME, appName);
+    }
+    //Then: fields that cannot be null or emtpy:
+    obj.set(KEY_AMCORS, "" + amVCores);
+    obj.set(KEY_AMMEM, "" + amMemory);
     obj.set(KEY_QUEUE, amQueue);
     obj.set(KEY_TYPE, JobType.YARN.name());
     return obj;
@@ -120,10 +123,12 @@ public class YarnJobConfiguration implements JsonReducable {
       if (type != JobType.YARN) {
         throw new IllegalArgumentException("JobType must be YARN.");
       }
-      jsonCors = json.getString(KEY_AMCORS);      
-      jsonMem = json.getString(KEY_AMMEM);      
-      jsonName = json.getString(KEY_APPNAME);      
-      jsonQueue = json.getString(KEY_QUEUE);      
+      //First: fields that can be null or empty:
+      jsonName = json.getString(KEY_APPNAME, null);
+      //Then: fields that cannot be null or empty
+      jsonCors = json.getString(KEY_AMCORS);
+      jsonMem = json.getString(KEY_AMMEM);
+      jsonQueue = json.getString(KEY_QUEUE);
     } catch (Exception e) {
       throw new IllegalArgumentException(
               "Cannot convert object into YarnJobConfiguration.", e);

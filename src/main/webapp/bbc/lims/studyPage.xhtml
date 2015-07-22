@@ -69,11 +69,6 @@
                   </ui:insert>
                 </p:tab>
                 <!-- TODO: figure out how to do this with a loop?-->
-                <p:tab id="cuneiform" title="Cuneiform" rendered="#{projectManagedBean.shouldDrawTab('CUNEIFORM') and projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
-                  <ui:insert name="workflowsTab">
-                    <ui:include src="/bbc/lims/projectTabs/cuneiformTab.xhtml"/>
-                  </ui:insert>
-                </p:tab>
                 <p:tab id="yarn" title="Yarn" rendered="#{projectManagedBean.shouldDrawTab('YARN') and projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
                   <ui:insert name="yarn">
                     <ui:include src="/bbc/lims/projectTabs/yarnTab.xhtml"/>

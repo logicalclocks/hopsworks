@@ -35,6 +35,9 @@ public class CuneiformJobConfiguration extends YarnJobConfiguration{
 
   @Override
   public DatabaseJsonObject getReducedJsonObject() {
+    if(wf == null){
+      throw new NullPointerException("Null workflowDTO in CuneiformJobConfiguration.");
+    }
     DatabaseJsonObject obj = super.getReducedJsonObject();
     obj.set(KEY_TYPE, JobType.CUNEIFORM.name());
     obj.set(KEY_WORKFLOW, wf.getReducedJsonObject());
@@ -60,6 +63,7 @@ public class CuneiformJobConfiguration extends YarnJobConfiguration{
               "Cannot convert object into CuneiformJobConfiguration.", e);
     }
     //Second: allow all superclasses to check validity.
+    json.set(KEY_TYPE, JobType.YARN.name());
     super.updateFromJson(json);
     //Third: we're now sure everything is valid: actually update the state
     this.wf = workflow;
