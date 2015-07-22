@@ -9,7 +9,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.jobs.yarn.YarnRunner;

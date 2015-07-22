@@ -177,11 +177,11 @@ public class Job implements Serializable {
     this.type = type;
   }
 
-  public YarnJobConfiguration getJsonConfig() {
+  public YarnJobConfiguration getJobConfig() {
     return jobConfig;
   }
 
-  public void setJsonConfig(YarnJobConfiguration config) {
+  public void setJobConfig(YarnJobConfiguration config) {
     this.jobConfig = config;
   }
 

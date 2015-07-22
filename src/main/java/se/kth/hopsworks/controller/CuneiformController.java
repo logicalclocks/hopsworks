@@ -17,14 +17,16 @@ import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.cuneiform.CuneiformJob;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
-import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
-import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.jobhistory.Job;
+import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  * Interaction point between frontend and backend. Upload, inspect Cuneiform
@@ -42,7 +44,9 @@ public class CuneiformController {
   @EJB
   private FileOperations fops;
   @EJB
-  private JobHistoryFacade history;
+  private ExecutionFacade executionFacade;
+  @EJB
+  private JobOutputFileFacade outputFacade;
   @EJB
   private ProjectFacade projects;
   @EJB
@@ -85,19 +89,36 @@ public class CuneiformController {
 
   /**
    * Start the workflow *wf* with the given name, as the user with given
-   * username in capacity of member of given project.
+   * username.
    * <p>
-   * @param runData
+   * @param job
    * @param user
-   * @param projectId
-   * @return The job history object for the started job.
+   * @return The execution object for the started execution.
    * @throws IOException
+   * @throws NullPointerException If the user or job are null.
+   * @throws IllegalArgumentException If the job does not represent a Cuneiform
+   * Job.
    */
-  public JobHistory startWorkflow(CuneiformJobConfiguration runData, String user,
-          Integer projectId) throws IOException {
-    WorkflowDTO wf = runData.getWf();
-    if (Strings.isNullOrEmpty(runData.getAppName())) {
-      runData.setAppName("Untitled Cuneiform job");
+  public Execution startWorkflow(Job job, Users user) throws IOException,
+          IllegalArgumentException, NullPointerException {
+    //First: some parameter checking
+    if (job == null) {
+      throw new NullPointerException("Cannot execute a null job.");
+    }
+    if (user == null) {
+      throw new NullPointerException("Cannot execute a job as a null user.");
+    }
+    if (!(job.getJobConfig() instanceof CuneiformJobConfiguration)) {
+      throw new IllegalArgumentException(
+              "The given job does not contain a Cuneiform job configuration.");
+    }
+
+    //Then: go about starting the job
+    CuneiformJobConfiguration config = (CuneiformJobConfiguration) job.
+            getJobConfig();
+    WorkflowDTO wf = config.getWf();
+    if (Strings.isNullOrEmpty(config.getAppName())) {
+      config.setAppName("Untitled Cuneiform job");
     }
     // Set the job name if necessary.
     String wfLocation;
@@ -137,7 +158,7 @@ public class CuneiformController {
     b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");
 
     //Set Yarn configuration
-    b.setConfig(runData);
+    b.setConfig(config);
     YarnRunner r;
 
     try {
@@ -150,16 +171,16 @@ public class CuneiformController {
       throw new IOException("Unable to create temp directory for AM logs.", ex);
     }
 
-    CuneiformJob job = new CuneiformJob(history, fops, r);
-    job.setStdOutPath("/hiway/" + CuneiformJob.APPID_PLACEHOLDER + "/"
+    CuneiformJob cfjob
+            = new CuneiformJob(executionFacade, outputFacade, fops, r);
+    cfjob.setStdOutPath("/hiway/" + CuneiformJob.APPID_PLACEHOLDER + "/"
             + OUT_LOGS);
-    job.setStdErrPath("/hiway/" + CuneiformJob.APPID_PLACEHOLDER + "/"
+    cfjob.setStdErrPath("/hiway/" + CuneiformJob.APPID_PLACEHOLDER + "/"
             + ERR_LOGS);
-    Project project = projects.find(projectId);
+    Project project = job.getProject();
 
     //TODO: include input and execution files
-    JobHistory jh = job.requestJobId(runData, user,
-            project, JobType.CUNEIFORM);
+    Execution jh = cfjob.requestJobId(job, user);
     if (jh != null) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(project.getName())
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jh.getId()
@@ -169,16 +190,16 @@ public class CuneiformController {
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jh.getId()
               + File.separator
               + "stderr.log";
-      job.setStdOutFinalDestination(stdOutFinalDestination);
-      job.setStdErrFinalDestination(stdErrFinalDestination);
-      job.setSummaryPath(resultName);
-      submitter.startExecution(job);
+      cfjob.setStdOutFinalDestination(stdOutFinalDestination);
+      cfjob.setStdErrFinalDestination(stdErrFinalDestination);
+      cfjob.setSummaryPath(resultName);
+      submitter.startExecution(cfjob);
     } else {
       logger.log(Level.SEVERE,
               "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
-    activities.persistActivity(ActivityFacade.RAN_JOB, project, user);
+    activities.persistActivity(ActivityFacade.RAN_JOB, project, user.asUser());
     return jh;
   }
 

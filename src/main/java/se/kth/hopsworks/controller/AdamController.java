@@ -15,15 +15,16 @@ import se.kth.bbc.jobs.adam.AdamArgumentDTO;
 import se.kth.bbc.jobs.adam.AdamJob;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.adam.AdamOptionDTO;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
-import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
-import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.jobhistory.Job;
+import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.Project;
-import se.kth.bbc.project.ProjectFacade;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  * Acts as the interaction point between the Adam frontend and backend.
@@ -39,27 +40,45 @@ public class AdamController {
   @EJB
   private FileOperations fops;
   @EJB
-  private JobHistoryFacade history;
+  private ExecutionFacade executionFacade;
   @EJB
-  private ProjectFacade projects;
+  private JobOutputFileFacade outputFacade;
   @EJB
   private AsynchronousJobExecutor submitter;
   @EJB
   private ActivityFacade activityFacade;
 
-  public JobHistory startJob(AdamJobConfiguration config, String user,
-          Integer projectId) throws IllegalStateException,
-          IllegalArgumentException,
-          IOException {
-    //Check if all the jars are available
-    if (!areJarsAvailable()) {
+  /**
+   * Start an execution of the given job, ordered by the given User.
+   * <p>
+   * @param job
+   * @param user
+   * @return
+   * @throws IllegalStateException If Adam is not set up properly.
+   * @throws IllegalArgumentException If the Job is not set up properly.
+   * @throws IOException If starting the job fails.
+   * @throws NullPointerException If job or user is null.
+   */
+  public Execution startJob(Job job, Users user) throws IllegalStateException,
+          IllegalArgumentException, IOException, NullPointerException {
+    //First: do some parameter checking.
+    if (job == null) {
+      throw new NullPointerException("Cannot run a null job.");
+    } else if (user == null) {
+      throw new NullPointerException("Cannot run a job as a null user.");
+    } else if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {
+      throw new IllegalArgumentException(
+              "The given job does not represent an Adam job configuration.");
+    } else if (!areJarsAvailable()) {
+      //Check if all the jars are available
       throw new IllegalStateException(
               "Some ADAM jars are not in HDFS and could not be copied over.");
     }
-    //First: check if all required arguments have been filled in
+    //Get to starting the job
+    AdamJobConfiguration config = (AdamJobConfiguration) job.getJobConfig();
     checkIfRequiredPresent(config); //thows an IllegalArgumentException if not ok.
 
-    Project project = projects.find(projectId);
+    Project project = job.getProject();
     //Then: submit ADAM job
     if (config.getAppName() == null || config.getAppName().isEmpty()) {
       config.setAppName("Untitled ADAM Job");
@@ -86,10 +105,10 @@ public class AdamController {
     YarnRunner r;
     r = builder.getYarnRunner();
 
-    AdamJob job = new AdamJob(history, r, fops, config.getSelectedCommand().
-            getArguments(), config.getSelectedCommand().getOptions());
-    JobHistory jh = job.requestJobId(config, user, project,
-            JobType.ADAM);
+    AdamJob adamjob = new AdamJob(executionFacade, outputFacade, r, fops,
+            config.getSelectedCommand().getArguments(), config.
+            getSelectedCommand().getOptions());
+    Execution jh = adamjob.requestJobId(job, user);
     if (jh != null) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(project.getName())
               + Constants.ADAM_DEFAULT_OUTPUT_PATH + jh.getId()
@@ -97,15 +116,16 @@ public class AdamController {
       String stdErrFinalDestination = Utils.getHdfsRootPath(project.getName())
               + Constants.ADAM_DEFAULT_OUTPUT_PATH + jh.getId()
               + File.separator + "stderr.log";
-      job.setStdOutFinalDestination(stdOutFinalDestination);
-      job.setStdErrFinalDestination(stdErrFinalDestination);
-      submitter.startExecution(job);
+      adamjob.setStdOutFinalDestination(stdOutFinalDestination);
+      adamjob.setStdErrFinalDestination(stdErrFinalDestination);
+      submitter.startExecution(adamjob);
     } else {
       logger.log(Level.SEVERE,
               "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB, project, user);
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB, project, user.
+            asUser());
     return jh;
   }
 
