@@ -69,23 +69,6 @@
                   </ui:insert>
                 </p:tab>
                 <!-- TODO: figure out how to do this with a loop?-->
-                <p:tab id="yarn" title="Yarn" rendered="#{projectManagedBean.shouldDrawTab('YARN') and projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
-                  <ui:insert name="yarn">
-                    <ui:include src="/bbc/lims/projectTabs/yarnTab.xhtml"/>
-                  </ui:insert>
-                </p:tab>
-
-                <p:tab id="spark" title="Spark" rendered="#{projectManagedBean.shouldDrawTab('SPARK') and projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
-                  <ui:insert name="spark">
-                    <ui:include src="/bbc/lims/projectTabs/sparkTab.xhtml"/>
-                  </ui:insert>
-                </p:tab>
-                <p:tab id="adam" title="ADAM" rendered="#{projectManagedBean.shouldDrawTab('ADAM') and projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
-                  <ui:insert name="adam">
-                    <ui:include src="/bbc/lims/projectTabs/adamTab.xhtml"/>
-                  </ui:insert>
-                </p:tab>
-
                 <p:tab title="Privacy" rendered="#{projectManagedBean.shouldDrawTab('PRIVACY') and projectManagedBean.currentRoleInProject() eq 'Master' and not projectManagedBean.projectArchived}">
                   <ui:insert name="privacyTab">
                     <ui:include src="/bbc/lims/projectTabs/privacyTab.xhtml"/>
