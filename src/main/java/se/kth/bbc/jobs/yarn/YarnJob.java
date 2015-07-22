@@ -7,8 +7,7 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.HopsJob;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
-import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobState;
 
 /**
@@ -31,7 +30,7 @@ public class YarnJob extends HopsJob {
 
   private JobState finalState = null;
 
-  public YarnJob(JobHistoryFacade facade, YarnRunner runner, FileOperations fops) {
+  public YarnJob(ExecutionFacade facade, YarnRunner runner, FileOperations fops) {
     super(facade);
     this.runner = runner;
     this.fops = fops;
@@ -77,12 +76,13 @@ public class YarnJob extends HopsJob {
       updateState(JobState.STARTING_APP_MASTER);
       monitor = runner.startAppMaster();
       started = true;
-      updateHistory(null, null, -1, null, null, monitor.getApplicationId().
+      updateExecution(null, -1, null, null, monitor.getApplicationId().
               toString(), null, null);
       return true;
     } catch (YarnException | IOException e) {
       logger.log(Level.SEVERE,
-              "Failed to start application master for job " + getHistory()
+              "Failed to start application master for execution "
+              + getExecution()
               + ". Aborting execution",
               e);
       updateState(JobState.APP_MASTER_START_FAILED);
@@ -105,8 +105,8 @@ public class YarnJob extends HopsJob {
         failures = 0;
       } catch (YarnException | IOException ex) {
         logger.log(Level.WARNING,
-                "Failed to get application state for job id "
-                + getHistory(), ex);
+                "Failed to get application state for execution"
+                + getExecution(), ex);
         appState = null;
         failures = 1;
       }
@@ -134,22 +134,22 @@ public class YarnJob extends HopsJob {
         } catch (YarnException | IOException ex) {
           failures++;
           logger.log(Level.WARNING,
-                  "Failed to get application state for job id "
-                  + getHistory() + ". Tried " + failures + " time(s).", ex);
+                  "Failed to get application state for execution "
+                  + getExecution() + ". Tried " + failures + " time(s).", ex);
         }
       }
 
       if (failures > DEFAULT_MAX_STATE_POLL_RETRIES) {
         try {
           logger.log(Level.SEVERE,
-                  "Killing application, jobId {0}, because unable to poll for status.",
-                  getHistory());
+                  "Killing application, {0}, because unable to poll for status.",
+                  getExecution());
           r.cancelJob();
           updateState(JobState.KILLED);
           finalState = JobState.KILLED;
         } catch (YarnException | IOException ex) {
           logger.log(Level.SEVERE,
-                  "Failed to cancel job, jobId " + getHistory()
+                  "Failed to cancel execution, " + getExecution()
                   + " after failing to poll for status.", ex);
           updateState(JobState.FRAMEWORK_FAILURE);
           finalState = JobState.FRAMEWORK_FAILURE;
@@ -179,17 +179,13 @@ public class YarnJob extends HopsJob {
           fops.renameInHdfs(runner.getStdErrPath(), stdErrFinalDestination);
         }
       }
-      updateHistory(null, null, -1, stdOutFinalDestination,
-              stdErrFinalDestination, null, null, null);
+      updateExecution(null, -1, stdOutFinalDestination, stdErrFinalDestination,
+              null, null, null);
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Exception while trying to write logs for job "
-              + getHistory() + " to HDFS.", e);
+      logger.log(Level.SEVERE,
+              "Exception while trying to write logs for execution "
+              + getExecution() + " to HDFS.", e);
     }
-  }
-
-  @Override
-  public HopsJob getInstance(JobHistory jh) throws IllegalArgumentException {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 
   @Override
@@ -205,7 +201,7 @@ public class YarnJob extends HopsJob {
     copyLogs();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    updateHistory(null, getFinalState(), duration, null, null, null, null,
-            null);
+    updateExecution(getFinalState(), duration, null,
+            null, null, null, null);
   }
 }

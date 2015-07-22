@@ -16,8 +16,8 @@ public class JobOutputFilePK implements Serializable {
 
   @Basic(optional = false)
   @NotNull
-  @Column(name = "job_id")
-  private long jobId;
+  @Column(name = "execution_id")
+  private long executionId;
 
   @Basic(optional = false)
   @NotNull
@@ -30,16 +30,16 @@ public class JobOutputFilePK implements Serializable {
   }
 
   public JobOutputFilePK(long jobId, String name) {
-    this.jobId = jobId;
+    this.executionId = jobId;
     this.name = name;
   }
 
-  public long getJobId() {
-    return jobId;
+  public long getExecutionId() {
+    return executionId;
   }
 
-  public void setJobId(long jobId) {
-    this.jobId = jobId;
+  public void setExecutionId(long executionId) {
+    this.executionId = executionId;
   }
 
   public String getName() {
@@ -53,7 +53,7 @@ public class JobOutputFilePK implements Serializable {
   @Override
   public int hashCode() {
     int hash = 0;
-    hash += (int) jobId;
+    hash += (int) executionId;
     hash += (name != null ? name.hashCode() : 0);
     return hash;
   }
@@ -65,7 +65,7 @@ public class JobOutputFilePK implements Serializable {
       return false;
     }
     JobOutputFilePK other = (JobOutputFilePK) object;
-    if (this.jobId != other.jobId) {
+    if (this.executionId != other.executionId) {
       return false;
     }
     if ((this.name == null && other.name != null) || (this.name != null
@@ -77,7 +77,7 @@ public class JobOutputFilePK implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.job.JobOutputFilePK[ jobId=" + jobId + ", name=" + name
+    return "se.kth.bbc.job.JobOutputFilePK[ jobId=" + executionId + ", name=" + name
             + " ]";
   }
 

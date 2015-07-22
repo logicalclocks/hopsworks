@@ -150,6 +150,12 @@ public class Execution implements Serializable {
     this(state, job, user, new Date(), stdoutPath, stderrPath, input);
   }
 
+  public Execution(Execution t) {
+    this(t.state, t.job, t.user, t.submissionTime, t.stdoutPath, t.stderrPath,
+            t.jobInputFileCollection);
+    this.id = t.id;
+  }
+
   public Execution(JobState state, Job job, Users user, Date submissionTime,
           String stdoutPath, String stderrPath, Collection<JobInputFile> input) {
     this.submissionTime = submissionTime;
@@ -248,7 +254,7 @@ public class Execution implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.jobs.jobhistory.Execution[ id=" + id + " ]";
+    return "Execution " + id + " of job " + job;
   }
 
   public Users getUser() {

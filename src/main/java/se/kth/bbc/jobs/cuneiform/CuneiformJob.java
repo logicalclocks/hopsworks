@@ -8,10 +8,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.jobs.HopsJob;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
-import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
+import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.Utils;
@@ -33,9 +32,12 @@ public final class CuneiformJob extends YarnJob {
   private String stdOutPath;
   private String stdErrPath;
 
-  public CuneiformJob(JobHistoryFacade facade, FileOperations fops,
-          YarnRunner runner) {
+  private final JobOutputFileFacade outputFacade;
+
+  public CuneiformJob(ExecutionFacade facade, JobOutputFileFacade outputFacade,
+          FileOperations fops, YarnRunner runner) {
     super(facade, runner, fops);
+    this.outputFacade = outputFacade;
   }
 
   public void setSummaryPath(String summaryPath) {
@@ -63,11 +65,6 @@ public final class CuneiformJob extends YarnJob {
   }
 
   @Override
-  public HopsJob getInstance(JobHistory jh) throws IllegalArgumentException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
   protected void runJobInternal() {
     //Can only be called if this job has a valid id.
     long startTime = System.currentTimeMillis();
@@ -90,8 +87,7 @@ public final class CuneiformJob extends YarnJob {
     //Update execution time and final state
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    updateHistory(null, getFinalState(), duration, null, null, null, null,
-            null);
+    updateExecution(getFinalState(), duration, null, null, null, null, null);
   }
 
   private void processOutput() {
@@ -104,16 +100,12 @@ public final class CuneiformJob extends YarnJob {
       JSONArray outputpaths = jobj.getJSONArray("output");
       for (int i = 0; i < outputpaths.length(); i++) {
         String outfile = outputpaths.getString(i);
-        JobOutputFile file = new JobOutputFile(getHistory().getId(), Utils.
-                getFileName(
-                        outfile));
-        file.setPath(outfile);
-        getJobHistoryFacade().persist(file);
+        outputFacade.create(getExecution(), Utils.getFileName(outfile), outfile);
       }
     } catch (IOException | JSONException e) {
       logger.log(Level.SEVERE,
               "Failed to copy output files after running Cuneiform job "
-              + getHistory().getId(), e);
+              + getExecution().getId(), e);
     }
   }
 
@@ -123,15 +115,15 @@ public final class CuneiformJob extends YarnJob {
   @Override
   protected void copyLogs() {
     try {
-      stdOutPath = stdOutPath.replaceAll(APPID_REGEX, getHistory().getAppId());
+      stdOutPath = stdOutPath.replaceAll(APPID_REGEX, getExecution().getAppId());
       getFileOperations().renameInHdfs(stdOutPath, getStdOutFinalDestination());
-      stdErrPath = stdErrPath.replaceAll(APPID_REGEX, getHistory().getAppId());
+      stdErrPath = stdErrPath.replaceAll(APPID_REGEX, getExecution().getAppId());
       getFileOperations().renameInHdfs(stdErrPath, getStdErrFinalDestination());
-      updateHistory(null, null, -1, getStdOutFinalDestination(),
+      updateExecution(null, -1, getStdOutFinalDestination(),
               getStdErrFinalDestination(), null, null, null);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Error while copying logs for job "
-              + getHistory().getId() + ".", ex);
+              + getExecution().getId() + ".", ex);
     }
   }
 

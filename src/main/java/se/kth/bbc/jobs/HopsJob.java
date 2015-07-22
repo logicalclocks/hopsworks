@@ -1,14 +1,13 @@
 package se.kth.bbc.jobs;
 
 import java.util.Collection;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
-import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.jobhistory.Job;
 import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;
-import se.kth.bbc.jobs.jobhistory.JobType;
-import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
-import se.kth.bbc.project.Project;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  * Class for containing the execution logic of a Hops job. Its internals
@@ -22,20 +21,20 @@ import se.kth.bbc.project.Project;
  */
 public abstract class HopsJob {
 
-  private JobHistoryFacade jobHistoryFacade;
+  private ExecutionFacade executionFacade;
   private boolean initialized = false;
-  private JobHistory history;
+  private Execution execution;
 
-  public HopsJob(JobHistoryFacade facade) {
-    this.jobHistoryFacade = facade;
+  public HopsJob(ExecutionFacade executionFacade) {
+    this.executionFacade = executionFacade;
   }
 
-  public final JobHistoryFacade getJobHistoryFacade() {
-    return jobHistoryFacade;
+  public ExecutionFacade getExecutionFacade() {
+    return executionFacade;
   }
 
-  public final void setJobHistoryFacade(JobHistoryFacade jobHistoryFacade) {
-    this.jobHistoryFacade = jobHistoryFacade;
+  public void setExecutionFacade(ExecutionFacade executionFacade) {
+    this.executionFacade = executionFacade;
   }
 
   public final boolean isIdAssigned() {
@@ -43,26 +42,30 @@ public abstract class HopsJob {
   }
 
   /**
-   * Returns a copy of the current history object. Should not be used for
-   * updating.
+   * Returns a copy of the current execution object. The copy is not persisted
+   * and should not be used for updating the database.
    * <p>
    * @return
    */
-  public final JobHistory getHistory() {
-    return new JobHistory(history);
+  public final Execution getExecution() {
+    return new Execution(execution);
   }
 
   protected final void updateState(JobState newState) {
-    history = jobHistoryFacade.update(history, newState);
+    execution = executionFacade.updateState(execution, newState);
   }
 
-  protected final void updateHistory(String name, JobState state,
+  protected final void updateExecution(JobState state,
           long executionDuration, String stdoutPath,
           String stderrPath, String appId, Collection<JobInputFile> inputFiles,
           Collection<JobOutputFile> outputFiles) {
-    history = jobHistoryFacade.update(history, name, state,
-            executionDuration, stdoutPath, stderrPath, appId, inputFiles,
-            outputFiles);
+    Execution upd = executionFacade.updateAppId(execution, appId);
+    upd = executionFacade.updateExecutionTime(upd, executionDuration);
+    upd = executionFacade.updateOutput(upd, outputFiles);
+    upd = executionFacade.updateState(upd, state);
+    upd = executionFacade.updateStdErrPath(upd, stderrPath);
+    upd = executionFacade.updateStdOutPath(upd, stdoutPath);
+    this.execution = upd;
   }
 
   /**
@@ -84,42 +87,20 @@ public abstract class HopsJob {
   }
 
   /**
-   * Request a unique job id by creating a JobHistory object. Creates
-   * and persists a JobHistory object that should ultimately enable this job to
-   * be rerun. The object is in the state INITIALIZING. Upon success, returns
-   * the created JobHistory object to allow tracking.
-   * This method must be called before attempting to run the actual job.
+   * Request a unique execution id by creating an Execution object. Creates
+   * and persists an Execution object. The object is in the state INITIALIZING.
+   * Upon success, returns the created Execution object to allow tracking.
+   * This method must be called before attempting to run the actual execution.
    * <p>
-   * @param config The configuration object with which this job is run.
-   * @param userEmail The email of the user running the job.
-   * @param project The project under which the job is being run.
-   * @param jobType The type of job.
+   * @param j The job for which an execution should be started.
+   * @param user The user who is starting this job.
    * @return Unique id of the JobHistory object associated with this job.
    */
-  public final JobHistory requestJobId(YarnJobConfiguration config,
-          String userEmail,
-          Project project,
-          JobType jobType) {
-    history = jobHistoryFacade.create(config.getAppName(), userEmail, project,
-            jobType, JobState.INITIALIZING, null, null, null, null, config);
-    initialized = true;
-    return history;
+  public final Execution requestJobId(Job j, Users user) {
+    execution = executionFacade.create(j, user, null, null, null);
+    initialized = (execution.getId() != null);
+    return execution;
   }
-
-  /*
-   * Methods meant to be overriden.
-   */
-  /**
-   * Create a new job instance that runs the same job as contained in the
-   * JobHistory object.
-   * <p>
-   * @param jh The JobHistory object whose execution to mimic.
-   * @return The HopsJob object containing the job to be executed.
-   * @throws IllegalArgumentException Thrown when the JobHistory object does not
-   * describe an object ran by this class.
-   */
-  public abstract HopsJob getInstance(JobHistory jh) throws
-          IllegalArgumentException;
 
   /**
    * Takes care of the execution of the job. Called by runJob() which first

@@ -4,10 +4,9 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.jobs.HopsJob;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
-import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
+import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFilePK;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.jobs.yarn.YarnRunner;
@@ -24,17 +23,16 @@ public class AdamJob extends YarnJob {
   private final AdamArgumentDTO[] invocationArguments;
   private final AdamOptionDTO[] invocationOptions;
 
-  public AdamJob(JobHistoryFacade facade, YarnRunner runner, FileOperations fops,
+  private final JobOutputFileFacade outputFacade;
+
+  public AdamJob(ExecutionFacade facade, JobOutputFileFacade outputFacade,
+          YarnRunner runner, FileOperations fops,
           AdamArgumentDTO[] invocationArguments,
           AdamOptionDTO[] invocationOptions) {
     super(facade, runner, fops);
     this.invocationArguments = invocationArguments;
     this.invocationOptions = invocationOptions;
-  }
-
-  @Override
-  public HopsJob getInstance(JobHistory jh) throws IllegalArgumentException {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    this.outputFacade = outputFacade;
   }
 
   @Override
@@ -56,8 +54,7 @@ public class AdamJob extends YarnJob {
     makeOutputAvailable();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    updateHistory(null, getFinalState(), duration, null, null, null, null,
-            null);
+    updateExecution(getFinalState(), duration, null, null, null, null, null);
   }
 
   /**
@@ -70,9 +67,7 @@ public class AdamJob extends YarnJob {
               isEmpty())) {
         try {
           if (getFileOperations().exists(arg.getValue())) {
-            getJobHistoryFacade().persist(new JobOutputFile(new JobOutputFilePK(
-                    getHistory().getId(), Utils.
-                    getFileName(arg.getValue())), arg.getValue()));
+            outputFacade.create(getExecution(), Utils.getFileName(arg.getValue()), arg.getValue());
           }
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
@@ -86,9 +81,7 @@ public class AdamJob extends YarnJob {
               isEmpty()) {
         try {
           if (getFileOperations().exists(opt.getValue())) {
-            getJobHistoryFacade().persist(new JobOutputFile(new JobOutputFilePK(
-                    getHistory().getId(), Utils.
-                    getFileName(opt.getValue())), opt.getValue()));
+            outputFacade.create(getExecution(), Utils.getFileName(opt.getValue()), opt.getValue());
           }
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "

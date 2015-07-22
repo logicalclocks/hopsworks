@@ -27,9 +27,9 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "JobInputFile.findAll",
           query
           = "SELECT j FROM JobInputFile j"),
-  @NamedQuery(name = "JobInputFile.findByJobId",
+  @NamedQuery(name = "JobInputFile.findByExecutionId",
           query
-          = "SELECT j FROM JobInputFile j WHERE j.jobInputFilePK.jobId = :jobId"),
+          = "SELECT j FROM JobInputFile j WHERE j.jobInputFilePK.executionId = :executionId"),
   @NamedQuery(name = "JobInputFile.findByPath",
           query
           = "SELECT j FROM JobInputFile j WHERE j.path = :path"),

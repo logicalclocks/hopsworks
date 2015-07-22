@@ -218,7 +218,7 @@ public class Job implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.jobs.jobhistory.Job[ id=" + id + " ]";
+    return "Job [" + name + ", " + type + ", " + id + "]";
   }
 
   public Project getProject() {

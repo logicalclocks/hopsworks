@@ -27,18 +27,18 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "JobOutputFile.findAll",
           query
           = "SELECT j FROM JobOutputFile j"),
-  @NamedQuery(name = "JobOutputFile.findByJobId",
+  @NamedQuery(name = "JobOutputFile.findByExecutionId",
           query
-          = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.jobId = :jobId"),
+          = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.executionId = :executionId"),
   @NamedQuery(name = "JobOutputFile.findByName",
           query
           = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.name = :name"),
   @NamedQuery(name = "JobOutputFile.findByPath",
           query
           = "SELECT j FROM JobOutputFile j WHERE j.path = :path"),
-  @NamedQuery(name = "JobOutputFile.findByNameAndJobId",
+  @NamedQuery(name = "JobOutputFile.findByNameAndExecutionId",
           query
-          = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.name = :name AND j.jobOutputFilePK.jobId = :jobId")})
+          = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.name = :name AND j.jobOutputFilePK.executionId = :executionId")})
 public class JobOutputFile implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -73,8 +73,8 @@ public class JobOutputFile implements Serializable {
     this.path = path;
   }
 
-  public JobOutputFile(long jobId, String name) {
-    this.jobOutputFilePK = new JobOutputFilePK(jobId, name);
+  public JobOutputFile(long executionId, String name) {
+    this.jobOutputFilePK = new JobOutputFilePK(executionId, name);
   }
 
   public JobOutputFilePK getJobOutputFilePK() {
