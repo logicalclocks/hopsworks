@@ -179,14 +179,6 @@ CREATE TABLE `job_input_files` (
   FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `job_execution_files` (
-  `job_id` INT(11) NOT NULL,
-  `path` VARCHAR(255) NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`job_id`,`name`),
-  FOREIGN KEY (`job_id`) REFERENCES `jobs` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=ndbcluster;
-
 CREATE TABLE `consent` (
   `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
   `date` DATE DEFAULT NULL,

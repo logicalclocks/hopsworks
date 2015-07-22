@@ -102,10 +102,6 @@ public class Job implements Serializable {
 
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "job")
-  private Collection<JobExecutionFile> jobExecutionFileCollection;
-
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "job")
   private Collection<Execution> executionCollection;
 
   public Job() {
@@ -122,30 +118,18 @@ public class Job implements Serializable {
   }
 
   public Job(JobType type, YarnJobConfiguration config, Project project,
-          Users creator, String jobname, Date creationTime) {
-    this(type, config, project, creator, jobname, null, creationTime);
-  }
-
-  public Job(JobType type, YarnJobConfiguration config, Project project,
           Users creator, String jobname) {
     this(type, config, project, creator, jobname, new Date());
   }
 
   public Job(JobType type, YarnJobConfiguration config, Project project,
-          Users creator, String jobname, Collection<JobExecutionFile> execFiles) {
-    this(type, config, project, creator, jobname, execFiles, new Date());
-  }
-
-  public Job(JobType type, YarnJobConfiguration config, Project project,
-          Users creator, String jobname, Collection<JobExecutionFile> execFiles,
-          Date creationTime) {
+          Users creator, String jobname, Date creationTime) {
     this.name = jobname;
     this.creationTime = creationTime;
     this.type = type;
     this.jobConfig = config;
     this.project = project;
     this.creator = creator;
-    this.jobExecutionFileCollection = execFiles;
   }
 
   public Integer getId() {
@@ -238,17 +222,6 @@ public class Job implements Serializable {
 
   public void setCreator(Users creator) {
     this.creator = creator;
-  }
-
-  @XmlTransient
-  @JsonIgnore
-  public Collection<JobExecutionFile> getJobExecutionFileCollection() {
-    return jobExecutionFileCollection;
-  }
-
-  public void setJobExecutionFileCollection(
-          Collection<JobExecutionFile> jobExecutionFileCollection) {
-    this.jobExecutionFileCollection = jobExecutionFileCollection;
   }
 
 }
