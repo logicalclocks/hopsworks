@@ -5,6 +5,7 @@ import java.util.List;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
@@ -41,6 +42,17 @@ public class JobFacade extends AbstractFacade<Job> {
     TypedQuery<Job> q = em.createNamedQuery(
             "Job.findByProjectAndType", Job.class);
     q.setParameter("type", type);
+    q.setParameter("project", project);
+    return q.getResultList();
+  }
+  
+  /**
+   * Find all the jobs defined in the given project.
+   * @param project
+   * @return 
+   */
+  public List<Job> findForProject(Project project){
+    TypedQuery<Job> q = em.createNamedQuery("Job.findByProject", Job.class);
     q.setParameter("project", project);
     return q.getResultList();
   }

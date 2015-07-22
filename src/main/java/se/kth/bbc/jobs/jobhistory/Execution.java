@@ -1,7 +1,6 @@
 package se.kth.bbc.jobs.jobhistory;
 
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;

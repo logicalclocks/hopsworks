@@ -21,8 +21,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
-import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 import se.kth.hopsworks.controller.CuneiformController;
 import se.kth.hopsworks.filters.AllowedRoles;
 

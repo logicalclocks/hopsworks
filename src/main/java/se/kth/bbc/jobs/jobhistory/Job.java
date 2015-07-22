@@ -54,6 +54,9 @@ import se.kth.hopsworks.user.model.Users;
   @NamedQuery(name = "Job.findByType",
           query
           = "SELECT j FROM Job j WHERE j.type = :type"),
+  @NamedQuery(name = "Job.findByProject",
+          query
+          = "SELECT j FROM Job j WHERE j.project = :project"),
   @NamedQuery(name = "Job.findByProjectAndType",
           query
           = "SELECT j FROM Job j WHERE j.type = :type AND j.project = :project ORDER BY j.creationTime DESC")})
