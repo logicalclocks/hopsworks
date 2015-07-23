@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.jobs.HopsJob;
+import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobState;
 

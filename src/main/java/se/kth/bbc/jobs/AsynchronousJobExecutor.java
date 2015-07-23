@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs;
 
+import se.kth.bbc.jobs.execution.HopsJob;
 import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
 

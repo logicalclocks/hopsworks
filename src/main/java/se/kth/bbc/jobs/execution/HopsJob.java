@@ -1,4 +1,4 @@
-package se.kth.bbc.jobs;
+package se.kth.bbc.jobs.execution;
 
 import java.util.Collection;
 import se.kth.bbc.jobs.jobhistory.Execution;
@@ -10,7 +10,7 @@ import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.hopsworks.user.model.Users;
 
 /**
- * Class for containing the execution logic of a Hops job. Its internals
+ * Contains the execution logic of a Hops job. Its internals
  * should take care of the entire job execution process. This entails creating
  * a persisted JobHistory object (in the init() method) that allows for
  * rerunning the same job, starting the actual job and possibly processing its
