@@ -8,9 +8,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -18,8 +16,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
+import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.SparkController;
 import se.kth.hopsworks.filters.AllowedRoles;
 
@@ -40,10 +38,10 @@ public class SparkService {
   @EJB
   private SparkController sparkController;
 
-  private Integer projectId;
+  private Project project;
 
-  SparkService setProjectId(Integer id) {
-    this.projectId = id;
+  SparkService setProject(Project project) {
+    this.project = project;
     return this;
   }
 
@@ -78,46 +76,6 @@ public class SparkService {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error reading jar file: " + e.
               getLocalizedMessage());
-    }
-  }
-
-  /**
-   * Run a job. This method returns a JobHistory object if it succeeds.
-   * <p>
-   * @param config
-   * @param req
-   * @param sc
-   * @return
-   * @throws se.kth.hopsworks.rest.AppException
-   */
-  @POST
-  @Path("/run")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response runJob(SparkJobConfiguration config,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-    if (config == null || config.getJarPath() == null || config.getJarPath().
-            isEmpty()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "You must set a jar path before running.");
-    } else if (config.getMainClass() == null || config.getMainClass().isEmpty()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "You must set a main class before running.");
-    }
-    try {
-      if (!config.getJarPath().startsWith("hdfs")) {
-        config.setJarPath("hdfs://" + config.getJarPath());
-      }
-      JobHistory jh = sparkController.startJob(config, req.getUserPrincipal().
-              getName(), projectId);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(jh).build();
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Error running Spark job.", ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error running job: " + ex.getLocalizedMessage());
     }
   }
 }

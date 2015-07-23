@@ -156,7 +156,6 @@ public abstract class JobDescription<T extends JobConfiguration> implements
     this.jobConfig = jobConfig;
   }
 
-  @XmlTransient
   @JsonIgnore
   public final Collection<Execution> getExecutionCollection() {
     return executionCollection;

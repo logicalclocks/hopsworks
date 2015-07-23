@@ -39,7 +39,8 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
    * @return List of JobHistory objects.
    * @throws IllegalArgumentException If the given type is not supported.
    */
-  public List<JobDescription<? extends JobConfiguration>> findForProjectByType(Project project, JobType type)
+  public List<JobDescription<? extends JobConfiguration>> findForProjectByType(
+          Project project, JobType type)
           throws IllegalArgumentException {
     TypedQuery<? extends JobDescription<? extends JobConfiguration>> q;
     switch (type) {
@@ -64,7 +65,7 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
                 "The requested type is not yet supported.");
     }
     q.setParameter("project", project);
-    return (List<JobDescription<? extends JobConfiguration>>)q.getResultList();
+    return (List<JobDescription<? extends JobConfiguration>>) q.getResultList();
   }
 
   /**
@@ -94,9 +95,9 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
    * config are null.
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW) //This seems to ensure that the entity is actually created and can later be found using em.find().
-  public JobDescription create(String name, Users creator, Project project,
-          JobConfiguration config) throws IllegalArgumentException,
-          NullPointerException {
+  public JobDescription<? extends JobConfiguration> create(String name,
+          Users creator, Project project, JobConfiguration config) throws
+          IllegalArgumentException, NullPointerException {
     //Argument checking
     if (creator == null || project == null || config == null) {
       throw new NullPointerException(

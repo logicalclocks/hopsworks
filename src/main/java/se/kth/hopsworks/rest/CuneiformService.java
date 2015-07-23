@@ -26,6 +26,7 @@ import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.CuneiformController;
 import se.kth.hopsworks.filters.AllowedRoles;
@@ -61,7 +62,8 @@ public class CuneiformService {
    * <p>
    * @param sc
    * @param req
-   * @return A list of all JobDescription objects of type Cuneiform in this project.
+   * @return A list of all JobDescription objects of type Cuneiform in this
+   * project.
    * @throws se.kth.hopsworks.rest.AppException
    */
   @GET
@@ -70,17 +72,21 @@ public class CuneiformService {
   public Response findAllCuneiformJobs(@Context SecurityContext sc,
           @Context HttpServletRequest req)
           throws AppException {
-    List<JobDescription> jobs = jobFacade.findForProjectByType(project, JobType.CUNEIFORM);
-    GenericEntity<List<JobDescription>> jobList = new GenericEntity<List<JobDescription>>(jobs) {
-    };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            jobList).build();
+    List<JobDescription<? extends JobConfiguration>> jobs = jobFacade.
+            findForProjectByType(project, JobType.CUNEIFORM);
+    GenericEntity<List<JobDescription<? extends JobConfiguration>>> jobList
+            = new GenericEntity<List<JobDescription<? extends JobConfiguration>>>(
+                    jobs) {
+                    };
+            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                    entity(
+                            jobList).build();
   }
 
   /**
    * Inspect the workflow stored at the given path. Returns a
    * CuneiformJobConfiguration containing a WorkflowDTO with the workflow
-   * details and a YarnJobConfiguration with Yarn job config.
+   * details and Yarn job config.
    * <p>
    * @param path
    * @param sc
@@ -115,40 +121,4 @@ public class CuneiformService {
               "Failed not inspect the workflow file. Reason:" + ex.getMessage());
     }
   }
-
-  /**
-   * Create a new Cuneiform job. The CuneiformJobConfiguration is passed as an
- argument. This call returns the created JobDescription object. To see if the job was
- started, update the execution list.
- <p>
-   * @param runData
-   * @param sc
-   * @param req
-   * @return
-   * @throws se.kth.hopsworks.rest.AppException
-   */
-  @POST
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response createJob(CuneiformJobConfiguration runData,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-    //First: argument checking
-    if (runData == null) {
-      return Response.status(Response.Status.BAD_REQUEST).build();
-    }
-    //Get the info to build a JobDescription object
-    String jobname = runData.getAppName();
-    JobType type = JobType.CUNEIFORM;
-    String email = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(email);
-    //Create the new job object.
-    JobDescription job = jobFacade.create(jobname, user, project, type, runData);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            job).build();
-  }
-  
-  
-
 }

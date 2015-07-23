@@ -1,5 +1,6 @@
 package se.kth.hopsworks.rest;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,11 +21,16 @@ import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
-import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
+import se.kth.bbc.jobs.model.description.AdamJobDescription;
+import se.kth.bbc.jobs.model.description.CuneiformJobDescription;
+import se.kth.bbc.jobs.model.description.SparkJobDescription;
 import se.kth.hopsworks.controller.AdamController;
 import se.kth.hopsworks.controller.CuneiformController;
 import se.kth.hopsworks.controller.SparkController;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.UserFacade;
 
 /**
  *
@@ -41,6 +47,8 @@ public class ExecutionService {
   private ExecutionFacade executionFacade;
   @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private UserFacade userFacade;
   //Controllers
   @EJB
   private CuneiformController cuneiformController;
@@ -49,9 +57,9 @@ public class ExecutionService {
   @EJB
   private AdamController adamController;
 
-  private JobDescription job;
+  private JobDescription<? extends JobConfiguration> job;
 
-  ExecutionService setJob(JobDescription job) {
+  ExecutionService setJob(JobDescription<? extends JobConfiguration> job) {
     this.job = job;
     return this;
   }
@@ -73,22 +81,64 @@ public class ExecutionService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(executions).build();
   }
-  
+
   /**
    * Start an Execution of the given job.
+   * <p>
    * @param sc
    * @param req
-   * @return 
+   * @return The new execution object.
+   * @throws se.kth.hopsworks.rest.AppException
    */
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response startExecution(@Context SecurityContext sc, @Context HttpServletRequest req){
-    JobType type = job.getType();
-    switch(type){
-      case CUNEIFORM:
-        cuneiformController.startWorkflow(job, null)
+  public Response startExecution(@Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    String loggedinemail = sc.getUserPrincipal().getName();
+    Users user = userFacade.findByEmail(loggedinemail);
+    if (user == null) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+              "You are not authorized for this invocation.");
     }
+    Execution exec;
+    if (job instanceof CuneiformJobDescription) {
+      try {
+        exec = cuneiformController.startWorkflow((CuneiformJobDescription) job,
+                user);
+      } catch (IOException | IllegalArgumentException |
+              NullPointerException ex) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "An error occured while trying to start this job: " + ex.
+                getLocalizedMessage());
+      }
+    } else if (job instanceof AdamJobDescription) {
+      try {
+        exec = adamController.startJob((AdamJobDescription) job, user);
+      } catch (IOException | IllegalArgumentException |
+              NullPointerException ex) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "An error occured while trying to start this job: " + ex.
+                getLocalizedMessage());
+      }
+    } else if (job instanceof SparkJobDescription) {
+      try {
+        exec = sparkController.startJob((SparkJobDescription) job, user);
+      } catch (IOException | IllegalArgumentException |
+              NullPointerException ex) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "An error occured while trying to start this job: " + ex.
+                getLocalizedMessage());
+      }
+    } else {
+      throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
+              "The given job cannot be handled by the server.");
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            exec).build();
   }
 
   /**

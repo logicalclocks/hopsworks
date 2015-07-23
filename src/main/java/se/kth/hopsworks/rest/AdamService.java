@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.adam.AdamCommand;
 import se.kth.bbc.jobs.adam.AdamCommandDTO;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
+import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.AdamController;
 import se.kth.hopsworks.filters.AllowedRoles;
 
@@ -38,10 +38,10 @@ public class AdamService {
   @EJB
   private AdamController adamController;
 
-  private Integer projectId;
+  private Project project;
 
-  AdamService setProjectId(Integer id) {
-    this.projectId = id;
+  AdamService setProject(Project project) {
+    this.project = project;
     return this;
   }
 
@@ -83,38 +83,6 @@ public class AdamService {
             commandName));
     AdamJobConfiguration config = new AdamJobConfiguration(selected);
     return Response.ok(config).build();
-  }
-
-  /**
-   * Run an ADAM job. Accepts a JSONized AdamJobConfiguration, which contains
-   * the selected command along with the set parameters.
-   * <p>
-   * @param config
-   * @param sc
-   * @param req
-   * @return
-   * @throws AppException
-   */
-  @POST
-  @Path("/run")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = AllowedRoles.ALL)
-  public Response run(AdamJobConfiguration config, @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-    if (config == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "You must set a job configuration first.");
-    }
-    try {
-      JobHistory jh = adamController.startJob(config, req.getUserPrincipal().
-              getName(), projectId);
-      return Response.ok(jh).build();
-    } catch (IOException | IllegalStateException | IllegalArgumentException ex) {
-      logger.log(Level.SEVERE, "Error running ADAM job.", ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error running job: " + ex.getLocalizedMessage());
-    }
   }
 
   @XmlRootElement(name = "commands")

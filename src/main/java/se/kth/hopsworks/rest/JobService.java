@@ -9,7 +9,9 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -18,11 +20,13 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
-import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.UserFacade;
 
 /**
  *
@@ -39,6 +43,8 @@ public class JobService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private JobDescriptionFacade jobFacade;
+  @EJB
+  private UserFacade userFacade;
   @Inject
   private ExecutionService executions;
   @Inject
@@ -70,8 +76,9 @@ public class JobService {
           @Context HttpServletRequest req)
           throws AppException {
     List<JobDescription> jobs = jobFacade.findForProject(project);
-    GenericEntity<List<JobDescription>> jobList = new GenericEntity<List<JobDescription>>(jobs) {
-    };
+    GenericEntity<List<JobDescription>> jobList
+            = new GenericEntity<List<JobDescription>>(jobs) {
+            };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             jobList).build();
   }
@@ -108,14 +115,59 @@ public class JobService {
   }
 
   /**
+   * Create a new Job definition. If successful, the job is returned.
+   * <p>
+   * @param config The configuration from which to create a Job.
+   * @param sc
+   * @param req
+   * @return
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  @POST
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response createJob(JobConfiguration config, @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    if (config == null) {
+      throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
+              "Cannot create job for a null argument.");
+    } else {
+      String email = sc.getUserPrincipal().getName();
+      Users user = userFacade.findByEmail(email);
+      if (user == null) {
+        //Should not be possible, but, well...
+        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+                "You are not authorized for this invocation.");
+      }
+      JobDescription<? extends JobConfiguration> created = jobFacade.create(
+              config.getApplicationName(), user, project, config);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(created).build();
+    }
+  }
+
+  @GET
+  @Path("/templates")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getConfigurationTemplates(@Context SecurityContext sc,
+          @Context HttpServletRequest req) {
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            JobConfiguration.JobConfigurationFactory.getAllAssignableTemplates()).
+            build();
+  }
+
+  /**
    * Get the ExecutionService for the job with given id.
+   * <p>
    * @param jobId
-   * @return 
+   * @return
    */
   @Path("/{jobId}/executions")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public ExecutionService executions(@PathParam("jobId") int jobId) {
-    JobDescription job = jobFacade.findById(jobId);
+    JobDescription<? extends JobConfiguration> job = jobFacade.findById(jobId);
     if (job == null) {
       return null;
     } else if (!job.getProject().equals(project)) {
@@ -137,12 +189,12 @@ public class JobService {
   @Path("/spark")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public SparkService spark() {
-    return this.spark.setProjectId(projectId);
+    return this.spark.setProject(project);
   }
 
   @Path("/adam")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public AdamService adam() {
-    return this.adam.setProjectId(projectId);
+    return this.adam.setProject(project);
   }
 }
