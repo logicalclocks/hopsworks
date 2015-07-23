@@ -2,6 +2,7 @@ package se.kth.hopsworks.rest;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -16,13 +17,20 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
+import se.kth.bbc.jobs.jobhistory.Job;
+import se.kth.bbc.jobs.jobhistory.JobFacade;
+import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.CuneiformController;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.UserFacade;
 
 /**
  *
@@ -36,18 +44,43 @@ public class CuneiformService {
   private CuneiformController cfCtrl;
   @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private JobFacade jobFacade;
+  @EJB
+  private UserFacade userFacade;
 
-  private Integer projectId;
+  private Project project;
 
-  CuneiformService setProjectId(Integer id) {
-    this.projectId = id;
+  CuneiformService setProject(Project project) {
+    this.project = project;
     return this;
   }
 
   /**
-   * Inspect the workflow stored at the given path. Returns a CuneiformJobConfiguration
-   * containing a WorkflowDTO with the workflow details and a
-   * YarnJobConfiguration with Yarn job config.
+   * Get all the jobs in this project of type cuneiform.
+   * <p>
+   * @param sc
+   * @param req
+   * @return A list of all Job objects of type Cuneiform in this project.
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response findAllCuneiformJobs(@Context SecurityContext sc,
+          @Context HttpServletRequest req)
+          throws AppException {
+    List<Job> jobs = jobFacade.findForProjectByType(project, JobType.CUNEIFORM);
+    GenericEntity<List<Job>> jobList = new GenericEntity<List<Job>>(jobs) {
+    };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            jobList).build();
+  }
+
+  /**
+   * Inspect the workflow stored at the given path. Returns a
+   * CuneiformJobConfiguration containing a WorkflowDTO with the workflow
+   * details and a YarnJobConfiguration with Yarn job config.
    * <p>
    * @param path
    * @param sc
@@ -84,9 +117,9 @@ public class CuneiformService {
   }
 
   /**
-   * Run a workflow. The workflowDTO is passed as an argument. The workflow is
-   * based on the given path. This call returns a JobHistory object if the call
-   * succeeds.
+   * Create a new Cuneiform job. The CuneiformJobConfiguration is passed as an
+   * argument. This call returns the created Job object. To see if the job was
+   * started, update the execution list.
    * <p>
    * @param runData
    * @param sc
@@ -95,25 +128,27 @@ public class CuneiformService {
    * @throws se.kth.hopsworks.rest.AppException
    */
   @POST
-  @Path("/run")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response runWorkFlow(CuneiformJobConfiguration runData,
+  public Response createJob(CuneiformJobConfiguration runData,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    try {
-      JobHistory jh = cfCtrl.startWorkflow(runData, req.getUserPrincipal().
-              getName(), projectId);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(jh).build();
-    } catch (IOException ex) {
-      Logger.getLogger(CuneiformService.class.getName()).log(Level.SEVERE,
-              "Error running Cuneiform job.",
-              ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error running job.");
+    //First: argument checking
+    if (runData == null) {
+      return Response.status(Response.Status.BAD_REQUEST).build();
     }
+    //Get the info to build a Job object
+    String jobname = runData.getAppName();
+    JobType type = JobType.CUNEIFORM;
+    String email = sc.getUserPrincipal().getName();
+    Users user = userFacade.findByEmail(email);
+    //Create the new job object.
+    Job job = jobFacade.create(jobname, user, project, type, runData);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            job).build();
   }
+  
+  
 
 }

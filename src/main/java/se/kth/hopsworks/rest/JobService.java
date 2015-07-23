@@ -77,30 +77,6 @@ public class JobService {
   }
 
   /**
-   * Get all the jobs in this project with the specified type.
-   * <p>
-   * @param type The type of jobs to fetch. The String parameter passed through
-   * REST should be an uppercase version of the constant value.
-   * @param sc
-   * @param req
-   * @return A list of all Job objects with the requested type in this project.
-   * @throws se.kth.hopsworks.rest.AppException
-   */
-  @GET
-  @Path("/type/{type}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response findAllJobsByType(@PathParam("type") JobType type,
-          @Context SecurityContext sc, @Context HttpServletRequest req)
-          throws AppException {
-    List<Job> jobs = jobFacade.findForProjectByType(project, type);
-    GenericEntity<List<Job>> jobList = new GenericEntity<List<Job>>(jobs) {
-    };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            jobList).build();
-  }
-
-  /**
    * Get the job with the given id in the current project.
    * <p>
    * @param jobId
@@ -155,7 +131,7 @@ public class JobService {
   @Path("/cuneiform")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public CuneiformService cuneiform() {
-    return this.cuneiform.setProjectId(projectId);
+    return this.cuneiform.setProject(project);
   }
 
   @Path("/spark")

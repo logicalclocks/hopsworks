@@ -102,6 +102,7 @@ public class Job implements Serializable {
 
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "job")
+  @XmlTransient
   private Collection<Execution> executionCollection;
 
   public Job() {

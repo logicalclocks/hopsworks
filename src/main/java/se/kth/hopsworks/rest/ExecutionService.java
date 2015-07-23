@@ -9,6 +9,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -19,6 +20,10 @@ import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.Job;
+import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.hopsworks.controller.AdamController;
+import se.kth.hopsworks.controller.CuneiformController;
+import se.kth.hopsworks.controller.SparkController;
 import se.kth.hopsworks.filters.AllowedRoles;
 
 /**
@@ -36,6 +41,13 @@ public class ExecutionService {
   private ExecutionFacade executionFacade;
   @EJB
   private NoCacheResponse noCacheResponse;
+  //Controllers
+  @EJB
+  private CuneiformController cuneiformController;
+  @EJB
+  private SparkController sparkController;
+  @EJB
+  private AdamController adamController;
 
   private Job job;
 
@@ -60,6 +72,23 @@ public class ExecutionService {
     List<Execution> executions = executionFacade.findForJob(job);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(executions).build();
+  }
+  
+  /**
+   * Start an Execution of the given job.
+   * @param sc
+   * @param req
+   * @return 
+   */
+  @POST
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response startExecution(@Context SecurityContext sc, @Context HttpServletRequest req){
+    JobType type = job.getType();
+    switch(type){
+      case CUNEIFORM:
+        
+    }
   }
 
   /**
