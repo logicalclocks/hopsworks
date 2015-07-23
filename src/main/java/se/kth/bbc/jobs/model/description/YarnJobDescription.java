@@ -22,21 +22,21 @@ import se.kth.hopsworks.user.model.Users;
           = "SELECT j FROM YarnJobDescription j WHERE j.project = :project ORDER BY j.creationTime DESC")})
 public class YarnJobDescription extends JobDescription<YarnJobConfiguration> {
 
-  public YarnJobDescription(){
+  public YarnJobDescription() {
     this(null, null, null, null);
   }
-  
-  public YarnJobDescription(YarnJobConfiguration config){
+
+  public YarnJobDescription(YarnJobConfiguration config) {
     this(config, null, null, null);
   }
-  
+
   public YarnJobDescription(YarnJobConfiguration config, Project project,
           Users creator, String jobname) {
     super(config, project, creator, jobname);
   }
-  
+
   @Override
-  public String toString(){
-    return "Yarn"+super.toString();
+  public String toString() {
+    return "Yarn" + super.toString();
   }
 }

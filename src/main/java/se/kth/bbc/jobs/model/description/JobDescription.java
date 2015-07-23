@@ -39,7 +39,6 @@ import se.kth.hopsworks.user.model.Users;
  * declare the @DiscriminatorValue annotation.
  * <p>
  * @author stig
- * @param <T> The JobConfiguration type. This defines how the job will be run.
  */
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -84,7 +83,7 @@ public abstract class JobDescription<T extends JobConfiguration> implements
 
   @Column(name = "json_config")
   @Convert(converter = JobConfigurationConverter.class)
-  private T jobConfig;
+  protected T jobConfig;
 
   @JoinColumn(name = "project_id",
           referencedColumnName = "id")

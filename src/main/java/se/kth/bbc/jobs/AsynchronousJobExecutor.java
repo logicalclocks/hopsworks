@@ -2,7 +2,12 @@ package se.kth.bbc.jobs;
 
 import se.kth.bbc.jobs.execution.HopsJob;
 import javax.ejb.Asynchronous;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.execution.HopsworksExecutionServiceProvider;
+import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 
 /**
  * Utility class for executing a HopsJob asynchronously. Passing the Hopsjob to
@@ -13,10 +18,34 @@ import javax.ejb.Stateless;
  * @author stig
  */
 @Stateless
-public class AsynchronousJobExecutor {
+public class AsynchronousJobExecutor implements
+        HopsworksExecutionServiceProvider {
+
+  @EJB
+  private ExecutionFacade executionFacade;
+  @EJB
+  private JobOutputFileFacade jobOutputFileFacade;
+  @EJB
+  private FileOperations fileOperations;
 
   @Asynchronous
   public void startExecution(HopsJob job) {
-    job.runJob();
+    job.execute();
   }
+
+  @Override
+  public ExecutionFacade getExecutionFacade() {
+    return executionFacade;
+  }
+
+  @Override
+  public JobOutputFileFacade getJobOutputFileFacade() {
+    return jobOutputFileFacade;
+  }
+
+  @Override
+  public FileOperations getFileOperations() {
+    return fileOperations;
+  }
+
 }

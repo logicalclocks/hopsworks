@@ -39,9 +39,9 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
    * @return List of JobHistory objects.
    * @throws IllegalArgumentException If the given type is not supported.
    */
-  public List<JobDescription> findForProjectByType(Project project, JobType type)
+  public List<JobDescription<? extends JobConfiguration>> findForProjectByType(Project project, JobType type)
           throws IllegalArgumentException {
-    TypedQuery<? extends JobDescription> q;
+    TypedQuery<? extends JobDescription<? extends JobConfiguration>> q;
     switch (type) {
       case ADAM:
         q = em.createNamedQuery("AdamJobDescription.findByProject",
@@ -64,7 +64,7 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
                 "The requested type is not yet supported.");
     }
     q.setParameter("project", project);
-    return (List<JobDescription>) q.getResultList();
+    return (List<JobDescription<? extends JobConfiguration>>)q.getResultList();
   }
 
   /**

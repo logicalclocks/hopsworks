@@ -5,35 +5,34 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.execution.HopsJob;
-import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.execution.HopsworksExecutionServiceProvider;
 import se.kth.bbc.jobs.jobhistory.JobState;
+import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
  * @author stig
  */
-public class YarnJob extends HopsJob {
+public abstract class YarnJob extends HopsJob {
 
   private static final Logger logger = Logger.getLogger(YarnJob.class.getName());
 
   private static final int DEFAULT_MAX_STATE_POLL_RETRIES = 10;
   private static final int DEFAULT_POLL_TIMEOUT_INTERVAL = 1; //in seconds
 
-  private final YarnRunner runner;
+  protected YarnRunner runner;
   private YarnMonitor monitor = null;
-  private final FileOperations fops;
 
   private String stdOutFinalDestination, stdErrFinalDestination;
   private boolean started = false;
 
   private JobState finalState = null;
 
-  public YarnJob(ExecutionFacade facade, YarnRunner runner, FileOperations fops) {
-    super(facade);
-    this.runner = runner;
-    this.fops = fops;
+  public YarnJob(JobDescription<? extends YarnJobConfiguration> job, Users user,
+          HopsworksExecutionServiceProvider services) {
+    super(job, services, user);
   }
 
   public final void setStdOutFinalDestination(String stdOutFinalDestination) {
@@ -63,15 +62,17 @@ public class YarnJob extends HopsJob {
     return finalState;
   }
 
-  protected final YarnRunner getRunner() {
-    return runner;
-  }
-
-  protected final FileOperations getFileOperations() {
-    return fops;
-  }
-
-  protected final boolean startJob() {
+  /**
+   * Start the YARN application master.
+   * <p>
+   * @return True if the AM was started, false otherwise.
+   * @throws IllegalStateException If the YarnRunner has not been set yet.
+   */
+  protected final boolean startApplicationMaster() throws IllegalStateException {
+    if (runner == null) {
+      throw new IllegalStateException(
+              "The YarnRunner has not been initialized yet.");
+    }
     try {
       updateState(JobState.STARTING_APP_MASTER);
       monitor = runner.startAppMaster();
@@ -90,6 +91,12 @@ public class YarnJob extends HopsJob {
     }
   }
 
+  /**
+   * Monitor the state of the job.
+   * <p>
+   * @return True if monitoring succeeded all the way, false if failed in
+   * between.
+   */
   protected final boolean monitor() {
     try (YarnMonitor r = monitor.start()) {
       if (!started) {
@@ -161,22 +168,29 @@ public class YarnJob extends HopsJob {
     }
   }
 
+  /**
+   * Copy the AM logs to their final destination.
+   */
   protected void copyLogs() {
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
-          fops.copyToHDFSFromLocal(true, runner.getStdOutPath(),
+          services.getFileOperations().copyToHDFSFromLocal(true, runner.
+                  getStdOutPath(),
                   stdOutFinalDestination);
         } else {
-          fops.renameInHdfs(runner.getStdOutPath(), stdOutFinalDestination);
+          services.getFileOperations().renameInHdfs(runner.getStdOutPath(),
+                  stdOutFinalDestination);
         }
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
-          fops.copyToHDFSFromLocal(true, runner.getStdErrPath(),
+          services.getFileOperations().copyToHDFSFromLocal(true, runner.
+                  getStdErrPath(),
                   stdErrFinalDestination);
         } else {
-          fops.renameInHdfs(runner.getStdErrPath(), stdErrFinalDestination);
+          services.getFileOperations().renameInHdfs(runner.getStdErrPath(),
+                  stdErrFinalDestination);
         }
       }
       updateExecution(null, -1, stdOutFinalDestination, stdErrFinalDestination,
@@ -189,19 +203,19 @@ public class YarnJob extends HopsJob {
   }
 
   @Override
-  protected void runJobInternal() {
-    //Keep track of time and start job
-    long startTime = System.currentTimeMillis();
+  protected void runJob() {
     // Try to start the AM
-    boolean proceed = startJob();
+    boolean proceed = startApplicationMaster();
 
     if (!proceed) {
       return;
     }
+    proceed = monitor();
+    //If not ok: return
+    if (!proceed) {
+      return;
+    }
     copyLogs();
-    long endTime = System.currentTimeMillis();
-    long duration = endTime - startTime;
-    updateExecution(getFinalState(), duration, null,
-            null, null, null, null);
+    updateState(getFinalState());
   }
 }

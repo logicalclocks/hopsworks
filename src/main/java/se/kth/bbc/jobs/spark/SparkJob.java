@@ -1,10 +1,16 @@
 package se.kth.bbc.jobs.spark;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.execution.HopsworksExecutionServiceProvider;
+import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.model.description.SparkJobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
-import se.kth.bbc.jobs.yarn.YarnRunner;
+import se.kth.bbc.lims.Constants;
+import se.kth.bbc.lims.Utils;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  * Orchestrates the execution of a Spark job: run job, update history
@@ -17,30 +23,59 @@ public final class SparkJob extends YarnJob {
   private static final Logger logger = Logger.
           getLogger(SparkJob.class.getName());
 
-  public SparkJob(ExecutionFacade facade, YarnRunner runner,
-          FileOperations fops) {
-    super(facade, runner, fops);
+  private final SparkJobDescription sparkjob; //Just for convenience
+
+  public SparkJob(JobDescription<? extends SparkJobConfiguration> job,
+          Users user, HopsworksExecutionServiceProvider services) {
+    super(job, user, services);
+    this.sparkjob = (SparkJobDescription) super.jobDescription;
   }
 
   @Override
-  protected void runJobInternal() {
-    //Keep track of time and start job
-    long startTime = System.currentTimeMillis();
-    //Try to start the AM
-    boolean proceed = super.startJob();
-    //If success: monitor running job
-    if (!proceed) {
-      return;
+  protected boolean setupJob() {
+    //Then: actually get to running.
+    SparkJobConfiguration jobconfig = sparkjob.getJobConfig();
+    if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
+      jobconfig.setAppName("Untitled Spark Job");
     }
-    proceed = super.monitor();
-    //If not ok: return
-    if (!proceed) {
-      return;
+    SparkYarnRunnerBuilder runnerbuilder = new SparkYarnRunnerBuilder(
+            jobconfig.getJarPath(), jobconfig.getMainClass());
+    runnerbuilder.setJobName(jobconfig.getAppName());
+    String[] jobArgs = jobconfig.getArgs().trim().split(" ");
+    runnerbuilder.addAllJobArgs(jobArgs);
+    //Set spark runner options
+    runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
+    runnerbuilder.setExecutorMemory(jobconfig.getExecutorMemory());
+    runnerbuilder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
+    //Set Yarn running options
+    runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
+    runnerbuilder.setDriverCores(jobconfig.getAmVCores());
+    runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
+
+    //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
+    try {
+      runner = runnerbuilder.getYarnRunner();
+    } catch (IOException e) {
+      logger.log(Level.SEVERE,
+              "Failed to create YarnRunner.", e);
+      writeToLogs(new IOException("Failed to start Yarn client.", e));
+      return false;
     }
-    super.copyLogs();
-    long endTime = System.currentTimeMillis();
-    long duration = endTime - startTime;
-    updateExecution(getFinalState(), duration, null, null, null, null, null);
+
+    String stdOutFinalDestination = Utils.getHdfsRootPath(sparkjob.getProject().getName())
+            + Constants.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
+            + File.separator + "stdout.log";
+    String stdErrFinalDestination = Utils.getHdfsRootPath(sparkjob.getProject().getName())
+            + Constants.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
+            + File.separator + "stderr.log";
+    setStdOutFinalDestination(stdOutFinalDestination);
+    setStdErrFinalDestination(stdErrFinalDestination);
+    return true;
+  }
+  
+  @Override
+  protected void cleanup(){
+    //No special tasks to be done here.
   }
 
 }

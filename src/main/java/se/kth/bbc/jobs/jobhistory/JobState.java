@@ -9,6 +9,7 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 public enum JobState {
 
   INITIALIZING,
+  INITIALIZATION_FAILED,
   FINISHED,
   RUNNING,
   ACCEPTED,
@@ -26,6 +27,8 @@ public enum JobState {
     switch (this) {
       case INITIALIZING:
         return "Initializing";
+      case INITIALIZATION_FAILED:
+        return "Initialization failed";
       case FINISHED:
         return "Finished";
       case RUNNING:
@@ -83,6 +86,7 @@ public enum JobState {
       case KILLED:
       case FRAMEWORK_FAILURE:
       case APP_MASTER_START_FAILED:
+      case INITIALIZATION_FAILED:
         return true;
       default:
         return false;

@@ -2,43 +2,68 @@ package se.kth.bbc.jobs.execution;
 
 import java.util.Collection;
 import se.kth.bbc.jobs.jobhistory.Execution;
-import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.hopsworks.user.model.Users;
 
 /**
- * Contains the execution logic of a Hops job. Its internals
- * should take care of the entire job execution process. This entails creating
- * a persisted JobHistory object (in the init() method) that allows for
- * rerunning the same job, starting the actual job and possibly processing its
- * input/output and finally creating a new instance based on a previously run
- * job's JobHistory object.
+ * Contains the execution logic of a Hops job. This class takes care of the main
+ * flow control of the application. The job is started by calling the execute()
+ * method. Note that this method is blocking. Before this, however, the client
+ * must have requested an Execution id by calling the appropriate method on
+ * this class. HopsJob then sets up and runs the actual job and finally
+ * allows for some cleanup. This class takes care of execution time tracking as
+ * well.
+ * <p>
+ * Three abstract methods are provided for overriding:
+ * <ul>
+ * <li>setupJob() - This method is called after an Execution id has been
+ * procured. </li>
+ * <li>runJob() - This method is called after setupJob() finishes. </li>
+ * <li>cleanup() - This method is called after runJob() finishes. </li>
+ * </ul>
+ * <p>
+ * The calls to each of these methods are blocking.
  * <p>
  * @author stig
  */
 public abstract class HopsJob {
 
-  private ExecutionFacade executionFacade;
-  private boolean initialized = false;
   private Execution execution;
+  private boolean initialized = false;
 
-  public HopsJob(ExecutionFacade executionFacade) {
-    this.executionFacade = executionFacade;
-  }
+  //Service provider providing access to facades
+  protected final HopsworksExecutionServiceProvider services;
+  protected final JobDescription<? extends JobConfiguration> jobDescription;
+  private final Users user;
 
-  public ExecutionFacade getExecutionFacade() {
-    return executionFacade;
-  }
-
-  public void setExecutionFacade(ExecutionFacade executionFacade) {
-    this.executionFacade = executionFacade;
-  }
-
-  public final boolean isIdAssigned() {
-    return initialized;
+  /**
+   * Create a HopsJob instance.
+   * <p>
+   * @param jobDescription The JobDescription to be executed.
+   * @param services A service provider giving access to several execution
+   * services.
+   * @param user The user executing this job.
+   * @throws NullPointerException If either of the given arguments is null.
+   */
+  protected HopsJob(JobDescription<? extends JobConfiguration> jobDescription,
+          HopsworksExecutionServiceProvider services, Users user) throws
+          NullPointerException {
+    //Check validity
+    if (jobDescription == null) {
+      throw new NullPointerException("Cannot run a null JobDescription.");
+    } else if (services == null) {
+      throw new NullPointerException("Cannot run without a service provider.");
+    } else if (user == null) {
+      throw new NullPointerException("A job cannot be run by a null user!");
+    }
+    //We can safely proceed
+    this.jobDescription = jobDescription;
+    this.services = services;
+    this.user = user;
   }
 
   /**
@@ -51,40 +76,93 @@ public abstract class HopsJob {
     return new Execution(execution);
   }
 
+  /**
+   * Update the current state of the Execution entity to the given state.
+   * <p>
+   * @param newState
+   */
   protected final void updateState(JobState newState) {
-    execution = executionFacade.updateState(execution, newState);
+    execution = services.getExecutionFacade().updateState(execution, newState);
   }
 
+  /**
+   * Update the current Execution entity with the given values.
+   * <p>
+   * @param state
+   * @param executionDuration
+   * @param stdoutPath
+   * @param stderrPath
+   * @param appId
+   * @param inputFiles
+   * @param outputFiles
+   */
   protected final void updateExecution(JobState state,
           long executionDuration, String stdoutPath,
           String stderrPath, String appId, Collection<JobInputFile> inputFiles,
           Collection<JobOutputFile> outputFiles) {
-    Execution upd = executionFacade.updateAppId(execution, appId);
-    upd = executionFacade.updateExecutionTime(upd, executionDuration);
-    upd = executionFacade.updateOutput(upd, outputFiles);
-    upd = executionFacade.updateState(upd, state);
-    upd = executionFacade.updateStdErrPath(upd, stderrPath);
-    upd = executionFacade.updateStdOutPath(upd, stdoutPath);
+    Execution upd = services.getExecutionFacade().updateAppId(execution, appId);
+    upd = services.getExecutionFacade().updateExecutionTime(upd,
+            executionDuration);
+    upd = services.getExecutionFacade().updateOutput(upd, outputFiles);
+    upd = services.getExecutionFacade().updateState(upd, state);
+    upd = services.getExecutionFacade().updateStdErrPath(upd, stderrPath);
+    upd = services.getExecutionFacade().updateStdOutPath(upd, stdoutPath);
     this.execution = upd;
   }
 
   /**
-   * Takes care of the execution of the job. First checks if the job has
-   * been assigned a job id (achieved by calling requestJobId) and then calls
-   * runJobInternal(), which takes care of the real execution of the job.
-   * Is not intended to perform any work asynchronously, so should not be called
-   * from a synchronous context.
+   * Execute the job and keep track of its execution time. The execution flow is
+   * outlined in the class documentation. Internally, this method calls
+   * setupJob(), runJob() and cleanup() in that order.
+   * This method is blocking.
    * <p>
-   * @throws IllegalStateException Thrown when called on a job that has not been
-   * assigned a job id.
+   * @throws IllegalStateException If no Execution id has been requested yet.
    */
-  public final void runJob() throws IllegalStateException {
+  public final void execute() throws IllegalStateException {
     if (!initialized) {
-      throw new IllegalStateException("Trying to run a job for which no id has"
-              + "been assigned yet.");
+      throw new IllegalStateException(
+              "Cannot execute before acquiring an Execution id.");
     }
-    runJobInternal();
+    long starttime = System.currentTimeMillis();
+    boolean proceed = setupJob();
+    if (!proceed) {
+      long executiontime = System.currentTimeMillis() - starttime;
+      updateExecution(JobState.INITIALIZATION_FAILED, executiontime, null, null,
+              null, null, null);
+      cleanup();
+      return;
+    } else {
+      updateState(JobState.STARTING_APP_MASTER);
+    }
+    runJob();
+    long executiontime = System.currentTimeMillis() - starttime;
+    updateExecution(null, executiontime, null, null, null, null, null);
+    cleanup();
   }
+
+  /**
+   * Called before runJob, should setup the job environment to allow it to be
+   * run.
+   * <p>
+   * @return False if execution should be aborted. Cleanup() is still executed
+   * in that case.
+   */
+  protected abstract boolean setupJob();
+
+  /**
+   * Takes care of the execution of the job. Called by execute() after
+   * setupJob(), if that method indicated to be successful.
+   * Note that this method should update the Execution object correctly and
+   * persistently, since this object is used to check the status of (running)
+   * jobs.
+   */
+  protected abstract void runJob();
+
+  /**
+   * Called after runJob() completes, allows the job to perform some cleanup, if
+   * necessary.
+   */
+  protected abstract void cleanup();
 
   /**
    * Request a unique execution id by creating an Execution object. Creates
@@ -92,28 +170,38 @@ public abstract class HopsJob {
    * Upon success, returns the created Execution object to allow tracking.
    * This method must be called before attempting to run the actual execution.
    * <p>
-   * @param j The job for which an execution should be started.
-   * @param user The user who is starting this job.
-   * @return Unique id of the JobHistory object associated with this job.
+   * @return Unique Execution object associated with this job.
    */
-  public final Execution requestJobId(JobDescription j, Users user) {
-    execution = executionFacade.create(j, user, null, null, null);
+  public final Execution requestExecutionId() {
+    execution = services.getExecutionFacade().create(jobDescription, user, null,
+            null, null);
     initialized = (execution.getId() != null);
     return execution;
   }
 
   /**
-   * Takes care of the execution of the job. Called by runJob() which first
-   * checks whether the job has been initialized. In the execution, the job
-   * should
-   * take care of updating its JobHistory object, running the job and possibly
-   * process input or output.
+   * Check whether the HopsJob was initialized correctly, {@literal i.e.} if an
+   * Execution id has been acquired.
    * <p>
-   * Intended to be called from an asynchronous context so should not create
-   * threads ad libidum.
-   * <p>
-   * Note that updating the JobHistory object correctly and persistently is
-   * crucial, for this object is used to check the status of (running) jobs.
+   * @return
    */
-  protected abstract void runJobInternal();
+  public final boolean isInitialized() {
+    return initialized;
+  }
+  
+  /**
+   * Write a message to the application logs.
+   * @param message
+   */
+  protected final void writeToLogs(String message){
+    //TODO: implement this.
+  }
+  
+  /**
+   * Write an Exception message to the application logs.
+   * @param e 
+   */
+  protected final void writeToLogs(Exception e){
+    writeToLogs(e.getLocalizedMessage());
+  }
 }

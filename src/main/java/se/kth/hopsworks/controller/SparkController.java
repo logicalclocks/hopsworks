@@ -14,16 +14,10 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.jobhistory.Execution;
-import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.model.description.SparkJobDescription;
 import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
-import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
-import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.Constants;
-import se.kth.bbc.lims.Utils;
-import se.kth.bbc.project.Project;
-import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -40,13 +34,9 @@ public class SparkController {
   @EJB
   private FileOperations fops;
   @EJB
-  private ExecutionFacade executionFacade;
-  @EJB
   private AsynchronousJobExecutor submitter;
   @EJB
   private ActivityFacade activityFacade;
-  @EJB
-  private ProjectFacade projects;
 
   /**
    * Start the Spark job as the given user.
@@ -60,71 +50,37 @@ public class SparkController {
    * @throws IllegalArgumentException If the given job does not represent a
    * Spark job.
    */
-  public Execution startJob(JobDescription job, Users user) throws IllegalStateException,
+  public Execution startJob(SparkJobDescription job, Users user) throws
+          IllegalStateException,
           IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.
-    if(job == null){
+    if (job == null) {
       throw new NullPointerException("Cannot run a null job.");
-    }else if(user == null){
+    } else if (user == null) {
       throw new NullPointerException("Cannot run a job as a null user.");
-    }else if(! (job.getJobConfig() instanceof SparkJobConfiguration)){
-      throw new IllegalArgumentException("Job configuration is not a Spark job configuration.");
+    } else if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
+      throw new IllegalArgumentException(
+              "Job configuration is not a Spark job configuration.");
     } else if (!isSparkJarAvailable()) {
       throw new IllegalStateException("Spark is not installed on this system.");
     }
-    //Then: actually get to running.
-    SparkJobConfiguration jobconfig = (SparkJobConfiguration)job.getJobConfig();
-    if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
-      jobconfig.setAppName("Untitled Spark Job");
-    }
-    SparkYarnRunnerBuilder runnerbuilder = new SparkYarnRunnerBuilder(
-            jobconfig.getJarPath(), jobconfig.getMainClass());
-    runnerbuilder.setJobName(jobconfig.getAppName());
-    String[] jobArgs = jobconfig.getArgs().trim().split(" ");
-    runnerbuilder.addAllJobArgs(jobArgs);
-    //Set spark runner options
-    runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
-    runnerbuilder.setExecutorMemory(jobconfig.getExecutorMemory());
-    runnerbuilder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
-    //Set Yarn running options
-    runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
-    runnerbuilder.setDriverCores(jobconfig.getAmVCores());
-    runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
 
-    //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
-    YarnRunner r;
-    try {
-      r = runnerbuilder.getYarnRunner();
-    } catch (IOException e) {
-      logger.log(Level.SEVERE,
-              "Failed to create YarnRunner.", e);
-      throw new IOException("Failed to start Yarn client.", e);
-    }
-
-    SparkJob sparkjob = new SparkJob(executionFacade, r, fops);
-    Project project = job.getProject();
-    Execution jh = sparkjob.requestJobId(job, user);
+    SparkJob sparkjob = new SparkJob(job, user, submitter);
+    Execution jh = sparkjob.requestExecutionId();
     if (jh != null) {
-      String stdOutFinalDestination = Utils.getHdfsRootPath(project.getName())
-              + Constants.SPARK_DEFAULT_OUTPUT_PATH + jh.getId()
-              + File.separator + "stdout.log";
-      String stdErrFinalDestination = Utils.getHdfsRootPath(project.getName())
-              + Constants.SPARK_DEFAULT_OUTPUT_PATH + jh.getId()
-              + File.separator + "stderr.log";
-      sparkjob.setStdOutFinalDestination(stdOutFinalDestination);
-      sparkjob.setStdErrFinalDestination(stdErrFinalDestination);
       submitter.startExecution(sparkjob);
     } else {
       logger.log(Level.SEVERE,
               "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB, project, user.asUser());
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
+            user.asUser());
     return jh;
   }
 
   /**
-   * Check if the Spark jar is in HDFS. If it's not, try and copy it there from
+   * Check if the Spark jars are in HDFS. If it's not, try and copy it there from
    * the local filesystem. If it's still not there, then return false.
    * <p>
    * @return
