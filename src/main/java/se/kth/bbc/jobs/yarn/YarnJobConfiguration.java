@@ -3,8 +3,8 @@ package se.kth.bbc.jobs.yarn;
 import com.google.common.base.Strings;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.DatabaseJsonObject;
-import se.kth.bbc.jobs.JsonReducable;
 import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 
 /**
  * Contains user-setable configuration parameters for a Yarn job.
@@ -12,7 +12,7 @@ import se.kth.bbc.jobs.jobhistory.JobType;
  * @author stig
  */
 @XmlRootElement
-public class YarnJobConfiguration implements JsonReducable {
+public class YarnJobConfiguration extends JobConfiguration {
 
   private String amQueue = "default";
   // Memory for App master (in MB)

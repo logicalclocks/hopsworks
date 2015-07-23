@@ -3,7 +3,7 @@ package se.kth.bbc.jobs.adam;
 import com.google.common.base.Strings;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.DatabaseJsonObject;
-import se.kth.bbc.jobs.JsonReducable;
+import se.kth.bbc.jobs.model.JsonReducable;
 
 /**
  * POJO representing an AdamCommand.

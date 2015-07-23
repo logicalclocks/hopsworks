@@ -1,7 +1,6 @@
 package se.kth.bbc.jobs.spark;
 
 import com.google.common.base.Strings;
-import javax.json.JsonObjectBuilder;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.DatabaseJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;

@@ -1,5 +1,7 @@
-package se.kth.bbc.jobs.jobhistory;
+package se.kth.bbc.jobs.model.description;
 
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
+import se.kth.bbc.jobs.model.configuration.JobConfigurationConverter;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
@@ -7,12 +9,13 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
+import javax.persistence.DiscriminatorColumn;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
@@ -26,41 +29,40 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
-import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
+import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.user.model.Users;
 
 /**
- * A job is a description of work to be executed. If the work is executed, this
- * results in an Execution.
+ * Description of work to be executed. If the work is executed, this
+ * results in an Execution. Every type of Job needs to subclass this Entity and
+ * declare the @DiscriminatorValue annotation.
  * <p>
  * @author stig
+ * @param <T> The JobConfiguration type. This defines how the job will be run.
  */
 @Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "type")
 @Table(name = "hopsworks.jobs")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "Job.findAll",
-          query = "SELECT j FROM Job j"),
-  @NamedQuery(name = "Job.findById",
+  @NamedQuery(name = "JobDescription.findAll",
+          query = "SELECT j FROM JobDescription j"),
+  @NamedQuery(name = "JobDescription.findById",
           query
-          = "SELECT j FROM Job j WHERE j.id = :id"),
-  @NamedQuery(name = "Job.findByName",
+          = "SELECT j FROM JobDescription j WHERE j.id = :id"),
+  @NamedQuery(name = "JobDescription.findByName",
           query
-          = "SELECT j FROM Job j WHERE j.name = :name"),
-  @NamedQuery(name = "Job.findByCreationTime",
+          = "SELECT j FROM JobDescription j WHERE j.name = :name"),
+  @NamedQuery(name = "JobDescription.findByCreationTime",
           query
-          = "SELECT j FROM Job j WHERE j.creationTime = :creationTime"),
-  @NamedQuery(name = "Job.findByType",
+          = "SELECT j FROM JobDescription j WHERE j.creationTime = :creationTime"),
+  @NamedQuery(name = "JobDescription.findByProject",
           query
-          = "SELECT j FROM Job j WHERE j.type = :type"),
-  @NamedQuery(name = "Job.findByProject",
-          query
-          = "SELECT j FROM Job j WHERE j.project = :project"),
-  @NamedQuery(name = "Job.findByProjectAndType",
-          query
-          = "SELECT j FROM Job j WHERE j.type = :type AND j.project = :project ORDER BY j.creationTime DESC")})
-public class JobDescription implements Serializable {
+          = "SELECT j FROM JobDescription j WHERE j.project = :project")})
+public abstract class JobDescription<T extends JobConfiguration> implements
+        Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -80,15 +82,9 @@ public class JobDescription implements Serializable {
   @Temporal(TemporalType.TIMESTAMP)
   private Date creationTime;
 
-  @NotNull
-  @Size(max = 128)
-  @Column(name = "type")
-  @Enumerated(EnumType.STRING)
-  private JobType type;
-
   @Column(name = "json_config")
-  @Convert(converter = YarnJobConfigurationConverter.class)
-  private YarnJobConfiguration jobConfig;
+  @Convert(converter = JobConfigurationConverter.class)
+  private T jobConfig;
 
   @JoinColumn(name = "project_id",
           referencedColumnName = "id")
@@ -105,93 +101,82 @@ public class JobDescription implements Serializable {
   @XmlTransient
   private Collection<Execution> executionCollection;
 
-  public JobDescription() {
-  }
-
-  public JobDescription(JobType type, YarnJobConfiguration config, Project project,
+  public JobDescription(T config, Project project,
           Users creator) {
-    this(type, config, project, creator, new Date());
+    this(config, project, creator, new Date());
   }
 
-  public JobDescription(JobType type, YarnJobConfiguration config, Project project,
+  public JobDescription(T config, Project project,
           Users creator, Date creationTime) {
-    this(type, config, project, creator, null, creationTime);
+    this(config, project, creator, null, creationTime);
   }
 
-  public JobDescription(JobType type, YarnJobConfiguration config, Project project,
+  public JobDescription(T config, Project project,
           Users creator, String jobname) {
-    this(type, config, project, creator, jobname, new Date());
+    this(config, project, creator, jobname, new Date());
   }
 
-  public JobDescription(JobType type, YarnJobConfiguration config, Project project,
+  protected JobDescription(T config, Project project,
           Users creator, String jobname, Date creationTime) {
     this.name = jobname;
     this.creationTime = creationTime;
-    this.type = type;
     this.jobConfig = config;
     this.project = project;
     this.creator = creator;
   }
 
-  public Integer getId() {
+  public final Integer getId() {
     return id;
   }
 
-  public void setId(Integer id) {
+  public final void setId(Integer id) {
     this.id = id;
   }
 
-  public String getName() {
+  public final String getName() {
     return name;
   }
 
-  public void setName(String name) {
+  public final void setName(String name) {
     this.name = name;
   }
 
-  public Date getCreationTime() {
+  public final Date getCreationTime() {
     return creationTime;
   }
 
-  public void setCreationTime(Date creationTime) {
+  public final void setCreationTime(Date creationTime) {
     this.creationTime = creationTime;
   }
 
-  public JobType getType() {
-    return type;
-  }
-
-  public void setType(JobType type) {
-    this.type = type;
-  }
-
-  public YarnJobConfiguration getJobConfig() {
+  public final T getJobConfig() {
     return jobConfig;
   }
 
-  public void setJobConfig(YarnJobConfiguration config) {
-    this.jobConfig = config;
+  public final void setJobConfig(T jobConfig) {
+    this.jobConfig = jobConfig;
   }
 
   @XmlTransient
   @JsonIgnore
-  public Collection<Execution> getExecutionCollection() {
+  public final Collection<Execution> getExecutionCollection() {
     return executionCollection;
   }
 
-  public void setExecutionCollection(Collection<Execution> executionCollection) {
+  public final void setExecutionCollection(
+          Collection<Execution> executionCollection) {
     this.executionCollection = executionCollection;
   }
 
   @Override
-  public int hashCode() {
+  public final int hashCode() {
     int hash = 0;
     hash += (id != null ? id.hashCode() : 0);
     return hash;
   }
 
   @Override
-  public boolean equals(Object object) {
+  public final boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
     if (!(object instanceof JobDescription)) {
       return false;
@@ -206,22 +191,22 @@ public class JobDescription implements Serializable {
 
   @Override
   public String toString() {
-    return "Job [" + name + ", " + type + ", " + id + "]";
+    return "Job [" + name + ", " + id + "]";
   }
 
-  public Project getProject() {
+  public final Project getProject() {
     return project;
   }
 
-  public void setProject(Project project) {
+  public final void setProject(Project project) {
     this.project = project;
   }
 
-  public Users getCreator() {
+  public final Users getCreator() {
     return creator;
   }
 
-  public void setCreator(Users creator) {
+  public final void setCreator(Users creator) {
     this.creator = creator;
   }
 

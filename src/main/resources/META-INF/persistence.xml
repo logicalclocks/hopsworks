@@ -37,7 +37,7 @@
     <class>se.kth.meta.entity.Field</class>
     <class>se.kth.meta.entity.MTable</class>
     <class>se.kth.meta.entity.Template</class>
-    <class>se.kth.bbc.jobs.jobhistory.YarnJobConfigurationConverter</class>
+    <class>se.kth.bbc.jobs.model.configuration.JobConfigurationConverter</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

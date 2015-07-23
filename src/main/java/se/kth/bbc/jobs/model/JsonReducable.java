@@ -1,4 +1,6 @@
-package se.kth.bbc.jobs;
+package se.kth.bbc.jobs.model;
+
+import se.kth.bbc.jobs.DatabaseJsonObject;
 
 /**
  * Signifies that this object can be translated in a more compact JSON format.

@@ -23,8 +23,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
-import se.kth.bbc.jobs.jobhistory.JobDescription;
-import se.kth.bbc.jobs.jobhistory.JobFacade;
+import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.CuneiformController;
@@ -45,7 +45,7 @@ public class CuneiformService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private JobFacade jobFacade;
+  private JobDescriptionFacade jobFacade;
   @EJB
   private UserFacade userFacade;
 

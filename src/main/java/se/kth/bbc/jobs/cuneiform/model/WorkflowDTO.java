@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.DatabaseJsonObject;
-import se.kth.bbc.jobs.JsonReducable;
+import se.kth.bbc.jobs.model.JsonReducable;
 import se.kth.bbc.lims.Utils;
 
 /**

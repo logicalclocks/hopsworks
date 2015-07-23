@@ -17,7 +17,7 @@ import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.adam.AdamOptionDTO;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.jobhistory.JobDescription;
+import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.jobs.yarn.YarnRunner;

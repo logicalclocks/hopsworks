@@ -19,7 +19,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.jobhistory.JobDescription;
+import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.hopsworks.controller.AdamController;
 import se.kth.hopsworks.controller.CuneiformController;

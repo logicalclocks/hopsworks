@@ -3,7 +3,7 @@ package se.kth.bbc.jobs;
 import java.util.Collection;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.jobhistory.JobDescription;
+import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;

@@ -141,7 +141,7 @@ CREATE TABLE `jobs` (
   `project_id` INT(11) NOT NULL,
   `creator` VARCHAR(45) NOT NULL,
   `type` VARCHAR(128) NOT NULL,
-  `json_config` TEXT DEFAULT NULL,
+  `json_config` TEXT NOT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   FOREIGN KEY (`creator`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION

@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs.jobhistory;
 
+import se.kth.bbc.jobs.model.description.JobDescription;
 import java.util.Collection;
 import java.util.List;
 import javax.persistence.EntityManager;
