@@ -44,12 +44,12 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   }
 
   /**
-   * Get all the executions for a given Job.
+   * Get all the executions for a given JobDescription.
    * <p>
    * @param job
    * @return
    */
-  public List<Execution> findForJob(Job job) {
+  public List<Execution> findForJob(JobDescription job) {
     TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJob",
             Execution.class);
     q.setParameter("job", job);
@@ -66,13 +66,13 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     return em.find(Execution.class, id);
   }
 
-  public Execution create(Job job, Users user, String stdoutPath,
+  public Execution create(JobDescription job, Users user, String stdoutPath,
           String stderrPath, Collection<JobInputFile> input) {
     return create(job, user, JobState.INITIALIZING, stdoutPath, stderrPath,
             input);
   }
 
-  public Execution create(Job job, Users user, JobState state, String stdoutPath,
+  public Execution create(JobDescription job, Users user, JobState state, String stdoutPath,
           String stderrPath, Collection<JobInputFile> input) {
     //Check if state is ok
     if (state == null) {

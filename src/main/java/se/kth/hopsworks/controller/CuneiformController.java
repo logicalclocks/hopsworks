@@ -19,7 +19,7 @@ import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.jobhistory.Job;
+import se.kth.bbc.jobs.jobhistory.JobDescription;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.Constants;
@@ -97,9 +97,9 @@ public class CuneiformController {
    * @throws IOException
    * @throws NullPointerException If the user or job are null.
    * @throws IllegalArgumentException If the job does not represent a Cuneiform
-   * Job.
+ JobDescription.
    */
-  public Execution startWorkflow(Job job, Users user) throws IOException,
+  public Execution startWorkflow(JobDescription job, Users user) throws IOException,
           IllegalArgumentException, NullPointerException {
     //First: some parameter checking
     if (job == null) {

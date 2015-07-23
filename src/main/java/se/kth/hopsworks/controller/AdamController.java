@@ -17,7 +17,7 @@ import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.adam.AdamOptionDTO;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.jobhistory.Job;
+import se.kth.bbc.jobs.jobhistory.JobDescription;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.jobs.yarn.YarnRunner;
@@ -55,11 +55,11 @@ public class AdamController {
    * @param user
    * @return
    * @throws IllegalStateException If Adam is not set up properly.
-   * @throws IllegalArgumentException If the Job is not set up properly.
+   * @throws IllegalArgumentException If the JobDescription is not set up properly.
    * @throws IOException If starting the job fails.
    * @throws NullPointerException If job or user is null.
    */
-  public Execution startJob(Job job, Users user) throws IllegalStateException,
+  public Execution startJob(JobDescription job, Users user) throws IllegalStateException,
           IllegalArgumentException, IOException, NullPointerException {
     //First: do some parameter checking.
     if (job == null) {

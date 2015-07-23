@@ -23,7 +23,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
-import se.kth.bbc.jobs.jobhistory.Job;
+import se.kth.bbc.jobs.jobhistory.JobDescription;
 import se.kth.bbc.jobs.jobhistory.JobFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.project.Project;
@@ -61,7 +61,7 @@ public class CuneiformService {
    * <p>
    * @param sc
    * @param req
-   * @return A list of all Job objects of type Cuneiform in this project.
+   * @return A list of all JobDescription objects of type Cuneiform in this project.
    * @throws se.kth.hopsworks.rest.AppException
    */
   @GET
@@ -70,8 +70,8 @@ public class CuneiformService {
   public Response findAllCuneiformJobs(@Context SecurityContext sc,
           @Context HttpServletRequest req)
           throws AppException {
-    List<Job> jobs = jobFacade.findForProjectByType(project, JobType.CUNEIFORM);
-    GenericEntity<List<Job>> jobList = new GenericEntity<List<Job>>(jobs) {
+    List<JobDescription> jobs = jobFacade.findForProjectByType(project, JobType.CUNEIFORM);
+    GenericEntity<List<JobDescription>> jobList = new GenericEntity<List<JobDescription>>(jobs) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             jobList).build();
@@ -118,9 +118,9 @@ public class CuneiformService {
 
   /**
    * Create a new Cuneiform job. The CuneiformJobConfiguration is passed as an
-   * argument. This call returns the created Job object. To see if the job was
-   * started, update the execution list.
-   * <p>
+ argument. This call returns the created JobDescription object. To see if the job was
+ started, update the execution list.
+ <p>
    * @param runData
    * @param sc
    * @param req
@@ -138,13 +138,13 @@ public class CuneiformService {
     if (runData == null) {
       return Response.status(Response.Status.BAD_REQUEST).build();
     }
-    //Get the info to build a Job object
+    //Get the info to build a JobDescription object
     String jobname = runData.getAppName();
     JobType type = JobType.CUNEIFORM;
     String email = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(email);
     //Create the new job object.
-    Job job = jobFacade.create(jobname, user, project, type, runData);
+    JobDescription job = jobFacade.create(jobname, user, project, type, runData);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             job).build();
   }

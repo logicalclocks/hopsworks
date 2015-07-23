@@ -13,16 +13,16 @@ import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
- * Facade for management of persistent Job objects.
+ * Facade for management of persistent JobDescription objects.
  * @author stig
  */
-public class JobFacade extends AbstractFacade<Job> {
+public class JobFacade extends AbstractFacade<JobDescription> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   public JobFacade() {
-    super(Job.class);
+    super(JobDescription.class);
   }
 
   @Override
@@ -31,15 +31,14 @@ public class JobFacade extends AbstractFacade<Job> {
   }
 
   /**
-   * Find all the Job entries for the given project and type.
+   * Find all the JobDescription entries for the given project and type.
    * <p>
    * @param project
    * @param type
    * @return List of JobHistory objects.
    */
-  public List<Job> findForProjectByType(Project project, JobType type) {
-    TypedQuery<Job> q = em.createNamedQuery(
-            "Job.findByProjectAndType", Job.class);
+  public List<JobDescription> findForProjectByType(Project project, JobType type) {
+    TypedQuery<JobDescription> q = em.createNamedQuery("Job.findByProjectAndType", JobDescription.class);
     q.setParameter("type", type);
     q.setParameter("project", project);
     return q.getResultList();
@@ -50,14 +49,14 @@ public class JobFacade extends AbstractFacade<Job> {
    * @param project
    * @return 
    */
-  public List<Job> findForProject(Project project){
-    TypedQuery<Job> q = em.createNamedQuery("Job.findByProject", Job.class);
+  public List<JobDescription> findForProject(Project project){
+    TypedQuery<JobDescription> q = em.createNamedQuery("Job.findByProject", JobDescription.class);
     q.setParameter("project", project);
     return q.getResultList();
   }
 
   /**
-   * Create a new Job instance.
+   * Create a new JobDescription instance.
    * <p>
    * @param name The name of the job.
    * @param user The creator of the job.
@@ -67,10 +66,10 @@ public class JobFacade extends AbstractFacade<Job> {
    * @return
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW) //This seems to ensure that the entity is actually created and can later be found using em.find().
-  public Job create(String name, Users user, Project project, JobType type,
+  public JobDescription create(String name, Users user, Project project, JobType type,
            YarnJobConfiguration config) {
     //First: create a job object
-    Job job = new Job(type, config, project, user, name);
+    JobDescription job = new JobDescription(type, config, project, user, name);
     //Finally: persist it, getting the assigned id.
     em.persist(job);
     em.flush(); //To get the id.
@@ -78,12 +77,12 @@ public class JobFacade extends AbstractFacade<Job> {
   }
   
   /**
-   * Find the Job with given id.
+   * Find the JobDescription with given id.
    * @param id
    * @return The found entity or null if no such exists.
    */
-  public Job findById(Integer id){
-    return em.find(Job.class, id);
+  public JobDescription findById(Integer id){
+    return em.find(JobDescription.class, id);
   }
 
 }

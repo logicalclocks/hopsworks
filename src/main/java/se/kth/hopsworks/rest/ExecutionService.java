@@ -19,7 +19,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.jobhistory.Job;
+import se.kth.bbc.jobs.jobhistory.JobDescription;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.hopsworks.controller.AdamController;
 import se.kth.hopsworks.controller.CuneiformController;
@@ -49,9 +49,9 @@ public class ExecutionService {
   @EJB
   private AdamController adamController;
 
-  private Job job;
+  private JobDescription job;
 
-  ExecutionService setJob(Job job) {
+  ExecutionService setJob(JobDescription job) {
     this.job = job;
     return this;
   }
@@ -87,7 +87,7 @@ public class ExecutionService {
     JobType type = job.getType();
     switch(type){
       case CUNEIFORM:
-        
+        cuneiformController.startWorkflow(job, null)
     }
   }
 

@@ -28,7 +28,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.hopsworks.user.model.Users;
 
 /**
- * An Execution is an instance of execution of a specific Job.
+ * An Execution is an instance of execution of a specific JobDescription.
  * <p>
  * @author stig
  */
@@ -108,7 +108,7 @@ public class Execution implements Serializable {
   @JoinColumn(name = "job_id",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
-  private Job job;
+  private JobDescription job;
 
   @JoinColumn(name = "user",
           referencedColumnName = "email")
@@ -126,25 +126,25 @@ public class Execution implements Serializable {
   public Execution() {
   }
 
-  public Execution(JobState state, Job job, Users user) {
+  public Execution(JobState state, JobDescription job, Users user) {
     this(state, job, user, new Date());
   }
 
-  public Execution(JobState state, Job job, Users user, Date submissionTime) {
+  public Execution(JobState state, JobDescription job, Users user, Date submissionTime) {
     this(state, job, user, submissionTime, null, null);
   }
 
-  public Execution(JobState state, Job job, Users user, String stdoutPath,
+  public Execution(JobState state, JobDescription job, Users user, String stdoutPath,
           String stderrPath) {
     this(state, job, user, new Date(), stdoutPath, stderrPath);
   }
 
-  public Execution(JobState state, Job job, Users user, Date submissionTime,
+  public Execution(JobState state, JobDescription job, Users user, Date submissionTime,
           String stdoutPath, String stderrPath) {
     this(state, job, user, submissionTime, stdoutPath, stderrPath, null);
   }
 
-  public Execution(JobState state, Job job, Users user, String stdoutPath,
+  public Execution(JobState state, JobDescription job, Users user, String stdoutPath,
           String stderrPath, Collection<JobInputFile> input) {
     this(state, job, user, new Date(), stdoutPath, stderrPath, input);
   }
@@ -155,7 +155,7 @@ public class Execution implements Serializable {
     this.id = t.id;
   }
 
-  public Execution(JobState state, Job job, Users user, Date submissionTime,
+  public Execution(JobState state, JobDescription job, Users user, Date submissionTime,
           String stdoutPath, String stderrPath, Collection<JobInputFile> input) {
     this.submissionTime = submissionTime;
     this.state = state;
@@ -222,11 +222,11 @@ public class Execution implements Serializable {
     this.appId = appId;
   }
 
-  public Job getJob() {
+  public JobDescription getJob() {
     return job;
   }
 
-  public void setJob(Job job) {
+  public void setJob(JobDescription job) {
     this.job = job;
   }
 

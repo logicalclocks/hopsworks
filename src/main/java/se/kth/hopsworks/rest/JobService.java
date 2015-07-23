@@ -18,7 +18,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.jobs.jobhistory.Job;
+import se.kth.bbc.jobs.jobhistory.JobDescription;
 import se.kth.bbc.jobs.jobhistory.JobFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.project.Project;
@@ -69,8 +69,8 @@ public class JobService {
   public Response findAllJobs(@Context SecurityContext sc,
           @Context HttpServletRequest req)
           throws AppException {
-    List<Job> jobs = jobFacade.findForProject(project);
-    GenericEntity<List<Job>> jobList = new GenericEntity<List<Job>>(jobs) {
+    List<JobDescription> jobs = jobFacade.findForProject(project);
+    GenericEntity<List<JobDescription>> jobList = new GenericEntity<List<JobDescription>>(jobs) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             jobList).build();
@@ -92,7 +92,7 @@ public class JobService {
   public Response getJob(@PathParam("jobId") int jobId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    Job job = jobFacade.findById(jobId);
+    JobDescription job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
               getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
@@ -115,7 +115,7 @@ public class JobService {
   @Path("/{jobId}/executions")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public ExecutionService executions(@PathParam("jobId") int jobId) {
-    Job job = jobFacade.findById(jobId);
+    JobDescription job = jobFacade.findById(jobId);
     if (job == null) {
       return null;
     } else if (!job.getProject().equals(project)) {

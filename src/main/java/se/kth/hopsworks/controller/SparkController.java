@@ -15,7 +15,7 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.jobhistory.Job;
+import se.kth.bbc.jobs.jobhistory.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
@@ -60,7 +60,7 @@ public class SparkController {
    * @throws IllegalArgumentException If the given job does not represent a
    * Spark job.
    */
-  public Execution startJob(Job job, Users user) throws IllegalStateException,
+  public Execution startJob(JobDescription job, Users user) throws IllegalStateException,
           IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.
     if(job == null){

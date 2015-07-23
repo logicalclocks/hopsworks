@@ -3,7 +3,7 @@ package se.kth.bbc.jobs;
 import java.util.Collection;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.jobhistory.Job;
+import se.kth.bbc.jobs.jobhistory.JobDescription;
 import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;
@@ -96,7 +96,7 @@ public abstract class HopsJob {
    * @param user The user who is starting this job.
    * @return Unique id of the JobHistory object associated with this job.
    */
-  public final Execution requestJobId(Job j, Users user) {
+  public final Execution requestJobId(JobDescription j, Users user) {
     execution = executionFacade.create(j, user, null, null, null);
     initialized = (execution.getId() != null);
     return execution;

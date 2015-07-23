@@ -60,7 +60,7 @@ import se.kth.hopsworks.user.model.Users;
   @NamedQuery(name = "Job.findByProjectAndType",
           query
           = "SELECT j FROM Job j WHERE j.type = :type AND j.project = :project ORDER BY j.creationTime DESC")})
-public class Job implements Serializable {
+public class JobDescription implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -105,25 +105,25 @@ public class Job implements Serializable {
   @XmlTransient
   private Collection<Execution> executionCollection;
 
-  public Job() {
+  public JobDescription() {
   }
 
-  public Job(JobType type, YarnJobConfiguration config, Project project,
+  public JobDescription(JobType type, YarnJobConfiguration config, Project project,
           Users creator) {
     this(type, config, project, creator, new Date());
   }
 
-  public Job(JobType type, YarnJobConfiguration config, Project project,
+  public JobDescription(JobType type, YarnJobConfiguration config, Project project,
           Users creator, Date creationTime) {
     this(type, config, project, creator, null, creationTime);
   }
 
-  public Job(JobType type, YarnJobConfiguration config, Project project,
+  public JobDescription(JobType type, YarnJobConfiguration config, Project project,
           Users creator, String jobname) {
     this(type, config, project, creator, jobname, new Date());
   }
 
-  public Job(JobType type, YarnJobConfiguration config, Project project,
+  public JobDescription(JobType type, YarnJobConfiguration config, Project project,
           Users creator, String jobname, Date creationTime) {
     this.name = jobname;
     this.creationTime = creationTime;
@@ -193,10 +193,10 @@ public class Job implements Serializable {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof Job)) {
+    if (!(object instanceof JobDescription)) {
       return false;
     }
-    Job other = (Job) object;
+    JobDescription other = (JobDescription) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
             equals(other.id))) {
       return false;
