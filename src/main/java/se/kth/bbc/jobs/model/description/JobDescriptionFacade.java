@@ -1,6 +1,7 @@
 package se.kth.bbc.jobs.model.description;
 
 import java.util.List;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
@@ -17,6 +18,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  * <p>
  * @author stig
  */
+@Stateless
 public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
 
   @PersistenceContext(unitName = "kthfsPU")

@@ -2,6 +2,7 @@ package se.kth.bbc.jobs.model.configuration;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.DatabaseJsonObject;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
@@ -16,6 +17,7 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
  * <p>
  * @author stig
  */
+@XmlRootElement
 public abstract class JobConfiguration implements JsonReducable {
 
   private String applicationName;
@@ -28,13 +30,28 @@ public abstract class JobConfiguration implements JsonReducable {
     this.applicationName = applicationName;
   }
 
+    /**
+   * As found in Effective Java, the equals contract cannot be satisfied for
+   * inheritance hierarchies. Hence, these objects are not meant to be compared.
+   * <p>
+   * @param o
+   * @return
+   */
+  @Override
+  public final boolean equals(Object o) {
+    throw new UnsupportedOperationException(
+            "JobConfiguration objects cannot be compared.");
+  }
+
   public static class JobConfigurationFactory {
 
-    public static JobConfiguration getJobConfigurationFromJson(DatabaseJsonObject object)
-            throws IllegalArgumentException {   
+    public static JobConfiguration getJobConfigurationFromJson(
+            DatabaseJsonObject object)
+            throws IllegalArgumentException {
       //First: check if null
-      if(object == null){
-        throw new NullPointerException("Cannot get a JobConfiguration object from null.");
+      if (object == null) {
+        throw new NullPointerException(
+                "Cannot get a JobConfiguration object from null.");
       }
       //Get the type
       String jType = object.getString("type");
@@ -59,10 +76,10 @@ public abstract class JobConfiguration implements JsonReducable {
       }
       //Update the object
       conf.updateFromJson(object);
-      return conf;      
+      return conf;
     }
-    
-    public static List<JobConfiguration> getAllAssignableTemplates(){
+
+    public static List<JobConfiguration> getAllAssignableTemplates() {
       List<JobConfiguration> templates = new ArrayList<>(4);
       templates.add(new YarnJobConfiguration());
       templates.add(new CuneiformJobConfiguration());
@@ -70,6 +87,6 @@ public abstract class JobConfiguration implements JsonReducable {
       templates.add(new AdamJobConfiguration());
       return templates;
     }
-    
+
   }
 }

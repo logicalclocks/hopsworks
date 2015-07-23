@@ -3,9 +3,14 @@ package se.kth.bbc.jobs.jobhistory;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import java.util.Collection;
 import java.util.List;
+import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.jobs.model.description.AdamJobDescription;
+import se.kth.bbc.jobs.model.description.CuneiformJobDescription;
+import se.kth.bbc.jobs.model.description.SparkJobDescription;
+import se.kth.bbc.jobs.model.description.YarnJobDescription;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
@@ -15,6 +20,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  * <p>
  * @author stig
  */
+@Stateless
 public class ExecutionFacade extends AbstractFacade<Execution> {
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -35,11 +41,29 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
    * @param project
    * @param type
    * @return List of JobHistory objects.
+   * @throws IllegalArgumentException If the given JobType is not supported.
    */
-  public List<Execution> findForProjectByType(Project project, JobType type) {
+  public List<Execution> findForProjectByType(Project project, JobType type)
+          throws IllegalArgumentException {
     TypedQuery<Execution> q = em.createNamedQuery(
             "Execution.findByProjectAndType", Execution.class);
-    q.setParameter("type", type);
+    switch (type) {
+      case ADAM:
+        q.setParameter("class", AdamJobDescription.class);
+        break;
+      case CUNEIFORM:
+        q.setParameter("class", CuneiformJobDescription.class);
+        break;
+      case SPARK:
+        q.setParameter("class", SparkJobDescription.class);
+        break;
+      case YARN:
+        q.setParameter("class", YarnJobDescription.class);
+        break;
+      default:
+        throw new IllegalArgumentException(
+                "The given JobType is not yet supported.");
+    }
     q.setParameter("project", project);
     return q.getResultList();
   }
@@ -73,7 +97,8 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
             input);
   }
 
-  public Execution create(JobDescription job, Users user, JobState state, String stdoutPath,
+  public Execution create(JobDescription job, Users user, JobState state,
+          String stdoutPath,
           String stderrPath, Collection<JobInputFile> input) {
     //Check if state is ok
     if (state == null) {

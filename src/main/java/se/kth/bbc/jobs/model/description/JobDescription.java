@@ -39,6 +39,7 @@ import se.kth.hopsworks.user.model.Users;
  * declare the @DiscriminatorValue annotation.
  * <p>
  * @author stig
+ * @param <T>
  */
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -99,6 +100,8 @@ public abstract class JobDescription<T extends JobConfiguration> implements
           mappedBy = "job")
   @XmlTransient
   private Collection<Execution> executionCollection;
+  
+  protected JobDescription(){};
 
   public JobDescription(T config, Project project,
           Users creator) {
@@ -124,44 +127,44 @@ public abstract class JobDescription<T extends JobConfiguration> implements
     this.creator = creator;
   }
 
-  public final Integer getId() {
+  public Integer getId() {
     return id;
   }
 
-  public final void setId(Integer id) {
+  public void setId(Integer id) {
     this.id = id;
   }
 
-  public final String getName() {
+  public String getName() {
     return name;
   }
 
-  public final void setName(String name) {
+  public void setName(String name) {
     this.name = name;
   }
 
-  public final Date getCreationTime() {
+  public Date getCreationTime() {
     return creationTime;
   }
 
-  public final void setCreationTime(Date creationTime) {
+  public void setCreationTime(Date creationTime) {
     this.creationTime = creationTime;
   }
 
-  public final T getJobConfig() {
+  public T getJobConfig() {
     return jobConfig;
   }
 
-  public final void setJobConfig(T jobConfig) {
+  public void setJobConfig(T jobConfig) {
     this.jobConfig = jobConfig;
   }
 
   @JsonIgnore
-  public final Collection<Execution> getExecutionCollection() {
+  public Collection<Execution> getExecutionCollection() {
     return executionCollection;
   }
 
-  public final void setExecutionCollection(
+  public void setExecutionCollection(
           Collection<Execution> executionCollection) {
     this.executionCollection = executionCollection;
   }
@@ -192,19 +195,19 @@ public abstract class JobDescription<T extends JobConfiguration> implements
     return "Job [" + name + ", " + id + "]";
   }
 
-  public final Project getProject() {
+  public Project getProject() {
     return project;
   }
 
-  public final void setProject(Project project) {
+  public void setProject(Project project) {
     this.project = project;
   }
 
-  public final Users getCreator() {
+  public Users getCreator() {
     return creator;
   }
 
-  public final void setCreator(Users creator) {
+  public void setCreator(Users creator) {
     this.creator = creator;
   }
 

@@ -153,9 +153,13 @@ public class JobService {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response getConfigurationTemplates(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            JobConfiguration.JobConfigurationFactory.getAllAssignableTemplates()).
-            build();
+    GenericEntity<List<JobConfiguration>> templates
+            = new GenericEntity<List<JobConfiguration>>(
+                    JobConfiguration.JobConfigurationFactory.
+                    getAllAssignableTemplates()) {
+                    };
+            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                    entity(templates).build();
   }
 
   /**

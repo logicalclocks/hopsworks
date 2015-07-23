@@ -63,7 +63,7 @@ import se.kth.hopsworks.user.model.Users;
           = "SELECT e FROM Execution e WHERE e.appId = :appId"),
   @NamedQuery(name = "Execution.findByProjectAndType",
           query
-          = "SELECT e FROM Execution e WHERE e.job.type = :type AND e.job.project = :project ORDER BY e.submissionTime DESC"),
+          = "SELECT e FROM Execution e WHERE TYPE(e.job) = :class AND e.job.project = :project ORDER BY e.submissionTime DESC"),
   @NamedQuery(name = "Execution.findByJob",
           query
           = "SELECT e FROM Execution e WHERE e.job = :job ORDER BY e.submissionTime DESC")})
