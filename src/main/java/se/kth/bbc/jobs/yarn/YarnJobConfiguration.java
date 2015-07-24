@@ -28,6 +28,10 @@ public class YarnJobConfiguration extends JobConfiguration {
   protected final static String KEY_AMCORS = "AMCORS";
   protected final static String KEY_APPNAME = "APPNAME";
 
+  public YarnJobConfiguration() {
+    super();
+  }
+
   public final String getAmQueue() {
     return amQueue;
   }

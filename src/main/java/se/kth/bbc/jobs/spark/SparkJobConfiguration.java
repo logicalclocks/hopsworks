@@ -30,6 +30,10 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   protected static final String KEY_EXECCORES = "EXECCORES";
   protected static final String KEY_EXECMEM = "EXECMEM";
 
+  public SparkJobConfiguration() {
+    super();
+  }
+
   public String getJarPath() {
     return jarPath;
   }
@@ -132,13 +136,13 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   public DatabaseJsonObject getReducedJsonObject() {
     DatabaseJsonObject obj = super.getReducedJsonObject();
     //First: fields that are possibly null or empty:
-    if(!Strings.isNullOrEmpty(args)){
+    if (!Strings.isNullOrEmpty(args)) {
       obj.set(KEY_ARGS, args);
     }
-    if(!Strings.isNullOrEmpty(mainClass)){
+    if (!Strings.isNullOrEmpty(mainClass)) {
       obj.set(KEY_MAINCLASS, mainClass);
     }
-    if(!Strings.isNullOrEmpty(mainClass)){
+    if (!Strings.isNullOrEmpty(mainClass)) {
       obj.set(KEY_JARPATH, jarPath);
     }
     //Then: fields that can never be null or emtpy.
@@ -162,9 +166,9 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
         throw new IllegalArgumentException("JobType must be SPARK.");
       }
       //First: fields that can be null or empty
-      jsonArgs = json.getString(KEY_ARGS,null);
-      jsonJarpath = json.getString(KEY_JARPATH,null);
-      jsonMainclass = json.getString(KEY_MAINCLASS,null);
+      jsonArgs = json.getString(KEY_ARGS, null);
+      jsonJarpath = json.getString(KEY_JARPATH, null);
+      jsonMainclass = json.getString(KEY_MAINCLASS, null);
       //Then: fields that cannot be null or emtpy.
       jsonExeccors = json.getString(KEY_EXECCORES);
       jsonExecmem = json.getString(KEY_EXECMEM);

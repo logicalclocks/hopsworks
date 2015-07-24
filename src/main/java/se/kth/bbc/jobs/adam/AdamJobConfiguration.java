@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs.adam;
 
+import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.DatabaseJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
@@ -8,6 +9,7 @@ import se.kth.bbc.jobs.spark.SparkJobConfiguration;
  *
  * @author stig
  */
+@XmlRootElement
 public class AdamJobConfiguration extends SparkJobConfiguration {
 
   private AdamCommandDTO selectedCommand;
@@ -15,6 +17,7 @@ public class AdamJobConfiguration extends SparkJobConfiguration {
   protected static final String KEY_COMMAND = "command";
 
   public AdamJobConfiguration() {
+    super();
   }
 
   public AdamJobConfiguration(AdamCommandDTO selectedCommand) {

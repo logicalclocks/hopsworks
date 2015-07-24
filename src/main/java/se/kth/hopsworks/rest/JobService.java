@@ -1,5 +1,6 @@
 package se.kth.hopsworks.rest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,9 +21,14 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.bbc.jobs.adam.AdamJobConfiguration;
+import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
+import se.kth.bbc.jobs.spark.SparkJobConfiguration;
+import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
@@ -127,7 +133,7 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response createJob(JobConfiguration config, @Context SecurityContext sc,
+  public Response createJob(YarnJobConfiguration config, @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     if (config == null) {
       throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
@@ -141,25 +147,22 @@ public class JobService {
                 "You are not authorized for this invocation.");
       }
       JobDescription<? extends JobConfiguration> created = jobFacade.create(
-              config.getApplicationName(), user, project, config);
+              config.getAppName(), user, project, config);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();
     }
   }
 
   @GET
-  @Path("/templates")
+  @Path("/template/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response getConfigurationTemplates(@Context SecurityContext sc,
-          @Context HttpServletRequest req) {
-    GenericEntity<List<JobConfiguration>> templates
-            = new GenericEntity<List<JobConfiguration>>(
-                    JobConfiguration.JobConfigurationFactory.
-                    getAllAssignableTemplates()) {
-                    };
-            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-                    entity(templates).build();
+  public Response getConfigurationTemplate(@PathParam("type") String type,
+          @Context SecurityContext sc, @Context HttpServletRequest req) {
+    JobConfiguration template = JobConfiguration.JobConfigurationFactory.
+            getJobConfigurationTemplate(JobType.valueOf(type));
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(template).build();
   }
 
   /**

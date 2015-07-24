@@ -19,6 +19,7 @@ public class CuneiformJobConfiguration extends YarnJobConfiguration{
   protected static final String KEY_WORKFLOW = "workflow";
   
   public CuneiformJobConfiguration() {
+    super();
   }
 
   public CuneiformJobConfiguration(WorkflowDTO wf) {

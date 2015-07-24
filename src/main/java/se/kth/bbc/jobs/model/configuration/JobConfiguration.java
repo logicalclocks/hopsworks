@@ -20,17 +20,11 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 @XmlRootElement
 public abstract class JobConfiguration implements JsonReducable {
 
-  private String applicationName;
-
-  public String getApplicationName() {
-    return applicationName;
+  public JobConfiguration() {
+    //Needed for JAXB
   }
 
-  public void setApplicationName(String applicationName) {
-    this.applicationName = applicationName;
-  }
-
-    /**
+  /**
    * As found in Effective Java, the equals contract cannot be satisfied for
    * inheritance hierarchies. Hence, these objects are not meant to be compared.
    * <p>
@@ -78,14 +72,41 @@ public abstract class JobConfiguration implements JsonReducable {
       conf.updateFromJson(object);
       return conf;
     }
-
-    public static List<JobConfiguration> getAllAssignableTemplates() {
-      List<JobConfiguration> templates = new ArrayList<>(4);
-      templates.add(new YarnJobConfiguration());
-      templates.add(new CuneiformJobConfiguration());
-      templates.add(new SparkJobConfiguration());
-      templates.add(new AdamJobConfiguration());
-      return templates;
+    
+    /**
+     * Get a new JobConfiguration object with the given type.
+     * @param type
+     * @return 
+     */
+    public static JobConfiguration getJobConfigurationTemplate(JobType type){
+      JobConfiguration conf;
+      switch (type) {
+        case ADAM:
+          conf = new AdamJobConfiguration();
+          break;
+        case CUNEIFORM:
+          conf = new CuneiformJobConfiguration();
+          break;
+        case SPARK:
+          conf = new SparkJobConfiguration();
+          break;
+        case YARN:
+          conf = new YarnJobConfiguration();
+          break;
+        default:
+          throw new UnsupportedOperationException(
+                  "The given jobtype is not recognized by this factory.");
+      }
+      return conf;
+    }
+    
+    public static List<JobType> getSupportedTypes(){
+      List<JobType> list = new ArrayList<>(4);
+      list.add(JobType.ADAM);
+      list.add(JobType.CUNEIFORM);
+      list.add(JobType.SPARK);
+      list.add(JobType.YARN);
+      return list;
     }
 
   }
