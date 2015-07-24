@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import se.kth.bbc.jobs.execution.HopsJob;
-import se.kth.bbc.jobs.execution.HopsworksExecutionServiceProvider;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.hopsworks.user.model.Users;
@@ -31,7 +31,7 @@ public abstract class YarnJob extends HopsJob {
   private JobState finalState = null;
 
   public YarnJob(JobDescription<? extends YarnJobConfiguration> job, Users user,
-          HopsworksExecutionServiceProvider services) {
+          AsynchronousJobExecutor services) {
     super(job, services, user);
   }
 

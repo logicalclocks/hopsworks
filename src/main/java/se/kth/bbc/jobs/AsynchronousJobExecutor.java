@@ -6,7 +6,6 @@ import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.jobs.execution.HopsworksExecutionServiceProvider;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 
@@ -20,8 +19,7 @@ import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
  */
 @Stateless
 @LocalBean
-public class AsynchronousJobExecutor implements
-        HopsworksExecutionServiceProvider {
+public class AsynchronousJobExecutor{
 
   @EJB
   private ExecutionFacade executionFacade;
@@ -35,17 +33,14 @@ public class AsynchronousJobExecutor implements
     job.execute();
   }
 
-  @Override
   public ExecutionFacade getExecutionFacade() {
     return executionFacade;
   }
 
-  @Override
   public JobOutputFileFacade getJobOutputFileFacade() {
     return jobOutputFileFacade;
   }
 
-  @Override
   public FileOperations getFileOperations() {
     return fileOperations;
   }

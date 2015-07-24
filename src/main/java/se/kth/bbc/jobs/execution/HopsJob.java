@@ -1,6 +1,7 @@
 package se.kth.bbc.jobs.execution;
 
 import java.util.Collection;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.jobhistory.JobInputFile;
@@ -36,7 +37,7 @@ public abstract class HopsJob {
   private boolean initialized = false;
 
   //Service provider providing access to facades
-  protected final HopsworksExecutionServiceProvider services;
+  protected final AsynchronousJobExecutor services;
   protected final JobDescription<? extends JobConfiguration> jobDescription;
   private final Users user;
 
@@ -50,7 +51,7 @@ public abstract class HopsJob {
    * @throws NullPointerException If either of the given arguments is null.
    */
   protected HopsJob(JobDescription<? extends JobConfiguration> jobDescription,
-          HopsworksExecutionServiceProvider services, Users user) throws
+          AsynchronousJobExecutor services, Users user) throws
           NullPointerException {
     //Check validity
     if (jobDescription == null) {

@@ -154,6 +154,9 @@ public class Execution implements Serializable {
     this(t.state, t.job, t.user, t.submissionTime, t.stdoutPath, t.stderrPath,
             t.jobInputFileCollection);
     this.id = t.id;
+    this.appId = t.appId;
+    this.jobOutputFileCollection = t.jobOutputFileCollection;
+    this.executionDuration = t.executionDuration;
   }
 
   public Execution(JobState state, JobDescription job, Users user, Date submissionTime,

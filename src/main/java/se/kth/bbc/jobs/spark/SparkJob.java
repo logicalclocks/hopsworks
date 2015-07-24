@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import se.kth.bbc.jobs.execution.HopsworksExecutionServiceProvider;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.SparkJobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
@@ -26,7 +26,7 @@ public final class SparkJob extends YarnJob {
   private final SparkJobDescription sparkjob; //Just for convenience
 
   public SparkJob(JobDescription<? extends SparkJobConfiguration> job,
-          Users user, HopsworksExecutionServiceProvider services) {
+          Users user, AsynchronousJobExecutor services) {
     super(job, user, services);
     this.sparkjob = (SparkJobDescription) super.jobDescription;
   }

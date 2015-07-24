@@ -13,7 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
-import se.kth.bbc.jobs.execution.HopsworksExecutionServiceProvider;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.CuneiformJobDescription;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
@@ -49,7 +49,7 @@ public final class CuneiformJob extends YarnJob {
   private final CuneiformJobDescription cfjob;
 
   public CuneiformJob(JobDescription<? extends CuneiformJobConfiguration> job,
-          HopsworksExecutionServiceProvider services, Users user) {
+          AsynchronousJobExecutor services, Users user) {
     super(job, user, services);
     this.cfjob = (CuneiformJobDescription) job; //We can do this because of the type of the argument to this constructor.
   }

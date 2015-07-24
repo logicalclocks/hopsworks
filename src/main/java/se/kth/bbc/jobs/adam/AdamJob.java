@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import se.kth.bbc.jobs.execution.HopsworksExecutionServiceProvider;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.AdamJobDescription;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
@@ -29,7 +29,7 @@ public class AdamJob extends YarnJob {
   private final AdamJobDescription adamjob;
 
   public AdamJob(JobDescription<? extends AdamJobConfiguration> job,
-          HopsworksExecutionServiceProvider services, Users user,
+          AsynchronousJobExecutor services, Users user,
           AdamArgumentDTO[] invocationArguments,
           AdamOptionDTO[] invocationOptions) {
     super(job, user, services);
