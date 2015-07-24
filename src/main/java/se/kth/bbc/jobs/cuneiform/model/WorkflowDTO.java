@@ -87,14 +87,11 @@ public class WorkflowDTO implements JsonReducable {
 
   /**
    * Set the contents of the workflow file.
-   * This operation resets the contents of the input and output parameter lists.
    * <p>
    * @param contents
    */
   public void setContents(String contents) {
     this.contents = contents;
-    this.inputParams = new ArrayList<>();
-    this.outputParams = new ArrayList<>();
   }
 
   /**
