@@ -15,6 +15,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -78,8 +79,11 @@ public class ExecutionService {
   public Response getAllExecutions(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     List<Execution> executions = executionFacade.findForJob(job);
+    GenericEntity<List<Execution>> list = new GenericEntity<List<Execution>>(
+            executions) {
+            };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(executions).build();
+            entity(list).build();
   }
 
   /**

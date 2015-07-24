@@ -67,8 +67,12 @@ public class DatabaseJsonObject {
    * <p>
    * @param key
    * @param value
+   * @throws NullPointerException If the value is null.
    */
   public void set(String key, String value) {
+    if(value == null){
+      throw new NullPointerException("Cannot store null value.");
+    }
     internalStrings.put(key, value);
   }
 

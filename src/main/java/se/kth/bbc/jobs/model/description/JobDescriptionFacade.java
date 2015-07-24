@@ -7,7 +7,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.user.model.Users;
@@ -33,41 +32,34 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
     return em;
   }
 
-  /**
-   * Find all the JobDescription entries for the given project and type.
-   * <p>
-   * @param project
-   * @param type
-   * @return List of JobHistory objects.
-   * @throws IllegalArgumentException If the given type is not supported.
-   */
-  public List<JobDescription<? extends JobConfiguration>> findForProjectByType(
-          Project project, JobType type)
-          throws IllegalArgumentException {
-    TypedQuery<? extends JobDescription<? extends JobConfiguration>> q;
-    switch (type) {
-      case ADAM:
-        q = em.createNamedQuery("AdamJobDescription.findByProject",
-                AdamJobDescription.class);
-        break;
-      case CUNEIFORM:
-        q = em.createNamedQuery("CuneiformJobDescription.findByProject",
-                CuneiformJobDescription.class);
-        break;
-      case SPARK:
-        q = em.createNamedQuery("SparkJobDescription.findByProject",
-                SparkJobDescription.class);
-        break;
-      case YARN:
-        q = em.createNamedQuery("YarnJobDescription.findByProject",
-                YarnJobDescription.class);
-        break;
-      default:
-        throw new IllegalArgumentException(
-                "The requested type is not yet supported.");
-    }
+  public List<CuneiformJobDescription> findCuneiformJobsForProject(
+          Project project) {
+    TypedQuery<CuneiformJobDescription> q = em.createNamedQuery(
+            "CuneiformJobDescription.findByProject",
+            CuneiformJobDescription.class);
     q.setParameter("project", project);
-    return (List<JobDescription<? extends JobConfiguration>>) q.getResultList();
+    return q.getResultList();
+  }
+
+  public List<SparkJobDescription> findSparkJobsForProject(Project project) {
+    TypedQuery<SparkJobDescription> q = em.createNamedQuery(
+            "SparkJobDescription.findByProject", SparkJobDescription.class);
+    q.setParameter("project", project);
+    return q.getResultList();
+  }
+
+  public List<AdamJobDescription> findAdamJobsForProject(Project project) {
+    TypedQuery<AdamJobDescription> q = em.createNamedQuery(
+            "AdamJobDescription.findByProject", AdamJobDescription.class);
+    q.setParameter("project", project);
+    return q.getResultList();
+  }
+
+  public List<YarnJobDescription> findYarnJobsForProject(Project project) {
+    TypedQuery<YarnJobDescription> q = em.createNamedQuery(
+            "YarnJobDescription.findByProject", YarnJobDescription.class);
+    q.setParameter("project", project);
+    return q.getResultList();
   }
 
   /**

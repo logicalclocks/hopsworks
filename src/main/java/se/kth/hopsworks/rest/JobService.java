@@ -1,6 +1,5 @@
 package se.kth.hopsworks.rest;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -10,9 +9,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -21,17 +18,12 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.jobs.adam.AdamJobConfiguration;
-import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
-import se.kth.bbc.jobs.spark.SparkJobConfiguration;
-import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 
 /**
@@ -117,39 +109,6 @@ public class JobService {
     } else {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(job).build();
-    }
-  }
-
-  /**
-   * Create a new Job definition. If successful, the job is returned.
-   * <p>
-   * @param config The configuration from which to create a Job.
-   * @param sc
-   * @param req
-   * @return
-   * @throws se.kth.hopsworks.rest.AppException
-   */
-  @POST
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response createJob(YarnJobConfiguration config, @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-    if (config == null) {
-      throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
-              "Cannot create job for a null argument.");
-    } else {
-      String email = sc.getUserPrincipal().getName();
-      Users user = userFacade.findByEmail(email);
-      if (user == null) {
-        //Should not be possible, but, well...
-        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-                "You are not authorized for this invocation.");
-      }
-      JobDescription<? extends JobConfiguration> created = jobFacade.create(
-              config.getAppName(), user, project, config);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(created).build();
     }
   }
 

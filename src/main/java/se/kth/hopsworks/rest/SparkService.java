@@ -1,6 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -8,18 +9,27 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
+import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
+import se.kth.bbc.jobs.model.description.SparkJobDescription;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.SparkController;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.UserFacade;
 
 /**
  * Service offering functionality to run a Spark fatjar job.
@@ -37,12 +47,41 @@ public class SparkService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private SparkController sparkController;
+  @EJB
+  private JobDescriptionFacade jobFacade;
+  @EJB
+  private UserFacade userFacade;
 
   private Project project;
 
   SparkService setProject(Project project) {
     this.project = project;
     return this;
+  }
+  
+  /**
+   * Get all the jobs in this project of type Spark.
+   * <p>
+   * @param sc
+   * @param req
+   * @return A list of all JobDescription objects of type Spark in this
+   * project.
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response findAllSparkJobs(@Context SecurityContext sc,
+          @Context HttpServletRequest req)
+          throws AppException {
+    List<SparkJobDescription> jobs = jobFacade.
+            findSparkJobsForProject(project);
+    GenericEntity<List<SparkJobDescription>> jobList
+            = new GenericEntity<List<SparkJobDescription>>(
+                    jobs) {
+                    };
+            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                    entity(jobList).build();
   }
 
   /**
@@ -76,6 +115,40 @@ public class SparkService {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error reading jar file: " + e.
               getLocalizedMessage());
+    }
+  }
+  
+  /**
+   * Create a new Job definition. If successful, the job is returned.
+   * <p>
+   * @param config The configuration from which to create a Job.
+   * @param sc
+   * @param req
+   * @return
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  @POST
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response createJob(SparkJobConfiguration config,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    if (config == null) {
+      throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
+              "Cannot create job for a null argument.");
+    } else {
+      String email = sc.getUserPrincipal().getName();
+      Users user = userFacade.findByEmail(email);
+      if (user == null) {
+        //Should not be possible, but, well...
+        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+                "You are not authorized for this invocation.");
+      }
+      JobDescription<? extends JobConfiguration> created = jobFacade.create(
+              config.getAppName(), user, project, config);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(created).build();
     }
   }
 }

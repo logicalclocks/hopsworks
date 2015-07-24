@@ -205,6 +205,9 @@ public final class CuneiformJob extends YarnJob {
    * @return The path at which the temporary file was created.
    */
   private String prepWorkflowFile(WorkflowDTO wf) throws IOException {
+    if(wf.areContentsEmpty()){
+      wf.setContents(services.getFileOperations().cat(wf.getPath()));
+    }
     // Update the workflow contents
     wf.updateContentsFromVars();
     //actually write to workflow file

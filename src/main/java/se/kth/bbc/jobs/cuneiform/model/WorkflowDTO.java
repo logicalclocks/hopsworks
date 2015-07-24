@@ -214,6 +214,14 @@ public class WorkflowDTO implements JsonReducable {
   public void setPath(String path) {
     this.path = path;
   }
+  
+  /**
+   * Check if the current contents are empty.
+   * @return 
+   */
+  public boolean areContentsEmpty(){
+    return Strings.isNullOrEmpty(contents);
+  }
 
   /**
    * Inspect the workflow. This method analyzes the contents of the workflow and
@@ -284,7 +292,9 @@ public class WorkflowDTO implements JsonReducable {
     //Construct input object and add to object
     DatabaseJsonObject inputs = new DatabaseJsonObject();
     for (InputParameter ip : inputParams) {
-      inputs.set(ip.getName(), ip.getValue());
+      if (ip.getValue() != null) {
+        inputs.set(ip.getName(), ip.getValue());
+      }
     }
     obj.set(KEY_INPUT, inputs);
     //Construct output object
@@ -308,13 +318,14 @@ public class WorkflowDTO implements JsonReducable {
       jsonName = json.getString(KEY_NAME);
       DatabaseJsonObject jsonInputs = json.getJsonObject(KEY_INPUT);
       inputs = new ArrayList<>(jsonInputs.size());
-      for(String s : jsonInputs.keySet()){
+      for (String s : jsonInputs.keySet()) {
         inputs.add(new InputParameter(s, jsonInputs.getString(s)));
       }
       DatabaseJsonObject jsonOutputs = json.getJsonObject(KEY_OUTPUT);
       outputs = new ArrayList<>(jsonOutputs.size());
-      for(String s : jsonOutputs.keySet()){
-        outputs.add(new OutputParameter(s, "true".equals(jsonOutputs.getString(s))));
+      for (String s : jsonOutputs.keySet()) {
+        outputs.add(new OutputParameter(s, "true".equals(jsonOutputs.
+                getString(s))));
       }
     } catch (Exception e) {
       throw new IllegalArgumentException(

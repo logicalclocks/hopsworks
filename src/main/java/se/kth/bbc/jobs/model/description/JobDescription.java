@@ -98,7 +98,6 @@ public abstract class JobDescription<T extends JobConfiguration> implements
 
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "job")
-  @XmlTransient
   private Collection<Execution> executionCollection;
   
   protected JobDescription(){};
@@ -160,6 +159,7 @@ public abstract class JobDescription<T extends JobConfiguration> implements
   }
 
   @JsonIgnore
+  @XmlTransient
   public Collection<Execution> getExecutionCollection() {
     return executionCollection;
   }
