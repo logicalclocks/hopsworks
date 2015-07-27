@@ -11,8 +11,6 @@ angular.module('hopsWorksApp')
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
             var self = this;
-            self.arguments = [];
-            self.options = [];
             this.projectId = $routeParams.projectID;
             this.jobType = 'ADAM';
             this.growl = growl;
@@ -22,12 +20,7 @@ angular.module('hopsWorksApp')
             this.selectFileErrorMsg = "Please select a file or folder.";
             this.onFileSelected = function (path) {
               //Set the path in the arguments.
-              if (self.fileSelectionIsArgument) {
-                self.arguments[self.fileSelectionName] = path;
-              } else {
-                self.options[self.fileSelectionName] = path;
-              }
-              self.fileSelectionName = null;
+              self.processparameter.value = path;
             };
             
             /**
@@ -53,9 +46,8 @@ angular.module('hopsWorksApp')
              * the file is selected.
              * @returns {undefined}
              */
-            this.selectFile = function (isArgument, name) {
-              self.fileSelectionIsArgument = isArgument;
-              self.fileSelectionName = name;
+            this.selectFile = function (parameter) {
+              self.processparameter = parameter;
               selectFile(this);
             };
 

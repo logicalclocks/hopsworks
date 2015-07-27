@@ -63,9 +63,7 @@ public class AdamController {
               "Some ADAM jars are not in HDFS and could not be copied over.");
     }
     //Get to starting the job
-    AdamJob adamjob = new AdamJob(job, submitter, user, job.getJobConfig().
-            getSelectedCommand().getArguments(), job.getJobConfig().
-            getSelectedCommand().getOptions());
+    AdamJob adamjob = new AdamJob(job, submitter, user);
     Execution jh = adamjob.requestExecutionId();
     if (jh != null) {
       submitter.startExecution(adamjob);

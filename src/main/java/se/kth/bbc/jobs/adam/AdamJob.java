@@ -23,18 +23,11 @@ public class AdamJob extends YarnJob {
 
   private static final Logger logger = Logger.getLogger(AdamJob.class.getName());
 
-  private final AdamArgumentDTO[] invocationArguments;
-  private final AdamOptionDTO[] invocationOptions;
-
   private final AdamJobDescription adamjob;
 
   public AdamJob(JobDescription<? extends AdamJobConfiguration> job,
-          AsynchronousJobExecutor services, Users user,
-          AdamArgumentDTO[] invocationArguments,
-          AdamOptionDTO[] invocationOptions) {
+          AsynchronousJobExecutor services, Users user) {
     super(job, user, services);
-    this.invocationArguments = invocationArguments;
-    this.invocationOptions = invocationOptions;
     this.adamjob = (AdamJobDescription) super.jobDescription;
   }
 
@@ -61,7 +54,7 @@ public class AdamJob extends YarnJob {
    * create entries in the DB.
    */
   private void makeOutputAvailable() {
-    for (AdamArgumentDTO arg : invocationArguments) {
+    for (AdamArgumentDTO arg : adamjob.getJobConfig().getSelectedCommand().getArguments()) {
       if (arg.isOutputPath() && !(arg.getValue() == null || arg.getValue().
               isEmpty())) {
         try {
@@ -76,7 +69,7 @@ public class AdamJob extends YarnJob {
       }
     }
 
-    for (AdamOptionDTO opt : invocationOptions) {
+    for (AdamOptionDTO opt : adamjob.getJobConfig().getSelectedCommand().getOptions()) {
       if (opt.isOutputPath() && opt.getValue() != null && !opt.getValue().
               isEmpty()) {
         try {
