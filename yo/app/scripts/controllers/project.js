@@ -145,6 +145,10 @@ angular.module('hopsWorksApp')
             self.goToDatasets = function () {
               $location.path('project/' + self.pId + '/datasets');
             };
+            
+            self.goToJobs = function () {
+              $location.path('project/' + self.pId + '/jobs');
+            };
 
             self.goToService = function (service) {
               if(service === "Zeppelin"){

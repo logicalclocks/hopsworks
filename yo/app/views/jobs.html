@@ -1,0 +1,59 @@
+<!-- Displays the defined jobs in the current project -->
+<link rel="stylesheet" href="styles/timeline.css">
+<link rel="stylesheet" href="styles/cuneiform.css">
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div id="wrapper" class="toggled" ng-controller="JobsCtrl as jobsCtrl">
+    <div class="overlay"></div>
+
+    <div ng-include="'navProject.html'"></div>
+
+    <section>
+      <div class="content-wrapper">
+        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Jobs</h3>
+
+
+        <!-- Page Content -->
+        <div>
+          <table>
+            <thead>
+            <th>
+              Name
+            </th>
+            <th>
+              Created
+            </th>
+            <th>
+              Owner
+            </th>
+            <th>
+              Action
+            </th>
+            </thead>
+            <tbody>
+              <tr ng-repeat="job in jobsCtrl.jobs">
+                <td>
+                  {{job.name}}
+                </td>
+                <td>
+                  {{job.creationTime}}
+                </td>
+                <td>
+                  {{job.creator.fname}} {{job.creator.lname}}
+                </td>
+                <td>
+                  <button ng-click="jobsCtrl.runJob(job.id)">Run now</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- /#page-content-wrapper -->
+      </div>
+    </section>
+  </div>
+  <!-- /#wrapper -->
+</div>

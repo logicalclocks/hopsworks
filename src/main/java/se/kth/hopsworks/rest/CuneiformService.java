@@ -127,7 +127,7 @@ public class CuneiformService {
    * @param config The configuration from which to create a Job.
    * @param sc
    * @param req
-   * @return
+   * @return The newly created job object.
    * @throws se.kth.hopsworks.rest.AppException
    */
   @POST
