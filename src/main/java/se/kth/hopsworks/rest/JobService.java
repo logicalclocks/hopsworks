@@ -112,6 +112,41 @@ public class JobService {
     }
   }
 
+  /**
+   * Get the JobConfiguration object for the specified job. The sole reason of
+   * existence of this method is the dodginess of polymorphism in JAXB/JAXRS. As
+   * such, the jobConfig field is always empty when a JobDescription object is
+   * returned. This method must therefore be called explicitly to get the job
+   * configuration.
+   * <p>
+   * @param jobId
+   * @param sc
+   * @param req
+   * @return
+   * @throws AppException
+   */
+  @GET
+  @Path("/{jobId}/config")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getJobConfiguration(@PathParam("jobId") int jobId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    JobDescription job = jobFacade.findById(jobId);
+    if (job == null) {
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } else if (!job.getProject().equals(project)) {
+      //In this case, a user is trying to access a job outside its project!!!
+      logger.log(Level.SEVERE,
+              "A user is trying to access a job outside their project!");
+      return Response.status(Response.Status.FORBIDDEN).build();
+    } else {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(job.getJobConfig()).build();
+    }
+  }
+
   @GET
   @Path("/template/{type}")
   @Produces(MediaType.APPLICATION_JSON)
