@@ -24,8 +24,6 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -268,8 +266,6 @@ public class Execution implements Serializable {
     this.user = user;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public Collection<JobOutputFile> getJobOutputFileCollection() {
     return jobOutputFileCollection;
   }
@@ -279,8 +275,6 @@ public class Execution implements Serializable {
     this.jobOutputFileCollection = jobOutputFileCollection;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public Collection<JobInputFile> getJobInputFileCollection() {
     return jobInputFileCollection;
   }

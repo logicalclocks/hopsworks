@@ -1,0 +1,187 @@
+<!-- A file selection dialog. -->
+
+<div class="modal-header">
+  <button class="close" ng-click="jobDetailCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">{{jobDetailCtrl.job.name}}</h2>
+</div>
+<div class="modal-body">
+
+
+  <div>
+    <!-- Job details-->
+    <h2>Configuration</h2>
+    <div>
+      <!-- General config -->
+      <h3>General configuration</h3>
+      <table>
+        <tr>
+          <td class="firstColumn">Application master memory</td>
+          <td class="secondColumn">
+            {{jobDetailCtrl.job.runConfig.amMemory}}
+          </td>
+        </tr>
+        <tr>
+          <td class="firstColumn">Application master vcores</td>
+          <td class="secondColumn">
+            {{jobDetailCtrl.job.runConfig.amVCores}}
+          </td>
+        </tr>
+        <tr>
+          <td class="firstColumn">ResourceManager queue</td>
+          <td class="secondColumn">
+            {{jobDetailCtrl.job.runConfig.amQueue}}
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div ng-show="jobDetailCtrl.job.runConfig.type == 'adamJobConfiguration'">
+      <!-- ADAM configuration -->
+      <table>
+        <tr>
+          <td class="firstColumn">Adam command</td>
+          <td class="secondColumn">
+            {{jobDetailCtrl.job.runConfig.selectedCommand.command}}: {{jobDetailCtrl.job.runConfig.selectedCommand.description}}
+          </td>
+        </tr>
+      </table>      
+      <h3>Arguments</h3>
+      <table>
+        <tr ng-repeat="arg in jobDetailCtrl.job.runConfig.selectedCommand.arguments">
+          <td class="firstColumn">
+            {{arg.name}} <span ng-show="arg.required">*</span> <i class="fa fa-info-circle" tooltip="{{arg.description}}"></i>
+          </td>
+          <td class="secondColumn">
+            {{arg.value}}
+          </td>
+        </tr>
+      </table>
+      <h3>Options</h3>
+      <table>
+        <tr ng-repeat="opt in jobDetailCtrl.job.runConfig.selectedCommand.options">
+          <td class="firstColumn">
+            {{opt.name}} <i class="fa fa-info-circle" tooltip="{{opt.description}}"></i>
+          </td>
+          <td class="secondColumn">
+            {{opt.value}}
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div ng-show="jobDetailCtrl.job.runConfig.type == 'sparkJobConfiguration'">
+      <!-- Spark configuration -->
+      <h3>Spark configuration</h3>
+      <table>
+        <tr>
+          <td class="firstColumn">Selected jar</td>
+          <td class="secondColumn">{{jobDetailCtrl.job.runConfig.jarPath}}</td>
+        </tr>
+        <tr>
+          <td class="firstColumn">Main class name</td>
+          <td class="secondColumn">{{jobDetailCtrl.job.runConfig.mainClass}}</td>
+        </tr>
+        <tr>
+          <td class="firstColumn">Job arguments</td>
+          <td class="secondColumn">{{jobDetailCtrl.job.runConfig.args}}</td>
+        </tr>
+        <tr>
+          <td class="firstColumn">Number of executors</td>
+          <td class="secondColumn">{{jobDetailCtrl.job.runConfig.numberOfExecutors}}</td>
+        </tr>
+        <tr>
+          <td class="firstColumn">Number of executor cores</td>
+          <td class="secondColumn">{{jobDetailCtrl.job.runConfig.executorCores}}</td>
+        </tr>
+        <tr>
+          <td class="firstColumn">Executor memory</td>
+          <td class="secondColumn">{{jobDetailCtrl.job.runConfig.executorMemory}}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div ng-show="jobDetailCtrl.job.runConfig.type == 'cuneiformJobConfiguration'">
+      <!-- Cuneiform configuration -->
+      <h3> Workflow </h3>
+      <table>
+        <tr>
+          <td class="firstColumn">Workflow </td>
+          <td class="secondColumn">
+            {{jobDetailCtrl.job.runConfig.wf.name}}
+          </td>
+        </tr>
+      </table>
+
+      <h3 ng-show="jobDetailCtrl.job.runConfig.wf.inputParams.length > 0"> Input Parameters </h3>
+      <table>
+        <tr ng-repeat="param in jobDetailCtrl.job.runConfig.wf.inputParams">
+          <td class="firstColumn">{{param.name}}</td>
+          <td class="secondColumn"> {{param.value}}</td>
+        </tr>
+      </table>
+    </div>
+
+  </div>
+
+  <div>
+    <!-- Previous runs-->
+    <h2>Previous executions:</h2>
+    <span ng-show="jobDetailCtrl.job.executions == null">
+      There are no registered executions for this job.
+    </span>
+    <table>
+      <thead>
+        <tr>
+          <th>
+            Submission time
+          </th>
+          <th>
+            Current state
+          </th>
+          <th>
+            Execution duration
+          </th>
+          <th>
+            Stdout
+          </th>
+          <th>
+            Stderr
+          </th>
+          <th>
+            Output files
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="exec in jobDetailCtrl.job.executions">
+          <td>
+            {{exec.submissionTime}}
+          </td>
+          <td>
+            {{exec.state}}
+          </td>
+          <td>
+            {{exec.executionDuration}}
+          </td>
+          <td>
+            {{exec.stdoutPath}}
+          </td>
+          <td>
+            {{exec.stderrPath}}
+          </td>
+          <td>
+            <ul>
+              <li ng-repeat="output in exec.jobOutputFileCollection">
+                {{output.jobOutputFilePK.name}}
+              </li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+</div>
+

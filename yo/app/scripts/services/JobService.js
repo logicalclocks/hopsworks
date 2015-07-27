@@ -60,6 +60,15 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/'+projectId+'/jobs/'+jobId+'/executions');
               },
               /**
+               * Get the configuration object for the given job.
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {unresolved}
+               */
+              getConfiguration: function(projectId, jobId){
+                return $http.get('/api/project/'+projectId+'/jobs/'+jobId+'/config');
+              },
+              /**
                * Run the given job, creating a new Execution instance.
                * @param {type} projectId
                * @param {type} jobId

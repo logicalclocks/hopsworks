@@ -33,7 +33,7 @@
             </th>
             </thead>
             <tbody>
-              <tr ng-repeat="job in jobsCtrl.jobs">
+              <tr ng-repeat="job in jobsCtrl.jobs" ng-click="jobsCtrl.showDetails(job)">
                 <td>
                   {{job.name}}
                 </td>
