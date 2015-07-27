@@ -1,0 +1,226 @@
+<!-- Displays the defined jobs in the current project -->
+<link rel="stylesheet" href="styles/timeline.css">
+<link rel="stylesheet" href="styles/cuneiform.css">
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div id="wrapper" class="toggled" ng-controller="NewJobCtrl as newJobCtrl">
+    <div class="overlay"></div>
+
+    <div ng-include="'navProject.html'"></div>
+
+    <section>
+      <div class="content-wrapper">
+        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / New job</h3>
+
+
+        <!-- Page Content -->
+        <div>
+          <!-- Select the type of job-->  
+          Select the type of job to be created:
+          <select ng-model="newJobCtrl.jobtype" convert-to-number>
+            <option value="0">Cuneiform</option>
+            <option value="1">Spark</option>
+            <option value="2">Adam</option>
+          </select>
+        </div>
+
+        <div ng-show="newJobCtrl.jobtype == 0" ng-controller="CuneiformCtrl as cuneiformCtrl">
+          <!-- Cuneiform job creation-->
+          <h3> Workflow </h3>          
+          <button ng-click="newJobCtrl.createJob('cuneiform', cuneiformCtrl.runConfig)">
+            <span>Create job</span>
+          </button>
+          <table>
+            <tr>
+              <td class="firstColumn">Select workflow </td>
+              <td class="secondColumn">
+                <button ng-click="cuneiformCtrl.selectFile()">
+                  <span>Select...</span>
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td class="firstColumn">Selected file </td>
+              <td class="secondColumn">{{cuneiformCtrl.runConfig.wf.name}}</td>
+            </tr>
+          </table>
+
+          <h3 ng-show="cuneiformCtrl.runConfig.wf.inputParams.length > 0"> Input Parameters </h3>
+          <table>
+            <tr ng-repeat="param in cuneiformCtrl.runConfig.wf.inputParams">
+              <td class="firstColumn">{{param.name}}</td>
+              <td class="secondColumn"> <input type="text" ng-model="param.value"></td>
+            </tr>
+          </table>
+
+          <div ng-show="cuneiformCtrl.runConfig">
+            <h3>Job configuration</h3>
+            <table>
+              <tr>
+                <td class="firstColumn">Job name</td>
+                <td class="secondColumn"><input type="text" ng-model="cuneiformCtrl.runConfig.appName"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Application master memory</td>
+                <td class="secondColumn"><input type="number" ng-model="cuneiformCtrl.runConfig.amMemory" min="0"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Application master vcores</td>
+                <td class="secondColumn"><input type="number" ng-model="cuneiformCtrl.runConfig.amVCores" min="1"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">ResourceManager queue</td>
+                <td class="secondColumn"><input type="text" ng-model="cuneiformCtrl.runConfig.amQueue"></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div ng-show="newJobCtrl.jobtype == 1" ng-controller="SparkCtrl as sparkCtrl">
+          <!-- Spark job creation -->
+          <h3> Job </h3>
+          <button ng-click="newJobCtrl.createJob('spark', sparkCtrl.sparkConfig)">
+            <span>Create job</span>
+          </button>
+          <table>
+            <tr>
+              <td class="firstColumn">Select jar file </td>
+              <td class="secondColumn">
+                <button ng-click="sparkCtrl.selectFile()">
+                  <span>Select...</span>
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td class="firstColumn">Selected file </td>
+              <td class="secondColumn">{{sparkCtrl.selectedJar}}</td>
+            </tr>
+          </table>
+
+          <div ng-show="sparkCtrl.sparkConfig">
+            <h3>Job configuration</h3>
+            <table>
+              <tr>
+                <td class="firstColumn">Job name</td>
+                <td class="secondColumn"><input type="text" ng-model="sparkCtrl.sparkConfig.appName"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Main class name</td>
+                <td class="secondColumn"><input type="text" ng-model="sparkCtrl.sparkConfig.mainClass"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Job arguments</td>
+                <td class="secondColumn"><input type="text" ng-model="sparkCtrl.sparkConfig.args"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Application master memory</td>
+                <td class="secondColumn"><input type="number" ng-model="sparkCtrl.sparkConfig.amMemory" min="0"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Application master vcores</td>
+                <td class="secondColumn"><input type="number" ng-model="sparkCtrl.sparkConfig.amVCores" min="1"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">ResourceManager queue</td>
+                <td class="secondColumn"><input type="text" ng-model="sparkCtrl.sparkConfig.amQueue"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Number of executors</td>
+                <td class="secondColumn"><input type="number" ng-model="sparkCtrl.sparkConfig.numberOfExecutors"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Number of executor cores</td>
+                <td class="secondColumn"><input type="number" ng-model="sparkCtrl.sparkConfig.executorCores"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Executor memory</td>
+                <td class="secondColumn"><input type="text" ng-model="sparkCtrl.sparkConfig.executorMemory"></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div ng-show="newJobCtrl.jobtype == 2" ng-controller="AdamCtrl as adamCtrl">
+          <!-- Adam job creation -->
+          <h3> Job </h3>
+          <button ng-click="newJobCtrl.createJob('adam', adamCtrl.runConfig)">
+            <span>Create job</span>
+          </button>
+          <select ng-change="adamCtrl.selectCommand()" 
+                  ng-model="adamCtrl.selectedCommand" 
+                  ng-options="command as command for command in adamCtrl.commandList">
+          </select>
+          <div ng-show="adamCtrl.runConfig">
+            {{adamCtrl.runConfig.selectedCommand.description}}
+          </div>
+
+          <div ng-show="adamCtrl.runConfig">
+            <h3>Arguments</h3>
+            <table>
+              <tr ng-repeat="arg in adamCtrl.runConfig.selectedCommand.arguments">
+                <td class="firstColumn">
+                  {{arg.name}} <span ng-show="arg.required">*</span> <i class="fa fa-info-circle" tooltip="{{arg.description}}"></i>
+                </td>
+                <td class="secondColumn">
+                  <input type="text" ng-model="adamCtrl.arguments[arg.name]" ng-hide="arg.path && !adamCtrl.arguments[arg.name]" ng-required="arg.required">
+                  <button ng-show="arg.path && !adamCtrl.arguments[arg.name]" ng-click="adamCtrl.selectFile(true, arg.name)">Select</button>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div ng-show="adamCtrl.runConfig">
+            <h3>Options</h3>
+            <table>
+              <tr ng-repeat="opt in adamCtrl.runConfig.selectedCommand.options">
+                <td class="firstColumn">
+                  {{opt.name}} <i class="fa fa-info-circle" tooltip="{{opt.description}}"></i>
+                </td>
+                <td class="secondColumn">
+                  <input type="text" ng-model="adamCtrl.options[opt.name]" ng-hide="(opt.valueIsPath && !adamCtrl.options[opt.name]) || opt.flag">
+                  <button ng-show="opt.valueIsPath && !adamCtrl.options[opt.name]" ng-click="adamCtrl.selectFile(false, opt.name)">Select</button>
+                  <input type="checkbox" ng-model="adamCtrl.options[opt.name]" ng-show="opt.flag">
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div ng-show="adamCtrl.runConfig">
+            <h3>Job configuration</h3>
+            <table>
+              <tr>
+                <td class="firstColumn">Job name</td>
+                <td class="secondColumn">
+                  <input type="text" ng-model="adamCtrl.runConfig.appName">
+                </td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Application master memory</td>
+                <td class="secondColumn">
+                  <input type="number" ng-model="adamCtrl.runConfig.amMemory" min="0">
+                </td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Application master vcores</td>
+                <td class="secondColumn">
+                  <input type="number" ng-model="adamCtrl.runConfig.amVCores" min="1">
+                </td>
+              </tr>
+              <tr>
+                <td class="firstColumn">ResourceManager queue</td>
+                <td class="secondColumn">
+                  <input type="text" ng-model="adamCtrl.runConfig.amQueue">
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- /#page-content-wrapper -->
+      </div>
+    </section>
+  </div>
+  <!-- /#wrapper -->
+</div>

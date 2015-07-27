@@ -5,15 +5,14 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('AdamCtrl', ['$scope', '$routeParams', 'growl', 'JobHistoryService', '$interval', 'AdamService', 'ModalService',
-          function ($scope, $routeParams, growl, JobHistoryService, $interval, AdamService, ModalService) {
+        .controller('AdamCtrl', ['$routeParams', 'growl', 'AdamService', 'ModalService',
+          function ($routeParams, growl, AdamService, ModalService) {
 
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
             var self = this;
             self.arguments = [];
             self.options = [];
-            this.JobHistoryService = JobHistoryService;
             this.projectId = $routeParams.projectID;
             this.jobType = 'ADAM';
             this.growl = growl;
@@ -30,28 +29,7 @@ angular.module('hopsWorksApp')
               }
               self.fileSelectionName = null;
             };
-            //For job execution
-            this.$interval = $interval;
-            this.callExecute = function () {
-              return AdamService.runJob(
-                      self.projectId, self.runConfig);
-            };
-            this.onExecuteSuccess = function (success) {
-              self.runConfig = null;
-              self.arguments = [];
-              self.options = [];
-            };
-
-
-            /*
-             * Get all Spark job history objects for this project.
-             */
-            this.getAdamHistory = function () {
-              getHistory(this);
-            };
-
-            this.getAdamHistory();
-
+            
             /**
              * Get a list of commands from the server.
              * @returns {undefined}
@@ -81,27 +59,6 @@ angular.module('hopsWorksApp')
               selectFile(this);
             };
 
-            this.execute = function () {
-              //First: fill in the runConfig
-              for (var x in this.runConfig.selectedCommand.arguments) {
-                var name = this.runConfig.selectedCommand.arguments[x].name;
-                if (this.arguments[name]) {
-                  this.runConfig.selectedCommand.arguments[x].value = this.arguments[name];
-                }
-              }
-              for (var x in this.runConfig.selectedCommand.options) {
-                var name = this.runConfig.selectedCommand.options[x].name;
-                if (this.options[name]) {
-                  this.runConfig.selectedCommand.options[x].value = this.options[name];
-                }
-              }
-              execute(this);
-            };
-
-            this.selectJob = function (job) {
-              selectJob(this, job);
-            };
-
             /**
              * Select a command by sending the name to the server, gets an 
              * AdamJobConfiguration back.
@@ -118,13 +75,6 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
-
-            /**
-             * Close the poller if the controller is destroyed.
-             */
-            $scope.$on('$destroy', function () {
-              $interval.cancel(this.poller);
-            });
 
           }]);
 

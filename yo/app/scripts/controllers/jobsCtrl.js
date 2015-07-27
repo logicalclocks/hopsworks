@@ -6,8 +6,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('JobsCtrl', ['$routeParams', 'growl', 'JobService',
-          function ($routeParams, growl, JobService) {
+        .controller('JobsCtrl', ['$routeParams', 'growl', 'JobService', '$location',
+          function ($routeParams, growl, JobService,$location) {
 
             var self = this;
             this.projectId = $routeParams.projectID;
@@ -32,6 +32,14 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to run job', ttl: 15000});
               });
+            };
+            
+            /**
+             * Navigate to the new job page.
+             * @returns {undefined}
+             */
+            self.newJob = function () {
+              $location.path('project/' + self.projectId + '/newjob');
             };
 
 

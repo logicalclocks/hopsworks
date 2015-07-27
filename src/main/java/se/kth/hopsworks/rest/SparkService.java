@@ -140,6 +140,9 @@ public class SparkService {
     } else {
       String email = sc.getUserPrincipal().getName();
       Users user = userFacade.findByEmail(email);
+      if(!config.getJarPath().startsWith("hdfs")){
+        config.setJarPath("hdfs://"+config.getJarPath());
+      }
       if (user == null) {
         //Should not be possible, but, well...
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),

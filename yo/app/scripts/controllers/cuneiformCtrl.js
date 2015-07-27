@@ -6,12 +6,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('CuneiformCtrl', ['$scope', '$routeParams', 'growl', 'ModalService', 'JobHistoryService', 'CuneiformService', '$interval',
-          function ($scope, $routeParams, growl, ModalService, JobHistoryService, CuneiformService, $interval) {
+        .controller('CuneiformCtrl', ['$routeParams', 'growl', 'ModalService', 'CuneiformService',
+          function ($routeParams, growl, ModalService, CuneiformService) {
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
             var self = this;
-            this.JobHistoryService = JobHistoryService;
             this.projectId = $routeParams.projectID;
             this.jobType = 'CUNEIFORM';
             this.growl = growl;
@@ -27,41 +26,10 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
-            //For job execution
-            this.$interval = $interval;
-            this.callExecute = function () {
-              return CuneiformService.runWorkflow(
-                      self.projectId, self.runConfig);
-            };
-            this.onExecuteSuccess = function (success) {
-              self.runConfig = null;
-            };
-
-            this.getHistory = function () {
-              getHistory(this);
-            };
 
             this.selectFile = function () {
               selectFile(this);
             };
-
-            this.execute = function () {
-              execute(this);
-            };
-
-            this.selectJob = function (job) {
-              selectJob(this, job);
-            };
-
-            /**
-             * Close the poller if the controller is destroyed.
-             */
-            $scope.$on('$destroy', function () {
-              $interval.cancel(this.poller);
-            });
-
-            //Load the job history
-            this.getHistory();
 
           }]);
 
