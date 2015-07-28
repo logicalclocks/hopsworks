@@ -6,12 +6,13 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('JobsCtrl', ['$routeParams', 'growl', 'JobService', '$location', 'ModalService',
-          function ($routeParams, growl, JobService, $location, ModalService) {
+        .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval',
+          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval) {
 
             var self = this;
             this.projectId = $routeParams.projectID;
             this.jobs; // Will contain all the jobs.
+            this.running; //Will contain run information
 
             var getAllJobs = function () {
               JobService.getAllJobsInProject(self.projectId).then(
@@ -22,7 +23,17 @@ angular.module('hopsWorksApp')
               });
             };
 
+            var getRunStatus = function () {
+              JobService.getRunStatus(self.projectId).then(
+                      function (success) {
+                        self.running = success.data;
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+              });
+            };
+
             getAllJobs();
+            getRunStatus();
 
             this.runJob = function (jobId) {
               JobService.runJob(self.projectId, jobId).then(
@@ -45,6 +56,17 @@ angular.module('hopsWorksApp')
             self.showDetails = function (job) {
               ModalService.jobDetails('lg', job, self.projectId);
             };
+
+            /**
+             * Close the poller if the controller is destroyed.
+             */
+            $scope.$on('$destroy', function () {
+              $interval.cancel(this.poller);
+            });
+
+            $interval(function () {
+              getRunStatus();
+            }, 3000);
 
 
           }]);

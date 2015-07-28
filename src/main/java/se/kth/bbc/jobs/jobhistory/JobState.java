@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs.jobhistory;
 
+import java.util.EnumSet;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 
 /**
@@ -91,6 +92,11 @@ public enum JobState {
       default:
         return false;
     }
+  }
+
+  public static EnumSet<JobState> getRunningStates() {
+    return EnumSet.of(INITIALIZING, RUNNING, ACCEPTED, NEW, NEW_SAVING,
+            SUBMITTED, STARTING_APP_MASTER);
   }
 
 }

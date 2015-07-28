@@ -86,6 +86,14 @@ angular.module('hopsWorksApp')
                */
               getExecutionStatus: function(projectId, jobId, executionId){
                 return $http.get('/api/project/' + projectId + '/jobs/'+jobId+'/executions/'+executionId);
+              },
+              /**
+               * Get the current status of all jobs in the given project.
+               * @param {type} projectId
+               * @returns {unresolved}
+               */
+              getRunStatus: function(projectId){
+                return $http.get('/api/project/'+projectId+'/jobs/running');
               }
             };
             return service;

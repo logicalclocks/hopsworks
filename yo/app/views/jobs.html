@@ -33,6 +33,8 @@
             </th>
             <th>
             </th>
+            <th>
+            </th>
             </thead>
             <tbody>
               <tr ng-repeat="job in jobsCtrl.jobs| orderBy : 'creationTime'" ng-click="jobsCtrl.showDetails(job)">
@@ -47,6 +49,9 @@
                 </td>
                 <td>
                   <button ng-click="jobsCtrl.runJob(job.id); $event.stopPropagation();" class="btn btn-default btn-sm">Run now</button>
+                </td>
+                <td>
+                  <span class="text-info" ng-show="jobsCtrl.running[''+job.id]">Running...</span>
                 </td>
               </tr>
             </tbody>

@@ -7,6 +7,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.user.model.Users;
@@ -114,6 +115,13 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
    */
   public JobDescription findById(Integer id) {
     return em.find(JobDescription.class, id);
+  }
+  
+  public List<JobDescription> getRunningJobs(Project project){
+    TypedQuery<JobDescription> q = em.createNamedQuery("Execution.findJobsForExecutionInState", JobDescription.class);
+    q.setParameter("project", project);
+    q.setParameter("stateCollection",JobState.getRunningStates());
+    return q.getResultList();
   }
 
 }

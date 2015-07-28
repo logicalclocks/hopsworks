@@ -8,6 +8,9 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -24,7 +27,6 @@ import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.users.UserFacade;
 
 /**
  *
@@ -41,8 +43,6 @@ public class JobService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private JobDescriptionFacade jobFacade;
-  @EJB
-  private UserFacade userFacade;
   @Inject
   private ExecutionService executions;
   @Inject
@@ -157,6 +157,34 @@ public class JobService {
             getJobConfigurationTemplate(JobType.valueOf(type));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(template).build();
+  }
+
+  /**
+   * Get all the jobs in this project that have a running execution. The return
+   * value is a JSON object, where each job id is a key and the corresponding
+   * boolean indicates whether the job is running or not.
+   * <p>
+   * @param sc
+   * @param req
+   * @return
+   */
+  @GET
+  @Path("/running")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getConfigurationTemplate(@Context SecurityContext sc,
+          @Context HttpServletRequest req) {
+    List<JobDescription> running = jobFacade.getRunningJobs(project);
+    List<JobDescription> allJobs = jobFacade.findForProject(project);
+    JsonObjectBuilder builder = Json.createObjectBuilder();
+    for (JobDescription desc : allJobs) {
+      builder.add(desc.getId().toString(), false);
+    }
+    for (JobDescription desc : running) {
+      builder.add(desc.getId().toString(), true);
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(builder.build()).build();
   }
 
   /**
