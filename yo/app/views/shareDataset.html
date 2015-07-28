@@ -1,0 +1,67 @@
+<div class="modal-header">
+    <button class="close" ng-click="shareDatasetCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;</button>
+    <h2 class="modal-title">Share DataSet</h2>
+</div>
+<div class="modal-body">
+    <form role="form" name="dataSetForm" ng-submit="shareDatasetCtrl.shareDataset()" novalidate
+          class="form-validate">
+        <div class="row">
+            <fieldset>
+                <div class="control-group col-md-offset-1" style="margin-right: 8.33333%;">
+                    <div class="form-group has-feedback">
+                    <div class="row">
+                        <div class="col-xs-9" style="z-index: 10">
+                            <label class="text-muted control-label">Projects</label>
+                            <select name="project_name"
+                                    ng-model="shareDatasetCtrl.dataSet.projectId"
+                                    class="" required>
+                                <option value="">Select a project to share with</option>
+                                <option ng-repeat="project in shareDatasetCtrl.projects" value="{{project.id}}">
+                                    {{project.name}}
+                                </option>
+                            </select>
+                            <span ng-show="(dataSetForm.$submitted || dataSetForm.project_name.$dirty) &amp;&amp;
+                                  dataSetForm.project_name.$error.required"
+                                  class="text-danger ng-hide">
+                                Choose a project to share with.
+                            </span>
+                        </div>
+                          <div class="col-xs-3" style="margin-top: 26px; margin-left: -30px; min-width: 120px">
+                            <select ng-model="shareDatasetCtrl.dataSet.editable">
+                                    <option  value="false">Can view</option>
+                                    <option value="true">Can edit</option>
+                            </select>
+                          </div>
+                    </div>
+                    <p></p>
+                    <div>
+                    <label class="control-label">Description</label>
+
+                    <div class="controls">
+                      <textarea class="form-control" style="resize:none;"
+                                ng-model="shareDatasetCtrl.dataSet.description"
+                                rows="3">
+                      </textarea>
+                    </div>
+
+                    </div>
+                </div>
+                </div>
+            </fieldset>
+            <fieldset>
+                <div class="col-md-1">
+
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
+            <button class="btn btn-default" type="button" ng-click="shareDatasetCtrl.close()">Cancel</button>
+            <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.dataSet_name.$error.required">
+                Share
+            </button>
+
+        </div>
+    </form>
+</div>

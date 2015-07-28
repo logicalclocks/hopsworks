@@ -3,6 +3,7 @@ package se.kth.hopsworks.controller;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -23,10 +24,14 @@ import se.kth.bbc.project.ProjectRoleTypes;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.bbc.project.ProjectTeamPK;
+import se.kth.bbc.project.fb.Inode;
+import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.bbc.project.fb.InodeView;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.rest.AppException;
 
 /**
@@ -53,6 +58,8 @@ public class ProjectController {
   private FileOperations fileOps;
   @EJB
   private ProjectServiceFacade projectServicesFacade;
+  @EJB
+  private InodeFacade inodes;
 
   /**
    * Creates a new project(project), the related DIR, the different services
@@ -223,6 +230,7 @@ public class ProjectController {
    * removed.
    * @throws AppException if the project could not be found.
    */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public boolean removeByID(Integer projectID, String email,
           boolean deleteFilesOnRemove) throws IOException, AppException {
     boolean success = !deleteFilesOnRemove;
@@ -335,6 +343,37 @@ public class ProjectController {
     return new ProjectDTO(project, services, projectTeam);
   }
 
+  /**
+   * Project info as data transfer object that can be sent to the user.
+   * <p>
+   * @param name
+   * @return project DTO that contains team members and services
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  public ProjectDTO getProjectByName(String name) throws AppException {
+    Project project = projectFacade.findByName(name);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(
+            project);
+    List<ProjectServiceEnum> projectServices = projectServicesFacade.
+            findEnabledServicesForProject(project);
+    List<String> services = new ArrayList<>();
+    for (ProjectServiceEnum s : projectServices) {
+      services.add(s.toString());
+    }
+    Inode parent;
+    List<InodeView> kids = new ArrayList<>();
+
+    Collection<Dataset> dsInProject = project.getDatasetCollection();
+    for (Dataset ds : dsInProject) {
+      parent = inodes.findParent(ds.getInode());
+      kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode())));
+    }
+    return new ProjectDTO(project, services, projectTeam, kids);
+  }
   /**
    * Deletes a member from a project
    *

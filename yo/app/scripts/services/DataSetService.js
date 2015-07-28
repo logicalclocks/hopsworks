@@ -41,6 +41,30 @@ angular.module('hopsWorksApp')
 
                   return $http(regReq);
                 },
+                createTopLevelDataSet: function (dataSet) {
+                  var regReq = {
+                    method: 'POST',
+                    url: '/api/project/' + id + '/dataset/createTopLevelDataSet',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    data: dataSet
+                  };
+
+                  return $http(regReq);
+                },
+                shareDataSet: function (dataSet) {
+                  var regReq = {
+                    method: 'POST',
+                    url: '/api/project/' + id + '/dataset/shareDataSet',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    data: dataSet
+                  };
+
+                  return $http(regReq);
+                },
                 removeDataSetDir: function (fileName) {
                   return $http.delete('/api/project/' + id + '/dataset/' + fileName);
                 },

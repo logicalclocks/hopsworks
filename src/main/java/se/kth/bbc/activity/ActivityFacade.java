@@ -27,6 +27,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   // String constants
   public static final String NEW_PROJECT = " created a new project ";
   public static final String NEW_DATA = " added a new dataset ";
+  public static final String SHARED_DATA = " shared dataset ";
   public static final String NEW_MEMBER = " added a member ";
   public static final String NEW_SAMPLE = " added a new sample ";
   public static final String CHANGE_ROLE = " changed the role of ";

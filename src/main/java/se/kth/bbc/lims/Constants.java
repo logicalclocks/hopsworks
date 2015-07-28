@@ -163,5 +163,5 @@ public class Constants {
   public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#";
   public static final String PRINT_FILENAME_DISALLOWED_CHARS
           = "space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #";
-
+  public static final String SHARED_FILE_SEPARATOR = "::";
 }

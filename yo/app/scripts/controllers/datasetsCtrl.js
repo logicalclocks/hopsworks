@@ -296,7 +296,17 @@ angular.module('hopsWorksApp')
                         });
                       });
             };
-
+            /**
+             * Opens a modal dialog for sharing.
+             * @returns {undefined}
+             */
+            self.share = function (name) {
+              ModalService.shareDataset('sm', name).then(
+                      function (success) {
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                      }, function (error) {
+              });
+            };
             /**
              * Upon click on a inode in the browser:
              *  + If folder: open folder, fetch contents from server and display.

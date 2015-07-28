@@ -27,6 +27,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.activity.Activity;
 import se.kth.bbc.project.services.ProjectServices;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.dataset.Dataset;
 
 /**
  *
@@ -69,6 +70,9 @@ public class Project implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<ProjectServices> projectServicesCollection;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "projectId")
+  private Collection<Dataset> datasetCollection;
 
   private static final long serialVersionUID = 1L;
 
@@ -275,4 +279,13 @@ public class Project implements Serializable {
     this.projectServicesCollection = projectServicesCollection;
   }
 
+  @XmlTransient
+  @JsonIgnore
+  public Collection<Dataset> getDatasetCollection() {
+    return datasetCollection;
+  }
+
+  public void setDatasetCollection(Collection<Dataset> datasetCollection) {
+    this.datasetCollection = datasetCollection;
+  }
 }

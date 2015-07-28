@@ -34,7 +34,7 @@
               <option value="">Select security question</option>
               <option ng-repeat="question in recoverCtrl.securityQuestions" value="{{question}}">{{question}}</option>
             </select>
-            <span ng-show="(recoveryForm.$submitted || recoveryForm.sec_question.$dirty) & amp; & amp; recoveryForm.sec_question.$error.required"
+            <span ng-show="(recoveryForm.$submitted || recoveryForm.sec_question.$dirty) &amp;&amp; recoveryForm.sec_question.$error.required"
                   class="text-danger ng-hide">This field is required</span>
           </div>
           <div class="form-group has-feedback">
@@ -43,7 +43,7 @@
                    ng-model="recoverCtrl.user.securityAnswer" required
                    class="form-control"
                    type="text">
-            <span ng-show="(recoveryForm.$submitted || recoveryForm.sec_answer.$dirty) & amp; & amp; recoveryForm.sec_answer.$error.required"
+            <span ng-show="(recoveryForm.$submitted || recoveryForm.sec_answer.$dirty) &amp;&amp; recoveryForm.sec_answer.$error.required"
                   class="text-danger ng-hide">This field is required</span>
           </div>
 

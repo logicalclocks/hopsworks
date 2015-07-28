@@ -28,11 +28,17 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeam;
+import se.kth.bbc.project.fb.Inode;
+import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.services.ProjectServiceEnum;
+import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ProjectDTO;
 import se.kth.hopsworks.controller.ResponseMessages;
+import se.kth.hopsworks.dataset.Dataset;
+import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 
 /**
@@ -47,6 +53,8 @@ import se.kth.hopsworks.filters.AllowedRoles;
 public class ProjectService {
 
   @EJB
+  private ProjectFacade projectFacade;
+  @EJB
   private ProjectController projectController;
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -56,6 +64,10 @@ public class ProjectService {
   private DataSetService dataSet;
   @Inject
   private JobService jobs;
+  @EJB
+  private DatasetFacade datasetFacade;
+  @EJB
+  private InodeFacade inodes;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
           getName());
@@ -77,6 +89,71 @@ public class ProjectService {
             projects).build();
   }
 
+  @GET
+  @Path("/getAll")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getAllProjects(@Context SecurityContext sc,
+          @Context HttpServletRequest req) {
+
+    List<Project> list = projectFacade.findAll();
+    GenericEntity<List<Project>> projects
+            = new GenericEntity<List<Project>>(list) {
+            };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            projects).build();
+  }
+ 
+  @GET
+  @Path("/getProjectInfo/{projectName}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getProjectByName(@PathParam("projectName") String projectName,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    ProjectDTO proj = projectController.getProjectByName(projectName);
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            proj).build();
+  }
+  
+  @GET
+  @Path("getDatasetInfo/{inodeId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getDatasetInfo(
+          @PathParam("inodeId") Integer inodeId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    Inode inode = inodes.findById(inodeId);
+    if (inode == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NOT_FOUND);
+    }
+    
+    Inode parent = inodes.findParent(inode);
+    Project proj = projectFacade.findByName(parent.getInodePK().getName());
+    Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
+    
+    if (ds == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NOT_FOUND);
+    }
+    
+    List<Dataset> projectsContainingInode = datasetFacade.findByInode(inode);
+    List<String> sharedWith = new ArrayList<>();
+    for (Dataset d : projectsContainingInode) {
+      if (!d.getProjectId().getId().equals(proj.getId())) {
+        sharedWith.add(d.getProjectId().getName());
+      }
+    }
+    DataSetDTO dataset = new DataSetDTO(ds, proj, sharedWith);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            dataset).build();
+  }
+  
   @GET
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)

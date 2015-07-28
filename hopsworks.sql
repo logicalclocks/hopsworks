@@ -271,8 +271,8 @@ CREATE TABLE `meta_template_to_inode` (
   `inode_pid` INT(11) NOT NULL,
   `inode_name` VARCHAR(3000) NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`,`name`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster CHARSET=latin1;
 
 -- elastic jdbc-importer buffer tables -------
@@ -292,6 +292,30 @@ CREATE TABLE `meta_inodes_ops_parents_deleted` (
   `processed` tinyint(4) DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+---- Dataset table-------------------------------------------------
+CREATE TABLE `dataset` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `inode_pid` int(11) NOT NULL,
+  `inode_name` varchar(3000) NOT NULL,
+  `projectId` int(11) NOT NULL,
+  `description` varchar(3000) DEFAULT NULL,
+  `editable` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_dataset` (`inode_pid`,`projectId`,`inode_name`),
+  KEY `fk_dataset_2_idx` (`projectId`),
+  KEY `fk_dataset_1_idx` (`inode_pid`,`inode_name`),
+  CONSTRAINT `fk_dataset_2` 
+	FOREIGN KEY (`projectId`) 
+	REFERENCES `project` (`id`) 
+	ON DELETE CASCADE 
+	ON UPDATE NO ACTION,
+  CONSTRAINT `fk_dataset_1` 
+	FOREIGN KEY (`inode_pid`,`inode_name`) 
+	REFERENCES `hops`.`hdfs_inodes` (`parent_id`,`name`) 
+	ON DELETE CASCADE 
+	ON UPDATE NO ACTION
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
 
 -- VIEWS --------------
 -- ---------------------

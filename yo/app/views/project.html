@@ -1,12 +1,5 @@
-<link rel="stylesheet" href="styles/timeline.css">
-
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
-
-  <div align="center" id="projectSearchResults">
-    <p ng-bind-html="mainCtrl.searchResult"></p>
-  </div>
-
   <div id="wrapper" class="toggled">
     <div class="overlay"></div>
 
@@ -17,7 +10,12 @@
         <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} /</h3>
 
         <!-- Page Content -->
-
+        <div ng-show="mainCtrl.searchReturned !== ''">
+          <div id="projectSearchResults">
+            <div ng-include="'views/searchResult.html'"></div>
+          </div>
+        </div>
+      <div ng-show="mainCtrl.searchReturned === ''">
         <div class="widget-body col-md-6">
           <div class="timeline clearfix">
             <div class="mid-line"></div>
@@ -61,17 +59,14 @@
 
             <p></p>
 
-            <canvas id="line" class="chart chart-line" data="data2"
-                    labels="labels2" legend="true" series="series"
-                    click="onClick">
-            </canvas>
           </div>
         </div>
         <!-- /#page-content-wrapper -->
       </div>
+        </div>
     </section>
   </div>
   <!-- /#wrapper -->
 </div>
-</div>
+
 

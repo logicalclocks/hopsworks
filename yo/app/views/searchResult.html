@@ -1,0 +1,95 @@
+<div class="col-md-8" style="padding-left:56px; min-width: 500px">
+  <div >
+    <div class="widget-body">
+      <div class="timeline clearfix">
+        <div class="mid-line"></div>
+        <div  class="time-header search">
+          <p ng-bind-html="mainCtrl.searchReturned"></p>
+          <div ng-show="mainCtrl.resultItems > 1" class="text-muted result">
+            {{mainCtrl.resultItems}} results found.
+          </div>
+          <div ng-show="mainCtrl.resultItems == 1" class="text-muted result">
+            {{mainCtrl.resultItems}} result found.
+          </div>
+        </div>
+        <div ng-repeat="result in mainCtrl.searchResult| startFrom:(mainCtrl.currentPage - 1) * mainCtrl.pageSize | limitTo:mainCtrl.pageSize">
+
+          <div class="right">
+            <div class="r-arrow"></div>
+            <div class="about-task">
+              <div class="header">{{result._source.name}}
+                <small class="muted">
+                  <div ng-click="mainCtrl.view(result._source, result._type)" class="pull-right btn btn-default btn-sm" >View</div>
+                </small>
+              </div>
+              <p ng-show="result._type == 'child'" class="no-margin text-muted">
+                Description Dataset
+              </p>
+              <p ng-show="result._type == 'parent'" class="no-margin text-muted">
+                Description Project
+              </p>
+            </div>
+          </div>
+        </div>
+        <pagination ng-show="mainCtrl.resultPages > 1"
+                    total-items="mainCtrl.resultItems"
+                    ng-model="mainCtrl.currentPage"
+                    max-size="mainCtrl.pageSize"
+                    items-per-page="5"
+                    class="pagination-sm"
+                    boundary-links="true">
+        </pagination>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="col-md-4 sidebar" style="min-width: 390px; max-width: 390px">
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <p>Filters</p>
+      <button class="btn btn-lightgrey pull-right"
+              style="height: 42px;margin-right: -16px;margin-top: -46px;width: 70px; border-radius: 0px;"
+              ng-click="">
+        <span style="margin-left:3px;">Apply</span>
+      </button>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="form-group"><br>
+          <div>
+            <label class="muted">By Date</label>
+            <br>
+            <div class='input-group date' id='datetimepicker1'>
+              <input type='text' class="form-control"/>
+              <span class="input-group-addon">
+                <span class="glyphicon glyphicon-calendar"></span>
+              </span>
+            </div>
+
+          </div>
+          <br>
+          <div>
+            <label class="muted">By Size</label>
+            <br>
+            <p>
+            <div class="col-md-6">
+              <label class="text-muted">from</label>
+              <br>
+              <input class="form-control" type="number" name="points" min="0" step="0.1" value="30">
+            </div>
+            <div class="col-md-6">
+              <label class="text-muted">to</label><br>
+              <input type="number" name="points" min="0" step="0.1" value="30" class="form-control"/>
+            </div>
+            </p>
+            <br><br>
+          </div>
+        </div>
+      </div>
+    </div><br><br>
+    <div class="panel-footer">
+
+    </div>
+  </div>
+</div>

@@ -106,6 +106,57 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              shareDataset: function (size, dsName) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/shareDataset.html',
+                  controller: 'ShareDatasetCtrl as shareDatasetCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                            function (success) {
+                            },
+                            function (err) {
+                              $location.path('/login');
+                              $location.replace();
+                              return $q.reject(err);
+                            });
+                      }],
+                    dsName: function () {
+                      return dsName;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
+              viewSearchResult: function (size, result, projectOrDataset) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/viewSearchResult.html',
+                  controller: 'ViewSearchResultCtrl as viewSearchResultCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                            function (success) {
+                            },
+                            function (err) {
+                              $location.path('/login');
+                              $location.replace();
+                              return $q.reject(err);
+                            });
+                      }],
+                    result: function () {
+                      return result;
+                    },
+                    projectOrDataset: function () {
+                      return projectOrDataset;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
               /**
                * Open a dialog to allow creating a new folder at the given path (excluding the new folder's name).
                * @param {type} size
