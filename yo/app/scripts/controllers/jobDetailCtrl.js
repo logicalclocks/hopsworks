@@ -3,8 +3,8 @@
  * Controller for the job detail dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('JobDetailCtrl', ['$modalInstance', 'growl', 'JobService', 'job', 'projectId',
-          function ($modalInstance, growl, JobService, job, projectId) {
+        .controller('JobDetailCtrl', ['$scope', '$modalInstance', 'growl', 'JobService', 'job', 'projectId', '$interval',
+          function ($scope, $modalInstance, growl, JobService, job, projectId, $interval) {
 
             var self = this;
             this.job = job;
@@ -55,4 +55,16 @@ angular.module('hopsWorksApp')
             self.close = function () {
               $modalInstance.dismiss('cancel');
             };
+
+            /**
+             * Close the poller if the controller is destroyed.
+             */
+            $scope.$on('$destroy', function () {
+              $interval.cancel(this.poller);
+            });
+
+            $interval(function () {
+              getExecutions();
+            }, 3000);
+            
           }]);
