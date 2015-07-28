@@ -220,7 +220,7 @@ public class UploadService {
                 + fileName);
         logger.log(Level.INFO, "Copied to HDFS");
 
-        if (templateid != 0) {
+        if (templateid != 0 && templateid != -1) {
           this.attachTemplateToInode(info, this.path + fileName);
         }
 

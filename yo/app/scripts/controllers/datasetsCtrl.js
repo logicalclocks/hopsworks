@@ -255,10 +255,21 @@ angular.module('hopsWorksApp')
               var templateId = -1;
               console.log(JSON.stringify(file));
 
-              ModalService.selectTemplate('sm', templateId).then(
+              var data = {inodePath: "", templateId: -1};
+              data.inodePath = file.path;
+
+              ModalService.selectTemplate('sm', false, templateId).then(
                       function (success) {
-                        templateId = success.templateId;
-                        console.log("RETURNED TEMPLATE ID " + templateId);
+                        data.templateId = success.templateId;
+                        console.log("RETURNED TEMPLATE ID " + data.templateId);
+
+                        dataSetService.attachTemplate(data).then(
+                                function (success) {
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                                }, function (error) {
+                          growl.info("Could not attach template to file " + file.name + ".",
+                                  {title: 'Info', ttl: 5000});
+                        });
                       });
             };
 
@@ -281,7 +292,7 @@ angular.module('hopsWorksApp')
             self.uploadFile = function () {
               var templateId = -1;
 
-              ModalService.selectTemplate('sm', templateId).then(
+              ModalService.selectTemplate('sm', true, templateId).then(
                       function (success) {
                         templateId = success.templateId;
                         console.log("RETURNED TEMPLATE ID " + templateId);
