@@ -5,7 +5,7 @@
 
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams', 'UtilsService',
-          'growl', 'ProjectService', 'ModalService', 'ActivityService','$cookies',
+          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies',
           function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies) {
 
             UtilsService.setIndex("child");
@@ -20,7 +20,7 @@ angular.module('hopsWorksApp')
             self.projectMembers = [];
 
             // We could instead implement a service to get all the available types but this will do it for now
-            self.projectTypes = ['CUNEIFORM', 'SPARK', 'ADAM', 'MAPREDUCE', 'YARN', 'ZEPPELIN'];
+            self.projectTypes = ['CUNEIFORM', 'SPARK', 'ADAM', 'ZEPPELIN'];
             self.alreadyChoosenServices = [];
             self.selectionProjectTypes = [];
             self.pId = $routeParams.projectID;
@@ -145,24 +145,33 @@ angular.module('hopsWorksApp')
             self.goToDatasets = function () {
               $location.path('project/' + self.pId + '/datasets');
             };
-            
+
             self.goToJobs = function () {
               $location.path('project/' + self.pId + '/jobs');
             };
 
             self.goToService = function (service) {
-              if(service === "Zeppelin"){
+              if (service === "Zeppelin") {
                 window.open("http://localhost:8080/hopsworks/zeppelin");
-              }else{
+              } else {
                 $location.path('project/' + self.pId + '/' + service.toLowerCase());
               }
-              
+
             };
 
             self.goToSpecificDataset = function (name) {
               $location.path($location.path() + '/' + name);
             };
 
+            self.showZeppelin = function () {
+              var len = self.alreadyChoosenServices.length;
+              for(var i=0;i<len;i++){
+                if(self.alreadyChoosenServices[i] == 'Zeppelin'){
+                  return true;
+                }
+              }
+              return false;
+            }
 
             self.saveAllowed = function () {
               if (self.currentProject.projectName.length == 0) {
