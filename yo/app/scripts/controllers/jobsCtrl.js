@@ -23,7 +23,7 @@ angular.module('hopsWorksApp')
               });
             };
 
-            var getRunStatus = function () {
+            this.getRunStatus = function () {
               JobService.getRunStatus(self.projectId).then(
                       function (success) {
                         self.running = success.data;
@@ -33,13 +33,12 @@ angular.module('hopsWorksApp')
             };
 
             getAllJobs();
-            getRunStatus();
+            self.getRunStatus();
 
             this.runJob = function (jobId) {
               JobService.runJob(self.projectId, jobId).then(
                       function (success) {
-                        var exec = success.data;
-                        //Do something with it.
+                        self.getRunStatus();
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to run job', ttl: 15000});
               });
