@@ -13,13 +13,12 @@
     <section>
       <div class="content-wrapper">
         <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / New job</h3>
-
-
+        
         <!-- Page Content -->
-        <div>
-          <!-- Select the type of job-->  
-          Select the type of job to be created:
-          <select ng-model="newJobCtrl.jobtype" convert-to-number>
+        <div class="panel-header">
+          <h2>New job definition</h2>
+          Job type: 
+          <select class="dropdown" ng-model="newJobCtrl.jobtype" convert-to-number>
             <option value="0">Cuneiform</option>
             <option value="1">Spark</option>
             <option value="2">Adam</option>

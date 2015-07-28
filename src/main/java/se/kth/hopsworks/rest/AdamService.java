@@ -1,5 +1,6 @@
 package se.kth.hopsworks.rest;
 
+import com.google.common.base.Strings;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -146,8 +147,10 @@ public class AdamService {
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                 "You are not authorized for this invocation.");
       }
+      String jobname = Strings.isNullOrEmpty(config.getAppName())
+              ? "Untitled Adam job" : config.getAppName();
       JobDescription<? extends JobConfiguration> created = jobFacade.create(
-              config.getAppName(), user, project, config);
+              jobname, user, project, config);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();
     }

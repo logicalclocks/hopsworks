@@ -17,43 +17,42 @@
 
         <!-- Page Content -->
         <div>
-          <table>
+          <button ng-click="jobsCtrl.newJob()" class="btn btn-info">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>New job
+          </button>
+          <table class="table table-hover">
             <thead>
             <th>
               Name
             </th>
             <th>
-              Created
-            </th>
-            <th>
               Owner
             </th>
             <th>
-              Action
+              Created on
+            </th>
+            <th>
             </th>
             </thead>
             <tbody>
-              <tr ng-repeat="job in jobsCtrl.jobs" ng-click="jobsCtrl.showDetails(job)">
+              <tr ng-repeat="job in jobsCtrl.jobs| orderBy : 'creationTime'" ng-click="jobsCtrl.showDetails(job)">
                 <td>
                   {{job.name}}
-                </td>
-                <td>
-                  {{job.creationTime}}
                 </td>
                 <td>
                   {{job.creator.fname}} {{job.creator.lname}}
                 </td>
                 <td>
-                  <button ng-click="jobsCtrl.runJob(job.id)">Run now</button>
+                  {{job.creationTime| date:'mediumDate'}}
+                </td>
+                <td>
+                  <button ng-click="jobsCtrl.runJob(job.id)" class="btn btn-default btn-sm">Run now</button>
                 </td>
               </tr>
             </tbody>
           </table>
-          <button ng-click="jobsCtrl.newJob()">
-            New job
-          </button>
         </div>
-        
+
         <!-- /#page-content-wrapper -->
       </div>
     </section>
