@@ -34,8 +34,9 @@
                 <accordion-group heading="2. {{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" 
                                  is-open="newJobCtrl.accordion1.isOpen" 
                                  ng-show="newJobCtrl.accordion1.visible">
-                  <select class="dropdown" ng-model="newJobCtrl.jobtype" convert-to-number 
+                  <select class="dropdown" ng-model="newJobCtrl.jobtype"
                           ng-change="newJobCtrl.jobTypeChosen()">
+                    <option value="">Select...</option>
                     <option value="0">Cuneiform</option>
                     <option value="1">Spark</option>
                     <option value="2">Adam</option>
@@ -79,7 +80,7 @@
                     <tbody>
                       <tr ng-repeat="param in cuneiformCtrl.runConfig.wf.inputParams">
                         <td>{{param.name}}</td>
-                        <td> <input type="text" ng-model="param.value"></td>
+                        <td> <input type="text" ng-model="param.value" class="form-control"></td>
                       </tr>
                     </tbody>
                   </table>
@@ -88,11 +89,11 @@
                     <tbody>
                       <tr>
                         <td>Main class name</td>
-                        <td><input type="text" ng-model="sparkCtrl.sparkConfig.mainClass"></td>
+                        <td><input type="text" ng-model="sparkCtrl.sparkConfig.mainClass" class="form-control"></td>
                       </tr>
                       <tr>
                         <td>Job arguments</td>
-                        <td><input type="text" ng-model="sparkCtrl.sparkConfig.args"></td>
+                        <td><input type="text" ng-model="sparkCtrl.sparkConfig.args" class="form-control"></td>
                       </tr>
                     </tbody>
                   </table>
@@ -100,28 +101,28 @@
                   <div ng-show="newJobCtrl.jobtype == 2">
                     {{adamCtrl.runConfig.selectedCommand.description}}
                     <h3>Arguments</h3>
-                    <table>
+                    <table class="table">
                       <tr ng-repeat="arg in adamCtrl.runConfig.selectedCommand.arguments">
                         <td>
                           {{arg.name}} <span ng-show="arg.required">*</span> <i class="fa fa-info-circle" tooltip="{{arg.description}}"></i>
                         </td>
                         <td>
-                          <input type="text" ng-model="arg.value" ng-hide="arg.path && !arg.value" ng-required="arg.required">
-                          <button ng-show="arg.path && !arg.value" ng-click="adamCtrl.selectFile(arg)">Select</button>
+                          <input type="text" ng-model="arg.value" ng-hide="arg.path && !arg.value" ng-required="arg.required" class="form-control">
+                          <button ng-show="arg.path && !arg.value" ng-click="adamCtrl.selectFile(arg)" class="btn btn-default">Select</button>
                         </td>
                       </tr>
                     </table>
 
                     <h3>Options</h3>
-                    <table>
+                    <table class="table">
                       <tr ng-repeat="opt in adamCtrl.runConfig.selectedCommand.options">
                         <td>
                           {{opt.name}} <i class="fa fa-info-circle" tooltip="{{opt.description}}"></i>
                         </td>
                         <td>
-                          <input type="text" ng-model="opt.value" ng-hide="(opt.valueIsPath && !opt.value) || opt.flag">
-                          <button ng-show="opt.valueIsPath && !opt.value" ng-click="adamCtrl.selectFile(opt.name)">Select</button>
-                          <input type="checkbox" ng-model="opt.value" ng-show="opt.flag">
+                          <input type="text" ng-model="opt.value" ng-hide="(opt.valueIsPath && !opt.value) || opt.flag" class="form-control">
+                          <button ng-show="opt.valueIsPath && !opt.value" ng-click="adamCtrl.selectFile(opt.name)" class="btn btn-default">Select</button>
+                          <input type="checkbox" ng-model="opt.value" ng-show="opt.flag" class="form-control">
                         </td>
                       </tr>
                     </table>
@@ -147,39 +148,39 @@
                       <tr>
                         <td>Application master memory</td>
                         <td>
-                          <input type="number" ng-model="cuneiformCtrl.runConfig.amMemory" min="0" ng-show="newJobCtrl.jobtype == 0">
-                          <input type="number" ng-model="sparkCtrl.sparkConfig.amMemory" min="0" ng-show="newJobCtrl.jobtype == 1">
-                          <input type="number" ng-model="adamCtrl.runConfig.amMemory" min="0" ng-show="newJobCtrl.jobtype == 2">
+                          <input type="number" ng-model="cuneiformCtrl.runConfig.amMemory" min="0" ng-show="newJobCtrl.jobtype == 0" class="form-control">
+                          <input type="number" ng-model="sparkCtrl.sparkConfig.amMemory" min="0" ng-show="newJobCtrl.jobtype == 1" class="form-control">
+                          <input type="number" ng-model="adamCtrl.runConfig.amMemory" min="0" ng-show="newJobCtrl.jobtype == 2" class="form-control">
                         </td>
                       </tr>
                       <tr>
                         <td>Application master vcores</td>
                         <td>
-                          <input type="number" ng-model="cuneiformCtrl.runConfig.amVCores" min="1" ng-show="newJobCtrl.jobtype == 0">
-                          <input type="number" ng-model="sparkCtrl.sparkConfig.amVCores" min="1" ng-show="newJobCtrl.jobtype == 1">
-                          <input type="number" ng-model="adamCtrl.runConfig.amVCores" min="1" ng-show="newJobCtrl.jobtype == 2">
+                          <input type="number" ng-model="cuneiformCtrl.runConfig.amVCores" min="1" ng-show="newJobCtrl.jobtype == 0" class="form-control">
+                          <input type="number" ng-model="sparkCtrl.sparkConfig.amVCores" min="1" ng-show="newJobCtrl.jobtype == 1" class="form-control">
+                          <input type="number" ng-model="adamCtrl.runConfig.amVCores" min="1" ng-show="newJobCtrl.jobtype == 2" class="form-control">
                         </td>
                       </tr>
                       <tr>
                         <td>ResourceManager queue</td>
                         <td>
-                          <input type="text" ng-model="cuneiformCtrl.runConfig.amQueue" ng-show="newJobCtrl.jobtype == 0">
-                          <input type="text" ng-model="sparkCtrl.sparkConfig.amQueue" ng-show="newJobCtrl.jobtype == 1">
-                          <input type="text" ng-model="adamCtrl.runConfig.amQueue" ng-show="newJobCtrl.jobtype == 2">
+                          <input type="text" ng-model="cuneiformCtrl.runConfig.amQueue" ng-show="newJobCtrl.jobtype == 0" class="form-control">
+                          <input type="text" ng-model="sparkCtrl.sparkConfig.amQueue" ng-show="newJobCtrl.jobtype == 1" class="form-control">
+                          <input type="text" ng-model="adamCtrl.runConfig.amQueue" ng-show="newJobCtrl.jobtype == 2" class="form-control">
                         </td>
                       </tr>
                       <!-- Spark -->
                       <tr ng-show="newJobCtrl.jobtype == 1">
                         <td>Number of executors</td>
-                        <td><input type="number" ng-model="sparkCtrl.sparkConfig.numberOfExecutors"></td>
+                        <td><input type="number" ng-model="sparkCtrl.sparkConfig.numberOfExecutors" class="form-control"></td>
                       </tr>
                       <tr ng-show="newJobCtrl.jobtype == 1">
                         <td>Number of executor cores</td>
-                        <td><input type="number" ng-model="sparkCtrl.sparkConfig.executorCores"></td>
+                        <td><input type="number" ng-model="sparkCtrl.sparkConfig.executorCores" class="form-control"></td>
                       </tr>
                       <tr ng-show="newJobCtrl.jobtype == 1">
                         <td>Executor memory</td>
-                        <td><input type="text" ng-model="sparkCtrl.sparkConfig.executorMemory"></td>
+                        <td><input type="text" ng-model="sparkCtrl.sparkConfig.executorMemory" class="form-control"></td>
                       </tr>
                     </tbody>
                   </table>

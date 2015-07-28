@@ -7,21 +7,21 @@
 
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService', '$location',
-          function ($routeParams, growl, JobService,$location) {
+          function ($routeParams, growl, JobService, $location) {
 
             var self = this;
             this.projectId = $routeParams.projectID;
             this.jobtype; //Will hold the selection of which job to create.
             this.jobname; //Will hold the name of the job
             this.phase = 0; //The phase of creation we are in.
-            
-            this.accordion1 = {"isOpen": false,"visible":false, "value":"", "title":"Choose the job type"};
-            this.accordion2 = {"isOpen": false,"visible":false, "value":"", "title":""};
-            this.accordion3 = {"isOpen": false,"visible":false, "value":"", "title":""};
-            this.accordion4 = {"isOpen": false,"visible":false, "value":"", "title":"Configure and create"};
-            
-            
-            this.createJob = function(type, config){
+
+            this.accordion1 = {"isOpen": false, "visible": false, "value": "", "title": "Choose the job type"};
+            this.accordion2 = {"isOpen": false, "visible": false, "value": "", "title": ""};
+            this.accordion3 = {"isOpen": false, "visible": false, "value": "", "title": ""};
+            this.accordion4 = {"isOpen": false, "visible": false, "value": "", "title": "Configure and create"};
+
+
+            this.createJob = function (type, config) {
               config.appName = self.jobname;
               JobService.createNewJob(self.projectId, type, config).then(
                       function (success) {
@@ -30,20 +30,20 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
-            
-            this.nameFilledIn = function(){
-              if(self.phase == 0){
+
+            this.nameFilledIn = function () {
+              if (self.phase == 0) {
                 self.phase = 1;
                 self.accordion1.isOpen = true;
                 self.accordion1.visible = true;
               }
             };
-            
-            this.jobTypeChosen = function(){
+
+            this.jobTypeChosen = function () {
               self.phase = 2;
               self.accordion2.isOpen = true;
               var type;
-              switch(self.jobtype){
+              switch (self.jobtype) {
                 case "0":
                   self.accordion2.title = "Select a workflow file";
                   self.accordion3.title = "Bind input variables";
@@ -61,24 +61,28 @@ angular.module('hopsWorksApp')
                   break;
               }
               self.accordion2.visible = true;
-              self.accordion1.value=" - "+type;
+              self.accordion1.value = " - " + type;
               self.accordion1.isOpen = false;
+              self.accordion3.isOpen = false;
+              self.accordion3.visible = false;
+              self.accordion4.visible = false;
+              self.accordion2.value = "";
             };
-            
-            this.mainFileSelected = function(path){
+
+            this.mainFileSelected = function (path) {
               self.phase = 3;
               self.accordion3.isOpen = true;
               self.accordion3.visible = true;
               self.accordion4.visible = true;
-              self.accordion2.value = " - "+path;
+              self.accordion2.value = " - " + path;
               self.accordion2.isOpen = false;
             };
-            
-            this.jobDetailsFilledIn = function() {
+
+            this.jobDetailsFilledIn = function () {
               self.phase = 4;
             }
-            
-            
+
+
 
 
           }]);
