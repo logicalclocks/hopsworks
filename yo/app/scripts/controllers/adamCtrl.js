@@ -57,12 +57,13 @@ angular.module('hopsWorksApp')
              * @param {string} command
              * @returns {undefined}
              */
-            this.selectCommand = function () {
+            this.selectCommand = function (phasekeeper) {
               self.fileSelectionIsArgument = null;
               self.fileSelectionName = null;
               AdamService.getCommand(self.projectId, this.selectedCommand).then(
                       function (success) {
                         self.runConfig = success.data;
+                        phasekeeper.mainFileSelected(self.selectedCommand);
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });

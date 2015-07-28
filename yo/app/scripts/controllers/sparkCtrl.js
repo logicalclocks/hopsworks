@@ -23,12 +23,14 @@ angular.module('hopsWorksApp')
               SparkService.inspectJar(this.projectId, path).then(
                       function (success) {
                         self.sparkConfig = success.data;
+                        self.phasekeeper.mainFileSelected(getFileName(path));
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
 
-            this.selectFile = function () {
+            this.selectFile = function (phasekeeper) {
+              self.phasekeeper = phasekeeper;
               selectFile(this);
             };
 
