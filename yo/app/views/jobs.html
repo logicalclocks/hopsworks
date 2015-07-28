@@ -46,7 +46,7 @@
                   {{job.creationTime| date:'mediumDate'}}
                 </td>
                 <td>
-                  <button ng-click="jobsCtrl.runJob(job.id)" class="btn btn-default btn-sm">Run now</button>
+                  <button ng-click="jobsCtrl.runJob(job.id); $event.stopPropagation();" class="btn btn-default btn-sm">Run now</button>
                 </td>
               </tr>
             </tbody>
