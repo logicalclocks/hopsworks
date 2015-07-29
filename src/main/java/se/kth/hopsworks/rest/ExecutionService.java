@@ -24,6 +24,7 @@ import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.hopsworks.controller.AdamController;
 import se.kth.hopsworks.controller.CuneiformController;
+import se.kth.hopsworks.controller.ExecutionController;
 import se.kth.hopsworks.controller.SparkController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
@@ -46,13 +47,8 @@ public class ExecutionService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private UserFacade userFacade;
-  //Controllers
   @EJB
-  private CuneiformController cuneiformController;
-  @EJB
-  private SparkController sparkController;
-  @EJB
-  private AdamController adamController;
+  private ExecutionController executionController;
 
   private JobDescription job;
 
@@ -101,22 +97,10 @@ public class ExecutionService {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
               "You are not authorized for this invocation.");
     }
-    Execution exec;
     try {
-      switch (job.getJobType()) {
-        case CUNEIFORM:
-          exec = cuneiformController.startWorkflow(job, user);
-          break;
-        case ADAM:
-          exec = adamController.startJob(job, user);
-          break;
-        case SPARK:
-          exec = sparkController.startJob(job, user);
-          break;
-        default:
-          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                  "Unsupported job type");
-      }
+      Execution exec = executionController.start(job, user);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(exec).build();
     } catch (IOException | IllegalArgumentException |
             NullPointerException ex) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -124,8 +108,6 @@ public class ExecutionService {
               "An error occured while trying to start this job: " + ex.
               getLocalizedMessage());
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            exec).build();
   }
 
   /**
