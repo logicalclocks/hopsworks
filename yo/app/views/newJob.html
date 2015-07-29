@@ -184,26 +184,42 @@
                       </tr>
                     </tbody>
                   </table>
-                  <!-- Execution button -->
-                  <!-- Cuneiform -->
-                  <button ng-click="newJobCtrl.createJob('cuneiform', cuneiformCtrl.runConfig)" 
-                          ng-show="newJobCtrl.jobtype == 0"
-                          class="btn btn-warning">
-                    Create job
-                  </button>
-                  <!-- Spark -->
-                  <button ng-click="newJobCtrl.createJob('spark', sparkCtrl.sparkConfig)" 
-                          ng-show="newJobCtrl.jobtype == 1"
-                          class="btn btn-warning">
-                    Create job
-                  </button>
-                  <!-- Adam -->
-                  <button ng-click="newJobCtrl.createJob('adam', adamCtrl.runConfig)" 
-                          ng-show="newJobCtrl.jobtype == 2"
-                          class="btn btn-warning">
-                    Create job
-                  </button>
                 </accordion-group>
+                <accordion-group heading="6. {{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}">
+                  <div>
+                    Every 
+                    <input type="number" ng-model="newJobCtrl.schedule.number" min="1" ng-change="newJobCtrl.updateNumberOfScheduleUnits()"> 
+                     <select class="dropdown" ng-model="newJobCtrl.schedule.unit"
+                          ng-change="newJobCtrl.updateScheduleUnit()">
+                    <option value="minute">minute{{newJobCtrl.schedule.addition}}</option>
+                    <option value="hour">hour{{newJobCtrl.schedule.addition}}</option>
+                    <option value="day">day{{newJobCtrl.schedule.addition}}</option>
+                    <option value="week">week{{newJobCtrl.schedule.addition}}</option>
+                    <option value="month">month{{newJobCtrl.schedule.addition}}</option>
+                    <option value="year">year{{newJobCtrl.schedule.addition}}</option>
+                  </select>
+                    {{newJobCtrl.schedule.preposition}}
+                  </div>
+                </accordion-group>
+                <!-- Execution button -->
+                <!-- Cuneiform -->
+                <button ng-click="newJobCtrl.createJob('cuneiform', cuneiformCtrl.runConfig)" 
+                        ng-show="newJobCtrl.jobtype == 0"
+                        class="btn btn-warning">
+                  Create job
+                </button>
+                <!-- Spark -->
+                <button ng-click="newJobCtrl.createJob('spark', sparkCtrl.sparkConfig)" 
+                        ng-show="newJobCtrl.jobtype == 1"
+                        class="btn btn-warning">
+                  Create job
+                </button>
+                <!-- Adam -->
+                <button ng-click="newJobCtrl.createJob('adam', adamCtrl.runConfig)" 
+                        ng-show="newJobCtrl.jobtype == 2"
+                        class="btn btn-warning">
+                  Create job
+                </button>
               </accordion>
             </div>
           </div>

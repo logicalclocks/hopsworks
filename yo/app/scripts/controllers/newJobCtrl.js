@@ -18,8 +18,10 @@ angular.module('hopsWorksApp')
             this.accordion1 = {"isOpen": false, "visible": false, "value": "", "title": "Choose the job type"};
             this.accordion2 = {"isOpen": false, "visible": false, "value": "", "title": ""};
             this.accordion3 = {"isOpen": false, "visible": false, "value": "", "title": ""};
-            this.accordion4 = {"isOpen": false, "visible": false, "value": "", "title": "Configure and create"};
+            this.accordion4 = {"isOpen": false, "visible": false, "value": "", "title": "Configure"};
+            this.accordion5 = {"isOpen": false, "visible": false, "value": "", "title": "Set a schedule (optional)"};
 
+            this.schedule = {"unit": "hour", "number": 1, "addition": "", "preposition": ""};
 
             this.createJob = function (type, config) {
               config.appName = self.jobname;
@@ -66,6 +68,7 @@ angular.module('hopsWorksApp')
               self.accordion3.isOpen = false;
               self.accordion3.visible = false;
               self.accordion4.visible = false;
+              self.acoordion5.visible = false;
               self.accordion2.value = "";
             };
 
@@ -76,13 +79,33 @@ angular.module('hopsWorksApp')
               self.accordion4.visible = true;
               self.accordion2.value = " - " + path;
               self.accordion2.isOpen = false;
+              self.accordion5.visible = true;
             };
 
             this.jobDetailsFilledIn = function () {
               self.phase = 4;
             }
 
-
+            // Methods for schedule updating
+            this.updateNumberOfScheduleUnits = function () {
+              self.schedule.addition = self.schedule.number == 1 ? "" : "s";
+            }
+            this.updateScheduleUnit = function () {
+              switch (self.schedule.unit) {
+                case "year":
+                case "week":
+                  self.schedule.preposition = "on";
+                  return;
+                case "month":
+                  self.schedule.preposition = "on the";
+                  return;
+                case "day":
+                  self.schedule.preposition = "at";
+                  return;
+                default:
+                  self.schedule.preposition = "";
+              }
+            }
 
 
           }]);
