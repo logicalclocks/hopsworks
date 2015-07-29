@@ -12,7 +12,8 @@ import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.adam.AdamJob;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.Execution;
-import se.kth.bbc.jobs.model.description.AdamJobDescription;
+import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.user.model.Users;
 
@@ -46,7 +47,7 @@ public class AdamController {
    * @throws IOException If starting the job fails.
    * @throws NullPointerException If job or user is null.
    */
-  public Execution startJob(AdamJobDescription job, Users user) throws
+  public Execution startJob(JobDescription job, Users user) throws
           IllegalStateException,
           IllegalArgumentException, IOException, NullPointerException {
     //First: do some parameter checking.
@@ -54,9 +55,9 @@ public class AdamController {
       throw new NullPointerException("Cannot run a null job.");
     } else if (user == null) {
       throw new NullPointerException("Cannot run a job as a null user.");
-    } else if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {
+    } else if (job.getJobType() != JobType.ADAM) {
       throw new IllegalArgumentException(
-              "The given job does not represent an Adam job configuration.");
+              "The given job does not represent an Adam job.");
     } else if (!areJarsAvailable()) {
       //Check if all the jars are available
       throw new IllegalStateException(

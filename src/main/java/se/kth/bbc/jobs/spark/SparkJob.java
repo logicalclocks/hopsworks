@@ -6,7 +6,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.JobDescription;
-import se.kth.bbc.jobs.model.description.SparkJobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
@@ -23,18 +22,28 @@ public final class SparkJob extends YarnJob {
   private static final Logger logger = Logger.
           getLogger(SparkJob.class.getName());
 
-  private final SparkJobDescription sparkjob; //Just for convenience
+  private final SparkJobConfiguration jobconfig; //Just for convenience
 
-  public SparkJob(JobDescription<? extends SparkJobConfiguration> job,
+  /**
+   *
+   * @param job
+   * @param user
+   * @param services
+   */
+  public SparkJob(JobDescription job,
           Users user, AsynchronousJobExecutor services) {
     super(job, user, services);
-    this.sparkjob = (SparkJobDescription) super.jobDescription;
+    if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
+      throw new IllegalArgumentException(
+              "JobDescription must contain a SparkJobConfiguration object. Received: "
+              + job.getJobConfig().getClass());
+    }
+    this.jobconfig = (SparkJobConfiguration) job.getJobConfig();
   }
 
   @Override
   protected boolean setupJob() {
     //Then: actually get to running.
-    SparkJobConfiguration jobconfig = sparkjob.getJobConfig();
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled Spark Job");
     }
@@ -62,19 +71,21 @@ public final class SparkJob extends YarnJob {
       return false;
     }
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(sparkjob.getProject().getName())
+    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().
+            getName())
             + Constants.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(sparkjob.getProject().getName())
+    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().
+            getName())
             + Constants.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator + "stderr.log";
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
     return true;
   }
-  
+
   @Override
-  protected void cleanup(){
+  protected void cleanup() {
     //No special tasks to be done here.
   }
 

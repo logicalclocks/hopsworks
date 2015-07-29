@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
-import se.kth.bbc.jobs.model.description.AdamJobDescription;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.jobs.yarn.YarnJob;
@@ -23,12 +22,17 @@ public class AdamJob extends YarnJob {
 
   private static final Logger logger = Logger.getLogger(AdamJob.class.getName());
 
-  private final AdamJobDescription adamjob;
+  private final AdamJobConfiguration jobconfig;
 
-  public AdamJob(JobDescription<? extends AdamJobConfiguration> job,
+  public AdamJob(JobDescription job,
           AsynchronousJobExecutor services, Users user) {
     super(job, user, services);
-    this.adamjob = (AdamJobDescription) super.jobDescription;
+    if(!(job.getJobConfig() instanceof AdamJobConfiguration)){
+      throw new IllegalArgumentException(
+              "JobDescription must contain a AdamJobConfiguration object. Received: "
+              + job.getJobConfig().getClass());
+    }
+    this.jobconfig = (AdamJobConfiguration) job.getJobConfig();
   }
 
   @Override
@@ -54,7 +58,7 @@ public class AdamJob extends YarnJob {
    * create entries in the DB.
    */
   private void makeOutputAvailable() {
-    for (AdamArgumentDTO arg : adamjob.getJobConfig().getSelectedCommand().getArguments()) {
+    for (AdamArgumentDTO arg : jobconfig.getSelectedCommand().getArguments()) {
       if (arg.isOutputPath() && !(arg.getValue() == null || arg.getValue().
               isEmpty())) {
         try {
@@ -69,7 +73,7 @@ public class AdamJob extends YarnJob {
       }
     }
 
-    for (AdamOptionDTO opt : adamjob.getJobConfig().getSelectedCommand().getOptions()) {
+    for (AdamOptionDTO opt : jobconfig.getSelectedCommand().getOptions()) {
       if (opt.isOutputPath() && opt.getValue() != null && !opt.getValue().
               isEmpty()) {
         try {
@@ -88,8 +92,7 @@ public class AdamJob extends YarnJob {
   @Override
   protected boolean setupJob() {
     //Get to starting the job
-    AdamJobConfiguration config = adamjob.getJobConfig();
-    List<String> missingArgs = checkIfRequiredPresent(config); //thows an IllegalArgumentException if not ok.
+    List<String> missingArgs = checkIfRequiredPresent(jobconfig); //thows an IllegalArgumentException if not ok.
     if (!missingArgs.isEmpty()) {
       writeToLogs(
               "Cannot execute ADAM command because some required arguments are missing: "
@@ -98,8 +101,8 @@ public class AdamJob extends YarnJob {
     }
 
     //Then: submit ADAM job
-    if (config.getAppName() == null || config.getAppName().isEmpty()) {
-      config.setAppName("Untitled ADAM Job");
+    if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
+      jobconfig.setAppName("Untitled ADAM Job");
     }
     SparkYarnRunnerBuilder builder = new SparkYarnRunnerBuilder(
             Constants.ADAM_DEFAULT_JAR_HDFS_PATH, Constants.ADAM_MAINCLASS);
@@ -112,13 +115,13 @@ public class AdamJob extends YarnJob {
     builder.addSystemProperty("spark.kryo.referenceTracking", "true");
     builder.setExecutorMemoryGB(1);
 
-    builder.addAllJobArgs(constructArgs(config));
+    builder.addAllJobArgs(constructArgs(jobconfig));
 
     //Add all ADAM jars to local resources
     addAllAdamJarsToLocalResourcesAndClasspath(builder);
 
     //Set the job name
-    builder.setJobName(config.getAppName());
+    builder.setJobName(jobconfig.getAppName());
 
     try {
       runner = builder.getYarnRunner();
@@ -129,11 +132,11 @@ public class AdamJob extends YarnJob {
       return false;
     }
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(adamjob.getProject().
+    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().
             getName())
             + Constants.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(adamjob.getProject().
+    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().
             getName())
             + Constants.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator + "stderr.log";

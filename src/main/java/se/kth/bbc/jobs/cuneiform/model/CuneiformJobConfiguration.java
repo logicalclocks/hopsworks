@@ -33,6 +33,11 @@ public class CuneiformJobConfiguration extends YarnJobConfiguration{
   public void setWf(WorkflowDTO wf) {
     this.wf = wf;
   }
+  
+  @Override
+  public JobType getType(){
+    return JobType.CUNEIFORM;
+  }
 
   @Override
   public DatabaseJsonObject getReducedJsonObject() {

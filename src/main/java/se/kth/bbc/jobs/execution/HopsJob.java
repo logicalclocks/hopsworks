@@ -38,7 +38,7 @@ public abstract class HopsJob {
 
   //Service provider providing access to facades
   protected final AsynchronousJobExecutor services;
-  protected final JobDescription<? extends JobConfiguration> jobDescription;
+  protected final JobDescription jobDescription;
   private final Users user;
 
   /**
@@ -50,7 +50,7 @@ public abstract class HopsJob {
    * @param user The user executing this job.
    * @throws NullPointerException If either of the given arguments is null.
    */
-  protected HopsJob(JobDescription<? extends JobConfiguration> jobDescription,
+  protected HopsJob(JobDescription jobDescription,
           AsynchronousJobExecutor services, Users user) throws
           NullPointerException {
     //Check validity
@@ -189,20 +189,22 @@ public abstract class HopsJob {
   public final boolean isInitialized() {
     return initialized;
   }
-  
+
   /**
    * Write a message to the application logs.
+   * <p>
    * @param message
    */
-  protected final void writeToLogs(String message){
+  protected final void writeToLogs(String message) {
     //TODO: implement this.
   }
-  
+
   /**
    * Write an Exception message to the application logs.
-   * @param e 
+   * <p>
+   * @param e
    */
-  protected final void writeToLogs(Exception e){
+  protected final void writeToLogs(Exception e) {
     writeToLogs(e.getLocalizedMessage());
   }
 }

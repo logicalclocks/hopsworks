@@ -8,6 +8,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.jobs.jobhistory.JobState;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.user.model.Users;
@@ -33,33 +34,20 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
     return em;
   }
 
-  public List<CuneiformJobDescription> findCuneiformJobsForProject(
-          Project project) {
-    TypedQuery<CuneiformJobDescription> q = em.createNamedQuery(
-            "CuneiformJobDescription.findByProject",
-            CuneiformJobDescription.class);
+  /**
+   * Find all the jobs in this project with the given type.
+   * <p>
+   * @param project
+   * @param type
+   * @return
+   */
+  public List<JobDescription> findJobsForProjectAndType(
+          Project project, JobType type) {
+    TypedQuery<JobDescription> q = em.createNamedQuery(
+            "JobDescription.findByProjectAndType",
+            JobDescription.class);
     q.setParameter("project", project);
-    return q.getResultList();
-  }
-
-  public List<SparkJobDescription> findSparkJobsForProject(Project project) {
-    TypedQuery<SparkJobDescription> q = em.createNamedQuery(
-            "SparkJobDescription.findByProject", SparkJobDescription.class);
-    q.setParameter("project", project);
-    return q.getResultList();
-  }
-
-  public List<AdamJobDescription> findAdamJobsForProject(Project project) {
-    TypedQuery<AdamJobDescription> q = em.createNamedQuery(
-            "AdamJobDescription.findByProject", AdamJobDescription.class);
-    q.setParameter("project", project);
-    return q.getResultList();
-  }
-
-  public List<YarnJobDescription> findYarnJobsForProject(Project project) {
-    TypedQuery<YarnJobDescription> q = em.createNamedQuery(
-            "YarnJobDescription.findByProject", YarnJobDescription.class);
-    q.setParameter("project", project);
+    q.setParameter("type", type);
     return q.getResultList();
   }
 
@@ -79,7 +67,6 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
   /**
    * Create a new JobDescription instance.
    * <p>
-   * @param name The name of the job.
    * @param creator The creator of the job.
    * @param project The project in which this job is defined.
    * @param config The job configuration file.
@@ -90,8 +77,8 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
    * config are null.
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW) //This seems to ensure that the entity is actually created and can later be found using em.find().
-  public JobDescription<? extends JobConfiguration> create(String name,
-          Users creator, Project project, JobConfiguration config) throws
+  public JobDescription create(Users creator, Project project,
+          JobConfiguration config) throws
           IllegalArgumentException, NullPointerException {
     //Argument checking
     if (creator == null || project == null || config == null) {
@@ -99,8 +86,7 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
               "Owner, project and config must be non-null.");
     }
     //First: create a job object
-    JobDescription job = JobDescriptionFactory.
-            getNewJobDescription(config, name, creator, project);
+    JobDescription job = new JobDescription(config, project, creator, config.getAppName());
     //Finally: persist it, getting the assigned id.
     em.persist(job);
     em.flush(); //To get the id.
@@ -116,11 +102,12 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
   public JobDescription findById(Integer id) {
     return em.find(JobDescription.class, id);
   }
-  
-  public List<JobDescription> getRunningJobs(Project project){
-    TypedQuery<JobDescription> q = em.createNamedQuery("Execution.findJobsForExecutionInState", JobDescription.class);
+
+  public List<JobDescription> getRunningJobs(Project project) {
+    TypedQuery<JobDescription> q = em.createNamedQuery(
+            "Execution.findJobsForExecutionInState", JobDescription.class);
     q.setParameter("project", project);
-    q.setParameter("stateCollection",JobState.getRunningStates());
+    q.setParameter("stateCollection", JobState.getRunningStates());
     return q.getResultList();
   }
 

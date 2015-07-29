@@ -29,6 +29,9 @@
               Owner
             </th>
             <th>
+              Type
+            </th>
+            <th>
               Created on
             </th>
             <th>
@@ -43,6 +46,9 @@
                 </td>
                 <td>
                   {{job.creator.fname}} {{job.creator.lname}}
+                </td>
+                <td>
+                  {{job.jobType}}
                 </td>
                 <td>
                   {{job.creationTime| date:'mediumDate'}}

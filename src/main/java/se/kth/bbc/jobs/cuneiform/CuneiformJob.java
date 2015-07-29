@@ -14,7 +14,6 @@ import org.json.JSONObject;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
-import se.kth.bbc.jobs.model.description.CuneiformJobDescription;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.jobs.yarn.YarnRunner;
@@ -46,12 +45,25 @@ public final class CuneiformJob extends YarnJob {
   private Path tempFile;
 
   //Just for ease of use...
-  private final CuneiformJobDescription cfjob;
+  private final CuneiformJobConfiguration config;
 
-  public CuneiformJob(JobDescription<? extends CuneiformJobConfiguration> job,
+  /**
+   *
+   * @param job
+   * @param services
+   * @param user
+   * @throws IllegalArgumentException If the given JobDescription does not
+   * contain a CuneiformJobConfiguration object.
+   */
+  public CuneiformJob(JobDescription job,
           AsynchronousJobExecutor services, Users user) {
     super(job, user, services);
-    this.cfjob = (CuneiformJobDescription) job; //We can do this because of the type of the argument to this constructor.
+    if (!(job.getJobConfig() instanceof CuneiformJobConfiguration)) {
+      throw new IllegalArgumentException(
+              "The jobconfiguration in JobDescription must be of type CuneiformJobDescription. Received: "
+              + job.getJobConfig().getClass());
+    }
+    this.config = (CuneiformJobConfiguration) job.getJobConfig(); //We can do this because of the type check earlier.
   }
 
   @Override
@@ -120,7 +132,6 @@ public final class CuneiformJob extends YarnJob {
   @Override
   protected final boolean setupJob() {
     //Then: go about starting the job
-    CuneiformJobConfiguration config = cfjob.getJobConfig();
     WorkflowDTO wf = config.getWf();
     if (Strings.isNullOrEmpty(config.getAppName())) {
       config.setAppName("Untitled Cuneiform job");
@@ -179,12 +190,12 @@ public final class CuneiformJob extends YarnJob {
     }
 
     //TODO: include input files
-    String stdOutFinalDestination = Utils.getHdfsRootPath(cfjob.getProject().
+    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().
             getName())
             + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator
             + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(cfjob.getProject().
+    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().
             getName())
             + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator
@@ -205,7 +216,7 @@ public final class CuneiformJob extends YarnJob {
    * @return The path at which the temporary file was created.
    */
   private String prepWorkflowFile(WorkflowDTO wf) throws IOException {
-    if(wf.areContentsEmpty()){
+    if (wf.areContentsEmpty()) {
       wf.setContents(services.getFileOperations().cat(wf.getPath()));
     }
     // Update the workflow contents

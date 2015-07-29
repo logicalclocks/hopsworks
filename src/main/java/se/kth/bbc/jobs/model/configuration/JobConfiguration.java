@@ -20,13 +20,36 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 @XmlRootElement
 public abstract class JobConfiguration implements JsonReducable {
 
-  public JobConfiguration() {
+  protected String appName;
+
+  protected JobConfiguration() {
     //Needed for JAXB
+  }
+
+  public JobConfiguration(String appname) {
+    this.appName = appname;
+  }
+
+  /**
+   * Return the JobType this JobConfiguration is meant for.
+   * <p>
+   * @return
+   */
+  public abstract JobType getType();
+
+  public String getAppName() {
+    return appName;
+  }
+
+  public void setAppName(String appName) {
+    this.appName = appName;
   }
 
   /**
    * As found in Effective Java, the equals contract cannot be satisfied for
-   * inheritance hierarchies. Hence, these objects are not meant to be compared.
+   * inheritance hierarchies that add fields in subclasses. Since this is the
+   * main goal of extension of this class, these objects are not meant to be
+   * compared.
    * <p>
    * @param o
    * @return
@@ -72,13 +95,14 @@ public abstract class JobConfiguration implements JsonReducable {
       conf.updateFromJson(object);
       return conf;
     }
-    
+
     /**
      * Get a new JobConfiguration object with the given type.
+     * <p>
      * @param type
-     * @return 
+     * @return
      */
-    public static JobConfiguration getJobConfigurationTemplate(JobType type){
+    public static JobConfiguration getJobConfigurationTemplate(JobType type) {
       JobConfiguration conf;
       switch (type) {
         case ADAM:
@@ -99,8 +123,8 @@ public abstract class JobConfiguration implements JsonReducable {
       }
       return conf;
     }
-    
-    public static List<JobType> getSupportedTypes(){
+
+    public static List<JobType> getSupportedTypes() {
       List<JobType> list = new ArrayList<>(4);
       list.add(JobType.ADAM);
       list.add(JobType.CUNEIFORM);
@@ -108,6 +132,5 @@ public abstract class JobConfiguration implements JsonReducable {
       list.add(JobType.YARN);
       return list;
     }
-
   }
 }

@@ -23,8 +23,8 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.adam.AdamCommand;
 import se.kth.bbc.jobs.adam.AdamCommandDTO;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
-import se.kth.bbc.jobs.model.description.AdamJobDescription;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.project.Project;
@@ -73,14 +73,13 @@ public class AdamService {
   public Response findAllAdamJobs(@Context SecurityContext sc,
           @Context HttpServletRequest req)
           throws AppException {
-    List<AdamJobDescription> jobs = jobFacade.
-            findAdamJobsForProject(project);
-    GenericEntity<List<AdamJobDescription>> jobList
-            = new GenericEntity<List<AdamJobDescription>>(
-                    jobs) {
-                    };
-            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-                    entity(jobList).build();
+    List<JobDescription> jobs = jobFacade.findJobsForProjectAndType(project,
+            JobType.ADAM);
+    GenericEntity<List<JobDescription>> jobList
+            = new GenericEntity<List<JobDescription>>(jobs) {
+            };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(jobList).build();
   }
 
   /**
@@ -150,10 +149,10 @@ public class AdamService {
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                 "You are not authorized for this invocation.");
       }
-      String jobname = Strings.isNullOrEmpty(config.getAppName())
-              ? "Untitled Adam job" : config.getAppName();
-      JobDescription<? extends JobConfiguration> created = jobFacade.create(
-              jobname, user, project, config);
+      if (Strings.isNullOrEmpty(config.getAppName())) {
+        config.setAppName("Untitled ADAM job");
+      }
+      JobDescription created = jobFacade.create(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();

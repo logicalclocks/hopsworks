@@ -19,8 +19,6 @@ public class YarnJobConfiguration extends JobConfiguration {
   private int amMemory = 1024;
   //Number of cores for appMaster
   private int amVCores = 1;
-  // Application name
-  private String appName = "";
 
   protected final static String KEY_TYPE = "type";
   protected final static String KEY_QUEUE = "QUEUE";
@@ -73,18 +71,10 @@ public class YarnJobConfiguration extends JobConfiguration {
   public final void setAmVCores(int amVCores) {
     this.amVCores = amVCores;
   }
-
-  public final String getAppName() {
-    return appName;
-  }
-
-  /**
-   * Set the name of the application. Default value: "Hops job".
-   * <p>
-   * @param appName
-   */
-  public final void setAppName(String appName) {
-    this.appName = appName;
+  
+  @Override
+  public JobType getType(){
+    return JobType.YARN;
   }
 
   @Override

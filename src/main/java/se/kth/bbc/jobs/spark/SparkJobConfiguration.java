@@ -131,6 +131,11 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     }
     this.executorMemory = executorMemory;
   }
+  
+  @Override
+  public JobType getType(){
+    return JobType.SPARK;
+  }
 
   @Override
   public DatabaseJsonObject getReducedJsonObject() {

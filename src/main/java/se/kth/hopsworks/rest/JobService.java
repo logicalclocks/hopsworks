@@ -195,7 +195,7 @@ public class JobService {
   @Path("/{jobId}/executions")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public ExecutionService executions(@PathParam("jobId") int jobId) {
-    JobDescription<? extends JobConfiguration> job = jobFacade.findById(jobId);
+    JobDescription job = jobFacade.findById(jobId);
     if (job == null) {
       return null;
     } else if (!job.getProject().equals(project)) {

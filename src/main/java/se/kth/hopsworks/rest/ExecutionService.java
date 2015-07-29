@@ -22,10 +22,6 @@ import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
-import se.kth.bbc.jobs.model.configuration.JobConfiguration;
-import se.kth.bbc.jobs.model.description.AdamJobDescription;
-import se.kth.bbc.jobs.model.description.CuneiformJobDescription;
-import se.kth.bbc.jobs.model.description.SparkJobDescription;
 import se.kth.hopsworks.controller.AdamController;
 import se.kth.hopsworks.controller.CuneiformController;
 import se.kth.hopsworks.controller.SparkController;
@@ -58,9 +54,9 @@ public class ExecutionService {
   @EJB
   private AdamController adamController;
 
-  private JobDescription<? extends JobConfiguration> job;
+  private JobDescription job;
 
-  ExecutionService setJob(JobDescription<? extends JobConfiguration> job) {
+  ExecutionService setJob(JobDescription job) {
     this.job = job;
     return this;
   }
@@ -106,40 +102,27 @@ public class ExecutionService {
               "You are not authorized for this invocation.");
     }
     Execution exec;
-    if (job instanceof CuneiformJobDescription) {
-      try {
-        exec = cuneiformController.startWorkflow((CuneiformJobDescription) job,
-                user);
-      } catch (IOException | IllegalArgumentException |
-              NullPointerException ex) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(),
-                "An error occured while trying to start this job: " + ex.
-                getLocalizedMessage());
+    try {
+      switch (job.getJobType()) {
+        case CUNEIFORM:
+          exec = cuneiformController.startWorkflow(job, user);
+          break;
+        case ADAM:
+          exec = adamController.startJob(job, user);
+          break;
+        case SPARK:
+          exec = sparkController.startJob(job, user);
+          break;
+        default:
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  "Unsupported job type");
       }
-    } else if (job instanceof AdamJobDescription) {
-      try {
-        exec = adamController.startJob((AdamJobDescription) job, user);
-      } catch (IOException | IllegalArgumentException |
-              NullPointerException ex) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(),
-                "An error occured while trying to start this job: " + ex.
-                getLocalizedMessage());
-      }
-    } else if (job instanceof SparkJobDescription) {
-      try {
-        exec = sparkController.startJob((SparkJobDescription) job, user);
-      } catch (IOException | IllegalArgumentException |
-              NullPointerException ex) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(),
-                "An error occured while trying to start this job: " + ex.
-                getLocalizedMessage());
-      }
-    } else {
-      throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
-              "The given job cannot be handled by the server.");
+    } catch (IOException | IllegalArgumentException |
+            NullPointerException ex) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "An error occured while trying to start this job: " + ex.
+              getLocalizedMessage());
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             exec).build();

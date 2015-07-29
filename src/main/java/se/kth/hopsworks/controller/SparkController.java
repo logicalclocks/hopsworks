@@ -14,7 +14,8 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.jobhistory.Execution;
-import se.kth.bbc.jobs.model.description.SparkJobDescription;
+import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.lims.Constants;
@@ -50,7 +51,7 @@ public class SparkController {
    * @throws IllegalArgumentException If the given job does not represent a
    * Spark job.
    */
-  public Execution startJob(SparkJobDescription job, Users user) throws
+  public Execution startJob(JobDescription job, Users user) throws
           IllegalStateException,
           IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.
@@ -58,7 +59,7 @@ public class SparkController {
       throw new NullPointerException("Cannot run a null job.");
     } else if (user == null) {
       throw new NullPointerException("Cannot run a job as a null user.");
-    } else if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
+    } else if (job.getJobType() != JobType.SPARK) {
       throw new IllegalArgumentException(
               "Job configuration is not a Spark job configuration.");
     } else if (!isSparkJarAvailable()) {

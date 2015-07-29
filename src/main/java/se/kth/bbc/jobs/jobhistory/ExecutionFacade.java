@@ -7,10 +7,6 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.jobs.model.description.AdamJobDescription;
-import se.kth.bbc.jobs.model.description.CuneiformJobDescription;
-import se.kth.bbc.jobs.model.description.SparkJobDescription;
-import se.kth.bbc.jobs.model.description.YarnJobDescription;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
@@ -47,23 +43,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
           throws IllegalArgumentException {
     TypedQuery<Execution> q = em.createNamedQuery(
             "Execution.findByProjectAndType", Execution.class);
-    switch (type) {
-      case ADAM:
-        q.setParameter("class", AdamJobDescription.class);
-        break;
-      case CUNEIFORM:
-        q.setParameter("class", CuneiformJobDescription.class);
-        break;
-      case SPARK:
-        q.setParameter("class", SparkJobDescription.class);
-        break;
-      case YARN:
-        q.setParameter("class", YarnJobDescription.class);
-        break;
-      default:
-        throw new IllegalArgumentException(
-                "The given JobType is not yet supported.");
-    }
+    q.setParameter("type", type);
     q.setParameter("project", project);
     return q.getResultList();
   }

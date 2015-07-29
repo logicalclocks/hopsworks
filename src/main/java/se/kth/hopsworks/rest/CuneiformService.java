@@ -25,9 +25,9 @@ import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
-import se.kth.bbc.jobs.model.description.CuneiformJobDescription;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.CuneiformController;
@@ -76,14 +76,13 @@ public class CuneiformService {
   public Response findAllCuneiformJobs(@Context SecurityContext sc,
           @Context HttpServletRequest req)
           throws AppException {
-    List<CuneiformJobDescription> jobs = jobFacade.
-            findCuneiformJobsForProject(project);
-    GenericEntity<List<CuneiformJobDescription>> jobList
-            = new GenericEntity<List<CuneiformJobDescription>>(
-                    jobs) {
-                    };
-            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-                    entity(jobList).build();
+    List<JobDescription> jobs = jobFacade.findJobsForProjectAndType(project,
+            JobType.CUNEIFORM);
+    GenericEntity<List<JobDescription>> jobList
+            = new GenericEntity<List<JobDescription>>(jobs) {
+            };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(jobList).build();
   }
 
   /**
@@ -152,10 +151,10 @@ public class CuneiformService {
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                 "You are not authorized for this invocation.");
       }
-      String jobname = Strings.isNullOrEmpty(config.getAppName())
-              ? "Untitled Cuneiform job" : config.getAppName();
-      JobDescription<? extends JobConfiguration> created = jobFacade.create(
-              jobname, user, project, config);
+      if (Strings.isNullOrEmpty(config.getAppName())) {
+        config.setAppName("Untitled Cuneiform job");
+      }
+      JobDescription created = jobFacade.create(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();

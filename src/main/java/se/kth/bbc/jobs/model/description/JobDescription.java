@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs.model.description;
 
+import com.google.common.base.Strings;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.configuration.JobConfigurationConverter;
 import java.io.Serializable;
@@ -9,13 +10,12 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
-import javax.persistence.DiscriminatorColumn;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
@@ -26,10 +26,12 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.user.model.Users;
 
@@ -39,11 +41,8 @@ import se.kth.hopsworks.user.model.Users;
  * declare the @DiscriminatorValue annotation.
  * <p>
  * @author stig
- * @param <T>
  */
 @Entity
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "type")
 @Table(name = "hopsworks.jobs")
 @XmlRootElement
 @NamedQueries({
@@ -60,9 +59,11 @@ import se.kth.hopsworks.user.model.Users;
           = "SELECT j FROM JobDescription j WHERE j.creationTime = :creationTime"),
   @NamedQuery(name = "JobDescription.findByProject",
           query
-          = "SELECT j FROM JobDescription j WHERE j.project = :project")})
-public abstract class JobDescription<T extends JobConfiguration> implements
-        Serializable {
+          = "SELECT j FROM JobDescription j WHERE j.project = :project"),
+  @NamedQuery(name = "JobDescription.findByProjectAndType",
+          query
+          = "SELECT j FROM JobDescription j WHERE j.project = :project AND j.type = :type")})
+public class JobDescription implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -84,7 +85,12 @@ public abstract class JobDescription<T extends JobConfiguration> implements
 
   @Column(name = "json_config")
   @Convert(converter = JobConfigurationConverter.class)
-  protected T jobConfig;
+  private JobConfiguration jobConfig;
+
+  @Size(max = 128)
+  @Column(name = "type")
+  @Enumerated(EnumType.STRING)
+  private JobType type;
 
   @JoinColumn(name = "project_id",
           referencedColumnName = "id")
@@ -99,31 +105,38 @@ public abstract class JobDescription<T extends JobConfiguration> implements
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "job")
   private Collection<Execution> executionCollection;
-  
-  protected JobDescription(){};
 
-  public JobDescription(T config, Project project,
+  protected JobDescription() {
+    this.name = "Hopsworks job";
+  }
+
+  public JobDescription(JobConfiguration config, Project project,
           Users creator) {
     this(config, project, creator, new Date());
   }
 
-  public JobDescription(T config, Project project,
+  public JobDescription(JobConfiguration config, Project project,
           Users creator, Date creationTime) {
     this(config, project, creator, null, creationTime);
   }
 
-  public JobDescription(T config, Project project,
+  public JobDescription(JobConfiguration config, Project project,
           Users creator, String jobname) {
     this(config, project, creator, jobname, new Date());
   }
 
-  protected JobDescription(T config, Project project,
+  protected JobDescription(JobConfiguration config, Project project,
           Users creator, String jobname, Date creationTime) {
-    this.name = jobname;
+    if (Strings.isNullOrEmpty(jobname)) {
+      this.name = "Hopsworks job";
+    } else {
+      this.name = jobname;
+    }
     this.creationTime = creationTime;
     this.jobConfig = config;
     this.project = project;
     this.creator = creator;
+    this.type = config.getType();
   }
 
   public Integer getId() {
@@ -138,6 +151,11 @@ public abstract class JobDescription<T extends JobConfiguration> implements
     return name;
   }
 
+  /**
+   * Set the name of the application. Default value: "Hopsworks job".
+   * <p>
+   * @param name
+   */
   public void setName(String name) {
     this.name = name;
   }
@@ -150,12 +168,17 @@ public abstract class JobDescription<T extends JobConfiguration> implements
     this.creationTime = creationTime;
   }
 
-  public T getJobConfig() {
+  public JobConfiguration getJobConfig() {
     return jobConfig;
   }
 
-  public void setJobConfig(T jobConfig) {
+  public void setJobConfig(JobConfiguration jobConfig) {
     this.jobConfig = jobConfig;
+  }
+
+  @XmlElement
+  public JobType getJobType() {
+    return type;
   }
 
   @JsonIgnore
@@ -192,7 +215,7 @@ public abstract class JobDescription<T extends JobConfiguration> implements
 
   @Override
   public String toString() {
-    return "Job [" + name + ", " + id + "]";
+    return type.toString() + "Job [" + name + ", " + id + "]";
   }
 
   public Project getProject() {

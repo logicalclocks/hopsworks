@@ -30,9 +30,22 @@ public abstract class YarnJob extends HopsJob {
 
   private JobState finalState = null;
 
-  public YarnJob(JobDescription<? extends YarnJobConfiguration> job, Users user,
+  /**
+   *
+   * @param job
+   * @param user
+   * @param services
+   * @throws IllegalArgumentException If the JobDescription does not contain a
+   * YarnJobConfiguration object.
+   */
+  public YarnJob(JobDescription job, Users user,
           AsynchronousJobExecutor services) {
     super(job, services, user);
+    if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
+      throw new IllegalArgumentException(
+              "JobDescription must contain a YarnJobConfiguration object. Received class: "
+              + job.getJobConfig().getClass());
+    }
   }
 
   public final void setStdOutFinalDestination(String stdOutFinalDestination) {

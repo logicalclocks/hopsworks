@@ -22,10 +22,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.activity.ActivityFacade;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
-import se.kth.bbc.jobs.model.description.SparkJobDescription;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.SparkController;
@@ -62,7 +62,7 @@ public class SparkService {
     this.project = project;
     return this;
   }
-  
+
   /**
    * Get all the jobs in this project of type Spark.
    * <p>
@@ -78,14 +78,13 @@ public class SparkService {
   public Response findAllSparkJobs(@Context SecurityContext sc,
           @Context HttpServletRequest req)
           throws AppException {
-    List<SparkJobDescription> jobs = jobFacade.
-            findSparkJobsForProject(project);
-    GenericEntity<List<SparkJobDescription>> jobList
-            = new GenericEntity<List<SparkJobDescription>>(
-                    jobs) {
-                    };
-            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-                    entity(jobList).build();
+    List<JobDescription> jobs = jobFacade.findJobsForProjectAndType(project,
+            JobType.SPARK);
+    GenericEntity<List<JobDescription>> jobList
+            = new GenericEntity<List<JobDescription>>(jobs) {
+            };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(jobList).build();
   }
 
   /**
@@ -121,7 +120,7 @@ public class SparkService {
               getLocalizedMessage());
     }
   }
-  
+
   /**
    * Create a new Job definition. If successful, the job is returned.
    * <p>
@@ -144,18 +143,18 @@ public class SparkService {
     } else {
       String email = sc.getUserPrincipal().getName();
       Users user = userFacade.findByEmail(email);
-      if(!config.getJarPath().startsWith("hdfs")){
-        config.setJarPath("hdfs://"+config.getJarPath());
+      if (!config.getJarPath().startsWith("hdfs")) {
+        config.setJarPath("hdfs://" + config.getJarPath());
       }
       if (user == null) {
         //Should not be possible, but, well...
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                 "You are not authorized for this invocation.");
       }
-      String jobname = Strings.isNullOrEmpty(config.getAppName())
-              ? "Untitled Spark job" : config.getAppName();
-      JobDescription<? extends JobConfiguration> created = jobFacade.create(
-              jobname, user, project, config);
+      if (Strings.isNullOrEmpty(config.getAppName())) {
+        config.setAppName("Untitled Spark job");
+      }
+      JobDescription created = jobFacade.create(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();

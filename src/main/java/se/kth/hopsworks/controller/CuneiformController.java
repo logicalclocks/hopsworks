@@ -12,7 +12,8 @@ import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.cuneiform.CuneiformJob;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
 import se.kth.bbc.jobs.jobhistory.Execution;
-import se.kth.bbc.jobs.model.description.CuneiformJobDescription;
+import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -78,15 +79,17 @@ public class CuneiformController {
    * @throws IllegalArgumentException If the job does not represent a Cuneiform
    * JobDescription.
    */
-  public Execution startWorkflow(CuneiformJobDescription job, Users user) throws
+  public Execution startWorkflow(JobDescription job, Users user) throws
           IOException,
           IllegalArgumentException, NullPointerException {
     //First: some parameter checking
     if (job == null) {
       throw new NullPointerException("Cannot execute a null job.");
-    }
-    if (user == null) {
+    } else if (user == null) {
       throw new NullPointerException("Cannot execute a job as a null user.");
+    } else if (job.getJobType() != JobType.CUNEIFORM) {
+      throw new IllegalArgumentException(
+              "Job does not represent a Cuneiform job.");
     }
 
     //Then: create a CuneiformJob to run it
