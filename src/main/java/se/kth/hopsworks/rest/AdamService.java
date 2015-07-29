@@ -1,7 +1,7 @@
 package se.kth.hopsworks.rest;
 
-import java.io.IOException;
-import java.util.logging.Level;
+import com.google.common.base.Strings;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
@@ -13,17 +13,24 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.adam.AdamCommand;
 import se.kth.bbc.jobs.adam.AdamCommandDTO;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
-import se.kth.hopsworks.controller.AdamController;
+import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
+import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
+import se.kth.bbc.project.Project;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.UserFacade;
 
 /**
  *
@@ -35,14 +42,44 @@ public class AdamService {
   private static final Logger logger = Logger.getLogger(AdamService.class.
           getName());
 
+  private Project project;
+
   @EJB
-  private AdamController adamController;
+  private JobDescriptionFacade jobFacade;
+  @EJB
+  private NoCacheResponse noCacheResponse;
+  @EJB
+  private UserFacade userFacade;
+  @EJB
+  private ActivityFacade activityFacade;
 
-  private Integer projectId;
-
-  AdamService setProjectId(Integer id) {
-    this.projectId = id;
+  AdamService setProject(Project project) {
+    this.project = project;
     return this;
+  }
+
+  /**
+   * Get all the jobs in this project of type Adam.
+   * <p>
+   * @param sc
+   * @param req
+   * @return A list of all JobDescription objects of type Adam in this
+   * project.
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response findAllAdamJobs(@Context SecurityContext sc,
+          @Context HttpServletRequest req)
+          throws AppException {
+    List<JobDescription> jobs = jobFacade.findJobsForProjectAndType(project,
+            JobType.ADAM);
+    GenericEntity<List<JobDescription>> jobList
+            = new GenericEntity<List<JobDescription>>(jobs) {
+            };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(jobList).build();
   }
 
   /**
@@ -86,34 +123,39 @@ public class AdamService {
   }
 
   /**
-   * Run an ADAM job. Accepts a JSONized AdamJobConfiguration, which contains
-   * the selected command along with the set parameters.
+   * Create a new Job definition. If successful, the job is returned.
    * <p>
-   * @param config
+   * @param config The configuration from which to create a Job.
    * @param sc
    * @param req
    * @return
-   * @throws AppException
+   * @throws se.kth.hopsworks.rest.AppException
    */
   @POST
-  @Path("/run")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = AllowedRoles.ALL)
-  public Response run(AdamJobConfiguration config, @Context SecurityContext sc,
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response createJob(AdamJobConfiguration config,
+          @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     if (config == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "You must set a job configuration first.");
-    }
-    try {
-      JobHistory jh = adamController.startJob(config, req.getUserPrincipal().
-              getName(), projectId);
-      return Response.ok(jh).build();
-    } catch (IOException | IllegalStateException | IllegalArgumentException ex) {
-      logger.log(Level.SEVERE, "Error running ADAM job.", ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error running job: " + ex.getLocalizedMessage());
+      throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
+              "Cannot create job for a null argument.");
+    } else {
+      String email = sc.getUserPrincipal().getName();
+      Users user = userFacade.findByEmail(email);
+      if (user == null) {
+        //Should not be possible, but, well...
+        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+                "You are not authorized for this invocation.");
+      }
+      if (Strings.isNullOrEmpty(config.getAppName())) {
+        config.setAppName("Untitled ADAM job");
+      }
+      JobDescription created = jobFacade.create(user, project, config);
+      activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(created).build();
     }
   }
 

@@ -5,8 +5,6 @@
     <jta-data-source>jdbc/kthfs</jta-data-source>
     <class>se.kth.bbc.activity.ActivityDetail</class>
     <class>se.kth.bbc.activity.UsersGroups</class>
-    <class>se.kth.bbc.jobs.jobhistory.JobExecutionFile</class>
-    <class>se.kth.bbc.jobs.jobhistory.JobHistory</class>
     <class>se.kth.bbc.jobs.jobhistory.JobInputFile</class>
     <class>se.kth.bbc.jobs.jobhistory.JobOutputFile</class>
     <class>se.kth.bbc.security.ua.model.Address</class>
@@ -37,6 +35,9 @@
     <class>se.kth.meta.entity.Field</class>
     <class>se.kth.meta.entity.MTable</class>
     <class>se.kth.meta.entity.Template</class>
+    <class>se.kth.bbc.jobs.jobhistory.Execution</class>
+    <class>se.kth.bbc.jobs.model.description.JobDescription</class>
+    <class>se.kth.bbc.jobs.model.configuration.JsonReduceableConverter</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

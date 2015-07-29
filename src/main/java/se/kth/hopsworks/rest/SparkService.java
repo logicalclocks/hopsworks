@@ -1,6 +1,8 @@
 package se.kth.hopsworks.rest;
 
+import com.google.common.base.Strings;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -15,13 +17,21 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
+import se.kth.bbc.activity.ActivityFacade;
+import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
+import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
+import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.SparkController;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.UserFacade;
 
 /**
  * Service offering functionality to run a Spark fatjar job.
@@ -39,12 +49,42 @@ public class SparkService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private SparkController sparkController;
+  @EJB
+  private JobDescriptionFacade jobFacade;
+  @EJB
+  private UserFacade userFacade;
+  @EJB
+  private ActivityFacade activityFacade;
 
-  private Integer projectId;
+  private Project project;
 
-  SparkService setProjectId(Integer id) {
-    this.projectId = id;
+  SparkService setProject(Project project) {
+    this.project = project;
     return this;
+  }
+
+  /**
+   * Get all the jobs in this project of type Spark.
+   * <p>
+   * @param sc
+   * @param req
+   * @return A list of all JobDescription objects of type Spark in this
+   * project.
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response findAllSparkJobs(@Context SecurityContext sc,
+          @Context HttpServletRequest req)
+          throws AppException {
+    List<JobDescription> jobs = jobFacade.findJobsForProjectAndType(project,
+            JobType.SPARK);
+    GenericEntity<List<JobDescription>> jobList
+            = new GenericEntity<List<JobDescription>>(jobs) {
+            };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(jobList).build();
   }
 
   /**
@@ -82,42 +122,42 @@ public class SparkService {
   }
 
   /**
-   * Run a job. This method returns a JobHistory object if it succeeds.
+   * Create a new Job definition. If successful, the job is returned.
    * <p>
-   * @param config
-   * @param req
+   * @param config The configuration from which to create a Job.
    * @param sc
+   * @param req
    * @return
    * @throws se.kth.hopsworks.rest.AppException
    */
   @POST
-  @Path("/run")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response runJob(SparkJobConfiguration config,
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response createJob(SparkJobConfiguration config,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    if (config == null || config.getJarPath() == null || config.getJarPath().
-            isEmpty()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "You must set a jar path before running.");
-    } else if (config.getMainClass() == null || config.getMainClass().isEmpty()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "You must set a main class before running.");
-    }
-    try {
+    if (config == null) {
+      throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
+              "Cannot create job for a null argument.");
+    } else {
+      String email = sc.getUserPrincipal().getName();
+      Users user = userFacade.findByEmail(email);
       if (!config.getJarPath().startsWith("hdfs")) {
         config.setJarPath("hdfs://" + config.getJarPath());
       }
-      JobHistory jh = sparkController.startJob(config, req.getUserPrincipal().
-              getName(), projectId);
+      if (user == null) {
+        //Should not be possible, but, well...
+        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+                "You are not authorized for this invocation.");
+      }
+      if (Strings.isNullOrEmpty(config.getAppName())) {
+        config.setAppName("Untitled Spark job");
+      }
+      JobDescription created = jobFacade.create(user, project, config);
+      activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(jh).build();
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Error running Spark job.", ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error running job: " + ex.getLocalizedMessage());
+              entity(created).build();
     }
   }
 }

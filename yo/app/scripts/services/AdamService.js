@@ -21,17 +21,6 @@ angular.module('hopsWorksApp')
                */
               getCommand: function (projectId, commandname) {
                 return $http.get('/api/project/' + projectId + '/jobs/adam/commands/' + commandname);
-              },
-              runJob: function (projectId, runConfig) {
-                var req = {
-                  method: 'POST',
-                  url: '/api/project/' + projectId + '/jobs/adam/run',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  },
-                  data: runConfig
-                }
-                return $http(req);
               }
             };
             return service;

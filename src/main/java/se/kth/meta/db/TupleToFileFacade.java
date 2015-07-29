@@ -46,7 +46,7 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
 
     this.em.persist(ttf);
     this.em.flush();
-    
+
     return ttf.getId();
   }
 

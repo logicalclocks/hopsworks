@@ -1,6 +1,9 @@
 package se.kth.bbc.jobs.adam;
 
+import com.google.common.base.Strings;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.model.JsonReduceable;
 
 /**
  * POJO representing an AdamCommand.
@@ -8,7 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author stig
  */
 @XmlRootElement
-public class AdamCommandDTO {
+public class AdamCommandDTO implements JsonReduceable {
 
   private String command;
   private String description;
@@ -90,4 +93,99 @@ public class AdamCommandDTO {
     return ret;
   }
 
+  @Override
+  public DatabaseJsonObject getReducedJsonObject() {
+    DatabaseJsonObject obj = new DatabaseJsonObject();
+    obj.set("command", command);
+    //Create a JSON object "arguments" and set it to the builder.
+    DatabaseJsonObject args = new DatabaseJsonObject();
+    for (AdamArgumentDTO arg : arguments) {
+      //Only set if the argument is non-empty.
+      if (!Strings.isNullOrEmpty(arg.getValue())) {
+        args.set(arg.getName(), arg.getValue());
+      }
+    }
+    obj.set("arguments", args);
+    //Create a JSON object "options" and set it to the builder.
+    DatabaseJsonObject opts = new DatabaseJsonObject();
+    for (AdamOptionDTO opt : options) {
+      //If a flag: only set if set
+      if (opt.isFlag()) {
+        if (opt.getSet()) {
+          opts.set(opt.getName(), "true");
+        }
+      } //If not a flag: only set if not empty
+      else if (!Strings.isNullOrEmpty(opt.getValue())) {
+        opts.set(opt.getName(), opt.getValue());
+      }
+    }
+    obj.set("options", opts);
+    return obj;
+  }
+
+  @Override
+  public void updateFromJson(DatabaseJsonObject json) throws
+          IllegalArgumentException {
+    String jsonCommand;
+    AdamCommand ac;
+    DatabaseJsonObject jsonArgs, jsonOpts;
+    try {
+      jsonCommand = json.getString("command");
+      ac = AdamCommand.getFromCommand(jsonCommand);
+      jsonArgs = json.getJsonObject("arguments");
+      jsonOpts = json.getJsonObject("options");
+
+      //Count the number of arguments found in the JSON
+      int cnt = 0;
+      for (AdamArgument aa : ac.getArguments()) {
+        if (jsonArgs.containsKey(aa.getName())) {
+          cnt++;
+        }
+      }
+      if (cnt != jsonArgs.size()) {
+        throw new IllegalArgumentException(
+                "Some of the arguments in the JSON object are not valid for the given command.");
+      }
+      //Count the number of options found in the JSON
+      cnt = 0;
+      for (AdamOption ao : ac.getOptions()) {
+        if (jsonOpts.containsKey(ao.getName())) {
+          cnt++;
+        }
+      }
+      if (cnt != jsonOpts.size()) {
+        throw new IllegalArgumentException(
+                "Some of the options in the JSON object are not valid for the given command.");
+      }
+    } catch (Exception e) {
+      throw new IllegalArgumentException(
+              "JSON cannot be converted to AdamCommandDTO", e);
+    }
+
+    //Now that we're certain it's ok: fill in the fields.
+    this.command = jsonCommand;
+    this.description = ac.getDescription();
+    //Fill in the arguments
+    this.arguments = new AdamArgumentDTO[ac.getArguments().length];
+    for (int i = 0; i < ac.getArguments().length; i++) {
+      this.arguments[i] = new AdamArgumentDTO(ac.getArguments()[i]);
+      String key = this.arguments[i].getName();
+      //Check if this argument is in the json
+      if (jsonArgs.containsKey(key)) {
+        //If so: set the value.
+        this.arguments[i].setValue(jsonArgs.getString(key));
+      }
+    }
+    //Fill in the options
+    this.options = new AdamOptionDTO[ac.getOptions().length];
+    for (int i = 0; i < ac.getOptions().length; i++) {
+      this.options[i] = new AdamOptionDTO(ac.getOptions()[i]);
+      String key = this.options[i].getName();
+      //Check if this option is in the json
+      if (jsonOpts.containsKey(key)) {
+        //If so: set the value.
+        this.options[i].setValue(jsonOpts.getString(key));
+      }
+    }
+  }
 }

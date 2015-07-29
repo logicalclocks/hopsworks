@@ -22,6 +22,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  * @author André<amore@kth.se>
@@ -415,4 +416,8 @@ public class Users implements Serializable {
     return "se.kth.hopsworks.model.Users[ uid=" + uid + " ]";
   }
 
+  public User asUser() {
+    return new User(uid, username, password, activated, falseLogin, status,
+            isonline ? 1 : 0);
+  }
 }

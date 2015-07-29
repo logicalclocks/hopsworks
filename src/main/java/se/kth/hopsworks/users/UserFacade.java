@@ -3,6 +3,7 @@ package se.kth.hopsworks.users;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -92,12 +93,18 @@ public class UserFacade extends AbstractFacade<Users> {
     }
   }
 
+  /**
+   * Get the user with the given email.
+   * <p>
+   * @param email
+   * @return The user with given email, or null if no such user exists.
+   */
   public Users findByEmail(String email) {
     try {
       return em.createNamedQuery("Users.findByEmail", Users.class).setParameter(
               "email", email)
               .getSingleResult();
-    } catch (Exception e) {
+    } catch (NoResultException e) {
       return null;
     }
   }

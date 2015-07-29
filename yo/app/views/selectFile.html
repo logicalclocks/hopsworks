@@ -12,20 +12,17 @@
 
   <div class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
 
-    <table class="table table-bordred table-hover" >
-      <tbody ui-sortable ng-model="datasetsCtrl.files">
-        <tr>
+    <table class="table table-hover" >
+      <tbody ng-model="datasetsCtrl.files">
+        <tr ng-click="selectFileCtrl.back(datasetsCtrl)">
           <td style="padding: 0px">&nbsp &nbsp
-            <a ng-click="selectFileCtrl.back(datasetsCtrl)" style="font-size:25px">..</a>
+            <a style="font-size:25px">..</a>
           </td>
         </tr>
         <tr ng-repeat="file in datasetsCtrl.files"
-            context-menu
-            data-target="menu-{{ $index}}"
             ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
             ng-dblclick="selectFileCtrl.dblClick(datasetsCtrl, file)"
-            ng-click="selectFileCtrl.select(file.path); datasetsCtrl.select($index, file);"
-            id="table-{{ $index}}">
+            ng-click="selectFileCtrl.select(file.path); datasetsCtrl.select($index, file);">
 
           <td>
             <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
@@ -35,7 +32,7 @@
         </tr>
       </tbody>
     </table>
-    <button ng-click="selectFileCtrl.confirmSelection()">Select</button>
+    <button ng-click="selectFileCtrl.confirmSelection()" class="btn btn-default">Select</button>
   </div>
 </div>
 

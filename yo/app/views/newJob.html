@@ -1,0 +1,217 @@
+<!-- Create a new job -->
+<link rel="stylesheet" href="styles/timeline.css">
+<link rel="stylesheet" href="styles/cuneiform.css">
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div id="wrapper" class="toggled" ng-controller="NewJobCtrl as newJobCtrl">
+    <div class="overlay"></div>
+
+    <div ng-include="'navProject.html'"></div>
+
+    <section>
+      <div class="content-wrapper">
+        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / New job</h3>
+
+        <div class="panel-header">
+          <h2>New job definition</h2>
+        </div>
+        <div ng-controller="CuneiformCtrl as cuneiformCtrl">
+          <div ng-controller="AdamCtrl as adamCtrl">
+            <div ng-controller="SparkCtrl as sparkCtrl">
+              <accordion close-others="false">
+
+                <accordion-group heading="1. Name the job - {{newJobCtrl.jobname}}" is-open="true">
+                  <md-input-container>
+                    <label for="jobname" style="color: black;">Job name</label>
+                    <input name="jobname" type="text" id="jobname"
+                           ng-model="newJobCtrl.jobname" ng-change="newJobCtrl.nameFilledIn()">
+                  </md-input-container>
+                </accordion-group>
+
+                <!-- Select the type of job -->
+                <accordion-group heading="2. {{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" 
+                                 is-open="newJobCtrl.accordion1.isOpen" 
+                                 ng-show="newJobCtrl.accordion1.visible">
+                  <select class="dropdown" ng-model="newJobCtrl.jobtype"
+                          ng-change="newJobCtrl.jobTypeChosen()">
+                    <option value="">Select...</option>
+                    <option value="0">Cuneiform</option>
+                    <option value="1">Spark</option>
+                    <option value="2">Adam</option>
+                  </select>
+                </accordion-group>
+
+
+                <!-- Select the main execution file -->
+                <accordion-group heading="3. {{newJobCtrl.accordion2.title}} {{newJobCtrl.accordion2.value}}" 
+                                 is-open="newJobCtrl.accordion2.isOpen" 
+                                 ng-show="newJobCtrl.accordion2.visible">
+                  <!-- Cuneiform -->
+                  <button class="btn btn-default" ng-click="cuneiformCtrl.selectFile(newJobCtrl)" ng-show="newJobCtrl.jobtype == 0">
+                    <span>Select...</span>
+                  </button>
+                  <!-- Spark -->
+                  <button class="btn btn-default" ng-click="sparkCtrl.selectFile(newJobCtrl)" ng-show="newJobCtrl.jobtype == 1">
+                    <span>Select...</span>
+                  </button>
+                  <!-- ADAM -->
+                  <select ng-change="adamCtrl.selectCommand(newJobCtrl)" 
+                          ng-model="adamCtrl.selectedCommand" 
+                          ng-options="command as command for command in adamCtrl.commandList"
+                          ng-show="newJobCtrl.jobtype == 2">
+                  </select>
+                </accordion-group>
+
+
+                <!-- Set up the job details -->
+                <accordion-group heading="4. {{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}" 
+                                 is-open="newJobCtrl.accordion3.isOpen" 
+                                 ng-show="newJobCtrl.accordion3.visible">
+                  <!-- Cuneiform -->
+                  <table class="table" ng-show="newJobCtrl.jobtype == 0">
+                    <thead>
+                      <tr>
+                        <th>Parameter</th>
+                        <th>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr ng-repeat="param in cuneiformCtrl.runConfig.wf.inputParams">
+                        <td>{{param.name}}</td>
+                        <td> <input type="text" ng-model="param.value" class="form-control"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <!-- Spark -->
+                  <table class="table" ng-show="newJobCtrl.jobtype == 1">
+                    <tbody>
+                      <tr>
+                        <td>Main class name</td>
+                        <td><input type="text" ng-model="sparkCtrl.sparkConfig.mainClass" class="form-control"></td>
+                      </tr>
+                      <tr>
+                        <td>Job arguments</td>
+                        <td><input type="text" ng-model="sparkCtrl.sparkConfig.args" class="form-control"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <!-- Adam -->
+                  <div ng-show="newJobCtrl.jobtype == 2">
+                    {{adamCtrl.runConfig.selectedCommand.description}}
+                    <h3>Arguments</h3>
+                    <table class="table">
+                      <tr ng-repeat="arg in adamCtrl.runConfig.selectedCommand.arguments">
+                        <td>
+                          {{arg.name}} <span ng-show="arg.required">*</span> <i class="fa fa-info-circle" tooltip="{{arg.description}}"></i>
+                        </td>
+                        <td>
+                          <input type="text" ng-model="arg.value" ng-hide="arg.path && !arg.value" ng-required="arg.required" class="form-control">
+                          <button ng-show="arg.path && !arg.value" ng-click="adamCtrl.selectFile(arg)" class="btn btn-default">Select</button>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <h3>Options</h3>
+                    <table class="table">
+                      <tr ng-repeat="opt in adamCtrl.runConfig.selectedCommand.options">
+                        <td>
+                          {{opt.name}} <i class="fa fa-info-circle" tooltip="{{opt.description}}"></i>
+                        </td>
+                        <td>
+                          <input type="text" ng-model="opt.value" ng-hide="(opt.valueIsPath && !opt.value) || opt.flag" class="form-control">
+                          <button ng-show="opt.valueIsPath && !opt.value" ng-click="adamCtrl.selectFile(opt.name)" class="btn btn-default">Select</button>
+                          <input type="checkbox" ng-model="opt.value" ng-show="opt.flag" class="form-control">
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </accordion-group>
+
+
+                <!-- Set some run configuration -->
+                <accordion-group heading="5. {{newJobCtrl.accordion4.title}} {{newJobCtrl.accordion4.value}}" 
+                                 is-open="newJobCtrl.accordion4.isOpen" 
+                                 ng-show="newJobCtrl.accordion4.visible">
+                  <!-- Common -->
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>
+                          Configuration parameter
+                        </th>
+                        <th>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Application master memory</td>
+                        <td>
+                          <input type="number" ng-model="cuneiformCtrl.runConfig.amMemory" min="0" ng-show="newJobCtrl.jobtype == 0" class="form-control">
+                          <input type="number" ng-model="sparkCtrl.sparkConfig.amMemory" min="0" ng-show="newJobCtrl.jobtype == 1" class="form-control">
+                          <input type="number" ng-model="adamCtrl.runConfig.amMemory" min="0" ng-show="newJobCtrl.jobtype == 2" class="form-control">
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Application master vcores</td>
+                        <td>
+                          <input type="number" ng-model="cuneiformCtrl.runConfig.amVCores" min="1" ng-show="newJobCtrl.jobtype == 0" class="form-control">
+                          <input type="number" ng-model="sparkCtrl.sparkConfig.amVCores" min="1" ng-show="newJobCtrl.jobtype == 1" class="form-control">
+                          <input type="number" ng-model="adamCtrl.runConfig.amVCores" min="1" ng-show="newJobCtrl.jobtype == 2" class="form-control">
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>ResourceManager queue</td>
+                        <td>
+                          <input type="text" ng-model="cuneiformCtrl.runConfig.amQueue" ng-show="newJobCtrl.jobtype == 0" class="form-control">
+                          <input type="text" ng-model="sparkCtrl.sparkConfig.amQueue" ng-show="newJobCtrl.jobtype == 1" class="form-control">
+                          <input type="text" ng-model="adamCtrl.runConfig.amQueue" ng-show="newJobCtrl.jobtype == 2" class="form-control">
+                        </td>
+                      </tr>
+                      <!-- Spark -->
+                      <tr ng-show="newJobCtrl.jobtype == 1">
+                        <td>Number of executors</td>
+                        <td><input type="number" ng-model="sparkCtrl.sparkConfig.numberOfExecutors" class="form-control"></td>
+                      </tr>
+                      <tr ng-show="newJobCtrl.jobtype == 1">
+                        <td>Number of executor cores</td>
+                        <td><input type="number" ng-model="sparkCtrl.sparkConfig.executorCores" class="form-control"></td>
+                      </tr>
+                      <tr ng-show="newJobCtrl.jobtype == 1">
+                        <td>Executor memory</td>
+                        <td><input type="text" ng-model="sparkCtrl.sparkConfig.executorMemory" class="form-control"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <!-- Execution button -->
+                  <!-- Cuneiform -->
+                  <button ng-click="newJobCtrl.createJob('cuneiform', cuneiformCtrl.runConfig)" 
+                          ng-show="newJobCtrl.jobtype == 0"
+                          class="btn btn-warning">
+                    Create job
+                  </button>
+                  <!-- Spark -->
+                  <button ng-click="newJobCtrl.createJob('spark', sparkCtrl.sparkConfig)" 
+                          ng-show="newJobCtrl.jobtype == 1"
+                          class="btn btn-warning">
+                    Create job
+                  </button>
+                  <!-- Adam -->
+                  <button ng-click="newJobCtrl.createJob('adam', adamCtrl.runConfig)" 
+                          ng-show="newJobCtrl.jobtype == 2"
+                          class="btn btn-warning">
+                    Create job
+                  </button>
+                </accordion-group>
+              </accordion>
+            </div>
+          </div>
+        </div>
+
+        <!-- /#page-content-wrapper -->
+      </div>
+    </section>
+  </div>
+  <!-- /#wrapper -->
+</div>

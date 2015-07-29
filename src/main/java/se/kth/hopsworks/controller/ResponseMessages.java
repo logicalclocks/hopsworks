@@ -120,7 +120,7 @@ public class ResponseMessages {
           = "DataSet name can not be empty.";
   public final static String DATASET_REMOVED_FROM_HDFS
           = "DataSet removed from hdfs.";
-  
+
   //Template
   public final static String TEMPLATE_INODEID_EMPTY
           = "The template id is empty";

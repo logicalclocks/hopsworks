@@ -28,20 +28,26 @@ public class JobOutputFileFacade extends AbstractFacade<JobOutputFile> {
     super(JobOutputFile.class);
   }
 
-  public void persist(JobOutputFile file) {
+  public void create(Execution execution, String name, String path) {
+    if (execution == null) {
+      throw new NullPointerException(
+              "Cannot create an OutputFile for null Execution.");
+    }
+    JobOutputFile file = new JobOutputFile(execution.getId(), name);
+    file.setPath(path);
     em.persist(file);
   }
 
-  public List<JobOutputFile> findOutputFilesForJobid(Long id) {
+  public List<JobOutputFile> findOutputFilesForExecutionId(Long id) {
     TypedQuery<JobOutputFile> q = em.createNamedQuery(
-            "JobOutputFile.findByJobId", JobOutputFile.class);
+            "JobOutputFile.findByExecutionId", JobOutputFile.class);
     q.setParameter("jobId", id);
     return q.getResultList();
   }
 
-  public JobOutputFile findByNameAndJobId(String name, Long id) {
+  public JobOutputFile findByNameAndExecutionId(String name, Long id) {
     TypedQuery<JobOutputFile> q = em.createNamedQuery(
-            "JobOutputFile.findByNameAndJobId", JobOutputFile.class);
+            "JobOutputFile.findByNameAndExecutionId", JobOutputFile.class);
     q.setParameter("name", name);
     q.setParameter("jobId", id);
     try {
