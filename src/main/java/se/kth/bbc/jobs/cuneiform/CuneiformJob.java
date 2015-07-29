@@ -190,12 +190,14 @@ public final class CuneiformJob extends YarnJob {
     }
 
     //TODO: include input files
-    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().
+    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.
+            getProject().
             getName())
             + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator
             + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().
+    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.
+            getProject().
             getName())
             + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator

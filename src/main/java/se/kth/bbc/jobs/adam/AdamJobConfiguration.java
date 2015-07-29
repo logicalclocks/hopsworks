@@ -31,15 +31,15 @@ public class AdamJobConfiguration extends SparkJobConfiguration {
   public void setSelectedCommand(AdamCommandDTO selectedCommand) {
     this.selectedCommand = selectedCommand;
   }
-  
+
   @Override
-  public JobType getType(){
+  public JobType getType() {
     return JobType.ADAM;
   }
 
   @Override
   public DatabaseJsonObject getReducedJsonObject() {
-    if(selectedCommand == null){
+    if (selectedCommand == null) {
       throw new NullPointerException("Null command in AdamJobConfiguration.");
     }
     DatabaseJsonObject obj = super.getReducedJsonObject();

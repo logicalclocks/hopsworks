@@ -25,13 +25,14 @@ public class JsonReduceableConverter implements
 
   @Override
   public JobConfiguration convertToEntityAttribute(String config) {
-    if(Strings.isNullOrEmpty(config)){
+    if (Strings.isNullOrEmpty(config)) {
       return null;
     }
     try (JsonReader reader = Json.createReader(new StringReader(config))) {
       JsonObject obj = reader.readObject();
       DatabaseJsonObject json = new DatabaseJsonObject(obj);
-      return JobConfiguration.JobConfigurationFactory.getJobConfigurationFromJson(json);
+      return JobConfiguration.JobConfigurationFactory.
+              getJobConfigurationFromJson(json);
     }
   }
 

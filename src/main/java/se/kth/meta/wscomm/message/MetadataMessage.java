@@ -18,7 +18,7 @@ import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
 
 /**
- * Represents a message carrying the actual metadata or a message 
+ * Represents a message carrying the actual metadata or a message
  * asking for stored metadata
  *
  * @author Vangelis

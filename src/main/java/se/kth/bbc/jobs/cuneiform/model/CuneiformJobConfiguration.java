@@ -12,12 +12,12 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
  * @author stig
  */
 @XmlRootElement
-public class CuneiformJobConfiguration extends YarnJobConfiguration{
+public class CuneiformJobConfiguration extends YarnJobConfiguration {
 
   private WorkflowDTO wf;
-  
+
   protected static final String KEY_WORKFLOW = "workflow";
-  
+
   public CuneiformJobConfiguration() {
     super();
   }
@@ -33,16 +33,17 @@ public class CuneiformJobConfiguration extends YarnJobConfiguration{
   public void setWf(WorkflowDTO wf) {
     this.wf = wf;
   }
-  
+
   @Override
-  public JobType getType(){
+  public JobType getType() {
     return JobType.CUNEIFORM;
   }
 
   @Override
   public DatabaseJsonObject getReducedJsonObject() {
-    if(wf == null){
-      throw new NullPointerException("Null workflowDTO in CuneiformJobConfiguration.");
+    if (wf == null) {
+      throw new NullPointerException(
+              "Null workflowDTO in CuneiformJobConfiguration.");
     }
     DatabaseJsonObject obj = super.getReducedJsonObject();
     obj.set(KEY_TYPE, JobType.CUNEIFORM.name());
@@ -51,14 +52,15 @@ public class CuneiformJobConfiguration extends YarnJobConfiguration{
   }
 
   @Override
-  public void updateFromJson(DatabaseJsonObject json) throws IllegalArgumentException {
+  public void updateFromJson(DatabaseJsonObject json) throws
+          IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
     WorkflowDTO workflow;
     try {
       String jsonType = json.getString(KEY_TYPE);
       type = JobType.valueOf(jsonType);
-      if(type != JobType.CUNEIFORM){
+      if (type != JobType.CUNEIFORM) {
         throw new IllegalArgumentException("JobType must be CUNEIFORM.");
       }
       DatabaseJsonObject jsonWf = json.getJsonObject(KEY_WORKFLOW);

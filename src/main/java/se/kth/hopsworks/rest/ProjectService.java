@@ -291,7 +291,8 @@ public class ProjectService {
 
   @Path("{projectId}/jobs")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public JobService jobs(@PathParam("projectId") Integer projectId) throws AppException {
+  public JobService jobs(@PathParam("projectId") Integer projectId) throws
+          AppException {
     Project project = projectController.findProjectById(projectId);
     return this.jobs.setProject(project);
   }

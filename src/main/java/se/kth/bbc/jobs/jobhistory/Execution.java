@@ -132,21 +132,25 @@ public class Execution implements Serializable {
     this(state, job, user, new Date());
   }
 
-  public Execution(JobState state, JobDescription job, Users user, Date submissionTime) {
+  public Execution(JobState state, JobDescription job, Users user,
+          Date submissionTime) {
     this(state, job, user, submissionTime, null, null);
   }
 
-  public Execution(JobState state, JobDescription job, Users user, String stdoutPath,
+  public Execution(JobState state, JobDescription job, Users user,
+          String stdoutPath,
           String stderrPath) {
     this(state, job, user, new Date(), stdoutPath, stderrPath);
   }
 
-  public Execution(JobState state, JobDescription job, Users user, Date submissionTime,
+  public Execution(JobState state, JobDescription job, Users user,
+          Date submissionTime,
           String stdoutPath, String stderrPath) {
     this(state, job, user, submissionTime, stdoutPath, stderrPath, null);
   }
 
-  public Execution(JobState state, JobDescription job, Users user, String stdoutPath,
+  public Execution(JobState state, JobDescription job, Users user,
+          String stdoutPath,
           String stderrPath, Collection<JobInputFile> input) {
     this(state, job, user, new Date(), stdoutPath, stderrPath, input);
   }
@@ -160,7 +164,8 @@ public class Execution implements Serializable {
     this.executionDuration = t.executionDuration;
   }
 
-  public Execution(JobState state, JobDescription job, Users user, Date submissionTime,
+  public Execution(JobState state, JobDescription job, Users user,
+          Date submissionTime,
           String stdoutPath, String stderrPath, Collection<JobInputFile> input) {
     this.submissionTime = submissionTime;
     this.state = state;

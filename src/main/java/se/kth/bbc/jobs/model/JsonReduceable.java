@@ -24,5 +24,6 @@ public interface JsonReduceable {
    * @throws IllegalArgumentException If the given JSON object cannot be
    * converted to the current class.
    */
-  public void updateFromJson(DatabaseJsonObject json) throws IllegalArgumentException;
+  public void updateFromJson(DatabaseJsonObject json) throws
+          IllegalArgumentException;
 }

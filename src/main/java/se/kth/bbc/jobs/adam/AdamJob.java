@@ -27,7 +27,7 @@ public class AdamJob extends YarnJob {
   public AdamJob(JobDescription job,
           AsynchronousJobExecutor services, Users user) {
     super(job, user, services);
-    if(!(job.getJobConfig() instanceof AdamJobConfiguration)){
+    if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain a AdamJobConfiguration object. Received: "
               + job.getJobConfig().getClass());
@@ -132,11 +132,13 @@ public class AdamJob extends YarnJob {
       return false;
     }
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().
+    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.
+            getProject().
             getName())
             + Constants.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().
+    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.
+            getProject().
             getName())
             + Constants.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator + "stderr.log";

@@ -19,7 +19,7 @@ import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
  */
 @Stateless
 @LocalBean
-public class AsynchronousJobExecutor{
+public class AsynchronousJobExecutor {
 
   @EJB
   private ExecutionFacade executionFacade;

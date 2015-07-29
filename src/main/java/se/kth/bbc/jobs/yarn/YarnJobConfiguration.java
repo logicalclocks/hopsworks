@@ -71,9 +71,9 @@ public class YarnJobConfiguration extends JobConfiguration {
   public final void setAmVCores(int amVCores) {
     this.amVCores = amVCores;
   }
-  
+
   @Override
-  public JobType getType(){
+  public JobType getType() {
     return JobType.YARN;
   }
 

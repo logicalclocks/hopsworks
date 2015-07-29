@@ -211,12 +211,13 @@ public class WorkflowDTO implements JsonReduceable {
   public void setPath(String path) {
     this.path = path;
   }
-  
+
   /**
    * Check if the current contents are empty.
-   * @return 
+   * <p>
+   * @return
    */
-  public boolean areContentsEmpty(){
+  public boolean areContentsEmpty() {
     return Strings.isNullOrEmpty(contents);
   }
 

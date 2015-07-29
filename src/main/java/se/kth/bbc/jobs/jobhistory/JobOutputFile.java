@@ -130,5 +130,5 @@ public class JobOutputFile implements Serializable {
     return "se.kth.bbc.job.JobOutputFile[ jobOutputFilePK=" + jobOutputFilePK
             + " ]";
   }
-  
+
 }

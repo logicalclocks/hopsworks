@@ -81,7 +81,8 @@ public class SparkController {
   }
 
   /**
-   * Check if the Spark jars are in HDFS. If it's not, try and copy it there from
+   * Check if the Spark jars are in HDFS. If it's not, try and copy it there
+   * from
    * the local filesystem. If it's still not there, then return false.
    * <p>
    * @return

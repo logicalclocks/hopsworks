@@ -22,7 +22,7 @@ angular.module('hopsWorksApp')
               //Set the path in the arguments.
               self.processparameter.value = path;
             };
-            
+
             /**
              * Get a list of commands from the server.
              * @returns {undefined}

@@ -49,7 +49,7 @@ public class DatabaseJsonObject {
           internalStrings.put(key, val.toString());
           break;
         case STRING:
-          internalStrings.put(key, ((JsonString)val).getString());
+          internalStrings.put(key, ((JsonString) val).getString());
           break;
         case OBJECT:
           internalJsons.put(key, new DatabaseJsonObject((JsonObject) val));
@@ -70,7 +70,7 @@ public class DatabaseJsonObject {
    * @throws NullPointerException If the value is null.
    */
   public void set(String key, String value) {
-    if(value == null){
+    if (value == null) {
       throw new NullPointerException("Cannot store null value.");
     }
     internalStrings.put(key, value);

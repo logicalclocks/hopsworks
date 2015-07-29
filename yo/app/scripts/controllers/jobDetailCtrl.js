@@ -66,5 +66,5 @@ angular.module('hopsWorksApp')
             self.poller = $interval(function () {
               getExecutions();
             }, 3000);
-            
+
           }]);

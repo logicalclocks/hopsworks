@@ -86,7 +86,8 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
               "Owner, project and config must be non-null.");
     }
     //First: create a job object
-    JobDescription job = new JobDescription(config, project, creator, config.getAppName());
+    JobDescription job = new JobDescription(config, project, creator, config.
+            getAppName());
     //Finally: persist it, getting the assigned id.
     em.persist(job);
     em.flush(); //To get the id.

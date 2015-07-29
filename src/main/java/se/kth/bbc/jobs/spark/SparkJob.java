@@ -71,11 +71,13 @@ public final class SparkJob extends YarnJob {
       return false;
     }
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().
+    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.
+            getProject().
             getName())
             + Constants.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().
+    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.
+            getProject().
             getName())
             + Constants.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator + "stderr.log";

@@ -39,10 +39,10 @@ angular.module('hopsWorksApp')
                * @param {type} config The configuration of the newly created job.
                * @returns {undefined} The newly created job object.
                */
-              createNewJob: function(projectId, type, config){
+              createNewJob: function (projectId, type, config) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/jobs/'+type.toLowerCase(),
+                  url: '/api/project/' + projectId + '/jobs/' + type.toLowerCase(),
                   headers: {
                     'Content-Type': 'application/json'
                   },
@@ -56,8 +56,8 @@ angular.module('hopsWorksApp')
                * @param {type} jobId
                * @returns {undefined}
                */
-              getAllExecutions: function(projectId, jobId){
-                return $http.get('/api/project/'+projectId+'/jobs/'+jobId+'/executions');
+              getAllExecutions: function (projectId, jobId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/executions');
               },
               /**
                * Get the configuration object for the given job.
@@ -65,8 +65,8 @@ angular.module('hopsWorksApp')
                * @param {type} jobId
                * @returns {unresolved}
                */
-              getConfiguration: function(projectId, jobId){
-                return $http.get('/api/project/'+projectId+'/jobs/'+jobId+'/config');
+              getConfiguration: function (projectId, jobId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/config');
               },
               /**
                * Run the given job, creating a new Execution instance.
@@ -74,8 +74,8 @@ angular.module('hopsWorksApp')
                * @param {type} jobId
                * @returns {undefined} The new Execution instance
                */
-              runJob: function(projectId, jobId){
-                return $http.post('/api/project/' + projectId + '/jobs/'+jobId+'/executions',{});
+              runJob: function (projectId, jobId) {
+                return $http.post('/api/project/' + projectId + '/jobs/' + jobId + '/executions', {});
               },
               /**
                * Get the current status of the given execution.
@@ -84,16 +84,16 @@ angular.module('hopsWorksApp')
                * @param {type} executionId
                * @returns {unresolved} The entire Execution object.
                */
-              getExecutionStatus: function(projectId, jobId, executionId){
-                return $http.get('/api/project/' + projectId + '/jobs/'+jobId+'/executions/'+executionId);
+              getExecutionStatus: function (projectId, jobId, executionId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/executions/' + executionId);
               },
               /**
                * Get the current status of all jobs in the given project.
                * @param {type} projectId
                * @returns {unresolved}
                */
-              getRunStatus: function(projectId){
-                return $http.get('/api/project/'+projectId+'/jobs/running');
+              getRunStatus: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/jobs/running');
               }
             };
             return service;

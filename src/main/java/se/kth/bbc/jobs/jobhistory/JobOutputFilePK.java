@@ -77,7 +77,8 @@ public class JobOutputFilePK implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.job.JobOutputFilePK[ jobId=" + executionId + ", name=" + name
+    return "se.kth.bbc.job.JobOutputFilePK[ jobId=" + executionId + ", name="
+            + name
             + " ]";
   }
 
