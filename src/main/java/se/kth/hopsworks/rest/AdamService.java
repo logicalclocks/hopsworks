@@ -19,6 +19,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.adam.AdamCommand;
 import se.kth.bbc.jobs.adam.AdamCommandDTO;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
@@ -49,6 +50,8 @@ public class AdamService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private ActivityFacade activityFacade;
 
   AdamService setProject(Project project) {
     this.project = project;
@@ -151,6 +154,7 @@ public class AdamService {
               ? "Untitled Adam job" : config.getAppName();
       JobDescription<? extends JobConfiguration> created = jobFacade.create(
               jobname, user, project, config);
+      activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();
     }

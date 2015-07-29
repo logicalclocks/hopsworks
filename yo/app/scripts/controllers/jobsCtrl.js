@@ -60,12 +60,15 @@ angular.module('hopsWorksApp')
              * Close the poller if the controller is destroyed.
              */
             $scope.$on('$destroy', function () {
-              $interval.cancel(this.poller);
+              $interval.cancel(self.poller);
             });
 
-            $interval(function () {
-              getRunStatus();
-            }, 3000);
+            var startPolling = function () {
+              self.poller = $interval(function () {
+                self.getRunStatus();
+              }, 5000);
+            };
+            startPolling();
 
 
           }]);

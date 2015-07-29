@@ -21,6 +21,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
@@ -52,6 +53,8 @@ public class SparkService {
   private JobDescriptionFacade jobFacade;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private ActivityFacade activityFacade;
 
   private Project project;
 
@@ -153,6 +156,7 @@ public class SparkService {
               ? "Untitled Spark job" : config.getAppName();
       JobDescription<? extends JobConfiguration> created = jobFacade.create(
               jobname, user, project, config);
+      activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();
     }
