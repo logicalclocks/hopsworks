@@ -8,7 +8,7 @@ import se.kth.bbc.jobs.DatabaseJsonObject;
  * <p>
  * @author stig
  */
-public interface JsonReducable {
+public interface JsonReduceable {
 
   /**
    * Get the contents of this instance in a compact JSON format.

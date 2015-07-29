@@ -7,7 +7,7 @@ import se.kth.bbc.jobs.DatabaseJsonObject;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.JobType;
-import se.kth.bbc.jobs.model.JsonReducable;
+import se.kth.bbc.jobs.model.JsonReduceable;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 
@@ -18,7 +18,7 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
  * @author stig
  */
 @XmlRootElement
-public abstract class JobConfiguration implements JsonReducable {
+public abstract class JobConfiguration implements JsonReduceable {
 
   protected String appName;
 

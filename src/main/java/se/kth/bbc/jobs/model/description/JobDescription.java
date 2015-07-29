@@ -2,7 +2,7 @@ package se.kth.bbc.jobs.model.description;
 
 import com.google.common.base.Strings;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
-import se.kth.bbc.jobs.model.configuration.JobConfigurationConverter;
+import se.kth.bbc.jobs.model.configuration.JsonReduceableConverter;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
@@ -84,7 +84,7 @@ public class JobDescription implements Serializable {
   private Date creationTime;
 
   @Column(name = "json_config")
-  @Convert(converter = JobConfigurationConverter.class)
+  @Convert(converter = JsonReduceableConverter.class)
   private JobConfiguration jobConfig;
 
   @Size(max = 128)

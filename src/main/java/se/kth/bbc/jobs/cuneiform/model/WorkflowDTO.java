@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.DatabaseJsonObject;
-import se.kth.bbc.jobs.model.JsonReducable;
+import se.kth.bbc.jobs.model.JsonReduceable;
 import se.kth.bbc.lims.Utils;
 
 /**
@@ -18,7 +18,7 @@ import se.kth.bbc.lims.Utils;
  * @author stig
  */
 @XmlRootElement
-public class WorkflowDTO implements JsonReducable {
+public class WorkflowDTO implements JsonReduceable {
 
   private String name;
   private String contents;

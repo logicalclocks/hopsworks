@@ -3,7 +3,7 @@ package se.kth.bbc.jobs.adam;
 import com.google.common.base.Strings;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.DatabaseJsonObject;
-import se.kth.bbc.jobs.model.JsonReducable;
+import se.kth.bbc.jobs.model.JsonReduceable;
 
 /**
  * POJO representing an AdamCommand.
@@ -11,7 +11,7 @@ import se.kth.bbc.jobs.model.JsonReducable;
  * @author stig
  */
 @XmlRootElement
-public class AdamCommandDTO implements JsonReducable {
+public class AdamCommandDTO implements JsonReduceable {
 
   private String command;
   private String description;

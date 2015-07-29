@@ -8,17 +8,18 @@ import javax.json.JsonReader;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.model.JsonReduceable;
 
 /**
  *
  * @author stig
  */
 @Converter
-public class JobConfigurationConverter implements
-        AttributeConverter<JobConfiguration, String> {
+public class JsonReduceableConverter implements
+        AttributeConverter<JsonReduceable, String> {
 
   @Override
-  public String convertToDatabaseColumn(JobConfiguration config) {
+  public String convertToDatabaseColumn(JsonReduceable config) {
     return config.getReducedJsonObject().toJson();
   }
 
