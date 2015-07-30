@@ -70,7 +70,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     try {
       return em.createNamedQuery("Dataset.findByProjectAndInode", Dataset.class)
               .setParameter("projectId", project).setParameter(
-                            "inode", inode).getSingleResult();
+                      "inode", inode).getSingleResult();
     } catch (Exception e) {
       return null;
     }
@@ -95,5 +95,9 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
 
   public void flushEm() {
     em.flush();
+  }
+  
+  public void merge(Dataset dataset) {
+    em.merge(dataset);
   }
 }

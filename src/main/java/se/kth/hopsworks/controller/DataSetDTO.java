@@ -1,5 +1,6 @@
 package se.kth.hopsworks.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.project.Project;
@@ -14,6 +15,7 @@ import se.kth.hopsworks.users.UserCardDTO;
 @XmlRootElement
 public class DataSetDTO {
 
+  private Integer inodeId;
   private String name;
   private String description;
   private String searchable;
@@ -37,15 +39,24 @@ public class DataSetDTO {
   }
 
   public DataSetDTO(Dataset ds, Project project, List<String> sharedWith) {
+    this.inodeId = ds.getInode().getId();
     this.name = ds.getInode().getInodePK().getName();
     this.description = ds.getDescription();
     this.projectName = project.getName();
     this.sharedWith = sharedWith;
-    
+    this.projectTeam = new ArrayList<>();
     //this have to be done because project team contains too much info.
     for(ProjectTeam member : project.getProjectTeamCollection()) {
       projectTeam.add(new UserCardDTO(member.getUser().getFname(), member.getUser().getLname(), member.getUser().getEmail()));
     }
+  }
+
+  public Integer getInodeId() {
+    return inodeId;
+  }
+
+  public void setInodeId(Integer inodeId) {
+    this.inodeId = inodeId;
   }
 
   public String getName() {

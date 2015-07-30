@@ -1,7 +1,9 @@
 package se.kth.hopsworks.dataset;
 
 import java.io.Serializable;
+import java.util.Collection;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -12,6 +14,7 @@ import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -49,6 +52,8 @@ import se.kth.bbc.project.fb.Inode;
 public class Dataset implements Serializable {
 
   private static final long serialVersionUID = 1L;
+  public static final boolean PENDING = false;
+  public static final boolean ACCEPTED = true;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
@@ -73,6 +78,13 @@ public class Dataset implements Serializable {
   @NotNull
   @Column(name = "editable")
   private boolean editable;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "status")
+  private boolean status;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "dataset")
+  private Collection<DatasetRequest> datasetRequestCollection;
 
   public Dataset() {
   }
@@ -129,6 +141,23 @@ public class Dataset implements Serializable {
 
   public void setEditable(boolean editable) {
     this.editable = editable;
+  }
+
+  public boolean getStatus() {
+    return status;
+  }
+
+  public void setStatus(boolean status) {
+    this.status = status;
+  }
+
+  public Collection<DatasetRequest> getDatasetRequestCollection() {
+    return datasetRequestCollection;
+  }
+
+  public void setDatasetRequestCollection(
+          Collection<DatasetRequest> datasetRequestCollection) {
+    this.datasetRequestCollection = datasetRequestCollection;
   }
 
   @Override

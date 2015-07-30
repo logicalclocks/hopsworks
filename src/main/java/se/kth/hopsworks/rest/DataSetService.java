@@ -36,6 +36,7 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
+import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
@@ -49,6 +50,9 @@ import se.kth.meta.exception.DatabaseException;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
+import se.kth.hopsworks.dataset.DatasetRequest;
+import se.kth.hopsworks.dataset.RequestDTO;
+import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.meta.db.TemplateFacade;
 
@@ -67,6 +71,8 @@ public class DataSetService {
   private ProjectFacade projectFacade;
   @EJB
   private DatasetFacade datasetFacade;
+  @EJB
+  private DatasetRequestFacade datasetRequest;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -119,7 +125,7 @@ public class DataSetService {
     Collection<Dataset> dsInProject = this.project.getDatasetCollection();
     for (Dataset ds : dsInProject) {
       parent = inodes.findParent(ds.getInode());
-      kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode())));
+        kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode())));
     }
 
     GenericEntity<List<InodeView>> inodViews
@@ -129,7 +135,7 @@ public class DataSetService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             inodViews).build();
   }
-
+   
   /**
    * Get the inodes in the given project-relative path.
    * <p>
@@ -240,11 +246,13 @@ public class DataSetService {
               "You can not share this dataset you are not the owner.");
     }
 
-    ds = datasetFacade.findByProjectAndInode(proj, inode);
-    if (ds != null) {//proj already have the dataset.
+    Dataset dst = datasetFacade.findByProjectAndInode(proj, inode);
+    if (dst != null) {//proj already have the dataset.
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Dataset already shared with this project");
     }
+
+    DatasetRequest dsReq = datasetRequest.findByProjectAndDataset(proj, ds);
 
     Dataset newDS = new Dataset(inode, proj);
     if (dataSet.getDescription() != null) {
@@ -253,12 +261,52 @@ public class DataSetService {
     if (dataSet.isEditable()) {
       newDS.setEditable(true);
     }
+    // if the dataset is not requested or is requested by a data scientist
+    // set status to pending. 
+    if (dsReq == null || dsReq.getProjectTeam().getTeamRole().equals(
+            AllowedRoles.DATA_SCIENTIST)) {
+      newDS.setStatus(Dataset.PENDING);
+    }
     datasetFacade.persistDataset(newDS);
+    datasetRequest.remove(dsReq);//the dataset is shared so remove the request.
     logActivity(ActivityFacade.SHARED_DATA + dataSet.getName()
             + " with project " + proj.getName(),
             ActivityFacade.FLAG_DATASET, user, this.project);
 
     json.setSuccessMessage("The Dataset was successfully shared.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
+
+  @GET
+  @Path("/accept/{inodeId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response acceptRequest(@PathParam("inodeId") Integer inodeId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    JsonResponse json = new JsonResponse();
+    if (inodeId == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Incomplete request!");
+    }
+    Inode inode = inodes.findById(inodeId);
+    if (inode == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NOT_FOUND);
+    }
+
+    Inode parent = inodes.findParent(inode);
+    Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
+
+    if (ds == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NOT_FOUND);
+    }
+
+    ds.setStatus(Dataset.ACCEPTED);
+    datasetFacade.merge(ds);
+    json.setSuccessMessage("Request sent successfully.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
@@ -331,7 +379,7 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException {
     boolean success = false;
     boolean exist = true;
-    
+
     JsonResponse json = new JsonResponse();
 
     if (dataSetName == null || dataSetName.getName() == null || dataSetName.
@@ -558,6 +606,10 @@ public class DataSetService {
       if (this.dataset == null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.DATASET_NOT_FOUND);
+      }
+      if (this.dataset.getStatus() == Dataset.PENDING) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "Dataset is not yet accessible. Accept the share requst to access it.");
       }
       path = path.replaceFirst(projectName + Constants.SHARED_FILE_SEPARATOR
               + dsName, projectName

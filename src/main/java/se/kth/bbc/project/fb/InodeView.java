@@ -27,6 +27,7 @@ public final class InodeView {
   private int id;
   private int template;
   private String description;
+  private boolean status;
 
   public InodeView() {
   }
@@ -60,6 +61,7 @@ public final class InodeView {
     }
     this.owningProjectName = parent.inodePK.getName();
     this.description = ds.getDescription();
+    this.status = ds.getStatus();
   }
   
   private InodeView(String name, boolean dir, boolean parent, String path) {
@@ -170,6 +172,22 @@ public final class InodeView {
     this.owningProjectName = owningProjectName;
   }
 
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  public boolean getStatus() {
+    return status;
+  }
+
+  public void setStatus(boolean status) {
+    this.status = status;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 7;
