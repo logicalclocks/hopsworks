@@ -188,17 +188,20 @@
                 <accordion-group heading="6. {{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}">
                   <div>
                     Every 
-                    <input type="number" ng-model="newJobCtrl.schedule.number" min="1" ng-change="newJobCtrl.updateNumberOfScheduleUnits()"> 
-                     <select class="dropdown" ng-model="newJobCtrl.schedule.unit"
-                          ng-change="newJobCtrl.updateScheduleUnit()">
-                    <option value="minute">minute{{newJobCtrl.schedule.addition}}</option>
-                    <option value="hour">hour{{newJobCtrl.schedule.addition}}</option>
-                    <option value="day">day{{newJobCtrl.schedule.addition}}</option>
-                    <option value="week">week{{newJobCtrl.schedule.addition}}</option>
-                    <option value="month">month{{newJobCtrl.schedule.addition}}</option>
-                    <option value="year">year{{newJobCtrl.schedule.addition}}</option>
-                  </select>
-                    {{newJobCtrl.schedule.preposition}}
+                    <input type="number" ng-model="newJobCtrl.schedule.number" min="1" max="999" ng-change="newJobCtrl.updateNumberOfScheduleUnits()"> 
+                    <select class="dropdown" ng-model="newJobCtrl.schedule.unit"
+                            ng-change="newJobCtrl.updateScheduleUnit()">
+                      <option value="minute">minute{{newJobCtrl.schedule.addition}}</option>
+                      <option value="hour">hour{{newJobCtrl.schedule.addition}}</option>
+                      <option value="day">day{{newJobCtrl.schedule.addition}}</option>
+                      <option value="week">week{{newJobCtrl.schedule.addition}}</option>
+                      <option value="month">month{{newJobCtrl.schedule.addition}}</option>
+                    </select>
+                    starting at 
+                      <input type="date" is-open="newJobCtrl.datePickerOpen"
+                             datepicker-popup ng-model="newJobCtrl.schedule.start" min-date="newJobCtrl.schedule.minStart" 
+                             ng-required="false" close-text="Close" />
+                        <button type="button" class="btn btn-default" ng-click="newJobCtrl.openDatePicker($event)"><i class="glyphicon glyphicon-calendar"></i></button>
                   </div>
                 </accordion-group>
                 <!-- Execution button -->

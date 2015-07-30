@@ -21,8 +21,6 @@ angular.module('hopsWorksApp')
             this.accordion4 = {"isOpen": false, "visible": false, "value": "", "title": "Configure"};
             this.accordion5 = {"isOpen": false, "visible": false, "value": "", "title": "Set a schedule (optional)"};
 
-            this.schedule = {"unit": "hour", "number": 1, "addition": "", "preposition": ""};
-
             this.createJob = function (type, config) {
               config.appName = self.jobname;
               JobService.createNewJob(self.projectId, type, config).then(
@@ -87,25 +85,23 @@ angular.module('hopsWorksApp')
             }
 
             // Methods for schedule updating
+            this.schedule = {
+              "unit": "hour", 
+              "number": 1, 
+              "addition": "", 
+              "startDate": "",
+              "startTime":"",
+              "minStart":new Date()
+            };
             this.updateNumberOfScheduleUnits = function () {
               self.schedule.addition = self.schedule.number == 1 ? "" : "s";
-            }
-            this.updateScheduleUnit = function () {
-              switch (self.schedule.unit) {
-                case "year":
-                case "week":
-                  self.schedule.preposition = "on";
-                  return;
-                case "month":
-                  self.schedule.preposition = "on the";
-                  return;
-                case "day":
-                  self.schedule.preposition = "at";
-                  return;
-                default:
-                  self.schedule.preposition = "";
-              }
-            }
+            };  
+            self.datePickerOpen = false;
+            this.openDatePicker = function($event){
+              $event.preventDefault();
+              $event.stopPropagation();
+              self.datePickerOpen = true;
+            };
 
 
           }]);
