@@ -84,15 +84,6 @@ public class AdamCommandDTO implements JsonReduceable {
     return AdamCommand.getFromCommand(command);
   }
 
-  public static String[] getAllCommandNames() {
-    AdamCommand[] acs = AdamCommand.values();
-    String[] ret = new String[acs.length];
-    for (int i = 0; i < acs.length; i++) {
-      ret[i] = acs[i].getCommand();
-    }
-    return ret;
-  }
-
   @Override
   public DatabaseJsonObject getReducedJsonObject() {
     DatabaseJsonObject obj = new DatabaseJsonObject();

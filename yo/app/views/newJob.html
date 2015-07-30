@@ -34,13 +34,11 @@
                 <accordion-group heading="2. {{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" 
                                  is-open="newJobCtrl.accordion1.isOpen" 
                                  ng-show="newJobCtrl.accordion1.visible">
-                  <select class="dropdown" ng-model="newJobCtrl.jobtype"
-                          ng-change="newJobCtrl.jobTypeChosen()">
-                    <option value="">Select...</option>
-                    <option value="0">Cuneiform</option>
-                    <option value="1">Spark</option>
-                    <option value="2">Adam</option>
-                  </select>
+                  <div class="btn-group">
+                    <label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="0" ng-change="newJobCtrl.jobTypeChosen()">Cuneiform</label>
+                    <label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
+                    <label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>
+                  </div>
                 </accordion-group>
 
 
@@ -57,10 +55,16 @@
                     <span>Select...</span>
                   </button>
                   <!-- ADAM -->
-                  <select ng-change="adamCtrl.selectCommand(newJobCtrl)" 
-                          ng-model="adamCtrl.selectedCommand" 
-                          ng-options="command as command for command in adamCtrl.commandList"
-                          ng-show="newJobCtrl.jobtype == 2">
+                  <table ng-show="newJobCtrl.jobtype == 2">
+                    <tr ng-repeat="command in adamCtrl.commandList">
+                      <td>
+                        <button class="btn btn-default" ng-click="adamCtrl.selectCommand(command.name, newJobCtrl)" style="width:100%">{{command.name}}</button> 
+                      </td>
+                      <td>
+                        {{command.description}}
+                      </td>
+                    </tr>
+                  </table>
                   </select>
                 </accordion-group>
 
