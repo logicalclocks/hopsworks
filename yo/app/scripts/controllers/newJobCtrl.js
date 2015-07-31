@@ -89,10 +89,8 @@ angular.module('hopsWorksApp')
               "unit": "hour",
               "number": 1,
               "addition": "",
-              "startDate": "",
-              "startTime": "",
-              "minStart": new Date(),
-              "pickTime": true
+              "startDate": new Date(),
+              "minStart": new Date()
             };
             this.updateNumberOfScheduleUnits = function () {
               self.schedule.addition = self.schedule.number == 1 ? "" : "s";
@@ -102,9 +100,6 @@ angular.module('hopsWorksApp')
               $event.preventDefault();
               $event.stopPropagation();
               self.datePickerOpen = true;
-            };
-            self.updateScheduleUnit = function () {
-              self.schedule.pickTime = self.schedule.unit == "hour" || self.schedule.unit == "minute";
             };
 
 

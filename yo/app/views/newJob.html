@@ -189,8 +189,7 @@
                   <div>
                     Every 
                     <input type="number" ng-model="newJobCtrl.schedule.number" min="1" max="999" ng-change="newJobCtrl.updateNumberOfScheduleUnits()"> 
-                    <select class="dropdown" ng-model="newJobCtrl.schedule.unit"
-                            ng-change="newJobCtrl.updateScheduleUnit()">
+                    <select class="dropdown" ng-model="newJobCtrl.schedule.unit">
                       <option value="minute">minute{{newJobCtrl.schedule.addition}}</option>
                       <option value="hour">hour{{newJobCtrl.schedule.addition}}</option>
                       <option value="day">day{{newJobCtrl.schedule.addition}}</option>
@@ -198,7 +197,7 @@
                       <option value="month">month{{newJobCtrl.schedule.addition}}</option>
                     </select>
 
-                    <p ng-hide="newJobCtrl.schedule.pickTime" class="input-group">
+                    <p>
                       Starting on 
                       <input type="date" is-open="newJobCtrl.datePickerOpen" class=""
                              datepicker-popup ng-model="newJobCtrl.schedule.startDate" min-date="newJobCtrl.schedule.minStart" 
@@ -206,14 +205,11 @@
                       <span class="">
                         <button type="button" class="btn btn-default" ng-click="newJobCtrl.openDatePicker($event)" ><i class="glyphicon glyphicon-calendar"></i></button>
                       </span>
-                    </p>
-                    <div ng-show="newJobCtrl.schedule.pickTime">
-                      <span style="display:block">Starting at</span>
-                      <timepicker ng-model="newJobCtrl.schedule.startTime" 
-                                  show-meridian="false" style="display: block">
-                      </timepicker>
-                    </div>
 
+                      <timepicker ng-model="newJobCtrl.schedule.startDate" 
+                                  show-meridian="false" style="display: inline">
+                      </timepicker>
+                  </p>
 
 
                   </div>
