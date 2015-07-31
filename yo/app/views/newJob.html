@@ -197,11 +197,25 @@
                       <option value="week">week{{newJobCtrl.schedule.addition}}</option>
                       <option value="month">month{{newJobCtrl.schedule.addition}}</option>
                     </select>
-                    starting at 
-                      <input type="date" is-open="newJobCtrl.datePickerOpen"
-                             datepicker-popup ng-model="newJobCtrl.schedule.start" min-date="newJobCtrl.schedule.minStart" 
+
+                    <p ng-hide="newJobCtrl.schedule.pickTime" class="input-group">
+                      Starting on 
+                      <input type="date" is-open="newJobCtrl.datePickerOpen" class=""
+                             datepicker-popup ng-model="newJobCtrl.schedule.startDate" min-date="newJobCtrl.schedule.minStart" 
                              ng-required="false" close-text="Close" />
-                        <button type="button" class="btn btn-default" ng-click="newJobCtrl.openDatePicker($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                      <span class="">
+                        <button type="button" class="btn btn-default" ng-click="newJobCtrl.openDatePicker($event)" ><i class="glyphicon glyphicon-calendar"></i></button>
+                      </span>
+                    </p>
+                    <div ng-show="newJobCtrl.schedule.pickTime">
+                      <span style="display:block">Starting at</span>
+                      <timepicker ng-model="newJobCtrl.schedule.startTime" 
+                                  show-meridian="false" style="display: block">
+                      </timepicker>
+                    </div>
+
+
+
                   </div>
                 </accordion-group>
                 <!-- Execution button -->

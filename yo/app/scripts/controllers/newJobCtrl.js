@@ -86,21 +86,25 @@ angular.module('hopsWorksApp')
 
             // Methods for schedule updating
             this.schedule = {
-              "unit": "hour", 
-              "number": 1, 
-              "addition": "", 
+              "unit": "hour",
+              "number": 1,
+              "addition": "",
               "startDate": "",
-              "startTime":"",
-              "minStart":new Date()
+              "startTime": "",
+              "minStart": new Date(),
+              "pickTime": true
             };
             this.updateNumberOfScheduleUnits = function () {
               self.schedule.addition = self.schedule.number == 1 ? "" : "s";
-            };  
+            };
             self.datePickerOpen = false;
-            this.openDatePicker = function($event){
+            this.openDatePicker = function ($event) {
               $event.preventDefault();
               $event.stopPropagation();
               self.datePickerOpen = true;
+            };
+            self.updateScheduleUnit = function () {
+              self.schedule.pickTime = self.schedule.unit == "hour" || self.schedule.unit == "minute";
             };
 
 
