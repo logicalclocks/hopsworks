@@ -5,13 +5,12 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('SparkCtrl', ['$scope', '$routeParams', 'growl', 'JobHistoryService', '$interval', 'SparkService', 'ModalService',
-          function ($scope, $routeParams, growl, JobHistoryService, $interval, SparkService, ModalService) {
+        .controller('SparkCtrl', ['$routeParams', 'growl', 'SparkService', 'ModalService',
+          function ($routeParams, growl, SparkService, ModalService) {
 
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
             var self = this;
-            this.JobHistoryService = JobHistoryService;
             this.projectId = $routeParams.projectID;
             this.jobType = 'SPARK';
             this.growl = growl;
@@ -24,50 +23,16 @@ angular.module('hopsWorksApp')
               SparkService.inspectJar(this.projectId, path).then(
                       function (success) {
                         self.sparkConfig = success.data;
+                        self.phasekeeper.mainFileSelected(getFileName(path));
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
-            //For job execution
-            this.$interval = $interval;
-            this.callExecute = function () {
-              return SparkService.runJob(
-                      self.projectId,
-                      self.sparkConfig);
-            };
-            this.onExecuteSuccess = function (success) {
-              self.sparkConfig = null;
-              self.selectedJar = null;
-            };
 
-
-            /*
-             * Get all Spark job history objects for this project.
-             */
-            this.getSparkHistory = function () {
-              getHistory(this);
-            };
-
-            this.getSparkHistory();
-
-            this.selectFile = function () {
+            this.selectFile = function (phasekeeper) {
+              self.phasekeeper = phasekeeper;
               selectFile(this);
             };
-
-            this.execute = function () {
-              execute(this);
-            };
-
-            this.selectJob = function (job) {
-              selectJob(this, job);
-            };
-
-            /**
-             * Close the poller if the controller is destroyed.
-             */
-            $scope.$on('$destroy', function () {
-              $interval.cancel(this.poller);
-            });
 
           }]);
 

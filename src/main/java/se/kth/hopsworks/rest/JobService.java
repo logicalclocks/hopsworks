@@ -8,6 +8,8 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -18,11 +20,11 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
-import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
+import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.project.Project;
-import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.filters.AllowedRoles;
 
 /**
@@ -37,11 +39,11 @@ public class JobService {
           getName());
 
   @EJB
-  private ProjectController projectController;
-  @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private JobHistoryFacade jobHistoryFacade;
+  private JobDescriptionFacade jobFacade;
+  @Inject
+  private ExecutionService executions;
   @Inject
   private CuneiformService cuneiform;
   @Inject
@@ -49,76 +51,178 @@ public class JobService {
   @Inject
   private AdamService adam;
 
-  private Integer projectId;
+  private Project project;
 
-  JobService setProjectId(Integer id) {
-    this.projectId = id;
+  JobService setProject(Project project) {
+    this.project = project;
     return this;
   }
 
   /**
-   * Get all the jobhistory objects in this project with the specified type.
+   * Get all the jobs in this project.
    * <p>
-   * @param type The type of jobs to fetch. The String parameter passed through
-   * REST should be an uppercase version of the constant value.
    * @param sc
-   * @param reqJobType
-   * @return A list of all jobhistory objects.
+   * @param req
+   * @return A list of all defined Jobs in this project.
    * @throws se.kth.hopsworks.rest.AppException
    */
   @GET
-  @Path("/history/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response findAllJobHistoryByType(@PathParam("type") JobType type,
-          @Context SecurityContext sc, @Context HttpServletRequest reqJobType)
+  public Response findAllJobs(@Context SecurityContext sc,
+          @Context HttpServletRequest req)
           throws AppException {
-    Project project = projectController.findProjectById(projectId);
-    List<JobHistory> history = jobHistoryFacade.findForProjectByType(project,
-            type);
-    GenericEntity<List<JobHistory>> jobHistory
-            = new GenericEntity<List<JobHistory>>(history) {
+    List<JobDescription> jobs = jobFacade.findForProject(project);
+    GenericEntity<List<JobDescription>> jobList
+            = new GenericEntity<List<JobDescription>>(jobs) {
             };
-
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            jobHistory).build();
+            jobList).build();
+  }
+
+  /**
+   * Get the job with the given id in the current project.
+   * <p>
+   * @param jobId
+   * @param sc
+   * @param req
+   * @return
+   * @throws AppException
+   */
+  @GET
+  @Path("/{jobId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getJob(@PathParam("jobId") int jobId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    JobDescription job = jobFacade.findById(jobId);
+    if (job == null) {
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } else if (!job.getProject().equals(project)) {
+      //In this case, a user is trying to access a job outside its project!!!
+      logger.log(Level.SEVERE,
+              "A user is trying to access a job outside their project!");
+      return Response.status(Response.Status.FORBIDDEN).build();
+    } else {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(job).build();
+    }
+  }
+
+  /**
+   * Get the JobConfiguration object for the specified job. The sole reason of
+   * existence of this method is the dodginess of polymorphism in JAXB/JAXRS. As
+   * such, the jobConfig field is always empty when a JobDescription object is
+   * returned. This method must therefore be called explicitly to get the job
+   * configuration.
+   * <p>
+   * @param jobId
+   * @param sc
+   * @param req
+   * @return
+   * @throws AppException
+   */
+  @GET
+  @Path("/{jobId}/config")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getJobConfiguration(@PathParam("jobId") int jobId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    JobDescription job = jobFacade.findById(jobId);
+    if (job == null) {
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } else if (!job.getProject().equals(project)) {
+      //In this case, a user is trying to access a job outside its project!!!
+      logger.log(Level.SEVERE,
+              "A user is trying to access a job outside their project!");
+      return Response.status(Response.Status.FORBIDDEN).build();
+    } else {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(job.getJobConfig()).build();
+    }
   }
 
   @GET
-  @Path("/status/{jobId}")
+  @Path("/template/{type}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response getStatusOfJob(@PathParam("jobId") long id,
-          @Context SecurityContext sc, @Context HttpServletRequest req) throws
-          AppException {
-    JobHistory jh = jobHistoryFacade.find(id);
-    if (jh == null) {
-      logger.log(Level.WARNING,
-              "Trying to access the status of a non-existing job with id {0}",
-              id);
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              "No job with the given id was found.");
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getConfigurationTemplate(@PathParam("type") String type,
+          @Context SecurityContext sc, @Context HttpServletRequest req) {
+    JobConfiguration template = JobConfiguration.JobConfigurationFactory.
+            getJobConfigurationTemplate(JobType.valueOf(type));
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(template).build();
+  }
+
+  /**
+   * Get all the jobs in this project that have a running execution. The return
+   * value is a JSON object, where each job id is a key and the corresponding
+   * boolean indicates whether the job is running or not.
+   * <p>
+   * @param sc
+   * @param req
+   * @return
+   */
+  @GET
+  @Path("/running")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getConfigurationTemplate(@Context SecurityContext sc,
+          @Context HttpServletRequest req) {
+    List<JobDescription> running = jobFacade.getRunningJobs(project);
+    List<JobDescription> allJobs = jobFacade.findForProject(project);
+    JsonObjectBuilder builder = Json.createObjectBuilder();
+    for (JobDescription desc : allJobs) {
+      builder.add(desc.getId().toString(), false);
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            new GenericEntity<JobHistory>(jh) {
-            }).build();
+    for (JobDescription desc : running) {
+      builder.add(desc.getId().toString(), true);
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(builder.build()).build();
+  }
+
+  /**
+   * Get the ExecutionService for the job with given id.
+   * <p>
+   * @param jobId
+   * @return
+   */
+  @Path("/{jobId}/executions")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public ExecutionService executions(@PathParam("jobId") int jobId) {
+    JobDescription job = jobFacade.findById(jobId);
+    if (job == null) {
+      return null;
+    } else if (!job.getProject().equals(project)) {
+      //In this case, a user is trying to access a job outside its project!!!
+      logger.log(Level.SEVERE,
+              "A user is trying to access a job outside their project!");
+      return null;
+    } else {
+      return this.executions.setJob(job);
+    }
   }
 
   @Path("/cuneiform")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public CuneiformService cuneiform() {
-    return this.cuneiform.setProjectId(projectId);
+    return this.cuneiform.setProject(project);
   }
 
   @Path("/spark")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public SparkService spark() {
-    return this.spark.setProjectId(projectId);
+    return this.spark.setProject(project);
   }
 
   @Path("/adam")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public AdamService adam() {
-    return this.adam.setProjectId(projectId);
+    return this.adam.setProject(project);
   }
 }

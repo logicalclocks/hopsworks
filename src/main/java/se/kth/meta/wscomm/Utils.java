@@ -26,7 +26,7 @@ import se.kth.meta.exception.DatabaseException;
  *
  * @author Vangelis
  */
-@Stateless(name="utils")
+@Stateless(name = "utils")
 public class Utils {
 
   private static final Logger logger = Logger.getLogger(Utils.class.getName());
@@ -43,7 +43,7 @@ public class Utils {
   private RawDataFacade rawDataFacade;
   @EJB
   private TupleToFileFacade tupletoFileFacade;
-  
+
   public Utils() {
   }
 
@@ -89,7 +89,6 @@ public class Utils {
 
           List<EntityIntf> predef = new LinkedList<>(
                   (List<EntityIntf>) (List<?>) field.getFieldPredefinedValues());
-
 
           field.resetFieldPredefinedValues();
           //persist the child
@@ -169,11 +168,11 @@ public class Utils {
        * same for all the entities, since they constitute a single tuple
        */
       RawData r = (RawData) list.get(0);
-      
+
       //create a metadata tuple attached to an inodeid
       TupleToFile ttf = new TupleToFile(-1, r.getInodeid());
       int tupleid = this.tupletoFileFacade.addTupleToFile(ttf);
-      
+
       //every rawData entity carries the same inodeid
       for (EntityIntf raw : list) {
 

@@ -6,12 +6,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('CuneiformCtrl', ['$scope', '$routeParams', 'growl', 'ModalService', 'JobHistoryService', 'CuneiformService', '$interval',
-          function ($scope, $routeParams, growl, ModalService, JobHistoryService, CuneiformService, $interval) {
+        .controller('CuneiformCtrl', ['$routeParams', 'growl', 'ModalService', 'CuneiformService',
+          function ($routeParams, growl, ModalService, CuneiformService) {
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
             var self = this;
-            this.JobHistoryService = JobHistoryService;
             this.projectId = $routeParams.projectID;
             this.jobType = 'CUNEIFORM';
             this.growl = growl;
@@ -22,49 +21,17 @@ angular.module('hopsWorksApp')
             this.onFileSelected = function (path) {
               CuneiformService.inspectStoredWorkflow(this.projectId, path).then(
                       function (success) {
-                        self.workflow = success.data.wf;
-                        self.yarnConfig = success.data.yarnConfig;
+                        self.runConfig = success.data;
+                        self.phasekeeper.mainFileSelected(getFileName(path));
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
-            //For job execution
-            this.$interval = $interval;
-            this.callExecute = function () {
-              return CuneiformService.runWorkflow(
-                      self.projectId,
-                      {"wf": self.workflow, "yarnConfig": self.yarnConfig});
-            };
-            this.onExecuteSuccess = function (success) {
-              self.workflow = null;
-              self.yarnConfig = null;
-            };
 
-            this.getHistory = function () {
-              getHistory(this);
-            };
-
-            this.selectFile = function () {
+            this.selectFile = function (phasekeeper) {
+              self.phasekeeper = phasekeeper;
               selectFile(this);
             };
-
-            this.execute = function () {
-              execute(this);
-            };
-
-            this.selectJob = function (job) {
-              selectJob(this, job);
-            };
-
-            /**
-             * Close the poller if the controller is destroyed.
-             */
-            $scope.$on('$destroy', function () {
-              $interval.cancel(this.poller);
-            });
-
-            //Load the job history
-            this.getHistory();
 
           }]);
 

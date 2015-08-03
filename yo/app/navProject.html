@@ -9,17 +9,19 @@
           ? '...' : ''}}
         </a>
       </li>
-
-      <li ng-repeat="typeObject in projectCtrl.alreadyChoosenServices">
-        <div ng-click="projectCtrl.goToService(typeObject)">
-          <a href="">
-            {{typeObject}} <span ng-show="typeObject !== 'Spark' && typeObject !== 'Zeppelin'" class="sub_icon fa fa-globe fa-lg pull-right"></span>
-            <img ng-show="typeObject === 'Spark'" class="pull-right" style="margin-left:10px" width="30" src="images/spark_logo_white.png"/>
-            <img ng-show="typeObject === 'Zeppelin'" class="pull-right" style="margin-left:10px" width="30" src="images/zeppelin_logo.png"/>
-          </a>
-        </div>
+      
+      <li ng-click="projectCtrl.goToService('Zeppelin')" ng-show="projectCtrl.showZeppelin()">
+        <a>
+          Zeppelin <img class="pull-right" style="margin-left:10px" width="30" src="images/zeppelin_logo.png"/>
+        </a>
       </li>
-
+      
+      <li ng-click="projectCtrl.goToJobs()">
+        <a>
+          Jobs <span class="sub_icon fa fa-cogs fa-lg pull-right"></span>
+        </a>
+      </li>
+      
       <li ng-click="projectCtrl.goToDatasets()">
         <a>
           DATASETS <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>

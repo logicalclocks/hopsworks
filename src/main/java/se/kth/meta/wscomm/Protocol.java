@@ -119,7 +119,7 @@ public class Protocol {
         return this.createSchema(message);
 
       case FETCH_METADATA:
-        //SHOULD BE REFACTORED TO RETURN TUPLE_TO_FILE AS ENTITY. NOT TABLE
+      //SHOULD BE REFACTORED TO RETURN TUPLE_TO_FILE AS ENTITY. NOT TABLE
 //        table = (MTable) message.parseSchema().get(0);
 //        //return this.fetchTableMetadata(table);
 //        return this.fetchTableMetadataForInode(table, table.getInodeid());
