@@ -257,12 +257,9 @@ public class ProjectService {
       }
     }
 
-    projectDTO.setOwner(owner);
-    projectDTO.setCreated(new Date());
     try {
       //save the project
-      project = projectController.createProject(projectDTO.getProjectName(),
-              owner);
+      project = projectController.createProject(projectDTO, owner);
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);

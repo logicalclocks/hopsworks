@@ -5,8 +5,8 @@
 
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams', 'UtilsService',
-          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies',
-          function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies) {
+          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies','DataSetService',
+          function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies, DataSetService) {
 
             UtilsService.setIndex("child");
 
@@ -59,11 +59,16 @@ angular.module('hopsWorksApp')
                 self.totalPages = Math.floor(self.activities.length / self.pageSize);
                 self.totalItems = self.activities.length;
               }, function (error) {
-
+                growl.info("Error"+ error.data.errorMsg,{title: 'Error', ttl: 5000});
               });
             };
 
-            getAllActivities();
+            //we only need to load the activities if the path is project (endswith pId).
+            var locationPath = $location.path();
+            if (locationPath.substring( locationPath.length - self.pId.length, locationPath.length ) === self.pId) {
+              getAllActivities();
+            }
+            
             getCurrentProject();
 
 
@@ -163,18 +168,53 @@ angular.module('hopsWorksApp')
               $location.path($location.path() + '/' + name);
             };
 
+            /**
+             * Checks if the file has been accepted before opening.
+             * @param dataset
+             */
+            self.browseDataset = function (dataset) {
+              if (dataset.status === true) {
+                $location.path($location.path() + '/' + dataset.name);
+              } else {
+                ModalService.confirmShare('sm', 'Confirm', 'Do you want to accept this dataset, and add it to this project?')
+                        .then(function (success) {
+                          DataSetService(self.pId).acceptDataset(dataset.id).then(
+                                  function (success) {
+                                    $location.path($location.path() + '/' + dataset.name);
+                                  }, function (error) {
+                                    growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                          });
+                        }, function (error) {
+                          if (error === 'reject') {
+                            DataSetService(self.pId).rejectDataset(dataset.id).then(
+                                    function (success) {
+                                      $location.path($location.path()+ '/');
+                                      growl.success("Success: " + success.data.successMessage, {title: 'Success', ttl: 5000});                                      
+                                    }, function (error) {
+                                      growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});                                   
+                            });
+                          }
+                        });
+              }
+
+            };
+            
+            self.sizeOnDisk = function (fileSizeInBytes) {
+              return convertSize (fileSizeInBytes);
+            };
+
             self.showZeppelin = function () {
               var len = self.alreadyChoosenServices.length;
-              for(var i=0;i<len;i++){
-                if(self.alreadyChoosenServices[i] == 'Zeppelin'){
+              for (var i = 0; i < len; i++) {
+                if (self.alreadyChoosenServices[i] === 'Zeppelin') {
                   return true;
                 }
               }
               return false;
-            }
+            };
 
             self.saveAllowed = function () {
-              if (self.currentProject.projectName.length == 0) {
+              if (self.currentProject.projectName.length === 0) {
                 return true;
               }
             };

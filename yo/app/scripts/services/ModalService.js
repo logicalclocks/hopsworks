@@ -19,6 +19,22 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              confirmShare: function (size, title, msg) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/confirmShareModal.html',
+                  controller: 'ModalCtrl as ctrl',
+                  size: size,
+                  resolve: {
+                    title: function () {
+                      return title;
+                    },
+                    msg: function () {
+                      return msg;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
               createProject: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/projectModal.html',

@@ -27,7 +27,7 @@ import se.kth.bbc.project.ProjectTeam;
  * @author ermiasg
  */
 @Entity
-@Table(name = "dataset_request")
+@Table(name = "hopsworks.dataset_request")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "DatasetRequest.findAll",

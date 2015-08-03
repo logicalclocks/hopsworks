@@ -65,7 +65,7 @@ public class ProjectController {
    * Creates a new project(project), the related DIR, the different services
    * in the project, and the master of the project.
    *
-   * @param newProjectName the name of the new project(project)
+   * @param newProject
    * @param email
    * @return
    * @throws AppException if the project name already exists.
@@ -76,15 +76,16 @@ public class ProjectController {
   //this needs to be an atomic operation (all or nothing) REQUIRES_NEW 
   //will make sure a new transaction is created even if this method is
   //called from within a transaction.
-  public Project createProject(String newProjectName, String email) throws
+  public Project createProject(ProjectDTO newProject, String email) throws
           AppException, IOException {
     User user = userBean.getUserByEmail(email);
     //if there is no project by the same name for this user and project name is valid
-    if (projectNameValidator.isValidName(newProjectName) && !projectFacade.
-            projectExists(newProjectName)) {
+    if (projectNameValidator.isValidName(newProject.getProjectName()) && !projectFacade.
+            projectExists(newProject.getProjectName())) {
       //Create a new project object
       Date now = new Date();
-      Project project = new Project(newProjectName, user, now);
+      Project project = new Project(newProject.getProjectName(), user, now);
+      project.setDescription(newProject.getDescription());
       //Persist project object
       projectFacade.persistProject(project);
       projectFacade.flushEm();//flushing it to get project id
@@ -104,7 +105,7 @@ public class ProjectController {
       return project;
     } else {
       logger.log(Level.SEVERE, "Project with name {0} already exists!",
-              newProjectName);
+              newProject.getProjectName());
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NAME_EXIST);
     }

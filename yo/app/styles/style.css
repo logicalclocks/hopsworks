@@ -40,25 +40,25 @@ a:focus {
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
   margin-bottom: 21px;
 }
-.panel.panel-default {
+.panel.panel-filter {
   box-shadow:none;
   border-radius:0;
 }
 
-.panel-default > .panel-heading {
+.panel-filter > .panel-heading {
   background-color: #2e353d;
   color: #fff;
   height: 43px;
   border-radius: 0;
 }
-.panel-default > .panel-footer {
+.panel-filter > .panel-footer {
   background-color: #2e353d;
   color: #fff;
   height: 43px;
   padding: 0 20px 0 5px;
   border-radius: 0;
 }
-.panel-default > .row {
+.panel-filter > .row {
   margin-left: 0px;
   margin-right: 0px;
 }

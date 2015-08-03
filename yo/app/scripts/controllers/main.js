@@ -31,7 +31,12 @@ angular.module('hopsWorksApp')
               if (projectOrDataset === 'parent') {
               ProjectService.getProjectInfo({projectName:selected.name}).$promise.then(
                     function (success) {
-                        ModalService.viewSearchResult('md', success, projectOrDataset);
+                        ModalService.viewSearchResult('md', success, projectOrDataset)
+                                .then(function (success) {
+                                    growl.success(success.data.successMessage, {title: 'Success', ttl: 5000}); 
+                                }, function (error) {
+                                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                });
                     }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                     }
@@ -39,7 +44,12 @@ angular.module('hopsWorksApp')
               }else if (projectOrDataset === 'child') {
                 ProjectService.getDatasetInfo({inodeId:selected.inode_id}).$promise.then(
                     function (success) {
-                        ModalService.viewSearchResult('md', success, projectOrDataset);
+                        ModalService.viewSearchResult('md', success, projectOrDataset)
+                                .then(function (success) {
+                                    growl.success(success.data.successMessage, {title: 'Success', ttl: 5000}); 
+                                }, function (error) {
+                                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                });
                     }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                     }

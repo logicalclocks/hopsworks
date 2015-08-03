@@ -36,7 +36,6 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
-import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
@@ -51,7 +50,6 @@ import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.dataset.DatasetRequest;
-import se.kth.hopsworks.dataset.RequestDTO;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.meta.db.TemplateFacade;
@@ -258,8 +256,8 @@ public class DataSetService {
     if (dataSet.getDescription() != null) {
       newDS.setDescription(dataSet.getDescription());
     }
-    if (dataSet.isEditable()) {
-      newDS.setEditable(true);
+    if (!dataSet.isEditable()) {
+      newDS.setEditable(false);
     }
     // if the dataset is not requested or is requested by a data scientist
     // set status to pending. 
@@ -268,7 +266,10 @@ public class DataSetService {
       newDS.setStatus(Dataset.PENDING);
     }
     datasetFacade.persistDataset(newDS);
-    datasetRequest.remove(dsReq);//the dataset is shared so remove the request.
+    if (dsReq != null) {
+       datasetRequest.remove(dsReq);//the dataset is shared so remove the request.
+    }
+
     logActivity(ActivityFacade.SHARED_DATA + dataSet.getName()
             + " with project " + proj.getName(),
             ActivityFacade.FLAG_DATASET, user, this.project);
@@ -296,7 +297,6 @@ public class DataSetService {
               ResponseMessages.DATASET_NOT_FOUND);
     }
 
-    Inode parent = inodes.findParent(inode);
     Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
 
     if (ds == null) {
@@ -306,7 +306,38 @@ public class DataSetService {
 
     ds.setStatus(Dataset.ACCEPTED);
     datasetFacade.merge(ds);
-    json.setSuccessMessage("Request sent successfully.");
+    json.setSuccessMessage("The Dataset is now accessable.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
+  
+  @GET
+  @Path("/reject/{inodeId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response rejectRequest(@PathParam("inodeId") Integer inodeId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    JsonResponse json = new JsonResponse();
+    if (inodeId == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Incomplete request!");
+    }
+    Inode inode = inodes.findById(inodeId);
+    if (inode == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NOT_FOUND);
+    }
+
+    Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
+
+    if (ds == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NOT_FOUND);
+    }
+
+    datasetFacade.remove(ds);
+    json.setSuccessMessage("The Dataset has been removed.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
@@ -536,6 +567,45 @@ public class DataSetService {
     return this.uploader;
   }
 
+  @POST
+  @Path("/attachTemplate")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response attachTemplate(FileTemplateDTO filetemplateData) throws
+          AppException {
+
+    if (filetemplateData == null || filetemplateData.getInodePath() == null
+            || filetemplateData.getInodePath().equals("")) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.TEMPLATE_INODEID_EMPTY);
+    }
+
+    String inodePath = filetemplateData.getInodePath();
+    int templateid = filetemplateData.getTemplateId();
+
+    Inode inode = inodes.getInodeAtPath(inodePath);
+    Template temp = template.findByTemplateId(templateid);
+    temp.getInodes().add(inode);
+
+    logger.log(Level.INFO, "ATTACHING TEMPLATE {0} TO INODE {0}",
+            new Object[]{templateid, inode.getId()});
+
+    try {
+      //persist the relationship
+      this.template.updateTemplatesInodesMxN(temp);
+    } catch (DatabaseException e) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              ResponseMessages.TEMPLATE_NOT_ATTACHED);
+    }
+
+    JsonResponse json = new JsonResponse();
+    json.setSuccessMessage("The template was attached to file "
+            + inode.getId());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
+  
   private boolean createDataset(String dsPath, Inode parent, String dsName,
           int template) throws AppException {
     boolean success = false;
@@ -621,42 +691,4 @@ public class DataSetService {
             + path;
   }
 
-  @POST
-  @Path("/attachTemplate")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response attachTemplate(FileTemplateDTO filetemplateData) throws
-          AppException {
-
-    if (filetemplateData == null || filetemplateData.getInodePath() == null
-            || filetemplateData.getInodePath().equals("")) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.TEMPLATE_INODEID_EMPTY);
-    }
-
-    String inodePath = filetemplateData.getInodePath();
-    int templateid = filetemplateData.getTemplateId();
-
-    Inode inode = inodes.getInodeAtPath(inodePath);
-    Template temp = template.findByTemplateId(templateid);
-    temp.getInodes().add(inode);
-
-    logger.log(Level.INFO, "ATTACHING TEMPLATE {0} TO INODE {0}",
-            new Object[]{templateid, inode.getId()});
-
-    try {
-      //persist the relationship
-      this.template.updateTemplatesInodesMxN(temp);
-    } catch (DatabaseException e) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              ResponseMessages.TEMPLATE_NOT_ATTACHED);
-    }
-
-    JsonResponse json = new JsonResponse();
-    json.setSuccessMessage("The template was attached to file "
-            + inode.getId());
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
-  }
 }

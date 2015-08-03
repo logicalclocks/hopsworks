@@ -198,7 +198,7 @@ public class RequestService {
             + "if you want to add this person as a member in your project. \n";
 
     try {
-      emailBean.sendEmail("g.ermias.s@gmail.com", "Join request for projrct "
+      emailBean.sendEmail("g.ermias.s@gmail.com", "Join request for project "
               + project.getName(), msg);
     } catch (MessagingException ex) {
       json.setErrorMsg("Could not send e-mail to " + project.getOwner().

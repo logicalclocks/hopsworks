@@ -18,9 +18,10 @@
                   <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
                     <div class="file-manager">
                       <h5 style="margin: 0px; font-weight: bold; color: #2e353d;">Filter: </h5>
-                      <a class="file-control active">All</a>
-                      <a class="file-control">Last month</a>
-                      <a class="file-control">Today</a>
+                      <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined" class="file-control active">All</a>
+                      <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true" class="file-control">Shared</a>
+                      <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true" class="file-control">Exclusive</a>
+                      <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false" class="file-control">Pending</a>
 
                       <div class="hr-line-dashed"></div>
                       <div class="btn-group"
@@ -45,9 +46,9 @@
                 </div>
               </div>
               <div class="col-lg-10">
-                <div ng-repeat="dataset in datasetsCtrl.files">
+                <div ng-repeat="dataset in datasetsCtrl.files | filter:{shared:datasetsCtrl.shared, status: datasetsCtrl.status} | orderBy: 'name'">
                   <div ng-if="($index % 6 == 0) && ($index !== 0)" class="row"></div>
-                  <div ng-click="projectCtrl.goToSpecificDataset(dataset.name)"
+                  <div ng-click="projectCtrl.browseDataset(dataset)"
                        ng-init="(iscollapsed$index) = true"
                        class="file-box"
                        ng-mouseenter="(iscollapsed$index) = false"

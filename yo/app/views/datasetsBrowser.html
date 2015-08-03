@@ -91,7 +91,7 @@
                             <td>{{file.owner}} me</td>
                             <td>{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
                             </td>
-                            <td style="width: 12%;">{{(file.size == 0? '_': file.size)}}</td>
+                            <td style="width: 12%;">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
 
                             <td>
                               <div class="dropdown position-fixed" id="menu-{{ $index}}">
