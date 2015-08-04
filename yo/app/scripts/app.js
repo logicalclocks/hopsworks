@@ -20,7 +20,8 @@ angular.module('hopsWorksApp', [
   'xeditable',
   'flow',
   'ngMaterial',
-  'ngMessages'
+  'ngMessages',
+  'as.sortable'
 ])
         .config(['$routeProvider', '$httpProvider', 'flowFactoryProvider', function ($routeProvider, $httpProvider, flowFactoryProvider) {
 
