@@ -601,7 +601,6 @@ angular.module('hopsWorksApp')
             };
 
             self.modifyField = function (column, field) {
-              console.log("SAVING " + JSON.stringify(column));
               $scope.tableid = column.id;
               $scope.field = field;
 
@@ -611,7 +610,7 @@ angular.module('hopsWorksApp')
               //data: {table: column.id, field: field}};
 
               $modal.open({
-                templateUrl: 'views/partials/modifyFieldDialog.html',
+                templateUrl: 'views/metadata/modifyFieldDialog.html',
                 controller: 'ModifyFieldCtrl',
                 scope: $scope
               })
@@ -623,7 +622,6 @@ angular.module('hopsWorksApp')
 
                                   defer.resolve($rootScope.mainBoard);
                                   console.log("MODIFIED FIELD " + JSON.stringify(self.currentBoard));
-                                  //$rootScope.$broadcast('refreshApp', $rootScope.mainBoard);
                                 });
                       }, function (dialogResponse) {
                         console.log("don't modify " + JSON.stringify(dialogResponse));
