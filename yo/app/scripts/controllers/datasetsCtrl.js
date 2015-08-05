@@ -7,9 +7,9 @@
 
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$rootScope', '$modal', '$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
-          'DataSetService', '$routeParams', 'ModalService', 'growl', 'MetadataActionService', '$location',
+          'DataSetService', '$routeParams', 'ModalService', 'growl', 'MetadataActionService', '$location', '$filter',
           function ($rootScope, $modal, $scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, $routeParams,
-                  ModalService, growl, MetadataActionService, $location) {
+                  ModalService, growl, MetadataActionService, $location, $filter) {
 
             var self = this;
 
@@ -483,9 +483,16 @@ angular.module('hopsWorksApp')
 
               MetadataActionService.fetchTemplate(templateId)
                       .then(function (success) {
+                        /*
+                         * sort the objects of the retrieved template by id.
+                         * Keeps the objects in a fixed position
+                         */
+                        var template = JSON.parse(success.board);
+                        var sortedTables = sortObject($filter, 'id', template);
+                        template.columns = sortedTables;
+
                         //update the currentBoard upon template retrieval
-                        self.currentBoard = JSON.parse(success.board);
-                        //console.log('fetchTemplate - success CURRENTBOARD ' + JSON.stringify(self.currentBoard));
+                        self.currentBoard = template;
                       }, function (error) {
                         console.log('fetchTemplate - error');
                         console.log(JSON.parse(error));
@@ -496,8 +503,11 @@ angular.module('hopsWorksApp')
 
               MetadataActionService.storeTemplate(self.currentTemplateID, self.currentBoard)
                       .then(function (response) {
-                        console.log("TEMPLATE SAVED SUCCESSFULLY " + JSON.stringify(response));
-                        self.currentBoard = JSON.parse(response.board);
+                        var template = JSON.parse(response.board);
+                        var sortedTables = sortObject($filter, 'id', template);
+                        template.columns = sortedTables;
+
+                        self.currentBoard = template;
                         if (closeSlideout === 'true') {
                           self.close();
                         }
@@ -568,16 +578,16 @@ angular.module('hopsWorksApp')
 
                         if (!angular.isUndefined(list)) {
 
-                          //{tempid:2,bd:{name:MainBoard,numberOfColumns:3,columns:[{id:-1,name:newTable,cards:[]}],backlogs:[]}}}
                           //we need to add the new table into the mainboard object
                           self.currentBoard.columns.push(list);
-                          //console.log("CURRENT LIST AFTER TABLE ADDITION " + JSON.stringify(self.currentBoard));
 
                           MetadataActionService.storeTemplate(self.currentTemplateID, self.currentBoard)
                                   .then(function (response) {
-                                    console.log("TEMPLATE STORED SUCCESSFULLY " /*+ JSON.stringify(response)*/);
-                                    self.currentBoard = JSON.parse(response.board);
-                                    //defer.resolve($rootScope.mainBoard);
+                                    var template = JSON.parse(response.board);
+                                    var sortedTables = sortObject($filter, 'id', template);
+                                    template.columns = sortedTables;
+                                    
+                                    self.currentBoard = template;
                                   }, function (error) {
                                     console.log(error);
                                   });
@@ -611,7 +621,6 @@ angular.module('hopsWorksApp')
             };
 
             self.modifyField = function (column, field) {
-              console.log("SAVING " + JSON.stringify(column));
               $scope.tableid = column.id;
               $scope.field = field;
 
@@ -621,7 +630,7 @@ angular.module('hopsWorksApp')
               //data: {table: column.id, field: field}};
 
               $modal.open({
-                templateUrl: 'views/partials/modifyFieldDialog.html',
+                templateUrl: 'views/metadata/modifyFieldDialog.html',
                 controller: 'ModifyFieldCtrl',
                 scope: $scope
               })
@@ -633,7 +642,6 @@ angular.module('hopsWorksApp')
 
                                   defer.resolve($rootScope.mainBoard);
                                   console.log("MODIFIED FIELD " + JSON.stringify(self.currentBoard));
-                                  //$rootScope.$broadcast('refreshApp', $rootScope.mainBoard);
                                 });
                       }, function (dialogResponse) {
                         console.log("don't modify " + JSON.stringify(dialogResponse));
