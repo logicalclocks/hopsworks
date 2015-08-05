@@ -266,6 +266,8 @@ angular.module('hopsWorksApp')
                         dataSetService.attachTemplate(data).then(
                                 function (success) {
                                   growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                                  //refresh the file browser to get the updated objects
+                                  getDirContents();
                                 }, function (error) {
                           growl.info("Could not attach template to file " + file.name + ".",
                                   {title: 'Info', ttl: 5000});
