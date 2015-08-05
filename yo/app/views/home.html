@@ -96,7 +96,7 @@
       </div>
       <div ng-repeat="project in homeCtrl.projects| filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects - 1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
         <a href="#/project/{{project.project.id}}"
-           class="list-group-item"
+           class="list-group-item" context-menu
            data-target="menu-{{$index}}">
           <div ng-if="project.teamRole == 'Data scientist'">
             <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"></i>
