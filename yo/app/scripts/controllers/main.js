@@ -35,7 +35,7 @@ angular.module('hopsWorksApp')
                                 .then(function (success) {
                                     growl.success(success.data.successMessage, {title: 'Success', ttl: 5000}); 
                                 }, function (error) {
-                                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                    
                                 });
                     }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
@@ -48,7 +48,7 @@ angular.module('hopsWorksApp')
                                 .then(function (success) {
                                     growl.success(success.data.successMessage, {title: 'Success', ttl: 5000}); 
                                 }, function (error) {
-                                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                    
                                 });
                     }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});

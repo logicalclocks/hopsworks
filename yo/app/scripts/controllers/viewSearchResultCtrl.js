@@ -4,7 +4,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.request = {'inodeId':"", 'projectId':"",'message':""};
-
+            self.projects = "";
             if (projectOrDataset === 'parent') {
                 self.type = 'Project';
                 self.requestType = 'join';
@@ -33,7 +33,7 @@ angular.module('hopsWorksApp')
                 self.infoMembers = 'Members of the owning project.';
                 self.infoDS = 'Projects this dataset is shared with.';
                 self.result = result;
-                self.request.inodeId = self.result.projectId;
+                self.request.inodeId = self.result.inodeId;
                 self.sendRequest = function () {
                     RequestService.accessRequest(self.request).then(
                         function (success) {

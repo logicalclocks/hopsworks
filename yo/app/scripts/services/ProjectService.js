@@ -34,7 +34,7 @@ angular.module('hopsWorksApp')
                 url: '/api/project/getProjectInfo/:projectName',
                 'method': 'GET'
               },
-              getDatasetInfo: {
+              "getDatasetInfo": {
                 url: '/api/project/getDatasetInfo/:inodeId',
                 'method': 'GET'                  
               }

@@ -31,7 +31,7 @@
                 <div class="col-md-10" style="width: 80%">
                     <label class="control-label text-muted">{{viewSearchResultCtrl.result.name}}</label><br>
                     <label class="control-label text-muted">{{viewSearchResultCtrl.result.projectName}}</label><br>
-                    <label class="control-label text-muted">{{viewSearchResultCtrl.result.template}}</label>
+                    <label class="control-label text-muted">{{viewSearchResultCtrl.result.template}}</label><br>
                     <label class="control-label text-muted">{{viewSearchResultCtrl.result.description}}</label>
                 </div>
             </div>
@@ -46,58 +46,80 @@
                 </div>
                 <div id="moreInfo" class="panel-collapse collapse"><br>
                 <div class="row">
-                <div class="col-md-6">
-                    <label class="control-label">Members:</label>
-                    <div class="scroll">
-                        <ul type="none">
-                            <li style=" border-bottom: 1px solid #e6e6e6;" ng-repeat="member in viewSearchResultCtrl.result.projectTeam">
-                              <div ng-show="viewSearchResultCtrl.type === 'Project'">
-                                <span>Name : </span><span class="text-muted"> {{member.user.fname}} {{member.user.lname}} </span><br>
-                                <span>Role :</span> <span class="text-muted"> {{member.teamRole}}</span><br>
-                                <span>email :</span><span class="text-muted"> {{member.user.email}}</span>
-                              </div>
-                              <div ng-show="viewSearchResultCtrl.type === 'Dataset'">
-                                <span>Name : </span><span class="text-muted"> {{member.fname}} {{member.lname}} </span><br>
-                                <span>email :</span><span class="text-muted"> {{member.email}}</span>
-                              </div>
-                            </li>
-                        </ul>
-                    </div>
-                    <p><span class="glyphicon glyphicon-info-sign"></span> {{viewSearchResultCtrl.infoMembers}} </p>
-                </div>
-                <div class="col-md-6">
-                    <div ng-show=" viewSearchResultCtrl.type === 'Project'">
-                        <label class="control-label">Datasets:</label>
-                        <div class="scroll">
-                            <ul type="none">
-                                <li style=" border-bottom: 1px solid #e6e6e6;" ng-repeat="dataset in viewSearchResultCtrl.result.datasets">
-                                    Name : <span class="text-muted"> {{dataset.name}}</span><br>
-                                    Project : <span class="text-muted"> {{dataset.owningProjectName}}</span><br>
-                                    Description : <span class="text-muted"> {{dataset.description}}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div ng-show="viewSearchResultCtrl.type === 'Dataset'">
-                        <label class="control-label">Shared with:</label>
-                        <div class="scroll">
-                            <ul type="none">
-                                <li style=" border-bottom: 1px solid #e6e6e6;" ng-repeat="project in viewSearchResultCtrl.result.sharedWith">
-                                    Project : <span class="text-muted"> {{project}}</span><br>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <p><span class="glyphicon glyphicon-info-sign"></span> {{viewSearchResultCtrl.infoDS}} </p>
-                </div>
+                  <div class="col-md-6">
+                      <label class="control-label">Members:</label>
+                      <div class="scroll">
+                          <ul type="none">
+                              <li style=" border-bottom: 1px solid #e6e6e6;" ng-repeat="member in viewSearchResultCtrl.result.projectTeam">
+                                <div ng-show="viewSearchResultCtrl.type === 'Project'">
+                                  <span>Name : </span><span class="text-muted"> {{member.user.fname}} {{member.user.lname}} </span><br>
+                                  <span>Role :</span> <span class="text-muted"> {{member.teamRole}}</span><br>
+                                  <span>email :</span><span class="text-muted"> {{member.user.email}}</span>
+                                </div>
+                                <div ng-show="viewSearchResultCtrl.type === 'Dataset'">
+                                  <span>Name : </span><span class="text-muted"> {{member.firstname}} {{member.lastname}} </span><br>
+                                  <span>email :</span><span class="text-muted"> {{member.email}}</span>
+                                </div>
+                              </li>
+                          </ul>
+                      </div>
+                      <p><span class="glyphicon glyphicon-info-sign"></span> {{viewSearchResultCtrl.infoMembers}} </p>
+                  </div>
+                  <div class="col-md-6">
+                      <div ng-show=" viewSearchResultCtrl.type === 'Project'">
+                          <label class="control-label">Datasets:</label>
+                          <div class="scroll">
+                              <ul type="none">
+                                  <li style=" border-bottom: 1px solid #e6e6e6;" ng-repeat="dataset in viewSearchResultCtrl.result.datasets">
+                                      Name : <span class="text-muted"> {{dataset.name}}</span><br>
+                                      Project : <span class="text-muted"> {{dataset.owningProjectName}}</span><br>
+                                      Description : <span class="text-muted"> {{dataset.description}}</span>
+                                  </li>
+                              </ul>
+                          </div>
+                      </div>
+                      <div ng-show="viewSearchResultCtrl.type === 'Dataset'">
+                          <label class="control-label">Shared with:</label>
+                          <div class="scroll">
+                              <ul type="none">
+                                  <li style=" border-bottom: 1px solid #e6e6e6;" ng-repeat="project in viewSearchResultCtrl.result.sharedWith">
+                                      Project : <span class="text-muted"> {{project}}</span><br>
+                                  </li>
+                              </ul>
+                          </div>
+                      </div>
+                      <p><span class="glyphicon glyphicon-info-sign"></span> {{viewSearchResultCtrl.infoDS}} </p>
+                  </div>
             </div>
            </div>
+            </div>
+            <div ng-show="viewSearchResultCtrl.type === 'Dataset'" class="col-xs-9" style="padding-left: 0px">
+              <label class="text-muted control-label">Projects</label>
+              <ui-select name="project_name" theme="select2"
+                           ng-model="viewSearchResultCtrl.request.projectId" style="min-width: 300px;" required>
+
+                    <ui-select-match placeholder="Select a project this dataset will be shared with">{{$select.selected.project.name}}</ui-select-match>
+
+                    <ui-select-choices repeat="item.project.id as item in viewSearchResultCtrl.projects | filter: $select.search">
+                        <div ng-bind-html="item.project.name | highlight: $select.search"></div>
+                        <small>
+                            Owner: {{item.project.owner.fname}} {{item.project.owner.lname}}
+                        </small>
+                    </ui-select-choices>
+
+                </ui-select><br>
+              <span ng-show="(dataSetForm.$submitted || dataSetForm.project_name.$dirty) &amp;&amp;
+                    dataSetForm.project_name.$error.required"
+                    class="text-danger ng-hide">
+                  Choose a project this dataset will be shared with.
+              </span>
+            </div>
         </div>
-        </div>
+        <br ng-show="viewSearchResultCtrl.type === 'Dataset'" style="margin:15px">
         <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
 
             <button class="btn btn-default" type="button" ng-click="viewSearchResultCtrl.close()">Cancel</button>
-            <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.dataSet_name.$error.required">
+            <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.project_name.$error.required">
                 Send {{viewSearchResultCtrl.requestType}} request
             </button>
 

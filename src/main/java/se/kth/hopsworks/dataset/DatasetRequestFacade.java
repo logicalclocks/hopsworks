@@ -108,7 +108,7 @@ public class DatasetRequestFacade extends AbstractFacade<DatasetRequest> {
    * @param projectTeam
    * @return
    */
-  public List<DatasetRequest> findByProject(ProjectTeam projectTeam) {
+  public List<DatasetRequest> findByProjectTeam(ProjectTeam projectTeam) {
     TypedQuery<DatasetRequest> query = em.createNamedQuery(
             "DatasetRequest.findByProjectTeam",
             DatasetRequest.class).setParameter(

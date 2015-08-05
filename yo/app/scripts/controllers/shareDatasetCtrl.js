@@ -6,7 +6,7 @@ angular.module('hopsWorksApp')
 
             self.datasets = [];
             self.projects = [];
-            self.dataSet = {'name': dsName, 'description': "", 'projectId': "", 'editable':"false"};
+            self.dataSet = {'name': dsName, 'description': "", 'projectId': "", 'editable':false};
             var pId = $routeParams.projectID;
             var dataSetService = DataSetService(pId);
 
@@ -24,11 +24,6 @@ angular.module('hopsWorksApp')
             };
 
             self.shareDataset = function () {
-                if (self.dataSet.editable === 'true') {
-                    self.dataSet.editable = true;
-                } else {
-                    self.dataSet.editable = false;
-                }
                 if ($scope.dataSetForm.$valid) {
                     dataSetService.shareDataSet(self.dataSet)
                         .then(function (success) {
@@ -38,7 +33,7 @@ angular.module('hopsWorksApp')
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                         });
                 } else {
-                    self.dataSet.editable = "false";
+                    self.dataSet.editable = false;
                 }
 
             };

@@ -312,7 +312,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.share = function (name) {
-              ModalService.shareDataset('sm', name).then(
+              ModalService.shareDataset('md', name).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
                       }, function (error) {
