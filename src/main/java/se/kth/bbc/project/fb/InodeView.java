@@ -27,11 +27,15 @@ public final class InodeView {
   private int id;
   private int template;
   private String description;
-  private boolean status;
+  private boolean status = true;
 
   public InodeView() {
   }
-  
+  /**
+   * Constructor for sub folders 
+   * @param i
+   * @param path 
+   */
   public InodeView(Inode i, String path) {
     this.name = i.getInodePK().getName();
     this.dir = i.isDir();
@@ -43,8 +47,17 @@ public final class InodeView {
     this.path = path;
     this.modification = new Date(i.getModificationTime().longValue());
     this.accessTime = new Date(i.getAccessTime().longValue());
+    // if it is a sub folder the status should be default true
+    // this is used in the front-end to tell apart accepted and pending shared 
+    // top level datasets. 
+    this.status = true;
   }
-  
+  /**
+   * Constructor for top level datasets.
+   * @param parent
+   * @param ds
+   * @param path 
+   */
   public InodeView(Inode parent, Dataset ds, String path) {
     this.name = ds.getInode().getInodePK().getName();
     this.dir = ds.getInode().isDir();

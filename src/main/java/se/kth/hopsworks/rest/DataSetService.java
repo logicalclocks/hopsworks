@@ -247,7 +247,7 @@ public class DataSetService {
     Dataset dst = datasetFacade.findByProjectAndInode(proj, inode);
     if (dst != null) {//proj already have the dataset.
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Dataset already shared with this project");
+              "Dataset already in " + proj.getName());
     }
 
     DatasetRequest dsReq = datasetRequest.findByProjectAndDataset(proj, ds);

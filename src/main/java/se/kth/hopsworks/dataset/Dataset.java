@@ -77,11 +77,11 @@ public class Dataset implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "editable")
-  private boolean editable;
+  private boolean editable = true;
   @Basic(optional = false)
   @NotNull
   @Column(name = "status")
-  private boolean status;
+  private boolean status = ACCEPTED;
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "dataset")
   private Collection<DatasetRequest> datasetRequestCollection;
