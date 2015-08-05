@@ -289,7 +289,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
     return null;
   }
 
-  private Project findByName(String name) {
+  public Project findByName(String name) {
     TypedQuery<Project> query = em.createNamedQuery("Project.findByName",
             Project.class);
     query.setParameter("name", name);

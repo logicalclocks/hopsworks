@@ -12,7 +12,7 @@ angular.module('hopsWorksApp')
                   method: 'POST',
                   //hops server
                   //url: 'http://193.10.66.222:9200/project/' + index + '/_search',
-                  url: 'http://193.10.67.226:9200/project/' + index + '/_search',
+                  url: 'http://193.10.67.135:9200/project/' + index + '/_search',
                   //url: 'http://localhost:9200/project/' + index + '/_search',
                   contentType: 'application/x-www-form-urlencoded',
                   data: JSON.stringify(query)

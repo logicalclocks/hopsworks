@@ -38,6 +38,7 @@ public class ApplicationConfig extends Application {
     resources.add(se.kth.hopsworks.rest.JobService.class);
     resources.add(se.kth.hopsworks.rest.ProjectMembers.class);
     resources.add(se.kth.hopsworks.rest.ProjectService.class);
+    resources.add(se.kth.hopsworks.rest.RequestService.class);
     resources.add(se.kth.hopsworks.rest.SparkService.class);
     resources.add(se.kth.hopsworks.rest.ThrowableExceptionMapper.class);
     resources.add(se.kth.hopsworks.rest.TransactionExceptionMapper.class);

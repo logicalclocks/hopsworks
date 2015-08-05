@@ -19,6 +19,22 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              confirmShare: function (size, title, msg) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/confirmShareModal.html',
+                  controller: 'ModalCtrl as ctrl',
+                  size: size,
+                  resolve: {
+                    title: function () {
+                      return title;
+                    },
+                    msg: function () {
+                      return msg;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
               createProject: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/projectModal.html',
@@ -101,6 +117,57 @@ angular.module('hopsWorksApp')
                       }],
                     projectId: function () {
                       return projectId;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
+              shareDataset: function (size, dsName) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/shareDataset.html',
+                  controller: 'ShareDatasetCtrl as shareDatasetCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                            function (success) {
+                            },
+                            function (err) {
+                              $location.path('/login');
+                              $location.replace();
+                              return $q.reject(err);
+                            });
+                      }],
+                    dsName: function () {
+                      return dsName;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
+              viewSearchResult: function (size, result, projectOrDataset) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/viewSearchResult.html',
+                  controller: 'ViewSearchResultCtrl as viewSearchResultCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                            function (success) {
+                            },
+                            function (err) {
+                              $location.path('/login');
+                              $location.replace();
+                              return $q.reject(err);
+                            });
+                      }],
+                    result: function () {
+                      return result;
+                    },
+                    projectOrDataset: function () {
+                      return projectOrDataset;
                     }
                   }
                 });

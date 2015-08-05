@@ -30,6 +30,34 @@
   white-space: nowrap;
   width: 80px;
 }
+.timeline .time-header.search {
+  border: 1px solid #ededed;
+  border-radius: 2px;
+  clear: both;
+  color: black;
+  float: none;
+  font-size: 16px;
+  height: auto;
+  line-height: 24px;
+  margin-bottom: 30px;
+  margin-left: -40px;
+  position: relative;
+  width: auto;
+  padding: 1px 5px 5px 5px;
+  background: #ffffff;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 1px rgba(0,0,0,.25);
+  display: inline-block;
+}
+.time-header.search .result {
+  font-size: 12px;
+  margin-top: -20px;
+  text-align: left;
+  margin-bottom: -10px;
+}
+.timeline .pagination {
+ display: unset;
+}
 .timeline .time-header.completed {
   background: none repeat scroll 0 0 #3eb157;
   border: 1px solid #35974a;
@@ -78,6 +106,8 @@
   margin-left: 9px;
   min-height: 60px;
   padding: 10px;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 1px rgba(0,0,0,.25);
 }
 .about-task .header {
   border-bottom: 1px solid #e6e6e6;
@@ -88,6 +118,9 @@
   line-height: 30px;
   margin-bottom: 10px;
   padding: 0;
+}
+.about-task .header .btn{
+  margin-top: -5px;
 }
 .about-task small {
   float: right;

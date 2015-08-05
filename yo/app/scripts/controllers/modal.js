@@ -15,5 +15,9 @@ angular.module('hopsWorksApp')
             self.cancel = function () {
               $modalInstance.dismiss('cancel');
             };
+            
+            self.reject = function () {
+              $modalInstance.dismiss('reject');
+            };
 
           }]);

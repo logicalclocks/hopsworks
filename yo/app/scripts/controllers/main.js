@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MainCtrl', ['$cookies', '$location', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService',
-          function ($cookies, $location, AuthService, UtilsService, ElasticService, md5, ModalService) {
+        .controller('MainCtrl', ['$cookies', '$location', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService','ProjectService','growl',
+          function ($cookies, $location, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl) {
 
             var self = this;
             self.email = $cookies['email'];
@@ -27,19 +27,51 @@ angular.module('hopsWorksApp')
               ModalService.profile('md');
             };
 
+            self.view = function (selected, projectOrDataset) {
+              if (projectOrDataset === 'parent') {
+              ProjectService.getProjectInfo({projectName:selected.name}).$promise.then(
+                    function (success) {
+                        ModalService.viewSearchResult('md', success, projectOrDataset)
+                                .then(function (success) {
+                                    growl.success(success.data.successMessage, {title: 'Success', ttl: 5000}); 
+                                }, function (error) {
+                                    
+                                });
+                    }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                    }
+                );
+              }else if (projectOrDataset === 'child') {
+                ProjectService.getDatasetInfo({inodeId:selected.inode_id}).$promise.then(
+                    function (success) {
+                        ModalService.viewSearchResult('md', success, projectOrDataset)
+                                .then(function (success) {
+                                    growl.success(success.data.successMessage, {title: 'Success', ttl: 5000}); 
+                                }, function (error) {
+                                    
+                                });
+                    }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                    }
+                );
+              }
+            };
+            
             self.searchTerm = "";
-            self.searchResult = "";
+            self.searchReturned = "";
+            self.searchResult = [];
+            self.resultPages = 0;
+            self.resultItems = 0;
+            self.currentPage = 1;
+            self.pageSize = 5;
 
             self.keyTyped = function (evt) {
 
               if (self.searchTerm.length > 3) {
                 self.search();
               } else {
-                self.searchResult = "";
-              }
-
-              if (angular.equals(evt.keyCode, 13)) {
-                self.search();
+                self.searchResult = [];
+                self.searchReturned = "";
               }
             };
 
@@ -47,28 +79,32 @@ angular.module('hopsWorksApp')
               //ask for the index name and project name when it is time to search
               self.index = UtilsService.getIndex();
               self.projectName = UtilsService.getProjectName();
-
-              //console.log("SEARCHING FOR  " + self.searchTerm);
-              console.log("INDEX " + self.index + " PROJECTNAME: " + self.projectName);
-
+              self.currentPage = 1;
+              self.pageSize = 5;
               var searchQuery = ElasticService.query(self.index, self.projectName, self.searchTerm);
 
               ElasticService.search(searchQuery, self.index)
                       .then(function (response) {
-                        console.log("DATA RETURNED " + JSON.stringify(response.data.hits));
                         var data = response.data.hits.hits;
-
-                        self.searchResult = "";
+                        self.searchResult = [];
+                        self.searchReturned = "";
                         if (data.length > 0) {
-                          $.each(data, function (i, val) {
-                            var source = val._source;
-                            self.searchResult += "<h3>" + source.name + "</h3>modified at <b> " + source.modified + "</b><hr/>";
-                          });
+                          self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
+                          self.searchResult = data;
+                        } else {
+                          self.searchResult = [];
+                          self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
                         }
-                        else {
-                          self.searchResult = "Search <b>" + self.searchTerm + "</b> did not \n\
-                                                find any document. Try different keywords";
-                        }
+                        self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
+                        self.resultItems = self.searchResult.length;
+                      }, function (error) {
                       });
+
+              datePicker();// this will load the function so that the date picker can call it.
+            };
+            var datePicker = function () {
+              $(function () {
+                $('#datetimepicker1').datetimepicker();
+              });
             };
           }]);

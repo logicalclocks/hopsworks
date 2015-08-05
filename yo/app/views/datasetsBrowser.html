@@ -67,6 +67,7 @@
                         </thead>
 
                         <tbody ui-sortable ng-model="datasetsCtrl.files">
+
                           <tr ng-click="datasetsCtrl.back()">
                             <td style="padding: 0px" colspan="4">&nbsp &nbsp
                               <a style="font-size:25px">..</a>
@@ -90,7 +91,7 @@
                             <td>{{file.owner}} me</td>
                             <td>{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
                             </td>
-                            <td style="width: 12%;">{{file.filesize}} 4TB</td>
+                            <td style="width: 12%;">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
 
                             <td>
                               <div class="dropdown position-fixed" id="menu-{{ $index}}">
@@ -109,12 +110,11 @@
                                     <a class="pointer"
                                        role="menuitem"
                                        tabindex="2"
-                                       ng-click="">
+                                       ng-click="datasetsCtrl.attachTemplate(file)">
                                       <span><i class="fa fa-share-alt"></i>
                                         Share...</span>
                                     </a>
                                   </li>
-
                                   <li>
                                     <a class="pointer"
                                        role="menuitem"
@@ -128,7 +128,7 @@
                                   <li>
                                     <a class="pointer"
                                        role="menuitem"
-                                       tabindex="4"
+                                       tabindex="3"
                                        ng-click="datasetsCtrl.deleteFile(file.name)">
                                       <span><i class="fa fa-trash"></i>
                                         Remove</span>
@@ -166,7 +166,7 @@
                               <table id="mytable1" ng-show="datasetsCtrl.selected > - 1" class="table table-bordred table-striped" style="margin-top: 16px;">
                                 <tr style="background-color: #fafafa">
                                   <td style="color:lightgrey;">Size</td>
-                                  <td style="color: grey;">234 Kb</td>
+                                  <td style="color: grey;">{{(datasetsCtrl.fileDetail.size == 0? '_': datasetsCtrl.fileDetail.size)}}</td>
                                 </tr>
 
                                 <tr style="background-color: #fafafa">

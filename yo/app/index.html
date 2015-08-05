@@ -1,9 +1,10 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>HopsWorks</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
+    <link rel="icon" type="image/png" href="images/Hops.png" />
     <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Lobster'>
     <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Varela+Round'>
     <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Roboto:500'>
@@ -20,6 +21,7 @@
     <link rel="stylesheet" href="bower_components/angular-chart.js/dist/angular-chart.css" />
     <link rel="stylesheet" href="bower_components/select2/select2.css" />
     <link rel="stylesheet" href="bower_components/angular-ui-select/dist/select.css" />
+    <link rel="stylesheet" href="bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
     <link rel="stylesheet" href="bower_components/ng-sortable/dist/ng-sortable.css" />
     <link rel="stylesheet" href="bower_components/ng-sortable/dist/ng-sortable.style.css" />
     <!-- endbower -->
@@ -70,6 +72,8 @@
     <script src="bower_components/select2/select2.js"></script>
     <script src="bower_components/angular-ui-select2/src/select2.js"></script>
     <script src="bower_components/angular-ui-select/dist/select.js"></script>
+    <script src="bower_components/moment/moment.js"></script>
+    <script src="bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
     <script src="bower_components/ng-sortable/dist/ng-sortable.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
@@ -105,6 +109,8 @@
     <script src="scripts/controllers/templateDropdownCtrl.js"></script>
     <script src="scripts/controllers/sparkCtrl.js"></script>
     <script src="scripts/controllers/adamCtrl.js"></script>
+    <script src="scripts/controllers/shareDatasetCtrl.js"></script>
+    <script src="scripts/controllers/viewSearchResultCtrl.js"></script>
     <script src="scripts/controllers/jobsCtrl.js"></script>
     <script src="scripts/controllers/newJobCtrl.js"></script>
     <script src="scripts/controllers/jobDetailCtrl.js"></script>
@@ -132,6 +138,7 @@
     <script src="scripts/services/SparkService.js"></script>
     <script src="scripts/services/AdamService.js"></script>
     <script src="scripts/services/JobService.js"></script>
+    <script src="scripts/services/RequestService.js"></script>
     <!-- endbuild -->
 
   </body>
