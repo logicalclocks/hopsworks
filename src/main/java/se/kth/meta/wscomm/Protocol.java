@@ -15,6 +15,7 @@ import se.kth.meta.db.TupleToFileFacade;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldType;
 import se.kth.meta.entity.Field;
+import se.kth.meta.entity.InodeTableComposite;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.Template;
@@ -26,8 +27,9 @@ import se.kth.meta.wscomm.message.ContentMessage;
 import se.kth.meta.wscomm.message.ErrorMessage;
 import se.kth.meta.wscomm.message.FieldTypeMessage;
 import se.kth.meta.wscomm.message.Message;
-import se.kth.meta.wscomm.message.MetadataMessage;
-import se.kth.meta.wscomm.message.TableMetadataMessage;
+import se.kth.meta.wscomm.message.FetchMetadataMessage;
+import se.kth.meta.wscomm.message.FetchTableMetadataMessage;
+import se.kth.meta.wscomm.message.StoreMetadataMessage;
 import se.kth.meta.wscomm.message.TextMessage;
 
 /**
@@ -119,9 +121,11 @@ public class Protocol {
         return this.createSchema(message);
 
       case FETCH_METADATA:
-      //SHOULD BE REFACTORED TO RETURN TUPLE_TO_FILE AS ENTITY. NOT TABLE
-//        table = (MTable) message.parseSchema().get(0);
-//        //return this.fetchTableMetadata(table);
+        //need to fetch the metadata a table carries for a specific inode
+        //joining two different entities
+        InodeTableComposite itc = (InodeTableComposite) message.parseSchema().
+                get(0);
+        return this.fetchInodeMetadata(itc);
 //        return this.fetchTableMetadataForInode(table, table.getInodeid());
 
       case FETCH_TABLE_METADATA:
@@ -132,8 +136,10 @@ public class Protocol {
 
       //saves the actual metadata
       case STORE_METADATA:
-        List<EntityIntf> schema = message.parseSchema();
-        this.utils.storeMetadata(schema);
+        List<EntityIntf> composite = ((StoreMetadataMessage) message).
+                superParseSchema();
+        List<EntityIntf> rawData = message.parseSchema();
+        this.utils.storeMetadata(composite, rawData);
 
         return new TextMessage("Server", "Metadata was stored successfully");
 
@@ -216,23 +222,9 @@ public class Protocol {
   private Message fetchTableMetadata(MTable table) {
 
     try {
-      TableMetadataMessage message = new TableMetadataMessage("Server", "");
+      FetchTableMetadataMessage message
+              = new FetchTableMetadataMessage("Server", "");
       MTable t = this.tableFacade.getTable(table.getId());
-
-      List<Field> fields = t.getFields();
-      for (Field field : fields) {
-        /*
-         * Load raw data based on the field id. Need to filter this further
-         * according to tupleid and inodeid
-         */
-        List<RawData> raw = field.getRawData();
-
-        for (RawData rawdata : raw) {
-          TupleToFile ttf = this.tupletofileFacade.getTupletofile(rawdata.
-                  getTupleid());
-          rawdata.setInodeid(ttf.getInodeid());
-        }
-      }
 
       List<MTable> tables = new LinkedList<>();
       tables.add(t);
@@ -253,30 +245,31 @@ public class Protocol {
    * @param table
    * @return
    */
-  private Message fetchTableMetadataForInode(MTable table, int inodeid) {
+  private Message fetchInodeMetadata(InodeTableComposite itc) {
 
     try {
-      MetadataMessage message = new MetadataMessage("Server", "");
-      MTable t = this.tableFacade.getTable(table.getId());
+      FetchMetadataMessage message = new FetchMetadataMessage("Server", "");
+
+      MTable t = this.tableFacade.getTable(itc.getTableid());
+      List<TupleToFile> ttfList = this.tupletofileFacade.getTuplesByInode(itc.
+              getInodeid());
 
       List<Field> fields = t.getFields();
 
       for (Field field : fields) {
         /*
-         * Load raw data based on the field id. Need to filter this further
-         * according to tupleid and inodeid
+         * Load raw data based on the field id. Keep only data related to
+         * a specific inode
          */
         List<RawData> rawList = field.getRawData();
         List<RawData> toKeep = new LinkedList<>();
 
         for (RawData raw : rawList) {
-          TupleToFile ttf = this.tupletofileFacade.getTupletofile(raw.
-                  getTupleid());
+          for (TupleToFile ttf : ttfList) {
 
-          //keep only the data related to the specific inode
-          if (ttf.getInodeid() == inodeid) {
-            raw.setInodeid(ttf.getInodeid());
-            toKeep.add(raw);
+            if (raw.getTupleid() == ttf.getId()) {
+              toKeep.add(raw);
+            }
           }
         }
 

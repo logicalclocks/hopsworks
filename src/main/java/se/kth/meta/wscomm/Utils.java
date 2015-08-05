@@ -15,6 +15,7 @@ import se.kth.meta.db.TupleToFileFacade;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.Field;
+import se.kth.meta.entity.InodeTableComposite;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.Template;
@@ -160,23 +161,23 @@ public class Utils {
     }
   }
 
-  public void storeMetadata(List<EntityIntf> list) throws ApplicationException {
+  public void storeMetadata(List<EntityIntf> composite, List<EntityIntf> raw) throws ApplicationException {
 
     try {
       /*
        * get the inodeid present in the entities in the list. It is the
        * same for all the entities, since they constitute a single tuple
        */
-      RawData r = (RawData) list.get(0);
+      InodeTableComposite itc = (InodeTableComposite) composite.get(0);
 
-      //create a metadata tuple attached to an inodeid
-      TupleToFile ttf = new TupleToFile(-1, r.getInodeid());
+      //create a metadata tuple attached to be attached to an inodeid
+      TupleToFile ttf = new TupleToFile(-1, itc.getInodeid());
       int tupleid = this.tupletoFileFacade.addTupleToFile(ttf);
 
       //every rawData entity carries the same inodeid
-      for (EntityIntf raw : list) {
+      for (EntityIntf raww : raw) {
 
-        r = (RawData) raw;
+        RawData r = (RawData) raww;
         r.setData(r.getData().replaceAll("\"", ""));
         r.setTupleid(tupleid);
 

@@ -124,7 +124,7 @@ angular.module('hopsWorksApp')
               console.log("fetching metadata for inode " + inodeId);
               return WSComm.send({
                 sender: 'evsav',
-                type: 'MetadataMessage',
+                type: 'FetchMetadataMessage',
                 action: 'fetch_metadata',
                 message: JSON.stringify({tableid: tableId, inodeid: inodeId})
               });
@@ -133,7 +133,7 @@ angular.module('hopsWorksApp')
               console.log("fetching metadata for table " + tableId);
               return WSComm.send({
                 sender: 'evsav',
-                type: 'TableMetadataMessage',
+                type: 'FetchTableMetadataMessage',
                 action: 'fetch_table_metadata',
                 message: JSON.stringify({tableid: tableId})
               });
@@ -141,7 +141,7 @@ angular.module('hopsWorksApp')
             storeMetadata: function (data) {
               return WSComm.send({
                 sender: 'evsav',
-                type: 'MetadataMessage',
+                type: 'StoreMetadataMessage',
                 action: 'store_metadata',
                 message: JSON.stringify(data)
               });

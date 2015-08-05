@@ -245,14 +245,14 @@ public class Field implements Serializable, EntityIntf {
   public void addRawData(RawData raw) {
     this.raw.add(raw);
     if (raw != null) {
-      raw.setFields(this);
+      raw.setField(this);
     }
   }
 
   public void removeRawData(RawData raw) {
     this.raw.remove(raw);
     if (raw != null) {
-      raw.setFields(null);
+      raw.setField(null);
     }
   }
   /*

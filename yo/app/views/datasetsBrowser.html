@@ -336,7 +336,7 @@
 
           <tabset justified="false">
             <tab ng-repeat="tab in datasetsCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
-                 disabled="tab.disabled">
+                 disabled="tab.disabled" select="datasetsCtrl.onTabSelect(tab)">
 
               <form name="{{tab.title}}{{$index}}" ng-submit="datasetsCtrl.submitMetadata(datasetsCtrl.metaData)">
 

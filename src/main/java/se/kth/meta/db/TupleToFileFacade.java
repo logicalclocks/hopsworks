@@ -1,10 +1,13 @@
 package se.kth.meta.db;
 
+import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import se.kth.kthfsdashboard.user.AbstractFacade;
+import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.DatabaseException;
 
@@ -33,13 +36,15 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
   public TupleToFile getTupletofile(int tupleid) throws DatabaseException {
 
     return this.em.find(TupleToFile.class, tupleid);
-//    String query = "TupleToFile.findByTupleid";
-//    Query q = this.em.createNamedQuery(query);
-//    q.setParameter("tupleid", tupleid);
-//
-//    List<TupleToFile> result = q.getResultList();
-//
-//    return result.get(0);
+  }
+
+  public List<TupleToFile> getTuplesByInode(int inodeid) throws
+          DatabaseException {
+
+    String queryString = "TupleToFile.findByInodeid";
+
+    Query query = this.em.createNamedQuery(queryString);
+    return query.getResultList();
   }
 
   public int addTupleToFile(TupleToFile ttf) throws DatabaseException {
