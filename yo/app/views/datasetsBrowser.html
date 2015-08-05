@@ -329,6 +329,11 @@
         <md-content layout-padding>
           <p>Associating metadata to: <a ng-href="{{returnnUrl}}"><b>'{{datasetsCtrl.currentFile.name}}'</b></a></p>
 
+          <label class="control-label" ng-show="datasetsCtrl.currentTemplateID === -1">
+            <font color="red">There is no template attached to file {{datasetsCtrl.currentFile.name}}</font>
+          </label>
+          <p></p>
+
           <tabset justified="false">
             <tab ng-repeat="tab in datasetsCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
                  disabled="tab.disabled">

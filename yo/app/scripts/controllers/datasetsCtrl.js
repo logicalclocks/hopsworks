@@ -27,6 +27,7 @@ angular.module('hopsWorksApp')
             self.metaData = {};
             self.meta = [];
             self.metadataView = {};
+            self.existingTabs = false;
 
             /*
              * Get all datasets under the current project.
@@ -104,8 +105,6 @@ angular.module('hopsWorksApp')
                 //console.log("value " + JSON.stringify(table));
                 MetadataActionService.fetchMetadata(table.id, self.currentFile.id)
                         .then(function (response) {
-                          //console.log("METADATA FOR TABLE " + table.name);
-                          //console.log("ARE " + JSON.stringify(response.board));
                           self.reconstructMetadata(table.name, JSON.parse(response.board));
                           //self.meta = JSON.parse(response.board);
                         });
@@ -115,13 +114,9 @@ angular.module('hopsWorksApp')
             self.reconstructMetadata = function (tableName, rawdata) {
 
               $scope.tableName = rawdata.table;
-//                    self.metadataView = results;
-//                    self.meta.push({name: tableName, tuples: self.metadataView});
 
               self.meta.push({name: tableName, rest: rawdata});
               self.metadataView = {};
-              console.log(JSON.stringify(self.meta));
-              //self.print(self.meta);
               console.log("RECONSTRUCTED ARRAY  " + JSON.stringify(self.meta));
             };
 
@@ -150,7 +145,6 @@ angular.module('hopsWorksApp')
                 console.log(key + ': ' + value.name);
                 self.tabs.push({title: value.name, cards: value.cards});
               });
-              //console.log("initialized tabs " + JSON.stringify(self.tabs));
             };
 
             /*
