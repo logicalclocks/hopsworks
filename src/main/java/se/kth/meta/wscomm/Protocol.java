@@ -230,7 +230,8 @@ public class Protocol {
       String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
 
       message.setMessage(jsonMsg);
-
+      message.setStatus("OK");
+      
       return message;
 
     } catch (DatabaseException e) {
@@ -280,7 +281,8 @@ public class Protocol {
       String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
 
       message.setMessage(jsonMsg);
-
+      message.setStatus("OK");
+      
       return message;
 
     } catch (DatabaseException e) {

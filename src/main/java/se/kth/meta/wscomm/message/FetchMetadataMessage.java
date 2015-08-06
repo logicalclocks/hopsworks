@@ -24,7 +24,6 @@ public class FetchMetadataMessage extends MetadataMessage {
   public FetchMetadataMessage() {
     super();
     this.TYPE = "FetchMetadataMessage";
-    this.status = "OK";
   }
 
   /**
