@@ -145,6 +145,22 @@ angular.module('hopsWorksApp')
                 action: 'store_metadata',
                 message: JSON.stringify(data)
               });
+            },
+            isTableEmpty: function(tableId){
+              return WSComm.send({
+                sender: 'evsav',
+                type: 'CheckTableContentMessage',
+                action: 'is_table_empty',
+                message: JSON.stringify({tableid: tableId})
+              });
+            },
+            isFieldEmpty: function(fieldId){
+              return WSComm.send({
+                sender: 'evsav',
+                type: 'CheckFieldContentMessage',
+                action: 'is_field_empty',
+                message: JSON.stringify({fieldid: fieldId})
+              });
             }
           };
         });

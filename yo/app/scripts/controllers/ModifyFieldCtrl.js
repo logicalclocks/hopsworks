@@ -31,17 +31,12 @@ var mainModule = angular.module('hopsWorksApp')
                               $scope.selectedItem = $scope.items[0];
                             });
 
-                    MetadataActionService.fetchTableMetadata($scope.tableid)
+                    MetadataActionService.isFieldEmpty($scope.field.id)
                             .then(function (response) {
-                              console.log("TABLE METADATA RETRIEVED " + JSON.stringify(response.board));
-                              var table = JSON.parse(response.board);
 
-                              angular.forEach(table.fields, function (field, key) {
-
-                                if (field.data.length !== 0 && field.id === $scope.field.id) {
-                                  $scope.existingRawData = true;
-                                }
-                              });
+                              if (response.board !== "EMPTY") {
+                                $scope.existingRawData = true;
+                              }
                             });
 
                     switch ($scope.field.fieldtypeid) {

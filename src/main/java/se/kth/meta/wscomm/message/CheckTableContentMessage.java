@@ -14,14 +14,22 @@ import se.kth.meta.entity.MTable;
  *
  * @author Vangelis
  */
-public class TableMessage extends ContentMessage {
+public class CheckTableContentMessage extends ContentMessage {
 
-  private static final Logger logger = Logger.getLogger(TableMessage.class.
+  private static final Logger logger = Logger.getLogger(
+          CheckTableContentMessage.class.
           getName());
 
-  public TableMessage(){
+  
+  public CheckTableContentMessage() {
     super();
-    this.TYPE = "TableMessage";
+    this.TYPE = "CheckTableContentMessage";
+  }
+
+  public CheckTableContentMessage(String sender, String message){
+    this();
+    this.sender = sender;
+    this.message = message;
   }
   
   @Override
@@ -29,15 +37,6 @@ public class TableMessage extends ContentMessage {
     this.sender = json.getString("sender");
     this.message = json.getString("message");
     this.action = json.getString("action");
-    super.setAction(this.action);
-
-    try {
-      JsonObject object = Json.createReader(new StringReader(this.message)).
-              readObject();
-      super.setTemplateid(object.getInt("tempid"));
-    } catch (NullPointerException e) {
-      logger.log(Level.SEVERE, "Error while retrieving the templateid", e);
-    }
   }
 
   @Override
@@ -63,21 +62,17 @@ public class TableMessage extends ContentMessage {
     JsonObject obj = Json.createReader(new StringReader(this.message)).
             readObject();
 
-    int tableId = obj.getInt("id");
-    String tableName = obj.getString("name");
-    boolean forceDelete = false;
+    List<EntityIntf> list = null;
 
     try {
-      forceDelete = obj.getBoolean("forceDelete");
-      logger.log(Level.SEVERE, "FORCE DELETE ON TABLE {0}", forceDelete);
-    } catch (NullPointerException e) {
-    }
+      int tableid = obj.getInt("tableid");
 
-    MTable table = new MTable(tableId, tableName);
-    //FORCE DELETE NEEDS TO BE REFACTORED
-    //table.setForceDelete(forceDelete);
-    List<EntityIntf> list = new LinkedList<>();
-    list.add(table);
+      MTable table = new MTable(tableid);
+      list = new LinkedList<>();
+      list.add(table);
+    } catch (NullPointerException e) {
+      logger.log(Level.SEVERE, "Table id was not present in the message");
+    }
 
     return list;
   }
@@ -116,6 +111,8 @@ public class TableMessage extends ContentMessage {
   public String toString() {
     return "{\"sender\": \"" + this.sender + "\", "
             + "\"type\": \"" + this.TYPE + "\", "
+            + "\"status\": \"" + this.status + "\", "
+            + "\"action\": \"" + this.action + "\", "
             + "\"message\": \"" + this.message + "\"}";
   }
 }

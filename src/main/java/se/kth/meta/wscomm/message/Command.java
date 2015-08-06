@@ -37,5 +37,13 @@ public enum Command {
   //
   QUIT,
   //
-  TEST
+  TEST,
+  //
+  IS_TABLE_EMPTY,
+  //
+  IS_FIELD_EMPTY,
+  //
+  FORCE_TABLE_DELETE,
+  //
+  FORCE_FIELD_DELETE
 }

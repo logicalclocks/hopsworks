@@ -146,6 +146,12 @@ public class Protocol {
       case TEST:
       case QUIT:
         return new TextMessage(message.getSender(), message.getMessage());
+      case IS_TABLE_EMPTY:
+        table = (MTable) message.parseSchema().get(0);
+        return this.checkTableFields(table);
+      case IS_FIELD_EMPTY:
+        field = (Field) message.parseSchema().get(0);
+        return this.checkFieldContents(field);
     }
 
     return new TextMessage();
@@ -228,12 +234,9 @@ public class Protocol {
       List<MTable> tables = new LinkedList<>();
       tables.add(t);
       String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
-
       message.setMessage(jsonMsg);
-      message.setStatus("OK");
-      
-      return message;
 
+      return message;
     } catch (DatabaseException e) {
       return new ErrorMessage("Server", e.getMessage());
     }
@@ -279,13 +282,57 @@ public class Protocol {
       List<MTable> tables = new LinkedList<>();
       tables.add(t);
       String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
-
       message.setMessage(jsonMsg);
-      message.setStatus("OK");
       
       return message;
-
     } catch (DatabaseException e) {
+      return new ErrorMessage("Server", e.getMessage());
+    }
+  }
+
+  /**
+   * Checks if a table contains fields. This is necessary when the user wants to
+   * delete a table
+   * <p>
+   * @param table
+   * @return
+   */
+  private Message checkTableFields(MTable table) {
+
+    try {
+
+      TextMessage message = new TextMessage("Server");
+
+      MTable t = this.tableFacade.getTable(table.getId());
+      List<Field> fields = t.getFields();
+
+      String msg = fields.size() > 0 ? "This table contains fields" : "EMPTY";
+      message.setMessage(msg);
+
+      return message;
+    } catch (DatabaseException e) {
+      logger.log(Level.SEVERE, "Could not retrieve table " + table.getId()
+              + ". ", e);
+      return new ErrorMessage("Server", e.getMessage());
+    }
+  }
+
+  private Message checkFieldContents(Field field) {
+    try {
+
+      TextMessage message = new TextMessage("Server");
+
+      Field f = this.fieldFacade.getField(field.getId());
+      List<RawData> rawdata = f.getRawData();
+
+      String msg = rawdata.size() > 0 ? "This field contains raw data" : "EMPTY";
+      message.setMessage(msg);
+
+      return message;
+    } catch (DatabaseException e) {
+      logger.
+              log(Level.SEVERE, "Could not retrieve field " + field.getId()
+                      + ".", e);
       return new ErrorMessage("Server", e.getMessage());
     }
   }
