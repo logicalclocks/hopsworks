@@ -161,6 +161,14 @@ angular.module('hopsWorksApp')
                 action: 'is_field_empty',
                 message: JSON.stringify({fieldid: fieldId})
               });
+            },
+            updateRawdata: function(rawObj){
+              return WSComm.send({
+                sender: 'evsav',
+                type: 'UpdateMetadataMessage',
+                action: 'update_metadata',
+                message: JSON.stringify({rawid: rawObj.rawid, rawdata: rawObj.raw})
+              });
             }
           };
         });

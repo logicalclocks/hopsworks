@@ -45,5 +45,7 @@ public enum Command {
   //
   FORCE_TABLE_DELETE,
   //
-  FORCE_FIELD_DELETE
+  FORCE_FIELD_DELETE,
+  //
+  UPDATE_METADATA
 }

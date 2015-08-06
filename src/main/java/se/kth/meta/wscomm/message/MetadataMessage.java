@@ -11,7 +11,10 @@ import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.InodeTableComposite;
 
 /**
- *
+ * Represents a generic metadata message. It may be about fetching table
+ * metadata or inode metadata, or about updating table metadata depending on its
+ * subclasses
+ * <p>
  * @author vangelis
  */
 public class MetadataMessage implements Message {

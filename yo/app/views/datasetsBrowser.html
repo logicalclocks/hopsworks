@@ -211,7 +211,13 @@
                                     <div>
                                       <div ng-repeat="field in table.rest.fields"><b>{{field.name}}</b>
                                         <div ng-repeat="value in field.data">
-                                          {{value.raw}}
+                                          <a href="#" editable-text="value.raw" buttons="no"
+                                                onaftersave="datasetsCtrl.updateRawdata(value)"
+                                                style="font-size: 16px;"
+                                                class="column-title ng-binding"
+                                                >
+                                            {{value.raw}}
+                                          </a>
                                         </div>
                                       </div>
                                     </div>
@@ -329,7 +335,7 @@
         <md-content layout-padding>
           <p>Associating metadata to: <a ng-href="{{returnnUrl}}"><b>'{{datasetsCtrl.currentFile.name}}'</b></a></p>
 
-          <label class="control-label" ng-show="datasetsCtrl.currentTemplateID === -1">
+          <label class="control-label" ng-show="datasetsCtrl.currentTemplateID === - 1">
             <font color="red">There is no template attached to file {{datasetsCtrl.currentFile.name}}</font>
           </label>
           <p></p>

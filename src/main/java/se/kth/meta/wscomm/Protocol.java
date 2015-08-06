@@ -152,6 +152,11 @@ public class Protocol {
       case IS_FIELD_EMPTY:
         field = (Field) message.parseSchema().get(0);
         return this.checkFieldContents(field);
+      case UPDATE_METADATA:
+        RawData raw = (RawData) message.parseSchema().get(0);
+        this.utils.updateMetadata(raw);
+        
+        return new TextMessage("Server", "Raw data was updated successfully");
     }
 
     return new TextMessage();
@@ -283,7 +288,7 @@ public class Protocol {
       tables.add(t);
       String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
       message.setMessage(jsonMsg);
-      
+
       return message;
     } catch (DatabaseException e) {
       return new ErrorMessage("Server", e.getMessage());

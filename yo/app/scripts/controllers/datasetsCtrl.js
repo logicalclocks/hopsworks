@@ -647,11 +647,21 @@ angular.module('hopsWorksApp')
                                   defer.resolve($rootScope.mainBoard);
                                   console.log("MODIFIED FIELD " + JSON.stringify(self.currentBoard));
                                 });
-                      }, function (dialogResponse) {
-                        console.log("don't modify " + JSON.stringify(dialogResponse));
                       });
 
               return defer.promise;
+            };
+
+            self.updateRawdata = function (raw) {
+              console.log("META " + JSON.stringify(raw));
+              
+              MetadataActionService.updateRawdata(raw)
+                      .then(function (response) {
+                        growl.success(response.board, {title: 'Success', ttl: 15000});
+                      }, function (dialogResponse) {
+                        growl.info("Could not update metadata " + raw.raw + ".",
+                                  {title: 'Info', ttl: 5000});
+                      });
             };
           }]);
 

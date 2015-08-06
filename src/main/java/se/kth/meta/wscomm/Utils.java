@@ -161,7 +161,8 @@ public class Utils {
     }
   }
 
-  public void storeMetadata(List<EntityIntf> composite, List<EntityIntf> raw) throws ApplicationException {
+  public void storeMetadata(List<EntityIntf> composite, List<EntityIntf> raw)
+          throws ApplicationException {
 
     try {
       /*
@@ -192,4 +193,20 @@ public class Utils {
     }
   }
 
+  /**
+   * Updates a single raw data record.
+   * <p>
+   * @param raw
+   * @throws ApplicationException 
+   */
+  public void updateMetadata(RawData raw) throws ApplicationException {
+    try {
+
+      this.rawDataFacade.addRawData(raw);
+    } catch (DatabaseException e) {
+      logger.log(Level.SEVERE, null, e);
+      throw new ApplicationException(e.getMessage(),
+              "Utils.java: updateMetadata(RawData) encountered a problem");
+    }
+  }
 }

@@ -92,9 +92,9 @@ public class FetchMetadataMessage extends MetadataMessage {
 
       for (RawData raw : data) {
         JsonObjectBuilder rawdata = Json.createObjectBuilder();
+        rawdata.add("rawid", raw.getId());
         rawdata.add("raw", raw.getData());
-        //rawdata.add("inodeid", raw.getInodeid());
-
+        
         rd.add(rawdata);
       }
       field.add("data", rd);
