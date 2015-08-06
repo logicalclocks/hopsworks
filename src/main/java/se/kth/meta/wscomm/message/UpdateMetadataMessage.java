@@ -3,18 +3,16 @@ package se.kth.meta.wscomm.message;
 import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonValue;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.RawData;
 
 /**
- *
+ * A message request to update a specific raw data row.
+ * <p>
  * @author vangelis
  */
 public class UpdateMetadataMessage extends MetadataMessage {
@@ -24,7 +22,7 @@ public class UpdateMetadataMessage extends MetadataMessage {
 
   public UpdateMetadataMessage() {
     super();
-    super.TYPE = "UpdateMetadataMessage";
+    this.TYPE = "UpdateMetadataMessage";
   }
 
   /**
@@ -39,11 +37,11 @@ public class UpdateMetadataMessage extends MetadataMessage {
     this.message = message;
   }
 
-  //returns the inode id and table id wrapped in an entity class in a list
-  public List<EntityIntf> superParseSchema() {
-    return super.parseSchema();
-  }
-
+  /**
+   * parses the incoming message and returns a RawData object wrapped in a list.
+   * <p>
+   * @return 
+   */
   @Override
   public List<EntityIntf> parseSchema() {
     JsonObject obj = Json.createReader(new StringReader(this.message)).
@@ -66,15 +64,6 @@ public class UpdateMetadataMessage extends MetadataMessage {
       logger.log(Level.SEVERE, "Raw id or data was not present in the message");
     }
     return null;
-  }
-
-  private boolean isNumeric(String value) {
-    try {
-      Double.parseDouble(value);
-    } catch (NumberFormatException e) {
-      return false;
-    }
-    return true;
   }
 
   @Override
