@@ -46,7 +46,6 @@ public class FetchMetadataMessage extends MetadataMessage {
 
   @Override
   public String encode() {
-    System.out.println("SENDER " + this.sender + " STATUS " + this.status + " MESSAGE  " + this.message);
     String value = Json.createObjectBuilder()
             .add("sender", this.sender)
             .add("type", this.TYPE)
