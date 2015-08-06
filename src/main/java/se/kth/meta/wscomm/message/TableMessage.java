@@ -19,18 +19,16 @@ public class TableMessage extends ContentMessage {
   private static final Logger logger = Logger.getLogger(TableMessage.class.
           getName());
 
-  private final String TYPE = "TableMessage";
-  private String sender;
-  private String message;
-  private String action;
-  private String status;
-
+  public TableMessage(){
+    super();
+    this.TYPE = "TableMessage";
+  }
+  
   @Override
   public void init(JsonObject json) {
     this.sender = json.getString("sender");
     this.message = json.getString("message");
     this.action = json.getString("action");
-    this.setStatus("OK");
     super.setAction(this.action);
 
     try {

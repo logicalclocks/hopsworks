@@ -63,7 +63,7 @@ public class TextMessage extends PlainMessage {
             .add("type", this.TYPE)
             .add("status", this.status)
             .add("message", this.message)
-            .build() //pretty necessary so as to build the actual json structure
+            .build()
             .toString();
 
     return value;

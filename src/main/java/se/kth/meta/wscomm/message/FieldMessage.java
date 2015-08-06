@@ -23,10 +23,10 @@ public class FieldMessage extends ContentMessage {
   private static final Logger logger = Logger.getLogger(FieldMessage.class.
           getName());
 
-  private final String TYPE = "FieldMessage";
-  private String sender;
-  private String message;
-  private String status;
+  public FieldMessage(){
+    super();
+    this.TYPE = "FieldMessage";
+  }
 
   @Override
   public void init(JsonObject json) {
@@ -34,7 +34,6 @@ public class FieldMessage extends ContentMessage {
     this.message = json.getString("message");
     this.action = json.getString("action");
     super.setAction(this.action);
-    this.setStatus("OK");
 
     try {
       JsonObject object = Json.createReader(new StringReader(this.message)).

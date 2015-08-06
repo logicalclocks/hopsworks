@@ -37,9 +37,9 @@ public class FetchMetadataMessage extends MetadataMessage {
     this.sender = sender;
     this.message = message;
   }
-  
+
   @Override
-  public void init(JsonObject obj){
+  public void init(JsonObject obj) {
     super.init(obj);
   }
 

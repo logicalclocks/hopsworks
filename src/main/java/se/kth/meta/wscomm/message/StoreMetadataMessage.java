@@ -26,10 +26,6 @@ public class StoreMetadataMessage extends MetadataMessage {
     super();
     super.TYPE = "StoreMetadataMessage";
   }
-
-  public MetadataMessage getParent(){
-    return super.getSelf();
-  }
   
   /**
    * Used to send custom messages

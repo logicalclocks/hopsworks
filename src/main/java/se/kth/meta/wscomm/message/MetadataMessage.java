@@ -25,8 +25,8 @@ public class MetadataMessage implements Message {
   protected String action;
   protected String status;
 
-  public MetadataMessage getSelf() {
-    return this;
+  public MetadataMessage() {
+    this.status = "OK";
   }
 
   @Override
