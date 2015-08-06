@@ -34,7 +34,9 @@ var mainModule = angular.module('hopsWorksApp')
                     MetadataActionService.fetchTableMetadata($scope.tableid)
                             .then(function (response) {
                               console.log("TABLE METADATA RETRIEVED " + JSON.stringify(response.board));
-                              angular.forEach(response.fields, function (field, key) {
+                              var table = JSON.parse(response.board);
+
+                              angular.forEach(table.fields, function (field, key) {
 
                                 if (field.data.length !== 0 && field.id === $scope.field.id) {
                                   $scope.existingRawData = true;

@@ -33,6 +33,11 @@ public class FetchTableMetadataMessage extends FetchMetadataMessage {
   }
 
   @Override
+  public void init(JsonObject obj){
+    super.init(obj);
+  }
+  
+  @Override
   public List<EntityIntf> parseSchema() {
     JsonObject obj = Json.createReader(new StringReader(this.message)).
             readObject();
