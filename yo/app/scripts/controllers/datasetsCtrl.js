@@ -145,10 +145,10 @@ angular.module('hopsWorksApp')
                 console.log(key + ': ' + value.name);
                 self.tabs.push({tableid: value.id, title: value.name, cards: value.cards});
               });
-              
-              self.currentTableId = self.tabs[0].tableid;
+
+              self.currentTableId = angular.isUndefined(self.tabs[0]) ? -1 : self.tabs[0].tableid;
             };
-            
+
             /*
              * submit form data when the 'save' button is clicked
              */
@@ -585,7 +585,7 @@ angular.module('hopsWorksApp')
                                     var template = JSON.parse(response.board);
                                     var sortedTables = sortObject($filter, 'id', template);
                                     template.columns = sortedTables;
-                                    
+
                                     self.currentBoard = template;
                                   }, function (error) {
                                     console.log(error);
@@ -594,11 +594,11 @@ angular.module('hopsWorksApp')
                       });
             };
 
-            self.onTabSelect = function(tab){
-              
-              self.currentTableId = tab.tableid;              
+            self.onTabSelect = function (tab) {
+
+              self.currentTableId = tab.tableid;
             };
-            
+
             /* CARD MANIPULATION FUNCTIONS */
             self.makeSearchable = function (card) {
               card.find = !card.find;
