@@ -143,7 +143,10 @@ public class Inode implements Serializable {
   private Byte subtreeLocked;
   @Column(name = "subtree_lock_owner")
   private BigInteger subtreeLockOwner;
-
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "size")
+  private long size;
   @ManyToMany(mappedBy = "inodes",
           cascade = CascadeType.PERSIST,
           fetch = FetchType.EAGER)
@@ -295,6 +298,14 @@ public class Inode implements Serializable {
     this.subtreeLockOwner = subtreeLockOwner;
   }
 
+  public long getSize() {
+    return size;
+  }
+
+  public void setSize(long size) {
+    this.size = size;
+  }
+  
   @XmlTransient
   public Collection<Template> getTemplates() {
     return this.templates;

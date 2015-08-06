@@ -50,8 +50,8 @@
       </button>
       <div class="navbar-header" style="padding-right: 55px">
 
-        <a class="navbar-brand" href="#/" style="font-family: Lobster; font-size: 30px; color: #fff;">HopsWorks
-          <img class="pull-right" style="margin-left:10px" width="30" src="images/hops.png"/>
+        <a class="navbar-brand" href="#home" style="font-family: Lobster; font-size: 30px; color: #fff;">HopsWorks
+          <img alt="hops icon" class="pull-right" style="margin-left:10px" width="30" src="images/hops.png"/>
         </a>
         <div class="input-group" ng-show="showHamburger">
           <button type="button" class="hamburger is-open" style="color:white;" data-toggle="offcanvas">
@@ -80,11 +80,12 @@
         <form class="navbar-form" role="search">
           <div class="col-md-offset-2 col-md-4 input-group">
             <input type="text" class="form-control" style="height: 28px;margin-top: 3px;" placeholder="Search"
-                   name="srch-term" id="srch-term" ng-model="mainCtrl.searchTerm" ng-keyup="mainCtrl.keyTyped($event)">
+                   name="srch-term" id="srch-term" ng-model="mainCtrl.searchTerm" ng-change="mainCtrl.keyTyped()">
 
             <div class="input-group-btn" style="width: 54px;">
               <button class="btn btn-default" style="color: #028e9b;margin-top: 3px; padding: 6px 12px;"
-                      type="submit">
+                      ng-click="mainCtrl.search()"
+                      type="button">
                 <i class="glyphicon glyphicon-search"></i></button>
             </div>
           </div>

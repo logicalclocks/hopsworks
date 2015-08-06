@@ -273,8 +273,8 @@ CREATE TABLE `meta_template_to_inode` (
   `inode_pid` INT(11) NOT NULL,
   `inode_name` VARCHAR(3000) NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`,`name`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster CHARSET=latin1;
 
 -- elastic jdbc-importer buffer tables -------
@@ -294,6 +294,53 @@ CREATE TABLE `meta_inodes_ops_parents_deleted` (
   `processed` tinyint(4) DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+---- Dataset table-------------------------------------------------
+CREATE TABLE `dataset` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `inode_pid` int(11) NOT NULL,
+  `inode_name` varchar(3000) NOT NULL,
+  `projectId` int(11) NOT NULL,
+  `description` varchar(3000) DEFAULT NULL,
+  `editable` tinyint(1) NOT NULL DEFAULT '1',
+  `status` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_dataset` (`inode_pid`,`projectId`,`inode_name`),
+  KEY `fk_dataset_2_idx` (`projectId`),
+  KEY `fk_dataset_1_idx` (`inode_pid`,`inode_name`),
+  CONSTRAINT `fk_dataset_2` 
+	FOREIGN KEY (`projectId`) 
+	REFERENCES `project` (`id`) 
+	ON DELETE CASCADE 
+	ON UPDATE NO ACTION,
+  CONSTRAINT `fk_dataset_1` 
+	FOREIGN KEY (`inode_pid`,`inode_name`) 
+	REFERENCES `hops`.`hdfs_inodes` (`parent_id`,`name`) 
+	ON DELETE CASCADE 
+	ON UPDATE NO ACTION
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
+
+CREATE TABLE `dataset_request` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `dataset` int(11) NOT NULL,
+  `projectId` int(11) NOT NULL,
+  `user_email` varchar(45) NOT NULL,
+  `requested` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `message` varchar(3000) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `index2` (`dataset`,`projectId`),
+  KEY `fk_dataset_request_2_idx` (`projectId`,`user_email`),
+  CONSTRAINT `fk_dataset_request_2` 
+  FOREIGN KEY (`projectId`,`user_email`) 
+   REFERENCES `project_team` (`project_id`,`team_member`) 
+   ON DELETE CASCADE 
+   ON UPDATE NO ACTION,
+  CONSTRAINT `fk_dataset_request_1` 
+  FOREIGN KEY (`dataset`) 
+   REFERENCES `dataset` (`id`) 
+   ON DELETE CASCADE 
+   ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
 
 -- VIEWS --------------
 -- ---------------------

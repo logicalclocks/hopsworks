@@ -5,6 +5,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectTeam;
+import se.kth.bbc.project.fb.InodeView;
 
 /**
  *
@@ -23,6 +24,7 @@ public class ProjectDTO {
   private boolean archived;
   private List<String> services;
   private List<ProjectTeam> projectTeam;
+  private List<InodeView> datasets;
 
   public ProjectDTO() {
   }
@@ -45,6 +47,21 @@ public class ProjectDTO {
     this.description = project.getDescription();
     this.services = services;
     this.projectTeam = projectTeam;
+  }
+  
+  public ProjectDTO(Project project, List<String> services,
+          List<ProjectTeam> projectTeam, List<InodeView> datasets) {
+    this.projectId = project.getId();
+    this.projectName = project.getName();
+    this.owner = project.getOwner().getEmail();
+    this.retentionPeriod = project.getRetentionPeriod();
+    this.created = project.getCreated();
+    this.ethicalStatus = project.getEthicalStatus();
+    this.archived = project.getArchived();
+    this.description = project.getDescription();
+    this.services = services;
+    this.projectTeam = projectTeam;
+    this.datasets = datasets;
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
@@ -142,6 +159,14 @@ public class ProjectDTO {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public List<InodeView> getDatasets() {
+    return datasets;
+  }
+
+  public void setDatasets(List<InodeView> datasets) {
+    this.datasets = datasets;
   }
 
   @Override

@@ -3,6 +3,8 @@ package se.kth.bbc.project.fb;
 import java.util.Date;
 import java.util.Objects;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.lims.Constants;
+import se.kth.hopsworks.dataset.Dataset;
 
 /**
  * Simplified version of the Inode entity to allow for easier access through web
@@ -17,26 +19,64 @@ public final class InodeView {
   private boolean dir;
   private boolean parent;
   private String path;
+  private long size;
+  private boolean shared;
+  private String owningProjectName;
   private Date modification;
   private Date accessTime;
   private int id;
   private int template;
+  private String description;
+  private boolean status = true;
 
   public InodeView() {
   }
-
+  /**
+   * Constructor for sub folders 
+   * @param i
+   * @param path 
+   */
   public InodeView(Inode i, String path) {
     this.name = i.getInodePK().getName();
     this.dir = i.isDir();
     this.id = i.getId();
+    this.size = i.getSize();
     //put the template id in the REST response
     this.template = i.getTemplate();
     this.parent = false;
     this.path = path;
     this.modification = new Date(i.getModificationTime().longValue());
     this.accessTime = new Date(i.getAccessTime().longValue());
+    // if it is a sub folder the status should be default true
+    // this is used in the front-end to tell apart accepted and pending shared 
+    // top level datasets. 
+    this.status = true;
   }
-
+  /**
+   * Constructor for top level datasets.
+   * @param parent
+   * @param ds
+   * @param path 
+   */
+  public InodeView(Inode parent, Dataset ds, String path) {
+    this.name = ds.getInode().getInodePK().getName();
+    this.dir = ds.getInode().isDir();
+    this.id = ds.getInode().getId();
+    this.size = ds.getInode().getSize();
+    this.template = ds.getInode().getTemplate();
+    this.parent = false;
+    this.path = path;
+    this.modification = new Date(ds.getInode().getModificationTime().longValue());
+    this.accessTime = new Date(ds.getInode().getAccessTime().longValue());
+    this.shared = (!parent.inodePK.getName().equals(ds.getProjectId().getName()));
+    if (this.shared){
+      this.name = parent.inodePK.getName() + Constants.SHARED_FILE_SEPARATOR + this.name;
+    }
+    this.owningProjectName = parent.inodePK.getName();
+    this.description = ds.getDescription();
+    this.status = ds.getStatus();
+  }
+  
   private InodeView(String name, boolean dir, boolean parent, String path) {
     this.name = name;
     this.dir = dir;
@@ -121,6 +161,46 @@ public final class InodeView {
     return accessTime;
   }
 
+  public long getSize() {
+    return size;
+  }
+
+  public void setSize(long size) {
+    this.size = size;
+  }
+
+  public boolean isShared() {
+    return shared;
+  }
+
+  public void setShared(boolean shared) {
+    this.shared = shared;
+  }
+
+  public String getOwningProjectName() {
+    return owningProjectName;
+  }
+
+  public void setOwningProjectName(String owningProjectName) {
+    this.owningProjectName = owningProjectName;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  public boolean getStatus() {
+    return status;
+  }
+
+  public void setStatus(boolean status) {
+    this.status = status;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 7;
