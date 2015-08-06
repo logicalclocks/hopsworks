@@ -23,7 +23,8 @@ public class FetchMetadataMessage extends MetadataMessage {
    */
   public FetchMetadataMessage() {
     super();
-    super.TYPE = "FetchMetadataMessage";
+    this.TYPE = "FetchMetadataMessage";
+    this.status = "OK";
   }
 
   /**
@@ -37,22 +38,21 @@ public class FetchMetadataMessage extends MetadataMessage {
     this.sender = sender;
     this.message = message;
   }
-
+  
   @Override
-  public void init(JsonObject obj) {
-    this.sender = obj.getString("sender");
-    this.message = obj.getString("message");
-    this.action = obj.getString("action");
+  public void init(JsonObject obj){
+    super.init(obj);
   }
 
   @Override
   public String encode() {
+    System.out.println("SENDER " + this.sender + " STATUS " + this.status + " MESSAGE  " + this.message);
     String value = Json.createObjectBuilder()
             .add("sender", this.sender)
             .add("type", this.TYPE)
             .add("status", this.status)
             .add("message", this.message)
-            .build() //pretty necessary so as to build the actual json structure
+            .build()
             .toString();
 
     return value;

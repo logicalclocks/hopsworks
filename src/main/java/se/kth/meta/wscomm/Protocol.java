@@ -126,7 +126,6 @@ public class Protocol {
         InodeTableComposite itc = (InodeTableComposite) message.parseSchema().
                 get(0);
         return this.fetchInodeMetadata(itc);
-//        return this.fetchTableMetadataForInode(table, table.getInodeid());
 
       case FETCH_TABLE_METADATA:
         table = (MTable) message.parseSchema().get(0);

@@ -7,7 +7,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import se.kth.kthfsdashboard.user.AbstractFacade;
-import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.DatabaseException;
 
@@ -44,6 +43,7 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
     String queryString = "TupleToFile.findByInodeid";
 
     Query query = this.em.createNamedQuery(queryString);
+    query.setParameter("inodeid", inodeid);
     return query.getResultList();
   }
 
