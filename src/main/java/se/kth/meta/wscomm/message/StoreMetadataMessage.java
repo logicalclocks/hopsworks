@@ -81,6 +81,8 @@ public class StoreMetadataMessage extends MetadataMessage {
   public String toString() {
     return "{\"sender\": \"" + this.sender + "\", "
             + "\"type\": \"" + this.TYPE + "\", "
+            + "\"status\": \"" + this.status + "\", "
+            + "\"action\": \"" + this.action + "\", "
             + "\"message\": \"" + this.message + "\"}";
   }
 }

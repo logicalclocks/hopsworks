@@ -183,6 +183,7 @@ public class FieldMessage extends ContentMessage {
   public String toString() {
     return "{\"sender\": \"" + this.sender + "\", "
             + "\"type\": \"" + this.TYPE + "\", "
+            + "\"status\": \"" + this.status + "\", "
             + "\"action\": \"" + this.action + "\", "
             + "\"message\": \"" + this.message + "\"}";
   }
