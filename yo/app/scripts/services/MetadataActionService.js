@@ -7,58 +7,57 @@ angular.module('hopsWorksApp')
         .service('MetadataActionService', function (WSComm) {
 
           return {
-            fetchTemplates: function () {
+            fetchTemplates: function (user) {
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'TemplateMessage',
                 action: 'fetch_templates',
                 message: JSON.stringify({})
               });
             },
-            addNewTemplate: function (templatename) {
+            addNewTemplate: function (user, templatename) {
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'TemplateMessage',
                 action: 'add_new_template',
                 message: JSON.stringify({templateName: templatename})
               });
             },
-            removeTemplate: function (templateid) {
+            removeTemplate: function (user, templateid) {
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'TemplateMessage',
                 action: 'remove_template',
                 message: JSON.stringify({templateId: templateid})
               });
             },
-            extendTemplate: function (templateId, board) {
-
+            extendTemplate: function (user, templateId, board) {
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'TemplateMessage',
                 action: 'extend_template',
                 message: JSON.stringify({tempid: templateId, bd: board})
               });
             },
-            fetchTemplate: function (templateId) {
+            fetchTemplate: function (user, templateId) {
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'TemplateMessage',
                 action: 'fetch_template',
                 message: JSON.stringify({tempid: templateId})
               });
             },
-            storeTemplate: function (templateId, board) {
+            storeTemplate: function (user, templateId, board) {
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'TemplateMessage',
                 action: 'store_template',
                 message: JSON.stringify({tempid: templateId, bd: board})
               });
             },
-            deleteList: function (templateId, column) {
+            deleteList: function (user, templateId, column) {
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'TableMessage',
                 action: 'delete_table',
                 message: JSON.stringify({
@@ -69,9 +68,9 @@ angular.module('hopsWorksApp')
                 })
               });
             },
-            storeCard: function (templateId, column, card) {
+            storeCard: function (user, templateId, column, card) {
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'FieldMessage',
                 action: 'store_field',
                 message: JSON.stringify({
@@ -90,9 +89,9 @@ angular.module('hopsWorksApp')
                 })
               });
             },
-            deleteCard: function (templateId, column, card) {
+            deleteCard: function (user, templateId, column, card) {
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'FieldMessage',
                 action: 'delete_field',
                 message: JSON.stringify({
@@ -112,59 +111,57 @@ angular.module('hopsWorksApp')
                 })
               });
             },
-            fetchFieldTypes: function () {
+            fetchFieldTypes: function (user) {
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'FieldTypeMessage',
                 action: 'fetch_field_types',
                 message: 'null'
               });
             },
-            fetchMetadata: function (tableId, inodeId) {
-              console.log("fetching metadata for inode " + inodeId);
+            fetchMetadata: function (user, tableId, inodeId) {
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'FetchMetadataMessage',
                 action: 'fetch_metadata',
                 message: JSON.stringify({tableid: tableId, inodeid: inodeId})
               });
             },
-            fetchTableMetadata: function(tableId){
-              console.log("fetching metadata for table " + tableId);
+            fetchTableMetadata: function(user, tableId){
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'FetchTableMetadataMessage',
                 action: 'fetch_table_metadata',
                 message: JSON.stringify({tableid: tableId})
               });
             },
-            storeMetadata: function (data) {
+            storeMetadata: function (user, data) {
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'StoreMetadataMessage',
                 action: 'store_metadata',
                 message: JSON.stringify(data)
               });
             },
-            isTableEmpty: function(tableId){
+            isTableEmpty: function(user, tableId){
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'CheckTableContentMessage',
                 action: 'is_table_empty',
                 message: JSON.stringify({tableid: tableId})
               });
             },
-            isFieldEmpty: function(fieldId){
+            isFieldEmpty: function(user, fieldId){
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'CheckFieldContentMessage',
                 action: 'is_field_empty',
                 message: JSON.stringify({fieldid: fieldId})
               });
             },
-            updateRawdata: function(rawObj){
+            updateRawdata: function(user, rawObj){
               return WSComm.send({
-                sender: 'evsav',
+                sender: user,
                 type: 'UpdateMetadataMessage',
                 action: 'update_metadata',
                 message: JSON.stringify({rawid: rawObj.rawid, rawdata: rawObj.raw})

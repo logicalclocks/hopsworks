@@ -5,8 +5,8 @@
 
 var mainModule = angular.module('hopsWorksApp')
         .controller('ModifyFieldCtrl',
-                ['$scope', '$modalInstance', 'MetadataActionService',
-                  function ($scope, $modalInstance, MetadataActionService) {
+                ['$cookies', '$scope', '$modalInstance', 'MetadataActionService',
+                  function ($cookies, $scope, $modalInstance, MetadataActionService) {
 
                     $scope.fieldName = $scope.field.title;
                     $scope.fieldDescription = $scope.field.description;
@@ -20,7 +20,7 @@ var mainModule = angular.module('hopsWorksApp')
 
                     $scope.items = [];
 
-                    MetadataActionService.fetchFieldTypes()
+                    MetadataActionService.fetchFieldTypes($cookies['email'])
                             .then(function (response) {
                               var board = JSON.parse(response.board);
 
@@ -31,7 +31,7 @@ var mainModule = angular.module('hopsWorksApp')
                               $scope.selectedItem = $scope.items[0];
                             });
 
-                    MetadataActionService.isFieldEmpty($scope.field.id)
+                    MetadataActionService.isFieldEmpty($cookies['email'], $scope.field.id)
                             .then(function (response) {
 
                               if (response.board !== "EMPTY") {

@@ -5,8 +5,8 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('NewCardCtrl', ['$scope', '$modalInstance', 'MetadataActionService', '$filter',
-          function ($scope, $modalInstance, MetadataActionService, $filter) {
+        .controller('NewCardCtrl', ['$cookies', '$scope', '$modalInstance', 'MetadataActionService', '$filter',
+          function ($cookies, $scope, $modalInstance, MetadataActionService, $filter) {
 
             //data is the actual column under processing
             $scope.columnName = $scope.currentColumn.name;
@@ -25,7 +25,7 @@ angular.module('hopsWorksApp')
             $scope.yesNoItems = [];
             $scope.selectedItem = "";
 
-            MetadataActionService.fetchFieldTypes()
+            MetadataActionService.fetchFieldTypes($cookies['email'])
                     .then(function (success) {
                       success = JSON.parse(success.board);
                       /*
