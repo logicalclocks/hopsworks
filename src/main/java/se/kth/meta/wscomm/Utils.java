@@ -128,7 +128,8 @@ public class Utils {
       this.tableFacade.deleteTable(table);
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteTable encountered a problem");
+              "Utils.java: method deleteTable encountered a problem " + e.
+              getMessage());
     }
   }
 
@@ -139,7 +140,8 @@ public class Utils {
       this.fieldFacade.deleteField(field);
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteField encountered a problem");
+              "Utils.java: method deleteField encountered a problem " + e.
+              getMessage());
     }
   }
 
@@ -150,7 +152,8 @@ public class Utils {
       this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteField encountered a problem");
+              "Utils.java: method deleteField encountered a problem " + e.
+              getMessage());
     }
   }
 
@@ -181,7 +184,8 @@ public class Utils {
 
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: storeMetadata(List<?> list) encountered a problem");
+              "Utils.java: storeMetadata(List<?> list) encountered a problem "
+              + e.getMessage());
     }
   }
 
@@ -189,16 +193,18 @@ public class Utils {
    * Updates a single raw data record.
    * <p>
    * @param raw
-   * @throws ApplicationException 
+   * @throws ApplicationException
    */
   public void updateMetadata(RawData raw) throws ApplicationException {
     try {
 
-      System.out.println("GOING TO UPDATE RAW " + raw.getId());
-      this.rawDataFacade.addRawData(raw);
+      RawData rawdata = this.rawDataFacade.getRawData(raw.getId());
+      rawdata.setData(raw.getData());
+      this.rawDataFacade.addRawData(rawdata);
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: updateMetadata(RawData) encountered a problem");
+              "Utils.java: updateMetadata(RawData) encountered a problem " + e.
+              getMessage());
     }
   }
 }

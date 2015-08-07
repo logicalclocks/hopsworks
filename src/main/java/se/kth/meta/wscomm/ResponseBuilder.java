@@ -236,7 +236,6 @@ public class ResponseBuilder {
       List<RawData> raw = f.getRawData();
       List<Integer> rawdataAsTuple = this.groupByTupleid(raw);
 
-      System.out.println("\nDELETING FIELD " + f.getId());
       //remove the child entities first
       this.fieldFacade.deleteField(field);
 
@@ -265,13 +264,11 @@ public class ResponseBuilder {
     try {
       List<RawData> rawlist = ttf.getRawData();
 
-      System.out.println("\nRAW LIST SIZE " + rawlist.size() + " \n");
       /*
        * remove a tuple if and only if all the raw data entries composing this
        * tuple have been removed
        */
       if (rawlist.isEmpty()) {
-        System.out.println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
         this.tupletofileFacade.deleteTTF(ttf);
       }
     } catch (DatabaseException e) {

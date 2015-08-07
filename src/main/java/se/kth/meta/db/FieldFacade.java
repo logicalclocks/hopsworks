@@ -76,7 +76,7 @@ public class FieldFacade extends AbstractFacade<Field> {
   }
 
   /**
-   * Deletes a fields entity from the fields table. If the object is an
+   * Deletes a fields entity. If the object is an
    * unmanaged entity it has to be merged to become managed so that the delete
    * can cascade down its associations if necessary
    * <p>

@@ -49,7 +49,7 @@ public class RawDataFacade extends AbstractFacade<RawData> {
   public int addRawData(RawData raw) throws DatabaseException {
 
     try {
-      RawData r = this.getRawData(raw.getId());
+      RawData r = this.contains(raw) ? raw : this.getRawData(raw.getId());
 
       if (raw.getId() != -1) {
         /*
@@ -81,5 +81,15 @@ public class RawDataFacade extends AbstractFacade<RawData> {
     List<RawData> list = query.getResultList();
 
     return (!list.isEmpty()) ? list.get(0).getId() : 0;
+  }
+
+  /**
+   * Checks if a raw data instance is a managed entity
+   * <p>
+   * @param rawdata
+   * @return
+   */
+  public boolean contains(RawData rawdata) {
+    return this.em.contains(rawdata);
   }
 }

@@ -57,8 +57,8 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
   }
 
   /**
-   * Deletes a fields entity from the fields table. If the object is an
-   * unmanaged entity it has to be merged to become managed so that the delete
+   * Deletes a tupleToFile entity. If the object is an
+   * unmanaged entity it has to be merged to become managed so that delete
    * can cascade down its associations if necessary
    * <p>
    *
