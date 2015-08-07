@@ -387,7 +387,6 @@ public class DataSetService {
         try {
           success = fileOps.rmRecursive(dsPath);//if dataset persist fails rm ds folder.
         } catch (IOException ex) {
-          logger.log(Level.SEVERE, null, e);
         }
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 "Could not create dataset in db." + success);
@@ -523,7 +522,6 @@ public class DataSetService {
     try {
       success = fileOps.rmRecursive(filePath);
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + filePath);
     }
@@ -626,11 +624,9 @@ public class DataSetService {
         }
       }
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not create the directory at " + dsPath);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
               "Could not attach template to inode " + e.getMessage());

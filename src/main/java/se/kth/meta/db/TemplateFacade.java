@@ -63,7 +63,6 @@ public class TemplateFacade extends AbstractFacade<Template> {
       }
 
     } catch (SecurityException | IllegalStateException ex) {
-      logger.log(Level.SEVERE, null, ex);
       throw new DatabaseException(TemplateFacade.class.getName(),
               "Could not remove template " + ex.getMessage());
     }

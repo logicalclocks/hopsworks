@@ -41,7 +41,7 @@ public class ApplicationListener implements ServletContextListener,
 
       logger.log(Level.INFO, "HOPSWORKS DEPLOYED");
     } catch (DeploymentException ex) {
-      logger.log(Level.SEVERE, null, ex);
+      logger.log(Level.SEVERE, ex.getMessage(), ex);
     }
   }
 

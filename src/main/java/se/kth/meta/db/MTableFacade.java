@@ -101,7 +101,6 @@ public class MTableFacade extends AbstractFacade<MTable> {
       }
 
     } catch (SecurityException | IllegalStateException ex) {
-      logger.log(Level.SEVERE, null, ex);
       throw new DatabaseException(MTableFacade.class.getName(),
               "Could not delete table " + ex.getMessage());
     }

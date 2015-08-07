@@ -53,7 +53,6 @@ public class Utils {
     try {
       this.templateFacade.addTemplate(template);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException("Could not add new template " + template.
               getName() + " " + e.getMessage());
     }
@@ -63,7 +62,6 @@ public class Utils {
     try {
       this.templateFacade.removeTemplate(template);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException("Could not remove template " + template.
               getName() + " " + e.getMessage());
     }
@@ -100,7 +98,6 @@ public class Utils {
           this.addFieldsPredefinedValues(predef, fieldid);
         }
       } catch (DatabaseException e) {
-        logger.log(Level.SEVERE, null, e);
         throw new ApplicationException("Could not add table " + t.getName()
                 + " " + e.getMessage());
       }
@@ -120,7 +117,6 @@ public class Utils {
         this.fieldPredefinedValueFacade.addFieldPredefinedValue(predefval);
       }
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException("Could not add predefined value " + e.
               getMessage());
     }
@@ -131,7 +127,6 @@ public class Utils {
       logger.log(Level.INFO, "DELETING TABLE {0} ", table.getName());
       this.tableFacade.deleteTable(table);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
               "Utils.java: method deleteTable encountered a problem");
     }
@@ -143,7 +138,6 @@ public class Utils {
       logger.log(Level.INFO, "DELETING FIELD {0} ", field);
       this.fieldFacade.deleteField(field);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
               "Utils.java: method deleteField encountered a problem");
     }
@@ -155,7 +149,6 @@ public class Utils {
 
       this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
               "Utils.java: method deleteField encountered a problem");
     }
@@ -187,7 +180,6 @@ public class Utils {
       }
 
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
               "Utils.java: storeMetadata(List<?> list) encountered a problem");
     }
@@ -204,7 +196,6 @@ public class Utils {
 
       this.rawDataFacade.addRawData(raw);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
               "Utils.java: updateMetadata(RawData) encountered a problem");
     }
