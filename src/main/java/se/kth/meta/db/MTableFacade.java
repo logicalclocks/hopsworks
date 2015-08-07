@@ -90,7 +90,7 @@ public class MTableFacade extends AbstractFacade<MTable> {
   public void deleteTable(MTable table) throws DatabaseException {
 
     try {
-      MTable t = this.getTable(table.getId());
+      MTable t = this.contains(table) ? table : this.getTable(table.getId());
 
       //remove the table
       if (this.em.contains(t)) {
@@ -104,5 +104,15 @@ public class MTableFacade extends AbstractFacade<MTable> {
       throw new DatabaseException(MTableFacade.class.getName(),
               "Could not delete table " + ex.getMessage());
     }
+  }
+  
+  /**
+   * Checks if a table instance is a managed entity
+   * <p>
+   * @param table
+   * @return 
+   */
+  public boolean contains(MTable table){
+    return this.em.contains(table);
   }
 }

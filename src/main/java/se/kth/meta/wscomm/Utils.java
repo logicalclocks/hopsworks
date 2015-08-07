@@ -194,6 +194,7 @@ public class Utils {
   public void updateMetadata(RawData raw) throws ApplicationException {
     try {
 
+      System.out.println("GOING TO UPDATE RAW " + raw.getId());
       this.rawDataFacade.addRawData(raw);
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),

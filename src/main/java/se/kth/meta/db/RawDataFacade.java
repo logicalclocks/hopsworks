@@ -51,11 +51,11 @@ public class RawDataFacade extends AbstractFacade<RawData> {
     try {
       RawData r = this.getRawData(raw.getId());
 
-      if (r != null) {
+      if (raw.getId() != -1) {
         /*
          * if the row exists just update it.
          */
-        r.setData(raw.getData());
+        r.copy(raw);
         this.em.merge(r);
       } else {
         /*

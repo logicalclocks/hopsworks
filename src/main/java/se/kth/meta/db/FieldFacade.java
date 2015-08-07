@@ -87,7 +87,7 @@ public class FieldFacade extends AbstractFacade<Field> {
    */
   public void deleteField(Field field) throws DatabaseException {
 
-    Field f = this.getField(field.getId());
+    Field f = this.contains(field) ? field : this.getField(field.getId());
 
     if (this.em.contains(f)) {
       this.em.remove(f);
@@ -95,5 +95,17 @@ public class FieldFacade extends AbstractFacade<Field> {
       //if the object is unmanaged it has to be managed before it is removed
       this.em.remove(this.em.merge(f));
     }
+    //persist the changes to the database immediately
+    this.em.flush();
+  }
+
+  /**
+   * Checks if a field instance is a managed entity
+   * <p>
+   * @param field
+   * @return
+   */
+  public boolean contains(Field field) {
+    return this.em.contains(field);
   }
 }
