@@ -74,6 +74,7 @@ public class RawData implements Serializable, EntityIntf {
   private TupleToFile tupleToFile;
 
   public RawData() {
+    this.id = -1;
   }
 
   public RawData(Integer id) {

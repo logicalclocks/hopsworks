@@ -65,17 +65,8 @@ public class TableMessage extends ContentMessage {
 
     int tableId = obj.getInt("id");
     String tableName = obj.getString("name");
-    boolean forceDelete = false;
-
-    try {
-      forceDelete = obj.getBoolean("forceDelete");
-      logger.log(Level.SEVERE, "FORCE DELETE ON TABLE {0}", forceDelete);
-    } catch (NullPointerException e) {
-    }
 
     MTable table = new MTable(tableId, tableName);
-    //FORCE DELETE NEEDS TO BE REFACTORED
-    //table.setForceDelete(forceDelete);
     List<EntityIntf> list = new LinkedList<>();
     list.add(table);
 

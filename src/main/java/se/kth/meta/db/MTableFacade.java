@@ -80,7 +80,7 @@ public class MTableFacade extends AbstractFacade<MTable> {
 
   /**
    * Deletes a tables entity from meta_tables table. If the object is an
-   * unmanaged entity it has to be merged to become managed so that the delete
+   * unmanaged entity it has to be merged to become managed so that delete
    * can cascade down its associations if necessary
    * <p>
    *
@@ -92,19 +92,6 @@ public class MTableFacade extends AbstractFacade<MTable> {
     try {
       MTable t = this.getTable(table.getId());
 
-//    FORCE DELETE NEEDS TO BE REFACTORED
-//            t.setForceDelete(table.forceDelete());
-//            if (!t.getFields().isEmpty() && !t.forceDelete()) {
-//                throw new DatabaseException("MTable '" + t.getName() + "' has fields "
-//                        + "associated to it");
-//            }
-      //first remove all the child elements of this table to avoid foreign key violation
-//      List<Field> fields = t.getFields();
-//      for (Field field : fields) {
-//        //FORCE DELETE NEEDS TO BE REFACTORED
-//        field.setForceDelete(true);
-//        this.deleteField(field);
-//      }
       //remove the table
       if (this.em.contains(t)) {
         this.em.remove(t);

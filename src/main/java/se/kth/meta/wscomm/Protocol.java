@@ -155,7 +155,7 @@ public class Protocol {
       case UPDATE_METADATA:
         RawData raw = (RawData) message.parseSchema().get(0);
         this.utils.updateMetadata(raw);
-        
+
         return new TextMessage("Server", "Raw data was updated successfully");
     }
 
@@ -335,9 +335,8 @@ public class Protocol {
 
       return message;
     } catch (DatabaseException e) {
-      logger.
-              log(Level.SEVERE, "Could not retrieve field " + field.getId()
-                      + ".", e);
+      logger.log(Level.SEVERE, "Could not retrieve field " + field.getId()
+              + ".", e);
       return new ErrorMessage("Server", e.getMessage());
     }
   }

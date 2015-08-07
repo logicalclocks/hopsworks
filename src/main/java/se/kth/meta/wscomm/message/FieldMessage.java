@@ -81,12 +81,7 @@ public class FieldMessage extends ContentMessage {
     String name = obj.getString("name");
     String type = obj.getString("type");
     String maxsize = obj.getJsonObject("sizefield").getString("value");
-    boolean forceDelete = false;
-    try {
-      forceDelete = obj.getBoolean("forceDelete");
-      logger.log(Level.INFO, "FORCE DELETE ON THE FIELD {0}", forceDelete);
-    } catch (NullPointerException e) {
-    }
+
     try {
       //sanitize maxsize in case the user has entered shit
       maxsize = (!"".equals(maxsize)) ? maxsize : "0";
@@ -103,8 +98,6 @@ public class FieldMessage extends ContentMessage {
     Field field = new Field(fieldId, tableId, name, type,
             Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0),
             (short) ((required) ? 1 : 0), description, fieldtypeid);
-    //FORCE DELETE NEEDS TO BE REFACTORED
-//    field.setForceDelete(forceDelete);
 
     //-- ATTACH the field's parent entity (FieldType)
     field.setFieldTypeId(fieldtypeid);

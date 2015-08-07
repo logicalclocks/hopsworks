@@ -515,16 +515,42 @@ angular.module('hopsWorksApp')
                       });
             };
 
-            self.deleteList = function (column) {
-              MetadataActionService.deleteList($cookies['email'], self.currentTemplateID, column)
-                      .then(function (success) {
-                        console.log(success);
-                        self.fetchTemplate(self.currentTemplateID);
-                      }, function (error) {
-                        console.log(error);
-                      });
+            self.checkDeleteTable = function (column) {
+              MetadataActionService.isTableEmpty($cookies['email'], column.id)
+                      .then(function(response){
+                        
+                        if(response.board !== "EMPTY"){
+                          ModalService.confirm("sm", "Delete table", 
+                              "This table contains fields. Do you really want to delete it?\n\
+                                This action cannot be undone.")
+                              .then(function (success) {
+                                    self.deleteTable(column);
+                                  }, function (cancelled) {
+                                    console.log("CANCELED " + JSON.stringify(cancelled));
+                                    growl.info("Delete aborted", {title: 'Info', ttl: 5000});
+                                  });
+                                  
+                          return;
+                        }
+
+                        self.deleteTable(column);
+              });
             };
 
+            self.deleteTable = function(column){
+              MetadataActionService.deleteList($cookies['email'], self.currentTemplateID, column)
+                .then(function (success) {
+                  console.log(success);
+                  self.fetchTemplate(self.currentTemplateID);
+                  growl.success("Table " + column.name + " deleted successfully.",
+                    {title: 'Success', ttl: 5000});
+                }, function (error) {
+                  console.log(error);
+                  growl.info("Could not delete table " + column.name + 
+                          " " + error + ".", {title: 'Info', ttl: 5000});
+                });
+            };
+            
             self.storeCard = function (templateId, column, card) {
 
               return MetadataActionService.storeCard($cookies['email'], templateId, column, card);
@@ -556,16 +582,42 @@ angular.module('hopsWorksApp')
             };
 
             /* Metadata designer */
-            self.deleteCard = function (column, card) {
-              MetadataActionService.deleteCard($cookies['email'], self.currentTemplateID, column, card)
-                      .then(function (success) {
-                        console.log(success);
-                        self.fetchTemplate(self.currentTemplateID);
-                      }, function (error) {
-                        console.log(error);
-                      });
+            self.checkDeleteField = function (column, card) {
+              MetadataActionService.isFieldEmpty($cookies['email'], card.id)
+                      .then(function(response){
+                        
+                        if(response.board !== "EMPTY"){
+                          ModalService.confirm("sm", "Delete field", 
+                              "This field contains raw data. Do you really want to delete it?\n\
+                                This action cannot be undone.")
+                              .then(function (success) {
+                                    self.deleteField(column, card);
+                                  }, function (cancelled) {
+                                    console.log("CANCELED " + JSON.stringify(cancelled));
+                                    growl.info("Delete aborted", {title: 'Info', ttl: 5000});
+                                  });
+                                  
+                          return;
+                        }
+
+                        self.deleteField(column, card);
+              });
             };
 
+            self.deleteField = function(column, card){
+                MetadataActionService.deleteCard($cookies['email'], self.currentTemplateID, column, card)
+                  .then(function (success) {
+                    console.log(success);
+                    self.fetchTemplate(self.currentTemplateID);
+                    growl.success("Field " + card.title + " deleted successfully.",
+                                  {title: 'Success', ttl: 5000});
+                  }, function (error) {
+                    console.log(error);
+                    growl.info("Could not delete field " + card.title + 
+                          " " + error + ".", {title: 'Info', ttl: 5000});
+                  });
+            };
+            
             self.addNewList = function () {
               $scope.template = self.currentTemplateID;
               $modal.open({
@@ -654,7 +706,6 @@ angular.module('hopsWorksApp')
 
             self.updateRawdata = function (raw) {
               console.log("META " + JSON.stringify(raw));
-              console.log("LOGGED IN USER " + $cookies['email']);
               MetadataActionService.updateRawdata($cookies['email'], raw)
                       .then(function (response) {
                         growl.success(response.board, {title: 'Success', ttl: 5000});

@@ -87,13 +87,7 @@ public class FieldFacade extends AbstractFacade<Field> {
    */
   public void deleteField(Field field) throws DatabaseException {
 
-    //FORCE DELETE NEEDS TO BE REFACTORED
     Field f = this.getField(field.getId());
-//      f.setForceDelete(field.forceDelete());
-//      if (!f.getRawData().isEmpty() && !f.forceDelete()) {
-//        throw new DatabaseException("Field '" + f.getName() + "' has data "
-//                + "associated to it");
-//      }
 
     if (this.em.contains(f)) {
       this.em.remove(f);

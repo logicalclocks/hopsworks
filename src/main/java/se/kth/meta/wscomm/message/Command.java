@@ -43,9 +43,5 @@ public enum Command {
   //
   IS_FIELD_EMPTY,
   //
-  FORCE_TABLE_DELETE,
-  //
-  FORCE_FIELD_DELETE,
-  //
   UPDATE_METADATA
 }
