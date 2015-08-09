@@ -301,9 +301,7 @@
                         </md-tabs>
                       </md-content>
                     </div>
-
                   </div>
-
                 </div>
               </div>
             </div>
@@ -311,6 +309,8 @@
         </div>
         <div flex=""></div>
       </md-content>
+      
+      <div ng-controller="MetaSliderCtrl as metaSliderCtrl">
       <!-- Slideout - Add Metadata -->
       <md-sidenav class="md-sidenav-right md-whiteframe-z2" md-component-id="right"
                   style="margin-top: 0px;">
@@ -324,7 +324,7 @@
             </h2>
             <span flex></span>
             <button style="font-size:15px;height:28px;color:white;padding-top: 3px;"
-                    ng-click="datasetsCtrl.submitMetadata(datasetsCtrl.metaData); datasetsCtrl.close()"
+                    ng-click="metaSliderCtrl.submitMetadata(metaSliderCtrl.metaData); datasetsCtrl.close()"
                     class="btn btn-success">
               <i class="fa fa-save"></i>
               Save
@@ -333,10 +333,10 @@
 
         </md-toolbar>
         <md-content layout-padding>
-          <p>Associating metadata to: <a ng-href="{{returnnUrl}}"><b>'{{datasetsCtrl.currentFile.name}}'</b></a></p>
+          <p>Associating metadata to: <a ng-href="{{returnnUrl}}"><b>'{{metaSliderCtrl.currentFile.name}}'</b></a></p>
 
           <label class="control-label" ng-show="datasetsCtrl.currentTemplateID === - 1">
-            <font color="red">There is no template attached to file {{datasetsCtrl.currentFile.name}}</font>
+            <font color="red">There is no template attached to file {{metaSliderCtrl.currentFile.name}}</font>
           </label>
           <p></p>
 
@@ -344,7 +344,7 @@
             <tab ng-repeat="tab in datasetsCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
                  disabled="tab.disabled" select="datasetsCtrl.onTabSelect(tab)">
 
-              <form name="{{tab.title}}{{$index}}" ng-submit="datasetsCtrl.submitMetadata(datasetsCtrl.metaData)">
+              <form name="{{tab.title}}{{$index}}" ng-submit="metaSliderCtrl.submitMetadata(metaSliderCtrl.metaData)">
 
                 <ul class="cards card-list" as-sortable="sortOptions" ng-model="column.cards">
                   <li class="card" ng-repeat="card in tab.cards">
@@ -364,13 +364,13 @@
                                 <input size="10" value="" class="fillInMetadataInput" id="sizeFieldInput"
                                        tooltips title="{{card.description}}"
                                        ng-show="true"
-                                       ng-model="datasetsCtrl.metaData[card.id]"/>
+                                       ng-model="metaSliderCtrl.metaData[card.id]"/>
                               </div>
 
                               <!--select list input type-->
                               <div ng-if="card.fieldtypeid === 2">
 
-                                <ui-select ng-model="datasetsCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
+                                <ui-select ng-model="metaSliderCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
                                   <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
                                   <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
                                     <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
@@ -412,6 +412,7 @@
 
         </md-content>
       </md-sidenav>
+      </div>
     </section>
   </div>
 </div>
