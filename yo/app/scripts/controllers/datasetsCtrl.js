@@ -32,9 +32,8 @@ angular.module('hopsWorksApp')
             self.currentBoard = {};
 
             $scope.$watch('metaHelperService.availableTemplates', function (availableTemplates) {
-              console.log("OTINANAI RE I MALAKIA 1 " + JSON.stringify(availableTemplates));
               if (!angular.isUndefined(availableTemplates)) {
-                console.log("OTINANAI RE I MALAKIA " + JSON.stringify(availableTemplates));
+                console.log(JSON.stringify(availableTemplates));
               }
             });
     
