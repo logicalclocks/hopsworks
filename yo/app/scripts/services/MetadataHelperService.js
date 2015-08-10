@@ -8,22 +8,35 @@
  * metadataSliderCtrl.
  */
 angular.module('hopsWorksApp')
-        .service('MetadataHelperService', function () {
+        .service('MetadataHelperService', ['$cookies', '$q', 'MetadataActionService',
+          function ($cookies, $q, MetadataActionService) {
 
-          var currentFile = {};
+            var self = this;
+            var currentFile = {};
+            var availableTemplates = [];
 
-          return function() {
-            var services = {
-              setCurrentFile: function(currentfile){
-                currentFile = currentfile;
-              },
+            return function () {
+              var services = {
+                setCurrentFile: function (currentfile) {
+                  currentFile = currentfile;
+                },
+                getCurrentFile: function () {
+                  return currentFile;
+                },
+                getAvailableTemplates: function () {
+                  var defer = $q.defer();
 
-              getCurrentFile: function(){
-                return currentFile;
-              }
+                  MetadataActionService.fetchTemplates($cookies['email'])
+                          .then(function (data) {
+                            availableTemplates = JSON.parse(data.board).templates;
+                            defer.resolve(data);
+                          });
+
+                  return defer.promise;
+                }
+              };
+              return services;
             };
-            return services;
-          };
-        });
+          }]);
 
 

@@ -24,11 +24,20 @@ angular.module('hopsWorksApp')
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
             var metaHelperService = MetadataHelperService();
 
-            self.tabs = [];
-            self.meta = [];
             self.metadataView = {};
-            self.currentTableId = -1;
+            self.availableTemplates = [];
+            $scope.extendedFrom = {};
 
+            self.extendedFromBoard = {};
+            self.currentBoard = {};
+
+            $scope.$watch('metaHelperService.availableTemplates', function (availableTemplates) {
+              console.log("OTINANAI RE I MALAKIA 1 " + JSON.stringify(availableTemplates));
+              if (!angular.isUndefined(availableTemplates)) {
+                console.log("OTINANAI RE I MALAKIA " + JSON.stringify(availableTemplates));
+              }
+            });
+    
             /*
              * Get all datasets under the current project.
              * @returns {undefined}
@@ -190,7 +199,7 @@ angular.module('hopsWorksApp')
                         });
                       });
             };
-            
+
             /**
              * Opens a modal dialog for sharing.
              * @returns {undefined}
@@ -202,7 +211,7 @@ angular.module('hopsWorksApp')
                       }, function (error) {
               });
             };
-            
+
             /**
              * Upon click on a inode in the browser:
              *  + If folder: open folder, fetch contents from server and display.
@@ -268,10 +277,12 @@ angular.module('hopsWorksApp')
 
             function buildToggler(navID) {
               var debounceFn = $mdUtil.debounce(function () {
-                $mdSidenav(navID)
-                        .toggle()
+                $mdSidenav(navID).toggle()
                         .then(function () {
-                          self.getAllTemplates();
+                          metaHelperService.getAvailableTemplates()
+                                  .then(function (response) {
+                                    self.availableTemplates = JSON.parse(response.board).templates;
+                                  });
                         });
               }, 300);
               return debounceFn;
@@ -283,17 +294,6 @@ angular.module('hopsWorksApp')
                         $log.debug("Closed metadata designer");
                       });
             };
-
-            self.availableTemplates = [];
-            self.newTemplateName = "";
-            $scope.extendedFrom = {};
-
-            self.extendedFromBoard = {};
-
-            self.currentTemplateID = "";
-            self.currentBoard = {};
-
-            self.editedField = null;
 
             self.selectChanged = function (extendFromThisID) {
               console.log('selectChanged - start: ' + extendFromThisID);
@@ -311,11 +311,6 @@ angular.module('hopsWorksApp')
                         console.log('Fetched data - error:');
                         console.log(error);
                       });
-            };
-
-            self.onTabSelect = function (tab) {
-
-              self.currentTableId = tab.tableid;
             };
 
           }]);

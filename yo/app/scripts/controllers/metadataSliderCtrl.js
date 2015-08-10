@@ -16,10 +16,14 @@ angular.module('hopsWorksApp')
             var self = this;
             self.metaData = {};
             self.currentFile = metaHelperService.getCurrentFile();
+            self.tabs = [];
+            self.meta = [];
+            self.newTemplateName = "";
+            self.currentTableId = -1;
+            self.currentTemplateID = -1;
+            self.editedField;
 
-
-
-            /*
+            /**
              * submit form data when the 'save' button is clicked
              */
             self.submitMetadata = function () {
@@ -42,21 +46,20 @@ angular.module('hopsWorksApp')
             };
 
             /* -- TEMPLATE HANDLING FUNCTIONS -- */
+            /**
+             * Provides functionality to create a template from an existing one
+             * @returns {undefined}
+             */
             self.extendTemplate = function () {
               MetadataActionService.addNewTemplate(self.newTemplateName)
                       .then(function (data) {
                         var tempTemplates = JSON.parse(data.board);
                         var newlyCreatedID = tempTemplates.templates[tempTemplates.numberOfTemplates - 1].id;
-                        console.log('add_new_templatE');
-                        console.log(data);
-
-                        console.log('Sent message: ');
-                        console.log(self.extendedFromBoard);
 
                         MetadataActionService.extendTemplate($cookies['email'], newlyCreatedID, self.extendedFromBoard)
                                 .then(function (data) {
                                   self.newTemplateName = "";
-                                  self.getAllTemplates();
+                                  metaHelperService.getAvailableTemplates();
 
                                   console.log('Response from extending template: ');
                                   console.log(data);
@@ -64,6 +67,12 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            /**
+             * Fetches a specific template from the database based on its id
+             * 
+             * @param {type} templateId
+             * @returns {undefined}
+             */
             self.fetchTemplate = function (templateId) {
               self.currentTemplateID = templateId;
 
@@ -85,6 +94,12 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            /**
+             * Persists a template's contents (tables, fields) in the database
+             * 
+             * @param {type} closeSlideout
+             * @returns {undefined}
+             */
             self.storeTemplate = function (closeSlideout) {
 
               MetadataActionService.storeTemplate($cookies['email'], self.currentTemplateID, self.currentBoard)
@@ -102,30 +117,41 @@ angular.module('hopsWorksApp')
                       });
             };
 
-            self.getAllTemplates = function () {
-              MetadataActionService.fetchTemplates($cookies['email'])
-                      .then(function (data) {
-                        self.availableTemplates = JSON.parse(data.board).templates;
-                      });
-            };
-
+            /**
+             * Creates a new template in the database
+             * 
+             * @returns {undefined}
+             */
             self.addNewTemplate = function () {
               MetadataActionService.addNewTemplate($cookies['email'], self.newTemplateName)
                       .then(function (data) {
                         self.newTemplateName = "";
-                        self.getAllTemplates();
+                        metaHelperService.getAvailableTemplates();
                         console.log(data);
                       });
             };
 
+            /**
+             * Deletes a template from the database
+             * 
+             * @param {type} templateId. The id of the template to be removed
+             * @returns {undefined}
+             */
             self.removeTemplate = function (templateId) {
               MetadataActionService.removeTemplate($cookies['email'], templateId)
                       .then(function (data) {
-                        self.getAllTemplates();
-                        console.log(data);
+                        metaHelperService.getAvailableTemplates();
+                        console.log(JSON.stringify(data));
                       });
             };
 
+            /**
+             * Associates a template to a file. It is a template id to file (inodeid)
+             * association
+             * 
+             * @param {type} file
+             * @returns {undefined}
+             */
             self.attachTemplate = function (file) {
               var templateId = -1;
               console.log(JSON.stringify(file));
@@ -151,6 +177,13 @@ angular.module('hopsWorksApp')
             };
 
             /* -- TABLE AND FIELD HANDLING FUNCTIONS ADD/REMOVE -- */
+            /**
+             * Deletes a table. It is checking first if the table contains any fields
+             * and proceeds according to user input
+             * 
+             * @param {type} column
+             * @returns {undefined}
+             */
             self.checkDeleteTable = function (column) {
               MetadataActionService.isTableEmpty($cookies['email'], column.id)
                       .then(function (response) {
@@ -173,6 +206,12 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            /**
+             * Deletes a table
+             * 
+             * @param {type} column
+             * @returns {undefined}
+             */
             self.deleteTable = function (column) {
               MetadataActionService.deleteList($cookies['email'], self.currentTemplateID, column)
                       .then(function (success) {
@@ -187,6 +226,14 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            /**
+             * Deletes a field. It is checking first if the field contains any raw data
+             * and proceeds according to user input
+             * 
+             * @param {type} column. The table this field resides in
+             * @param {type} card. The card going to be deleted
+             * @returns {undefined}
+             */
             self.checkDeleteField = function (column, card) {
               MetadataActionService.isFieldEmpty($cookies['email'], card.id)
                       .then(function (response) {
@@ -209,6 +256,13 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            /**
+             * Deletes a table field
+             * 
+             * @param {type} column. The table this field resides in
+             * @param {type} card. The field going to be deleted
+             * @returns {undefined}
+             */
             self.deleteField = function (column, card) {
               MetadataActionService.deleteCard($cookies['email'], self.currentTemplateID, column, card)
                       .then(function (success) {
@@ -223,11 +277,25 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            /**
+             * Adds a new field to a table
+             * 
+             * @param {type} templateId
+             * @param {type} column
+             * @param {type} card
+             * @returns {unresolved}
+             */
             self.storeCard = function (templateId, column, card) {
 
               return MetadataActionService.storeCard($cookies['email'], templateId, column, card);
             };
 
+            /**
+             * Displays the modal dialog to creating a new card
+             * 
+             * @param {type} column
+             * @returns {undefined}
+             */
             self.addCard = function (column) {
               $scope.currentColumn = column;
               var modalInstance = $modal.open({
@@ -253,6 +321,11 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            /**
+             * Displays the modal dialog to creating a new table
+             * 
+             * @returns {undefined}
+             */
             self.addNewList = function () {
               $scope.template = self.currentTemplateID;
               $modal.open({
@@ -282,16 +355,34 @@ angular.module('hopsWorksApp')
             };
 
             /* -- Field handling functions -- */
+            /**
+             * Makes a field (not)searchable by setting the attribute 'find' accordingly
+             * 
+             * @param {type} card
+             * @returns {undefined}
+             */
             self.makeSearchable = function (card) {
               card.find = !card.find;
               console.log("Card " + card.title + " became searchable " + card.find);
             };
 
+            /**
+             * Makes a field (not)required by setting the attribute 'required' accordingly
+             * 
+             * @param {type} card
+             * @returns {undefined}
+             */
             self.makeRequired = function (card) {
               card.required = !card.required;
               console.log("Card " + card.title + " became required " + card.required);
             };
 
+            /**
+             * Allows editing the size (max chars) of a field
+             * 
+             * @param {type} card
+             * @returns {undefined}
+             */
             self.editSizeField = function (card) {
 
               card.sizefield.showing = !card.sizefield.showing;
@@ -306,6 +397,14 @@ angular.module('hopsWorksApp')
               self.editedField = null;
             };
 
+            /**
+             * Allows modifying the definition of a field i.e. changing the field type
+             * (text, yes/no field, dropdown), the field name and description
+             * 
+             * @param {type} column
+             * @param {type} field
+             * @returns {$q@call;defer.promise}
+             */
             self.modifyField = function (column, field) {
               $scope.tableid = column.id;
               $scope.field = field;
@@ -331,6 +430,12 @@ angular.module('hopsWorksApp')
               return defer.promise;
             };
 
+            /**
+             * Allows modifying the metadata (raw data) a file contains
+             * 
+             * @param {type} raw
+             * @returns {undefined}
+             */
             self.updateRawdata = function (raw) {
               console.log("META " + JSON.stringify(raw));
               MetadataActionService.updateRawdata($cookies['email'], raw)
@@ -355,11 +460,15 @@ angular.module('hopsWorksApp')
                         console.log("LOADED TEMPLATE " + JSON.stringify(response.board) + " template id " + templateId);
                         self.currentBoard = JSON.parse(response.board);
                         self.initializeMetadataTabs(JSON.parse(response.board));
-
                         self.fetchMetadataForTemplate();
                       });
             };
 
+            /**
+             * Fetches all the metadata a template holds
+             * 
+             * @returns {undefined}
+             */
             self.fetchMetadataForTemplate = function () {
               //columns are the tables in the template
               self.meta = [];
@@ -368,15 +477,21 @@ angular.module('hopsWorksApp')
               var currentfile = metaHelperService.getCurrentFile();
 
               angular.forEach(tables, function (table, key) {
-                //console.log("value " + JSON.stringify(table));
                 MetadataActionService.fetchMetadata($cookies['email'], table.id, currentfile.id)
                         .then(function (response) {
                           self.reconstructMetadata(table.name, JSON.parse(response.board));
-                          //self.meta = JSON.parse(response.board);
                         });
               });
             };
 
+            /**
+             * Creates the table with the retrieved metadata, so it can be displayed
+             * in the file metadata presentation section
+             * 
+             * @param {type} tableName
+             * @param {type} rawdata
+             * @returns {undefined}
+             */
             self.reconstructMetadata = function (tableName, rawdata) {
 
               $scope.tableName = rawdata.table;
@@ -386,6 +501,13 @@ angular.module('hopsWorksApp')
               console.log("RECONSTRUCTED ARRAY  " + JSON.stringify(self.meta));
             };
 
+            /**
+             * Creates the metadata tabs in the metadata insert page, according to the 
+             * template that has been previously selected. Every table in the template
+             * corresponds to a tab
+             * 
+             * @returns {undefined}
+             */
             self.initializeMetadataTabs = function () {
               self.tabs = [];
 
@@ -395,6 +517,11 @@ angular.module('hopsWorksApp')
               });
 
               self.currentTableId = angular.isUndefined(self.tabs[0]) ? -1 : self.tabs[0].tableid;
+            };
+
+            self.onTabSelect = function (tab) {
+
+              self.currentTableId = tab.tableid;
             };
           }
         ]);
