@@ -8,34 +8,35 @@
  * metadataSliderCtrl.
  */
 angular.module('hopsWorksApp')
-        .service('MetadataHelperService', ['$cookies', '$q', 'MetadataActionService',
-          function ($cookies, $q, MetadataActionService) {
+        .service('MetadataHelperService', ['$cookies', '$rootScope', '$q', 'MetadataActionService',
+          function ($cookies, $rootScope, $q, MetadataActionService) {
 
             var self = this;
             var currentFile = {};
             var availableTemplates = [];
 
-            return function () {
-              var services = {
-                setCurrentFile: function (currentfile) {
-                  currentFile = currentfile;
-                },
-                getCurrentFile: function () {
-                  return currentFile;
-                },
-                getAvailableTemplates: function () {
-                  var defer = $q.defer();
+            return {
+              setCurrentFile: function (currentfile) {
+                currentFile = currentfile;
+              },
+              getCurrentFile: function () {
+                return currentFile;
+              },
+              fetchAvailableTemplates: function () {
+                var defer = $q.defer();
 
-                  MetadataActionService.fetchTemplates($cookies['email'])
-                          .then(function (data) {
-                            availableTemplates = JSON.parse(data.board).templates;
-                            defer.resolve(data);
-                          });
+                MetadataActionService.fetchTemplates($cookies['email'])
+                        .then(function (data) {
+                          angular.copy(JSON.parse(data.board).templates, availableTemplates);
+                          console.log("FETCHED AVAILABLE TEMPLATES " + JSON.stringify(availableTemplates));
+                          defer.resolve(data);
+                        });
 
-                  return defer.promise;
-                }
-              };
-              return services;
+                return defer.promise;
+              },
+              getAvailableTemplates: function () {
+                return availableTemplates;
+              }
             };
           }]);
 

@@ -11,17 +11,19 @@ angular.module('hopsWorksApp')
           function ($cookies, $modal, $scope, $mdSidenav, $mdUtil, $location, $filter, DataSetService,
                   ModalService, growl, MetadataActionService, MetadataHelperService) {
 
-            var metaHelperService = MetadataHelperService();
+            //var metaHelperService = MetadataHelperService();
 
             var self = this;
             self.metaData = {};
-            self.currentFile = metaHelperService.getCurrentFile();
+            self.currentFile = MetadataHelperService.getCurrentFile();
             self.tabs = [];
             self.meta = [];
+            self.availableTemplates = [];
             self.newTemplateName = "";
             self.currentTableId = -1;
             self.currentTemplateID = -1;
             self.editedField;
+            self.extendedFrom = {};
 
             /**
              * submit form data when the 'save' button is clicked
@@ -31,7 +33,7 @@ angular.module('hopsWorksApp')
                 return;
               }
 
-              var currentfile = metaHelperService.getCurrentFile();
+              var currentfile = MetadataHelperService.getCurrentFile();
               self.metaData.inodeid = currentfile.id;
               self.metaData.tableid = self.currentTableId;
               console.log("saving " + JSON.stringify(self.metaData));
@@ -47,22 +49,38 @@ angular.module('hopsWorksApp')
 
             /* -- TEMPLATE HANDLING FUNCTIONS -- */
             /**
-             * Provides functionality to create a template from an existing one
+             * Creates a new template from an existing one
+             * 
              * @returns {undefined}
              */
             self.extendTemplate = function () {
-              MetadataActionService.addNewTemplate(self.newTemplateName)
+              MetadataActionService.addNewTemplate($cookies['email'], self.newTemplateName)
                       .then(function (data) {
                         var tempTemplates = JSON.parse(data.board);
+                        
+                        //get the id of the new template
                         var newlyCreatedID = tempTemplates.templates[tempTemplates.numberOfTemplates - 1].id;
 
-                        MetadataActionService.extendTemplate($cookies['email'], newlyCreatedID, self.extendedFromBoard)
-                                .then(function (data) {
-                                  self.newTemplateName = "";
-                                  metaHelperService.getAvailableTemplates();
+                        //get the contents of the template to extend
+                        MetadataActionService.fetchTemplate($cookies['email'], parseInt(self.extendedFrom))
+                                .then(function (response) {
+                                  var templateToExtend = JSON.parse(response.board);
 
-                                  console.log('Response from extending template: ');
-                                  console.log(data);
+                                  //associate existing contents with the new template
+                                  MetadataActionService.extendTemplate($cookies['email'], newlyCreatedID, templateToExtend)
+                                          .then(function (data) {
+                                            self.newTemplateName = "";
+                                    
+                                            //trigger the necessary variable change in the service
+                                            MetadataHelperService.fetchAvailableTemplates()
+                                                    .then(function (response) {
+                                                      self.availableTemplates = JSON.parse(response.board).templates;
+                                                      //console.log("AVAILABLE TEMPLATES " + JSON.stringify(self.availableTemplates));
+                                                    });
+
+                                            console.log('Response from extending template: ');
+                                            console.log(data);
+                                          });
                                 });
                       });
             };
@@ -126,8 +144,8 @@ angular.module('hopsWorksApp')
               MetadataActionService.addNewTemplate($cookies['email'], self.newTemplateName)
                       .then(function (data) {
                         self.newTemplateName = "";
-                        metaHelperService.getAvailableTemplates();
-                        console.log(data);
+                        //trigger a variable change (availableTemplates) in the service
+                        MetadataHelperService.fetchAvailableTemplates();
                       });
             };
 
@@ -140,7 +158,8 @@ angular.module('hopsWorksApp')
             self.removeTemplate = function (templateId) {
               MetadataActionService.removeTemplate($cookies['email'], templateId)
                       .then(function (data) {
-                        metaHelperService.getAvailableTemplates();
+                        //trigger a variable change (availableTemplates) in the service
+                        MetadataHelperService.fetchAvailableTemplates();
                         console.log(JSON.stringify(data));
                       });
             };

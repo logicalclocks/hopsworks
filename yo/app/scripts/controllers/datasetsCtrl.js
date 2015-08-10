@@ -22,21 +22,22 @@ angular.module('hopsWorksApp')
             self.fileDetail; //The details about the currently selected file.
 
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
-            var metaHelperService = MetadataHelperService();
 
             self.metadataView = {};
             self.availableTemplates = [];
-            $scope.extendedFrom = {};
 
             self.extendedFromBoard = {};
             self.currentBoard = {};
 
-            $scope.$watch('metaHelperService.availableTemplates', function (availableTemplates) {
-              if (!angular.isUndefined(availableTemplates)) {
-                console.log(JSON.stringify(availableTemplates));
+            /**
+             * watch for changes happening in service variables from the other controller
+             */
+            $scope.$watchCollection(MetadataHelperService.getAvailableTemplates, function (availTemplates) {
+              if (!angular.isUndefined(availTemplates)) {
+                self.availableTemplates = availTemplates;
               }
             });
-    
+
             /*
              * Get all datasets under the current project.
              * @returns {undefined}
@@ -278,37 +279,20 @@ angular.module('hopsWorksApp')
               var debounceFn = $mdUtil.debounce(function () {
                 $mdSidenav(navID).toggle()
                         .then(function () {
-                          metaHelperService.getAvailableTemplates()
+                          MetadataHelperService.fetchAvailableTemplates()
                                   .then(function (response) {
                                     self.availableTemplates = JSON.parse(response.board).templates;
                                   });
                         });
               }, 300);
               return debounceFn;
-            };
+            }
+            ;
 
             self.close = function () {
               $mdSidenav('right').close()
                       .then(function () {
                         $log.debug("Closed metadata designer");
-                      });
-            };
-
-            self.selectChanged = function (extendFromThisID) {
-              console.log('selectChanged - start: ' + extendFromThisID);
-
-              MetadataActionService.fetchTemplate($cookies['email'], parseInt(extendFromThisID))
-                      .then(function (success) {
-                        console.log('Fetched data - success.board.column:');
-                        self.extendedFromBoard = JSON.parse(success.board);
-                        console.log(self.extendedFromBoard);
-
-                        console.log('Fetched data - success:');
-                        console.log(success);
-
-                      }, function (error) {
-                        console.log('Fetched data - error:');
-                        console.log(error);
                       });
             };
 
