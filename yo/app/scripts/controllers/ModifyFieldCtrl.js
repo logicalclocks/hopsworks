@@ -22,10 +22,10 @@ var mainModule = angular.module('hopsWorksApp')
 
                     MetadataActionService.fetchFieldTypes($cookies['email'])
                             .then(function (response) {
-                              var board = JSON.parse(response.board);
-
+                              var content = JSON.parse(response.board);
+                              
                               //construct the select component's contents
-                              angular.forEach(board.fieldTypes, function (value, key) {
+                              angular.forEach(content.fieldTypes, function (value, key) {
                                 $scope.items.push({id: value.id, name: value.description});
                               });
                               $scope.selectedItem = $scope.items[0];

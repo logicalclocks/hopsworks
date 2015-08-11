@@ -135,7 +135,7 @@
               </h2>
               <span flex></span>
               <button style="font-size:15px;height:28px;color:white;padding-top: 3px; padding-right: 3px"
-                      ng-click="datasetsCtrl.storeTemplate('true')"
+                      ng-click="metaSliderCtrl.storeTemplate('true')"
                       class="btn btn-success">
                 <i class="fa fa-save"></i>
                 Save
@@ -261,7 +261,7 @@
               <!-- Rightside tables -->
               <div class="col-md-10">
 
-                <div ng-repeat="column in datasetsCtrl.currentBoard.columns">
+                <div ng-repeat="column in metaSliderCtrl.currentBoard.columns">
                   <div ng-if="($index % 3 == 0) && ($index !== 0)" class="row"></div>
 
                   <div class="col-md-4">
@@ -274,12 +274,12 @@
 
                         <div align="right">
 
-                          <a ng-click="datasetsCtrl.addCard(column)"
+                          <a ng-click="metaSliderCtrl.addCard(column)"
                              title="Add card to table">
                             <i class="fa fa-plus addNewCard"></i>
                           </a>
 
-                          <a ng-click="datasetsCtrl.checkDeleteTable(column)"
+                          <a ng-click="metaSliderCtrl.checkDeleteTable(column)"
                              title="Remove table">
                             <i class="fa fa-trash-o removeList"></i>
                           </a>
@@ -288,7 +288,7 @@
 
                         <span editable-text="column.name"
                               style="font-size: 16px;"
-                              onaftersave="datasetsCtrl.storeTemplate()"
+                              onaftersave="metaSliderCtrl.storeTemplate()"
                               class="column-title ng-binding">
                           {{column.name}}
                         </span>

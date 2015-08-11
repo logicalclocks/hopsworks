@@ -57,7 +57,7 @@ angular.module('hopsWorksApp')
               MetadataActionService.addNewTemplate($cookies['email'], self.newTemplateName)
                       .then(function (data) {
                         var tempTemplates = JSON.parse(data.board);
-                        
+
                         //get the id of the new template
                         var newlyCreatedID = tempTemplates.templates[tempTemplates.numberOfTemplates - 1].id;
 
@@ -70,7 +70,7 @@ angular.module('hopsWorksApp')
                                   MetadataActionService.extendTemplate($cookies['email'], newlyCreatedID, templateToExtend)
                                           .then(function (data) {
                                             self.newTemplateName = "";
-                                    
+
                                             //trigger the necessary variable change in the service
                                             MetadataHelperService.fetchAvailableTemplates()
                                                     .then(function (response) {
@@ -428,25 +428,15 @@ angular.module('hopsWorksApp')
               $scope.tableid = column.id;
               $scope.field = field;
 
-              var defer = $q.defer();
-
-              $modal.open({
-                templateUrl: 'views/metadata/modifyFieldDialog.html',
-                controller: 'ModifyFieldCtrl',
-                scope: $scope
-              })
-                      .result.then(function (dialogResponse) {
-                        //PERSIST THE CARD TO THE DATABASE - dialogResponse is the modified field
-                        self.storeCard(self.currentTemplateID, column, dialogResponse)
+              ModalService.modifyField($scope).then(
+                      function (success) {                      
+                        //Persist the modified card to the database
+                        self.storeCard(self.currentTemplateID, column, success)
                                 .then(function (response) {
                                   self.currentBoard = JSON.parse(response.board);
-
-                                  defer.resolve($rootScope.mainBoard);
-                                  console.log("MODIFIED FIELD " + JSON.stringify(self.currentBoard));
                                 });
-                      });
 
-              return defer.promise;
+                      });
             };
 
             /**
@@ -538,12 +528,12 @@ angular.module('hopsWorksApp')
               self.currentTableId = angular.isUndefined(self.tabs[0]) ? -1 : self.tabs[0].tableid;
             };
 
-          /**
-           * Listener on tab selection changes
-           * 
-           * @param {type} tab
-           * @returns {undefined}
-           */
+            /**
+             * Listener on tab selection changes
+             * 
+             * @param {type} tab
+             * @returns {undefined}
+             */
             self.onTabSelect = function (tab) {
 
               self.currentTableId = tab.tableid;
