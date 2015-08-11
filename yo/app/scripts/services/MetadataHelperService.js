@@ -14,6 +14,7 @@ angular.module('hopsWorksApp')
             var currentFile = {};
             var availableTemplates = [];
             var closeSlider = "false";
+            var dirContents = "false";
 
             return {
               setCurrentFile: function (currentfile) {
@@ -41,6 +42,12 @@ angular.module('hopsWorksApp')
               },
               setCloseSlider: function(value){
                 closeSlider = value;
+              },
+              getDirContents: function(){
+                return dirContents;
+              },
+              setDirContents: function(value){
+                dirContents = "true";
               }
             };
           }]);

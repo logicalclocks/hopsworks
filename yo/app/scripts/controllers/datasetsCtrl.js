@@ -6,11 +6,11 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('DatasetsCtrl', ['$cookies', '$rootScope', '$modal', '$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
-          'DataSetService', '$routeParams', 'ModalService', 'growl', 'MetadataActionService', '$location', '$filter',
+        .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
+          'DataSetService', '$routeParams', 'ModalService', 'growl', '$location',
           'MetadataHelperService',
-          function ($cookies, $rootScope, $modal, $scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, $routeParams,
-                  ModalService, growl, MetadataActionService, $location, $filter, MetadataHelperService) {
+          function ($scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, $routeParams,
+                  ModalService, growl, $location, MetadataHelperService) {
 
             var self = this;
 
@@ -36,13 +36,20 @@ angular.module('hopsWorksApp')
               }
             });
 
-            $scope.$watch(MetadataHelperService.getCloseSlider, function(response){
-              if(response === "true"){
+            $scope.$watch(MetadataHelperService.getCloseSlider, function (response) {
+              if (response === "true") {
                 self.close();
                 MetadataHelperService.setCloseSlider("false");
               }
             });
-            
+
+            $scope.$watch(MetadataHelperService.getDirContents, function (response) {
+              if (response === "true") {
+                getDirContents();
+                MetadataHelperService.setDirContents("false");
+              }
+            });
+
             /*
              * Get all datasets under the current project.
              * @returns {undefined}

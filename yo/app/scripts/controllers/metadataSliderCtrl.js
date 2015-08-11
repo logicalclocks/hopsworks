@@ -5,10 +5,10 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('MetaSliderCtrl', ['$cookies', '$modal', '$scope', '$mdSidenav', '$mdUtil',
-          '$location', '$filter', 'DataSetService', 'ModalService', 'growl', 'MetadataActionService',
+        .controller('MetaSliderCtrl', ['$cookies', '$modal', '$scope', '$routeParams',
+          '$filter', 'DataSetService', 'ModalService', 'growl', 'MetadataActionService',
           'MetadataHelperService',
-          function ($cookies, $modal, $scope, $mdSidenav, $mdUtil, $location, $filter, DataSetService,
+          function ($cookies, $modal, $scope, $routeParams, $filter, DataSetService,
                   ModalService, growl, MetadataActionService, MetadataHelperService) {
 
             var self = this;
@@ -23,6 +23,7 @@ angular.module('hopsWorksApp')
             self.editedField;
             self.extendedFrom = {};
             self.currentBoard = {};
+            var dataSetService = DataSetService($routeParams.projectID);
 
             /**
              * submit form data when the 'save' button is clicked
@@ -187,7 +188,7 @@ angular.module('hopsWorksApp')
                                 function (success) {
                                   growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
                                   //refresh the file browser to get the updated objects
-                                  getDirContents();
+                                  MetadataHelperService.setDirContents("true");
                                 }, function (error) {
                           growl.info("Could not attach template to file " + file.name + ".",
                                   {title: 'Info', ttl: 5000});
