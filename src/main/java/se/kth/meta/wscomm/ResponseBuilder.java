@@ -100,7 +100,8 @@ public class ResponseBuilder {
   public Message fetchFieldTypes(Message message) {
 
     List<FieldType> ftypes = this.fieldTypeFacade.loadFieldTypes();
-
+    Collections.sort(ftypes);
+    
     FieldTypeMessage newMsg = new FieldTypeMessage();
 
     String jsonMsg = newMsg.buildSchema((List<EntityIntf>) (List<?>) ftypes);

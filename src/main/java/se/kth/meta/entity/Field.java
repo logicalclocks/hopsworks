@@ -45,7 +45,7 @@ import javax.validation.constraints.Size;
           query = "SELECT f FROM Field f WHERE f.required = :required"),
   @NamedQuery(name = "Field.findByFieldTypeId",
           query = "SELECT f FROM Field f WHERE f.fieldtypeid = :fieldtypeid")})
-public class Field implements Serializable, EntityIntf {
+public class Field implements Serializable, EntityIntf, Comparable {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -331,6 +331,20 @@ public class Field implements Serializable, EntityIntf {
   @Override
   public String toString() {
     return "entity.Fields[ id=" + id + " ]";
+  }
+
+  @Override
+  public int compareTo(Object o) {
+    Field field = (Field) o;
+    
+    if(this.getId() > field.getId()){
+      return 1;
+    }
+    else if(this.getId() < field.getId()){
+      return -1;
+    }
+    
+    return 0;
   }
 
 }

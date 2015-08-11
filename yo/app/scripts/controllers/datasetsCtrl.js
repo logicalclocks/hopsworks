@@ -25,9 +25,7 @@ angular.module('hopsWorksApp')
 
             self.metadataView = {};
             self.availableTemplates = [];
-
-            self.extendedFromBoard = {};
-            self.currentBoard = {};
+            self.closeSlider = false;
 
             /**
              * watch for changes happening in service variables from the other controller
@@ -38,6 +36,13 @@ angular.module('hopsWorksApp')
               }
             });
 
+            $scope.$watch(MetadataHelperService.getCloseSlider, function(response){
+              if(response === "true"){
+                self.close();
+                MetadataHelperService.setCloseSlider("false");
+              }
+            });
+            
             /*
              * Get all datasets under the current project.
              * @returns {undefined}

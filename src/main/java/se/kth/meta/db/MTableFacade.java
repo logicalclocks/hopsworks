@@ -32,7 +32,6 @@ public class MTableFacade extends AbstractFacade<MTable> {
   }
 
   public MTable getTable(int tableid) throws DatabaseException {
-    System.out.println("3. --GOING TO FIND TABLE " + tableid);
     return this.em.find(MTable.class, tableid);
   }
 
