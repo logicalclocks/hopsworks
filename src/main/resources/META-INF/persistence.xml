@@ -2,7 +2,7 @@
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
   <persistence-unit name="kthfsPU" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-    <jta-data-source>jdbc/kthfs</jta-data-source>
+    <jta-data-source>jdbc/hopsworks</jta-data-source>
     <class>se.kth.bbc.activity.ActivityDetail</class>
     <class>se.kth.bbc.activity.UsersGroups</class>
     <class>se.kth.bbc.jobs.jobhistory.JobInputFile</class>

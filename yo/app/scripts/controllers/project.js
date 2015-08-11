@@ -157,7 +157,7 @@ angular.module('hopsWorksApp')
 
             self.goToService = function (service) {
               if (service === "Zeppelin") {
-                window.open("http://localhost:8080/hopsworks/zeppelin");
+                  window.open("http://" + $location.host() + ":" + $location.port() + "/hopsworks/zeppelin");
               } else {
                 $location.path('project/' + self.pId + '/' + service.toLowerCase());
               }
