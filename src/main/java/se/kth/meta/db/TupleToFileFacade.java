@@ -7,7 +7,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import se.kth.kthfsdashboard.user.AbstractFacade;
-import se.kth.meta.entity.Field;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.DatabaseException;
 

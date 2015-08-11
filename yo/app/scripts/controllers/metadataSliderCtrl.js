@@ -11,8 +11,6 @@ angular.module('hopsWorksApp')
           function ($cookies, $modal, $scope, $mdSidenav, $mdUtil, $location, $filter, DataSetService,
                   ModalService, growl, MetadataActionService, MetadataHelperService) {
 
-            //var metaHelperService = MetadataHelperService();
-
             var self = this;
             self.metaData = {};
             self.currentFile = MetadataHelperService.getCurrentFile();
@@ -24,6 +22,7 @@ angular.module('hopsWorksApp')
             self.currentTemplateID = -1;
             self.editedField;
             self.extendedFrom = {};
+            self.currentBoard = {};
 
             /**
              * submit form data when the 'save' button is clicked
@@ -54,6 +53,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.extendTemplate = function () {
+              //store the new template name
               MetadataActionService.addNewTemplate($cookies['email'], self.newTemplateName)
                       .then(function (data) {
                         var tempTemplates = JSON.parse(data.board);
@@ -65,7 +65,7 @@ angular.module('hopsWorksApp')
                         MetadataActionService.fetchTemplate($cookies['email'], parseInt(self.extendedFrom))
                                 .then(function (response) {
                                   var templateToExtend = JSON.parse(response.board);
-
+                                  //console.log(JSON.stringify(cleanBoard));
                                   //associate existing contents with the new template
                                   MetadataActionService.extendTemplate($cookies['email'], newlyCreatedID, templateToExtend)
                                           .then(function (data) {
@@ -128,7 +128,7 @@ angular.module('hopsWorksApp')
 
                         self.currentBoard = template;
                         if (closeSlideout === 'true') {
-                          self.close();
+                          MetadataHelperService.setCloseSlider("true");
                         }
                       }, function (error) {
                         console.log(error);
@@ -472,7 +472,7 @@ angular.module('hopsWorksApp')
 
               var templateId = file.template;
               self.currentTemplateID = templateId;
-              metaHelperService.setCurrentFile(file);
+              MetadataHelperService.setCurrentFile(file);
 
               MetadataActionService.fetchTemplate($cookies['email'], templateId)
                       .then(function (response) {
@@ -493,7 +493,7 @@ angular.module('hopsWorksApp')
               self.meta = [];
 
               var tables = self.currentBoard.columns;
-              var currentfile = metaHelperService.getCurrentFile();
+              var currentfile = MetadataHelperService.getCurrentFile();
 
               angular.forEach(tables, function (table, key) {
                 MetadataActionService.fetchMetadata($cookies['email'], table.id, currentfile.id)
@@ -538,6 +538,12 @@ angular.module('hopsWorksApp')
               self.currentTableId = angular.isUndefined(self.tabs[0]) ? -1 : self.tabs[0].tableid;
             };
 
+          /**
+           * Listener on tab selection changes
+           * 
+           * @param {type} tab
+           * @returns {undefined}
+           */
             self.onTabSelect = function (tab) {
 
               self.currentTableId = tab.tableid;

@@ -77,11 +77,11 @@ public class Utils {
       t.resetFields();
 
       try {
+        logger.log(Level.INFO, "STORE/UPDATE TABLE: {0} ", t);
+        
         //persist the parent
         int tableId = this.tableFacade.addTable(t);
-
-        logger.log(Level.INFO, "STORE/UPDATE TABLE: {0}", tableName);
-
+        
         for (Field field : tableFields) {
           //associate each field(child) with its table(parent)
           field.setTableid(tableId);

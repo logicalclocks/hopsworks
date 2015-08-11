@@ -51,7 +51,7 @@ public class RawDataFacade extends AbstractFacade<RawData> {
     try {
       RawData r = this.contains(raw) ? raw : this.getRawData(raw.getId());
 
-      if (raw.getId() != -1) {
+      if (r != null && r.getId() != -1) {
         /*
          * if the row exists just update it.
          */
@@ -66,6 +66,7 @@ public class RawDataFacade extends AbstractFacade<RawData> {
       }
 
       this.em.flush();
+      this.em.clear();
       return r.getId();
     } catch (IllegalStateException | SecurityException e) {
 

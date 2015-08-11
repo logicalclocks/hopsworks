@@ -1,5 +1,6 @@
 package se.kth.meta.wscomm;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -89,6 +90,7 @@ public class ResponseBuilder {
 
     List<Template> templates = this.templateFacade.loadTemplates();
 
+    Collections.sort(templates);
     String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) templates);
     message.setMessage(jsonMsg);
 

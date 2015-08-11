@@ -170,8 +170,7 @@ public class TemplateMessage extends ContentMessage {
 
           /*
            * if a template is being extended, cancel the field id so that they
-           * are
-           * reinserted and attached to the new template
+           * are reinserted and attached to the new template
            */
           if (Command.valueOf(this.action.toUpperCase())
                   == Command.EXTEND_TEMPLATE) {

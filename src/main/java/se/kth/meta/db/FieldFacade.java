@@ -49,7 +49,7 @@ public class FieldFacade extends AbstractFacade<Field> {
     try {
       Field f = this.getField(field.getId());
 
-      if (field.getId() != -1) {
+      if (f != null && f.getId() != -1) {
         f.copy(field);
         this.em.merge(f);
       } else {
@@ -66,6 +66,7 @@ public class FieldFacade extends AbstractFacade<Field> {
       }
 
       this.em.flush();
+      this.em.clear();
       return f.getId();
     } catch (IllegalStateException | SecurityException e) {
 

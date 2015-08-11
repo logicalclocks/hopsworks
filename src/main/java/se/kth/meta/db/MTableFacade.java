@@ -32,7 +32,7 @@ public class MTableFacade extends AbstractFacade<MTable> {
   }
 
   public MTable getTable(int tableid) throws DatabaseException {
-
+    System.out.println("3. --GOING TO FIND TABLE " + tableid);
     return this.em.find(MTable.class, tableid);
   }
 
@@ -47,9 +47,10 @@ public class MTableFacade extends AbstractFacade<MTable> {
   public int addTable(MTable table) throws DatabaseException {
 
     try {
+
       MTable t = this.getTable(table.getId());
 
-      if (t != null) {
+      if (t != null && t.getId() != -1) {
         /*
          * if the table exists just update it, along with its corresponding
          * child fields.
@@ -71,6 +72,7 @@ public class MTableFacade extends AbstractFacade<MTable> {
       }
 
       this.em.flush();
+      this.em.clear();
       return t.getId();
     } catch (IllegalStateException | SecurityException e) {
 

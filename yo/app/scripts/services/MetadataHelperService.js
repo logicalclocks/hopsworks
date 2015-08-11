@@ -11,9 +11,9 @@ angular.module('hopsWorksApp')
         .service('MetadataHelperService', ['$cookies', '$rootScope', '$q', 'MetadataActionService',
           function ($cookies, $rootScope, $q, MetadataActionService) {
 
-            var self = this;
             var currentFile = {};
             var availableTemplates = [];
+            var closeSlider = "false";
 
             return {
               setCurrentFile: function (currentfile) {
@@ -28,7 +28,6 @@ angular.module('hopsWorksApp')
                 MetadataActionService.fetchTemplates($cookies['email'])
                         .then(function (data) {
                           angular.copy(JSON.parse(data.board).templates, availableTemplates);
-                          console.log("FETCHED AVAILABLE TEMPLATES " + JSON.stringify(availableTemplates));
                           defer.resolve(data);
                         });
 
@@ -36,6 +35,12 @@ angular.module('hopsWorksApp')
               },
               getAvailableTemplates: function () {
                 return availableTemplates;
+              },
+              getCloseSlider: function(){
+                return closeSlider;
+              },
+              setCloseSlider: function(value){
+                closeSlider = value;
               }
             };
           }]);
