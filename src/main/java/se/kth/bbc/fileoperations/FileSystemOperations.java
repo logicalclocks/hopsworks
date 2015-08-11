@@ -35,7 +35,7 @@ public class FileSystemOperations {
   @PostConstruct
   public void init() {
     try {
-      dfs = getFs();
+      dfs = getDfs();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
     }
@@ -74,9 +74,9 @@ public class FileSystemOperations {
    * <p>
    * @throws java.io.IOException
    */
-  public boolean mkdir(Path location) throws IOException {
+  public boolean mkdirs(Path location) throws IOException {
 
-    return dfs.mkdirs(location, null);
+    return dfs.mkdirs(location, FsPermission.getDefault());
   }
 
   /**
@@ -101,7 +101,7 @@ public class FileSystemOperations {
    * @return
    * @throws IOException
    */
-  private DistributedFileSystem getFs() throws IOException {
+  private DistributedFileSystem getDfs() throws IOException {
 
     String coreConfDir = System.getenv("HADOOP_CONF_DIR");
     //If still not found: throw exception
@@ -219,4 +219,28 @@ public class FileSystemOperations {
     dfs.copyToLocalFile(src, dst);
   }
 
+  /**
+   * Marks a folder/file in location as metaEnabled. This means that all file
+   * operations from this path down the directory tree will be registered in
+   * hdfs_metadata_log table
+   * <p>
+   * @param location
+   * @throws IOException
+   */
+  public void setMetaEnabled(Path location) throws IOException {
+    dfs.setMetaEnabled(location, true);
+  }
+
+  /**
+   * Create a new folder on the given path only if the parent folders exist
+   * <p>
+   * @param location The path to the new folder, its name included.
+   * @return True if successful.
+   * <p>
+   * @throws java.io.IOException
+   */
+  public boolean mkdir(Path location) throws IOException {
+
+    return dfs.mkdir(location, FsPermission.getDefault());
+  }
 }

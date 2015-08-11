@@ -48,9 +48,9 @@ public class FileOperations {
    * @return
    * @throws IOException
    */
-  public boolean mkDir(String path) throws IOException {
+  public boolean mkDirs(String path) throws IOException {
     Path location = new Path(path);
-    return fsOps.mkdir(location);
+    return fsOps.mkdirs(location);
   }
 
   /**
@@ -66,7 +66,7 @@ public class FileOperations {
           throws IOException {
     //Make sure the directories exist
     String dirs = Utils.getDirectoryPart(destination);
-    mkDir(dirs);
+    mkDirs(dirs);
     //Actually copy to HDFS
     Path destp = new Path(destination);
     Path srcp = new Path(src);
@@ -137,7 +137,7 @@ public class FileOperations {
       destDir = Utils.getDirectoryPart(tmp);
     }
     if (!exists(destDir)) {
-      mkDir("hdfs://" + destDir);
+      mkDirs("hdfs://" + destDir);
     }
     Path src = new Path(source);
     Path dst = new Path(destination);
@@ -172,7 +172,7 @@ public class FileOperations {
     Path dstPath = new Path(dst);
     //Make the necessary output directories
     String dirPart = Utils.getDirectoryPart(dst);
-    mkDir(dirPart);
+    mkDirs(dirPart);
     //Actually copy
     fsOps.copyInHdfs(srcPath, dstPath);
   }
@@ -228,4 +228,26 @@ public class FileOperations {
             + relativePath;
   }
 
+  /**
+   * Marks a file/folder in location as metadata enabled
+   * <p>
+   * @param location
+   * @throws IOException
+   */
+  public void setMetaEnabled(String location) throws IOException {
+    Path path = new Path(location);
+    this.fsOps.setMetaEnabled(path);
+  }
+
+  /**
+   * Create the folder on the given path only if the parent folders exist.
+   * <p>
+   * @param path
+   * @return
+   * @throws IOException
+   */
+  public boolean mkDir(String path) throws IOException {
+    Path location = new Path(path);
+    return fsOps.mkdir(location);
+  }
 }

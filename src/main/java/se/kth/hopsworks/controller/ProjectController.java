@@ -216,7 +216,16 @@ public class ProjectController {
 
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator + projectName;
+    
+    //create the base dir (Projects) and set it metadata enabled
+    fileOps.mkDirs(File.separator + rootDir);
+    System.out.println("\nCREATING A DIR UNDER " + File.separator + rootDir + "\n");
+    fileOps.setMetaEnabled(File.separator + rootDir);
+    
+    //create the project folder and set it metadata enabled
     fileOps.mkDir(projectPath);
+    System.out.println("\nCREATING A DIR UNDER " + projectPath + "\n");
+    //fileOps.setMetaEnabled(projectPath);
   }
 
   /**
