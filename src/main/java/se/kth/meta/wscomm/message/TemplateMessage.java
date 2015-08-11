@@ -170,8 +170,7 @@ public class TemplateMessage extends ContentMessage {
 
           /*
            * if a template is being extended, cancel the field id so that they
-           * are
-           * reinserted and attached to the new template
+           * are reinserted and attached to the new template
            */
           if (Command.valueOf(this.action.toUpperCase())
                   == Command.EXTEND_TEMPLATE) {
@@ -272,8 +271,9 @@ public class TemplateMessage extends ContentMessage {
   @Override
   public String toString() {
     return "{\"sender\": \"" + this.sender + "\", "
-            + "\"action\": \"" + this.action + "\", "
             + "\"type\": \"" + this.TYPE + "\", "
+            + "\"status\": \"" + this.status + "\", "
+            + "\"action\": \"" + this.action + "\", "
             + "\"message\": \"" + this.message + "\"}";
   }
 

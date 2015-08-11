@@ -5,8 +5,8 @@
 
 var mainModule = angular.module('hopsWorksApp')
         .controller('ModifyFieldCtrl',
-                ['$scope', '$modalInstance', 'MetadataActionService',
-                  function ($scope, $modalInstance, MetadataActionService) {
+                ['$cookies', '$scope', '$modalInstance', 'MetadataActionService',
+                  function ($cookies, $scope, $modalInstance, MetadataActionService) {
 
                     $scope.fieldName = $scope.field.title;
                     $scope.fieldDescription = $scope.field.description;
@@ -20,26 +20,23 @@ var mainModule = angular.module('hopsWorksApp')
 
                     $scope.items = [];
 
-                    MetadataActionService.fetchFieldTypes()
+                    MetadataActionService.fetchFieldTypes($cookies['email'])
                             .then(function (response) {
-                              var board = JSON.parse(response.board);
-
+                              var content = JSON.parse(response.board);
+                              
                               //construct the select component's contents
-                              angular.forEach(board.fieldTypes, function (value, key) {
+                              angular.forEach(content.fieldTypes, function (value, key) {
                                 $scope.items.push({id: value.id, name: value.description});
                               });
                               $scope.selectedItem = $scope.items[0];
                             });
 
-                    MetadataActionService.fetchTableMetadata($scope.tableid)
+                    MetadataActionService.isFieldEmpty($cookies['email'], $scope.field.id)
                             .then(function (response) {
-                              console.log("TABLE METADATA RETRIEVED " + JSON.stringify(response.board));
-                              angular.forEach(response.fields, function (field, key) {
 
-                                if (field.data.length !== 0 && field.id === $scope.field.id) {
-                                  $scope.existingRawData = true;
-                                }
-                              });
+                              if (response.board !== "EMPTY") {
+                                $scope.existingRawData = true;
+                              }
                             });
 
                     switch ($scope.field.fieldtypeid) {

@@ -15,6 +15,7 @@ import se.kth.meta.db.TupleToFileFacade;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.Field;
+import se.kth.meta.entity.InodeTableComposite;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.Template;
@@ -52,7 +53,6 @@ public class Utils {
     try {
       this.templateFacade.addTemplate(template);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException("Could not add new template " + template.
               getName() + " " + e.getMessage());
     }
@@ -62,7 +62,6 @@ public class Utils {
     try {
       this.templateFacade.removeTemplate(template);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException("Could not remove template " + template.
               getName() + " " + e.getMessage());
     }
@@ -78,11 +77,11 @@ public class Utils {
       t.resetFields();
 
       try {
+        logger.log(Level.INFO, "STORE/UPDATE TABLE: {0} ", t);
+        
         //persist the parent
         int tableId = this.tableFacade.addTable(t);
-
-        logger.log(Level.INFO, "STORE/UPDATE TABLE: {0}", tableName);
-
+        
         for (Field field : tableFields) {
           //associate each field(child) with its table(parent)
           field.setTableid(tableId);
@@ -99,7 +98,6 @@ public class Utils {
           this.addFieldsPredefinedValues(predef, fieldid);
         }
       } catch (DatabaseException e) {
-        logger.log(Level.SEVERE, null, e);
         throw new ApplicationException("Could not add table " + t.getName()
                 + " " + e.getMessage());
       }
@@ -119,7 +117,6 @@ public class Utils {
         this.fieldPredefinedValueFacade.addFieldPredefinedValue(predefval);
       }
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException("Could not add predefined value " + e.
               getMessage());
     }
@@ -130,9 +127,9 @@ public class Utils {
       logger.log(Level.INFO, "DELETING TABLE {0} ", table.getName());
       this.tableFacade.deleteTable(table);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteTable encountered a problem");
+              "Utils.java: method deleteTable encountered a problem " + e.
+              getMessage());
     }
   }
 
@@ -142,9 +139,9 @@ public class Utils {
       logger.log(Level.INFO, "DELETING FIELD {0} ", field);
       this.fieldFacade.deleteField(field);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteField encountered a problem");
+              "Utils.java: method deleteField encountered a problem " + e.
+              getMessage());
     }
   }
 
@@ -154,29 +151,30 @@ public class Utils {
 
       this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteField encountered a problem");
+              "Utils.java: method deleteField encountered a problem " + e.
+              getMessage());
     }
   }
 
-  public void storeMetadata(List<EntityIntf> list) throws ApplicationException {
+  public void storeMetadata(List<EntityIntf> composite, List<EntityIntf> raw)
+          throws ApplicationException {
 
     try {
       /*
        * get the inodeid present in the entities in the list. It is the
        * same for all the entities, since they constitute a single tuple
        */
-      RawData r = (RawData) list.get(0);
+      InodeTableComposite itc = (InodeTableComposite) composite.get(0);
 
-      //create a metadata tuple attached to an inodeid
-      TupleToFile ttf = new TupleToFile(-1, r.getInodeid());
+      //create a metadata tuple attached to be attached to an inodeid
+      TupleToFile ttf = new TupleToFile(-1, itc.getInodeid());
       int tupleid = this.tupletoFileFacade.addTupleToFile(ttf);
 
       //every rawData entity carries the same inodeid
-      for (EntityIntf raw : list) {
+      for (EntityIntf raww : raw) {
 
-        r = (RawData) raw;
+        RawData r = (RawData) raww;
         r.setData(r.getData().replaceAll("\"", ""));
         r.setTupleid(tupleid);
 
@@ -185,10 +183,28 @@ public class Utils {
       }
 
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: storeMetadata(List<?> list) encountered a problem");
+              "Utils.java: storeMetadata(List<?> list) encountered a problem "
+              + e.getMessage());
     }
   }
 
+  /**
+   * Updates a single raw data record.
+   * <p>
+   * @param raw
+   * @throws ApplicationException
+   */
+  public void updateMetadata(RawData raw) throws ApplicationException {
+    try {
+
+      RawData rawdata = this.rawDataFacade.getRawData(raw.getId());
+      rawdata.setData(raw.getData());
+      this.rawDataFacade.addRawData(rawdata);
+    } catch (DatabaseException e) {
+      throw new ApplicationException(e.getMessage(),
+              "Utils.java: updateMetadata(RawData) encountered a problem " + e.
+              getMessage());
+    }
+  }
 }
