@@ -131,13 +131,13 @@ angular.module('hopsWorksApp')
                     auth: ['$q', '$location', 'AuthService',
                       function ($q, $location, AuthService) {
                         return AuthService.session().then(
-                            function (success) {
-                            },
-                            function (err) {
-                              $location.path('/login');
-                              $location.replace();
-                              return $q.reject(err);
-                            });
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
                       }],
                     dsName: function () {
                       return dsName;
@@ -155,13 +155,13 @@ angular.module('hopsWorksApp')
                     auth: ['$q', '$location', 'AuthService',
                       function ($q, $location, AuthService) {
                         return AuthService.session().then(
-                            function (success) {
-                            },
-                            function (err) {
-                              $location.path('/login');
-                              $location.replace();
-                              return $q.reject(err);
-                            });
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
                       }],
                     result: function () {
                       return result;
@@ -254,7 +254,7 @@ angular.module('hopsWorksApp')
                     templateId: function () {
                       return templateId;
                     },
-                    showSkipButton: function(){
+                    showSkipButton: function () {
                       return showSkipButton;
                     }
                   }
@@ -310,6 +310,32 @@ angular.module('hopsWorksApp')
                     },
                     projectId: function () {
                       return projectId;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
+              modifyField: function (scope) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/metadata/modifyFieldDialog.html',
+                  controller: 'ModifyFieldCtrl',
+                  scope: scope,
+                  size: 'md',
+                  backdrop: 'static',
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    scope: function () {
+                      return scope;
                     }
                   }
                 });

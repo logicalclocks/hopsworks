@@ -64,7 +64,7 @@ public class WebSocketEndpoint {
         session.close();
         return;
       } catch (IOException ex) {
-        logger.log(Level.SEVERE, null, ex);
+        logger.log(Level.SEVERE, ex.getMessage(), ex);
       }
     }
 
@@ -77,7 +77,7 @@ public class WebSocketEndpoint {
         session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY,
                 "You do not have a role in this project."));
       } catch (IOException ex) {
-        logger.log(Level.SEVERE, null, ex);
+        logger.log(Level.SEVERE, ex.getMessage(), ex);
       }
     }
     session.getUserProperties().put("projectID", this.project.getId());
@@ -117,7 +117,6 @@ public class WebSocketEndpoint {
                   new Object[]{msg, s.getUserPrincipal()});
         }
       } catch (IOException | EncodeException ex) {
-        logger.log(Level.SEVERE, null, ex);
         this.sendError(session, ex.getMessage());
       }
     }

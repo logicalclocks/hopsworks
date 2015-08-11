@@ -1,41 +1,41 @@
 package se.kth.meta.wscomm.message;
 
+import java.io.StringReader;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
-import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldType;
+import se.kth.meta.entity.Field;
 
 /**
  *
- * @author vangelis
+ * @author Vangelis
  */
-public class FieldTypeMessage extends PlainMessage {
+public class CheckFieldContentMessage extends ContentMessage {
 
-  private static final Logger logger = Logger.
-          getLogger(FieldTypeMessage.class.getName());
+  private static final Logger logger = Logger.getLogger(CheckFieldContentMessage.class.
+          getName());
 
-  private String TYPE = "FieldTypeMessage";
-  private String sender;
-  private String message;
-  private String action;
-  private String status;
-
-  public FieldTypeMessage() {
-    this.status = "OK";
-    this.action = "fetch_field_types";
+  
+  public CheckFieldContentMessage() {
+    super();
+    this.TYPE = "CheckFieldContentMessage";
   }
 
+  public CheckFieldContentMessage(String sender, String message){
+    this();
+    this.sender = sender;
+    this.message = message;
+  }
+  
   @Override
   public void init(JsonObject json) {
     this.sender = json.getString("sender");
     this.message = json.getString("message");
     this.action = json.getString("action");
-    this.setStatus("OK");
-    super.setAction(this.action);
   }
 
   @Override
@@ -45,7 +45,7 @@ public class FieldTypeMessage extends PlainMessage {
             .add("type", this.TYPE)
             .add("status", this.status)
             .add("message", this.message)
-            .build()
+            .build() //pretty necessary so as to build the actual json structure
             .toString();
 
     return value;
@@ -57,8 +57,23 @@ public class FieldTypeMessage extends PlainMessage {
   }
 
   @Override
-  public void setAction(String action) {
-    this.action = action;
+  public List<EntityIntf> parseSchema() {
+    JsonObject obj = Json.createReader(new StringReader(this.message)).
+            readObject();
+
+    List<EntityIntf> list = null;
+
+    try {
+      int fieldid = obj.getInt("fieldid");
+
+      Field field = new Field(fieldid);
+      list = new LinkedList<>();
+      list.add(field);
+    } catch (NullPointerException e) {
+      logger.log(Level.SEVERE, "Field id was not present in the message");
+    }
+
+    return list;
   }
 
   @Override
@@ -82,24 +97,13 @@ public class FieldTypeMessage extends PlainMessage {
   }
 
   @Override
-  public String buildSchema(List<EntityIntf> list) {
+  public String getStatus() {
+    return this.status;
+  }
 
-    List<FieldType> ft = (List<FieldType>) (List<?>) list;
-
-    JsonObjectBuilder builder = Json.createObjectBuilder();
-    JsonArrayBuilder fieldTypes = Json.createArrayBuilder();
-
-    for (FieldType fi : ft) {
-      JsonObjectBuilder field = Json.createObjectBuilder();
-      field.add("id", fi.getId());
-      field.add("description", fi.getDescription());
-
-      fieldTypes.add(field);
-    }
-
-    builder.add("fieldTypes", fieldTypes);
-
-    return builder.build().toString();
+  @Override
+  public void setStatus(String status) {
+    this.status = status;
   }
 
   @Override

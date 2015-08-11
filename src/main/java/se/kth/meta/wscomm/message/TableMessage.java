@@ -19,18 +19,16 @@ public class TableMessage extends ContentMessage {
   private static final Logger logger = Logger.getLogger(TableMessage.class.
           getName());
 
-  private final String TYPE = "TableMessage";
-  private String sender;
-  private String message;
-  private String action;
-  private String status;
-
+  public TableMessage(){
+    super();
+    this.TYPE = "TableMessage";
+  }
+  
   @Override
   public void init(JsonObject json) {
     this.sender = json.getString("sender");
     this.message = json.getString("message");
     this.action = json.getString("action");
-    this.setStatus("OK");
     super.setAction(this.action);
 
     try {
@@ -67,17 +65,8 @@ public class TableMessage extends ContentMessage {
 
     int tableId = obj.getInt("id");
     String tableName = obj.getString("name");
-    boolean forceDelete = false;
-
-    try {
-      forceDelete = obj.getBoolean("forceDelete");
-      logger.log(Level.SEVERE, "FORCE DELETE ON TABLE {0}", forceDelete);
-    } catch (NullPointerException e) {
-    }
 
     MTable table = new MTable(tableId, tableName);
-    //FORCE DELETE NEEDS TO BE REFACTORED
-    //table.setForceDelete(forceDelete);
     List<EntityIntf> list = new LinkedList<>();
     list.add(table);
 
@@ -118,6 +107,8 @@ public class TableMessage extends ContentMessage {
   public String toString() {
     return "{\"sender\": \"" + this.sender + "\", "
             + "\"type\": \"" + this.TYPE + "\", "
+            + "\"status\": \"" + this.status + "\", "
+            + "\"action\": \"" + this.action + "\", "
             + "\"message\": \"" + this.message + "\"}";
   }
 }

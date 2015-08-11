@@ -32,17 +32,46 @@ public class RawDataFacade extends AbstractFacade<RawData> {
     super(RawData.class);
   }
 
+  public RawData getRawData(int rawid) throws DatabaseException {
+
+    return this.em.find(RawData.class, rawid);
+  }
+
   /**
    * adds a new record into 'raw_data' table. RawData is the object that's
    * going to be persisted to the database
    * <p>
    *
    * @param raw
+   * @return the id of the affected row
    * @throws se.kth.meta.exception.DatabaseException
    */
-  public void addRawData(RawData raw) throws DatabaseException {
+  public int addRawData(RawData raw) throws DatabaseException {
 
-    this.em.persist(raw);
+    try {
+      RawData r = this.contains(raw) ? raw : this.getRawData(raw.getId());
+
+      if (r != null && r.getId() != -1) {
+        /*
+         * if the row exists just update it.
+         */
+        r.copy(raw);
+        this.em.merge(r);
+      } else {
+        /*
+         * if the row is new then just persist it
+         */
+        r = raw;
+        this.em.persist(r);
+      }
+
+      this.em.flush();
+      this.em.clear();
+      return r.getId();
+    } catch (IllegalStateException | SecurityException e) {
+
+      throw new DatabaseException(RawDataFacade.class.getName(), e.getMessage());
+    }
   }
 
   public int getLastInsertedTupleId() throws DatabaseException {
@@ -53,5 +82,15 @@ public class RawDataFacade extends AbstractFacade<RawData> {
     List<RawData> list = query.getResultList();
 
     return (!list.isEmpty()) ? list.get(0).getId() : 0;
+  }
+
+  /**
+   * Checks if a raw data instance is a managed entity
+   * <p>
+   * @param rawdata
+   * @return
+   */
+  public boolean contains(RawData rawdata) {
+    return this.em.contains(rawdata);
   }
 }

@@ -155,7 +155,6 @@ public class RequestService {
       json.setErrorMsg("Could not send e-mail to " + project.getOwner().
               getEmail());
       datasetRequest.remove(dsRequest);
-      logger.log(Level.SEVERE, null, ex);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(
                       json).build();
@@ -203,7 +202,7 @@ public class RequestService {
     } catch (MessagingException ex) {
       json.setErrorMsg("Could not send e-mail to " + project.getOwner().
               getEmail());
-      logger.log(Level.SEVERE, null, ex);
+
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(
                       json).build();

@@ -3,24 +3,21 @@ package se.kth.meta.wscomm.message;
 import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.MTable;
 
 /**
- *
+ * A message asking for a table's metadata
+ * 
  * @author vangelis
  */
-public class TableMetadataMessage extends MetadataMessage {
+public class FetchTableMetadataMessage extends FetchMetadataMessage {
 
-  private static final Logger logger = Logger.
-          getLogger(TableMetadataMessage.class.getName());
-
-  public TableMetadataMessage() {
+  public FetchTableMetadataMessage() {
     super();
-    super.TYPE = "TableMetadataMessage";
+    super.TYPE = "FetchTableMetadataMessage";
   }
 
   /**
@@ -29,12 +26,17 @@ public class TableMetadataMessage extends MetadataMessage {
    * @param sender the message sender
    * @param message the actual message
    */
-  public TableMetadataMessage(String sender, String message) {
+  public FetchTableMetadataMessage(String sender, String message) {
     this();
     this.sender = sender;
     this.message = message;
   }
 
+  @Override
+  public void init(JsonObject obj){
+    super.init(obj);
+  }
+  
   @Override
   public List<EntityIntf> parseSchema() {
     JsonObject obj = Json.createReader(new StringReader(this.message)).
@@ -54,6 +56,8 @@ public class TableMetadataMessage extends MetadataMessage {
   public String toString() {
     return "{\"sender\": \"" + this.sender + "\", "
             + "\"type\": \"" + this.TYPE + "\", "
+            + "\"status\": \"" + this.status + "\", "
+            + "\"action\": \"" + this.action + "\", "
             + "\"message\": \"" + this.message + "\"}";
   }
 }

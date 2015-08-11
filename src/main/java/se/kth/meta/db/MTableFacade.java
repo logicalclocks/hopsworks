@@ -32,7 +32,6 @@ public class MTableFacade extends AbstractFacade<MTable> {
   }
 
   public MTable getTable(int tableid) throws DatabaseException {
-
     return this.em.find(MTable.class, tableid);
   }
 
@@ -47,9 +46,10 @@ public class MTableFacade extends AbstractFacade<MTable> {
   public int addTable(MTable table) throws DatabaseException {
 
     try {
+
       MTable t = this.getTable(table.getId());
 
-      if (t != null) {
+      if (t != null && t.getId() != -1) {
         /*
          * if the table exists just update it, along with its corresponding
          * child fields.
@@ -71,6 +71,7 @@ public class MTableFacade extends AbstractFacade<MTable> {
       }
 
       this.em.flush();
+      this.em.clear();
       return t.getId();
     } catch (IllegalStateException | SecurityException e) {
 
@@ -80,7 +81,7 @@ public class MTableFacade extends AbstractFacade<MTable> {
 
   /**
    * Deletes a tables entity from meta_tables table. If the object is an
-   * unmanaged entity it has to be merged to become managed so that the delete
+   * unmanaged entity it has to be merged to become managed so that delete
    * can cascade down its associations if necessary
    * <p>
    *
@@ -90,21 +91,8 @@ public class MTableFacade extends AbstractFacade<MTable> {
   public void deleteTable(MTable table) throws DatabaseException {
 
     try {
-      MTable t = this.getTable(table.getId());
+      MTable t = this.contains(table) ? table : this.getTable(table.getId());
 
-//    FORCE DELETE NEEDS TO BE REFACTORED
-//            t.setForceDelete(table.forceDelete());
-//            if (!t.getFields().isEmpty() && !t.forceDelete()) {
-//                throw new DatabaseException("MTable '" + t.getName() + "' has fields "
-//                        + "associated to it");
-//            }
-      //first remove all the child elements of this table to avoid foreign key violation
-//      List<Field> fields = t.getFields();
-//      for (Field field : fields) {
-//        //FORCE DELETE NEEDS TO BE REFACTORED
-//        field.setForceDelete(true);
-//        this.deleteField(field);
-//      }
       //remove the table
       if (this.em.contains(t)) {
         this.em.remove(t);
@@ -114,9 +102,18 @@ public class MTableFacade extends AbstractFacade<MTable> {
       }
 
     } catch (SecurityException | IllegalStateException ex) {
-      logger.log(Level.SEVERE, null, ex);
       throw new DatabaseException(MTableFacade.class.getName(),
               "Could not delete table " + ex.getMessage());
     }
+  }
+  
+  /**
+   * Checks if a table instance is a managed entity
+   * <p>
+   * @param table
+   * @return 
+   */
+  public boolean contains(MTable table){
+    return this.em.contains(table);
   }
 }

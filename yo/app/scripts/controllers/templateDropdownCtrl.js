@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp').controller('TemplateDropdownCtrl',
-        ['$scope', '$modalInstance', 'showSkipButton', 'templateId', 'MetadataActionService',
-          function ($scope, $modalInstance, showSkipButton, templateId, MetadataActionService) {
+        ['$cookies', '$scope', '$modalInstance', 'showSkipButton', 'templateId', 'MetadataActionService',
+          function ($cookies, $scope, $modalInstance, showSkipButton, templateId, MetadataActionService) {
 
             var self = this;
 
@@ -15,7 +15,7 @@ angular.module('hopsWorksApp').controller('TemplateDropdownCtrl',
             self.skipTemplate = false;
             self.showSkipButton = showSkipButton;
 
-            MetadataActionService.fetchTemplates()
+            MetadataActionService.fetchTemplates($cookies['email'])
                     .then(function (response) {
                       var temps = JSON.parse(response.board);
                       angular.forEach(temps.templates, function (value, key) {

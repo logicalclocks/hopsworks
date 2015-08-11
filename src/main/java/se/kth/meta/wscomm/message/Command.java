@@ -37,5 +37,11 @@ public enum Command {
   //
   QUIT,
   //
-  TEST
+  TEST,
+  //
+  IS_TABLE_EMPTY,
+  //
+  IS_FIELD_EMPTY,
+  //
+  UPDATE_METADATA
 }
