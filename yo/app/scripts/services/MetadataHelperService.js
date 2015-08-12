@@ -8,8 +8,8 @@
  * metadataSliderCtrl.
  */
 angular.module('hopsWorksApp')
-        .service('MetadataHelperService', ['$cookies', '$rootScope', '$q', 'MetadataActionService',
-          function ($cookies, $rootScope, $q, MetadataActionService) {
+        .service('MetadataHelperService', ['$cookies', '$q', 'MetadataActionService',
+          function ($cookies, $q, MetadataActionService) {
 
             var currentFile = {};
             var availableTemplates = [];
