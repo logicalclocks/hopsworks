@@ -252,7 +252,7 @@ public class ProjectController {
     //logActivity(ActivityFacade.REMOVED_PROJECT,
     //ActivityFacade.FLAG_PROJECT, user, project);
 
-    if (project == null && deleteFilesOnRemove) {
+    if (deleteFilesOnRemove) {
       String path = File.separator + Constants.DIR_ROOT + File.separator
               + project.getName();
       success = fileOps.rmRecursive(path);
