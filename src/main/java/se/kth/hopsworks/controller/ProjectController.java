@@ -87,30 +87,35 @@ public class ProjectController {
       Date now = new Date();
       Project project = new Project(newProject.getProjectName(), user, now);
       project.setDescription(newProject.getDescription());
-      //Persist project object
-      projectFacade.persistProject(project);
-      projectFacade.flushEm();//flushing it to get project id
-      //Add the activity information     
-      logActivity(ActivityFacade.NEW_PROJECT,
-              ActivityFacade.FLAG_PROJECT, user, project);
-      //update role information in project
-      addProjectOwner(project.getId(), user.getEmail());
-      logger.log(Level.FINE, "{0} - project created successfully.", project.
-              getName());
 
-      //create folder structure in hdfs
-      mkProjectDIR(project.getName());
-      logger.log(Level.FINE, "{0} - project directory created successfully.",
-              project.getName());
+      /*
+       * first create the folder structure in hdfs. If it is successful move on
+       * to create the project in hopsworks
+       */
+      if (mkProjectDIR(project.getName())) {
+        //Persist project object
+        projectFacade.persistProject(project);
+        projectFacade.flushEm();//flushing it to get project id
+        //Add the activity information     
+        logActivity(ActivityFacade.NEW_PROJECT,
+                ActivityFacade.FLAG_PROJECT, user, project);
+        //update role information in project
+        addProjectOwner(project.getId(), user.getEmail());
+        logger.log(Level.FINE, "{0} - project created successfully.", project.
+                getName());
 
-      return project;
+        logger.log(Level.FINE, "{0} - project directory created successfully.",
+                project.getName());
+
+        return project;
+      }
     } else {
       logger.log(Level.SEVERE, "Project with name {0} already exists!",
               newProject.getProjectName());
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NAME_EXIST);
     }
-
+    return null;
   }
 
   /**
@@ -213,11 +218,14 @@ public class ProjectController {
   }
 
   //create project on HDFS
-  private void mkProjectDIR(String projectName) throws IOException {
+  private boolean mkProjectDIR(String projectName) throws IOException {
 
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator + projectName;
 
+    boolean rootDirCreated = true;
+    boolean projectDirCreated = false;
+    
     if (!fileOps.isDir(Constants.DIR_ROOT)) {
       /*
        * if the base path does not exist in the file system, create it first
@@ -226,8 +234,8 @@ public class ProjectController {
        */
       System.out.println("\nCREATING A DIR UNDER " + File.separator + rootDir
             + "\n");
-      fileOps.mkDir(File.separator + rootDir);
-      fileOps.setMetaEnabled(File.separator + rootDir);
+      rootDirCreated = fileOps.mkDir(rootDir);
+      fileOps.setMetaEnabled(rootDir);
     }
 
     /*
@@ -235,9 +243,11 @@ public class ProjectController {
      * that'll be created in this directory tree will have as a parent this
      * inode.
      */
-    fileOps.mkDirs(projectPath);
+    projectDirCreated = fileOps.mkDirs(projectPath);
     fileOps.setMetaEnabled(projectPath);
     System.out.println("\nCREATING A DIR UNDER " + projectPath + "\n");
+
+    return rootDirCreated && projectDirCreated;
   }
 
   /**
