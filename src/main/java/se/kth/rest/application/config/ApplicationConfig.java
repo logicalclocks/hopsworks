@@ -26,6 +26,29 @@ public class ApplicationConfig extends Application {
    * If required, comment out calling this method in getClasses().
    */
   private void addRestResourceClasses(Set<Class<?>> resources) {
+    resources.add(com.fasterxml.jackson.jaxrs.base.JsonMappingExceptionMapper.class);
+    resources.add(com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper.class);
+    resources.add(com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.class);
+    resources.add(com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider.class);
+    resources.add(com.fasterxml.jackson.jaxrs.json.JsonMappingExceptionMapper.class);
+    resources.add(com.fasterxml.jackson.jaxrs.json.JsonParseExceptionMapper.class);
+    resources.add(org.eclipse.persistence.jpa.rs.exceptions.JPARSExceptionMapper.class);
+    resources.add(org.eclipse.persistence.jpa.rs.resources.EntityResource.class);
+    resources.add(org.eclipse.persistence.jpa.rs.resources.MetadataResource.class);
+    resources.add(org.eclipse.persistence.jpa.rs.resources.PersistenceResource.class);
+    resources.add(org.eclipse.persistence.jpa.rs.resources.PersistenceUnitResource.class);
+    resources.add(org.eclipse.persistence.jpa.rs.resources.QueryResource.class);
+    resources.add(org.eclipse.persistence.jpa.rs.resources.SingleResultQueryResource.class);
+    resources.add(org.eclipse.persistence.jpa.rs.resources.unversioned.EntityResource.class);
+    resources.add(org.eclipse.persistence.jpa.rs.resources.unversioned.PersistenceResource.class);
+    resources.add(org.eclipse.persistence.jpa.rs.resources.unversioned.PersistenceUnitResource.class);
+    resources.add(org.eclipse.persistence.jpa.rs.resources.unversioned.QueryResource.class);
+    resources.add(org.eclipse.persistence.jpa.rs.resources.unversioned.SingleResultQueryResource.class);
+    resources.add(org.glassfish.jersey.server.mvc.internal.ViewableMessageBodyWriter.class);
+    resources.add(org.glassfish.jersey.server.oauth1.DefaultOAuth1Provider.class);
+    resources.add(org.glassfish.jersey.server.oauth1.internal.AccessTokenResource.class);
+    resources.add(org.glassfish.jersey.server.oauth1.internal.RequestTokenResource.class);
+    resources.add(org.glassfish.jersey.server.wadl.internal.WadlResource.class);
     resources.add(se.kth.hopsworks.filters.RequestAuthFilter.class);
     resources.add(se.kth.hopsworks.rest.ActivityService.class);
     resources.add(se.kth.hopsworks.rest.AdamService.class);

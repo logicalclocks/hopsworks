@@ -89,7 +89,7 @@ public class NotebookServer implements
   public NotebookServer() {
   }
 
-  private Notebook notebook() {
+  public Notebook notebook() {
     return this.notebook;
   }
 

@@ -389,4 +389,7 @@ public class Notebook {
     return replFactory;
   }
 
+  public void setNotebookRepo(NotebookRepo notebookRepo) {
+    this.notebookRepo = notebookRepo;
+  }
 }
