@@ -5,7 +5,7 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('MetaSliderCtrl', ['$cookies', '$modal', '$scope', '$routeParams',
+        .controller('MetadataCtrl', ['$cookies', '$modal', '$scope', '$routeParams',
           '$filter', 'DataSetService', 'ModalService', 'growl', 'MetadataActionService',
           'MetadataHelperService',
           function ($cookies, $modal, $scope, $routeParams, $filter, DataSetService,
