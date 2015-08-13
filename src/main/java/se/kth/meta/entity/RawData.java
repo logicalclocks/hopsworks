@@ -13,7 +13,6 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -69,10 +68,13 @@ public class RawData implements Serializable, EntityIntf {
   @Column(name = "data")
   private String data;
 
-  @Transient
-  private int inodeid;
+  @ManyToOne(optional = false)
+  @PrimaryKeyJoinColumn(name = "tupleid",
+          referencedColumnName = "tupleid")
+  private TupleToFile tupleToFile;
 
   public RawData() {
+    this.id = -1;
   }
 
   public RawData(Integer id) {
@@ -116,11 +118,11 @@ public class RawData implements Serializable, EntityIntf {
   /*
    * get and set the parent entity
    */
-  public void setFields(Field fields) {
+  public void setField(Field fields) {
     this.fields = fields;
   }
 
-  public Field getFields() {
+  public Field getField() {
     return this.fields;
   }
   /*
@@ -135,20 +137,23 @@ public class RawData implements Serializable, EntityIntf {
     this.tupleid = tupleid;
   }
 
+  /*
+   * get and set the parent entity
+   */
+  public void setTupleToFile(TupleToFile ttf) {
+    this.tupleToFile = ttf;
+  }
+
+  public TupleToFile getTupleToFile() {
+    return this.tupleToFile;
+  }
+
   public String getData() {
     return data;
   }
 
   public void setData(String data) {
     this.data = data;
-  }
-
-  public int getInodeid() {
-    return this.inodeid;
-  }
-
-  public void setInodeid(int inodeid) {
-    this.inodeid = inodeid;
   }
 
   @Override

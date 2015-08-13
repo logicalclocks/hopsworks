@@ -6,7 +6,6 @@ import javax.annotation.PreDestroy;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import se.kth.hopsworks.zeppelin.notebook.Notebook;
-import se.kth.hopsworks.zeppelin.socket.NotebookServer;
 
 /**
  *
@@ -28,7 +27,7 @@ public class ReleaseZeppelinResources {
     zeppelin.getReplFactory().close();
     Notebook notebook = zeppelin.getNotebookServer().notebook();
     notebook.setNotebookRepo(null);
-    notebook = null;
+    notebook = null; 
     logger.log(Level.SEVERE, "Closed interpreters");
 
   }

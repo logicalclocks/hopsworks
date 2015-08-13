@@ -49,7 +49,7 @@ public class FieldFacade extends AbstractFacade<Field> {
     try {
       Field f = this.getField(field.getId());
 
-      if (field.getId() != -1) {
+      if (f != null && f.getId() != -1) {
         f.copy(field);
         this.em.merge(f);
       } else {
@@ -66,6 +66,7 @@ public class FieldFacade extends AbstractFacade<Field> {
       }
 
       this.em.flush();
+      this.em.clear();
       return f.getId();
     } catch (IllegalStateException | SecurityException e) {
 
@@ -76,7 +77,7 @@ public class FieldFacade extends AbstractFacade<Field> {
   }
 
   /**
-   * Deletes a fields entity from the fields table. If the object is an
+   * Deletes a fields entity. If the object is an
    * unmanaged entity it has to be merged to become managed so that the delete
    * can cascade down its associations if necessary
    * <p>
@@ -87,13 +88,7 @@ public class FieldFacade extends AbstractFacade<Field> {
    */
   public void deleteField(Field field) throws DatabaseException {
 
-    //FORCE DELETE NEEDS TO BE REFACTORED
-    Field f = this.getField(field.getId());
-//      f.setForceDelete(field.forceDelete());
-//      if (!f.getRawData().isEmpty() && !f.forceDelete()) {
-//        throw new DatabaseException("Field '" + f.getName() + "' has data "
-//                + "associated to it");
-//      }
+    Field f = this.contains(field) ? field : this.getField(field.getId());
 
     if (this.em.contains(f)) {
       this.em.remove(f);
@@ -101,5 +96,17 @@ public class FieldFacade extends AbstractFacade<Field> {
       //if the object is unmanaged it has to be managed before it is removed
       this.em.remove(this.em.merge(f));
     }
+    //persist the changes to the database immediately
+    this.em.flush();
+  }
+
+  /**
+   * Checks if a field instance is a managed entity
+   * <p>
+   * @param field
+   * @return
+   */
+  public boolean contains(Field field) {
+    return this.em.contains(field);
   }
 }

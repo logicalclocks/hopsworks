@@ -23,10 +23,10 @@ public class FieldMessage extends ContentMessage {
   private static final Logger logger = Logger.getLogger(FieldMessage.class.
           getName());
 
-  private final String TYPE = "FieldMessage";
-  private String sender;
-  private String message;
-  private String status;
+  public FieldMessage(){
+    super();
+    this.TYPE = "FieldMessage";
+  }
 
   @Override
   public void init(JsonObject json) {
@@ -34,7 +34,6 @@ public class FieldMessage extends ContentMessage {
     this.message = json.getString("message");
     this.action = json.getString("action");
     super.setAction(this.action);
-    this.setStatus("OK");
 
     try {
       JsonObject object = Json.createReader(new StringReader(this.message)).
@@ -82,12 +81,7 @@ public class FieldMessage extends ContentMessage {
     String name = obj.getString("name");
     String type = obj.getString("type");
     String maxsize = obj.getJsonObject("sizefield").getString("value");
-    boolean forceDelete = false;
-    try {
-      forceDelete = obj.getBoolean("forceDelete");
-      logger.log(Level.INFO, "FORCE DELETE ON THE FIELD {0}", forceDelete);
-    } catch (NullPointerException e) {
-    }
+
     try {
       //sanitize maxsize in case the user has entered shit
       maxsize = (!"".equals(maxsize)) ? maxsize : "0";
@@ -104,8 +98,6 @@ public class FieldMessage extends ContentMessage {
     Field field = new Field(fieldId, tableId, name, type,
             Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0),
             (short) ((required) ? 1 : 0), description, fieldtypeid);
-    //FORCE DELETE NEEDS TO BE REFACTORED
-//    field.setForceDelete(forceDelete);
 
     //-- ATTACH the field's parent entity (FieldType)
     field.setFieldTypeId(fieldtypeid);
@@ -184,6 +176,7 @@ public class FieldMessage extends ContentMessage {
   public String toString() {
     return "{\"sender\": \"" + this.sender + "\", "
             + "\"type\": \"" + this.TYPE + "\", "
+            + "\"status\": \"" + this.status + "\", "
             + "\"action\": \"" + this.action + "\", "
             + "\"message\": \"" + this.message + "\"}";
   }

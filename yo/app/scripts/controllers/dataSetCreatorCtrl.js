@@ -8,8 +8,8 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('DataSetCreatorCtrl', ['$modalInstance', 'DataSetService', 'MetadataActionService', '$routeParams', 'growl', 'path',
-          function ($modalInstance, DataSetService, MetadataActionService, $routeParams, growl, path) {
+        .controller('DataSetCreatorCtrl', ['$cookies', '$modalInstance', 'DataSetService', 'MetadataActionService', '$routeParams', 'growl', 'path',
+          function ($cookies, $modalInstance, DataSetService, MetadataActionService, $routeParams, growl, path) {
 
             var self = this;
 
@@ -22,7 +22,7 @@ angular.module('hopsWorksApp')
 
             self.templates = [];
 
-            MetadataActionService.fetchTemplates()
+            MetadataActionService.fetchTemplates($cookies['email'])
                     .then(function (response) {
                       var temps = JSON.parse(response.board);
                       angular.forEach(temps.templates, function (value, key) {

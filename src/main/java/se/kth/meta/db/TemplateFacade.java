@@ -1,7 +1,7 @@
 package se.kth.meta.db;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -63,7 +63,6 @@ public class TemplateFacade extends AbstractFacade<Template> {
       }
 
     } catch (SecurityException | IllegalStateException ex) {
-      logger.log(Level.SEVERE, null, ex);
       throw new DatabaseException(TemplateFacade.class.getName(),
               "Could not remove template " + ex.getMessage());
     }
@@ -89,6 +88,8 @@ public class TemplateFacade extends AbstractFacade<Template> {
     for (MTable table : modifiedEntities) {
       this.em.refresh(table);
     }
+    
+    Collections.sort(modifiedEntities);
     return modifiedEntities;
   }
 

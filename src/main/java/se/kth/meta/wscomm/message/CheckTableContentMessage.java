@@ -8,35 +8,35 @@ import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.InodeTableComposite;
+import se.kth.meta.entity.MTable;
 
 /**
- * Represents a generic metadata message. It may be about fetching table
- * metadata or inode metadata, or about updating table metadata depending on its
- * subclasses
- * <p>
- * @author vangelis
+ *
+ * @author Vangelis
  */
-public class MetadataMessage implements Message {
+public class CheckTableContentMessage extends ContentMessage {
 
-  private static final Logger logger = Logger.
-          getLogger(MetadataMessage.class.getName());
+  private static final Logger logger = Logger.getLogger(
+          CheckTableContentMessage.class.
+          getName());
 
-  protected String TYPE = "MetadataMessage";
-  protected String sender;
-  protected String message;
-  protected String action;
-  protected String status;
-
-  public MetadataMessage() {
-    this.status = "OK";
+  
+  public CheckTableContentMessage() {
+    super();
+    this.TYPE = "CheckTableContentMessage";
   }
 
+  public CheckTableContentMessage(String sender, String message){
+    this();
+    this.sender = sender;
+    this.message = message;
+  }
+  
   @Override
-  public void init(JsonObject obj) {
-    this.sender = obj.getString("sender");
-    this.message = obj.getString("message");
-    this.action = obj.getString("action");
+  public void init(JsonObject json) {
+    this.sender = json.getString("sender");
+    this.message = json.getString("message");
+    this.action = json.getString("action");
   }
 
   @Override
@@ -53,22 +53,10 @@ public class MetadataMessage implements Message {
   }
 
   @Override
-  public void setAction(String action) {
-    this.action = action;
-  }
-
-  @Override
   public String getAction() {
     return this.action;
   }
 
-  /**
-   * Instantiates the custom entity InodeTableComposite to pass table id and
-   * inode id to the protocol. This way raw data can be filtered by table id and
-   * inode id and be grouped in the front end.
-   *
-   * @return the list with the RawData objects
-   */
   @Override
   public List<EntityIntf> parseSchema() {
     JsonObject obj = Json.createReader(new StringReader(this.message)).
@@ -77,22 +65,16 @@ public class MetadataMessage implements Message {
     List<EntityIntf> list = null;
 
     try {
-      int inodeid = obj.getInt("inodeid");
       int tableid = obj.getInt("tableid");
 
-      InodeTableComposite itc = new InodeTableComposite(tableid, inodeid);
+      MTable table = new MTable(tableid);
       list = new LinkedList<>();
-      list.add(itc);
+      list.add(table);
     } catch (NullPointerException e) {
-      logger.log(Level.SEVERE, "Inodeid or tableid not present in the message");
+      logger.log(Level.SEVERE, "Table id was not present in the message");
     }
 
     return list;
-  }
-
-  @Override
-  public String buildSchema(List<EntityIntf> entity) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 
   @Override
@@ -125,4 +107,12 @@ public class MetadataMessage implements Message {
     this.status = status;
   }
 
+  @Override
+  public String toString() {
+    return "{\"sender\": \"" + this.sender + "\", "
+            + "\"type\": \"" + this.TYPE + "\", "
+            + "\"status\": \"" + this.status + "\", "
+            + "\"action\": \"" + this.action + "\", "
+            + "\"message\": \"" + this.message + "\"}";
+  }
 }

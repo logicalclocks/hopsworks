@@ -80,36 +80,42 @@ public class ProjectController {
           AppException, IOException {
     User user = userBean.getUserByEmail(email);
     //if there is no project by the same name for this user and project name is valid
-    if (projectNameValidator.isValidName(newProject.getProjectName()) && !projectFacade.
+    if (projectNameValidator.isValidName(newProject.getProjectName())
+            && !projectFacade.
             projectExists(newProject.getProjectName())) {
       //Create a new project object
       Date now = new Date();
       Project project = new Project(newProject.getProjectName(), user, now);
       project.setDescription(newProject.getDescription());
-      //Persist project object
-      projectFacade.persistProject(project);
-      projectFacade.flushEm();//flushing it to get project id
-      //Add the activity information     
-      logActivity(ActivityFacade.NEW_PROJECT,
-              ActivityFacade.FLAG_PROJECT, user, project);
-      //update role information in project
-      addProjectOwner(project.getId(), user.getEmail());
-      logger.log(Level.FINE, "{0} - project created successfully.", project.
-              getName());
 
-      //create folder structure in hdfs
-      mkProjectDIR(project.getName());
-      logger.log(Level.FINE, "{0} - project directory created successfully.",
-              project.getName());
+      /*
+       * first create the folder structure in hdfs. If it is successful move on
+       * to create the project in hopsworks
+       */
+      if (mkProjectDIR(project.getName())) {
+        //Persist project object
+        projectFacade.persistProject(project);
+        projectFacade.flushEm();//flushing it to get project id
+        //Add the activity information     
+        logActivity(ActivityFacade.NEW_PROJECT,
+                ActivityFacade.FLAG_PROJECT, user, project);
+        //update role information in project
+        addProjectOwner(project.getId(), user.getEmail());
+        logger.log(Level.FINE, "{0} - project created successfully.", project.
+                getName());
 
-      return project;
+        logger.log(Level.FINE, "{0} - project directory created successfully.",
+                project.getName());
+
+        return project;
+      }
     } else {
       logger.log(Level.SEVERE, "Project with name {0} already exists!",
               newProject.getProjectName());
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NAME_EXIST);
     }
-
+    return null;
   }
 
   /**
@@ -212,11 +218,11 @@ public class ProjectController {
   }
 
   //create project on HDFS
-  private void mkProjectDIR(String projectName) throws IOException {
+  private boolean mkProjectDIR(String projectName) throws IOException {
 
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator + projectName;
-    fileOps.mkDir(projectPath);
+    return fileOps.mkDir(projectPath);
   }
 
   /**
@@ -375,6 +381,7 @@ public class ProjectController {
     }
     return new ProjectDTO(project, services, projectTeam, kids);
   }
+
   /**
    * Deletes a member from a project
    *

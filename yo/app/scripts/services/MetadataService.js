@@ -11,7 +11,7 @@ angular.module('hopsWorksApp')
           var projectID = 1;
 
           //generic
-          var ws = $websocket("ws://" + $location.host() + ":8080/hopsworks/wspoint/" + projectID);
+          var ws = $websocket("ws://" + $location.host() + ":" + $location.port() + "/hopsworks/wspoint/" + projectID);
 
           var collection = [];
 
