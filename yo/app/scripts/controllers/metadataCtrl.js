@@ -539,6 +539,17 @@ angular.module('hopsWorksApp')
 
               self.currentTableId = tab.tableid;
             };
+            
+            self.importExportTemplate = function(){
+              var selectedTemplate = {};
+              
+              ModalService.importExportTemplate('md', selectedTemplate).then(
+                      function (success) {
+                        console.log(JSON.stringify(success));
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                      }, function (error) {
+              });
+            };
           }
         ]);
 
