@@ -118,7 +118,7 @@
           </execution>
         </executions>
       </plugin>
-      <!--maven war plugin -->
+      <!--maven war plugin--> 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
@@ -219,6 +219,14 @@
       <id>apache.snapshots</id>
       <name>Apache Development Snapshot Repository</name>
       <url>https://repository.apache.org/content/repositories/snapshots/</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>io.hops</id>
+      <name>Hops</name>
+      <url>http://snurran.sics.se/hops</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>

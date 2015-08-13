@@ -224,7 +224,7 @@ public class ProjectController {
     String projectPath = File.separator + rootDir + File.separator + projectName;
 
     boolean rootDirCreated = true;
-    boolean projectDirCreated = false;
+    boolean projectDirCreated = true;
     
     if (!fileOps.isDir(Constants.DIR_ROOT)) {
       /*
@@ -234,8 +234,8 @@ public class ProjectController {
        */
       System.out.println("\nCREATING A DIR UNDER " + File.separator + rootDir
             + "\n");
-      rootDirCreated = fileOps.mkDir(rootDir);
-      fileOps.setMetaEnabled(rootDir);
+      rootDirCreated = fileOps.mkDir(File.separator + rootDir);
+      fileOps.setMetaEnabled(File.separator + rootDir);
     }
 
     /*
