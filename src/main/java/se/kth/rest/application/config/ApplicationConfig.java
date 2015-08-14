@@ -1,6 +1,7 @@
 package se.kth.rest.application.config;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 
 /**
  *
@@ -11,6 +12,7 @@ public class ApplicationConfig extends ResourceConfig {
 
   /**
    * adding manually all the restful services of the application.
+   * Prevents glassfish from autoloading other irrelevant services
    */
   public ApplicationConfig() {
     register(com.fasterxml.jackson.jaxrs.base.JsonMappingExceptionMapper.class);
@@ -37,8 +39,13 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.TransactionExceptionMapper.class);
     register(se.kth.hopsworks.rest.UploadService.class);
     register(se.kth.hopsworks.rest.UserService.class);
-    register(se.kth.hopsworks.zeppelin.rest.InterpreterRestApi.class);
-    register(se.kth.hopsworks.zeppelin.rest.NotebookRestApi.class);
-    register(se.kth.hopsworks.zeppelin.rest.ZeppelinRestApi.class);
+    register(se.kth.hopsworks.rest.TemplateService.class);
+
+    // register resources and features
+    register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
+    register(org.glassfish.jersey.filter.LoggingFilter.class);
+
+    // Enable Tracing support.
+    property(ServerProperties.TRACING, "ALL");
   }
 }
