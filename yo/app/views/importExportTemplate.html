@@ -1,41 +1,140 @@
-<div class="modal-header">
-    <button class="close" ng-click="metadataCtrl.close()" data-dismiss="modal" aria-hidden="true"
+<div flow-object="ieTemplateCtrl.existingFlowObject" flow-init
+     flow-file-error="ieTemplateCtrl.fileErrorHandler( $file, $message, $flow )"
+     flow-error="ieTemplateCtrl.errorHandler( $file, $message, $flow )"
+     flow-file-added="ieTemplateCtrl.fileAddedHandler($file, $flow)"
+     flow-files-submitted="$flow.upload()">
+  <div class="modal-header">
+    <button class="close" ng-click="ieTemplateCtrl.close()" data-dismiss="modal" aria-hidden="true"
             type="button">&times;</button>
     <h2 class="modal-title">Import/Export Template</h2>
-</div>
-<div class="modal-body">
+  </div>
+  <div class="modal-body">
     <form role="form" name="ieForm" ng-submit="" novalidate
           class="form-validate">
-        <div class="row">
-            <fieldset>
-                <div class="control-group col-md-offset-1" style="margin-right: 8.33333%;">
-                    <div class="form-group has-feedback">
-                        <label class="text-muted control-label">Templates</label><br>
-                        <div class="btn-group btn-group" role="group" aria-label="..." style="min-width: 100%">
-                            
-                            <div class="btn-group" role="group" style="width: 15%">
-
-
-                            </div>
-                        </div>
-                    <p></p>
+      <div class="row">
+        <fieldset>
+          <div class="control-group col-md-offset-1" style="margin-right: 8.33333%;">
+            <div class="form-group has-feedback">
+              <label class="text-muted control-label"><h2>Import template</h2></label><br>
+              <div class="btn-group btn-group" role="group" aria-label="..." style="min-width: 100%">
+                <div class="btn-group" role="group" style="width: 15%">
                 </div>
-                </div>
-            </fieldset>
-            <fieldset>
-                <div class="col-md-1">
+              </div>
+            </div>
+          </div>
+        </fieldset>
+        <div id="files">
 
-                </div>
-            </fieldset>
+          <table class="table table-hover table-striped" flow-transfers>
+            <thead>
+              <tr>
+                <th width="5%">#</th>
+                <th width="40%">Name</th>
+                <th width="10%">Size</th>
+                <th width="28%">Progress</th>
+                <th width="17%">Settings</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="file in $flow.files">
+                <td>{{$index + 1}}</td>
+                <td>{{file.name}}</td>
+                <td>{{itTemplateCtrl.size(file.size)}}</td>
+                <td>
+                  <div class="progress">
+                    <div ng-show="file.sizeUploaded() > 0" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{file.progress() * 100}}"
+                         aria-valuemin="0" aria-valuemax="100" style="width:{{file.progress() * 100}}%">
+                      {{file.progress() * 100}}%
+                    </div>
+                    <div ng-show="file.error" class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"
+                         aria-valuemin="0" aria-valuemax="100" style="width:100%">
+                      {{ieTemplateCtrl.files[file.name]}}
+                    </div>
+                  </div>
+
+                </td>
+                <td>
+                  <div class="">
+                    <a class="btn btn-mini btn-warning" ng-click="file.pause()" ng-hide="file.paused">
+                      <i class="glyphicon glyphicon-pause"></i>
+                    </a>
+                    <a class="btn btn-mini btn-warning" ng-click="file.resume()" ng-show="file.paused">
+                      <i class="glyphicon glyphicon-play"></i>
+                    </a>
+                    <a class="btn btn-mini btn-danger btn-circle" ng-click="file.cancel()">
+                      <i class="glyphicon glyphicon-remove-circle"></i>
+                    </a>
+                    <a class="btn btn-mini btn-info btn-circle" ng-click="file.retry()" ng-show="file.error">
+                      <i class="glyphicon glyphicon-repeat round"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+        <fieldset>
+          <div class="col-md-1">
+            <table size="50%">
+              <tr>
+                <td>
+                  <span class="btn btn-small btn-info" flow-btn>
+                    <i class="glyphicon glyphicon-file"></i>
+                    &nbsp Upload File
+                  </span>
+                </td>
+                <td>
+                  <a class="btn btn-small btn-warning" ng-click="$flow.pause()">
+                    <i class="glyphicon glyphicon-pause"></i>
+                    Pause all</a>
+                </td>
+                <td>
+                  <a class="btn btn-small btn-danger" ng-click="$flow.cancel()">
+                    <i class="glyphicon glyphicon-remove-circle"></i>
+                    Cancel all</a>
+                </td>
+                <td>
+                  <span class="label label-info">Total Size: {{ieTemplateCtrl.size($flow.getSize())}}</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </fieldset>
+      </div>
+      <hr class="soften">
+      <div class="row">
+        <fieldset>
+          <div class="control-group col-md-offset-1" style="margin-right: 8.33333%;">
+            <div class="form-group has-feedback">
+              <label class="text-muted control-label"><h2>Export template</h2></label><br>
+              <div class="btn-group btn-group" role="group" aria-label="..." style="min-width: 100%">
+                <div class="btn-group" role="group" style="width: 15%">
+                  <ui-select ng-model="ieTemplateCtrl.selectedTemplate" theme="select2"
+                             on-select="ieTemplateCtrl.onSelectUpdate()" style="min-width: 300px;">
 
-        <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
+                    <ui-select-match placeholder="Select a template...">{{$select.selected.name}}</ui-select-match>
 
-            <button class="btn btn-default" type="button" ng-click="metadataCtrl.close()">Cancel</button>
-            <button class="btn btn-primary" type="submit" ng-disabled="">
-                Export
-            </button>
-
+                    <ui-select-choices repeat="template in ieTemplateCtrl.templates | filter: $select.search">
+                      <small>
+                        <span ng-bind-html="'' + template.name | highlight: $select.search"></span>
+                      </small>
+                    </ui-select-choices>
+                  </ui-select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+        <div class="col-md-1">
+          <button class="btn btn-primary" type="submit" ng-disabled="">
+            Export
+          </button>
         </div>
+      </div>
+
+      <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
+        <button class="btn btn-default" type="button" ng-click="ieTemplateCtrl.close()">Cancel</button>
+      </div>
     </form>
+  </div>
 </div>

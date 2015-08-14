@@ -106,8 +106,37 @@ public class UploadService {
   }
 
   /**
-   * Sets the template id to be attached to the file that's being uploaded.
+   * Sets the path for the file to be uploaded. It does not require a project
+   * name since the file to be uploaded is a template schema, irrelevant to any
+   * project or dataset. The only requirement is that the upload has to be
+   * performed in the Uploads directory
    * <p>
+   * @param path
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  public void setUploadPath(String path) throws AppException {
+    String[] pathArray = path.split(File.separator);
+    if (pathArray.length < 2) { // if path does not contain project name.
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Not a valid path!");
+    }
+
+    //check if the parent directory exists. If it doesn't create it first
+    if (!fileOps.isDir(File.separator + pathArray[0])) {
+      try {
+        fileOps.mkDir(File.separator + pathArray[0]);
+      } catch (IOException e) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "Upload directory could not be created in the file system");
+      }
+    }
+    
+    this.path = path;
+  }
+
+  /**
+   * Sets the template id to be attached to the file that's being uploaded.
    * <p>
    * @param templateId
    */
@@ -264,8 +293,8 @@ public class UploadService {
           AppException {
     //this will give us a tmp folder
     String base_dir = stagingManager.getStagingPath();
-    //this will create a folder if it doesnot exist inside the tmp folder 
-    //spesific to where the file is being uploaded
+    //this will create a folder if it does not exist inside the tmp folder 
+    //specific to where the file is being uploaded
     File userTmpDir = new File(base_dir + hdfsPath);
     if (!userTmpDir.exists()) {
       userTmpDir.mkdirs();
@@ -318,8 +347,8 @@ public class UploadService {
           int templateId) throws AppException {
     //this will give us a tmp folder
     String base_dir = stagingManager.getStagingPath();
-    //this will create a folder if it doesnot exist inside the tmp folder 
-    //spesific to where the file is being uploaded
+    //this will create a folder if it does not exist inside the tmp folder 
+    //specific to where the file is being uploaded
     File userTmpDir = new File(base_dir + hdfsPath);
     if (!userTmpDir.exists()) {
       userTmpDir.mkdirs();
