@@ -51,7 +51,6 @@ public class TemplateService {
       this.path += File.separator;
     }
     
-    logger.log(Level.INFO, "UPLOADING THE FUCKING TEMPLATE TO PATH {0} ", this.path);
     this.uploader.setUploadPath(this.path);
 
     return this.uploader;
