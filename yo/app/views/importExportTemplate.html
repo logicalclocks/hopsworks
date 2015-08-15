@@ -112,7 +112,7 @@
                   <ui-select ng-model="ieTemplateCtrl.selectedTemplate" theme="select2"
                              on-select="ieTemplateCtrl.onSelectUpdate()" style="min-width: 300px;">
 
-                    <ui-select-match placeholder="Select a template...">{{$select.template.name}}</ui-select-match>
+                    <ui-select-match placeholder="Select a template...">{{$select.selected.name}}</ui-select-match>
 
                     <ui-select-choices repeat="template in ieTemplateCtrl.templates | filter: $select.search">
                       <small>
