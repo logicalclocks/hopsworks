@@ -23,7 +23,8 @@ angular.module('hopsWorksApp', [
   'ngMessages',
   'as.sortable'
 ])
-        .config(['$routeProvider', '$httpProvider', 'flowFactoryProvider', function ($routeProvider, $httpProvider, flowFactoryProvider) {
+        .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 
+      function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider) {
 
             // Responseinterceptor for authentication
             $httpProvider.interceptors.push('AuthInterceptorService');
@@ -262,10 +263,11 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-
                     .otherwise({
                       redirectTo: '/'
                     });
+                    
+                    $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|tel|file|blob):/);
           }])
 
 //We already have a limitTo filter built-in to angular,
