@@ -4,11 +4,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .factory('WSComm', function ($websocket, $rootScope, $q, $location) {
+        .factory('WSComm', function ($websocket, $rootScope, $q, $location, $cookies) {
 
           // Keep all pending requests here until they get responses
           var callbacks = [];
-          var projectID = 10241;
+          var projectID = $cookies.projectID;
 
           //generic
           var ws = $websocket("ws://" + $location.host() + ":" + $location.port() + "/hopsworks/wspoint/" + projectID);
