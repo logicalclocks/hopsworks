@@ -70,6 +70,7 @@
       <groupId>io.hops</groupId>
       <artifactId>hadoop-client</artifactId>
       <version>2.4.0</version>
+      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>org.json</groupId>
@@ -224,19 +225,11 @@
       </snapshots>
     </repository>
     <repository>
-      <id>io.hops</id>
-      <name>Hops</name>
-      <url>http://snurran.sics.se/hops</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
       <id>prime-repo</id>
       <name>PrimeFaces Maven Repository</name>
       <url>http://repository.primefaces.org</url>
       <layout>default</layout>
-    </repository>               
+    </repository>             
     <repository>
       <id>sics-release</id>
       <name>SICS Release Repository</name>

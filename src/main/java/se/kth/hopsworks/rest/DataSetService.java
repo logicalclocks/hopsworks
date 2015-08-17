@@ -585,7 +585,7 @@ public class DataSetService {
     Template temp = template.findByTemplateId(templateid);
     temp.getInodes().add(inode);
 
-    logger.log(Level.INFO, "ATTACHING TEMPLATE {0} TO INODE {0}",
+    logger.log(Level.INFO, "ATTACHING TEMPLATE {0} TO INODE {1}",
             new Object[]{templateid, inode.getId()});
 
     try {

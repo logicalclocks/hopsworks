@@ -159,7 +159,7 @@ public class ProjectController {
 
   /**
    * change the name of a project but not fully implemented to change the
-   * related folder name in hdsf
+   * related folder name in hdfs
    * <p>
    * @param project
    * @param newProjectName
@@ -221,10 +221,10 @@ public class ProjectController {
   private boolean mkProjectDIR(String projectName) throws IOException {
 
     String rootDir = Constants.DIR_ROOT;
-    String projectPath = File.separator + rootDir + File.separator + projectName;
-
-    boolean rootDirCreated = true;
-    boolean projectDirCreated = true;
+    
+    boolean rootDirCreated = false;
+    boolean projectDirCreated = false;
+    boolean childDirCreated = false;
     
     if (!fileOps.isDir(Constants.DIR_ROOT)) {
       /*
@@ -232,22 +232,34 @@ public class ProjectController {
        * and set it metaEnabled so that other folders down the dir tree
        * are getting registered in hdfs_metadata_log table
        */
-      System.out.println("\nCREATING A DIR UNDER " + File.separator + rootDir
-            + "\n");
       rootDirCreated = fileOps.mkDir(File.separator + rootDir);
       fileOps.setMetaEnabled(File.separator + rootDir);
+    }else{
+      rootDirCreated = true;
     }
 
     /*
-     * Marking a project as meta enabled means that all child folders/files
-     * that'll be created in this directory tree will have as a parent this
+     * Marking a project path as meta enabled means that all child folders/files
+     * that'll be created down this directory tree will have as a parent this
      * inode.
      */
+    String fullProjectPath = File.separator + rootDir + File.separator + projectName;
+    String project = this.extractProjectName(fullProjectPath + File.separator);
+    String projectPath = File.separator + rootDir + File.separator + project;
+    //Create first the projectPath
+
     projectDirCreated = fileOps.mkDirs(projectPath);
     fileOps.setMetaEnabled(projectPath);
-    System.out.println("\nCREATING A DIR UNDER " + projectPath + "\n");
 
-    return rootDirCreated && projectDirCreated;
+    //create the rest of the child folders if any
+    if(projectDirCreated && !fullProjectPath.equals(projectPath)){
+      childDirCreated = fileOps.mkDirs(fullProjectPath);
+    }
+    else if(projectDirCreated){
+      childDirCreated = true;
+    }
+
+    return rootDirCreated && projectDirCreated && childDirCreated;
   }
 
   /**
@@ -510,5 +522,20 @@ public class ProjectController {
     activity.setUser(performedBy);
 
     activityFacade.persistActivity(activity);
+  }
+  
+  /**
+   * Extracts the project name out of the given path. The project name is the 
+   * second part of this path.
+   * 
+   * @param path
+   * @return 
+   */
+  private String extractProjectName(String path){
+    
+    int startIndex = path.indexOf('/', 1);
+    int endIndex = path.indexOf('/', startIndex + 1);
+    
+    return path.substring(startIndex + 1, endIndex);
   }
 }
