@@ -175,3 +175,7 @@ div.scroll > ul {
 div.scroll > ul > li > textarea {
   padding: 10px;
 }
+
+.glyphicon-info-sign {
+  color: royalblue;
+}

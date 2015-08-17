@@ -1,0 +1,76 @@
+<div ng-controller="MainCtrl as mainCtrl">
+    <div ng-include="'nav.html'"></div>
+    <div id="wrapper" class="toggled">
+        <div class="overlay"></div>
+
+        <div ng-include="'navProject.html'"></div>
+
+        <section>
+            <div class="content-wrapper" ng-controller="ZeppelinCtrl as zeppelinCtrl">
+                <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Zeppelin Dashboard</h3>
+                <div growl reference="10" class="pull-right" ></div>
+                <div class="row" style="margin: 10px">
+                    <div class="panel col-lg-9" style="width: 74%; margin-right: 10px; min-width: 400px">
+                        <div class="panel-body">
+                            <h1>Zeppelin Dashboard</h1>
+                            <p>Here you can see notebooks in the current project and start or stop interpreters.
+                               You can go directly to note books in this project or you can <a style="text-decoration: none" ng-click="zeppelinCtrl.openZeppelin()">go to zeppelin home.</a>
+                            </p>
+                            <h3><b>Notebooks in this project</b></h3>
+                            <h4>
+                                <a style="text-decoration: none" ng-click="zeppelinCtrl.createNewNote()" href="javascript:void(0);">
+                                    <i class="glyphicon glyphicon-book" style="font-size: 15px"></i>
+                                    Create new note
+                                </a>
+                            </h4>
+                            <ul style="list-style-type: none">
+                                <li ng-repeat="note in zeppelinCtrl.notes track by $index">
+                                    <a ng-click="zeppelinCtrl.openNote(note)" style="text-decoration: none">
+                                    <i class="glyphicon glyphicon-file" style="font-size: 10px"></i>
+                                    {{note.name || 'Note ' + note.id}}</a>
+                                </li>
+                            </ul>
+                            <h3><b>Tutorial Notebooks</b></h3>
+                            <ul style="list-style-type: none">
+                                <li ng-repeat="note in zeppelinCtrl.tutorialNotes track by $index">
+                                    <a ng-click="zeppelinCtrl.openNote(note)" style="text-decoration: none">
+                                    <i class="glyphicon glyphicon-file" style="font-size: 10px"></i>
+                                    {{note.name || 'Note ' + note.id}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="panel col-lg-2" style="width: 25%; min-width: 300px">
+                        <div class="panel-body">
+                            <h2>Interpreters</h2>
+
+                            <table class="table table-hover" style="width: 100%">
+                                <tr ng-repeat="interpreter in zeppelinCtrl.interpreters track by $index">
+                                    <td><span>{{interpreter.setting.group}} Interpreter </span></td>
+                                    <td style="text-align: right">
+                                        <input type="checkbox"
+                                               id="switch-{{$index}}"
+                                               name="switch-{{$index}}"
+                                               data-size="mini"
+                                               data-on-text="Start"
+                                               data-off-text="Stop"
+                                               data-on-color="success"
+                                               data-off-color="danger"
+                                               ng-model="interpreter.status"
+                                               data-indeterminate="false"
+                                               ng-change="zeppelinCtrl.changeState(interpreter, 'switch-'+ $index)"
+                                               hopsworks-switch>
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </div>
+                        <hr>
+                        <p style="line-height: 1.02; margin-top: 10px"><span class="glyphicon glyphicon-info-sign" ></span>  If CPU quota is enforced starting too many interpreters can eat up your quota. Running a paragraph in a notebook will automatically start the necessary interpreters for that job.     </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>

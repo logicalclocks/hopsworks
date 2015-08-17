@@ -43,6 +43,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
+import se.kth.hopsworks.controller.ResponseMessages;
+import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
 
 /**
@@ -160,5 +166,67 @@ public class InterpreterRestApi {
   public Response listInterpreter() {
     Map<String, RegisteredInterpreter> m = Interpreter.registeredInterpreters;
     return new JsonResponse(Status.OK, "", m).build();
+  }
+  
+  /**
+   * Start an interpreter
+   * <p>
+   * @return
+   */
+  @GET
+  @Path("start/{settingId}")
+  public Response start() {
+    List<InterpreterSetting> interpreterSettings;
+    interpreterSettings = interpreterFactory.get();
+    return new JsonResponse(Status.OK, "", interpreterSettings).build();
+  }
+  
+   /**
+   * stop an interpreter
+   * <p>
+   * @param settingId
+   * @return nothing if successful. 
+   */
+  @GET
+  @Path("stop/{settingId}")
+  public Response stop(@PathParam("settingId") String settingId) {
+    logger.info("Stoping interpreterSetting {}", settingId);
+    try {
+     interpreterFactory.restart(settingId);
+    } catch (InterpreterException e) {
+      return new JsonResponse(Status.BAD_REQUEST, e.getMessage(), e).build();
+    }
+    return new JsonResponse(Status.OK).build();
+  }
+  
+   /**
+   * list running interpreters
+   * <p>
+   * @return nothing if successful. 
+   * @throws se.kth.hopsworks.rest.AppException 
+   */
+  @GET
+  @Path("running")
+  public Response getRunning() throws AppException {
+    ZeppelinConfiguration conf = this.zeppelin.getConf();
+    URI filesystemRoot;
+    String pidPath = conf.getInterpreterSettingPath();
+    try {
+      filesystemRoot = new URI(conf.getInterpreterSettingPath());
+    } catch (URISyntaxException e1) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              e1.getMessage());
+    }
+
+    if (filesystemRoot.getScheme() == null) { // it is local path
+      try {
+        filesystemRoot = new URI(new File(
+                conf.getRelativeDir(filesystemRoot.getPath())).getAbsolutePath());
+      } catch (URISyntaxException e) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              e.getMessage());
+      }
+    }
+    return new JsonResponse(Status.OK).build();
   }
 }
