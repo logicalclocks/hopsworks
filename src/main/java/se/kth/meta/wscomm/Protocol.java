@@ -111,7 +111,7 @@ public class Protocol {
       case FETCH_FIELD_TYPES:
         return this.builder.fetchFieldTypes(message);
 
-      //saves the actual metadata. NA VALW LOG OPERATION GIA NA INDEXARW TO NEO INODE
+      //saves the actual metadata.
       case STORE_METADATA:
         List<EntityIntf> composite = ((StoreMetadataMessage) message).
                 superParseSchema();
