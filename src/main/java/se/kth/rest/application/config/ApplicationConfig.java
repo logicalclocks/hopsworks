@@ -1,6 +1,7 @@
 package se.kth.rest.application.config;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 
 /**
  *
@@ -34,6 +35,11 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.zeppelin.rest.InterpreterRestApi.class);
     register(se.kth.hopsworks.zeppelin.rest.NotebookRestApi.class);
     register(se.kth.hopsworks.zeppelin.rest.ZeppelinRestApi.class);
+    // register resources and features
+    register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
+    //register(org.glassfish.jersey.filter.LoggingFilter.class);
 
+    // Enable Tracing support.
+    property(ServerProperties.TRACING, "ALL");
   }
 }
