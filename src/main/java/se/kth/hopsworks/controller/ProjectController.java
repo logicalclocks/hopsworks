@@ -221,11 +221,11 @@ public class ProjectController {
   private boolean mkProjectDIR(String projectName) throws IOException {
 
     String rootDir = Constants.DIR_ROOT;
-    
+
     boolean rootDirCreated = false;
     boolean projectDirCreated = false;
     boolean childDirCreated = false;
-    
+
     if (!fileOps.isDir(Constants.DIR_ROOT)) {
       /*
        * if the base path does not exist in the file system, create it first
@@ -234,7 +234,7 @@ public class ProjectController {
        */
       rootDirCreated = fileOps.mkDir(File.separator + rootDir);
       fileOps.setMetaEnabled(File.separator + rootDir);
-    }else{
+    } else {
       rootDirCreated = true;
     }
 
@@ -243,19 +243,19 @@ public class ProjectController {
      * that'll be created down this directory tree will have as a parent this
      * inode.
      */
-    String fullProjectPath = File.separator + rootDir + File.separator + projectName;
+    String fullProjectPath = File.separator + rootDir + File.separator
+            + projectName;
     String project = this.extractProjectName(fullProjectPath + File.separator);
     String projectPath = File.separator + rootDir + File.separator + project;
-    //Create first the projectPath
 
+    //Create first the projectPath
     projectDirCreated = fileOps.mkDirs(projectPath);
     fileOps.setMetaEnabled(projectPath);
 
     //create the rest of the child folders if any
-    if(projectDirCreated && !fullProjectPath.equals(projectPath)){
+    if (projectDirCreated && !fullProjectPath.equals(projectPath)) {
       childDirCreated = fileOps.mkDirs(fullProjectPath);
-    }
-    else if(projectDirCreated){
+    } else if (projectDirCreated) {
       childDirCreated = true;
     }
 
@@ -523,19 +523,19 @@ public class ProjectController {
 
     activityFacade.persistActivity(activity);
   }
-  
+
   /**
-   * Extracts the project name out of the given path. The project name is the 
+   * Extracts the project name out of the given path. The project name is the
    * second part of this path.
-   * 
+   * <p>
    * @param path
-   * @return 
+   * @return
    */
-  private String extractProjectName(String path){
-    
+  private String extractProjectName(String path) {
+
     int startIndex = path.indexOf('/', 1);
     int endIndex = path.indexOf('/', startIndex + 1);
-    
+
     return path.substring(startIndex + 1, endIndex);
   }
 }
