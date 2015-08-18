@@ -15,6 +15,7 @@ import se.kth.meta.db.FieldTypeFacade;
 import se.kth.meta.db.MTableFacade;
 import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.db.TupleToFileFacade;
+import se.kth.meta.entity.DirPath;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.FieldType;
@@ -30,6 +31,7 @@ import se.kth.meta.wscomm.message.FetchMetadataMessage;
 import se.kth.meta.wscomm.message.FetchTableMetadataMessage;
 import se.kth.meta.wscomm.message.FieldTypeMessage;
 import se.kth.meta.wscomm.message.Message;
+import se.kth.meta.wscomm.message.RenameDirMessage;
 import se.kth.meta.wscomm.message.TextMessage;
 
 /**
@@ -341,5 +343,17 @@ public class ResponseBuilder {
     }
 
     return new LinkedList<>(grouped.keySet());
+  }
+  
+  public Message getRenameDirResponse(DirPath path) throws ApplicationException {
+    //rename the dir to a new name
+    this.utils.renameDir(path, "_");
+    //rename the dir to its old name. THROWS RPC FAILED EXCEPTION
+    //this.utils.renameDir(path, "");
+    
+    RenameDirMessage message = new RenameDirMessage();
+    message.setSender("Server");
+    message.setMessage("Renaming the dir was successful");
+    return message;
   }
 }

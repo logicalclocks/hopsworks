@@ -1,17 +1,21 @@
 package se.kth.meta.wscomm;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.meta.db.FieldFacade;
 import se.kth.meta.db.FieldPredefinedValueFacade;
 import se.kth.meta.db.MTableFacade;
 import se.kth.meta.db.RawDataFacade;
 import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.db.TupleToFileFacade;
+import se.kth.meta.entity.DirPath;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.Field;
@@ -22,6 +26,7 @@ import se.kth.meta.entity.Template;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.exception.DatabaseException;
+import se.kth.meta.wscomm.message.Message;
 
 /**
  *
@@ -44,6 +49,8 @@ public class Utils {
   private RawDataFacade rawDataFacade;
   @EJB
   private TupleToFileFacade tupletoFileFacade;
+  @EJB
+  private FileOperations fops;
 
   public Utils() {
   }
@@ -78,10 +85,10 @@ public class Utils {
 
       try {
         logger.log(Level.INFO, "STORE/UPDATE TABLE: {0} ", t);
-        
+
         //persist the parent
         int tableId = this.tableFacade.addTable(t);
-        
+
         for (Field field : tableFields) {
           //associate each field(child) with its table(parent)
           field.setTableid(tableId);
@@ -127,7 +134,7 @@ public class Utils {
       logger.log(Level.INFO, "DELETING TABLE {0} ", table.getName());
       this.tableFacade.deleteTable(table);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
+      throw new ApplicationException("ApplicationException",
               "Utils.java: method deleteTable encountered a problem " + e.
               getMessage());
     }
@@ -139,7 +146,7 @@ public class Utils {
       logger.log(Level.INFO, "DELETING FIELD {0} ", field);
       this.fieldFacade.deleteField(field);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
+      throw new ApplicationException("ApplicationException",
               "Utils.java: method deleteField encountered a problem " + e.
               getMessage());
     }
@@ -151,7 +158,7 @@ public class Utils {
 
       this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
+      throw new ApplicationException("ApplicationException",
               "Utils.java: method deleteField encountered a problem " + e.
               getMessage());
     }
@@ -183,7 +190,7 @@ public class Utils {
       }
 
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
+      throw new ApplicationException("ApplicationException",
               "Utils.java: storeMetadata(List<?> list) encountered a problem "
               + e.getMessage());
     }
@@ -202,8 +209,58 @@ public class Utils {
       rawdata.setData(raw.getData());
       this.rawDataFacade.addRawData(rawdata);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
+      throw new ApplicationException("ApplicationException",
               "Utils.java: updateMetadata(RawData) encountered a problem " + e.
+              getMessage());
+    }
+  }
+
+  /**
+   * It renames a given dir path. Used when attaching metadata to already
+   * indexed inodes as a means to get those inodes again in the metadata log
+   * table. Elastic rivers will pick them up again along with their metadata
+   * <p>
+   * @param path
+   * @param specialChar
+   * @throws ApplicationException
+   */
+  public void renameDir(DirPath path, String specialChar) throws ApplicationException {
+
+    String pathh = path.getPath();
+    int pathLength = path.getLength();
+    String oldDirPath = null;
+    String newDirPath = null;
+
+    //the path refers to a folder
+    if (this.fops.isDir(pathh)) {
+      oldDirPath = pathh;
+    } else {
+      //the path refers to a file
+      oldDirPath = se.kth.bbc.lims.Utils.getDirectoryPart(pathh);
+      //refresh the length, file name was removed
+      pathLength = oldDirPath.length();
+    }
+
+    if (oldDirPath.endsWith(File.separator)) {
+      //leave out the trailing slash
+      newDirPath = oldDirPath.substring(0, pathLength - 2);
+      oldDirPath = newDirPath;
+    }else{
+      newDirPath = oldDirPath;
+    }
+
+    if (specialChar.equals("_")) {
+      //add the underscore to the dir name
+      newDirPath += "_";
+    }else{
+      oldDirPath += "_";
+    }
+
+    try {
+      fops.renameInHdfs(oldDirPath, newDirPath);
+    } catch (IOException e) {
+      throw new ApplicationException("ApplicationException",
+              "Utils.java: renameDir(String) encountered a problem " + e.
               getMessage());
     }
   }

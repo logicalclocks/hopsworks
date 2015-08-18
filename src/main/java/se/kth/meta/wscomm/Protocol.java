@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import se.kth.meta.entity.DirPath;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.InodeTableComposite;
@@ -110,7 +111,7 @@ public class Protocol {
       case FETCH_FIELD_TYPES:
         return this.builder.fetchFieldTypes(message);
 
-      //saves the actual metadata
+      //saves the actual metadata. NA VALW LOG OPERATION GIA NA INDEXARW TO NEO INODE
       case STORE_METADATA:
         List<EntityIntf> composite = ((StoreMetadataMessage) message).
                 superParseSchema();
@@ -135,6 +136,10 @@ public class Protocol {
         RawData raw = (RawData) message.parseSchema().get(0);
         this.utils.updateMetadata(raw);
         return new TextMessage("Server", "Raw data was updated successfully");
+        
+      case RENAME_DIR:
+        DirPath path = (DirPath) message.parseSchema().get(0);
+        return this.builder.getRenameDirResponse(path);
     }
 
     return new TextMessage();

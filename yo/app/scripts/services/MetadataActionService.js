@@ -166,6 +166,14 @@ angular.module('hopsWorksApp')
                 action: 'update_metadata',
                 message: JSON.stringify({rawid: rawObj.rawid, rawdata: rawObj.raw})
               });
+            },
+            renameDir: function(user, path){
+              return WSComm.send({
+                sender: user,
+                type: 'RenameDirMessage',
+                action: 'rename_dir',
+                message: JSON.stringify({path: path})
+              });
             }
           };
         });
