@@ -61,11 +61,11 @@ angular.module('hopsWorksApp')
             };
 
             self.openNote = function (note) {
-              window.open("http://localhost:8080/hopsworks/zeppelin/#/notebook/" + note.id);
+              window.open(getLocationBase() + "/zeppelin/#/notebook/" + note.id);
             };
 
             self.openZeppelin = function () {
-              window.open("http://localhost:8080/hopsworks/zeppelin");
+              window.open(getLocationBase() + "/zeppelin");
             };
 
             self.createNewNote = function () {
