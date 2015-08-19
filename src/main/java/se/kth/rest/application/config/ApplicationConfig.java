@@ -10,6 +10,9 @@ import org.glassfish.jersey.server.ServerProperties;
 @javax.ws.rs.ApplicationPath("api")
 public class ApplicationConfig extends ResourceConfig {
 
+  /**
+   * adding manually all the restful services of the application.
+   */
   public ApplicationConfig() {
     register(com.fasterxml.jackson.jaxrs.base.JsonMappingExceptionMapper.class);
     register(com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper.class);
@@ -35,10 +38,13 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.TransactionExceptionMapper.class);
     register(se.kth.hopsworks.rest.UploadService.class);
     register(se.kth.hopsworks.rest.UserService.class);
+    register(se.kth.hopsworks.zeppelin.rest.InterpreterRestApi.class);
+    register(se.kth.hopsworks.zeppelin.rest.NotebookRestApi.class);
+    register(se.kth.hopsworks.zeppelin.rest.ZeppelinRestApi.class);
 
     // register resources and features
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
-    //register(org.glassfish.jersey.filter.LoggingFilter.class);
+    register(org.glassfish.jersey.filter.LoggingFilter.class);
 
     // Enable Tracing support.
     property(ServerProperties.TRACING, "ALL");
