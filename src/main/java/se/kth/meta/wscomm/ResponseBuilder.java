@@ -103,7 +103,7 @@ public class ResponseBuilder {
 
     List<FieldType> ftypes = this.fieldTypeFacade.loadFieldTypes();
     Collections.sort(ftypes);
-    
+
     FieldTypeMessage newMsg = new FieldTypeMessage();
 
     String jsonMsg = newMsg.buildSchema((List<EntityIntf>) (List<?>) ftypes);
@@ -344,12 +344,28 @@ public class ResponseBuilder {
 
     return new LinkedList<>(grouped.keySet());
   }
-  
-  public Message getRenameDirResponse(DirPath path) throws ApplicationException {
-    //rename the dir to a new name
-    this.utils.renameDir(path, "_");
-    //rename the dir to its old name. THROWS RPC FAILED EXCEPTION
-    //this.utils.renameDir(path, "");
+
+  /**
+   * Creates an inode mutation by copying a folder from a given path to the
+   * destination path. SHOULD change to mv, but mv fails for now
+   * <p>
+   * @param path
+   * @return
+   * @throws ApplicationException
+   */
+  public Message inodeMutationResponse(DirPath path) throws ApplicationException {
+    String lastDirName = path.getParent();
+    String dirPart = path.getDirPart(path.getPath());
+    String basePath = path.getDirPartUntil(lastDirName);
+    
+    //for now just copy the directory to a temporary place
+    this.utils.copyDir(dirPart, "/temp");
+    //remove the directory from its initial place
+    this.utils.removeDir(dirPart);
+    //copy the folder from the temp directory back to where it was
+    this.utils.copyDir("/temp/" + lastDirName, basePath);
+    //clean the temporary directory
+    this.utils.removeDir("/temp/" + lastDirName);
     
     RenameDirMessage message = new RenameDirMessage();
     message.setSender("Server");

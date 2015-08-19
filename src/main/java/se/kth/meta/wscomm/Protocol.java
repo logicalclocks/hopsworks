@@ -139,7 +139,7 @@ public class Protocol {
         
       case RENAME_DIR:
         DirPath path = (DirPath) message.parseSchema().get(0);
-        return this.builder.getRenameDirResponse(path);
+        return this.builder.inodeMutationResponse(path);
     }
 
     return new TextMessage();

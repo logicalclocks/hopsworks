@@ -232,7 +232,7 @@ public class ProjectController {
        * and set it metaEnabled so that other folders down the dir tree
        * are getting registered in hdfs_metadata_log table
        */
-      rootDirCreated = fileOps.mkDir(File.separator + rootDir);
+      rootDirCreated = fileOps.mkDirs(File.separator + rootDir);
       fileOps.setMetaEnabled(File.separator + rootDir);
     } else {
       rootDirCreated = true;

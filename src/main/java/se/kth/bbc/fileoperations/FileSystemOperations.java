@@ -80,7 +80,7 @@ public class FileSystemOperations {
   }
 
   /**
-   * Delete a file or directory form the file system.
+   * Delete a file or directory from the file system.
    *
    * @param location The location of file or directory to be removed.
    * @param recursive If true, a directory will be removed with all its
