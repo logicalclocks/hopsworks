@@ -20,6 +20,7 @@ public class DatabaseJsonObject {
 
   private final Map<String, String> internalStrings;
   private final Map<String, DatabaseJsonObject> internalJsons;
+  private final Map<String, 
 
   /**
    * Create a new mutable JSON object.

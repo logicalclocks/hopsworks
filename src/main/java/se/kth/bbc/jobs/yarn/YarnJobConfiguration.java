@@ -1,6 +1,8 @@
 package se.kth.bbc.jobs.yarn;
 
 import com.google.common.base.Strings;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.DatabaseJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;
@@ -19,12 +21,15 @@ public class YarnJobConfiguration extends JobConfiguration {
   private int amMemory = 1024;
   //Number of cores for appMaster
   private int amVCores = 1;
+  //List of paths to be added to local resources
+  private Map<String, String> localResources;
 
   protected final static String KEY_TYPE = "type";
   protected final static String KEY_QUEUE = "QUEUE";
   protected final static String KEY_AMMEM = "AMMEM";
   protected final static String KEY_AMCORS = "AMCORS";
   protected final static String KEY_APPNAME = "APPNAME";
+  protected final static String KEY_RESOURCES = "RESOURCES";
 
   public YarnJobConfiguration() {
     super();
@@ -70,6 +75,38 @@ public class YarnJobConfiguration extends JobConfiguration {
    */
   public final void setAmVCores(int amVCores) {
     this.amVCores = amVCores;
+  }
+
+  /**
+   * Add a file to the local resources.
+   * <p>
+   * @param name
+   * @param path
+   */
+  public final void addLocalResource(String name, String path) {
+    if (localResources == null) {
+      localResources = new HashMap<>();
+    }
+    localResources.put(name, path);
+  }
+
+  /**
+   * Set the local resources.
+   * <p>
+   * @param localResources
+   */
+  public final void setLocalResources(Map<String, String> localResources) {
+    this.localResources = new HashMap(localResources);
+  }
+
+  /**
+   * Return a view on the current local resources. The Map returned is not
+   * backed by this object.
+   * <p>
+   * @return
+   */
+  public final Map<String, String> getLocalResources() {
+    return new HashMap<>(localResources);
   }
 
   @Override
