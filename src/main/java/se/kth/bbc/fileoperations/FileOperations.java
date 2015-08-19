@@ -2,6 +2,9 @@ package se.kth.bbc.fileoperations;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -226,6 +229,30 @@ public class FileOperations {
     }
     return "hdfs:///" + Constants.DIR_ROOT + "/" + projectname + "/"
             + relativePath;
+  }
+
+  /**
+   * Get a list of the names of the child files (so no directories) of the given
+   * path.
+   * <p>
+   * @param path
+   * @return A list of filenames, empty if the given path does not have
+   * children.
+   */
+  public List<String> getChildNames(String path) {
+    Inode inode = inodes.getInodeAtPath(path);
+    if (inode.isDir()) {
+      List<Inode> inodekids = inodes.getChildren(inode);
+      ArrayList<String> retList = new ArrayList<>(inodekids.size());
+      for (Inode i : inodekids) {
+        if (!i.isDir()) {
+          retList.add(i.getInodePK().getName());
+        }
+      }
+      return retList;
+    } else {
+      return Collections.EMPTY_LIST;
+    }
   }
 
 }
