@@ -1,4 +1,3 @@
-
 package se.kth.hopsworks.dataset;
 
 import javax.xml.bind.annotation.XmlRootElement;
