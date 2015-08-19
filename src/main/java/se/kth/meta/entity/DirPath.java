@@ -65,7 +65,6 @@ public class DirPath implements EntityIntf {
   public String getDirPart(String path) {
 
     String dirPart = se.kth.bbc.lims.Utils.getDirectoryPart(path);
-    System.out.println("\nTHE DIRECTORY PART IS " + dirPart);
     return dirPart.substring(0, dirPart.length() - 1);
   }
 
