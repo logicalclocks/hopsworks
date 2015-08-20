@@ -70,9 +70,11 @@ public class ResumableInfo {
    * has finished. Upon upload, change file name. Synchronized method to enable
    * atomic checking.
    * <p>
+   * @param rcn
+   * @param contentLength
    * @return true if finished.
    */
-  public synchronized boolean addChuckAndCheckIfFinished(
+  public synchronized boolean addChunkAndCheckIfFinished(
           ResumableChunkNumber rcn, long contentLength) {
     if (!uploadedChunks.contains(rcn)) {
       uploadedContentLength += contentLength;

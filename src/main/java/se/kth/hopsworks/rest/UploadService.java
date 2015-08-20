@@ -1,6 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +35,10 @@ import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.entity.Template;
+import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.exception.DatabaseException;
+import se.kth.meta.wscomm.ResponseBuilder;
+import se.kth.meta.wscomm.message.TemplateMessage;
 
 /**
  *
@@ -59,6 +63,8 @@ public class UploadService {
   private FolderNameValidator datasetNameValidator;
   @EJB
   private TemplateFacade template;
+  @EJB
+  private ResponseBuilder responseBuilder;
 
   private String path;
   private Inode fileParent;
@@ -131,7 +137,7 @@ public class UploadService {
                 "Upload directory could not be created in the file system");
       }
     }
-    
+
     this.path = path;
   }
 
@@ -229,7 +235,7 @@ public class UploadService {
     boolean finished = false;
 
     //Mark as uploaded and check if finished
-    if (info.addChuckAndCheckIfFinished(new ResumableInfo.ResumableChunkNumber(
+    if (info.addChunkAndCheckIfFinished(new ResumableInfo.ResumableChunkNumber(
             resumableChunkNumber), content_length)) { //Check if all chunks uploaded, and change filename
       ResumableInfoStorage.getInstance().remove(info);
       logger.log(Level.INFO, "All finished.");
@@ -243,6 +249,15 @@ public class UploadService {
 
     if (finished) {
       try {
+        //if it is about a template file check its validity
+        if ((this.path + fileName).endsWith(".json")) {
+          if (!Utils.checkJsonValidity(stagingManager.getStagingPath()
+                  + this.path + fileName)) {
+            json.setErrorMsg("This was an invalid json file");
+            return noCacheResponse.getNoCacheResponseBuilder(
+                    Response.Status.NOT_ACCEPTABLE).entity(json).build();
+          }
+        }
         this.path = Utils.ensurePathEndsInSlash(this.path);
         fileOps.copyToHDFSFromLocal(true, stagingManager.getStagingPath()
                 + this.path + fileName, this.path
@@ -253,6 +268,10 @@ public class UploadService {
           this.attachTemplateToInode(info, this.path + fileName);
         }
 
+        //if it is about a template file persist it in the database as well
+        if ((this.path + fileName).endsWith(".json")) {
+          this.persistUploadedTemplate(this.path + fileName);
+        }
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(json).build();
@@ -281,6 +300,30 @@ public class UploadService {
       template.updateTemplatesInodesMxN(templ);
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, "Something went wrong.", e);
+    }
+  }
+
+  /**
+   * Persist a template to the database after it has been uploaded to hopsfs
+   * 
+   * @param filePath
+   * @throws AppException 
+   */
+  private void persistUploadedTemplate(String filePath) throws AppException {
+    try {
+      String fileContent = Utils.getFileContents(filePath);
+
+      //the file content has to be wrapped in a TemplateMessage message
+      TemplateMessage message = new TemplateMessage();
+      message.setMessage(fileContent);
+
+      this.responseBuilder.storeSchema(message);
+    } catch (FileNotFoundException e) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              "Template file was not found");
+    } catch (ApplicationException ee) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), ee.getMessage());
     }
   }
 

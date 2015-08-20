@@ -43,14 +43,6 @@
                             Metadata designer
                           </button>
                         </div>
-                        <div class="btn-group"
-                             style="width: 100%; margin-top: 10px;">
-                          <button style="width: 100%;"
-                                  ng-click="metadataCtrl.importExportTemplate()"
-                                  class="btn btn-primary">
-                            Import/Export template
-                          </button>
-                        </div>
                       </div>
                     </div>
                     <div class="ibox-content"></div>
@@ -221,6 +213,13 @@
                 </div>
 
                 <button class="btn btn-primary"
+                        style="width: 100%;border-radius: 0px; padding:10px;"
+                        ng-click="metadataCtrl.importExportTemplate()">
+                  <i class="fa fa-plus fa-lg pull-left" style="width: 30px;margin-top: 4px;"></i>
+                  <span class="pull-left">Upload template</span>
+                </button>
+
+                <button class="btn btn-primary"
                         style="width: 100%;border-radius: 0px; padding:10px;margin-top: 10px;">
                   <span class="pull-left" style="font-weight: bold;margin-left: 10px;">Available templates</span>
                 </button>
@@ -248,7 +247,7 @@
 
                   <ul class="datasetList btn-primary"
                       style="margin-top:10px;"
-                      ng-if="metadataCtrl.currentTemplateID !== -1">
+                      ng-if="metadataCtrl.currentTemplateID !== - 1">
                     <li ng-click="metadataCtrl.addNewList()">
                       <span>
                         Add table
