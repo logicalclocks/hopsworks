@@ -5,7 +5,7 @@
 
 /**
  * A helper service to enable communication between datasetsCtrl and 
- * metadataSliderCtrl.
+ * metadataCtrl.
  */
 angular.module('hopsWorksApp')
         .service('MetadataHelperService', ['$cookies', '$q', 'MetadataActionService',

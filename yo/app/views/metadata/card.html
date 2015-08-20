@@ -6,7 +6,7 @@
 
       <span editable-text="card.title"
             style="font-size: 16px;"
-            onaftersave="metaSliderCtrl.storeTemplate(false)"
+            onaftersave="metadataCtrl.storeTemplate(false)"
             class="column-title ng-binding">
         {{card.title}}
         <span ng-show="card.required"
@@ -31,7 +31,7 @@
          class="removeButton pull-left btn btn-xs"
          tooltips
          title="delete card"
-         ng-click="metaSliderCtrl.checkDeleteField(column, card)">
+         ng-click="metadataCtrl.checkDeleteField(column, card)">
         <span class="glyphicon glyphicon-remove"></span></a>
     </div>
 
@@ -41,7 +41,7 @@
       <!-- add a find button in each card. Means that the card/attribute is going to be searchable -->
       <a data-no-drag class="pull-left btn btn-xs">
         <span class="searchable-{{card.find}} glyphicon glyphicon-search"
-              ng-click="metaSliderCtrl.makeSearchable(card)"
+              ng-click="metadataCtrl.makeSearchable(card)"
               tooltips title="make a card available to search"> find</span></a>
     </div>
 
@@ -49,7 +49,7 @@
 
       <a data-no-drag class="pull-left btn btn-xs">
         <span class="required-{{card.required}} glyphicon glyphicon-asterisk"
-              ng-click="metaSliderCtrl.makeRequired(card)"
+              ng-click="metadataCtrl.makeRequired(card)"
               tooltips title="required field"> req</span></a>
     </div>
 
@@ -59,14 +59,14 @@
       <div ng-if="card.fieldtypeid === 1">
         <a data-no-drag
            class="pull-left btn btn-xs"
-           ng-click="metaSliderCtrl.editSizeField(card)"
+           ng-click="metadataCtrl.editSizeField(card)"
            ng-show="!card.sizefield.showing">
           <span class="glyphicon glyphicon-chevron-right"
                 tooltips
                 title="data field max length"> length</span></a>
 
         <a data-no-drag class="pull-left btn btn-xs"
-           ng-click="metaSliderCtrl.doneEditingSizeField(card)"
+           ng-click="metadataCtrl.doneEditingSizeField(card)"
            ng-show="card.sizefield.showing">
           <span class="glyphicon glyphicon-chevron-down"
                 tooltips
@@ -77,7 +77,7 @@
                type="text"
                ng-show="card.sizefield.showing"
                ng-model="card.sizefield.value"
-               ng-blur="metaSliderCtrl.doneEditingSizeField(card)"
+               ng-blur="metadataCtrl.doneEditingSizeField(card)"
                ng-enter="doneEditingSizeField(card)"
                ng-focus="card == editedField"/>
 
@@ -89,7 +89,7 @@
 
       <a data-no-drag
          class="pull-left btn btn-xs"
-         ng-click="metaSliderCtrl.modifyField(column, card)">
+         ng-click="metadataCtrl.modifyField(column, card)">
         <span class="glyphicon glyphicon-edit"
               tooltips
               title="modify field"> edit</span></a>

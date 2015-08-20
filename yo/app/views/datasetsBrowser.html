@@ -6,7 +6,7 @@
        class="toggled"
        ng-controller="DatasetsCtrl as datasetsCtrl">
 
-    <div ng-controller="MetaSliderCtrl as metaSliderCtrl">
+    <div ng-controller="MetadataCtrl as metadataCtrl">
 
       <div class="overlay"></div>
       <section layout="row" flex="">
@@ -82,7 +82,7 @@
 
                                 ng-class="{ 'highlight': datasetsCtrl.selected === $index, 'expanded': expanded }"
                                 ng-dblclick="datasetsCtrl.openDir(file.name, file.dir)"
-                                ng-click="datasetsCtrl.select($index, file); metaSliderCtrl.setMetadataTemplate(file)"
+                                ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file)"
                                 id="table-{{ $index}}">
 
                               <td>
@@ -121,7 +121,7 @@
                                       <a class="pointer"
                                          role="menuitem"
                                          tabindex="3"
-                                         ng-click="metaSliderCtrl.attachTemplate(file); $event.stopPropagation();">
+                                         ng-click="metadataCtrl.attachTemplate(file); $event.stopPropagation();">
                                         <span><i class="fa fa-camera-retro"></i>
                                           Attach template</span>
                                       </a>
@@ -207,12 +207,12 @@
 
                                 <div class="" height="80%">
                                   <div class="input-group-lg" align="center">
-                                    <div ng-repeat="table in metaSliderCtrl.meta"><h2>{{table.name}}</h2>
+                                    <div ng-repeat="table in metadataCtrl.meta"><h2>{{table.name}}</h2>
                                       <div>
                                         <div ng-repeat="field in table.rest.fields"><b>{{field.name}}</b>
                                           <div ng-repeat="value in field.data">
                                             <a href="#" editable-text="value.raw" buttons="no"
-                                               onaftersave="metaSliderCtrl.updateRawdata(value)"
+                                               onaftersave="metadataCtrl.updateRawdata(value)"
                                                style="font-size: 16px;"
                                                class="column-title ng-binding"
                                                >
@@ -320,7 +320,7 @@
               </h2>
               <span flex></span>
               <button style="font-size:15px;height:28px;color:white;padding-top: 3px;"
-                      ng-click="metaSliderCtrl.submitMetadata(metaSliderCtrl.metaData); datasetsCtrl.close()"
+                      ng-click="metadataCtrl.submitMetadata(metadataCtrl.metaData); datasetsCtrl.close()"
                       class="btn btn-success">
                 <i class="fa fa-save"></i>
                 Save
@@ -329,18 +329,18 @@
 
           </md-toolbar>
           <md-content layout-padding>
-            <p>Associating metadata to: <a ng-href="{{returnnUrl}}"><b>'{{metaSliderCtrl.currentFile.name}}'</b></a></p>
+            <p>Associating metadata to: <a ng-href="{{returnnUrl}}"><b>'{{metadataCtrl.currentFile.name}}'</b></a></p>
 
             <label class="control-label" ng-show="datasetsCtrl.currentTemplateID === - 1">
-              <font color="red">There is no template attached to file {{metaSliderCtrl.currentFile.name}}</font>
+              <font color="red">There is no template attached to file {{metadataCtrl.currentFile.name}}</font>
             </label>
             <p></p>
 
             <tabset justified="false">
-              <tab ng-repeat="tab in metaSliderCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
+              <tab ng-repeat="tab in metadataCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
                    disabled="tab.disabled" select="datasetsCtrl.onTabSelect(tab)">
 
-                <form name="{{tab.title}}{{$index}}" ng-submit="metaSliderCtrl.submitMetadata(metaSliderCtrl.metaData)">
+                <form name="{{tab.title}}{{$index}}" ng-submit="metadataCtrl.submitMetadata(metadataCtrl.metaData)">
 
                   <ul class="cards card-list" as-sortable="sortOptions" ng-model="column.cards">
                     <li class="card" ng-repeat="card in tab.cards">
@@ -360,13 +360,13 @@
                                   <input size="10" value="" class="fillInMetadataInput" id="sizeFieldInput"
                                          tooltips title="{{card.description}}"
                                          ng-show="true"
-                                         ng-model="metaSliderCtrl.metaData[card.id]"/>
+                                         ng-model="metadataCtrl.metaData[card.id]"/>
                                 </div>
 
                                 <!--select list input type-->
                                 <div ng-if="card.fieldtypeid === 2">
 
-                                  <ui-select ng-model="metaSliderCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
+                                  <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
                                     <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
                                     <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
                                       <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
