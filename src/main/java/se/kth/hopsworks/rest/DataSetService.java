@@ -383,12 +383,12 @@ public class DataSetService {
       newPath = newPath.substring(1);
     }
     String[] fullPathArray = newPath.split(File.separator);
-    String[] datasetRelativePathArray = Arrays.copyOfRange(fullPathArray, 4,
+    String[] datasetRelativePathArray = Arrays.copyOfRange(fullPathArray, 3,
             fullPathArray.length);
     String dsPath = File.separator + Constants.DIR_ROOT + File.separator
-            + fullPathArray[2];
+            + fullPathArray[1];
     //Check if the DataSet is writeable.
-    if (!fullPathArray[2].equals(this.project.getName())) {
+    if (!fullPathArray[1].equals(this.project.getName())) {
       if (!this.dataset.isEditable()) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 "You can not create a folder inside a shared dataset.");
