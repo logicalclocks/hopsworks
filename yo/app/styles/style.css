@@ -136,7 +136,8 @@ a:focus {
 
 
 .datasetList {
-  background-color: #46b8da;
+  /* disabled to use btn-primary style color instead */
+  /*background-color: #46b8da;*/
   list-style-type:none;
   color:white;
   padding-left: 0;

@@ -5,7 +5,7 @@
        class="toggled"
        ng-controller="DatasetsCtrl as datasetsCtrl">
 
-    <div ng-controller="MetaSliderCtrl as metaSliderCtrl">
+    <div ng-controller="MetadataCtrl as metadataCtrl">
 
       <div class="overlay"></div>
       <section layout="row" flex="">
@@ -41,6 +41,14 @@
                                   ng-click="datasetsCtrl.toggleRight()"
                                   class="btn btn-primary">
                             Metadata designer
+                          </button>
+                        </div>
+                        <div class="btn-group"
+                             style="width: 100%; margin-top: 10px;">
+                          <button style="width: 100%;"
+                                  ng-click="metadataCtrl.importExportTemplate()"
+                                  class="btn btn-primary">
+                            Import/Export template
                           </button>
                         </div>
                       </div>
@@ -135,7 +143,7 @@
               </h2>
               <span flex></span>
               <button style="font-size:15px;height:28px;color:white;padding-top: 3px; padding-right: 3px"
-                      ng-click="metaSliderCtrl.storeTemplate('true')"
+                      ng-click="metadataCtrl.storeTemplate('true')"
                       class="btn btn-success">
                 <i class="fa fa-save"></i>
                 Save
@@ -149,7 +157,7 @@
 
               <!-- Left menu -->
               <div class="col-md-2" style="height: 100%; border-right: 1px dashed lightgrey; min-width: 233px; max-width: 233px">
-                <button class="btn btn-info"
+                <button class="btn btn-primary"
                         style="width: 100%;margin-top: -7px;border-radius: 0px; padding:10px;"
                         data-toggle="collapse"
                         data-target="#collapseNewTemplate"
@@ -160,23 +168,23 @@
                 </button>
 
 
-                <div style="width: 100%; background-color: #46b8da; height: 50px;"
-                     class="collapse"
+                <div style="width: 100%; height: 50px;"
+                     class="collapse btn-warning"
                      id="collapseNewTemplate">
                   <div class="input-group">
                     <input type="text"
-                           ng-model="metaSliderCtrl.newTemplateName"
+                           ng-model="metadataCtrl.newTemplateName"
                            style="margin:10px; height: 30px; width: 145px;border: medium none; text-indent: 5px;"
                            placeholder="Template name..."/>
                     <button class="btn btn-success"
-                            ng-click="metaSliderCtrl.addNewTemplate()"
+                            ng-click="metadataCtrl.addNewTemplate()"
                             style="border-radius: 0px; margin-left: -13px;margin-top: -3px;  height: 30px;">
                       <i class="fa fa-floppy-o fa-lg"></i>
                     </button>
                   </div>
                 </div>
 
-                <button class="btn btn-info"
+                <button class="btn btn-primary"
                         style="width: 100%;border-radius: 0px; padding:10px;"
                         data-toggle="collapse"
                         data-target="#collapseExtendTemplate"
@@ -186,22 +194,22 @@
                   <span class="pull-left">Extend template</span>
                 </button>
 
-                <div style="width: 100%; background-color: #46b8da; height: 50px;"
-                     class="collapse"
+                <div style="width: 100%; height: 50px;"
+                     class="collapse btn-warning"
                      id="collapseExtendTemplate">
                   <div class="input-group styleSelect">
                     <input type="text"
-                           ng-model="metaSliderCtrl.newTemplateName"
+                           ng-model="metadataCtrl.newTemplateName"
                            style="margin:10px; height: 30px; width: 145px;border: medium none; text-indent: 5px;"
                            placeholder="Template name..."/>
                     <button class="btn btn-success"
-                            ng-click="metaSliderCtrl.extendTemplate()"
+                            ng-click="metadataCtrl.extendTemplate()"
                             style="border-radius: 0px; margin-left: -13px;margin-top: -3px;  height: 30px;">
                       <i class="fa fa-floppy-o fa-lg"></i>
                     </button>
 
                     <select name="extendedFromName"
-                            ng-model="metaSliderCtrl.extendedFrom"
+                            ng-model="metadataCtrl.extendedFrom"
                             class="form-control"
                             style="border-radius: 0px;margin: 9px;width: 188px;margin-top:0px;">
                       <option ng-repeat="template in datasetsCtrl.availableTemplates"
@@ -209,41 +217,39 @@
                         {{template.name}}
                       </option>
                     </select>
-
                   </div>
                 </div>
 
-                <button class="btn btn-info"
-                        style="width: 100%;border-radius: 0px; padding:10px;margin-top: 10px; background-color:#31b0d5;">
+                <button class="btn btn-primary"
+                        style="width: 100%;border-radius: 0px; padding:10px;margin-top: 10px;">
                   <span class="pull-left" style="font-weight: bold;margin-left: 10px;">Available templates</span>
                 </button>
 
                 <div>
-                  <ul class="datasetList">
+                  <ul class="datasetList btn-primary">
                     <li ng-repeat="template in datasetsCtrl.availableTemplates"
-                        ng-click="metaSliderCtrl.fetchTemplate(template.id)">
+                        ng-click="metadataCtrl.fetchTemplate(template.id)">
                       <span>
+                        <!--when the user clicks on a template name a check appears-->
                         <i class="fa fa-check pull-left"
                            style="color: lightgreen; width: 15px; margin-top:3px;"
-                           ng-if="metaSliderCtrl.currentTemplateID == template.id"></i>
+                           ng-if="metadataCtrl.currentTemplateID == template.id"></i>
 
                         {{template.name}}
 
                         <button class="btn btn-danger pull-right"
-                                ng-click="metaSliderCtrl.removeTemplate(template.id)"
+                                ng-click="metadataCtrl.removeTemplate(template.id)"
                                 style="margin-top: 1px; width: 20px; height: 20px;padding:2px;">
                           <i class="fa fa-times"></i>
                         </button>
                       </span>
                     </li>
-
                   </ul>
 
-
-                  <ul class="datasetList"
+                  <ul class="datasetList btn-primary"
                       style="margin-top:10px;"
-                      ng-if="metaSliderCtrl.currentTemplateID !== -1">
-                    <li ng-click="metaSliderCtrl.addNewList()">
+                      ng-if="metadataCtrl.currentTemplateID !== -1">
+                    <li ng-click="metadataCtrl.addNewList()">
                       <span>
                         Add table
                         <button class="btn btn-success pull-right"
@@ -261,7 +267,7 @@
               <!-- Rightside tables -->
               <div class="col-md-10">
 
-                <div ng-repeat="column in metaSliderCtrl.currentBoard.columns">
+                <div ng-repeat="column in metadataCtrl.currentBoard.columns">
                   <div ng-if="($index % 3 == 0) && ($index !== 0)" class="row"></div>
 
                   <div class="col-md-4">
@@ -274,12 +280,12 @@
 
                         <div align="right">
 
-                          <a ng-click="metaSliderCtrl.addCard(column)"
+                          <a ng-click="metadataCtrl.addCard(column)"
                              title="Add card to table">
                             <i class="fa fa-plus addNewCard"></i>
                           </a>
 
-                          <a ng-click="metaSliderCtrl.checkDeleteTable(column)"
+                          <a ng-click="metadataCtrl.checkDeleteTable(column)"
                              title="Remove table">
                             <i class="fa fa-trash-o removeList"></i>
                           </a>
@@ -288,7 +294,7 @@
 
                         <span editable-text="column.name"
                               style="font-size: 16px;"
-                              onaftersave="metaSliderCtrl.storeTemplate()"
+                              onaftersave="metadataCtrl.storeTemplate()"
                               class="column-title ng-binding">
                           {{column.name}}
                         </span>
