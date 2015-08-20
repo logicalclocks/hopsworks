@@ -14,7 +14,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import se.kth.bbc.lims.Constants;
 
@@ -65,9 +64,6 @@ public class FileSystemOperations {
 
   /**
    * Create a new folder on the given path. Equivalent to mkdir -p.
-   * setMetaEnabled allows added/deleted/renamed folders/files from the current
-   * location down the path, to be written to hdfs_metadata_log table so that
-   * they can be picked up and dumped into elasticsearch
    * <p>
    * @param location The path to the new folder, its name included.
    * @return True if successful.

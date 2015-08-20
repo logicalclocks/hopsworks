@@ -8,7 +8,6 @@ package se.kth.bbc.lims;
  */
 public class Constants {
 
-  //TODO: check entire project for correct closing of resources!
   //Local path to the hiway jar
   public static final String HIWAY_JAR_PATH
           = "/srv/hiway-1.0.1-SNAPSHOT/hiway-core-1.0.1-SNAPSHOT.jar";
@@ -92,4 +91,29 @@ public class Constants {
   public static final String PRINT_FILENAME_DISALLOWED_CHARS
           = "space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #";
   public static final String SHARED_FILE_SEPARATOR = "::";
+
+  //Project creation: default datasets
+  public static enum DefaultDataset {
+
+    LOGS("Logs",
+            "Contains the logs for jobs that have been run through the Hopsworks platform."),
+    RESOURCES("Resources",
+            "Contains resources for job running, for instance jar files.");
+    private final String name;
+    private final String description;
+
+    private DefaultDataset(String name, String description) {
+      this.name = name;
+      this.description = description;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public String getDescription() {
+      return description;
+    }
+
+  }
 }
