@@ -1,10 +1,10 @@
-<div flow-object="ieTemplateCtrl.existingFlowObject" flow-init
-     flow-file-error="ieTemplateCtrl.fileErrorHandler( $file, $message, $flow )"
-     flow-error="ieTemplateCtrl.errorHandler( $file, $message, $flow )"
-     flow-file-added="ieTemplateCtrl.fileAddedHandler($file, $flow)"
+<div flow-object="importTemplateCtrl.existingFlowObject" flow-init
+     flow-file-error="importTemplateCtrl.fileErrorHandler( $file, $message, $flow )"
+     flow-error="importTemplateCtrl.errorHandler( $file, $message, $flow )"
+     flow-file-added="importTemplateCtrl.fileAddedHandler($file, $flow)"
      flow-files-submitted="$flow.upload()">
   <div class="modal-header">
-    <button class="close" ng-click="ieTemplateCtrl.close()" data-dismiss="modal" aria-hidden="true"
+    <button class="close" ng-click="importTemplateCtrl.close()" data-dismiss="modal" aria-hidden="true"
             type="button">&times;</button>
     <h2 class="modal-title">Import/Export Template</h2>
   </div>
@@ -48,7 +48,7 @@
                     </div>
                     <div ng-show="file.error" class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"
                          aria-valuemin="0" aria-valuemax="100" style="width:100%">
-                      {{ieTemplateCtrl.files[file.name]}}
+                      {{importTemplateCtrl.files[file.name]}}
                     </div>
                   </div>
                 </td>
@@ -93,7 +93,7 @@
                     Cancel all</a>
                 </td>
                 <td>
-                  <span class="label label-info">Total Size: {{ieTemplateCtrl.size($flow.getSize())}}</span>
+                  <span class="label label-info">Total Size: {{importTemplateCtrl.size($flow.getSize())}}</span>
                 </td>
               </tr>
               <tr><td colspan='4'>Only .json files are allowed.</td></tr>
@@ -133,7 +133,7 @@
             </div>-->
 
       <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
-        <button class="btn btn-default" type="button" ng-click="ieTemplateCtrl.close()">Cancel</button>
+        <button class="btn btn-default" type="button" ng-click="importTemplateCtrl.close()">Cancel</button>
       </div>
     </form>
   </div>

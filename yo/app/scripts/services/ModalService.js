@@ -341,10 +341,10 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              importExportTemplate: function (size, template) {
+              importTemplate: function (size, template) {
                 var modalInstance = $modal.open({
-                  templateUrl: 'views/importExportTemplate.html',
-                  controller: 'ImportExportTemplateCtrl as ieTemplateCtrl',
+                  templateUrl: 'views/importTemplate.html',
+                  controller: 'ImportTemplateCtrl as importTemplateCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',

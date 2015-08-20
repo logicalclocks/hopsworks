@@ -227,7 +227,9 @@
                 <div>
                   <ul class="datasetList btn-primary">
                     <li ng-repeat="template in datasetsCtrl.availableTemplates"
-                        ng-click="metadataCtrl.fetchTemplate(template.id)">
+                        ng-click="metadataCtrl.fetchTemplate(template.id)"
+                        context-menu
+                        data-target="templateMenu-{{$index}}">
                       <span>
                         <!--when the user clicks on a template name a check appears-->
                         <i class="fa fa-check pull-left"
@@ -242,6 +244,21 @@
                           <i class="fa fa-times"></i>
                         </button>
                       </span>
+                      <div class="dropdown position-fixed" id="templateMenu-{{$index}}">
+                          <ul class="dropdown-menu dropdown-amore">
+                            <li>
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="1"
+                                 download="template.json"
+                                 ng-mousedown="metadataCtrl.createDownloadURL(template);"
+                                 ng-href="{{metadataCtrl.url}}">
+                                <span><i class="fa fa-download"></i>
+                                  Download</span>
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
                     </li>
                   </ul>
 

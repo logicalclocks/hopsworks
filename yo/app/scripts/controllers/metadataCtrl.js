@@ -23,6 +23,9 @@ angular.module('hopsWorksApp')
             self.editedField;
             self.extendedFrom = {};
             self.currentBoard = {};
+            self.toDownload;
+            self.blob;
+            self.templateContents = {};
             var dataSetService = DataSetService($routeParams.projectID);
 
             /**
@@ -430,7 +433,7 @@ angular.module('hopsWorksApp')
               $scope.field = field;
 
               ModalService.modifyField($scope).then(
-                      function (success) {                      
+                      function (success) {
                         //Persist the modified card to the database
                         self.storeCard(self.currentTemplateID, column, success)
                                 .then(function (response) {
@@ -539,16 +542,36 @@ angular.module('hopsWorksApp')
 
               self.currentTableId = tab.tableid;
             };
-            
-            self.importExportTemplate = function(){
-              var selectedTemplate = {};
+
+            /**
+             * Downloads a template on the fly
+             * 
+             * @param {type} template
+             * @returns {undefined}
+             */
+            self.createDownloadURL = function (template) {
+              var selectedTmptName = template.name;
+
+              console.log("SELECTED TEMPLATE " + JSON.stringify(template));
               
-              ModalService.importExportTemplate('md', selectedTemplate).then(
-                      function (success) {
-                        console.log(JSON.stringify(success));
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
-                      }, function (error) {
-              });
+              //get the actual template
+              MetadataActionService.fetchTemplate($cookies['email'], template.id)
+                      .then(function (response) {
+                        var contents = JSON.parse(response.board);
+                        self.templateContents.templateName = selectedTmptName;
+                        self.templateContents.templateContents = contents.columns;
+
+                        //clear any previously created urls
+                        if (!angular.isUndefined(self.blob)) {
+                          (window.URL || window.webkitURL).revokeObjectURL(self.blob);
+                        }
+
+                        //construct the url that downloads the template
+                        self.toDownload = JSON.stringify(self.templateContents);
+                        self.blob = new Blob([self.toDownload], {type: 'text/plain'});
+                        self.url = (window.URL || window.webkitURL).createObjectURL(self.blob);
+                        console.log("URL CREATED " + JSON.stringify(self.url));
+                      });
             };
           }
         ]);
