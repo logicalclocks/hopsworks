@@ -1,7 +1,7 @@
 package se.kth.bbc.jobs.cuneiform.model;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 
@@ -40,19 +40,19 @@ public class CuneiformJobConfiguration extends YarnJobConfiguration {
   }
 
   @Override
-  public DatabaseJsonObject getReducedJsonObject() {
+  public MutableJsonObject getReducedJsonObject() {
     if (wf == null) {
       throw new NullPointerException(
               "Null workflowDTO in CuneiformJobConfiguration.");
     }
-    DatabaseJsonObject obj = super.getReducedJsonObject();
+    MutableJsonObject obj = super.getReducedJsonObject();
     obj.set(KEY_TYPE, JobType.CUNEIFORM.name());
     obj.set(KEY_WORKFLOW, wf.getReducedJsonObject());
     return obj;
   }
 
   @Override
-  public void updateFromJson(DatabaseJsonObject json) throws
+  public void updateFromJson(MutableJsonObject json) throws
           IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
@@ -63,7 +63,7 @@ public class CuneiformJobConfiguration extends YarnJobConfiguration {
       if (type != JobType.CUNEIFORM) {
         throw new IllegalArgumentException("JobType must be CUNEIFORM.");
       }
-      DatabaseJsonObject jsonWf = json.getJsonObject(KEY_WORKFLOW);
+      MutableJsonObject jsonWf = json.getJsonObject(KEY_WORKFLOW);
       workflow = new WorkflowDTO();
       workflow.updateFromJson(jsonWf);
     } catch (Exception e) {

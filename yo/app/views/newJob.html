@@ -22,7 +22,7 @@
             <div ng-controller="SparkCtrl as sparkCtrl">
               <accordion close-others="false">
 
-                <accordion-group heading="1. Name the job - {{newJobCtrl.jobname}}" is-open="true">
+                <accordion-group heading="{{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" is-open="newJobCtrl.accordion1.isOpen">
                   <md-input-container>
                     <label for="jobname" style="color: black;">Job name</label>
                     <input name="jobname" type="text" id="jobname"
@@ -31,9 +31,9 @@
                 </accordion-group>
 
                 <!-- Select the type of job -->
-                <accordion-group heading="2. {{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" 
-                                 is-open="newJobCtrl.accordion1.isOpen" 
-                                 ng-show="newJobCtrl.accordion1.visible">
+                <accordion-group heading="{{newJobCtrl.accordion2.title}} {{newJobCtrl.accordion2.value}}" 
+                                 is-open="newJobCtrl.accordion2.isOpen" 
+                                 ng-show="newJobCtrl.accordion2.visible">
                   <div class="btn-group">
                     <label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="0" ng-change="newJobCtrl.jobTypeChosen()">Cuneiform</label>
                     <label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
@@ -43,9 +43,9 @@
 
 
                 <!-- Select the main execution file -->
-                <accordion-group heading="3. {{newJobCtrl.accordion2.title}} {{newJobCtrl.accordion2.value}}" 
-                                 is-open="newJobCtrl.accordion2.isOpen" 
-                                 ng-show="newJobCtrl.accordion2.visible">
+                <accordion-group heading="{{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}" 
+                                 is-open="newJobCtrl.accordion3.isOpen" 
+                                 ng-show="newJobCtrl.accordion3.visible">
                   <!-- Cuneiform -->
                   <button class="btn btn-default" ng-click="cuneiformCtrl.selectFile(newJobCtrl)" ng-show="newJobCtrl.jobtype == 0">
                     <span>Select...</span>
@@ -70,9 +70,9 @@
 
 
                 <!-- Set up the job details -->
-                <accordion-group heading="4. {{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}" 
-                                 is-open="newJobCtrl.accordion3.isOpen" 
-                                 ng-show="newJobCtrl.accordion3.visible">
+                <accordion-group heading="{{newJobCtrl.accordion4.title}} {{newJobCtrl.accordion4.value}}" 
+                                 is-open="newJobCtrl.accordion4.isOpen" 
+                                 ng-show="newJobCtrl.accordion4.visible">
                   <!-- Cuneiform -->
                   <table class="table" ng-show="newJobCtrl.jobtype == 0">
                     <thead>
@@ -135,9 +135,9 @@
 
 
                 <!-- Set some run configuration -->
-                <accordion-group heading="5. {{newJobCtrl.accordion4.title}} {{newJobCtrl.accordion4.value}}" 
-                                 is-open="newJobCtrl.accordion4.isOpen" 
-                                 ng-show="newJobCtrl.accordion4.visible">
+                <accordion-group heading="{{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}" 
+                                 is-open="newJobCtrl.accordion5.isOpen" 
+                                 ng-show="newJobCtrl.accordion5.visible">
                   <!-- Common -->
                   <table class="table">
                     <thead>
@@ -188,6 +188,9 @@
                       </tr>
                     </tbody>
                   </table>
+                  <!-- Add libraries -->
+                  <h3>Add extra libraries</h3>
+                  
                   <!-- Execution button -->
                   <!-- Cuneiform -->
                   <button ng-click="newJobCtrl.createJob('cuneiform', cuneiformCtrl.runConfig)" 

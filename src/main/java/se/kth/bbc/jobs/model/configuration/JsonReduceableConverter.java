@@ -7,7 +7,7 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
-import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.model.JsonReduceable;
 
 /**
@@ -30,7 +30,7 @@ public class JsonReduceableConverter implements
     }
     try (JsonReader reader = Json.createReader(new StringReader(config))) {
       JsonObject obj = reader.readObject();
-      DatabaseJsonObject json = new DatabaseJsonObject(obj);
+      MutableJsonObject json = new MutableJsonObject(obj);
       return JobConfiguration.JobConfigurationFactory.
               getJobConfigurationFromJson(json);
     }

@@ -15,10 +15,11 @@ angular.module('hopsWorksApp')
             this.jobname; //Will hold the name of the job
             this.phase = 0; //The phase of creation we are in.
 
-            this.accordion1 = {"isOpen": false, "visible": false, "value": "", "title": "Choose the job type"};
-            this.accordion2 = {"isOpen": false, "visible": false, "value": "", "title": ""};
+            this.accordion1 = {"isOpen": true, "visible": true, "value": "", "title": "Job name"};
+            this.accordion2 = {"isOpen": false, "visible": false, "value": "", "title": "Job type"};
             this.accordion3 = {"isOpen": false, "visible": false, "value": "", "title": ""};
-            this.accordion4 = {"isOpen": false, "visible": false, "value": "", "title": "Configure and create"};
+            this.accordion4 = {"isOpen": false, "visible": false, "value": "", "title": ""};
+            this.accordion5 = {"isOpen": false, "visible": false, "value": "", "title": "Configure and create"};
 
 
             this.createJob = function (type, config) {
@@ -34,48 +35,50 @@ angular.module('hopsWorksApp')
             this.nameFilledIn = function () {
               if (self.phase == 0) {
                 self.phase = 1;
-                self.accordion1.isOpen = true;
-                self.accordion1.visible = true;
+                self.accordion2.isOpen = true;
+                self.accordion2.visible = true;
               }
             };
 
             this.jobTypeChosen = function () {
               self.phase = 2;
-              self.accordion2.isOpen = true;
+              self.accordion3.isOpen = true;
               var type;
               switch (self.jobtype) {
                 case 0:
-                  self.accordion2.title = "Select a workflow file";
-                  self.accordion3.title = "Bind input variables";
+                  self.accordion3.title = "Workflow file";
+                  self.accordion4.title = "Input variables";
                   type = "Cuneiform";
                   break;
                 case 1:
-                  self.accordion2.title = "Select a JAR file";
-                  self.accordion3.title = "Fill in job details";
+                  self.accordion3.title = "JAR file";
+                  self.accordion4.title = "Job details";
                   type = "Spark";
                   break;
                 case 2:
-                  self.accordion2.title = "Select an ADAM command";
-                  self.accordion3.title = "Set job arguments";
+                  self.accordion3.title = "ADAM command";
+                  self.accordion4.title = "Job arguments";
                   type = "ADAM";
                   break;
               }
-              self.accordion2.visible = true;
-              self.accordion1.value = " - " + type;
               self.accordion1.isOpen = false;
-              self.accordion3.isOpen = false;
-              self.accordion3.visible = false;
+              self.accordion1.value = " - " + self.jobname;
+              self.accordion3.visible = true;
+              self.accordion2.value = " - " + type;
+              self.accordion2.isOpen = false;
+              self.accordion4.isOpen = false;
               self.accordion4.visible = false;
-              self.accordion2.value = "";
+              self.accordion5.visible = false;
+              self.accordion3.value = "";
             };
 
             this.mainFileSelected = function (path) {
               self.phase = 3;
-              self.accordion3.isOpen = true;
-              self.accordion3.visible = true;
+              self.accordion4.isOpen = true;
               self.accordion4.visible = true;
-              self.accordion2.value = " - " + path;
-              self.accordion2.isOpen = false;
+              self.accordion5.visible = true;
+              self.accordion3.value = " - " + path;
+              self.accordion3.isOpen = false;
             };
 
             this.jobDetailsFilledIn = function () {

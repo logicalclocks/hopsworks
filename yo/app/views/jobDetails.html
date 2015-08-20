@@ -18,7 +18,7 @@
     <accordion-group heading="Configuration">
       <!-- Cuneiform configuration -->
       <div ng-show="jobDetailCtrl.job.runConfig.type == 'cuneiformJobConfiguration'">
-        <table class="table table-condensed">
+        <table class="table table-condensed chrome-table">
           <tr ng-show="jobDetailCtrl.job.runConfig.wf.inputParams.length > 0">
             <td>
               <strong>Input parameters</strong>
@@ -57,7 +57,7 @@
       </div>
       <!-- Spark configuration -->
       <div ng-show="jobDetailCtrl.job.runConfig.type == 'sparkJobConfiguration'">
-        <table class="table table-condensed">
+        <table class="table table-condensed chrome-table">
           <tr>
             <td>
               <strong>Job details</strong>
@@ -115,7 +115,7 @@
         <div>
           <h3>{{jobDetailCtrl.job.runConfig.selectedCommand.description}}</h3>
         </div>
-        <table class="table table-condensed">
+        <table class="table table-condensed chrome-table">
           <tr>
             <td>
               <strong>Arguments</strong>
@@ -176,7 +176,7 @@
       <span ng-show="!jobDetailCtrl.showExecutions">
         There are no registered executions for this job.
       </span>
-      <table ng-show="jobDetailCtrl.showExecutions" class="table">
+      <table ng-show="jobDetailCtrl.showExecutions" class="table chrome-table">
         <thead>
           <tr>
             <th>

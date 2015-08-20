@@ -2,7 +2,7 @@ package se.kth.bbc.jobs.adam;
 
 import com.google.common.base.Strings;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.model.JsonReduceable;
 
 /**
@@ -85,11 +85,11 @@ public class AdamCommandDTO implements JsonReduceable {
   }
 
   @Override
-  public DatabaseJsonObject getReducedJsonObject() {
-    DatabaseJsonObject obj = new DatabaseJsonObject();
+  public MutableJsonObject getReducedJsonObject() {
+    MutableJsonObject obj = new MutableJsonObject();
     obj.set("command", command);
     //Create a JSON object "arguments" and set it to the builder.
-    DatabaseJsonObject args = new DatabaseJsonObject();
+    MutableJsonObject args = new MutableJsonObject();
     for (AdamArgumentDTO arg : arguments) {
       //Only set if the argument is non-empty.
       if (!Strings.isNullOrEmpty(arg.getValue())) {
@@ -98,7 +98,7 @@ public class AdamCommandDTO implements JsonReduceable {
     }
     obj.set("arguments", args);
     //Create a JSON object "options" and set it to the builder.
-    DatabaseJsonObject opts = new DatabaseJsonObject();
+    MutableJsonObject opts = new MutableJsonObject();
     for (AdamOptionDTO opt : options) {
       //If a flag: only set if set
       if (opt.isFlag()) {
@@ -115,11 +115,12 @@ public class AdamCommandDTO implements JsonReduceable {
   }
 
   @Override
-  public void updateFromJson(DatabaseJsonObject json) throws
+  public void updateFromJson(MutableJsonObject json) throws
           IllegalArgumentException {
     String jsonCommand;
     AdamCommand ac;
-    DatabaseJsonObject jsonArgs, jsonOpts;
+    MutableJsonObject jsonArgs;
+    MutableJsonObject jsonOpts;
     try {
       jsonCommand = json.getString("command");
       ac = AdamCommand.getFromCommand(jsonCommand);

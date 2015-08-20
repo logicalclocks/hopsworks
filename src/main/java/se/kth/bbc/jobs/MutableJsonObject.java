@@ -16,15 +16,15 @@ import javax.json.JsonValue;
  * <p>
  * @author stig
  */
-public class DatabaseJsonObject {
+public class MutableJsonObject {
 
   private final Map<String, String> internalStrings;
-  private final Map<String, DatabaseJsonObject> internalJsons;
+  private final Map<String, MutableJsonObject> internalJsons;
 
   /**
    * Create a new mutable JSON object.
    */
-  public DatabaseJsonObject() {
+  public MutableJsonObject() {
     internalStrings = new HashMap<>();
     internalJsons = new HashMap<>();
   }
@@ -37,7 +37,7 @@ public class DatabaseJsonObject {
    * @param object
    * @throws IllegalArgumentException
    */
-  public DatabaseJsonObject(JsonObject object) throws IllegalArgumentException {
+  public MutableJsonObject(JsonObject object) throws IllegalArgumentException {
     this();
     for (Entry<String, JsonValue> k : object.entrySet()) {
       String key = k.getKey();
@@ -52,7 +52,7 @@ public class DatabaseJsonObject {
           internalStrings.put(key, ((JsonString) val).getString());
           break;
         case OBJECT:
-          internalJsons.put(key, new DatabaseJsonObject((JsonObject) val));
+          internalJsons.put(key, new MutableJsonObject((JsonObject) val));
           break;
         default:
           throw new IllegalArgumentException(
@@ -84,7 +84,7 @@ public class DatabaseJsonObject {
    * @param key
    * @param value
    */
-  public void set(String key, DatabaseJsonObject value) {
+  public void set(String key, MutableJsonObject value) {
     internalJsons.put(key, value);
   }
 
@@ -137,10 +137,10 @@ public class DatabaseJsonObject {
    * <p>
    * @param key
    * @return
-   * @throws IllegalArgumentException If the object does not contain a string
+   * @throws IllegalArgumentException If the object does not contain an object
    * value for this key.
    */
-  public DatabaseJsonObject getJsonObject(String key) throws
+  public MutableJsonObject getJsonObject(String key) throws
           IllegalArgumentException {
     try {
       return internalJsons.get(key);
@@ -221,7 +221,7 @@ public class DatabaseJsonObject {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    final DatabaseJsonObject other = (DatabaseJsonObject) obj;
+    final MutableJsonObject other = (MutableJsonObject) obj;
     if (this.internalStrings.equals(other.internalStrings)) {
       return false;
     }
