@@ -10,7 +10,14 @@
                 <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Zeppelin Dashboard</h3>
                 <div growl reference="10" class="pull-right" ></div>
                 <div class="row" style="margin: 10px">
-                    <div class="panel col-lg-9" style="width: 74%; margin-right: 10px; min-width: 400px">
+                    <div class="panel col-lg-9" style="width: 69%; margin-right: 10px; min-width: 400px">
+                       <a 
+                          tooltip="Refresh Panel" 
+                          class="pull-right" 
+                          style="padding-top: 10px; color: #c1c2c3"
+                          ng-click="zeppelinCtrl.refreshDashboard()">
+                            <span class="glyphicon glyphicon-refresh"></span>
+                        </a>
                         <div class="panel-body">
                             <h1>Zeppelin Dashboard</h1>
                             <p>Here you can see notebooks in the current project and start or stop interpreters.
@@ -41,13 +48,21 @@
                         </div>
                     </div>
 
-                    <div class="panel col-lg-2" style="width: 25%; min-width: 300px">
+                    <div class="panel col-lg-2" style="width: 30%; min-width: 400px">
+                        <a 
+                          tooltip="Refresh Panel" 
+                          class="pull-right" 
+                          style="padding-top: 10px; color: #c1c2c3"
+                          ng-click="zeppelinCtrl.refreshInterpreters()">
+                            <span class="glyphicon glyphicon-refresh"></span>
+                        </a>
                         <div class="panel-body">
                             <h2>Interpreters</h2>
 
                             <table class="table table-hover" style="width: 100%">
                                 <tr ng-repeat="interpreter in zeppelinCtrl.interpreters track by $index">
-                                    <td><span>{{interpreter.setting.group}} Interpreter </span></td>
+                                    <td><span>{{interpreter.interpreter.group}} Interpreter </span></td>
+                                    <td class="text-muted">{{interpreter.statusMsg}}</td>
                                     <td style="text-align: right">
                                         <input type="checkbox"
                                                id="switch-{{$index}}"
@@ -57,7 +72,7 @@
                                                data-off-text="Stop"
                                                data-on-color="success"
                                                data-off-color="danger"
-                                               ng-model="interpreter.status"
+                                               ng-model="interpreter.interpreter.notRunning"
                                                data-indeterminate="false"
                                                ng-change="zeppelinCtrl.changeState(interpreter, 'switch-'+ $index)"
                                                hopsworks-switch>

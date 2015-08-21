@@ -169,7 +169,7 @@ public class Users implements Serializable {
   @NotNull
   @Column(name = "status")
   private int status;
-  @JoinTable(name = "people_group",
+  @JoinTable(name = "hopsworks.people_group",
           joinColumns = {
             @JoinColumn(name = "uid",
                     referencedColumnName = "uid")},

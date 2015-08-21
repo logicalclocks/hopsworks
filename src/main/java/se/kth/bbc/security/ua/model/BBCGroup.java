@@ -51,7 +51,7 @@ public class BBCGroup implements Serializable {
   @NotNull
   @Column(name = "gid")
   private Integer gid;
-  @JoinTable(name = "people_group",
+  @JoinTable(name = "hopsworks.people_group",
           joinColumns = {
             @JoinColumn(name = "gid",
                     referencedColumnName = "gid")},

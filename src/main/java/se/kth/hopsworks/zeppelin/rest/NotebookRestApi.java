@@ -140,7 +140,6 @@ public class NotebookRestApi {
       noteInfo = notebookRepo.list();
     } catch (IOException ex) {
       noteInfo = null;
-      System.out.println("NNNNNNote : " + ex.getMessage());
     }
     return new JsonResponse(Status.OK, "", noteInfo).build();
   }

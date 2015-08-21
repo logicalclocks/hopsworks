@@ -51,11 +51,12 @@ public class RequestAuthFilter implements ContainerRequestFilter {
     String[] pathParts = path.split("/");
     log.log(Level.INFO, "Filtering request path: {0}", pathParts[0]);
     log.log(Level.INFO, "Method called: {0}", method.getName());
-    //intercepted method must be a project operations on a specific project
-    //with an id (/project/projectId/... or /activity/projectId/...). Project creation will have time stamp so
-    //we do not need to sotre that here
+    //intercepted method must be project operations on a specific project
+    //with an id (/project/projectId/... or /activity/projectId/...). 
     if (pathParts.length > 1 && (pathParts[0].equalsIgnoreCase("project")
-            || pathParts[0].equalsIgnoreCase("activity") || pathParts[0].equalsIgnoreCase("notebook"))) {
+            || pathParts[0].equalsIgnoreCase("activity") 
+            || pathParts[0].equalsIgnoreCase("notebook")
+            || pathParts[0].equalsIgnoreCase("interpreter"))) {
 
       JsonResponse json = new JsonResponse();
       Integer projectId;
