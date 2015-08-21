@@ -21,12 +21,12 @@
         <table class="table table-condensed chrome-table">
           <tr ng-show="jobDetailCtrl.job.runConfig.wf.inputParams.length > 0">
             <td>
-              <strong>Input parameters</strong>
+              <strong>Input parameters <i class="fa fa-info-circle" tooltip="The unbound input parameters to the selected workflow. They have been bound to the given value for this job." style="margin-left: 10px"></i></strong>
             </td>
             <td></td>
           </tr>
           <tr ng-repeat="param in jobDetailCtrl.job.runConfig.wf.inputParams">
-            <td>{{param.name}}</td>
+            <td class="text-right">{{param.name}}</td>
             <td> {{param.value}}</td>
           </tr>
           <tr>
@@ -36,19 +36,19 @@
             <td></td>
           </tr>
           <tr>
-            <td>Application master memory</td>
+            <td class="text-right">Application master memory <i class="fa fa-info-circle" tooltip="The amount of memory that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></td>
             <td>
               {{jobDetailCtrl.job.runConfig.amMemory}}
             </td>
           </tr>
           <tr>
-            <td>Application master vcores</td>
+            <td class="text-right">Application master vcores <i class="fa fa-info-circle" tooltip="The number of cores that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></td>
             <td>
               {{jobDetailCtrl.job.runConfig.amVCores}}
             </td>
           </tr>
           <tr>
-            <td>ResourceManager queue</td>
+            <td class="text-right">ResourceManager queue <i class="fa fa-info-circle" tooltip="The queue in the ResourceManager in which this application should be submitted." style="margin-left: 10px"></i></td>
             <td>
               {{jobDetailCtrl.job.runConfig.amQueue}}
             </td>
@@ -65,11 +65,11 @@
             <td></td>
           </tr>
           <tr>
-            <td>Main class name</td>
+            <td class="text-right">Main class name <i class="fa fa-info-circle" tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></td>
             <td>{{jobDetailCtrl.job.runConfig.mainClass}}</td>
           </tr>
           <tr>
-            <td>Job arguments</td>
+            <td class="text-right">Job arguments <i class="fa fa-info-circle" tooltip="The arguments to be passed to the main method of the class entered above." style="margin-left: 10px"></i></td>
             <td>{{jobDetailCtrl.job.runConfig.args}}</td>
           </tr>
           <tr>
@@ -79,33 +79,33 @@
             <td></td>
           </tr>
           <tr>
-            <td>Application master memory</td>
+            <td class="text-right">Application master memory <i class="fa fa-info-circle" tooltip="The amount of memory that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></td>
             <td>
               {{jobDetailCtrl.job.runConfig.amMemory}}
             </td>
           </tr>
           <tr>
-            <td>Application master vcores</td>
+            <td class="text-right">Application master vcores <i class="fa fa-info-circle" tooltip="The number of cores that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></td>
             <td>
               {{jobDetailCtrl.job.runConfig.amVCores}}
             </td>
           </tr>
           <tr>
-            <td>ResourceManager queue</td>
+            <td class="text-right">ResourceManager queue <i class="fa fa-info-circle" tooltip="The queue in the ResourceManager in which this application should be submitted." style="margin-left: 10px"></i></td>
             <td>
               {{jobDetailCtrl.job.runConfig.amQueue}}
             </td>
           </tr>
           <tr>
-            <td>Number of executors</td>
+            <td class="text-right">Number of executors <i class="fa fa-info-circle" tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></td>
             <td>{{jobDetailCtrl.job.runConfig.numberOfExecutors}}</td>
           </tr>
           <tr>
-            <td>Number of executor cores</td>
+            <td class="text-right">Number of executor cores <i class="fa fa-info-circle" tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></td>
             <td>{{jobDetailCtrl.job.runConfig.executorCores}}</td>
           </tr>
           <tr>
-            <td>Executor memory</td>
+            <td class="text-right">Executor memory <i class="fa fa-info-circle" tooltip="The amount of memory that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></td>
             <td>{{jobDetailCtrl.job.runConfig.executorMemory}}</td>
           </tr>
         </table>
@@ -123,7 +123,7 @@
             <td></td>
           </tr>
           <tr ng-repeat="arg in jobDetailCtrl.job.runConfig.selectedCommand.arguments">
-            <td>
+            <td class="text-right">
               {{arg.name}} <span ng-show="arg.required">*</span> <i class="fa fa-info-circle" tooltip="{{arg.description}}"></i>
             </td>
             <td>
@@ -137,7 +137,7 @@
             <td></td>
           </tr>
           <tr ng-repeat="opt in jobDetailCtrl.job.runConfig.selectedCommand.options">
-            <td>
+            <td class="text-right">
               {{opt.name}} <i class="fa fa-info-circle" tooltip="{{opt.description}}"></i>
             </td>
             <td>
@@ -151,19 +151,19 @@
             <td></td>
           </tr>
           <tr>
-            <td>Application master memory</td>
+            <td class="text-right">Application master memory <i class="fa fa-info-circle" tooltip="The amount of memory that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></td>
             <td>
               {{jobDetailCtrl.job.runConfig.amMemory}}
             </td>
           </tr>
           <tr>
-            <td>Application master vcores</td>
+            <td class="text-right">Application master vcores <i class="fa fa-info-circle" tooltip="The number of cores that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></td>
             <td>
               {{jobDetailCtrl.job.runConfig.amVCores}}
             </td>
           </tr>
           <tr>
-            <td>ResourceManager queue</td>
+            <td class="text-right">ResourceManager queue <i class="fa fa-info-circle" tooltip="The queue in the ResourceManager in which this application should be submitted." style="margin-left: 10px"></i></td>
             <td>
               {{jobDetailCtrl.job.runConfig.amQueue}}
             </td>
