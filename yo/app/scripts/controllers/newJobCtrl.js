@@ -6,13 +6,17 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService', '$location',
-          function ($routeParams, growl, JobService, $location) {
+        .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService', '$location','ModalService',
+          function ($routeParams, growl, JobService, $location, ModalService) {
 
             var self = this;
             this.projectId = $routeParams.projectID;
+            this.ModalService = ModalService;
+            this.selectFileRegex = /.jar\b/;
+            this.selectFileErrorMsg = "Please select a JAR file.";
             this.jobtype; //Will hold the selection of which job to create.
             this.jobname; //Will hold the name of the job
+            this.localResources = {"entry":[]}; //Will hold extra libraries
             this.phase = 0; //The phase of creation we are in.
 
             this.accordion1 = {"isOpen": true, "visible": true, "value": "", "title": "Job name"};
@@ -24,6 +28,7 @@ angular.module('hopsWorksApp')
 
             this.createJob = function (type, config) {
               config.appName = self.jobname;
+              config.localResources = localResources;
               JobService.createNewJob(self.projectId, type, config).then(
                       function (success) {
                         $location.path('project/' + self.projectId + '/jobs');
@@ -83,11 +88,16 @@ angular.module('hopsWorksApp')
 
             this.jobDetailsFilledIn = function () {
               self.phase = 4;
-            }
-
-
-
-
+            };
+            
+            this.selectFile = function(){
+              selectFile(this);
+            };
+            
+            this.onFileSelected = function(path) {
+              var filename = getFileName(path);
+              localResources.entry.push({"key":filename,"value":path});
+            }; 
           }]);
 
 

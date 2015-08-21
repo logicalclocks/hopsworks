@@ -29,7 +29,7 @@ var convertSize = function (fileSizeInBytes) {
   } while (fileSizeInBytes > 1024);
 
   return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
-  };
+};
   
 /**
  * Sorts an object (a list) based on a predicate
@@ -39,8 +39,7 @@ var convertSize = function (fileSizeInBytes) {
  * @param {type} template
  * @returns {sorted list}
  */
-var sortObject = function(filter, predicate, template){
-  
+var sortObject = function(filter, predicate, template){  
   //false means 'do not reverse the order of the array'
   return filter('orderBy')(template.columns, predicate, false);
 };

@@ -190,7 +190,31 @@
                   </table>
                   <!-- Add libraries -->
                   <h3>Add extra libraries</h3>
-                  
+                  <button ng-click="newJobCtrl.selectFile()" class="btn btn-info">
+                    Select...
+                  </button>
+                  <table class="table" ng-show="newJobCtrl.localResources.entry.length > 0">
+                    <thead>
+                      <tr>
+                        <td>
+                          Name
+                        </td>
+                        <td>
+                          Path
+                        </td>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr ng-repeat="jar in newJob.localResources.entry">
+                        <td>
+                          <input type="text" ng-model="jar.key" class="form-control">
+                        </td>
+                        <td>
+                          {{jar.value}}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                   <!-- Execution button -->
                   <!-- Cuneiform -->
                   <button ng-click="newJobCtrl.createJob('cuneiform', cuneiformCtrl.runConfig)" 
