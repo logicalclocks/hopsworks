@@ -2,7 +2,8 @@
      flow-file-error="importTemplateCtrl.fileErrorHandler( $file, $message, $flow )"
      flow-error="importTemplateCtrl.errorHandler( $file, $message, $flow )"
      flow-file-added="importTemplateCtrl.fileAddedHandler($file, $flow)"
-     flow-files-submitted="$flow.upload()">
+     flow-files-submitted="$flow.upload()"
+     flow-file-success="importTemplateCtrl.close()">
   <div class="modal-header">
     <button class="close" ng-click="importTemplateCtrl.close()" data-dismiss="modal" aria-hidden="true"
             type="button">&times;</button>
@@ -101,37 +102,6 @@
           </div>
         </fieldset>
       </div>
-      <!--      <hr class="soften">
-            <div class="row">
-              <fieldset>
-                <div class="control-group col-md-offset-1" style="margin-right: 8.33333%;">
-                  <div class="form-group has-feedback">
-                    <label class="text-muted control-label"><h2>Export template</h2></label><br>
-                    <div class="btn-group btn-group" role="group" aria-label="..." style="min-width: 100%">
-                      <div class="btn-group" role="group" style="width: 15%">
-                        <ui-select ng-model="ieTemplateCtrl.selectedTemplate" theme="select2"
-                                   on-select="ieTemplateCtrl.onSelectUpdate()" style="min-width: 300px;">
-      
-                          <ui-select-match placeholder="Select a template...">{{$select.selected.name}}</ui-select-match>
-      
-                          <ui-select-choices repeat="template in ieTemplateCtrl.templates | filter: $select.search">
-                            <small>
-                              <span ng-bind-html="'' + template.name | highlight: $select.search"></span>
-                            </small>
-                          </ui-select-choices>
-                        </ui-select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </fieldset>
-              <div class="col-md-1">
-                <a class="btn btn-primary" download="template.json" ng-href="{{ieTemplateCtrl.url}}">
-                  Export
-                </a>
-              </div>
-            </div>-->
-
       <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
         <button class="btn btn-default" type="button" ng-click="importTemplateCtrl.close()">Cancel</button>
       </div>

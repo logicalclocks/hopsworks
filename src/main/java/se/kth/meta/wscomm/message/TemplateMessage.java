@@ -30,10 +30,6 @@ public class TemplateMessage extends ContentMessage {
           getName());
 
   private final String TYPE = "TemplateMessage";
-  private String sender;
-  private String message;
-  private String action;
-  private String status;
 
   public TemplateMessage() {
     this.status = "OK";
@@ -51,7 +47,7 @@ public class TemplateMessage extends ContentMessage {
     this.message = json.getString("message");
     this.action = json.getString("action");
     this.setStatus("OK");
-    super.setAction(this.action);
+    this.setAction(this.action);
 
     //when asking for template names list, tempid is null
     try {
@@ -64,6 +60,11 @@ public class TemplateMessage extends ContentMessage {
     }
   }
 
+  @Override
+  public void setAction(String action){
+    super.setAction(action);
+  }
+  
   @Override
   public String encode() {
     String value = Json.createObjectBuilder()
@@ -93,6 +94,7 @@ public class TemplateMessage extends ContentMessage {
 
     try {
       switch (Command.valueOf(this.action.toUpperCase())) {
+        
         case ADD_NEW_TEMPLATE:
           temp = new Template(-1, object.getString("templateName"));
           break;
@@ -115,7 +117,6 @@ public class TemplateMessage extends ContentMessage {
 
   @Override
   public List<EntityIntf> parseSchema() {
-
     JsonObject obj = Json.createReader(new StringReader(this.message)).
             readObject();
     JsonObject board = obj.getJsonObject("bd");

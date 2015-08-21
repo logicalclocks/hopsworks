@@ -553,7 +553,7 @@ angular.module('hopsWorksApp')
               var selectedTmptName = template.name;
 
               console.log("SELECTED TEMPLATE " + JSON.stringify(template));
-              
+
               //get the actual template
               MetadataActionService.fetchTemplate($cookies['email'], template.id)
                       .then(function (response) {
@@ -571,6 +571,26 @@ angular.module('hopsWorksApp')
                         self.blob = new Blob([self.toDownload], {type: 'text/plain'});
                         self.url = (window.URL || window.webkitURL).createObjectURL(self.blob);
                         console.log("URL CREATED " + JSON.stringify(self.url));
+                      });
+            };
+
+            self.importTemplate = function () {
+              ModalService.importTemplate('md')
+                      .then(function (resp) {
+                        /*
+                         * doesn't really happening anything on success.
+                         * it means that the upload was successful and the
+                         * window closed automatically
+                         */
+                      },
+                      function (closed) {
+                        //trigger the necessary variable change in the service
+                        MetadataHelperService.fetchAvailableTemplates()
+                                .then(function (response) {
+                                  self.availableTemplates = JSON.parse(response.board).templates;
+                                  growl.success("The template was uploaded successfully",
+                                      {title: 'Success', ttl: 15000});
+                                });
                       });
             };
           }

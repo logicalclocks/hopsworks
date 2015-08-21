@@ -341,7 +341,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              importTemplate: function (size, template) {
+              importTemplate: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/importTemplate.html',
                   controller: 'ImportTemplateCtrl as importTemplateCtrl',
@@ -357,10 +357,7 @@ angular.module('hopsWorksApp')
                                   $location.replace();
                                   return $q.reject(err);
                                 });
-                      }],
-                    template: function () {
-                      return template;
-                    }
+                      }]
                   }
                 });
                 return modalInstance.result;

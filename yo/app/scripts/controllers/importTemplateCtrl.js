@@ -5,8 +5,8 @@
 
 angular.module('hopsWorksApp')
         .controller('ImportTemplateCtrl',
-                ['$scope', '$cookies', '$modalInstance', 'growl', 'MetadataActionService', 'flowFactory', 'template',
-                  function ($scope, $cookies, $modalInstance, growl, MetadataActionService, flowFactory, template) {
+                ['$scope', '$modalInstance', 'growl', 'flowFactory',
+                  function ($scope, $modalInstance, growl, flowFactory) {
 
                     var self = this;
                     self.model = {};

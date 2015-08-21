@@ -48,16 +48,29 @@ public class Utils {
   public Utils() {
   }
 
-  public void addNewTemplate(Template template) throws ApplicationException {
+  /**
+   * Persist a new template in the database
+   * <p>
+   * @param template
+   * @return 
+   * @throws ApplicationException
+   */
+  public int addNewTemplate(Template template) throws ApplicationException {
 
     try {
-      this.templateFacade.addTemplate(template);
+      return this.templateFacade.addTemplate(template);
     } catch (DatabaseException e) {
       throw new ApplicationException("Could not add new template " + template.
               getName() + " " + e.getMessage());
     }
   }
 
+  /**
+   * Deletes a template from the database
+   * <p>
+   * @param template
+   * @throws ApplicationException
+   */
   public void removeTemplate(Template template) throws ApplicationException {
     try {
       this.templateFacade.removeTemplate(template);
@@ -67,6 +80,13 @@ public class Utils {
     }
   }
 
+  /**
+   * Persist a list of tables and all their corresponding child entities in the
+   * database
+   * <p>
+   * @param list
+   * @throws ApplicationException
+   */
   public void addTables(List<EntityIntf> list) throws ApplicationException {
 
     for (EntityIntf entry : list) {
@@ -78,10 +98,9 @@ public class Utils {
 
       try {
         logger.log(Level.INFO, "STORE/UPDATE TABLE: {0} ", t);
-        
+
         //persist the parent
         int tableId = this.tableFacade.addTable(t);
-        
         for (Field field : tableFields) {
           //associate each field(child) with its table(parent)
           field.setTableid(tableId);
@@ -104,6 +123,13 @@ public class Utils {
     }
   }
 
+  /**
+   * Stores the predefined values for a field
+   * <p>
+   * @param list
+   * @param fieldId
+   * @throws ApplicationException 
+   */
   private void addFieldsPredefinedValues(List<EntityIntf> list, int fieldId)
           throws ApplicationException {
 
@@ -122,6 +148,12 @@ public class Utils {
     }
   }
 
+  /**
+   * Removes a table from the database
+   * <p>
+   * @param table
+   * @throws ApplicationException
+   */
   public void deleteTable(MTable table) throws ApplicationException {
     try {
       logger.log(Level.INFO, "DELETING TABLE {0} ", table.getName());
@@ -133,6 +165,12 @@ public class Utils {
     }
   }
 
+  /**
+   * Removes a field from the database
+   * <p>
+   * @param field
+   * @throws ApplicationException
+   */
   public void deleteField(Field field) throws ApplicationException {
 
     try {
@@ -145,10 +183,15 @@ public class Utils {
     }
   }
 
+  /**
+   * Removes a field's predefined values
+   * <p>
+   * @param fieldid
+   * @throws ApplicationException
+   */
   public void removeFieldPredefinedValues(int fieldid) throws
           ApplicationException {
     try {
-
       this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),
@@ -157,6 +200,14 @@ public class Utils {
     }
   }
 
+  /**
+   * Stores the metadata for an inode. Creates a metadata tuple first and
+   * associates it with the given inode
+   * <p>
+   * @param composite
+   * @param raw
+   * @throws ApplicationException
+   */
   public void storeMetadata(List<EntityIntf> composite, List<EntityIntf> raw)
           throws ApplicationException {
 

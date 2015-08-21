@@ -44,11 +44,15 @@ public class TemplateFacade extends AbstractFacade<Template> {
    * adds a new record into 'templates' table.
    *
    * @param template The template name to be added
+   * @return 
    * @throws se.kth.meta.exception.DatabaseException
    */
-  public void addTemplate(Template template) throws DatabaseException {
+  public int addTemplate(Template template) throws DatabaseException {
 
     this.em.persist(template);
+    this.em.flush();
+
+    return template.getId();
   }
 
   public void removeTemplate(Template template) throws DatabaseException {
