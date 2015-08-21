@@ -38,7 +38,7 @@ import se.kth.meta.entity.Template;
 import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.exception.DatabaseException;
 import se.kth.meta.wscomm.ResponseBuilder;
-import se.kth.meta.wscomm.message.TemplateMessage;
+import se.kth.meta.wscomm.message.UploadedTemplateMessage;
 
 /**
  *
@@ -249,15 +249,22 @@ public class UploadService {
 
     if (finished) {
       try {
+        String fileContent = null;
+
         //if it is about a template file check its validity
         if ((this.path + fileName).endsWith(".json")) {
-          if (!Utils.checkJsonValidity(stagingManager.getStagingPath()
-                  + this.path + fileName)) {
+
+          String filePath = stagingManager.getStagingPath() + this.path
+                  + fileName;
+
+          if (!Utils.checkJsonValidity(filePath)) {
             json.setErrorMsg("This was an invalid json file");
             return noCacheResponse.getNoCacheResponseBuilder(
                     Response.Status.NOT_ACCEPTABLE).entity(json).build();
           }
+          fileContent = Utils.getFileContents(filePath);
         }
+        
         this.path = Utils.ensurePathEndsInSlash(this.path);
         fileOps.copyToHDFSFromLocal(true, stagingManager.getStagingPath()
                 + this.path + fileName, this.path
@@ -270,7 +277,7 @@ public class UploadService {
 
         //if it is about a template file persist it in the database as well
         if ((this.path + fileName).endsWith(".json")) {
-          this.persistUploadedTemplate(this.path + fileName);
+          this.persistUploadedTemplate(fileContent);
         }
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
@@ -305,25 +312,20 @@ public class UploadService {
 
   /**
    * Persist a template to the database after it has been uploaded to hopsfs
-   * 
+   * <p>
    * @param filePath
-   * @throws AppException 
+   * @throws AppException
    */
-  private void persistUploadedTemplate(String filePath) throws AppException {
+  private void persistUploadedTemplate(String fileContent) throws AppException {
     try {
-      String fileContent = Utils.getFileContents(filePath);
-
       //the file content has to be wrapped in a TemplateMessage message
-      TemplateMessage message = new TemplateMessage();
+      UploadedTemplateMessage message = new UploadedTemplateMessage();
       message.setMessage(fileContent);
 
-      this.responseBuilder.storeSchema(message);
-    } catch (FileNotFoundException e) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              "Template file was not found");
-    } catch (ApplicationException ee) {
+      this.responseBuilder.persistUploadedTemplate(message);
+    } catch (ApplicationException e) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), ee.getMessage());
+              getStatusCode(), e.getMessage());
     }
   }
 
