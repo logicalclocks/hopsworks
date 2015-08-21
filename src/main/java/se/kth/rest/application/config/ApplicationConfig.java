@@ -14,12 +14,6 @@ public class ApplicationConfig extends ResourceConfig {
    * adding manually all the restful services of the application.
    */
   public ApplicationConfig() {
-    register(com.fasterxml.jackson.jaxrs.base.JsonMappingExceptionMapper.class);
-    register(com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper.class);
-    register(com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.class);
-    register(com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider.class);
-    register(com.fasterxml.jackson.jaxrs.json.JsonMappingExceptionMapper.class);
-    register(com.fasterxml.jackson.jaxrs.json.JsonParseExceptionMapper.class);
     register(se.kth.hopsworks.filters.RequestAuthFilter.class);
     register(se.kth.hopsworks.rest.ActivityService.class);
     register(se.kth.hopsworks.rest.AdamService.class);
@@ -44,9 +38,9 @@ public class ApplicationConfig extends ResourceConfig {
 
     // register resources and features
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
-    register(org.glassfish.jersey.filter.LoggingFilter.class);
+    //register(org.glassfish.jersey.filter.LoggingFilter.class);
 
     // Enable Tracing support.
-    property(ServerProperties.TRACING, "OFF");
+    //property(ServerProperties.TRACING, "OFF");
   }
 }

@@ -49,7 +49,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
     Method method = resourceInfo.getResourceMethod();
 
     String[] pathParts = path.split("/");
-    log.log(Level.INFO, "Filtering request path: {0}", pathParts[0]);
+    log.log(Level.FINEST, "Filtering request path: {0}", pathParts[0]);
     //intercepted method must be a project operations on a specific project
     //with an id (/project/name/... or /activity/name/...). Project creation will have time stamp so
     //we do not need to sotre that here
@@ -58,9 +58,9 @@ public class RequestAuthFilter implements ContainerRequestFilter {
 
       JsonResponse json = new JsonResponse();
 
-      log.log(Level.INFO, "Filtering project request path: {0}", pathParts[1]);
-      log.log(Level.INFO, "Method called: {0}", method.getName());
-      log.log(Level.INFO, "Annotations present: {0}",
+      log.log(Level.FINEST, "Filtering project request path: {0}", pathParts[1]);
+      log.log(Level.FINEST, "Method called: {0}", method.getName());
+      log.log(Level.FINEST, "Annotations present: {0}",
               method.getAnnotations().length);
 
       if (!method.isAnnotationPresent(AllowedRoles.class)) {
@@ -94,7 +94,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       projectId = Integer.valueOf(pathParts[1]);
       Project project = projectBean.find(projectId);
 
-      log.log(Level.INFO, "PROJECT FOUND {0} ", project);
+      log.log(Level.FINEST, "PROJECT FOUND {0} ", project);
 
       userRole = projectTeamBean.findCurrentRole(project, userEmail);
 
