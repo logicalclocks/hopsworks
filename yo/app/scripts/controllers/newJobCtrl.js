@@ -6,8 +6,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService', '$location','ModalService',
-          function ($routeParams, growl, JobService, $location, ModalService) {
+        .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService', '$location', 'ModalService', 'StorageService','$scope',
+          function ($routeParams, growl, JobService, $location, ModalService, StorageService,$scope) {
 
             var self = this;
             this.projectId = $routeParams.projectID;
@@ -16,7 +16,7 @@ angular.module('hopsWorksApp')
             this.selectFileErrorMsg = "Please select a JAR file.";
             this.jobtype; //Will hold the selection of which job to create.
             this.jobname; //Will hold the name of the job
-            this.localResources = {"entry":[]}; //Will hold extra libraries
+            this.localResources = {"entry": []}; //Will hold extra libraries
             this.phase = 0; //The phase of creation we are in.
 
             this.accordion1 = {"isOpen": true, "visible": true, "value": "", "title": "Job name"};
@@ -89,15 +89,50 @@ angular.module('hopsWorksApp')
             this.jobDetailsFilledIn = function () {
               self.phase = 4;
             };
-            
-            this.selectFile = function(){
+
+            this.selectFile = function () {
               selectFile(self);
             };
-            
-            this.onFileSelected = function(path) {
+
+            this.onFileSelected = function (path) {
               var filename = getFileName(path);
-              self.localResources.entry.push({"key":filename,"value":path});
-            }; 
+              self.localResources.entry.push({"key": filename, "value": path});
+            };
+
+            var init = function () {
+              var stored = StorageService.recover(self.projectId+"newjob");
+              if (stored) {
+                self.jobtype = stored.jobtype; 
+                self.jobname = stored.jobname; 
+                self.localResources = stored.localResources; 
+                self.phase = stored.phase;
+                self.accordion1 = stored.accordion1;
+                self.accordion2 = stored.accordion2;
+                self.accordion3 = stored.accordion3;
+                self.accordion4 = stored.accordion4;
+                self.accordion5 = stored.accordion5;
+              }
+            };
+            init();
+            
+            /**
+             * Close the poller if the controller is destroyed.
+             */
+            $scope.$on('$destroy', function () {
+              var state = {
+                "jobtype":self.jobtype,
+                "jobname":self.jobname,
+                "localResources":self.localResources,
+                "phase":self.phase,
+                "accordion1":self.accordion1,
+                "accordion2":self.accordion2,
+                "accordion3":self.accordion3,
+                "accordion4":self.accordion4,
+                "accordion5":self.accordion5                
+              };
+              StorageService.store(self.projectId+"newjob",state);
+            });            
+
           }]);
 
 

@@ -6,8 +6,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('CuneiformCtrl', ['$routeParams', 'growl', 'ModalService', 'CuneiformService',
-          function ($routeParams, growl, ModalService, CuneiformService) {
+        .controller('CuneiformCtrl', ['$routeParams', 'growl', 'ModalService', 'CuneiformService','StorageService','$scope',
+          function ($routeParams, growl, ModalService, CuneiformService,StorageService,$scope) {
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
             var self = this;
@@ -32,6 +32,24 @@ angular.module('hopsWorksApp')
               self.phasekeeper = phasekeeper;
               selectFile(this);
             };
+            
+            var init = function () {
+              var stored = StorageService.recover(self.projectId + "cuneiform");
+              if (stored) {
+                self.runConfig = stored.runConfig;
+              }
+            };
+            init();
+
+            /**
+             * Close the poller if the controller is destroyed.
+             */
+            $scope.$on('$destroy', function () {
+              var state = {
+                "runConfig": self.runConfig
+              };
+              StorageService.store(self.projectId + "cuneiform", state);
+            });
 
           }]);
 

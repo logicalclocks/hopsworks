@@ -5,8 +5,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('AdamCtrl', ['$routeParams', 'growl', 'AdamService', 'ModalService',
-          function ($routeParams, growl, AdamService, ModalService) {
+        .controller('AdamCtrl', ['$routeParams', 'growl', 'AdamService', 'ModalService', 'StorageService', '$scope',
+          function ($routeParams, growl, AdamService, ModalService, StorageService, $scope) {
 
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
@@ -69,6 +69,26 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
+
+            var init = function () {
+              var stored = StorageService.recover(self.projectId + "adam");
+              if (stored) {
+                self.selectedCommand = stored.selectedCommand;
+                self.runConfig = stored.runConfig;
+              }
+            };
+            init();
+
+            /**
+             * Close the poller if the controller is destroyed.
+             */
+            $scope.$on('$destroy', function () {
+              var state = {
+                "selectedCommand": self.selectedCommand,
+                "runConfig": self.runConfig
+              };
+              StorageService.store(self.projectId + "adam", state);
+            });
 
           }]);
 

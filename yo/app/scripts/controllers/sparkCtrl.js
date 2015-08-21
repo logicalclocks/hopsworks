@@ -5,8 +5,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('SparkCtrl', ['$routeParams', 'growl', 'SparkService', 'ModalService',
-          function ($routeParams, growl, SparkService, ModalService) {
+        .controller('SparkCtrl', ['$routeParams', 'growl', 'SparkService', 'ModalService', 'StorageService', '$scope',
+          function ($routeParams, growl, SparkService, ModalService, StorageService, $scope) {
 
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
@@ -33,6 +33,26 @@ angular.module('hopsWorksApp')
               self.phasekeeper = phasekeeper;
               selectFile(this);
             };
+
+            var init = function () {
+              var stored = StorageService.recover(self.projectId + "spark");
+              if (stored) {
+                self.selectedJar = stored.selectedJar;
+                self.sparkConfig = stored.sparkConfig;
+              }
+            };
+            init();
+
+            /**
+             * Close the poller if the controller is destroyed.
+             */
+            $scope.$on('$destroy', function () {
+              var state = {
+                "sparkConfig": self.sparkConfig,
+                "selectedJar": self.selectedJar
+              };
+              StorageService.store(self.projectId + "spark", state);
+            });
 
           }]);
 
