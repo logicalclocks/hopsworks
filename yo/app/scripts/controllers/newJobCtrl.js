@@ -28,7 +28,7 @@ angular.module('hopsWorksApp')
 
             this.createJob = function (type, config) {
               config.appName = self.jobname;
-              config.localResources = localResources;
+              config.localResources = self.localResources;
               JobService.createNewJob(self.projectId, type, config).then(
                       function (success) {
                         $location.path('project/' + self.projectId + '/jobs');
@@ -91,12 +91,12 @@ angular.module('hopsWorksApp')
             };
             
             this.selectFile = function(){
-              selectFile(this);
+              selectFile(self);
             };
             
             this.onFileSelected = function(path) {
               var filename = getFileName(path);
-              localResources.entry.push({"key":filename,"value":path});
+              self.localResources.entry.push({"key":filename,"value":path});
             }; 
           }]);
 
