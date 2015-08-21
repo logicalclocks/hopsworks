@@ -50,6 +50,19 @@ angular.module('hopsWorksApp')
             console.error(error, error.message);
           }
           return false;
+        },
+        remove: function(key){
+          try {
+            if ($window.Storage) {
+              $window.localStorage.removeItem(key);
+              return true;
+            } else {
+              return false;
+            }
+          } catch (error) {
+            console.error(error, error.message);
+          }
+          return false;
         }
       }
-    }])
+    }]);

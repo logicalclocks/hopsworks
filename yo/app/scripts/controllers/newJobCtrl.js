@@ -31,6 +31,10 @@ angular.module('hopsWorksApp')
               config.localResources = self.localResources;
               JobService.createNewJob(self.projectId, type, config).then(
                       function (success) {
+                        StorageService.remove(self.projectId+"newjob");
+                        StorageService.remove(self.projectId+"adam");
+                        StorageService.remove(self.projectId+"cuneiform");
+                        StorageService.remove(self.projectId+"spark");
                         $location.path('project/' + self.projectId + '/jobs');
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
