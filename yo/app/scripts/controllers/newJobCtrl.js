@@ -31,11 +31,12 @@ angular.module('hopsWorksApp')
               config.localResources = self.localResources;
               JobService.createNewJob(self.projectId, type, config).then(
                       function (success) {
+                        $location.path('project/' + self.projectId + '/jobs');
                         StorageService.remove(self.projectId+"newjob");
                         StorageService.remove(self.projectId+"adam");
                         StorageService.remove(self.projectId+"cuneiform");
                         StorageService.remove(self.projectId+"spark");
-                        $location.path('project/' + self.projectId + '/jobs');
+                        self.removed = true;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
@@ -47,6 +48,8 @@ angular.module('hopsWorksApp')
                 self.accordion2.isOpen = true;
                 self.accordion2.visible = true;
               }
+              self.accordion1.value = " - " + self.jobname;
+              self.removed = false;
             };
 
             this.jobTypeChosen = function () {
@@ -123,6 +126,9 @@ angular.module('hopsWorksApp')
              * Close the poller if the controller is destroyed.
              */
             $scope.$on('$destroy', function () {
+              if(self.removed){
+                return;
+              }
               var state = {
                 "jobtype":self.jobtype,
                 "jobname":self.jobname,
