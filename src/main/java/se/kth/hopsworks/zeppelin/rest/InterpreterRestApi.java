@@ -43,21 +43,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.math.BigInteger;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
-import java.util.logging.Level;
 import javax.ejb.EJB;
-import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.VFS;
-import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Paragraph;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
@@ -69,6 +58,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.zeppelin.notebook.Notebook;
 import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
+import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 /**
  * Interpreter Rest API
@@ -81,6 +71,8 @@ public class InterpreterRestApi {
   Logger logger = LoggerFactory.getLogger(InterpreterRestApi.class);
   @EJB
   private ProjectController projectController;
+  @EJB
+  private ZeppelinResource zeppelinResource;
   private final InterpreterFactory interpreterFactory;
   private final ZeppelinSingleton zeppelin = ZeppelinSingleton.SINGLETON;
 
@@ -213,7 +205,7 @@ public class InterpreterRestApi {
     Notebook newNotebook;
     Note note;
     try {
-      notebookRepo = setupNotebookRepo(project);
+      notebookRepo = zeppelinResource.setupNotebookRepo(project);
       newNotebook = new Notebook(notebookRepo);
       note = newNotebook.createNote();
     } catch (IOException | SchedulerException ex) {
@@ -257,8 +249,10 @@ public class InterpreterRestApi {
     }
 
     InterpreterSetting interpreterSetting = interpreterFactory.get(settingId);
-    //wait until the pid file is removed
-    while (!isNotRunning(interpreterSetting)) {} //too risky!
+    //wait until the peocess is stoped.
+    while (zeppelinResource.isInterpreterRunning(interpreterSetting)) {
+    }
+
     InterpreterDTO interpreter = new InterpreterDTO(interpreterSetting, true);
     return new JsonResponse(Status.OK, "", interpreter).build();
   }
@@ -272,120 +266,20 @@ public class InterpreterRestApi {
   @GET
   @Path("interpretersWithStatus")
   public Response getinterpretersWithStatus() throws AppException {
-    Map<String, InterpreterDTO> interpreters = runningInterpreters();
+    Map<String, InterpreterDTO> interpreters = null;
+    interpreters = interpreters();
     return new JsonResponse(Status.OK, "", interpreters).build();
   }
 
-  private Map<String, InterpreterDTO> runningInterpreters() throws AppException {
+  private Map<String, InterpreterDTO> interpreters() throws AppException {
     Map<String, InterpreterDTO> interpreterDTO = new HashMap<>();
     List<InterpreterSetting> interpreterSettings;
     interpreterSettings = interpreterFactory.get();
     for (InterpreterSetting interpreter : interpreterSettings) {
       interpreterDTO.put(interpreter.getGroup(), new InterpreterDTO(interpreter,
-              isNotRunning(
-                      interpreter)));
+              !zeppelinResource.isInterpreterRunning(interpreter)));
     }
     return interpreterDTO;
   }
 
-  private boolean isNotRunning(InterpreterSetting interpreter) throws
-          AppException {
-    ZeppelinConfiguration conf = this.zeppelin.getConf();
-    String binPath = conf.getRelativeDir("bin");
-    FileObject[] pidFiles = getPidFiles();
-    boolean notRunning;
-    notRunning = true;
-    for (FileObject file : pidFiles) {
-      if (file.getName().toString().contains(interpreter.getGroup())) {
-        notRunning = !isProccessAlive(binPath + "/alive.sh", readPid(file));
-        break;
-      }
-    }
-    return notRunning;
-  }
-
-  private FileObject[] getPidFiles() throws AppException {
-    ZeppelinConfiguration conf = this.zeppelin.getConf();
-    URI filesystemRoot;
-    FileSystemManager fsManager;
-    String runPath = conf.getRelativeDir("run");//the string run should be a constant.
-    try {
-      filesystemRoot = new URI(runPath);
-    } catch (URISyntaxException e1) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              e1.getMessage());
-    }
-
-    if (filesystemRoot.getScheme() == null) { // it is local path
-      try {
-        filesystemRoot = new URI(new File(runPath).getAbsolutePath());
-      } catch (URISyntaxException e) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                e.getMessage());
-      }
-    }
-    FileObject[] pidFiles = null;
-    try {
-      fsManager = VFS.getManager();
-      pidFiles = fsManager.resolveFile(filesystemRoot.toString() + "/").
-              getChildren();
-    } catch (FileSystemException ex) {
-      logger.error("Failed to load pid files", ex);
-    }
-    return pidFiles;
-  }
-
-  private NotebookRepo setupNotebookRepo(Project project) throws AppException {
-    ZeppelinConfiguration conf = zeppelin.getConf();
-    Class<?> notebookStorageClass;
-    NotebookRepo repo;
-    try {
-      notebookStorageClass = Class.forName(conf.getString(
-              ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE));
-      Constructor<?> constructor = notebookStorageClass.getConstructor(
-              ZeppelinConfiguration.class, Project.class);
-      repo = (NotebookRepo) constructor.newInstance(conf, project);
-
-    } catch (ClassNotFoundException | NoSuchMethodException | SecurityException |
-            InstantiationException | IllegalAccessException |
-            IllegalArgumentException | InvocationTargetException ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not instantiate notebook" + ex.getMessage());
-    }
-
-    return repo;
-  }
-
-  private boolean isProccessAlive(String bashPath, String pid) {
-    ProcessBuilder pb = new ProcessBuilder(bashPath, pid);
-    int exitValue;
-    try {
-      Process p = pb.start();
-      p.waitFor();
-      exitValue = p.exitValue();
-    } catch (IOException | InterruptedException ex) {
-      return false;
-    }
-    return exitValue == 0;
-  }
-
-  private String readPid(FileObject file) {
-    //pid value can only be extended up to a theoretical maximum of 
-    //32768 for 32 bit systems or 4194304 for 64 bit:
-    byte[] pid = new byte[8];
-    try {
-      file.getContent().getInputStream().read(pid);
-    } catch (FileSystemException ex) {
-      return null;
-    } catch (IOException ex) {
-      return null;
-    }
-    String s;
-    try {
-      s = new String(pid, "UTF-8").trim();
-    } catch (UnsupportedEncodingException ex) {
-      return null;
-    }
-    return s;
-  }
 }

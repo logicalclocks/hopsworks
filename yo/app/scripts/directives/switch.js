@@ -19,11 +19,19 @@ angular.module('hopsWorksApp').directive('hopsworksSwitch', function() {
             angular.element(element)
                 .bootstrapSwitch('state', model)
                 .on('switchChange.bootstrapSwitch', function(event, state) {
-                    scope.$apply(function() {
-                        ctrl.$setViewValue(state);
-                    });
+                    if(!scope.$$phase) {// check if $digest is already in progress
+                        scope.$apply(function () {
+                            ctrl.$setViewValue(state);
+                        });
+                    }
 
                 });
+            // When the model changes
+            scope.$watch(attributes.ngModel, function (newValue) {
+                if (newValue !== undefined) {
+                    element.bootstrapSwitch('state', newValue);
+                }
+            }, true);
         }
     };
 });

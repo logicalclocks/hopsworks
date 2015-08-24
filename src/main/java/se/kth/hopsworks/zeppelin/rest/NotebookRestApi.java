@@ -35,6 +35,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.zeppelin.notebook.Notebook;
 import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
+import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 /**
  * Rest api endpoint for the noteBook.
@@ -47,6 +48,8 @@ public class NotebookRestApi {
   Gson gson = new Gson();
   @EJB
   private ProjectController projectController;
+  @EJB
+  private ZeppelinResource zeppelinResource;
   private final ZeppelinSingleton zeppelin = ZeppelinSingleton.SINGLETON;
   private final Notebook notebook;
   private NotebookRepo notebookRepo;
@@ -136,7 +139,7 @@ public class NotebookRestApi {
   public Response getTutorialNotes() throws AppException {
     List<NoteInfo> noteInfo;
     try {
-      notebookRepo = setupNotebookRepo(null);
+      notebookRepo = zeppelinResource.setupNotebookRepo(null);
       noteInfo = notebookRepo.list();
     } catch (IOException ex) {
       noteInfo = null;
@@ -163,7 +166,7 @@ public class NotebookRestApi {
     }
     List<NoteInfo> noteInfos;
     try {
-      notebookRepo = setupNotebookRepo(project);
+      notebookRepo = zeppelinResource.setupNotebookRepo(project);
       noteInfos = notebookRepo.list();
     } catch (IOException ex) {
       noteInfos = null;
@@ -192,7 +195,7 @@ public class NotebookRestApi {
     Note note;
     NoteInfo noteInfo;
     try {
-      notebookRepo = setupNotebookRepo(project);
+      notebookRepo = zeppelinResource.setupNotebookRepo(project);
       newNotebook = new Notebook(notebookRepo);
       note = newNotebook.createNote();
       note.addParagraph(); // it's an empty note. so add one paragraph
@@ -203,26 +206,5 @@ public class NotebookRestApi {
               "Could not create notebook" + ex.getMessage());
     }
     return new JsonResponse(Status.OK, "", noteInfo).build();
-  }
-
-  private NotebookRepo setupNotebookRepo(Project project) throws AppException {
-    ZeppelinConfiguration conf = zeppelin.getConf();
-    Class<?> notebookStorageClass;
-    NotebookRepo repo;
-    try {
-      notebookStorageClass = Class.forName(conf.getString(
-              ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE));
-      Constructor<?> constructor = notebookStorageClass.getConstructor(
-              ZeppelinConfiguration.class, Project.class);
-      repo = (NotebookRepo) constructor.newInstance(conf, project);
-
-    } catch (ClassNotFoundException | NoSuchMethodException | SecurityException |
-            InstantiationException | IllegalAccessException |
-            IllegalArgumentException | InvocationTargetException ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not instantiate notebook" + ex.getMessage());
-    }
-
-    return repo;
   }
 }
