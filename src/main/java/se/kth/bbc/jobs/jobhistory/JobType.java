@@ -6,27 +6,19 @@ package se.kth.bbc.jobs.jobhistory;
  */
 public enum JobType {
 
-  CUNEIFORM,
-  YARN,
-  FLINK,
-  SPARK,
-  ADAM;
+  CUNEIFORM("Cuneiform"),
+  YARN("Yarn"),
+  FLINK("Flink"),
+  SPARK("Spark"),
+  ADAM("ADAM");
+  
+  private final String readable;
+  private JobType(String readable){
+    this.readable = readable;
+  }
 
   @Override
   public String toString() {
-    switch (this) {
-      case CUNEIFORM:
-        return "Cuneiform";
-      case YARN:
-        return "Yarn";
-      case FLINK:
-        return "Flink";
-      case SPARK:
-        return "Spark";
-      case ADAM:
-        return "Adam";
-      default:
-        throw new IllegalStateException("Illegal enum value.");
-    }
+    return readable;
   }
 }

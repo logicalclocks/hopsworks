@@ -1,6 +1,3 @@
-/*
- * 
- */
 package se.kth.hopsworks.zeppelin.server;
 
 import java.net.URL;

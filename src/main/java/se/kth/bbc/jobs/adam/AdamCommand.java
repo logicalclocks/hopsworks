@@ -651,64 +651,7 @@ public enum AdamCommand {
   }
 
   public String getCommand() {
-    switch (this) {
-      case COMPARE:
-        return "compare";
-      case FINDREADS:
-        return "findreads";
-      case DEPTH:
-        return "depth";
-      case COUNT_KMERS:
-        return "count_kmers";
-      case TRANSFORM:
-        return "transform";
-      case ADAM2FASTQ:
-        return "adam2fastq";
-      case PLUGIN:
-        return "plugin";
-      case BAM2ADAM:
-        return "bam2adam";
-      case VCF2FLATGENOTYPE:
-        return "vcf2flatgenotype";
-      case VCF2ADAM:
-        return "vcf2adam";
-      case ANNO2ADAM:
-        return "anno2adam";
-      case ADAM2VCF:
-        return "adam2vcf";
-      case FASTA2ADAM:
-        return "fasta2adam";
-      case READS2REF:
-        return "reads2ref";
-      case MPILEUP:
-        return "mpileup";
-      case FEATURES2ADAM:
-        return "features2adam";
-      /*
-       * case WIGFIX2BED:
-       * return "wigfix2bed";
-       */
-      case PRINT:
-        return "print";
-      case PRINT_GENES:
-        return "print_genes";
-      case FLAGSTAT:
-        return "flagstat";
-      case VIZ:
-        return "viz";
-      case PRINT_TAGS:
-        return "print_tags";
-      case LISTDICT:
-        return "listdict";
-      case SUMMARIZE_GENOTYPES:
-        return "summarize_genotypes";
-      case ALLELECOUNT:
-        return "allelecount";
-      case VIEW:
-        return "view";
-      default:
-        throw new IllegalStateException("Impossible enum value.");
-    }
+    return this.name().toLowerCase();
   }
 
   @Override
@@ -723,61 +666,7 @@ public enum AdamCommand {
   }
 
   public static AdamCommand getFromCommand(String command) {
-    switch (command) {
-      case "compare":
-        return COMPARE;
-      case "findreads":
-        return FINDREADS;
-      case "depth":
-        return DEPTH;
-      case "count_kmers":
-        return COUNT_KMERS;
-      case "transform":
-        return TRANSFORM;
-      case "adam2fastq":
-        return ADAM2FASTQ;
-      case "plugin":
-        return PLUGIN;
-      case "bam2adam":
-        return BAM2ADAM;
-      case "vcf2flatgenotype":
-        return VCF2FLATGENOTYPE;
-      case "vcf2adam":
-        return VCF2ADAM;
-      case "anno2adam":
-        return ANNO2ADAM;
-      case "adam2vcf":
-        return ADAM2VCF;
-      case "fasta2adam":
-        return FASTA2ADAM;
-      case "reads2ref":
-        return READS2REF;
-      case "mpileup":
-        return MPILEUP;
-      case "features2adam":
-        return FEATURES2ADAM;
-      case "print":
-        return PRINT;
-      case "print_genes":
-        return PRINT_GENES;
-      case "flagstat":
-        return FLAGSTAT;
-      case "viz":
-        return VIZ;
-      case "print_tags":
-        return PRINT_TAGS;
-      case "listdict":
-        return LISTDICT;
-      case "summarize_genotypes":
-        return SUMMARIZE_GENOTYPES;
-      case "allelecount":
-        return ALLELECOUNT;
-      case "view":
-        return VIEW;
-      default:
-        throw new IllegalArgumentException("Argument " + command
-                + " does not represent a valid ADAM command.");
-    }
+    return AdamCommand.valueOf(command.toUpperCase());
   }
 
 }
