@@ -34,7 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "FieldType.findByDescription",
           query
           = "SELECT f FROM FieldType f WHERE f.description = :description")})
-public class FieldType implements Serializable, EntityIntf, Comparable {
+public class FieldType implements Serializable, EntityIntf, Comparable<FieldType> {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -131,9 +131,7 @@ public class FieldType implements Serializable, EntityIntf, Comparable {
   }
 
   @Override
-  public int compareTo(Object o) {
-    FieldType ft = (FieldType) o;
-    
+  public int compareTo(FieldType ft) {
     if(this.getId() > ft.getId()){
       return 1;
     }
