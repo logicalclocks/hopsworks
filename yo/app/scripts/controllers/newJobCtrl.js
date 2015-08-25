@@ -150,13 +150,13 @@ angular.module('hopsWorksApp')
               self.accordion5.visible = false; // Hide job configuration
               self.accordion3.value = ""; //Reset selected file
             };
-            
+
             /**
              * Get the String representation of the selected jobType.
              * @returns {String}
              */
-            this.getJobType = function() {
-              switch(self.jobtype){
+            this.getJobType = function () {
+              switch (self.jobtype) {
                 case 0:
                   return "CUNEIFORM";
                 case 1:
@@ -272,8 +272,11 @@ angular.module('hopsWorksApp')
                 self.localResources = stored.localResources;
                 self.phase = stored.phase;
                 self.runConfig = stored.runConfig;
-                self.sparkState = stored.sparkState;
-                self.adamState = stored.adamState;
+                if (self.jobtype == 1) {
+                  self.sparkState = stored.sparkState;
+                } else if (self.jobtype == 2) {
+                  self.adamState = stored.adamState;
+                }
                 //GUI state
                 self.accordion1 = stored.accordion1;
                 self.accordion2 = stored.accordion2;
