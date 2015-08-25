@@ -15,12 +15,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import org.apache.commons.codec.digest.DigestUtils;
 import se.kth.bbc.security.ua.EmailBean;
+import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
 import se.kth.bbc.security.ua.model.Userlogins;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.BbcGroup;
-import se.kth.hopsworks.user.model.SecurityQuestions;
 import se.kth.hopsworks.user.model.UserAccountStatus;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.BbcGroupFacade;
@@ -76,7 +76,7 @@ public class UsersController {
       user.setLname(newUser.getLastName());
       user.setMobile(newUser.getTelephoneNum());
       user.setStatus(UserAccountStatus.ACCOUNT_INACTIVE.getValue());
-      user.setSecurityQuestion(SecurityQuestions.getQuestion(newUser.
+      user.setSecurityQuestion(SecurityQuestion.getQuestion(newUser.
               getSecurityQuestion()));
       user.setPassword(DigestUtils.sha256Hex(newUser.getChosenPassword()));
       user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer().
@@ -159,7 +159,7 @@ public class UsersController {
     }
 
     if (userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
-      user.setSecurityQuestion(SecurityQuestions.getQuestion(securityQuestion));
+      user.setSecurityQuestion(SecurityQuestion.getQuestion(securityQuestion));
       user.
               setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer.
                               toLowerCase()));
