@@ -16,8 +16,10 @@ public class Constants {
   public static final String DEFAULT_YARN_USER = "glassfish";
 
   //Relative output path (within hdfs project folder) which to write cuneiform in-/output to
-  public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Logs/Cuneiform/Output/";
-  public static final String CUNEIFORM_DEFAULT_INPUT_PATH = "Logs/Cuneiform/Input/";
+  public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH
+          = "Logs/Cuneiform/Output/";
+  public static final String CUNEIFORM_DEFAULT_INPUT_PATH
+          = "Logs/Cuneiform/Input/";
 
   //Default configuration locations
   public static final String DEFAULT_HADOOP_CONF_DIR
@@ -60,12 +62,8 @@ public class Constants {
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/Output/";
   public static final String DEFAULT_SPARK_JAR_HDFS_PATH
           = "hdfs:///user/spark/spark.jar";
-  public static final String SPARK_DEFAULT_CLASSPATH = "/srv/spark/conf:"
-          + "/srv/spark/lib/spark-assembly-" + SPARK_VERSION
-          + "-hadoop2.4.0.jar:"
-          + "/srv/spark/lib/datanucleus-core-3.2.10.jar:"
-          + "/srv/spark/lib/datanucleus-api-jdo-3.2.6.jar:"
-          + "/srv/spark/lib/datanucleus-rdbms-3.2.9.jar";
+  public static final String SPARK_DEFAULT_CLASSPATH
+          = "/srv/spark/conf:/srv/spark/lib/*";
 
   //ADAM constants
   public static final String ADAM_MAINCLASS = "org.bdgenomics.adam.cli.ADAMMain";
