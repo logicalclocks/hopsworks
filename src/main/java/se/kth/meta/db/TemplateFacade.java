@@ -44,15 +44,32 @@ public class TemplateFacade extends AbstractFacade<Template> {
    * adds a new record into 'templates' table.
    *
    * @param template The template name to be added
-   * @return 
+   * @return
    * @throws se.kth.meta.exception.DatabaseException
    */
   public int addTemplate(Template template) throws DatabaseException {
 
-    this.em.persist(template);
-    this.em.flush();
+    try {
+      Template t = this.getTemplate(template.getId());
 
-    return template.getId();
+      if (t != null && t.getId() != -1) {
+
+        t.copy(template);
+        this.em.merge(t);
+      } else {
+
+        t = template;
+        t.getMTables().clear();
+        this.em.persist(t);
+      }
+
+      this.em.flush();
+      this.em.clear();
+      return t.getId();
+    } catch (IllegalStateException | SecurityException e) {
+
+      throw new DatabaseException(MTableFacade.class.getName(), e.getMessage());
+    }
   }
 
   public void removeTemplate(Template template) throws DatabaseException {
@@ -92,7 +109,7 @@ public class TemplateFacade extends AbstractFacade<Template> {
     for (MTable table : modifiedEntities) {
       this.em.refresh(table);
     }
-    
+
     Collections.sort(modifiedEntities);
     return modifiedEntities;
   }

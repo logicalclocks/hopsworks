@@ -18,6 +18,7 @@ angular.module('hopsWorksApp')
             self.meta = [];
             self.availableTemplates = [];
             self.newTemplateName = "";
+            self.extendedTemplateName = "";
             self.currentTableId = -1;
             self.currentTemplateID = -1;
             self.editedField;
@@ -26,7 +27,18 @@ angular.module('hopsWorksApp')
             self.toDownload;
             self.blob;
             self.templateContents = {};
+            self.editingTemplate = false;
             var dataSetService = DataSetService($routeParams.projectID);
+
+            //fetch all the available templates
+            MetadataHelperService.fetchAvailableTemplates()
+                    .then(function (response) {
+                      self.availableTemplates = JSON.parse(response.board).templates;
+                      angular.forEach(self.availableTemplates, function (template, key) {
+                        template.showing = false;
+                      });
+                      console.log("AVAILABLE TEMPLATES " + JSON.stringify(self.availableTemplates));
+                    });
 
             /**
              * submit form data when the 'save' button is clicked
@@ -52,13 +64,58 @@ angular.module('hopsWorksApp')
 
             /* -- TEMPLATE HANDLING FUNCTIONS -- */
             /**
+             * Selects/deselects a template item when the user clicks on it
+             * 
+             * @param {type} template
+             * @returns {undefined}
+             */
+            self.toggleTemplate = function (template) {
+              //disable toggling when a template name is being edited
+              if(self.editingTemplate){
+                return;
+              }
+              //reset all templates showing flag
+              angular.forEach(self.availableTemplates, function (temp, key) {
+                if (template.id !== temp.id) {
+                  temp.showing = false;
+                }
+              });
+              //handle the clicked template accordingly
+              template.showing = !template.showing;
+
+              //if all templates are deselected hide the add new table button
+              if (!template.showing) {
+                self.currentTemplateID = -1;
+              }
+            };
+            
+            /**
+             * Updates a template name
+             * 
+             * @param {type} template
+             * @returns {undefined}
+             */
+            self.updateTemplateName = function(template){
+              MetadataActionService.updateTemplateName($cookies['email'], template)
+                      .then(function(response){
+                        console.log(JSON.stringify(response));
+                        self.editingTemplate = false;
+                      });
+            };
+            
+            self.setTogglingDisabled = function(toggling){
+              self.editingTemplate = toggling;
+              console.log("TOGGLING DISABLED " + self.editingTemplate);
+            };
+            
+            /**
              * Creates a new template from an existing one
              * 
              * @returns {undefined}
              */
             self.extendTemplate = function () {
               //store the new template name
-              MetadataActionService.addNewTemplate($cookies['email'], self.newTemplateName)
+              MetadataActionService.addNewTemplate($cookies['email'], self.extendedTemplateName)
                       .then(function (data) {
                         var tempTemplates = JSON.parse(data.board);
 
@@ -73,7 +130,7 @@ angular.module('hopsWorksApp')
                                   //associate existing contents with the new template
                                   MetadataActionService.extendTemplate($cookies['email'], newlyCreatedID, templateToExtend)
                                           .then(function (data) {
-                                            self.newTemplateName = "";
+                                            self.extendedTemplateName = "";
 
                                             //trigger the necessary variable change in the service
                                             MetadataHelperService.fetchAvailableTemplates()
@@ -583,15 +640,15 @@ angular.module('hopsWorksApp')
                          * window closed automatically
                          */
                       },
-                      function (closed) {
-                        //trigger the necessary variable change in the service
-                        MetadataHelperService.fetchAvailableTemplates()
-                                .then(function (response) {
-                                  self.availableTemplates = JSON.parse(response.board).templates;
-                                  growl.success("The template was uploaded successfully",
-                                      {title: 'Success', ttl: 15000});
-                                });
-                      });
+                              function (closed) {
+                                //trigger the necessary variable change in the service
+                                MetadataHelperService.fetchAvailableTemplates()
+                                        .then(function (response) {
+                                          self.availableTemplates = JSON.parse(response.board).templates;
+                                          growl.success("The template was uploaded successfully",
+                                                  {title: 'Success', ttl: 15000});
+                                        });
+                              });
             };
           }
         ]);

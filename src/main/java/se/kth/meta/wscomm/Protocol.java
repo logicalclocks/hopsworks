@@ -71,6 +71,9 @@ public class Protocol {
       case REMOVE_TEMPLATE:
         return this.builder.removeTemplate(message);
         
+      case UPDATE_TEMPLATE_NAME:
+        return this.builder.updateTemplateName(message);
+        
       case STORE_FIELD:
       case EXTEND_TEMPLATE:
       case STORE_TEMPLATE:

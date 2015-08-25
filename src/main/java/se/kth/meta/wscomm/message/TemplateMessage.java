@@ -61,10 +61,10 @@ public class TemplateMessage extends ContentMessage {
   }
 
   @Override
-  public void setAction(String action){
+  public void setAction(String action) {
     super.setAction(action);
   }
-  
+
   @Override
   public String encode() {
     String value = Json.createObjectBuilder()
@@ -79,9 +79,9 @@ public class TemplateMessage extends ContentMessage {
   }
 
   /**
-   * Returns the template object. It is used only when creating a new template
-   * or deleting one. The message carries either the template name or the
-   * template id depending on the desired action.
+   * Returns the template object. It is used when creating a new template
+   * deleting or when updating one. The message carries either the template name
+   * or the template id depending on the desired action.
    *
    * @return the template to be added in the database
    * @throws se.kth.meta.exception.ApplicationException
@@ -94,20 +94,23 @@ public class TemplateMessage extends ContentMessage {
 
     try {
       switch (Command.valueOf(this.action.toUpperCase())) {
-        
+
         case ADD_NEW_TEMPLATE:
           temp = new Template(-1, object.getString("templateName"));
           break;
         case REMOVE_TEMPLATE:
           temp = new Template(object.getInt("templateId"));
           break;
+        case UPDATE_TEMPLATE_NAME:
+          temp = new Template(object.getInt("templateId"), object.getString(
+                  "templateName"));
+          break;
         default:
           throw new ApplicationException("Unknown command in received message");
       }
     } catch (NullPointerException e) {
-      logger.
-              log(Level.SEVERE,
-                      "Error while retrieving the template attributes.");
+      logger.log(Level.SEVERE,
+              "Error while retrieving the template attributes.");
       throw new ApplicationException(
               "Error while retrieving the template attributes.");
     }

@@ -65,7 +65,6 @@ public class ResponseBuilder {
 
   /**
    * Persists a new template in the database
-   * <b>
    * <p>
    * @param message
    * @return
@@ -82,7 +81,6 @@ public class ResponseBuilder {
 
   /**
    * Removes a template from the database
-   * <b>
    * <p>
    * @param message
    * @return
@@ -95,6 +93,25 @@ public class ResponseBuilder {
     this.utils.removeTemplate(template);
 
     return this.fetchTemplates(message);
+  }
+
+  /**
+   * Updates the name of a given template
+   * <p>
+   * @param message
+   * @return
+   * @throws ApplicationException
+   */
+  public Message updateTemplateName(Message message) throws ApplicationException {
+    ContentMessage cmsg = (ContentMessage) message;
+
+    Template template = cmsg.getTemplate();
+    this.utils.updateTemplateName(template);
+
+    TextMessage response = new TextMessage("Server");
+    response.setMessage("Template updated successfully");
+    
+    return response;
   }
 
   /**
@@ -397,7 +414,7 @@ public class ResponseBuilder {
    */
   public void persistUploadedTemplate(UploadedTemplateMessage message) throws
           ApplicationException {
-    
+
     //compile the message
     message.parseSchema();
     TemplateMessage tmplMsg = (TemplateMessage) message.addNewTemplateMessage();

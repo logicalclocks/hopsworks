@@ -52,7 +52,7 @@ public class Utils {
    * Persist a new template in the database
    * <p>
    * @param template
-   * @return 
+   * @return
    * @throws ApplicationException
    */
   public int addNewTemplate(Template template) throws ApplicationException {
@@ -63,6 +63,18 @@ public class Utils {
       throw new ApplicationException("Could not add new template " + template.
               getName() + " " + e.getMessage());
     }
+  }
+
+  /**
+   * Updates a template name. addNewTemplate handles persisting/updating the
+   * entity
+   * <p>
+   * @param template
+   * @return
+   * @throws ApplicationException
+   */
+  public int updateTemplateName(Template template) throws ApplicationException {
+    return this.addNewTemplate(template);
   }
 
   /**
@@ -128,7 +140,7 @@ public class Utils {
    * <p>
    * @param list
    * @param fieldId
-   * @throws ApplicationException 
+   * @throws ApplicationException
    */
   private void addFieldsPredefinedValues(List<EntityIntf> list, int fieldId)
           throws ApplicationException {
