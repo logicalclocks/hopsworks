@@ -100,6 +100,7 @@ angular.module('hopsWorksApp')
                       .then(function(response){
                         console.log(JSON.stringify(response));
                         self.editingTemplate = false;
+                        self.currentTemplateID = -1;
                       });
             };
             

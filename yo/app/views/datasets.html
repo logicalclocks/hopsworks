@@ -254,7 +254,7 @@
                            style="color:white; font-size: 14px;"
                            ng-mousedown="metadataCtrl.editingTemplate='true';"
                            ng-click="$event.stopPropagation()"
-                           onbeforesave="metadataCtrl.updateTemplateName(template)"
+                           onaftersave="metadataCtrl.updateTemplateName(template)"
                            blur="submit">
                           {{template.name | cut:true:10:' ...'}}
                         </a>
