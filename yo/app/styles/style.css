@@ -183,7 +183,6 @@ div.scroll > ul > li > textarea {
   color: #2e353d;
 }
 
-/*a.editable-click:hover { 
-    color: black;
-    border-bottom-color: #47a447;
-}*/
+.glyphicon-info-sign {
+  color: royalblue;
+}

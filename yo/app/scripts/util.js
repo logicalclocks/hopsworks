@@ -44,3 +44,22 @@ var sortObject = function(filter, predicate, template){
   //false means 'do not reverse the order of the array'
   return filter('orderBy')(template.columns, predicate, false);
 };
+
+function getLocationBase() {
+  var port = Number(location.port);
+  if (port === 'undefined' || port === 0) {
+    port = 80;
+    if (location.protocol === 'https:') {
+      port = 443;
+    }
+  }
+
+  if (port === 3333 || port === 9000) {
+    port = 8080;
+  }
+  return location.protocol + "//" + location.hostname +":" + port + skipTrailingSlash(location.pathname);
+};
+
+function skipTrailingSlash(path) {
+  return path.slice(-1) === "/" ? path.substring(0, path.length-1) : path;
+}
