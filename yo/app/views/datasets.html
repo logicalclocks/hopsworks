@@ -249,11 +249,13 @@
                            style="color: lightgreen; width: 15px; margin-top:3px;"
                            ng-if="template.showing"></i>
 
+                        <!--onaftersave="metadataCtrl.updateTemplateName(template)"-->
                         <a href="#" editable-text="template.name" buttons="no"
                            style="color:white; font-size: 14px;"
-                           ng-mousedown="metadataCtrl.setTogglingDisabled(true);"
+                           ng-mousedown="metadataCtrl.editingTemplate='true';"
                            ng-click="$event.stopPropagation()"
-                           onaftersave="metadataCtrl.updateTemplateName(template)">
+                           onbeforesave="metadataCtrl.updateTemplateName(template)"
+                           blur="submit">
                           {{template.name | cut:true:10:' ...'}}
                         </a>
 
@@ -283,12 +285,12 @@
 
                   <ul class="datasetList btn-primary"
                       style="margin-top:10px;"
-                      ng-if="metadataCtrl.currentTemplateID !== - 1">
+                      ng-if="metadataCtrl.currentTemplateID !== - 1 && !metadataCtrl.editingTemplate">
                     <li ng-click="metadataCtrl.addNewList()">
                       <span>
                         Add table
                         <button class="btn btn-success pull-right"
-                                style="background-color: #f5f5f5; margin-top: 1px; width: 20px; height: 20px;padding:2px;">
+                                style="margin-top: 1px; width: 20px; height: 20px;padding:2px;">
                           <i class="fa fa-plus"></i>
                         </button>
                       </span>

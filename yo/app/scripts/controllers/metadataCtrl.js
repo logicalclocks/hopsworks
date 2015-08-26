@@ -103,11 +103,6 @@ angular.module('hopsWorksApp')
                       });
             };
             
-            self.setTogglingDisabled = function(toggling){
-              self.editingTemplate = toggling;
-              console.log("TOGGLING DISABLED " + self.editingTemplate);
-            };
-            
             /**
              * Creates a new template from an existing one
              * 
