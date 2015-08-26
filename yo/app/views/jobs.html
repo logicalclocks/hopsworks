@@ -17,55 +17,86 @@
 
         <!-- Page Content -->
         <div>
-          <button ng-click="jobsCtrl.newJob()" class="btn btn-info">
-            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>New job
-          </button>
-          <table class="table table-hover">
-            <thead>
-            <th>
-              Name
-            </th>
-            <th>
-              Owner
-            </th>
-            <th>
-              Type
-            </th>
-            <th>
-              Created on
-            </th>
-            <th>
-            </th>
-            <th>
-            </th>
-            </thead>
-            <tbody>
-              <tr ng-repeat="job in jobsCtrl.jobs| orderBy : 'creationTime'" ng-click="jobsCtrl.showDetails(job)">
-                <td>
-                  {{job.name}}
-                </td>
-                <td>
-                  {{job.creator.fname}} {{job.creator.lname}}
-                </td>
-                <td>
-                  {{job.jobType}}
-                </td>
-                <td>
-                  {{job.creationTime| date:'mediumDate'}}
-                </td>
-                <td>
-                  <button ng-click="jobsCtrl.runJob(job.id); $event.stopPropagation();" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-play" aria-hidden="true"/>Run now</button>
-                </td>
-                <td>
-                  <span class="text-info" ng-show="jobsCtrl.running['' + job.id]">Running...</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          <div class="row">
+            <div class="col-lg-2" style="max-width: 250px">
+              <div class="ibox float-e-margins">
+                <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
+                  <div class="file-manager">
+                    <h5 style="margin: 0px; font-weight: bold; color: #2e353d;">Filter: </h5>
+                    <button type="button" class="btn btn-info" ng-model="jobsCtrl.jobFilter.creator.email" btn-checkbox btn-checkbox-true="mainCtrl.email" btn-checkbox-false="''">
+                      My jobs
+                    </button>
+                    <div class="btn-group">
+                      <label class="btn btn-info" ng-model="jobsCtrl.jobFilter.jobType" btn-radio="'CUNEIFORM'" uncheckable ng-change='jobsCtrl.checkJobTypeFilter()'>Cuneiform</label>
+                      <label class="btn btn-info" ng-model="jobsCtrl.jobFilter.jobType" btn-radio="'SPARK'" uncheckable ng-change='jobsCtrl.checkJobTypeFilter()'>Spark</label>
+                      <label class="btn btn-info" ng-model="jobsCtrl.jobFilter.jobType" btn-radio="'ADAM'" uncheckable ng-change='jobsCtrl.checkJobTypeFilter()'>ADAM</label>
+                    </div>
+                    <input type="text" ng-model="jobsCtrl.jobFilter.name" placeholder="Job name"/>
+                    
 
-        <!-- /#page-content-wrapper -->
-      </div>
+                    <div class="hr-line-dashed"></div>
+                    <div class="btn-group"
+                         style="width: 100%;">
+                      <button style="width: 100%;"
+                              ng-click="jobsCtrl.newJob()"
+                              class="btn btn-warning">
+                        New job
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="ibox-content"></div>
+              </div>
+            </div>
+
+            <div class="col-lg-10">
+              <table class="table table-hover">
+                <thead>
+                <th>
+                  Name
+                </th>
+                <th>
+                  Owner
+                </th>
+                <th>
+                  Type
+                </th>
+                <th>
+                  Created on
+                </th>
+                <th>
+                </th>
+                <th>
+                </th>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="job in jobsCtrl.jobs| filter:jobsCtrl.jobFilter:false | orderBy : 'creationTime'" ng-click="jobsCtrl.showDetails(job)">
+                    <td>
+                      {{job.name}}
+                    </td>
+                    <td>
+                      {{job.creator.fname}} {{job.creator.lname}}
+                    </td>
+                    <td>
+                      {{job.jobType}}
+                    </td>
+                    <td>
+                      {{job.creationTime| date:'mediumDate'}}
+                    </td>
+                    <td>
+                      <button ng-click="jobsCtrl.runJob(job.id); $event.stopPropagation();" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-play" aria-hidden="true"/>Run now</button>
+                    </td>
+                    <td>
+                      <span class="text-info" ng-show="jobsCtrl.running['' + job.id]">Running...</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- /#page-content-wrapper -->
+        </div>
     </section>
   </div>
   <!-- /#wrapper -->
