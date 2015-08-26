@@ -487,6 +487,7 @@ angular.module('hopsWorksApp')
 
               ModalService.modifyField($scope).then(
                       function (success) {
+                        console.log("GOING TO SAVE FIELD " + JSON.stringify(success));
                         //Persist the modified card to the database
                         self.storeCard(self.currentTemplateID, column, success)
                                 .then(function (response) {

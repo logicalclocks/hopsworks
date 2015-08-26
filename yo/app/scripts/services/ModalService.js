@@ -318,7 +318,7 @@ angular.module('hopsWorksApp')
               modifyField: function (scope) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/metadata/modifyFieldDialog.html',
-                  controller: 'ModifyFieldCtrl',
+                  controller: 'ModifyFieldCtrl as modifyFieldCtrl',
                   scope: scope,
                   size: 'md',
                   backdrop: 'static',

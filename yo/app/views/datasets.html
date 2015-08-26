@@ -309,10 +309,9 @@
                   <div class="col-md-4">
 
                     <div class="panel panel-default">
-                      <div class="panel-heading" style="border-bottom: 3px solid #46b8da;">
+                      <div class="panel-heading modal-header" style="border-bottom: 3px solid #46b8da;">
 
                         <div align="right">
-
                           <a ng-click="metadataCtrl.addCard(column)"
                              title="Add card to table">
                             <i class="fa fa-plus addNewCard"></i>
@@ -339,6 +338,7 @@
                           <li class="card"
                               ng-repeat="card in column.cards"
                               as-sortable-item
+                              style="line-height:1em;"
                               ng-include="'views/metadata/card.html'">
                           </li>
                         </ul>
