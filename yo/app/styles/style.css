@@ -181,3 +181,7 @@ div.scroll > ul > li > textarea {
     table-layout: fixed;
     word-wrap: break-word;
 }
+
+.glyphicon-info-sign {
+  color: royalblue;
+}
