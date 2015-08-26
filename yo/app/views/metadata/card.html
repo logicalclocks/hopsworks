@@ -10,10 +10,10 @@
             class="column-title ng-binding">
         {{card.title}}
         <span ng-show="card.required"
-              class="asteriskRed fa fa-asterisk"
+              class="fa fa-asterisk"
               tooltip="This field is mandatory"></span>
         <span ng-show="card.find"
-              class="asteriskRed fa fa-search"
+              class="fa fa-search"
               tooltip="This field is searchable"></span>
       </span>
 
@@ -47,6 +47,12 @@
               <a ng-click="metadataCtrl.makeRequired(card);
                 $event.stopPropagation()">
                 <i class="required-{{card.required}} fa fa-asterisk"></i> Required
+              </a>
+            </li>
+            <li class="divider"></li>
+            <li>
+              <a ng-click="metadataCtrl.modifyField(column, card)">
+                <i class="fa fa-edit"></i> Edit field...
               </a>
             </li>
           </ul>

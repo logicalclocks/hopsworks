@@ -76,13 +76,14 @@ public class TemplateFacade extends AbstractFacade<Template> {
     try {
       Template t = this.getTemplate(template.getId());
 
-      if (this.em.contains(t)) {
-        this.em.remove(t);
-      } else {
-        //if the object is unmanaged it has to be managed before it is removed
-        this.em.remove(this.em.merge(t));
+      if (t != null) {
+        if (this.em.contains(t)) {
+          this.em.remove(t);
+        } else {
+          //if the object is unmanaged it has to be managed before it is removed
+          this.em.remove(this.em.merge(t));
+        }
       }
-
     } catch (SecurityException | IllegalStateException ex) {
       throw new DatabaseException(TemplateFacade.class.getName(),
               "Could not remove template " + ex.getMessage());

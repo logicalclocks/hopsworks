@@ -237,9 +237,8 @@
                   </div>
                   <ul class="datasetList btn-primary">
                     <li ng-repeat="template in metadataCtrl.availableTemplates | filter: searchTemplate: false"
-                        ng-click="metadataCtrl.fetchTemplate(template.id);
-                                  metadataCtrl.setTogglingDisabled(false);
-                                  metadataCtrl.toggleTemplate(template)"
+                        ng-click="metadataCtrl.toggleTemplate(template);
+                                  metadataCtrl.fetchTemplate(template.id)"
                         context-menu
                         data-target="templateMenu-{{$index}}"
                         tooltip="{{template.name}}">
@@ -309,7 +308,7 @@
                   <div class="col-md-4">
 
                     <div class="panel panel-default">
-                      <div class="panel-heading modal-header" style="border-bottom: 3px solid #46b8da;">
+                      <div class="modal-header" style="border-bottom: 3px solid #46b8da;">
 
                         <div align="right">
                           <a ng-click="metadataCtrl.addCard(column)"

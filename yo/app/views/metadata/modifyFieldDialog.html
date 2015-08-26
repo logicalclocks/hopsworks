@@ -37,7 +37,7 @@
       <div>
         <ui-select  ng-disabled="modifyFieldCtrl.existingRawData === true"
                     ng-model="modifyFieldCtrl.selectedItem" theme="select2"
-                    on-select="modifyFieldCtrl.update()" style="min-width: 100px;">
+                    on-select="modifyFieldCtrl.update()" style="min-width: 130px;">
 
           <ui-select-match placeholder="Select a field type...">{{$select.selected.name}}</ui-select-match>
 
@@ -68,12 +68,14 @@
       </fieldset>
       <fieldset ng-disabled="modifyFieldCtrl.existingRawData === true" data-ng-repeat="choice in modifyFieldCtrl.fieldSelectItems">
         <input type="text" ng-model="choice.value" name="" placeholder="Enter a value">
-        <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="modifyFieldCtrl.addNewSelectChoice()"></button>
-        <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="modifyFieldCtrl.removeSelectChoice()"></button>   
+        <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="modifyFieldCtrl.addNewSelectChoice(1)"></button>
+        <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="modifyFieldCtrl.removeSelectChoice(1)"></button>   
       </fieldset>
 
-      <fieldset ng-disabled="modifyFieldCtrl.existingRawData === true" data-ng-repeat="choice in modifyFieldCtrl.yesNoItems">
-        <input type="text" ng-model="choice.value" name="" placeholder="Enter a yes/no choice">
+      <fieldset ng-disabled="modifyFieldCtrl.existingRawData === true" data-ng-repeat="choice in modifyFieldCtrl.multiSelectItems">
+        <input type="text" ng-model="choice.value" name="" placeholder="Enter a multi-select value">
+        <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="modifyFieldCtrl.addNewSelectChoice(2)"></button>
+        <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="modifyFieldCtrl.removeSelectChoice(2)"></button> 
       </fieldset>
     </div>
   </div>

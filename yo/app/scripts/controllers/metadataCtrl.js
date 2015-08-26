@@ -80,12 +80,15 @@ angular.module('hopsWorksApp')
                   temp.showing = false;
                 }
               });
+              
               //handle the clicked template accordingly
               template.showing = !template.showing;
-
+              self.currentTemplateID = template.id;
+              
               //if all templates are deselected hide the add new table button
               if (!template.showing) {
                 self.currentTemplateID = -1;
+                self.currentBoard = {};
               }
             };
             
@@ -149,8 +152,11 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.fetchTemplate = function (templateId) {
-              self.currentTemplateID = templateId;
-
+              //if all templates are deselected hide the add new table button
+              if (self.currentTemplateID === -1) {
+                return;
+              }
+              
               MetadataActionService.fetchTemplate($cookies['email'], templateId)
                       .then(function (success) {
                         /*
@@ -203,6 +209,7 @@ angular.module('hopsWorksApp')
                         self.newTemplateName = "";
                         //trigger a variable change (availableTemplates) in the service
                         MetadataHelperService.fetchAvailableTemplates();
+                        self.availableTemplates = MetadataHelperService.getAvailableTemplates();
                       });
             };
 
@@ -217,6 +224,7 @@ angular.module('hopsWorksApp')
                       .then(function (data) {
                         //trigger a variable change (availableTemplates) in the service
                         MetadataHelperService.fetchAvailableTemplates();
+                        self.availableTemplates = MetadataHelperService.getAvailableTemplates();
                         console.log(JSON.stringify(data));
                       });
             };
@@ -376,7 +384,7 @@ angular.module('hopsWorksApp')
               $scope.currentColumn = column;
               var modalInstance = $modal.open({
                 templateUrl: 'views/metadata/newCardModal.html',
-                controller: 'NewCardCtrl',
+                controller: 'ModifyFieldCtrl as modifyFieldCtrl',
                 scope: $scope
               })
                       .result.then(function (card) {
@@ -491,6 +499,7 @@ angular.module('hopsWorksApp')
                         self.storeCard(self.currentTemplateID, column, success)
                                 .then(function (response) {
                                   self.currentBoard = JSON.parse(response.board);
+                                  growl.success("Field " + field.title + " modified successfully", {title: 'Success', ttl: 5000});
                                 });
 
                       });

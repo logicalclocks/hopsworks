@@ -5,7 +5,7 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('NewCardCtrl', ['$cookies', '$scope', '$modalInstance', 'MetadataActionService', '$filter',
+        .controller('NewFieldCtrl', ['$cookies', '$scope', '$modalInstance', 'MetadataActionService', '$filter',
           function ($cookies, $scope, $modalInstance, MetadataActionService, $filter) {
 
             //data is the actual column under processing

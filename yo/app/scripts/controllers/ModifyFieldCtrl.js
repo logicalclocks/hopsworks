@@ -9,7 +9,7 @@ var mainModule = angular.module('hopsWorksApp')
                   function ($cookies, $scope, $modalInstance, MetadataActionService) {
 
                     var self = this;
-                    
+
                     self.card = $scope.field;
                     self.fieldName = $scope.field.title;
                     self.fieldDescription = $scope.field.description;
@@ -17,7 +17,7 @@ var mainModule = angular.module('hopsWorksApp')
                     self.fieldTypeValues = "";
 
                     self.fieldSelectItems = [];
-                    self.yesNoItems = [];
+                    self.multiSelectItems = [];
                     self.selectedItem = "1";
                     self.existingRawData = false;
 
@@ -26,12 +26,12 @@ var mainModule = angular.module('hopsWorksApp')
                     MetadataActionService.fetchFieldTypes($cookies['email'])
                             .then(function (response) {
                               var content = JSON.parse(response.board);
-                              
+
                               //construct the select component's contents
                               angular.forEach(content.fieldTypes, function (value, key) {
                                 self.items.push({id: value.id, name: value.description});
-                                
-                                if(value.id === $scope.field.fieldtypeid){
+
+                                if (value.id === $scope.field.fieldtypeid) {
                                   console.log("selected item id " + JSON.stringify(value));
                                   self.selectedItem = self.items[key];
                                 }
@@ -58,7 +58,7 @@ var mainModule = angular.module('hopsWorksApp')
                         });
                         break;
                       case 3:
-                        self.fieldType = "'a true/false field'";
+                        self.fieldType = "'a multi-select dropdown list'";
                         self.fieldTypeValues = "Existing values: ";
                         angular.forEach($scope.field.fieldtypeContent, function (value, key) {
                           self.fieldTypeValues += value.value + ", ";
@@ -79,7 +79,7 @@ var mainModule = angular.module('hopsWorksApp')
                           fieldTypeContent = self.fieldSelectItems;
                           break;
                         case 3:
-                          fieldTypeContent = self.yesNoItems;
+                          fieldTypeContent = self.multiSelectItems;
                       }
 
                       $modalInstance.close({id: $scope.field.id, title: self.fieldName, details: $scope.field.details,
@@ -96,33 +96,44 @@ var mainModule = angular.module('hopsWorksApp')
 
                       switch (self.selectedItem.id) {
                         case 1:
-                          self.yesNoItems = [];
+                          self.multiSelectItems = [];
                           self.fieldSelectItems = [];
                           break;
                         case 2:
-                          self.yesNoItems = [];
-                          self.addNewSelectChoice();
+                          self.multiSelectItems = [];
+                          self.addNewSelectChoice(1);
                           break;
                         case 3:
                           self.fieldSelectItems = [];
-                          self.addYesnoChoice();
+                          self.addNewSelectChoice(2);
                       }
                     };
 
-                    self.addNewSelectChoice = function () {
+                    self.addNewSelectChoice = function (index) {
                       var newItemNo = self.fieldSelectItems.length + 1;
-                      //$scope.choices.push({'id': 'choice' + newItemNo});
-                      self.fieldSelectItems.push({id: -1, fieldid: $scope.field.id, value: ""});
+
+                      switch (index) {
+                        case 1:
+                          //add a single selection item
+                          self.fieldSelectItems.push({id: -1, fieldid: $scope.field.id, value: ""});
+                          break;
+                        case 2:
+                          self.multiSelectItems.push({id: -1, fieldid: $scope.field.id, value: ""});
+                      }
+
                     };
 
-                    self.removeSelectChoice = function () {
-                      var lastItem = self.fieldSelectItems.length - 1;
-                      //$scope.choices.splice(lastItem);
-                      self.fieldSelectItems.splice(lastItem);
+                    self.removeSelectChoice = function (index) {
+
+                      switch (index) {
+                        case 1:
+                          var lastItem = self.fieldSelectItems.length - 1;
+                          self.fieldSelectItems.splice(lastItem);
+                          break;
+                        case 2:
+                          var lastItem = self.multiSelectItems.length - 1;
+                          self.multiSelectItems.splice(lastItem);
+                      }
                     };
 
-                    self.addYesnoChoice = function () {
-                      self.yesNoItems.push({id: -1, fieldid: $scope.field.id, value: ""});
-                      self.yesNoItems.push({id: -1, fieldid: $scope.field.id, value: ""});
-                    };
                   }]);

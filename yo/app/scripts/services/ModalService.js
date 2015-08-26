@@ -361,6 +361,32 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
-              }
+              },
+              addNewField: function (scope) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/metadata/newFieldModal.html',
+                  controller: 'NewFieldCtrl as newFieldCtrl',
+                  scope: scope,
+                  size: 'md',
+                  backdrop: 'static',
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    scope: function () {
+                      return scope;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
             };
           }]);
