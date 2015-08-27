@@ -19,7 +19,8 @@ bower install
 #Edit the index.html
 cd app/
 perl -pi -e "s/bower_components/..\/bower_components/g" index.html
+perl -pi -e "s/getLocationBase\(\)/'http:\/\/localhost:8080\/hopsworks'/g" scripts/services/RequestInterceptorService.js
 
 #Open a new firefox tab
-#firefox -new-tab http://localhost:8080/app
+firefox -new-tab http://localhost:8080/app
 #google-chrome -new-tab http://localhost:8080/app
