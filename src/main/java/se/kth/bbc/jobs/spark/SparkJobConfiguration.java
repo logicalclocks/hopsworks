@@ -2,7 +2,7 @@ package se.kth.bbc.jobs.spark;
 
 import com.google.common.base.Strings;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 
@@ -138,8 +138,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   }
 
   @Override
-  public DatabaseJsonObject getReducedJsonObject() {
-    DatabaseJsonObject obj = super.getReducedJsonObject();
+  public MutableJsonObject getReducedJsonObject() {
+    MutableJsonObject obj = super.getReducedJsonObject();
     //First: fields that are possibly null or empty:
     if (!Strings.isNullOrEmpty(args)) {
       obj.set(KEY_ARGS, args);
@@ -159,7 +159,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   }
 
   @Override
-  public void updateFromJson(DatabaseJsonObject json) throws
+  public void updateFromJson(MutableJsonObject json) throws
           IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;

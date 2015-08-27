@@ -51,8 +51,6 @@ public class ProjectController {
   @EJB
   private UserManager userBean;
   @EJB
-  private FolderNameValidator projectNameValidator;
-  @EJB
   private ActivityFacade activityFacade;
   @EJB
   private FileOperations fileOps;
@@ -60,6 +58,8 @@ public class ProjectController {
   private ProjectServiceFacade projectServicesFacade;
   @EJB
   private InodeFacade inodes;
+  @EJB
+  private DatasetController datasetController;
 
   /**
    * Creates a new project(project), the related DIR, the different services
@@ -68,7 +68,7 @@ public class ProjectController {
    * @param newProject
    * @param email
    * @return
-   * @throws AppException if the project name already exists.
+   * @throws IllegalArgumentException if the project name already exists.
    * @throws IOException if the DIR associated with the project could not be
    * created. For whatever reason.
    */
@@ -77,10 +77,10 @@ public class ProjectController {
   //will make sure a new transaction is created even if this method is
   //called from within a transaction.
   public Project createProject(ProjectDTO newProject, String email) throws
-          AppException, IOException {
+          IOException {
     User user = userBean.getUserByEmail(email);
     //if there is no project by the same name for this user and project name is valid
-    if (projectNameValidator.isValidName(newProject.getProjectName())
+    if (FolderNameValidator.isValidName(newProject.getProjectName())
             && !projectFacade.
             projectExists(newProject.getProjectName())) {
       //Create a new project object
@@ -106,14 +106,17 @@ public class ProjectController {
 
         logger.log(Level.FINE, "{0} - project directory created successfully.",
                 project.getName());
-
+        //Create default DataSets
+        for (Constants.DefaultDataset ds : Constants.DefaultDataset.values()) {
+          datasetController.createDataset(user, project, ds.getName(), ds.
+                  getDescription(), -1);
+        }
         return project;
       }
     } else {
       logger.log(Level.SEVERE, "Project with name {0} already exists!",
               newProject.getProjectName());
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_NAME_EXIST);
+      throw new IllegalArgumentException(ResponseMessages.PROJECT_NAME_EXIST);
     }
     return null;
   }
@@ -176,7 +179,7 @@ public class ProjectController {
     boolean nameExists = projectFacade.projectExistsForOwner(newProjectName,
             user);
 
-    if (projectNameValidator.isValidName(newProjectName) && nameExists) {
+    if (FolderNameValidator.isValidName(newProjectName) && nameExists) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NAME_EXIST);
     }
@@ -219,7 +222,6 @@ public class ProjectController {
 
   //create project on HDFS
   private boolean mkProjectDIR(String projectName) throws IOException {
-
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator + projectName;
     return fileOps.mkDir(projectPath);

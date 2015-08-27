@@ -1,9 +1,10 @@
 package se.kth.bbc.jobs.model.configuration;
 
+import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.JobType;
@@ -21,6 +22,7 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 public abstract class JobConfiguration implements JsonReduceable {
 
   protected String appName;
+  protected final static String KEY_APPNAME = "APPNAME";
 
   protected JobConfiguration() {
     //Needed for JAXB
@@ -60,10 +62,25 @@ public abstract class JobConfiguration implements JsonReduceable {
             "JobConfiguration objects cannot be compared.");
   }
 
+  @Override
+  public MutableJsonObject getReducedJsonObject() {
+    MutableJsonObject obj = new MutableJsonObject();
+    if (!Strings.isNullOrEmpty(appName)) {
+      obj.set(KEY_APPNAME, appName);
+    }
+    return obj;
+  }
+
+  @Override
+  public void updateFromJson(MutableJsonObject json) throws
+          IllegalArgumentException {
+    this.appName = json.getString(KEY_APPNAME, null);
+  }
+
   public static class JobConfigurationFactory {
 
     public static JobConfiguration getJobConfigurationFromJson(
-            DatabaseJsonObject object)
+            MutableJsonObject object)
             throws IllegalArgumentException {
       //First: check if null
       if (object == null) {

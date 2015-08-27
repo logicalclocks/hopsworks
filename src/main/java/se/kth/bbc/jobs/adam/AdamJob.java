@@ -199,10 +199,11 @@ public class AdamJob extends YarnJob {
   private void addAllAdamJarsToLocalResourcesAndClasspath(
           SparkYarnRunnerBuilder builder) {
     //Add all to local resources and to classpath
-    for (String sourcePath : Constants.ADAM_HDFS_JARS) {
-      String filename = Utils.getFileName(sourcePath);
-      builder.addExtraFile(filename, sourcePath);
-      builder.addToClassPath(filename);
+    List<String> jars = services.getFileOperations().getChildNames(
+            Constants.ADAM_DEFAULT_HDFS_REPO);
+    for (String jarname : jars) {
+      String sourcePath = "hdfs://" + Constants.ADAM_DEFAULT_HDFS_REPO + jarname;
+      builder.addExtraFile(jarname, sourcePath);
     }
   }
 

@@ -85,21 +85,6 @@ public class AdamController {
    * @return
    */
   private boolean areJarsAvailable() {
-    try {
-      boolean adamJarMissing = false;
-      for (String s : Constants.ADAM_HDFS_JARS) {
-        if (!fops.exists(s)) {
-          adamJarMissing = true;
-          logger.log(Level.WARNING, "Missing Adam jar: {0}", s);
-        }
-      }
-      if (adamJarMissing) {
-        return false;
-      }
-    } catch (IOException e) {
-      return false;
-    }
-
     boolean isInHdfs;
     try {
       isInHdfs = fops.exists(Constants.DEFAULT_SPARK_JAR_HDFS_PATH);

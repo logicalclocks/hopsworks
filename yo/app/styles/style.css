@@ -176,6 +176,12 @@ div.scroll > ul > li > textarea {
   padding: 10px;
 }
 
+.chrome-table {
+  /* Ensures that tables in a dialog box are presented correctly in Chrome*/
+    table-layout: fixed;
+    word-wrap: break-word;
+}
+
 .glyphicon-info-sign {
   color: royalblue;
 }

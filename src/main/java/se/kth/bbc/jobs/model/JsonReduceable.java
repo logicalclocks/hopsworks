@@ -1,6 +1,6 @@
 package se.kth.bbc.jobs.model;
 
-import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.MutableJsonObject;
 
 /**
  * Signifies that this object can be translated in a more compact JSON format.
@@ -15,7 +15,7 @@ public interface JsonReduceable {
    * <p>
    * @return
    */
-  public DatabaseJsonObject getReducedJsonObject();
+  public MutableJsonObject getReducedJsonObject();
 
   /**
    * Update the contents of the current object from the given JSON object.
@@ -24,6 +24,6 @@ public interface JsonReduceable {
    * @throws IllegalArgumentException If the given JSON object cannot be
    * converted to the current class.
    */
-  public void updateFromJson(DatabaseJsonObject json) throws
+  public void updateFromJson(MutableJsonObject json) throws
           IllegalArgumentException;
 }

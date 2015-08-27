@@ -40,6 +40,6 @@ public class ApplicationConfig extends ResourceConfig {
     //register(org.glassfish.jersey.filter.LoggingFilter.class);
 
     // Enable Tracing support.
-    property(ServerProperties.TRACING, "ALL");
+    //property(ServerProperties.TRACING, "OFF");
   }
 }
