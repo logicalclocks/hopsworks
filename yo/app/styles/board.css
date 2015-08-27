@@ -176,3 +176,9 @@ div.story h3, div.task h3 {
   padding: 2px 1px;
   text-decoration: none;
 }
+
+.field-info {
+  cursor: help;
+  padding-right: 0em;
+  padding-left: 0em;
+}

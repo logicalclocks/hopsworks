@@ -30,14 +30,6 @@ angular.module('hopsWorksApp')
             self.editingTemplate = false;
             var dataSetService = DataSetService($routeParams.projectID);
 
-            self.modernBrowsers = [
-              {id: "Opera", ticked: true},
-              {id: "Internet Explorer", ticked: false},
-              {id: "Firefox", ticked: true},
-              {id: "Safari", ticked: false},
-              {id: "Chrome", mticked: true}
-            ];
-
             //fetch all the available templates
             MetadataHelperService.fetchAvailableTemplates()
                     .then(function (response) {

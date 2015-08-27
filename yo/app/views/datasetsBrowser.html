@@ -338,62 +338,71 @@
 
             <tabset justified="false">
               <tab ng-repeat="tab in metadataCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
-                   disabled="tab.disabled" select="metadataCtrl.onTabSelect(tab)">
+                   disabled="tab.disabled" select="metadataCtrl.onTabSelect(tab)"
+                   style="padding-left: 1em;">
 
                 <form name="{{tab.title}}{{$index}}" ng-submit="metadataCtrl.submitMetadata(metadataCtrl.metaData)"
-                       style="padding-bottom: 150px;">
+                      style="padding:0em 1em 50em 1em;">
 
-                  <ul class="cards card-list" ng-model="column.cards">
-                    <li class="card" ng-repeat="card in tab.cards">
-                      <div>
-                        <div class="row">
-                          <table>
-                            <tr>
-                              <td width="50em">
-                                <div class="col-sm-10">
-                                  <span class="card-title"
-                                        class=" removeCard pull-left btn btn-xs">{{card.title}}</span>
-                                </div>
-                              </td>
-                              <td>
-                                <!--text input field type-->
-                                <div ng-if="card.fieldtypeid === 1">
-                                  <input size="10" value="" class="fillInMetadataInput" id="sizeFieldInput"
-                                         tooltips title="{{card.description}}"
-                                         ng-show="true"
-                                         ng-model="metadataCtrl.metaData[card.id]"/>
-                                </div>
+                  <ul class="card-list" ng-model="column.cards">
+                    <li ng-repeat="card in tab.cards" style="padding-bottom: 0;">
+                      <div style="padding-bottom: 0;">
+ 
+                        <!--The table section-->
+                        <div class="row col-md-15" style="padding-bottom: 0;">
+                          <!--The row section-->
+                          <div class="col-md-12" style="padding-bottom: 0;">
+                            <div tabindex="1" class="col-md-2">
+                              <span class="card-title pull-right btn btn-xs"
+                                    style="font-size: 1em">{{card.title}}</span>
+                            </div>
 
-                                <!--single select list input type-->
-                                <div ng-if="card.fieldtypeid === 2">
+                            <div tabindex="2" class="col-md-1" style="padding-bottom: 0;">
+                              <span class="field-info pull-left" tooltip="{{card.description}}">
+                                <i class="fa fa-exclamation-circle"></i>
+                              </span>
+                            </div>
 
-                                  <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
-                                    <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
-                                    <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
-                                      <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
-                                      <small>
-                                        <span ng-bind-html="''+item.value | highlight: $select.search"></span>
-                                      </small>
-                                    </ui-select-choices>
-                                  </ui-select>
-                                </div>
+                            <div tabindex="3" class="pull-left col-md-9" style="padding-bottom: 0;">
+                              <!--text input field type-->
+                              <div ng-if="card.fieldtypeid === 1">
+                                <input value="" class="fillInMetadataInput" id="sizeFieldInput"
+                                       tooltips title="{{card.description}}"
+                                       ng-show="true"
+                                       ng-model="metadataCtrl.metaData[card.id]"/>
+                              </div>
 
-                                <!--multi select list input type-->
-                                <div ng-if="card.fieldtypeid === 3">
-                                  <div
-                                    isteven-multi-select
-                                    input-model="card.fieldtypeContent"
-                                    output-model="metadataCtrl.metaData[card.id]"
-                                    button-label="value"
-                                    item-label="value"
-                                    tick-property="ticked"
-                                    output-properties="value">
-                                  </div>
+                              <!--single select list input type-->
+                              <div ng-if="card.fieldtypeid === 2">
+
+                                <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
+                                  <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                  <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                    <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                    <small>
+                                      <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                    </small>
+                                  </ui-select-choices>
+                                </ui-select>
+                              </div>
+
+                              <!--multi select list input type-->
+                              <div ng-if="card.fieldtypeid === 3">
+                                <div
+                                  isteven-multi-select
+                                  input-model="card.fieldtypeContent"
+                                  output-model="metadataCtrl.metaData[card.id]"
+                                  button-label="value"
+                                  item-label="value"
+                                  tick-property="ticked"
+                                  output-properties="value">
                                 </div>
-                              </td>
-                            </tr>
-                          </table>
+                              </div>
+                            </div>
+
+                          </div>
                         </div>
+                        <hr>
                       </div>
                     </li>
                   </ul>
