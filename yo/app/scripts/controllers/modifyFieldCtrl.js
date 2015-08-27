@@ -88,6 +88,12 @@ var mainModule = angular.module('hopsWorksApp')
                         fieldtypeid: self.selectedItem.id, fieldtypeContent: fieldTypeContent});
                     };
 
+                    self.hitEnter = function (evt) {
+                      if (angular.equals(evt.keyCode, 13)) {
+                        self.modifyField();
+                      }
+                    };
+
                     self.cancel = function () {
                       $modalInstance.dismiss('canceled');
                     };
@@ -110,7 +116,6 @@ var mainModule = angular.module('hopsWorksApp')
                     };
 
                     self.addNewSelectChoice = function (index) {
-                      var newItemNo = self.fieldSelectItems.length + 1;
 
                       switch (index) {
                         case 1:

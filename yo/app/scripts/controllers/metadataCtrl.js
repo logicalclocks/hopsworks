@@ -71,7 +71,7 @@ angular.module('hopsWorksApp')
              */
             self.toggleTemplate = function (template) {
               //disable toggling when a template name is being edited
-              if(self.editingTemplate){
+              if (self.editingTemplate) {
                 return;
               }
               //reset all templates showing flag
@@ -80,33 +80,33 @@ angular.module('hopsWorksApp')
                   temp.showing = false;
                 }
               });
-              
+
               //handle the clicked template accordingly
               template.showing = !template.showing;
               self.currentTemplateID = template.id;
-              
+
               //if all templates are deselected hide the add new table button
               if (!template.showing) {
                 self.currentTemplateID = -1;
                 self.currentBoard = {};
               }
             };
-            
+
             /**
              * Updates a template name
              * 
              * @param {type} template
              * @returns {undefined}
              */
-            self.updateTemplateName = function(template){
+            self.updateTemplateName = function (template) {
               MetadataActionService.updateTemplateName($cookies['email'], template)
-                      .then(function(response){
+                      .then(function (response) {
                         console.log(JSON.stringify(response));
                         self.editingTemplate = false;
                         self.currentTemplateID = -1;
                       });
             };
-            
+
             /**
              * Creates a new template from an existing one
              * 
@@ -156,7 +156,7 @@ angular.module('hopsWorksApp')
               if (self.currentTemplateID === -1) {
                 return;
               }
-              
+
               MetadataActionService.fetchTemplate($cookies['email'], templateId)
                       .then(function (success) {
                         /*
@@ -380,28 +380,21 @@ angular.module('hopsWorksApp')
              * @param {type} column
              * @returns {undefined}
              */
-            self.addCard = function (column) {
+            self.addField = function (column) {
               $scope.currentColumn = column;
-              var modalInstance = $modal.open({
-                templateUrl: 'views/metadata/newCardModal.html',
-                controller: 'ModifyFieldCtrl as modifyFieldCtrl',
-                scope: $scope
-              })
-                      .result.then(function (card) {
 
-                        console.log('Created card, ready to send:');
-                        console.log(JSON.stringify(card));
-
-                        MetadataActionService.storeCard($cookies['email'], self.currentTemplateID, column, card)
+              ModalService.addNewField($scope)
+                      .then(function (field) {
+                        console.log("NEW FIELD " + JSON.stringify(field));
+                
+                        MetadataActionService.storeCard($cookies['email'], self.currentTemplateID, column, field)
                                 .then(function (success) {
-                                  console.log(success);
+                                  growl.success("Field " + field.title + " saved successfully", {title: 'Success', ttl: 5000});
                                   self.fetchTemplate(self.currentTemplateID);
                                 }, function (error) {
                                   console.log(error);
+                                  growl.info("Could save field " + field.title + ".", {title: 'Info', ttl: 5000});
                                 });
-
-                      }, function (error) {
-                        console.log(error);
                       });
             };
 

@@ -15,14 +15,28 @@
 
       <label class="control-label" ng-disabled="modifyFieldCtrl.existingRawData === true" for="fieldName">Field name</label>
       <div>
-        <input type="text" id="fieldName" ng-disabled="modifyFieldCtrl.existingRawData === true" placeholder="Name of the field" ng-model="modifyFieldCtrl.fieldName" required
-               focus-me class="cardInputs form-control"/>
+        <input type="text" name="fieldName" ng-disabled="modifyFieldCtrl.existingRawData === true" 
+               placeholder="Name of the field" ng-model="modifyFieldCtrl.fieldName" 
+               required
+               focus-me class="cardInputs form-control" ng-keyup="modifyFieldCtrl.hitEnter($event)"/>
+
+        <div class="alert alert-danger fade in" ng-show="modifyFieldForm.fieldName.$error.required">
+          <a href="#" class="close" data-dismiss="alert">&times;</a>
+          <strong>A field name</strong> is required.
+        </div>
       </div>
 
       <label class="control-label" ng-disabled="modifyFieldCtrl.existingRawData === true" for="fieldDescription">Field description</label>
       <div>
-        <input type="text" id="fieldDescription" ng-disabled="modifyFieldCtrl.existingRawData === true" placeholder="Description of the field" ng-model="modifyFieldCtrl.fieldDescription" required
-               focus-me class="cardInputs form-control"/>
+        <input type="text" name="fieldDescription" ng-disabled="modifyFieldCtrl.existingRawData === true" 
+               placeholder="Description of the field" ng-model="modifyFieldCtrl.fieldDescription" 
+               required
+               focus-me class="cardInputs form-control" ng-keyup="modifyFieldCtrl.hitEnter($event)"/>
+        
+        <div class="alert alert-danger fade in" ng-show="modifyFieldForm.fieldDescription.$error.required">
+          <a href="#" class="close" data-dismiss="alert">&times;</a>
+          <strong>A field description</strong> is required.
+        </div>
       </div>
 
       <p></p>

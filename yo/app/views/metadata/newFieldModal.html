@@ -1,46 +1,75 @@
 <!-- New Card template -->
 
-<form ng-submit="saveCard()" class="noMargin" name="newCardForm">
+<form ng-submit="newFieldCtrl.saveField()" class="form-validate noMargin" name="newFieldForm">
   <div class="modal-header">
 
-
-    <button type="button" class="close" ng-click="cancel()">&times;</button>
-    <h2 class="modal-title" ng-model="columnName">Add New Field in '{{currentColumn.name}}'</h2>
+    <button type="button" class="close" ng-click="newFieldCtrl.cancel()">&times;</button>
+    <h2 class="modal-title" ng-model="newFieldCtrl.columnName">Add New Field in '{{newFieldCtrl.columnName}}'</h2>
   </div>
   <div class="modal-body">
     <div class="form-group">
       <label class="control-label" for="newFieldTitle">Field title</label>
       <div>
-        <input type="text" id="newFieldTitle" placeholder="Title on a field" ng-model="title" required
-               focus-me class="cardInputs form-control" ng-keyup="hitEnter($event)"/>
+        <input type="text" id="newfield_name" name="newFieldName" placeholder="Name of the field" ng-model="newFieldCtrl.name" 
+               required
+               focus-me class="cardInputs form-control" ng-keyup="newFieldCtrl.hitEnter($event)"/>
+
+<!--        <span
+          ng-show="newFieldForm.$submitted &amp;&amp; newFieldForm.newFieldName.$error.required"
+          class="alert alert-danger fade in">
+          <strong>A field name</strong> is required.
+        </span>-->
+          
+        <div class="alert alert-danger fade in" ng-show="newFieldForm.$submitted &amp;&amp; newFieldForm.newFieldName.$error.required">
+          <a class="close" data-dismiss="alert">&times;</a>
+          <strong>A field name</strong> is required.
+        </div>
       </div>
 
       <label class="control-label" for="newFieldDescription" style="margin-top: 20px;">Field Description</label>
       <div>
-        <input type="text" id="newFieldDescription" placeholder="Description of a field" ng-model="description" required
-               focus-me class="cardInputs form-control"/>
+        <input type="text" name="newfield_description" placeholder="Description of the field" ng-model="newFieldCtrl.description" 
+               required
+               focus-me class="cardInputs form-control" ng-keyup="newFieldCtrl.hitEnter($event)"/>
+
+        <div class="alert alert-danger fade in" ng-show="newFieldForm.$submitted &amp;&amp; newFieldForm.newfield_description.$error.required">
+          <a class="close" data-dismiss="alert">&times;</a>
+          <strong>A field description</strong> is required.
+        </div>
       </div>
 
       <label class="control-label" for="newFieldType" style="margin-top: 20px;">Field Type</label>
       <div>
-        <select id="newFieldType" ng-model="selectedItem" ng-change="update()" ng-options="item as item.name for item in items"></select>
+        <ui-select ng-model="newFieldCtrl.selectedItem" theme="select2"
+                   on-select="newFieldCtrl.update()" style="min-width: 130px;">
+
+          <ui-select-match placeholder="Select a field type...">{{$select.selected.name}}</ui-select-match>
+
+          <ui-select-choices repeat="item in newFieldCtrl.items | filter: $select.search">
+            <small>
+              <span ng-bind-html="'' + item.name"></span>
+            </small>
+          </ui-select-choices>
+        </ui-select>
       </div>
     </div>
 
     <div class="">
-      <fieldset  data-ng-repeat="choice in fieldSelectItems">
+      <fieldset  data-ng-repeat="choice in newFieldCtrl.fieldSelectItems">
         <input type="text" ng-model="choice.value" name="" placeholder="Enter a value">
-        <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="addNewSelectChoice()"></button>
-        <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="removeSelectChoice()"></button>
+        <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="newFieldCtrl.addNewSelectChoice(1)"></button>
+        <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="newFieldCtrl.removeSelectChoice(1)"></button>
       </fieldset>
 
-      <fieldset  data-ng-repeat="choice in yesNoItems">
-        <input type="text" ng-model="choice.value" name="" placeholder="Enter a yes/no choice">
+      <fieldset  data-ng-repeat="choice in newFieldCtrl.multiSelectItems">
+        <input type="text" ng-model="choice.value" name="" placeholder="Enter a multi-select value">
+        <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="newFieldCtrl.addNewSelectChoice(2)"></button>
+        <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="newFieldCtrl.removeSelectChoice(2)"></button>
       </fieldset>
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-default" ng-click="cancel()">Close</button>
-    <button type="button" class="btn btn-primary" ng-click="saveCard()">Add</button>
+    <button type="button" class="btn btn-default" ng-click="newFieldCtrl.cancel()">Close</button>
+    <button type="button" class="btn btn-primary" ng-click="newFieldCtrl.saveField()">Add</button>
   </div>
 </form>

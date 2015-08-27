@@ -117,9 +117,10 @@ div.story h3, div.task h3 {
 .card {
   box-shadow: 1px 1px 3px #999;
   background: none repeat scroll 0 0 white;
-  border-radius: 10px;
-  margin-top: 7px;
-  padding: 10px;
+  border-radius: 5px;
+  /* margin-top: 2px;*/
+  padding: 5px;
+  margin: 1px 2px 3px 1px;
 }
 .card-title {
   color: #7c9eb2;

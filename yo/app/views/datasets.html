@@ -236,9 +236,9 @@
                            name="x" placeholder="Find a template...">
                   </div>
                   <ul class="datasetList btn-primary">
-                    <li ng-repeat="template in metadataCtrl.availableTemplates | filter: searchTemplate: false"
+                    <li ng-repeat="template in metadataCtrl.availableTemplates| filter: searchTemplate: false"
                         ng-click="metadataCtrl.toggleTemplate(template);
-                                  metadataCtrl.fetchTemplate(template.id)"
+                                          metadataCtrl.fetchTemplate(template.id)"
                         context-menu
                         data-target="templateMenu-{{$index}}"
                         tooltip="{{template.name}}">
@@ -251,11 +251,11 @@
                         <!--onaftersave="metadataCtrl.updateTemplateName(template)"-->
                         <a href="#" editable-text="template.name" buttons="no"
                            style="color:white; font-size: 14px;"
-                           ng-mousedown="metadataCtrl.editingTemplate='true';"
+                           ng-mousedown="metadataCtrl.editingTemplate = 'true';"
                            ng-click="$event.stopPropagation()"
                            onaftersave="metadataCtrl.updateTemplateName(template)"
                            blur="submit">
-                          {{template.name | cut:true:10:' ...'}}
+                          {{template.name| cut:true:10:' ...'}}
                         </a>
 
                         <button class="btn btn-danger pull-right"
@@ -308,22 +308,25 @@
                   <div class="col-md-4">
 
                     <div class="panel panel-default">
-                      <div class="modal-header" style="border-bottom: 3px solid #46b8da;">
+                      <div class="panel-heading" style="background-color: #4b91ea; border-bottom: 3px solid #46b8da;">
 
                         <div align="right">
-                          <a ng-click="metadataCtrl.addCard(column)"
-                             title="Add card to table">
-                            <i class="fa fa-plus addNewCard"></i>
-                          </a>
+                          <button class="btn btn-success pull-right" ng-click="metadataCtrl.addField(column)"
+                             tooltip="Add card to table"
+                             style="margin-top: 1px; width: 20px; height: 20px;padding:2px;">
+                            <!--<i class="fa fa-plus addNewCard"></i>-->
+                              <i class="fa fa-plus"></i>
+                          </button>
 
-                          <a ng-click="metadataCtrl.checkDeleteTable(column)"
-                             title="Remove table">
-                            <i class="fa fa-trash-o removeList"></i>
-                          </a>
+                          <button class="btn btn-danger pull-right" ng-click="metadataCtrl.checkDeleteTable(column)"
+                             tooltip="Remove table"
+                             style="margin-top: 1px; width: 20px; height: 20px; padding:2px;">
+                            <i class="fa fa-trash-o"></i>
+                          </button>
                         </div>
 
                         <span editable-text="column.name"
-                              style="font-size: 16px;"
+                              style="color:white; font-size: 16px;"
                               onaftersave="metadataCtrl.storeTemplate()"
                               class="column-title ng-binding">
                           {{column.name}}

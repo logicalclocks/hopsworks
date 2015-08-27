@@ -8,22 +8,24 @@ angular.module('hopsWorksApp')
         .controller('NewFieldCtrl', ['$cookies', '$scope', '$modalInstance', 'MetadataActionService', '$filter',
           function ($cookies, $scope, $modalInstance, MetadataActionService, $filter) {
 
-            //data is the actual column under processing
-            $scope.columnName = $scope.currentColumn.name;
-            $scope.id = -1;
-            $scope.title = '';
-            $scope.details = '';
-            $scope.description = '';
-            $scope.cardType = '';
-            $scope.editing = false;
-            $scope.find = false;
-            $scope.required = false;
-            $scope.sizefield = {showing: false, value: ""};
+            var self = this;
 
-            $scope.items = [];
-            $scope.fieldSelectItems = [];
-            $scope.yesNoItems = [];
-            $scope.selectedItem = "";
+            //data is the actual column under processing
+            self.columnName = $scope.currentColumn.name;
+            self.id = -1;
+            self.name = '';
+            self.details = '';
+            self.description = '';
+            self.cardType = '';
+            self.editing = false;
+            self.find = false;
+            self.required = false;
+            self.sizefield = {showing: false, value: ""};
+
+            self.items = [];
+            self.fieldSelectItems = [];
+            self.multiSelectItems = [];
+            self.selectedItem = "";
 
             MetadataActionService.fetchFieldTypes($cookies['email'])
                     .then(function (success) {
@@ -33,48 +35,43 @@ angular.module('hopsWorksApp')
                        * the first one
                        */
                       var ordered = $filter('orderBy')(success.fieldTypes, 'id', false);
-                      console.log("ORDERED TYPES " + JSON.stringify(ordered));
 
                       //construct the select component's contents
                       angular.forEach(ordered, function (type) {
-                        $scope.items.push({
-                          id: type.id,
-                          name: type.description
-                        });
+                        self.items.push({id: type.id, name: type.description});
                       });
 
-                      $scope.selectedItem = $scope.items[0];
+                      self.selectedItem = self.items[0];
                     },
                             function (error) {
                               console.log(error);
                             });
 
             // Dialog service
-            $scope.cancel = function () {
+            self.cancel = function () {
               $modalInstance.dismiss('Canceled');
             };
 
-            $scope.saveCard = function () {
-              if (!this.newCardForm.$valid) {
-                console.log('false');
+            self.saveField = function () {
+              if (!$scope.newFieldForm.$valid) {
                 return false;
               }
 
               var fieldTypeContent = [];
-              switch ($scope.selectedItem.id) {
+              switch (self.selectedItem.id) {
                 case 1:
                   fieldTypeContent = [{id: -1, fieldid: -1, value: ""}];
                   break;
                 case 2:
-                  fieldTypeContent = $scope.fieldSelectItems;
+                  fieldTypeContent = self.fieldSelectItems;
                   break;
                 case 3:
-                  fieldTypeContent = $scope.yesNoItems;
+                  fieldTypeContent = self.multiSelectItems;
               }
 
               $modalInstance.close({
                 id: this.id,
-                title: this.title,
+                title: this.name,
                 details: this.details,
                 editing: this.editing,
                 find: this.find,
@@ -86,42 +83,53 @@ angular.module('hopsWorksApp')
               });
             };
 
-            $scope.hitEnter = function (evt) {
-              if (angular.equals(evt.keyCode, 13))
-                $scope.saveCard();
-            };
-
-            $scope.update = function () {
-
-              switch ($scope.selectedItem.id) {
-                case 1:
-                  $scope.yesNoItems = [];
-                  $scope.fieldSelectItems = [];
-                  break;
-                case 2:
-                  $scope.yesNoItems = [];
-                  $scope.addNewSelectChoice();
-                  break;
-                case 3:
-                  $scope.fieldSelectItems = [];
-                  $scope.addYesnoChoice();
+            self.hitEnter = function (evt) {
+              if (angular.equals(evt.keyCode, 13)) {
+                self.saveField();
+                console.log("enter was hit");
               }
             };
 
-            $scope.addNewSelectChoice = function () {
-              var newItemNo = $scope.fieldSelectItems.length + 1;
-              //$scope.choices.push({'id': 'choice' + newItemNo});
-              $scope.fieldSelectItems.push({id: -1, fieldid: -1, value: ""});
+            self.update = function () {
+
+              switch (self.selectedItem.id) {
+                case 1:
+                  self.multiSelectItems = [];
+                  self.fieldSelectItems = [];
+                  break;
+                case 2:
+                  self.multiSelectItems = [];
+                  self.addNewSelectChoice(1);
+                  break;
+                case 3:
+                  self.fieldSelectItems = [];
+                  self.addNewSelectChoice(2);
+              }
             };
 
-            $scope.removeSelectChoice = function () {
-              var lastItem = $scope.fieldSelectItems.length - 1;
-              //$scope.choices.splice(lastItem);
-              $scope.fieldSelectItems.splice(lastItem);
+            self.addNewSelectChoice = function (index) {
+
+              switch (index) {
+                case 1:
+                  //add a single selection item
+                  self.fieldSelectItems.push({id: -1, fieldid: -1, value: ""});
+                  break;
+                case 2:
+                  self.multiSelectItems.push({id: -1, fieldid: -1, value: ""});
+              }
+
             };
 
-            $scope.addYesnoChoice = function () {
-              $scope.yesNoItems.push({id: -1, fieldid: -1, value: ""});
-              $scope.yesNoItems.push({id: -1, fieldid: -1, value: ""});
+            self.removeSelectChoice = function (index) {
+
+              switch (index) {
+                case 1:
+                  var lastItem = self.fieldSelectItems.length - 1;
+                  self.fieldSelectItems.splice(lastItem);
+                  break;
+                case 2:
+                  var lastItem = self.multiSelectItems.length - 1;
+                  self.multiSelectItems.splice(lastItem);
+              }
             };
           }]);

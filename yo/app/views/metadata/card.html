@@ -17,47 +17,43 @@
               tooltip="This field is searchable"></span>
       </span>
 
-      <span>
+      <div class="btn-group pull-right">
         <a data-no-drag
-           class="removeButton pull-right"
+           class="removeButton btn pull-right"
            tooltip="delete this field"
            title="delete card"
-           style="margin-top: 1px; width: 20px; height: 20px;padding:2px;"
+           style="width: 20px; height: 20px;padding:2px;"
            ng-click="metadataCtrl.checkDeleteField(column, card)">
           <i class="fa fa-trash-o"></i>
         </a>
-      </span>
 
-      <span>
-        <div class="btn-group pull-right">
-          <a class="btn dropdown-toggle" data-toggle="dropdown"
-             style="width: 20px; height: 20px;padding:2px;"
-             tooltip="configure this field">
-            <i class="fa fa-cog"></i>
-          </a>
+        <a class="btn dropdown-toggle" data-toggle="dropdown"
+           style="width: 20px; height: 20px;padding:2px;"
+           tooltip="configure this field">
+          <i class="fa fa-cog"></i>
+        </a>
 
-          <ul class="dropdown-menu dropdown-amore">
-            <li>
-              <a ng-click="metadataCtrl.makeSearchable(card);
-                $event.stopPropagation()">
-                <i class="searchable-{{card.find}} fa fa-search"></i> Searchable
-              </a>
-            </li>
-            <li>
-              <a ng-click="metadataCtrl.makeRequired(card);
-                $event.stopPropagation()">
-                <i class="required-{{card.required}} fa fa-asterisk"></i> Required
-              </a>
-            </li>
-            <li class="divider"></li>
-            <li>
-              <a ng-click="metadataCtrl.modifyField(column, card)">
-                <i class="fa fa-edit"></i> Edit field...
-              </a>
-            </li>
-          </ul>
-        </div>
-      </span>
+        <ul class="dropdown-menu dropdown-amore">
+          <li>
+            <a ng-click="metadataCtrl.makeSearchable(card);
+              $event.stopPropagation()">
+              <i class="searchable-{{card.find}} fa fa-search"></i> Searchable
+            </a>
+          </li>
+          <li>
+            <a ng-click="metadataCtrl.makeRequired(card);
+              $event.stopPropagation()">
+              <i class="required-{{card.required}} fa fa-asterisk"></i> Required
+            </a>
+          </li>
+          <li class="divider"></li>
+          <li>
+            <a ng-click="metadataCtrl.modifyField(column, card)">
+              <i class="fa fa-edit"></i> Edit field...
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>
