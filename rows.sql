@@ -14,7 +14,7 @@ INSERT INTO `bbc_group` (`group_name`, `group_desc`, `gid`) VALUES
 
 INSERT INTO `meta_field_types` (`id`, `description`) VALUES
 (1, 'text'),
-(2, 'value list'),
+(2, 'single-select value list'),
 (3, 'multi-select value list');
 
 -- --------------------------------------------------------

@@ -7,6 +7,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import se.kth.meta.entity.EntityIntf;
@@ -26,7 +28,7 @@ public class StoreMetadataMessage extends MetadataMessage {
     super();
     super.TYPE = "StoreMetadataMessage";
   }
-  
+
   /**
    * Used to send custom messages
    *
@@ -40,10 +42,10 @@ public class StoreMetadataMessage extends MetadataMessage {
   }
 
   //returns the inode id and table id wrapped in an entity class in a list
-  public List<EntityIntf> superParseSchema(){
+  public List<EntityIntf> superParseSchema() {
     return super.parseSchema();
   }
-  
+
   @Override
   public List<EntityIntf> parseSchema() {
     JsonObject obj = Json.createReader(new StringReader(this.message)).
@@ -57,10 +59,34 @@ public class StoreMetadataMessage extends MetadataMessage {
       RawData raw = new RawData();
 
       //avoid the inodeid field as it has been accessed previously
+      //keys are the field ids
       if (isNumeric(entry.getKey())) {
         //set the field id and the actual data
         raw.setFieldid(Integer.parseInt(entry.getKey()));
-        raw.setData(entry.getValue().toString());
+
+        if (entry.getValue().getValueType() == JsonValue.ValueType.STRING) {
+          raw.setData(entry.getValue().toString());
+        } else if (entry.getValue().getValueType() == JsonValue.ValueType.ARRAY) {
+          /*
+           * build a json array out of the string and then iterate through it
+           * to get the actual values
+           */
+          JsonArray array = Json.
+                  createReader(new StringReader(entry.getValue().toString())).
+                  readArray();
+
+          String multiValues = "";
+          //scan the array and extract the values
+          for (JsonValue value : array) {
+            JsonObject object = Json.
+                    createReader(new StringReader(value.toString())).
+                    readObject();
+
+            multiValues += object.getString("value") + "-";
+          }
+          multiValues = multiValues.substring(0, multiValues.length() - 2);
+          raw.setData(multiValues);
+        }
         data.add(raw);
       }
     }

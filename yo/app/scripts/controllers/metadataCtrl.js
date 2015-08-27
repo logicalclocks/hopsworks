@@ -30,6 +30,14 @@ angular.module('hopsWorksApp')
             self.editingTemplate = false;
             var dataSetService = DataSetService($routeParams.projectID);
 
+            self.modernBrowsers = [
+              {id: "Opera", ticked: true},
+              {id: "Internet Explorer", ticked: false},
+              {id: "Firefox", ticked: true},
+              {id: "Safari", ticked: false},
+              {id: "Chrome", mticked: true}
+            ];
+
             //fetch all the available templates
             MetadataHelperService.fetchAvailableTemplates()
                     .then(function (response) {
@@ -386,7 +394,7 @@ angular.module('hopsWorksApp')
               ModalService.addNewField($scope)
                       .then(function (field) {
                         console.log("NEW FIELD " + JSON.stringify(field));
-                
+
                         MetadataActionService.storeCard($cookies['email'], self.currentTemplateID, column, field)
                                 .then(function (success) {
                                   growl.success("Field " + field.title + " saved successfully", {title: 'Success', ttl: 5000});
@@ -494,7 +502,6 @@ angular.module('hopsWorksApp')
                                   self.currentBoard = JSON.parse(response.board);
                                   growl.success("Field " + field.title + " modified successfully", {title: 'Success', ttl: 5000});
                                 });
-
                       });
             };
 
@@ -510,18 +517,21 @@ angular.module('hopsWorksApp')
                       .then(function (response) {
                         growl.success(response.board, {title: 'Success', ttl: 5000});
                       }, function (dialogResponse) {
-                        growl.info("Could not update metadata " + raw.raw + ".",
-                                {title: 'Info', ttl: 5000});
+                        growl.info("Could not update metadata " + raw.raw + ".", {title: 'Info', ttl: 5000});
                       });
             };
 
+            /**
+             * When the user clicks on a folder/file in the file browser the self.currentFile gets updated
+             * @param {type} file
+             * @returns {undefined}
+             */
             self.setMetadataTemplate = function (file) {
-
-              console.log("SELECTED FILE " + JSON.stringify(file));
 
               var templateId = file.template;
               self.currentTemplateID = templateId;
               MetadataHelperService.setCurrentFile(file);
+              self.currentFile = MetadataHelperService.getCurrentFile();
 
               MetadataActionService.fetchTemplate($cookies['email'], templateId)
                       .then(function (response) {
@@ -629,6 +639,11 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            /**
+             * Uploads a .json template file to the file system and the database
+             * 
+             * @returns {undefined}
+             */
             self.importTemplate = function () {
               ModalService.importTemplate('md')
                       .then(function (resp) {

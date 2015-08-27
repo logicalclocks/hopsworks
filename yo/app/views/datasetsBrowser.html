@@ -68,7 +68,7 @@
                           <th></th>
                           </thead>
 
-                          <tbody ui-sortable ng-model="datasetsCtrl.files">
+                          <tbody ng-model="datasetsCtrl.files">
 
                             <tr ng-click="datasetsCtrl.back()">
                               <td style="padding: 0px" colspan="4">&nbsp &nbsp
@@ -229,7 +229,7 @@
                             </md-tab>
                             <md-tab label="Activity">
                               <md-content class="md-padding" style="padding-left: 20px;padding-right: 20px;">
-                                
+
                                 <div class="row">
                                   <span
                                     style="color: #444;font-size: 11px; margin-bottom: 10px;padding: 16px 6px 6px;text-transform: uppercase;">
@@ -329,7 +329,7 @@
 
           </md-toolbar>
           <md-content layout-padding>
-            <p>Associating metadata to: <a ng-href="{{returnnUrl}}"><b>'{{metadataCtrl.currentFile.name}}'</b></a></p>
+            <p>Associating metadata to: <a><b>'{{metadataCtrl.currentFile.name}}'</b></a></p>
 
             <label class="control-label" ng-show="datasetsCtrl.currentTemplateID === - 1">
               <font color="red">There is no template attached to file {{metadataCtrl.currentFile.name}}</font>
@@ -338,11 +338,12 @@
 
             <tabset justified="false">
               <tab ng-repeat="tab in metadataCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
-                   disabled="tab.disabled" select="datasetsCtrl.onTabSelect(tab)">
+                   disabled="tab.disabled" select="metadataCtrl.onTabSelect(tab)">
 
-                <form name="{{tab.title}}{{$index}}" ng-submit="metadataCtrl.submitMetadata(metadataCtrl.metaData)">
+                <form name="{{tab.title}}{{$index}}" ng-submit="metadataCtrl.submitMetadata(metadataCtrl.metaData)"
+                       style="padding-bottom: 150px;">
 
-                  <ul class="cards card-list" as-sortable="sortOptions" ng-model="column.cards">
+                  <ul class="cards card-list" ng-model="column.cards">
                     <li class="card" ng-repeat="card in tab.cards">
                       <div>
                         <div class="row">
@@ -363,7 +364,7 @@
                                          ng-model="metadataCtrl.metaData[card.id]"/>
                                 </div>
 
-                                <!--select list input type-->
+                                <!--single select list input type-->
                                 <div ng-if="card.fieldtypeid === 2">
 
                                   <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
@@ -377,14 +378,17 @@
                                   </ui-select>
                                 </div>
 
-                                <!--yes/no input type-->
+                                <!--multi select list input type-->
                                 <div ng-if="card.fieldtypeid === 3">
-                                  {{card.fieldtypeContent[0].value}} / {{card.fieldtypeContent[1].value}}
-                                  <input type="checkbox" ng-model="card.fieldtypeContent[0].value"
-                                         tooltips title="{{card.description}}"
-                                         ng-checked="true"
-                                         ng-change=''
-                                         ng-true-value="'{{card.fieldtypeContent[0].value}}'" ng-false-value="'{{card.fieldtypeContent[1].value}}'"/>
+                                  <div
+                                    isteven-multi-select
+                                    input-model="card.fieldtypeContent"
+                                    output-model="metadataCtrl.metaData[card.id]"
+                                    button-label="value"
+                                    item-label="value"
+                                    tick-property="ticked"
+                                    output-properties="value">
+                                  </div>
                                 </div>
                               </td>
                             </tr>
@@ -394,14 +398,17 @@
                     </li>
                   </ul>
                   <hr/>
-                  <button class="btn btn-default">
-                    <i class="glyphicon glyphicon-floppy-save"></i>
-                    Save
-                  </button>
-                  <button class="btn btn-default" type="button" ng-click="datasetsCtrl.close()">
-                    <i class="glyphicon glyphicon-chevron-left"></i>
-                    Back
-                  </button>
+                  <div>
+                    <button class="btn btn-default">
+                      <i class="glyphicon glyphicon-floppy-save"></i>
+                      Save
+                    </button>
+                    <button class="btn btn-default" type="button"
+                            ng-click="datasetsCtrl.close()">
+                      <i class="glyphicon glyphicon-chevron-left"></i>
+                      Back
+                    </button>
+                  </div>
                 </form>
               </tab>
             </tabset>

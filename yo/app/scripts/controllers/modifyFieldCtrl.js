@@ -32,7 +32,6 @@ var mainModule = angular.module('hopsWorksApp')
                                 self.items.push({id: value.id, name: value.description});
 
                                 if (value.id === $scope.field.fieldtypeid) {
-                                  console.log("selected item id " + JSON.stringify(value));
                                   self.selectedItem = self.items[key];
                                 }
                               });
@@ -51,7 +50,7 @@ var mainModule = angular.module('hopsWorksApp')
                         self.fieldType = "'a text field'";
                         break;
                       case 2:
-                        self.fieldType = "'a dropdown list'";
+                        self.fieldType = "'a single-select dropdown list'";
                         self.fieldTypeValues = "Existing values: ";
                         angular.forEach($scope.field.fieldtypeContent, function (value, key) {
                           self.fieldTypeValues += value.value + ", ";

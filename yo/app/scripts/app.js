@@ -21,7 +21,8 @@ angular.module('hopsWorksApp', [
   'flow',
   'ngMaterial',
   'ngMessages',
-  'as.sortable'
+  'as.sortable',
+  'isteven-multi-select'
 ])
         .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider',
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider) {

@@ -41,7 +41,7 @@
       <label class="control-label" for="newFieldType" style="margin-top: 20px;">Field Type</label>
       <div>
         <ui-select ng-model="newFieldCtrl.selectedItem" theme="select2"
-                   on-select="newFieldCtrl.update()" style="min-width: 130px;">
+                   on-select="newFieldCtrl.update()" style="min-width: 150px;">
 
           <ui-select-match placeholder="Select a field type...">{{$select.selected.name}}</ui-select-match>
 
@@ -56,7 +56,7 @@
 
     <div class="">
       <fieldset  data-ng-repeat="choice in newFieldCtrl.fieldSelectItems">
-        <input type="text" ng-model="choice.value" name="" placeholder="Enter a value">
+        <input type="text" ng-model="choice.value" name="" placeholder="Enter a single-select value">
         <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="newFieldCtrl.addNewSelectChoice(1)"></button>
         <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="newFieldCtrl.removeSelectChoice(1)"></button>
       </fieldset>
