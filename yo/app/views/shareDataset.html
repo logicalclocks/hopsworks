@@ -1,0 +1,112 @@
+<div class="modal-header">
+    <button class="close" ng-click="shareDatasetCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;</button>
+    <h2 class="modal-title">Share DataSet</h2>
+</div>
+<div class="modal-body">
+    <form role="form" name="dataSetForm" ng-submit="shareDatasetCtrl.shareDataset()" novalidate
+          class="form-validate">
+        <div class="row">
+            <fieldset>
+                <div class="control-group col-md-offset-1" style="margin-right: 8.33333%;">
+                    <div class="form-group has-feedback">
+                        <label class="text-muted control-label">Projects</label><br>
+                        <div class="btn-group btn-group" role="group" aria-label="..." style="min-width: 100%">
+                            <div class="btn-group" role="group" style="width: 21%">
+
+                                    <button type="button"
+                                            class="btn btn-default dropdown-toggle"
+                                            data-toggle="dropdown"
+                                            aria-haspopup="true" aria-expanded="false">
+                                        <span id="search_concept">Filter by</span>
+                                        <span class="caret"></span>
+                                    </button>
+
+                                    <ul class="dropdown-menu" role="menu" style="min-width: 115px">
+                                        <li><a > All</a></li>
+                                        <li><a > Requested</a></li>
+                                    </ul>
+
+                            </div>
+
+                            <div class="btn-group" role="group" style="width: 56%">
+                                <div type="button" class="btn btn-default" style="padding: 3px;width: 295px;margin-left: -17px">
+                                    <ui-select name="project_name" theme="select2"
+                                               ng-model="shareDatasetCtrl.dataSet.projectId" style="width: 285px" required>
+
+                                        <ui-select-match placeholder="Select a project to share with">{{$select.selected.name}}</ui-select-match>
+
+                                        <ui-select-choices repeat="project.id as project in shareDatasetCtrl.projects | filter: $select.search">
+                                            <div ng-bind-html="project.name | highlight: $select.search"></div>
+                                            <small>
+                                                Owner: {{project.owner.fname}} {{project.owner.lname}}
+                                            </small>
+                                        </ui-select-choices>
+
+                                    </ui-select><br>
+                                    <span ng-show="(dataSetForm.$submitted || dataSetForm.project_name.$dirty) &amp;&amp;
+                                          dataSetForm.project_name.$error.required"
+                                          class="text-danger ng-hide">
+                                        Choose a project to share with.
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="btn-group" role="group" style="width: 15%">
+
+                                    <button type="button"
+                                            class="btn btn-default dropdown-toggle"
+                                            data-toggle="dropdown"
+                                            aria-haspopup="true" aria-expanded="false">
+                                        <span ng-if="!shareDatasetCtrl.dataSet.editable" id="view_concept">
+                                            <span class="glyphicon glyphicon-eye-open"></span> Can view
+                                        </span>
+                                        <span ng-if="shareDatasetCtrl.dataSet.editable" id="edit_concept">
+                                            <span class="glyphicon glyphicon-edit"></span> Can edit
+                                        </span>
+                                        <span class="caret"></span>
+                                    </button>
+
+                                    <ul class="dropdown-menu" role="menu" style="min-width: 115px;">
+                                        <li><a ng-click="shareDatasetCtrl.dataSet.editable = false">
+                                            <span class="glyphicon glyphicon-eye-open"></span>
+                                            Can view</a></li>
+                                        <li><a ng-click="shareDatasetCtrl.dataSet.editable = true">
+                                            <span class="glyphicon glyphicon-edit"></span>
+                                            Can edit</a></li>
+                                    </ul>
+
+                            </div>
+                        </div>
+                    <p></p>
+                    <div>
+                    <label class="text-muted control-label">Description</label>
+
+                    <div class="controls">
+                      <textarea class="form-control" style="resize:none;"
+                                ng-model="shareDatasetCtrl.dataSet.description"
+                                rows="3">
+                      </textarea>
+                    </div>
+
+                    </div>
+                </div>
+                </div>
+            </fieldset>
+            <fieldset>
+                <div class="col-md-1">
+
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
+
+            <button class="btn btn-default" type="button" ng-click="shareDatasetCtrl.close()">Cancel</button>
+            <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.dataSet_name.$error.required">
+                Share
+            </button>
+
+        </div>
+    </form>
+</div>

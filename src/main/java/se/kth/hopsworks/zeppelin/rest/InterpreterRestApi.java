@@ -43,7 +43,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import javax.ejb.EJB;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.zeppelin.notebook.Note;
+import org.apache.zeppelin.notebook.Paragraph;
+import org.apache.zeppelin.notebook.repo.NotebookRepo;
+import org.quartz.SchedulerException;
+import se.kth.bbc.project.Project;
+import se.kth.hopsworks.controller.ProjectController;
+import se.kth.hopsworks.controller.ResponseMessages;
+import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.rest.AppException;
+import se.kth.hopsworks.zeppelin.notebook.Notebook;
 import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
+import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 /**
  * Interpreter Rest API
@@ -54,7 +69,10 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
 public class InterpreterRestApi {
 
   Logger logger = LoggerFactory.getLogger(InterpreterRestApi.class);
-
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private ZeppelinResource zeppelinResource;
   private final InterpreterFactory interpreterFactory;
   private final ZeppelinSingleton zeppelin = ZeppelinSingleton.SINGLETON;
 
@@ -161,4 +179,107 @@ public class InterpreterRestApi {
     Map<String, RegisteredInterpreter> m = Interpreter.registeredInterpreters;
     return new JsonResponse(Status.OK, "", m).build();
   }
+
+  /**
+   * Start an interpreter
+   * <p>
+   * @param id
+   * @param settingId
+   * @return
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  @GET
+  @Path("{id}/start/{settingId}")
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response start(@PathParam("id") Integer id,
+          @PathParam("settingId") String settingId) throws
+          AppException {
+    logger.info("Starting interpreterSetting {}", settingId);
+    InterpreterSetting interpreterSetting = interpreterFactory.get(settingId);
+    Project project = projectController.findProjectById(id);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    NotebookRepo notebookRepo;
+    Notebook newNotebook;
+    Note note;
+    try {
+      notebookRepo = zeppelinResource.setupNotebookRepo(project);
+      newNotebook = new Notebook(notebookRepo);
+      note = newNotebook.createNote();
+    } catch (IOException | SchedulerException ex) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Could not create notebook" + ex.getMessage());
+    }
+    Paragraph p = note.addParagraph(); // it's an empty note. so add one paragraph
+    if (interpreterSetting.getGroup().equalsIgnoreCase("spark")) {
+      p.setText(" ");
+    } else {
+      p.setText("%" + interpreterSetting.getGroup() + " ");
+    }
+
+    note.run(p.getId());
+    //wait until starting job terminates
+    while (!note.getParagraph(p.getId()).isTerminated()) {
+    }
+    newNotebook.removeNote(note.id());
+
+    InterpreterDTO interpreterDTO
+            = new InterpreterDTO(interpreterSetting, false);
+    return new JsonResponse(Status.OK, "", interpreterDTO).build();
+  }
+
+  /**
+   * stop an interpreter
+   * <p>
+   * @param settingId
+   * @return nothing if successful.
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  @GET
+  @Path("stop/{settingId}")
+  public Response stop(@PathParam("settingId") String settingId) throws
+          AppException {
+    logger.info("Stoping interpreterSetting {}", settingId);
+    try {
+      interpreterFactory.restart(settingId);
+    } catch (InterpreterException e) {
+      return new JsonResponse(Status.BAD_REQUEST, e.getMessage(), e).build();
+    }
+
+    InterpreterSetting interpreterSetting = interpreterFactory.get(settingId);
+    //wait until the peocess is stoped.
+    while (zeppelinResource.isInterpreterRunning(interpreterSetting)) {
+    }
+
+    InterpreterDTO interpreter = new InterpreterDTO(interpreterSetting, true);
+    return new JsonResponse(Status.OK, "", interpreter).build();
+  }
+
+  /**
+   * list interpreters with status(running or not).
+   * <p>
+   * @return nothing if successful.
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  @GET
+  @Path("interpretersWithStatus")
+  public Response getinterpretersWithStatus() throws AppException {
+    Map<String, InterpreterDTO> interpreters = null;
+    interpreters = interpreters();
+    return new JsonResponse(Status.OK, "", interpreters).build();
+  }
+
+  private Map<String, InterpreterDTO> interpreters() throws AppException {
+    Map<String, InterpreterDTO> interpreterDTO = new HashMap<>();
+    List<InterpreterSetting> interpreterSettings;
+    interpreterSettings = interpreterFactory.get();
+    for (InterpreterSetting interpreter : interpreterSettings) {
+      interpreterDTO.put(interpreter.getGroup(), new InterpreterDTO(interpreter,
+              !zeppelinResource.isInterpreterRunning(interpreter)));
+    }
+    return interpreterDTO;
+  }
+
 }

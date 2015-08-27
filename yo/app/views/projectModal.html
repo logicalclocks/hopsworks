@@ -12,9 +12,8 @@
         <fieldset>
 
           <div class="control-group col-md-offset-1">
-
-            <md-input-container>
-              <label for="projectname" style="color: black;">Name</label>
+            <label for="projectname" style="color: black;">Name</label>
+            <md-input-container>            
               <input name="project_name" type="text" id="projectname"
                      ng-model="projectCreatorCtrl.projectName"
                      required
@@ -22,8 +21,7 @@
             </md-input-container>
 
             <span
-              ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) & amp;
-                  & amp;
+              ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.required"
               class="text-danger ng-hide">This field is required</span>
 

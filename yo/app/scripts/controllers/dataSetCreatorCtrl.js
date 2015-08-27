@@ -8,8 +8,8 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('DataSetCreatorCtrl', ['$modalInstance', 'DataSetService', 'MetadataActionService', '$routeParams', 'growl', 'path',
-          function ($modalInstance, DataSetService, MetadataActionService, $routeParams, growl, path) {
+        .controller('DataSetCreatorCtrl', ['$cookies', '$modalInstance', 'DataSetService', 'MetadataActionService', '$routeParams', 'growl', 'path',
+          function ($cookies, $modalInstance, DataSetService, MetadataActionService, $routeParams, growl, path) {
 
             var self = this;
 
@@ -22,13 +22,12 @@ angular.module('hopsWorksApp')
 
             self.templates = [];
 
-            MetadataActionService.fetchTemplates()
+            MetadataActionService.fetchTemplates($cookies['email'])
                     .then(function (response) {
                       var temps = JSON.parse(response.board);
                       angular.forEach(temps.templates, function (value, key) {
                         self.templates.push(value);
                       });
-                      console.log("FETCHED TEMPLATES " + JSON.stringify(self.templates));
                     }, function (error) {
                       console.log("ERROR " + JSON.stringify(error));
                     });
@@ -39,8 +38,16 @@ angular.module('hopsWorksApp')
                         $modalInstance.close(success);
                       },
                               function (error) {
-                                console.log("createDataSetDir error");
-                                console.log(error);
+                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                              });
+            };
+
+            var createTopLevelDataSet = function (dataSet) {
+              dataSetService.createTopLevelDataSet(dataSet)
+                      .then(function (success) {
+                        $modalInstance.close(success);
+                      },
+                              function (error) {
                                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                               });
             };
@@ -53,14 +60,10 @@ angular.module('hopsWorksApp')
               if (path) {
                 self.dataSet.name = path + '/' + self.dataSet.name;
                 self.dataSet.template = self.selectedTemplate.id;
-
-                console.log("SELECTED THE TEMPLATE 1 " + JSON.stringify(self.selectedTemplate));
                 createDataSetDir(self.dataSet);
               } else {
                 self.dataSet.template = self.selectedTemplate.id;
-
-                console.log("SELECTED THE TEMPLATE 2 " + JSON.stringify(self.selectedTemplate));
-                createDataSetDir(self.dataSet);
+                createTopLevelDataSet(self.dataSet);
               }
             };
           }]);

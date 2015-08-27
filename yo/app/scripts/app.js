@@ -20,7 +20,8 @@ angular.module('hopsWorksApp', [
   'xeditable',
   'flow',
   'ngMaterial',
-  'ngMessages'
+  'ngMessages',
+  'as.sortable'
 ])
         .config(['$routeProvider', '$httpProvider', 'flowFactoryProvider', function ($routeProvider, $httpProvider, flowFactoryProvider) {
 
@@ -57,6 +58,7 @@ angular.module('hopsWorksApp', [
                                     },
                                     function (err) {
                                       delete $cookies.email;
+                                      delete $cookies.projectID;
                                       $location.path('/login');
                                       $location.replace();
                                       return $q.reject(err);
@@ -119,6 +121,7 @@ angular.module('hopsWorksApp', [
                                     },
                                     function (err) {
                                       delete $cookies.email;
+                                      delete $cookies.projectID;
                                       $location.path('/login');
                                       $location.replace();
                                       return $q.reject(err);
@@ -139,6 +142,7 @@ angular.module('hopsWorksApp', [
                                     },
                                     function (err) {
                                       delete $cookies.email;
+                                      delete $cookies.projectID;
                                       $location.path('/login');
                                       $location.replace();
                                       return $q.reject(err);
@@ -159,6 +163,7 @@ angular.module('hopsWorksApp', [
                                     },
                                     function (err) {
                                       delete $cookies.email;
+                                      delete $cookies.projectID;
                                       $location.path('/login');
                                       $location.replace();
                                       return $q.reject(err);
@@ -178,6 +183,7 @@ angular.module('hopsWorksApp', [
                                     },
                                     function (err) {
                                       delete $cookies.email;
+                                      delete $cookies.projectID;
                                       $location.path('/login');
                                       $location.replace();
                                       return $q.reject(err);
@@ -197,6 +203,7 @@ angular.module('hopsWorksApp', [
                                     },
                                     function (err) {
                                       delete $cookies.email;
+                                      delete $cookies.projectID;
                                       $location.path('/login');
                                       $location.replace();
                                       return $q.reject(err);
@@ -216,6 +223,7 @@ angular.module('hopsWorksApp', [
                                     },
                                     function (err) {
                                       delete $cookies.email;
+                                      delete $cookies.projectID;
                                       $location.path('/login');
                                       $location.replace();
                                       return $q.reject(err);
@@ -235,6 +243,7 @@ angular.module('hopsWorksApp', [
                                     },
                                     function (err) {
                                       delete $cookies.email;
+                                      delete $cookies.projectID;
                                       $location.path('/login');
                                       $location.replace();
                                       return $q.reject(err);
@@ -254,12 +263,33 @@ angular.module('hopsWorksApp', [
                                     },
                                     function (err) {
                                       delete $cookies.email;
+                                      delete $cookies.projectID;
                                       $location.path('/login');
                                       $location.replace();
                                       return $q.reject(err);
                                     });
                           }]
                       }
+                    })
+                    .when('/project/:projectID/zeppelin', {
+                        templateUrl: 'views/zeppelinDashboard.html',
+                        controller: 'ProjectCtrl as projectCtrl',
+                        resolve: {
+                            auth: ['$q', '$location', 'AuthService', '$cookies',
+                                function ($q, $location, AuthService, $cookies) {
+                                    return AuthService.session().then(
+                                        function (success) {
+                                            $cookies.email = success.data.data.value;
+                                        },
+                                        function (err) {
+                                            delete $cookies.email;
+                                            delete $cookies.projectID;
+                                            $location.path('/login');
+                                            $location.replace();
+                                            return $q.reject(err);
+                                        });
+                                }]
+                        }
                     })
 
                     .otherwise({

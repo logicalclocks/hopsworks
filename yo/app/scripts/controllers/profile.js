@@ -58,7 +58,7 @@ angular.module('hopsWorksApp')
                           growl.success("Your password is now updated.", {title: 'Success', ttl: 5000, referenceId: 1});
                         }, function (error) {
                   self.errorMsg = error.data.errorMsg;
-                  growl.error("Could not update your passowrd.", {title: 'Error', ttl: 5000, referenceId: 1});
+                  growl.error("Could not update your password.", {title: 'Error', ttl: 5000, referenceId: 1});
                 });
               }
             };

@@ -70,6 +70,21 @@ public class InodeFacade extends AbstractFacade<Inode> {
       return null;
     }
   }
+  
+  /**
+   * find inode by id
+   * @param id
+   * @return 
+   */
+  public Inode findById(Integer id) {
+    TypedQuery<Inode> q = em.createNamedQuery("Inode.findById", Inode.class);
+    q.setParameter("id", id);
+    try {
+      return q.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
 
   /**
    *

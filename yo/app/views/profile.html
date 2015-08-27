@@ -23,7 +23,7 @@
               <input name="first_name" placeholder="First Name" autocomplete="off"
                      ng-model="profileCtrl.user.firstName" required class="form-control "
                      type="text">
-              <span ng-show="(profileForm.$submitted || profileForm.first_name.$dirty) & amp; & amp; profileForm.first_name.$error.required"
+              <span ng-show="(profileForm.$submitted || profileForm.first_name.$dirty) &amp;&amp; profileForm.first_name.$error.required"
                     class="text-danger ng-hide">This field is required</span>
             </div>
           </div>
@@ -33,7 +33,7 @@
               <input name="last_name" placeholder="Last Name" autocomplete="off"
                      ng-model="profileCtrl.user.lastName" required class="form-control "
                      type="text">
-              <span ng-show="(profileForm.$submitted || profileForm.last_name.$dirty) & amp; & amp; profileForm.last_name.$error.required"
+              <span ng-show="(profileForm.$submitted || profileForm.last_name.$dirty) &amp;&amp; profileForm.last_name.$error.required"
                     class="text-danger ng-hide">This field is required</span>
             </div>
           </div>
@@ -45,7 +45,7 @@
                  ng-pattern="/^[+ 0]?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
                  class="form-control "
                  type="text">
-          <span ng-show="profileForm.phone_number.$dirty & amp; & amp; profileForm.phone_number.$error.pattern"
+          <span ng-show="profileForm.phone_number.$dirty &amp;&amp; profileForm.phone_number.$error.pattern"
                 class="text-danger ng-hide">Phone number should be in (+00-000-000000) format.</span>
         </div>
 
@@ -82,9 +82,9 @@
              class="form-control"
              type="email" ng-disabled="true">
       <span class="fa fa-envelope form-control-feedback text-muted"></span>
-      <span ng-show="(credentialsForm.$submitted || credentialsForm.user_email.$dirty) & amp; & amp; credentialsForm.user_email.$error.required"
+      <span ng-show="(credentialsForm.$submitted || credentialsForm.user_email.$dirty) &amp;&amp; credentialsForm.user_email.$error.required"
             class="text-danger ng-hide">This field is required</span>
-      <span ng-show="credentialsForm.user_email.$dirty & amp; & amp; credentialsForm.user_email.$error.email"
+      <span ng-show="credentialsForm.user_email.$dirty &amp;&amp; credentialsForm.user_email.$error.email"
             class="text-danger ng-hide">This field must be a valid email address</span>
     </div>
 
@@ -95,7 +95,7 @@
              match="profileCtrl.user.chosenPassword"
              class="form-control" type="password" required>
       <span class="fa fa-lock form-control-feedback text-muted"></span>
-      <span ng-show="(credentialsForm.$submitted || credentialsForm.sec_answer.$dirty) & amp; & amp; credentialsForm.sec_answer.$error.required"
+      <span ng-show="(credentialsForm.$submitted || credentialsForm.sec_answer.$dirty) &amp;&amp; credentialsForm.sec_answer.$error.required"
             class="text-danger ng-hide">You have to enter your current password.</span>
     </div>
 
@@ -112,13 +112,13 @@
                  class="form-control"
                  type="password">
           <span class="fa fa-lock form-control-feedback text-muted"></span>
-          <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password.$dirty) & amp; & amp; credentialsForm.user_password.$error.required"
+          <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password.$dirty) &amp;&amp; credentialsForm.user_password.$error.required"
                 class="text-danger ng-hide">This field is required</span>
-          <span ng-show="credentialsForm.user_password.$dirty & amp; & amp; credentialsForm.user_password.$error.minlength"
+          <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.minlength"
                 class="text-danger ng-hide">Password should be at least 6 characters. </span>
-          <span ng-show="credentialsForm.user_password.$dirty & amp; & amp; credentialsForm.user_password.$error.maxlength"
+          <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.maxlength"
                 class="text-danger ng-hide">Password should be at most 10 characters. </span>
-          <span ng-show="credentialsForm.user_password.$dirty & amp; & amp; credentialsForm.user_password.$error.pattern"
+          <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.pattern"
                 class="text-danger ng-hide">Password should including one uppercase letter,
             one special character and/or alphanumeric characters. </span>
         </div>
@@ -130,7 +130,7 @@
                  match="regCtrl.newUser.chosenPassword"
                  class="form-control" type="password">
           <span class="fa fa-lock form-control-feedback text-muted"></span>
-          <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password_confirm.$dirty) & amp; & amp; credentialsForm.user_password_confirm.$invalid"
+          <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password_confirm.$dirty) &amp;&amp; credentialsForm.user_password_confirm.$invalid"
                 class="text-danger ng-hide">Password does Not match</span>
         </div>
       </div>

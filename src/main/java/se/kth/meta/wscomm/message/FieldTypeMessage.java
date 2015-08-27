@@ -105,8 +105,9 @@ public class FieldTypeMessage extends PlainMessage {
   @Override
   public String toString() {
     return "{\"sender\": \"" + this.sender + "\", "
-            + "\"action\": \"" + this.action + "\", "
             + "\"type\": \"" + this.TYPE + "\", "
+            + "\"status\": \"" + this.status + "\", "
+            + "\"action\": \"" + this.action + "\", "
             + "\"message\": \"" + this.message + "\"}";
   }
 }

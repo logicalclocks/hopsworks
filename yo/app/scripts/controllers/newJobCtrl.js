@@ -44,17 +44,17 @@ angular.module('hopsWorksApp')
               self.accordion2.isOpen = true;
               var type;
               switch (self.jobtype) {
-                case "0":
+                case 0:
                   self.accordion2.title = "Select a workflow file";
                   self.accordion3.title = "Bind input variables";
                   type = "Cuneiform";
                   break;
-                case "1":
+                case 1:
                   self.accordion2.title = "Select a JAR file";
                   self.accordion3.title = "Fill in job details";
                   type = "Spark";
                   break;
-                case "2":
+                case 2:
                   self.accordion2.title = "Select an ADAM command";
                   self.accordion3.title = "Set job arguments";
                   type = "ADAM";

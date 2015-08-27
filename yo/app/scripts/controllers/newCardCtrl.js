@@ -5,8 +5,8 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('NewCardCtrl', ['$scope', '$modalInstance', 'MetadataActionService',
-          function ($scope, $modalInstance, MetadataActionService) {
+        .controller('NewCardCtrl', ['$cookies', '$scope', '$modalInstance', 'MetadataActionService', '$filter',
+          function ($cookies, $scope, $modalInstance, MetadataActionService, $filter) {
 
             //data is the actual column under processing
             $scope.columnName = $scope.currentColumn.name;
@@ -25,14 +25,18 @@ angular.module('hopsWorksApp')
             $scope.yesNoItems = [];
             $scope.selectedItem = "";
 
-            MetadataActionService.fetchFieldTypes()
+            MetadataActionService.fetchFieldTypes($cookies['email'])
                     .then(function (success) {
-                      console.log('success from fetch_field_types');
                       success = JSON.parse(success.board);
-                      console.log(success);
+                      /*
+                       * sort the field types so that text option is always 
+                       * the first one
+                       */
+                      var ordered = $filter('orderBy')(success.fieldTypes, 'id', false);
+                      console.log("ORDERED TYPES " + JSON.stringify(ordered));
 
                       //construct the select component's contents
-                      angular.forEach(success.fieldTypes, function (type) {
+                      angular.forEach(ordered, function (type) {
                         $scope.items.push({
                           id: type.id,
                           name: type.description

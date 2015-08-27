@@ -1,7 +1,9 @@
 #!/bin/bash
 
-perl -pi -e "s/.*DEFINER=\`\w.*//g" kthfsSchema.sql 
-perl -pi -e "s/InnoDB/NDBCLUSTER/g" kthfsSchema.sql 
-perl -pi -e "s/AUTO_INCREMENT=[0-9]*\b//g" kthfsSchema.sql 
+schema=hopsworks.sql
 
-cp kthfsSchema.sql ../hopshub-chef/templates/default/tables.sql.erb
+perl -pi -e "s/.*DEFINER=\`\w.*//g" schema 
+perl -pi -e "s/InnoDB/NDBCLUSTER/g" schema 
+perl -pi -e "s/AUTO_INCREMENT=[0-9]*\b//g" schema 
+
+cp schema ../hopsworks-chef/templates/default/tables.sql.erb

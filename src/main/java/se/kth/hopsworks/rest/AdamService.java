@@ -1,10 +1,15 @@
 package se.kth.hopsworks.rest;
 
 import com.google.common.base.Strings;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -95,9 +100,15 @@ public class AdamService {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response getAdamCommands(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    CommandListWrapper wrap = new CommandListWrapper();
-    wrap.list = AdamCommandDTO.getAllCommandNames();
-    return Response.ok(wrap).build();
+    JsonArrayBuilder array = Json.createArrayBuilder();
+    AdamCommand[] allcommands = AdamCommand.values();
+    for (AdamCommand ac:allcommands) {
+      JsonObjectBuilder obj = Json.createObjectBuilder();
+      obj.add("name", ac.getCommand());
+      obj.add("description",ac.getDescription());
+      array.add(obj);
+    }
+    return Response.ok(array.build()).build();
   }
 
   /**
@@ -155,20 +166,6 @@ public class AdamService {
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();
-    }
-  }
-
-  @XmlRootElement(name = "commands")
-  private static class CommandListWrapper {
-
-    @XmlElement(name = "commands")
-    String[] list;
-
-    public CommandListWrapper() {
-    }
-
-    public void setList(String[] array) {
-      this.list = array;
     }
   }
 }

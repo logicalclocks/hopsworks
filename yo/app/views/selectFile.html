@@ -19,7 +19,7 @@
             <a style="font-size:25px">..</a>
           </td>
         </tr>
-        <tr ng-repeat="file in datasetsCtrl.files"
+        <tr ng-repeat="file in datasetsCtrl.files | filter:{status: true} | orderBy: 'name'"
             ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
             ng-dblclick="selectFileCtrl.dblClick(datasetsCtrl, file)"
             ng-click="selectFileCtrl.select(file.path); datasetsCtrl.select($index, file);">
