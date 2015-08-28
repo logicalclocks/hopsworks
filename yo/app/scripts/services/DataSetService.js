@@ -24,8 +24,8 @@ angular.module('hopsWorksApp')
                   return $http.get('/api/project/' + id + '/dataset/' + relativePath);
                 },
                 /**
-                 * Checkes the existance of a file. Should be caled before fileDownload.
-                 * @param {type} fileName
+                 * Checks the existence of a file. Should be caled before fileDownload.
+                 * @param {type} fileName is a path relative to the current ds to the file
                  * @returns {unresolved}
                  */
                 checkFileExist: function (fileName) {
@@ -35,7 +35,7 @@ angular.module('hopsWorksApp')
                  * Downloads a file using location.href. This will can replace the
                  * page with error page if the download is unseccessful. So use checkFileExist
                  * befor calling this to minimize the risk of an error page being showed. 
-                 * @param {type} fileName
+                 * @param {type} fileName is a path relative to the current ds to the file 
                  * @returns {undefined}
                  */
                 fileDownload: function (fileName) {

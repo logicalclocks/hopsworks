@@ -9,9 +9,7 @@
       <div class="panel-body">
         <p class="text-center">Account Recovery</p>
         <form role="form" name="recoveryForm" ng-submit="recoverCtrl.send()" novalidate class="form-validate">
-          <p class="text-center">Fill in your Email and the Security question and answer
-            you supplied when you registered, and your new password will be mailed to you.
-          </p>
+          <p></p>
           <div class="form-group has-feedback">
             <input id="recover_inputEmail"
                    class="form-control"
@@ -47,11 +45,15 @@
                   class="text-danger ng-hide">This field is required</span>
           </div>
 
-          <button class="btn btn-block btn-primary mt-lg" type="submit">Send</button>
+          <button class="btn btn-block btn-primary mt-lg" type="submit" data-ng-disabled="recoverCtrl.working">Send</button>
         </form>
+          <div style="text-align: center" class="text-muted" ng-show="recoverCtrl.working">
+            <i class="fa fa-spinner fa-spin"></i> 
+            Sending
+          </div>
         <div ng-show="recoverCtrl.successMessage" class="alert  alert-success text-center ng-binding ng-hide">{{recoverCtrl.successMessage}}</div>
         <div class="alert alert-danger text-center ng-binding ng-hide" ng-show="recoverCtrl.errorMessage">{{recoverCtrl.errorMessage}}</div>
-        <p class="pt-lg text-center">Remembered your password?</p>
+        <p></p>
         <a href="#/login" class="btn btn-block btn-default">Sign in</a>
       </div>
     </div>
