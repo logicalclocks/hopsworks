@@ -135,7 +135,12 @@ angular.module('hopsWorksApp')
                   "isOpen": false,
                   "visible": true,
                   "value": "",
-                  "title": "Configure and create"}
+                  "title": "Configure and create"},
+                "accordion6": {//Contains the schedule
+                  "isOpen": false,
+                  "visible": true,
+                  "value": "",
+                  "title": "Schedule (optional)"}
               };
               StorageService.store(self.projectId + "newjob", state);              
               $modalInstance.dismiss('cancel');

@@ -88,7 +88,7 @@ angular.module('hopsWorksApp')
               "isOpen": false,
               "visible": false,
               "value": "",
-              "title": "Set a schedule (optional)"};
+              "title": "Schedule (optional)"};
 
 
             /**
@@ -100,7 +100,10 @@ angular.module('hopsWorksApp')
             this.createJob = function () {
               self.runConfig.appName = self.jobname;
               self.runConfig.localResources = self.localResources;
-              self.schedule.startDate = $('#scheduleDatePicker').data("DateTimePicker").date().valueOf();
+              self.runConfig.schedule = {
+                "start": $('#scheduleDatePicker').data("DateTimePicker").date().valueOf(), 
+                "unit": self.schedule.unit.toUpperCase(), 
+                "number": self.schedule.number};
               JobService.createNewJob(self.projectId, self.getJobType(), self.runConfig).then(
                       function (success) {
                         $location.path('project/' + self.projectId + '/jobs');
