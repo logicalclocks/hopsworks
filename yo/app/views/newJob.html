@@ -218,7 +218,9 @@
               </button>
             </div>
           </accordion-group>
-          <accordion-group heading="{{newJobCtrl.accordion6.title}} {{newJobCtrl.accordion6.value}}">
+          <accordion-group heading="{{newJobCtrl.accordion6.title}} {{newJobCtrl.accordion6.value}}"
+                           is-open="newJobCtrl.accordion6.isOpen" 
+                           ng-show="newJobCtrl.accordion6.visible">
             <div>
               Every 
               <input type="number" ng-model="newJobCtrl.schedule.number" min="1" max="999" ng-change="newJobCtrl.updateNumberOfScheduleUnits()"> 
@@ -230,19 +232,20 @@
                 <option value="month">month{{newJobCtrl.schedule.addition}}</option>
               </select>
 
-              <p>
+              <div class="form-group">
                 Starting on 
-                <input type="date" is-open="newJobCtrl.datePickerOpen" class=""
-                       datepicker-popup ng-model="newJobCtrl.schedule.startDate" min-date="newJobCtrl.schedule.minStart" 
-                       ng-required="false" close-text="Close" />
-                <span class="">
-                  <button type="button" class="btn btn-default" ng-click="newJobCtrl.openDatePicker($event)" ><i class="glyphicon glyphicon-calendar"></i></button>
-                </span>
-
-              <timepicker ng-model="newJobCtrl.schedule.startDate" 
-                          show-meridian="false" style="display: inline">
-              </timepicker>
-              </p>
+                <div class='input-group date' id='scheduleDatePicker'>
+                  <input type='text' class="form-control">
+                  <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                  </span>
+                </div>
+              </div>
+              <script type="text/javascript">
+            $(function () {
+                $('#scheduleDatePicker').datetimepicker();
+            });
+        </script>
 
 
             </div>

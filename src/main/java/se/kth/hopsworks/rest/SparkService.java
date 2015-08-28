@@ -23,11 +23,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
-import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.project.Project;
+import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.controller.SparkController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
@@ -55,6 +55,8 @@ public class SparkService {
   private UserFacade userFacade;
   @EJB
   private ActivityFacade activityFacade;
+  @EJB
+  private JobController jobController;
 
   private Project project;
 
@@ -154,7 +156,7 @@ public class SparkService {
       if (Strings.isNullOrEmpty(config.getAppName())) {
         config.setAppName("Untitled Spark job");
       }
-      JobDescription created = jobFacade.create(user, project, config);
+      JobDescription created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();

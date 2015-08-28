@@ -13,6 +13,8 @@ import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
+import se.kth.bbc.jobs.model.configuration.ScheduleDTO;
+import se.kth.bbc.jobs.model.configuration.ScheduleDTO.TimeUnit;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.hopsworks.controller.ExecutionController;
@@ -74,7 +76,7 @@ public class JobScheduler {
    */
   public void scheduleJobPeriodic(JobDescription job, int numberOfUnits,
           TimeUnit timeUnit) {
-    long interval = numberOfUnits * timeUnit.duration;
+    long interval = numberOfUnits * timeUnit.getDuration();
     timerService.createTimer(new Date().getTime() + interval, interval, job.
             getId());
   }
@@ -104,20 +106,22 @@ public class JobScheduler {
   }
 
   /**
-   * Represents a time unit to be used in scheduling jobs.
+   * Schedule the given job according to the JobSchedule contained in its
+   * configuration.
+   * <p>
+   * @param job
+   * @throws NullPointerException If the job or its contained schedule are null.
    */
-  public static enum TimeUnit {
-
-    SECOND(1000),
-    MINUTE(60 * 1000),
-    HOUR(60 * 60 * 1000),
-    DAY(24 * 60 * 60 * 1000),
-    WEEK(7 * 24 * 60 * 60 * 1000);
-    private final long duration;
-
-    TimeUnit(long duration) {
-      this.duration = duration;
+  public void scheduleJobPeriodic(JobDescription job) {
+    //First: parameter checking
+    if(job == null){
+      throw new NullPointerException("Cannot schedule null job.");
+    }else if(job.getJobConfig().getSchedule() == null){
+      throw new NullPointerException("Trying to schedule a job with null schedule: "+job);
     }
+    //Then: set up interval timer
+    ScheduleDTO schedule = job.getJobConfig().getSchedule();
+    timerService.createTimer(new Date(schedule.getStart()), schedule.getNumber()*schedule.getUnit().getDuration(), job.getId());
   }
 
 }

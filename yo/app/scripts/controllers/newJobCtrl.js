@@ -55,8 +55,7 @@ angular.module('hopsWorksApp')
               "unit": "hour",
               "number": 1,
               "addition": "",
-              "startDate": new Date(),
-              "minStart": new Date()
+              "startDate": ""
             };
 
             //Variables for front-end magic
@@ -85,12 +84,12 @@ angular.module('hopsWorksApp')
               "visible": false,
               "value": "",
               "title": "Configure and create"};
-            this.accordion6 = { //Contains the schedule
+            this.accordion6 = {//Contains the schedule
               "isOpen": false,
               "visible": false,
               "value": "",
               "title": "Set a schedule (optional)"};
-            }
+
 
             /**
              * Create the job.
@@ -101,6 +100,7 @@ angular.module('hopsWorksApp')
             this.createJob = function () {
               self.runConfig.appName = self.jobname;
               self.runConfig.localResources = self.localResources;
+              self.schedule.startDate = $('#scheduleDatePicker').data("DateTimePicker").date().valueOf();
               JobService.createNewJob(self.projectId, self.getJobType(), self.runConfig).then(
                       function (success) {
                         $location.path('project/' + self.projectId + '/jobs');
@@ -207,12 +207,6 @@ angular.module('hopsWorksApp')
             // Methods for schedule updating
             this.updateNumberOfScheduleUnits = function () {
               self.schedule.addition = self.schedule.number == 1 ? "" : "s";
-            };
-            self.datePickerOpen = false;
-            this.openDatePicker = function ($event) {
-              $event.preventDefault();
-              $event.stopPropagation();
-              self.datePickerOpen = true;
             };
 
             /**
