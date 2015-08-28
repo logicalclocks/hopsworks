@@ -30,6 +30,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
@@ -177,6 +179,7 @@ public class DataSetService {
             inodViews).build();
   }
 
+  @Deprecated
   @GET
   @Path("download/{filePath: .+}")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
@@ -193,7 +196,7 @@ public class DataSetService {
     if (inodes.getInodeAtPath(fullPath) == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               ResponseMessages.FILE_NOT_FOUND);
-    }
+  }
     try {
       is = fileOps.getInputStream(fullPath);
       logger.
@@ -536,6 +539,54 @@ public class DataSetService {
 
   }
 
+  @GET
+  @Path("fileExists/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response checkFileExist(@PathParam("path") String path) throws AppException {
+    if (path == null) {
+      path = "";
+    }
+    path = getFullPath(path);
+    Configuration conf = new Configuration();
+    conf.addResource(new org.apache.hadoop.fs.Path(Constants.DEFAULT_HADOOP_CONF_DIR + "core-site.xml"));
+    FileSystem hdfs;
+    try {
+      hdfs = FileSystem.get(conf);
+      hdfs.open(new org.apache.hadoop.fs.Path(path));
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "File does not exist: " + path);
+    }
+    Response.ResponseBuilder response = Response.ok();
+    return response.build();
+  }
+  
+  
+  @Path("fileDownload/{path: .+}")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public DownloadService downloadDS(@PathParam("path") String path) throws AppException {
+     if (path == null) {
+      path = "";
+    }
+    path = getFullPath(path);
+    String[] pathArray = path.split(File.separator);
+    if (!pathArray[2].equals(this.project.getName())) {
+      if (!this.dataset.isEditable()) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "You can not upload to a shared dataset.");
+      }
+    }
+    if (!path.endsWith(File.separator)) {
+      path = path + File.separator;
+    }
+
+    DownloadService downloader = new DownloadService();
+    downloader.setPath(path);
+    return downloader;
+  }
+  
   @Path("upload/{path: .+}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public UploadService upload(

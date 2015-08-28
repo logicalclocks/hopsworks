@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .factory('AuthInterceptorService', ['$q', '$location', function ($q, $location) {
+        .factory('AuthInterceptorService', ['$q', '$location','growl', function ($q, $location, growl) {
 
             return {
               response: function (response) {
@@ -31,6 +31,7 @@ angular.module('hopsWorksApp')
                   }
 
                 } else {
+                  growl.error(responseRejection.data.errorMsg, {title: 'Error', ttl: 5000});
                   console.log('Unhandled error: ', responseRejection);
                 }
                 return $q.reject(responseRejection);

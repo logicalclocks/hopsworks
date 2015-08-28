@@ -49,7 +49,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
     Method method = resourceInfo.getResourceMethod();
 
     String[] pathParts = path.split("/");
-    log.log(Level.INFO, "Filtering request path: {0}", pathParts[0]);
+    log.log(Level.INFO, "Filtering request path: {0}", path);
     log.log(Level.INFO, "Method called: {0}", method.getName());
     //intercepted method must be project operations on a specific project
     //with an id (/project/projectId/... or /activity/projectId/...). 

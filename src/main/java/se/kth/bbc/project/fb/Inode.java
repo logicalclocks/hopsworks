@@ -2,11 +2,6 @@ package se.kth.bbc.project.fb;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Lob;
 import java.util.Collection;
 import java.util.Iterator;
 import javax.persistence.Basic;
