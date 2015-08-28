@@ -76,6 +76,16 @@ public class StoreMetadataMessage extends MetadataMessage {
                   readArray();
 
           String multiValues = "";
+          /*
+           * in case the multiselect values are not there, it means the user
+           * didn't select anything so skip this part.
+           * Avoids adding en empty line to the metadata table
+           */
+          int length = array.size();
+          if (length == 0) {
+            continue;
+          }
+
           //scan the array and extract the values
           for (JsonValue value : array) {
             JsonObject object = Json.
