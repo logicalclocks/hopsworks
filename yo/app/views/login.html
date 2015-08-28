@@ -9,15 +9,15 @@
         </div>
         <div class="panel-body">
           <p class="text-center">SIGN IN TO CONTINUE.</p>
-          <form name="loginForm" ng-submit="loginCtrl.login()" role="form" class="form-validate">
-            <div class="form-group has-feedback">
-              <input id="login_inputEmail" class="form-control" type="email" required
+          <form name="loginForm" ng-submit="loginCtrl.login()" role="form">
+            <div class="form-group">
+              <input id="login_inputEmail" class="form-control" required
                      ng-model="loginCtrl.user.email"
                      autocomplete="on"
                      placeholder="Email"
                      name="user_email">
             </div>
-            <div class="form-group has-feedback">
+            <div class="form-group">
               <input id="login_inputPassword" class="form-control" type="password" required
                      ng-model="loginCtrl.user.password"
                      placeholder="Password"
@@ -35,11 +35,15 @@
                 <a class="text-muted" href="#/recover">Forgot your password?</a>
               </div>
             </div>
-            <button class="btn btn-block btn-primary mt-lg" type="submit" ng-disabled="loginForm.$invalid">Login</button>
+            <button class="btn btn-block btn-primary mt-lg" type="submit" data-ng-disabled="loginCtrl.working">Login</button>
           </form>
+          <div style="text-align: center" class="text-muted" ng-show="loginCtrl.working">
+            <i class="fa fa-spinner fa-spin"></i> 
+            Logging you in
+          </div>
           <div class="alert alert-danger text-center ng-binding ng-hide" ng-show="loginCtrl.errorMessage">{{loginCtrl.errorMessage}}</div>
-          <p class="pt-lg text-center">Need to Sign up?</p>
-          <a class="btn btn-block btn-default" href="#/register">Register Now</a>
+          <p></p>
+          <a class="btn btn-block btn-default" href="#/register">Register</a>
         </div>
       </div>
 

@@ -5,7 +5,7 @@ angular.module('hopsWorksApp')
           function ($modalInstance, $scope, ProjectService, UserService, growl) {
 
             var self = this;
-
+            self.working = false;
             self.card = {};
             self.cards = [];
 
@@ -59,7 +59,7 @@ angular.module('hopsWorksApp')
 
 
             self.createProject = function () {
-
+              self.working = true;
               $scope.newProject = {
                 'projectName': self.projectName,
                 'description': self.projectDesc,
@@ -71,7 +71,7 @@ angular.module('hopsWorksApp')
 
               ProjectService.save($scope.newProject).$promise.then(
                       function (success) {
-                        console.log(success);
+                        self.working = false;
                         growl.success(success.successMessage, {title: 'Success', ttl: 15000});
                         if (success.errorMsg) {
                           growl.warning(success.errorMsg, {title: 'Error', ttl: 15000});
@@ -84,7 +84,8 @@ angular.module('hopsWorksApp')
                         }
                         $modalInstance.close($scope.newProject);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000, referenceId: 1});
+                        self.working = false;
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000, referenceId: 1});
               }
               );
             };

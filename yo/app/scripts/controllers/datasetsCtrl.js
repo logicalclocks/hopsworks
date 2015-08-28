@@ -13,7 +13,7 @@ angular.module('hopsWorksApp')
                   ModalService, growl, $location, MetadataHelperService) {
 
             var self = this;
-
+            
             //Some variables to keep track of state.
             self.files = []; //A list of files currently displayed to the user.
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.

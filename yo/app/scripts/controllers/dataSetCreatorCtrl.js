@@ -13,6 +13,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
 
+            self.working = false;
             self.datasets = [];
             self.selectedTemplate = {};
             self.temps = [{'temp': "temp"}];
@@ -33,23 +34,29 @@ angular.module('hopsWorksApp')
                     });
 
             var createDataSetDir = function (dataSet) {
+              self.working = true;
               dataSetService.createDataSetDir(dataSet)
                       .then(function (success) {
+                        self.working = false;
                         $modalInstance.close(success);
                       },
-                              function (error) {
-                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                              });
+                      function (error) {
+                        self.working = false;
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                      });
             };
 
             var createTopLevelDataSet = function (dataSet) {
+              self.working = true;
               dataSetService.createTopLevelDataSet(dataSet)
                       .then(function (success) {
+                        self.working = false;
                         $modalInstance.close(success);
                       },
-                              function (error) {
-                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                              });
+                      function (error) {
+                        self.working = false;
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                      });
             };
 
             self.close = function () {
