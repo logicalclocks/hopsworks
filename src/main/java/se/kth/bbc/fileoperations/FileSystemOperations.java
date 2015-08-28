@@ -136,6 +136,7 @@ public class FileSystemOperations {
     conf.addResource(yarnPath);
     conf.addResource(hdfsPath);
     //Need a different type of instantiation to get statistics object initialized
+    //TODO: here we could use .get(Configuration conf, String user). FileSystem then will have to be instantiated, opened and closed on every method call. Now it's just done on EJB instance creation.
     FileSystem fs = FileSystem.get(conf);
     return (DistributedFileSystem) fs;
   }

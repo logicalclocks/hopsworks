@@ -21,6 +21,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -126,6 +127,10 @@ public class YarnRunner {
     //Set up container launch context
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
             localResources, env, amCommands, null, null, null);
+// TODO: implement this for real. doAs
+//    UserGroupInformation proxyUser = UserGroupInformation.
+//            createProxyUser("user", UserGroupInformation.
+//                    getCurrentUser());
 
     //Finally set up context
     appContext.setAMContainerSpec(amContainer); //container spec
@@ -577,7 +582,7 @@ public class YarnRunner {
       this.amMemory = config.getAmMemory();
       this.amVCores = config.getAmVCores();
       this.appName = config.getAppName();
-      for(Entry<String,String> e:config.getLocalResources().entrySet()){
+      for (Entry<String, String> e : config.getLocalResources().entrySet()) {
         addLocalResource(e.getKey(), e.getValue(), false);
       }
       return this;
