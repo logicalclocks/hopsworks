@@ -8,10 +8,10 @@ import java.util.Set;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import se.kth.meta.entity.EntityIntf;
+import se.kth.meta.entity.MetaData;
 import se.kth.meta.entity.RawData;
 
 /**
@@ -54,18 +54,33 @@ public class StoreMetadataMessage extends MetadataMessage {
     List<EntityIntf> data = new LinkedList<>();
 
     Set<Entry<String, JsonValue>> set = obj.entrySet();
-
+    /*
+     * processes a json string of the following format:
+     * "{"1":"singleTwo","2":[{"value":"multiOne"},{"value":"multiThree"}],"1025":"55","inodeid":5,"tableid":1}"}
+     * 
+     * Numbers are field ids and the strings are the values they carry. Values
+     * may be single or multi strings
+     */
     for (Entry<String, JsonValue> entry : set) {
-      RawData raw = new RawData();
 
       //avoid the inodeid field as it has been accessed previously
       //keys are the field ids
       if (isNumeric(entry.getKey())) {
-        //set the field id and the actual data
-        raw.setFieldid(Integer.parseInt(entry.getKey()));
+        RawData raw = new RawData();
+        List<MetaData> metalist = new LinkedList<>();
+
+        //set the field id
+        int fieldid = Integer.parseInt(entry.getKey());
+        raw.getRawdataPK().setFieldid(fieldid);
 
         if (entry.getValue().getValueType() == JsonValue.ValueType.STRING) {
-          raw.setData(entry.getValue().toString());
+          //set the actual metadata
+          MetaData metadata = new MetaData();
+          metadata.getMetaDataPK().setFieldid(fieldid);
+          metadata.setData(entry.getValue().toString().replaceAll("\"", ""));
+          metalist.add(metadata);
+
+          raw.setMetaData(metalist);
         } else if (entry.getValue().getValueType() == JsonValue.ValueType.ARRAY) {
           /*
            * build a json array out of the string and then iterate through it
@@ -74,15 +89,12 @@ public class StoreMetadataMessage extends MetadataMessage {
           JsonArray array = Json.
                   createReader(new StringReader(entry.getValue().toString())).
                   readArray();
-
-          String multiValues = "";
           /*
            * in case the multiselect values are not there, it means the user
            * didn't select anything so skip this part.
            * Avoids adding en empty line to the metadata table
            */
-          int length = array.size();
-          if (length == 0) {
+          if (array.size() == 0) {
             continue;
           }
 
@@ -91,11 +103,13 @@ public class StoreMetadataMessage extends MetadataMessage {
             JsonObject object = Json.
                     createReader(new StringReader(value.toString())).
                     readObject();
-
-            multiValues += object.getString("value") + "-";
+            //set the actual metadata
+            MetaData metadata = new MetaData();
+            metadata.getMetaDataPK().setFieldid(fieldid);
+            metadata.setData(object.getString("value").replaceAll("\"", ""));
+            metalist.add(metadata);
           }
-          multiValues = multiValues.substring(0, multiValues.length() - 2);
-          raw.setData(multiValues);
+          raw.setMetaData(metalist);
         }
         data.add(raw);
       }

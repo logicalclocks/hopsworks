@@ -93,7 +93,7 @@ public class FetchMetadataMessage extends MetadataMessage {
       for (RawData raw : data) {
         JsonObjectBuilder rawdata = Json.createObjectBuilder();
         rawdata.add("rawid", raw.getId());
-        rawdata.add("raw", raw.getData());
+        //rawdata.add("raw", raw.getData());
         
         rd.add(rawdata);
       }
@@ -144,5 +144,4 @@ public class FetchMetadataMessage extends MetadataMessage {
             + "\"action\": \"" + this.action + "\", "
             + "\"message\": \"" + this.message + "\"}";
   }
-
 }

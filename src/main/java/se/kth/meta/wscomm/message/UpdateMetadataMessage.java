@@ -55,7 +55,7 @@ public class UpdateMetadataMessage extends MetadataMessage {
       
       RawData raw = new RawData();
       raw.setId(rawId);
-      raw.setData(rawdata);
+//      raw.setData(rawdata);
       
       data.add(raw);
       return data;

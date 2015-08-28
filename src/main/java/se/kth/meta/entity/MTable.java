@@ -142,7 +142,7 @@ public class MTable implements Serializable, EntityIntf, Comparable {
   }
 
   public void resetFields() {
-    this.fields = new LinkedList<>();
+    this.fields.clear();
   }
 
   public Template getTemplate() {

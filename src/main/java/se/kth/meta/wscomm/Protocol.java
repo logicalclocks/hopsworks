@@ -118,7 +118,7 @@ public class Protocol {
         List<EntityIntf> composite = ((StoreMetadataMessage) message).
                 superParseSchema();
         List<EntityIntf> rawData = message.parseSchema();
-        this.utils.storeMetadata(composite, rawData);
+        this.utils.storeRawData(composite, rawData);
         return new TextMessage("Server", "Metadata was stored successfully");
 
       case BROADCAST:
@@ -136,7 +136,7 @@ public class Protocol {
         
       case UPDATE_METADATA:
         RawData raw = (RawData) message.parseSchema().get(0);
-        this.utils.updateMetadata(raw);
+        this.utils.updateRawData(raw);
         return new TextMessage("Server", "Raw data was updated successfully");
     }
 

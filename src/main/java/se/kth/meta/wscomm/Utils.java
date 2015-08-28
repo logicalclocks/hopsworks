@@ -9,6 +9,7 @@ import javax.ejb.Stateless;
 import se.kth.meta.db.FieldFacade;
 import se.kth.meta.db.FieldPredefinedValueFacade;
 import se.kth.meta.db.MTableFacade;
+import se.kth.meta.db.MetaDataFacade;
 import se.kth.meta.db.RawDataFacade;
 import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.db.TupleToFileFacade;
@@ -18,6 +19,7 @@ import se.kth.meta.entity.Field;
 import se.kth.meta.entity.InodeTableComposite;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
+import se.kth.meta.entity.MetaData;
 import se.kth.meta.entity.Template;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.ApplicationException;
@@ -44,6 +46,8 @@ public class Utils {
   private RawDataFacade rawDataFacade;
   @EJB
   private TupleToFileFacade tupletoFileFacade;
+  @EJB
+  private MetaDataFacade metadataFacade;
 
   public Utils() {
   }
@@ -213,14 +217,15 @@ public class Utils {
   }
 
   /**
-   * Stores the metadata for an inode. Creates a metadata tuple first and
-   * associates it with the given inode
+   * Stores the raw data for an inode. Creates a tuple first and
+   * associates it with the given inode. Raw data at this point is just a field
+   * id and a tupleid
    * <p>
    * @param composite
    * @param raw
    * @throws ApplicationException
    */
-  public void storeMetadata(List<EntityIntf> composite, List<EntityIntf> raw)
+  public void storeRawData(List<EntityIntf> composite, List<EntityIntf> raw)
           throws ApplicationException {
 
     try {
@@ -238,16 +243,23 @@ public class Utils {
       for (EntityIntf raww : raw) {
 
         RawData r = (RawData) raww;
-        r.setData(r.getData().replaceAll("\"", ""));
-        r.setTupleid(tupleid);
+        r.getRawdataPK().setTupleid(tupleid);
 
+        List<EntityIntf> metadataList
+                = (List<EntityIntf>) (List<?>) new LinkedList<>(r.getMetaData());
+        r.resetMetadata();
+
+        //Persist the parent first
         logger.log(Level.INFO, r.toString());
         this.rawDataFacade.addRawData(r);
+
+        //move on to persist the child entities
+        this.storeMetaData(metadataList, tupleid);
       }
 
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: storeMetadata(List<?> list) encountered a problem "
+              "Utils.java: storeRawData(List<?> list) encountered a problem "
               + e.getMessage());
     }
   }
@@ -258,16 +270,42 @@ public class Utils {
    * @param raw
    * @throws ApplicationException
    */
-  public void updateMetadata(RawData raw) throws ApplicationException {
+  public void updateRawData(RawData raw) throws ApplicationException {
     try {
 
-      RawData rawdata = this.rawDataFacade.getRawData(raw.getId());
-      rawdata.setData(raw.getData());
+      RawData rawdata = this.rawDataFacade.getRawData(raw.getRawdataPK());
+      rawdata.setMetaData(raw.getMetaData());
       this.rawDataFacade.addRawData(rawdata);
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: updateMetadata(RawData) encountered a problem " + e.
+              "Utils.java: updateRawData(RawData) encountered a problem " + e.
               getMessage());
+    }
+  }
+
+  /**
+   * Stores the actual metadata for an inode. Associates a raw data record with
+   * a metadata record in the meta_data table
+   * <p>
+   * @param metadatalist
+   * @param tupleid
+   * @throws ApplicationException
+   */
+  public void storeMetaData(List<EntityIntf> metadatalist, int tupleid) throws
+          ApplicationException {
+
+    try {
+      for (EntityIntf entity : metadatalist) {
+        MetaData metadata = (MetaData) entity;
+        metadata.getMetaDataPK().setTupleid(tupleid);
+
+        //logger.log(Level.INFO, metadata.toString());
+        this.metadataFacade.addMetadata(metadata);
+      }
+    } catch (DatabaseException e) {
+      throw new ApplicationException(e.getMessage(),
+              "Utils.java: storeMetadata(List<?> list) encountered a problem "
+              + e.getMessage());
     }
   }
 }

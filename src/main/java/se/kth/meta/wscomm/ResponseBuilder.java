@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import se.kth.meta.db.FieldFacade;
-import se.kth.meta.db.FieldPredefinedValueFacade;
 import se.kth.meta.db.FieldTypeFacade;
 import se.kth.meta.db.MTableFacade;
 import se.kth.meta.db.TemplateFacade;
@@ -233,7 +232,7 @@ public class ResponseBuilder {
         for (RawData raw : rawList) {
           for (TupleToFile ttf : ttfList) {
 
-            if (raw.getTupleid() == ttf.getId()) {
+            if (raw.getRawdataPK().getTupleid() == ttf.getId()) {
               toKeep.add(raw);
             }
           }
@@ -397,7 +396,7 @@ public class ResponseBuilder {
     Map<Integer, List<RawData>> grouped = new HashMap<>();
 
     for (RawData raw : list) {
-      grouped.put(raw.getTupleid(), null);
+      grouped.put(raw.getRawdataPK().getTupleid(), null);
     }
 
     return new LinkedList<>(grouped.keySet());
