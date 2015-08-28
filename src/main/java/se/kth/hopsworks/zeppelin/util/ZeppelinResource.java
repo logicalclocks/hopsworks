@@ -9,20 +9,15 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ws.rs.core.Response;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.VFS;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
-import org.apache.zeppelin.interpreter.InterpreterFactory;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import se.kth.bbc.project.Project;
-import se.kth.hopsworks.controller.ProjectController;
-import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
 
 /**

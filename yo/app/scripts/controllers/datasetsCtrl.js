@@ -114,22 +114,6 @@ angular.module('hopsWorksApp')
             init();
 
             /**
-             * Download a file.
-             * @param {type} file Can either be a filename or a path.
-             * @returns {undefined}
-             */
-            var download = function (file) {
-              dataSetService.download(file).then(
-                      function (success) {
-                        console.log("download success");
-                        console.log(success);
-                      }, function (error) {
-                console.log("Error downloading file " + file);
-                console.log(error);
-              });
-            };
-
-            /**
              * Upload a file to the specified path.
              * @param {type} path
              * @returns {undefined}
@@ -228,23 +212,32 @@ angular.module('hopsWorksApp')
              * Upon click on a inode in the browser:
              *  + If folder: open folder, fetch contents from server and display.
              *  + If file: open a confirm dialog prompting for download.
-             * @param {type} name
-             * @param {type} isDir
+             * @param {type} file
              * @returns {undefined}
              */
-            self.openDir = function (name, isDir) {
-              if (isDir) {
+            self.openDir = function (file) {
+              if (file.dir) {
                 var newPathArray = self.pathArray.slice(0);
-                newPathArray.push(name);
+                newPathArray.push(file.name);
                 getDirContents(newPathArray);
-              } else {
+              } else if (!file.underConstruction) {
                 ModalService.confirm('sm', 'Confirm', 'Do you want to download this file?').then(
                         function (success) {
                           var downloadPathArray = self.pathArray.slice(0);
-                          downloadPathArray.push(name);
-                          download(getPath(downloadPathArray));
+                          downloadPathArray.push(file.name);
+                          var filePath = getPath(downloadPathArray);
+                          dataSetService.checkFileExist(filePath).then(
+                                  function (success) {
+                                   dataSetService.fileDownload(filePath);
+                                  }, function (error) {
+                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                          });
+                          
+                          
                         }
                 );
+              } else {
+                growl.info("File under construction.", {title: 'Info', ttl: 5000});
               }
             };
 
