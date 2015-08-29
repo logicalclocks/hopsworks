@@ -40,6 +40,7 @@
     <class>se.kth.bbc.jobs.jobhistory.Execution</class>
     <class>se.kth.bbc.jobs.model.description.JobDescription</class>
     <class>se.kth.bbc.jobs.model.configuration.JsonReduceableConverter</class>
+    <class>se.kth.hopsworks.user.model.SshKeys</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

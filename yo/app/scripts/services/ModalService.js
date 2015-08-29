@@ -98,6 +98,27 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              sshkeys: function (size) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/sshkeys.html',
+                  controller: 'SshkeysCtrl as sshkeysCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                            function (success) {
+                            },
+                            function (err) {
+                              $location.path('/login');
+                              $location.replace();
+                              return $q.reject(err);
+                            });
+                      }]
+                  }
+                });
+                return modalInstance.result;
+              },
               projectMembers: function (size, projectId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/members.html',

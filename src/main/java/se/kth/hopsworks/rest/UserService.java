@@ -22,6 +22,7 @@ import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UsersController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.SshKeyDTO;
 import se.kth.hopsworks.users.UserCardDTO;
 import se.kth.hopsworks.users.UserDTO;
 import se.kth.hopsworks.users.UserFacade;
@@ -144,4 +145,56 @@ public class UserService {
             json).build();
   }
 
+
+    @POST
+    @Path("addSshKey")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addSshkey(@FormParam("name") String name,
+                                  @FormParam("publicKey") String publicKey,
+                                  @Context SecurityContext sc,
+                                  @Context HttpServletRequest req) throws AppException {
+        JsonResponse json = new JsonResponse();
+        Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
+        int id = user.getUid();
+        SshKeyDTO dto = userController.addSshKey(id, name, publicKey);
+        json.setStatus("OK");
+        json.setSuccessMessage(ResponseMessages.SSH_KEY_ADDED);
+        json.setData(dto);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    }
+
+    @POST
+    @Path("removeSshKey")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response removeSshkey(@FormParam("name") String name,
+                              @Context SecurityContext sc,
+                              @Context HttpServletRequest req) throws AppException {
+        JsonResponse json = new JsonResponse();
+        Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
+        int id = user.getUid();
+        userController.removeSshKey(id, name);
+        json.setStatus("OK");
+        json.setSuccessMessage(ResponseMessages.SSH_KEY_REMOVED);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                json).build();
+    }
+
+    @POST
+    @Path("getSshKeys")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response listSshkeys(@Context SecurityContext sc,
+                                 @Context HttpServletRequest req) throws AppException {
+        JsonResponse json = new JsonResponse();
+
+        Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
+        int id = user.getUid();
+        List<SshKeyDTO> sshkeys = userController.getSshKeys(id);
+
+        json.setStatus("OK");
+        json.setSuccessMessage(ResponseMessages.SSH_KEYS_LISTED);
+        json.setData(sshkeys);
+
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                json).build();
+    }
 }

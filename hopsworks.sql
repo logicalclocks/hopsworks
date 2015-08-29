@@ -342,6 +342,17 @@ CREATE TABLE `dataset_request` (
    ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
+CREATE TABLE `ssh_keys` (
+  `uid` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `public_key` varchar(2000) NOT NULL,
+  PRIMARY KEY (`uid`, `name`),
+  KEY `name_idx` (`name`),
+  KEY `uid_idx` (`uid`),
+  CONSTRAINT `FK_248_381` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
+
+
 -- VIEWS --------------
 -- ---------------------
 
@@ -353,3 +364,5 @@ CREATE VIEW `users_groups` AS
   `g`.`group_name` AS `group_name` 
   from 
     ((`people_group` `ug` join `users` `u` on((`u`.`uid` = `ug`.`uid`))) join `bbc_group` `g` on((`g`.`gid` = `ug`.`gid`)));
+
+
