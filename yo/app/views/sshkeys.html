@@ -1,153 +1,76 @@
-
 <div class="modal-header">
-  <button class="close" ng-click="sshkeysCtrl.close()" data-dismiss="modal" aria-hidden="true" type="button">&times;</button>
-  <h2 class="modal-title">Ssh Keys</h2>
+    <button class="close" ng-click="sshkeysCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;</button>
+    <h2 class="modal-title">Ssh Keys</h2>
 </div>
 <div class="modal-body" id="sshkeysModal">
-  <div class="row">
+    <div class="row">
 
-    <div growl reference="1" class="pull-right"></div>
+        <div growl reference="1" class="pull-right"></div>
 
-    <div class="col-xs-9 col-sm-9 col-md-9 pull-right">
-      <form method="post"
-            name="sshkeysForm"
-            ng-submit="sshkeysCtrl.updateSshkeys()"
-            class="form-validate"
-            novalidate>
+        <div class="col-xs-9 col-sm-9 col-md-9 pull-right">
+
+            <accordion close-others="false">
+                <accordion-group is-open="$scope.keys[$index].status"
+                                 ng-repeat="key in $scope.keys track by $index">
+                    <accordion-heading>
+            <span class="col-xs-1 col-sm-1 col-md-1 col-lg-1 pull-left"
+                  ng-click="$scope.keys[$index].status = !$scope.keys[$index].status">
+              <i class="glyphicon"
+                 ng-class="{'glyphicon-chevron-down': $scope.status.experiment[$index].status, 'glyphicon-chevron-right': !$scope.status.experiment[$index].status}"></i>
+
+              <i class="fa fa-key"></i>
+
+            </span>
+                        <span class="col-md-8 col-lg-8">{{keys[$index].name}}</span>
+            <span class="col-xs-1 col-sm-1 col-md-1 col-lg-1 text-center pull-right"
+                  ng-click="removeSshKey(key.name)">
+              <i class="glyphicon glyphicon-minus"></i>
+            </span>
+                        <br/>
+                    </accordion-heading>
+                    <span class="col-md-10 col-lg-12">{{keys[$index].publickey}}</span>
+
+                </accordion-group>
+            </accordion>
 
 
-        <div class="row">
-          <div class="col-xs-6 col-sm-6 col-md-6">
-            <div class="form-group has-feedback">
-              <label class="text-muted">First Name</label>
-              <input name="first_name" placeholder="First Name" autocomplete="off"
-                     ng-model="sshkeysCtrl.user.firstName" required class="form-control "
-                     type="text">
-              <span ng-show="(sshkeysForm.$submitted || sshkeysForm.first_name.$dirty) &amp;&amp; sshkeysForm.first_name.$error.required"
+            <form method="post"
+                  name="sshkeysForm"
+                  ng-submit="sshkeysCtrl.addSshkey()"
+                  class="form-validate"
+                  novalidate>
+
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-6 col-md-6">
+                        <div class="form-group has-feedback">
+                            <label class="text-muted">Public Key</label>
+                            <input name="sshkey" placeholder="Open SSH Public Key" autocomplete="off"
+                                   ng-model="sshkeysCtrl.key.publicKey" required class="form-control "
+                                   type="text">
+              <span ng-show="(sshkeysForm.$submitted || sshkeysForm.key.publicKey.$dirty) &amp;&amp; sshkeysForm.key.publicKey.$error.required"
                     class="text-danger ng-hide">This field is required</span>
-            </div>
-          </div>
-          <div class="col-xs-6 col-sm-6 col-md-6">
-            <div class="form-group has-feedback">
-              <label class="text-muted">Last Name</label>
-              <input name="last_name" placeholder="Last Name" autocomplete="off"
-                     ng-model="sshkeysCtrl.user.lastName" required class="form-control "
-                     type="text">
-              <span ng-show="(sshkeysForm.$submitted || sshkeysForm.last_name.$dirty) &amp;&amp; sshkeysForm.last_name.$error.required"
-                    class="text-danger ng-hide">This field is required</span>
-            </div>
-          </div>
-        </div>
-        <div class="form-group has-feedback">
-          <label class="text-muted">Phone Number</label>
-          <input name="phone_number" placeholder="Phone" autocomplete="on"
-                 ng-model="sshkeysCtrl.user.telephoneNum"
-                 ng-pattern="/^[+ 0]?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
-                 class="form-control "
-                 type="text">
-          <span ng-show="sshkeysForm.phone_number.$dirty &amp;&amp; sshkeysForm.phone_number.$error.pattern"
-                class="text-danger ng-hide">Phone number should be in (+00-000-000000) format.</span>
-        </div>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="row">
-          <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
-            <button type="submit" class="btn btn-block btn-primary mt-lg"
-                     ng-disabled="sshkeysForm.$pristine || sshkeysCtrl.working">Save
-              <i ng-if="sshkeysCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
-            </button>
-          </div>
-          <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
-            <input type="button" class="btn btn-block btn-primary mt-lg" ng-click="sshkeysCtrl.reset()"
-                   value="Reset" ng-disabled="sshkeysForm.$pristine"/>
-          </div>
+                <div class="row">
+                    <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
+                        <button type="submit" class="btn btn-block btn-primary mt-lg"
+                                ng-disabled="sshkeysForm.$pristine || sshkeysCtrl.working">Add Key
+                            <i ng-if="sshkeysCtrl.working" style="margin-top: 2px"
+                               class="fa fa-spinner fa-spin pull-right"></i>
+                        </button>
+                    </div>
+                    <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
+                        <input type="button" class="btn btn-block btn-primary mt-lg" ng-click="sshkeysCtrl.reset()"
+                               value="Reset" ng-disabled="sshkeysForm.$pristine"/>
+                    </div>
 
+                </div>
+            </form>
         </div>
-      </form>
     </div>
-    <div class="col-xs-3 col-sm-3 col-md-3 ">
-      <img class="img-thumbnail"
-           ng-src="http://www.gravatar.com/avatar/{{ sshkeysCtrl.emailHash + '?s=300&d=mm'}}"/>
-    </div>
-  </div>
 
-  <!--<form method="post"-->
-        <!--name="credentialsForm"-->
-        <!--ng-submit="sshkeysCtrl.changeLoginCredentials()"-->
-        <!--class="form-validate"-->
-        <!--novalidate>-->
-
-    <!--<legend>Login Credentials</legend>-->
-
-    <!--<div class="form-group has-feedback">-->
-      <!--<label class="text-muted">Email address</label>-->
-      <!--<input name="user_email" placeholder="Email" autocomplete="off"-->
-             <!--ng-model="sshkeysCtrl.user.email" required-->
-             <!--class="form-control"-->
-             <!--type="email" ng-disabled="true">-->
-      <!--<span class="fa fa-envelope form-control-feedback text-muted"></span>-->
-      <!--<span ng-show="(credentialsForm.$submitted || credentialsForm.user_email.$dirty) &amp;&amp; credentialsForm.user_email.$error.required"-->
-            <!--class="text-danger ng-hide">This field is required</span>-->
-      <!--<span ng-show="credentialsForm.user_email.$dirty &amp;&amp; credentialsForm.user_email.$error.email"-->
-            <!--class="text-danger ng-hide">This field must be a valid email address</span>-->
-    <!--</div>-->
-
-
-    <!--<div class="form-group has-feedback">-->
-      <!--<label class="text-muted">Current Password</label>-->
-      <!--<input name="user_old_password" ng-model="sshkeysCtrl.loginCredes.oldPassword"-->
-             <!--match="sshkeysCtrl.user.chosenPassword"-->
-             <!--class="form-control" type="password" required>-->
-      <!--<span class="fa fa-lock form-control-feedback text-muted"></span>-->
-      <!--<span ng-show="(credentialsForm.$submitted || credentialsForm.sec_answer.$dirty) &amp;&amp; credentialsForm.sec_answer.$error.required"-->
-            <!--class="text-danger ng-hide">You have to enter your current password.</span>-->
-    <!--</div>-->
-
-    <!--<div class="row">-->
-      <!--<div class="col-xs-6 col-sm-6 col-md-6">-->
-        <!--<div class="form-group has-feedback">-->
-          <!--<label class="text-muted">New Password</label>-->
-          <!--<input id="id-password" name="user_password"-->
-                 <!--ng-model="sshkeysCtrl.loginCredes.newPassword"-->
-                 <!--ng-minlength="6"-->
-                 <!--ng-pattern="/(?=.*[a-z])(?=.*[A-Z])(?=.*[\d\W]).*$/"-->
-                 <!--required-->
-                 <!--class="form-control"-->
-                 <!--type="password">-->
-          <!--<span class="fa fa-lock form-control-feedback text-muted"></span>-->
-        <!--</div>-->
-      <!--</div>-->
-      <!--<div class="col-xs-6 col-sm-6 col-md-6">-->
-        <!--<div class="form-group has-feedback">-->
-          <!--<label class="text-muted">Confirm Password</label>-->
-          <!--<input name="user_password_confirm" ng-model="sshkeysCtrl.loginCredes.confirmedPassword"-->
-                 <!--match="regCtrl.newUser.chosenPassword"-->
-                 <!--class="form-control" type="password">-->
-          <!--<span class="fa fa-lock form-control-feedback text-muted"></span>-->
-        <!--</div>-->
-      <!--</div>-->
-    <!--</div>-->
-    <!--<div class="row">-->
-        <!--<div class="col-xs-12 col-sm-12 col-md-12">-->
-          <!--<span ng-show="(credentialsForm.$submitted || credentialsForm.user_password.$dirty) &amp;&amp; credentialsForm.user_password.$error.required"-->
-                <!--class="text-danger ng-hide">This field is required</span>-->
-          <!--<span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.minlength"-->
-                <!--class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,-->
-              <!--one special character and/or alphanumeric characters. </span>                 -->
-          <!--<span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.pattern"-->
-                <!--class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,-->
-              <!--one special character and/or alphanumeric characters. </span>-->
-          <!--<span ng-show="(credentialsForm.$submitted || credentialsForm.user_password_confirm.$dirty) &amp;&amp; credentialsForm.user_password_confirm.$invalid"-->
-                <!--class="text-danger ng-hide">The two passwords you entered do not match</span>-->
-        <!--</div>-->
-    <!--</div>-->
-    <!--<div class="row">-->
-      <!--<div class="col-xs-3 col-sm-3 col-md-3 pull-right">-->
-        <!--<button class="btn btn-block btn-primary mt-lg" type="submit" -->
-              <!--ng-disabled="sshkeysCtrl.credentialWorking">-->
-          <!--<i ng-if="sshkeysCtrl.credentialWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>-->
-          <!--Save-->
-        <!--</button>-->
-      <!--</div>-->
-    <!--</div>-->
-  <!--</form>-->
 </div>

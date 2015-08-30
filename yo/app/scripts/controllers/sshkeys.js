@@ -11,7 +11,8 @@ angular.module('hopsWorksApp')
 
             self.key = {
               name: '',
-              publicKey: ''
+              publicKey: '',
+              status: false
             };
 
             self.addSshKey = function () {
@@ -19,6 +20,7 @@ angular.module('hopsWorksApp')
               UserService.addSshKey(self.key).then(
                       function (success) {
                         self.keys.push(success.data);
+                        self.keys[self.keys.length-1].status = false;
                         growl.success("Your ssh key has been added.", {title: 'Success', ttl: 5000, referenceId: 1});
                         self.working = false;
                       },
@@ -30,9 +32,9 @@ angular.module('hopsWorksApp')
 
             self.getSshKeys();
 
-            self.removeSshKey = function () {
+            self.removeSshKey = function (name) {
               self.working = true;
-              UserService.removeSshKey(self.key).then(
+              UserService.removeSshKey(name).then(
                       function (success) {
                         growl.success("Your ssh key has been removed.", {title: 'Success', ttl: 5000, referenceId: 1});
                         self.working = false;
@@ -48,6 +50,7 @@ angular.module('hopsWorksApp')
               UserService.getSshKeys().then(
                   function (success) {
                     self.working = false;
+                    self.keys = success.data;
                   }, function (error) {
                     self.working = false;
                     self.errorMsg = error.data.errorMsg;

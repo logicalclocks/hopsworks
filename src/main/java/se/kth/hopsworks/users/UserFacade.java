@@ -10,11 +10,6 @@ import javax.persistence.TypedQuery;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
-/**
- *
- * @author Jim Dowling<jdowling@sics.se>
- *
- */
 @Stateless
 public class UserFacade extends AbstractFacade<Users> {
 
