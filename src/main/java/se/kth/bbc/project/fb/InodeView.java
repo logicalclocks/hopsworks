@@ -28,6 +28,7 @@ public final class InodeView {
   private int template;
   private String description;
   private boolean status = true;
+  private byte underConstruction;
 
   public InodeView() {
   }
@@ -43,6 +44,7 @@ public final class InodeView {
     this.size = i.getSize();
     //put the template id in the REST response
     this.template = i.getTemplate();
+    this.underConstruction = i.getUnderConstruction();
     this.parent = false;
     this.path = path;
     this.modification = new Date(i.getModificationTime().longValue());
@@ -64,6 +66,7 @@ public final class InodeView {
     this.id = ds.getInode().getId();
     this.size = ds.getInode().getSize();
     this.template = ds.getInode().getTemplate();
+    this.underConstruction = ds.getInode().getUnderConstruction();
     this.parent = false;
     this.path = path;
     this.modification = new Date(ds.getInode().getModificationTime().longValue());
@@ -200,7 +203,15 @@ public final class InodeView {
   public void setStatus(boolean status) {
     this.status = status;
   }
-  
+
+  public byte getUnderConstruction() {
+    return underConstruction;
+  }
+
+  public void setUnderConstruction(byte underConstruction) {
+    this.underConstruction = underConstruction;
+  }
+ 
   @Override
   public int hashCode() {
     int hash = 7;

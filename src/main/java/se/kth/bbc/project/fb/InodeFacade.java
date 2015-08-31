@@ -29,7 +29,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
   public InodeFacade() {
     super(Inode.class);
   }
-
+  
   /**
    * Find all the Inodes that have <i>parent</i> as parent.
    * <p>

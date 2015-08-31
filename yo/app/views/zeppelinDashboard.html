@@ -16,7 +16,7 @@
                           class="pull-right" 
                           style="padding-top: 10px; color: #c1c2c3"
                           ng-click="zeppelinCtrl.refreshDashboard()">
-                            <span class="glyphicon glyphicon-refresh"></span>
+                            <i class="fa fa-refresh" ng-class="{'fa-spin':zeppelinCtrl.notesRefreshing}"></i>
                         </a>
                         <div class="panel-body">
                             <h1>Zeppelin Dashboard</h1>
@@ -54,7 +54,7 @@
                           class="pull-right" 
                           style="padding-top: 10px; color: #c1c2c3"
                           ng-click="zeppelinCtrl.refreshInterpreters()">
-                            <span class="glyphicon glyphicon-refresh"></span>
+                            <i class="fa fa-refresh" ng-class="{'fa-spin':zeppelinCtrl.interpretersRefreshing}"></i>
                         </a>
                         <div class="panel-body">
                             <h2>Interpreters</h2>

@@ -11,6 +11,7 @@ angular.module('hopsWorksApp')
             UtilsService.setIndex("child");
 
             var self = this;
+            self.working = false;
             self.currentProject = [];
             self.activities = [];
             self.currentPage = 1;
@@ -119,7 +120,7 @@ angular.module('hopsWorksApp')
             };
 
             self.saveProject = function () {
-
+              self.working = true;
               $scope.newProject = {
                 'projectName': self.currentProject.projectName,
                 'description': self.currentProject.description,
@@ -129,14 +130,15 @@ angular.module('hopsWorksApp')
               ProjectService.update({id: self.currentProject.projectId}, $scope.newProject)
                       .$promise.then(
                               function (success) {
+                                self.working = false;
                                 growl.success("Success: " + success.successMessage, {title: 'Success', ttl: 5000});
                                 if (success.errorMsg) {
                                   growl.warning(success.errorMsg, {title: 'Error', ttl: 15000});
                                 }
-
                                 $modalStack.getTop().key.close();
                               }, function (error) {
-                        growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                self.working = false;
+                                growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
                       }
                       );
             };

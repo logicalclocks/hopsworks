@@ -62,8 +62,10 @@
   </div>
   <div class="modal-footer">
     <button class="btn btn-default" type="button" ng-click="projectCtrl.close()">Cancel</button>
-    <button class="btn btn-primary" type="submit" ng-disabled="projectForm.project_name.$error.required">
-      Save
+    <button class="btn btn-primary" type="submit" 
+              ng-disabled="projectCtrl.working">
+        <i ng-if="projectCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+        Save
     </button>
   </div>
 </form>

@@ -241,7 +241,6 @@ public class UploadService {
       logger.log(Level.INFO, "All finished.");
       finished = true;
     } else {
-      logger.log(Level.INFO, "Upload");
       json.setSuccessMessage("Upload");//This Chunk has been Uploaded.
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(json).build();

@@ -6,6 +6,8 @@ angular.module('hopsWorksApp')
           function ($routeParams, growl, ModalService, ZeppelinService) {
 
             var self = this;
+            self.interpretersRefreshing = false;
+            self.notesRefreshing = false;
             self.interpreters = [];
             self.tutorialNotes = [];
             self.notes = [];
@@ -25,9 +27,12 @@ angular.module('hopsWorksApp')
             };
 
             var getNotesInProject = function () {
+              self.notesRefreshing = true;
               ZeppelinService.notebooks(projectId).then(function (success) {
                 self.notes = success.data.body;
+                self.notesRefreshing = false;
               }, function (error) {
+                self.notesRefreshing = false;
                 console.log(error);
               });
             };
@@ -41,6 +46,7 @@ angular.module('hopsWorksApp')
             };
 
             var refresh = function () {
+              self.interpretersRefreshing = true;
               ZeppelinService.interpreters().then(function (success) {
                 for (var i in self.interpreters) {
                   var interpreter = success.data.body;
@@ -50,7 +56,9 @@ angular.module('hopsWorksApp')
                     self.interpreters[i].statusMsg = statusMsgs[(interpreter[self.interpreters[i].interpreter.name].notRunning ? 0 : 1)];
                   } 
                 }
+                self.interpretersRefreshing = false;
               }, function (error) {
+                self.interpretersRefreshing = false;
                 console.log(error);
               });
             };
