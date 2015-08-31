@@ -183,7 +183,6 @@ angular.module('hopsWorksApp')
               ModalService.selectTemplate('sm', true, templateId).then(
                       function (success) {
                         templateId = success.templateId;
-                        console.log("RETURNED TEMPLATE ID " + templateId);
 
                         ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
                                 function (success) {

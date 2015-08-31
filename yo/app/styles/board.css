@@ -117,9 +117,10 @@ div.story h3, div.task h3 {
 .card {
   box-shadow: 1px 1px 3px #999;
   background: none repeat scroll 0 0 white;
-  border-radius: 10px;
-  margin-top: 7px;
-  padding: 10px;
+  border-radius: 5px;
+  /* margin-top: 2px;*/
+  padding: 5px;
+  margin: 1px 2px 3px 1px;
 }
 .card-title {
   color: #7c9eb2;
@@ -174,4 +175,10 @@ div.story h3, div.task h3 {
   line-height: 1.5em;
   padding: 2px 1px;
   text-decoration: none;
+}
+
+.field-info {
+  cursor: help;
+  padding-right: 0em;
+  padding-left: 0em;
 }

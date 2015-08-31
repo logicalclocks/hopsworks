@@ -100,8 +100,12 @@ angular.module('hopsWorksApp')
                   };
 
                   return $http(regReq);
+                },
+                fetchMetadata: function (inodeId, tableId) {
+                  return $http.get('/api/metadata/fetchmetadata/' + inodeId + '/' + tableId);
                 }
               };
+
               return services;
             };
           }]);

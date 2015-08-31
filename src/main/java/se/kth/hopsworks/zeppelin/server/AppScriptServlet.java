@@ -67,17 +67,9 @@ public class AppScriptServlet extends HttpServlet {
           //this should not be hard-coded!
           if (startIndexRest >= 0 && endIndexRest >= 0) {
             String replaceStringRest
-                    = "function getRestApiBase(){  var port = Number(location.port);" +
-                      "  if (port === 'undefined' || port === 0) {" +
-                      "    port = 80;" +
-                      "    if (location.protocol === 'https:') {" +
-                      "      port = 443; } }" +
-                      "  if (port === 3333 || port === 9000) {" +
-                      "    port = 8080;" +
-                      "  }" +
-                      "  return location.protocol+'//'+location.hostname+':'+ port + '/hopsworks/api'; }";
+                    = "function getRestApiBase(){ return 'http://localhost:8080/hopsworks/api'; }";
             script.replace(startIndexRest, endIndexRest + 1, replaceStringRest);
-        }
+          }
         }
         out.println(script.toString());
 

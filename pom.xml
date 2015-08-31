@@ -79,19 +79,13 @@
     <!--Zeppelin dependencies -->
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
-      <artifactId>zeppelin</artifactId>
-      <version>0.5.0-incubating</version>
-      <type>pom</type>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-zengine</artifactId>
-      <version>0.5.0-incubating</version>
+      <version>0.5.1-incubating-SNAPSHOT</version>
     </dependency>
     <dependency>		
       <groupId>org.apache.zeppelin</groupId>		
       <artifactId>zeppelin-web</artifactId>		
-      <version>0.5.0-incubating</version>		
+      <version>0.5.1-incubating-SNAPSHOT</version>		
       <type>war</type>		
     </dependency>
     <!--End of Zeppelin dependencies -->

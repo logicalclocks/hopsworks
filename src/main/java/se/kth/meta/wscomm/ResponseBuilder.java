@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import se.kth.meta.db.FieldFacade;
-import se.kth.meta.db.FieldPredefinedValueFacade;
 import se.kth.meta.db.FieldTypeFacade;
 import se.kth.meta.db.MTableFacade;
 import se.kth.meta.db.TemplateFacade;
@@ -30,7 +29,9 @@ import se.kth.meta.wscomm.message.FetchMetadataMessage;
 import se.kth.meta.wscomm.message.FetchTableMetadataMessage;
 import se.kth.meta.wscomm.message.FieldTypeMessage;
 import se.kth.meta.wscomm.message.Message;
+import se.kth.meta.wscomm.message.TemplateMessage;
 import se.kth.meta.wscomm.message.TextMessage;
+import se.kth.meta.wscomm.message.UploadedTemplateMessage;
 
 /**
  * Helper class to assist Protocol in constructing responses. Keeps Protocol
@@ -56,13 +57,18 @@ public class ResponseBuilder {
   private FieldTypeFacade fieldTypeFacade;
   @EJB
   private FieldFacade fieldFacade;
-  @EJB
-  private FieldPredefinedValueFacade fpf;
 
   public ResponseBuilder() {
     logger.log(Level.INFO, "ResponseBuilder initialized");
   }
 
+  /**
+   * Persists a new template in the database
+   * <p>
+   * @param message
+   * @return
+   * @throws ApplicationException
+   */
   public Message addNewTemplate(Message message) throws ApplicationException {
     ContentMessage cmsg = (ContentMessage) message;
 
@@ -72,6 +78,13 @@ public class ResponseBuilder {
     return this.fetchTemplates(message);
   }
 
+  /**
+   * Removes a template from the database
+   * <p>
+   * @param message
+   * @return
+   * @throws ApplicationException
+   */
   public Message removeTemplate(Message message) throws ApplicationException {
     ContentMessage cmsg = (ContentMessage) message;
 
@@ -81,11 +94,43 @@ public class ResponseBuilder {
     return this.fetchTemplates(message);
   }
 
+  /**
+   * Updates the name of a given template
+   * <p>
+   * @param message
+   * @return
+   * @throws ApplicationException
+   */
+  public Message updateTemplateName(Message message) throws ApplicationException {
+    ContentMessage cmsg = (ContentMessage) message;
+
+    Template template = cmsg.getTemplate();
+    this.utils.updateTemplateName(template);
+
+    TextMessage response = new TextMessage("Server");
+    response.setMessage("Template updated successfully");
+    
+    return response;
+  }
+
+  /**
+   * Persists a whole metadata template (schema) in the database. The message
+   * contains all the tables and fields this template contains
+   * <p>
+   * @param message
+   * @throws ApplicationException
+   */
   public void storeSchema(Message message) throws ApplicationException {
     List<EntityIntf> schema = message.parseSchema();
     this.utils.addTables(schema);
   }
 
+  /**
+   * Retrieves all the templates (template names) from the database
+   * <p>
+   * @param message
+   * @return
+   */
   public Message fetchTemplates(Message message) {
 
     List<Template> templates = this.templateFacade.loadTemplates();
@@ -97,11 +142,17 @@ public class ResponseBuilder {
     return message;
   }
 
+  /**
+   * Retrieves all the field types from the database
+   * <p>
+   * @param message
+   * @return
+   */
   public Message fetchFieldTypes(Message message) {
 
     List<FieldType> ftypes = this.fieldTypeFacade.loadFieldTypes();
     Collections.sort(ftypes);
-    
+
     FieldTypeMessage newMsg = new FieldTypeMessage();
 
     String jsonMsg = newMsg.buildSchema((List<EntityIntf>) (List<?>) ftypes);
@@ -128,7 +179,7 @@ public class ResponseBuilder {
   /**
    * Fetches ALL the metadata a metadata table carries. It does not do any
    * filtering
-   *
+   * <p>
    * @param table
    * @return
    * @throws se.kth.meta.exception.ApplicationException
@@ -181,7 +232,7 @@ public class ResponseBuilder {
         for (RawData raw : rawList) {
           for (TupleToFile ttf : ttfList) {
 
-            if (raw.getTupleid() == ttf.getId()) {
+            if (raw.getRawdataPK().getTupleid() == ttf.getId()) {
               toKeep.add(raw);
             }
           }
@@ -307,6 +358,14 @@ public class ResponseBuilder {
     }
   }
 
+  /**
+   * Checks if a fields is associated (contains) raw data (metadata) in the
+   * database. This is necessary when the user wants to delete a field
+   * <p>
+   * @param field
+   * @return
+   * @throws ApplicationException
+   */
   public Message checkFieldContents(Field field) throws ApplicationException {
     try {
 
@@ -337,9 +396,33 @@ public class ResponseBuilder {
     Map<Integer, List<RawData>> grouped = new HashMap<>();
 
     for (RawData raw : list) {
-      grouped.put(raw.getTupleid(), null);
+      grouped.put(raw.getRawdataPK().getTupleid(), null);
     }
 
     return new LinkedList<>(grouped.keySet());
+  }
+
+  /**
+   * Persists an uploaded template to the database. The template comes from an
+   * uploaded file and contains the template name and all the template tables
+   * and fields. First create a 'new template' command message and then a 'store
+   * template content' command message
+   * <p>
+   * @param message
+   * @throws se.kth.meta.exception.ApplicationException
+   */
+  public void persistUploadedTemplate(UploadedTemplateMessage message) throws
+          ApplicationException {
+
+    //compile the message
+    message.parseSchema();
+    TemplateMessage tmplMsg = (TemplateMessage) message.addNewTemplateMessage();
+    Template template = tmplMsg.getTemplate();
+
+    int templateId = this.utils.addNewTemplate(template);
+
+    tmplMsg = (TemplateMessage) message.addNewTemplateContentMessage(templateId);
+
+    this.storeSchema(tmplMsg);
   }
 }

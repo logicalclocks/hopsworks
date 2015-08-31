@@ -8,6 +8,8 @@ import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
 import se.kth.meta.entity.EntityIntf;
+import se.kth.meta.entity.MetaData;
+import se.kth.meta.entity.MetaDataPK;
 import se.kth.meta.entity.RawData;
 
 /**
@@ -50,14 +52,17 @@ public class UpdateMetadataMessage extends MetadataMessage {
     try {
       List<EntityIntf> data = new LinkedList<>();
 
-      int rawId = obj.getInt("rawid");
-      String rawdata = obj.getString("rawdata");
+      int metaid = obj.getInt("metaid");
+      String metadata = obj.getString("metadata");
       
-      RawData raw = new RawData();
-      raw.setId(rawId);
-      raw.setData(rawdata);
+      MetaData mtd = new MetaData();
+      MetaDataPK metaPrimaryKey = new MetaDataPK();
+      metaPrimaryKey.setId(metaid);
       
-      data.add(raw);
+      mtd.setMetaDataPK(metaPrimaryKey);
+      mtd.setData(metadata);
+      
+      data.add(mtd);
       return data;
       
     } catch (NullPointerException e) {

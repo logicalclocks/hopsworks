@@ -66,7 +66,7 @@ public class UploadServlet extends HttpServlet {
 
     //Mark as uploaded and check if finished
     try (PrintWriter c = response.getWriter()) {
-      if (info.addChuckAndCheckIfFinished(
+      if (info.addChunkAndCheckIfFinished(
               new ResumableInfo.ResumableChunkNumber(
                       resumableChunkNumber), content_length)) { //Check if all chunks uploaded, and change filename
         ResumableInfoStorage.getInstance().remove(info);

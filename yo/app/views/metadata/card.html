@@ -1,99 +1,59 @@
 <!-- Item template -->
 <div as-sortable-item-handle>
-  <div class="row" style="width: 60em;">
+  <div class="row" style="width: 60em;height: 2em;">
 
-    <div class="col-md-12">
+    <div class="col-md-5" style="padding-right: 25px;">
 
       <span editable-text="card.title"
             style="font-size: 16px;"
-            onaftersave="metaSliderCtrl.storeTemplate(false)"
+            onaftersave="metadataCtrl.storeTemplate(false)"
             class="column-title ng-binding">
         {{card.title}}
         <span ng-show="card.required"
-              class="asteriskRed glyphicon glyphicon-asterisk"
-              title="required field"></span>
+              class="fa fa-asterisk"
+              tooltip="This field is mandatory"></span>
+        <span ng-show="card.find"
+              class="fa fa-search"
+              tooltip="This field is searchable"></span>
       </span>
 
-      <input type="text"
-             ng-show="card.editing"
-             ng-model="card.title"
-             ng-blur="doneEditing(card)"
-             ng-enter="doneEditing(card)"
-             ng-focus="card == editedItem"/>
-    </div>
-  </div>
-
-  <div class="row" style="margin-top: 10px; margin-bottom: 0px; height: 20px;">
-
-    <div class="col-md-2">
-
-      <a data-no-drag
-         class="removeButton pull-left btn btn-xs"
-         tooltips
-         title="delete card"
-         ng-click="metaSliderCtrl.checkDeleteField(column, card)">
-        <span class="glyphicon glyphicon-remove"></span></a>
-    </div>
-
-    <div class="col-md-2" style="padding-left:0px; width: 19%">
-
-      <!-- experiment starts here -->
-      <!-- add a find button in each card. Means that the card/attribute is going to be searchable -->
-      <a data-no-drag class="pull-left btn btn-xs">
-        <span class="searchable-{{card.find}} glyphicon glyphicon-search"
-              ng-click="metaSliderCtrl.makeSearchable(card)"
-              tooltips title="make a card available to search"> find</span></a>
-    </div>
-
-    <div class="col-md-2" style="padding-left:0px; width: 19%">
-
-      <a data-no-drag class="pull-left btn btn-xs">
-        <span class="required-{{card.required}} glyphicon glyphicon-asterisk"
-              ng-click="metaSliderCtrl.makeRequired(card)"
-              tooltips title="required field"> req</span></a>
-    </div>
-
-
-    <div class="col-md-2" style="padding-left:0px; width: 23%">
-
-      <div ng-if="card.fieldtypeid === 1">
+      <div class="btn-group pull-right">
         <a data-no-drag
-           class="pull-left btn btn-xs"
-           ng-click="metaSliderCtrl.editSizeField(card)"
-           ng-show="!card.sizefield.showing">
-          <span class="glyphicon glyphicon-chevron-right"
-                tooltips
-                title="data field max length"> length</span></a>
+           class="removeButton btn pull-right"
+           tooltip="delete this field"
+           title="delete card"
+           style="width: 20px; height: 20px;padding:2px;"
+           ng-click="metadataCtrl.checkDeleteField(column, card)">
+          <i class="fa fa-trash-o"></i>
+        </a>
 
-        <a data-no-drag class="pull-left btn btn-xs"
-           ng-click="metaSliderCtrl.doneEditingSizeField(card)"
-           ng-show="card.sizefield.showing">
-          <span class="glyphicon glyphicon-chevron-down"
-                tooltips
-                title="data field max length"> length</span></a>
+        <a class="btn dropdown-toggle" data-toggle="dropdown"
+           style="width: 20px; height: 20px;padding:2px;"
+           tooltip="configure this field">
+          <i class="fa fa-cog"></i>
+        </a>
 
-        <input size="10"
-               id="sizeFieldInput"
-               type="text"
-               ng-show="card.sizefield.showing"
-               ng-model="card.sizefield.value"
-               ng-blur="metaSliderCtrl.doneEditingSizeField(card)"
-               ng-enter="doneEditingSizeField(card)"
-               ng-focus="card == editedField"/>
-
+        <ul class="dropdown-menu dropdown-amore">
+          <li>
+            <a ng-click="metadataCtrl.makeSearchable(card);
+              $event.stopPropagation()">
+              <i class="searchable-{{card.find}} fa fa-search"></i> Searchable
+            </a>
+          </li>
+          <li>
+            <a ng-click="metadataCtrl.makeRequired(card);
+              $event.stopPropagation()">
+              <i class="required-{{card.required}} fa fa-asterisk"></i> Required
+            </a>
+          </li>
+          <li class="divider"></li>
+          <li>
+            <a ng-click="metadataCtrl.modifyField(column, card)">
+              <i class="fa fa-edit"></i> Edit field...
+            </a>
+          </li>
+        </ul>
       </div>
     </div>
-
-    <!--class = "cardMaxSize-{{card.size}}"-->
-    <div class="col-md-2" style="padding-left:0px; width: 20%">
-
-      <a data-no-drag
-         class="pull-left btn btn-xs"
-         ng-click="metaSliderCtrl.modifyField(column, card)">
-        <span class="glyphicon glyphicon-edit"
-              tooltips
-              title="modify field"> edit</span></a>
-    </div>
   </div>
-
 </div>

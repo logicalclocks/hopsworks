@@ -21,9 +21,11 @@ angular.module('hopsWorksApp', [
   'flow',
   'ngMaterial',
   'ngMessages',
-  'as.sortable'
+  'as.sortable',
+  'isteven-multi-select'
 ])
-        .config(['$routeProvider', '$httpProvider', 'flowFactoryProvider', function ($routeProvider, $httpProvider, flowFactoryProvider) {
+        .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider',
+          function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider) {
 
             // Responseinterceptor for authentication
             $httpProvider.interceptors.push('AuthInterceptorService');
@@ -291,21 +293,21 @@ angular.module('hopsWorksApp', [
                                 }]
                         }
                     })
-
                     .otherwise({
                       redirectTo: '/'
                     });
+
+            $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|tel|file|blob):/);            
           }])
 
-//We already have a limitTo filter built-in to angular,
-//let's make a startFrom filter
+        //We already have a limitTo filter built-in to angular,
+        //let's make a startFrom filter
         .filter('startFrom', function () {
           return function (input, start) {
             start = +start; //parse to int
             return input.slice(start);
           };
         })
-
 
         .filter('cardFilter', function () {
           return function (items, props) {
@@ -332,8 +334,27 @@ angular.module('hopsWorksApp', [
               // Let the output be the input untouched
               out = items;
             }
-
-
             return out;
           };
-        });
+        })
+        
+        //restrict the number of displayed characters
+        .filter('cut', function () {
+          return function (value, wordwise, max, tail) {
+              if (!value) return '';
+
+              max = parseInt(max, 10);
+              if (!max) return value;
+              if (value.length <= max) return value;
+
+              value = value.substr(0, max);
+              if (wordwise) {
+                  var lastspace = value.lastIndexOf(' ');
+                  if (lastspace !== -1) {
+                      value = value.substr(0, lastspace);
+                  }
+              }
+
+              return value + (tail || ' …');
+        };
+    });
