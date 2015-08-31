@@ -11,9 +11,10 @@ public enum JobType {
   FLINK("Flink"),
   SPARK("Spark"),
   ADAM("ADAM");
-  
+
   private final String readable;
-  private JobType(String readable){
+
+  private JobType(String readable) {
     this.readable = readable;
   }
 

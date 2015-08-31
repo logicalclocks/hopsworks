@@ -6,7 +6,6 @@ package se.kth.meta.exception;
  */
 public class DatabaseException extends Exception {
 
-
   public DatabaseException(String message) {
     super(message);
   }

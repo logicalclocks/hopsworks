@@ -78,10 +78,10 @@ public class Utils {
 
       try {
         logger.log(Level.INFO, "STORE/UPDATE TABLE: {0} ", t);
-        
+
         //persist the parent
         int tableId = this.tableFacade.addTable(t);
-        
+
         for (Field field : tableFields) {
           //associate each field(child) with its table(parent)
           field.setTableid(tableId);
@@ -127,7 +127,7 @@ public class Utils {
       logger.log(Level.INFO, "DELETING TABLE {0} ", table.getName());
       this.tableFacade.deleteTable(table);
     } catch (DatabaseException e) {
-      throw new ApplicationException("Failed to delete table "+table,e);
+      throw new ApplicationException("Failed to delete table " + table, e);
     }
   }
 
@@ -136,7 +136,7 @@ public class Utils {
       logger.log(Level.INFO, "DELETING FIELD {0} ", field);
       this.fieldFacade.deleteField(field);
     } catch (DatabaseException e) {
-      throw new ApplicationException("Failed to delete field "+field,e);
+      throw new ApplicationException("Failed to delete field " + field, e);
     }
   }
 
@@ -145,7 +145,8 @@ public class Utils {
     try {
       this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
-      throw new ApplicationException("Failed to delete predefined value for id "+fieldid,e);
+      throw new ApplicationException("Failed to delete predefined value for id "
+              + fieldid, e);
     }
   }
 
@@ -172,7 +173,7 @@ public class Utils {
         this.rawDataFacade.addRawData(r);
       }
     } catch (DatabaseException e) {
-      throw new ApplicationException("Failed to store metadata.",e);
+      throw new ApplicationException("Failed to store metadata.", e);
     }
   }
 
@@ -188,7 +189,7 @@ public class Utils {
       rawdata.setData(raw.getData());
       this.rawDataFacade.addRawData(rawdata);
     } catch (DatabaseException e) {
-      throw new ApplicationException("Failed to update metadata "+raw, e);
+      throw new ApplicationException("Failed to update metadata " + raw, e);
     }
   }
 }

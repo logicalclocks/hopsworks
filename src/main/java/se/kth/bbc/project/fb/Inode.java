@@ -300,7 +300,7 @@ public class Inode implements Serializable {
   public void setSize(long size) {
     this.size = size;
   }
-  
+
   @XmlTransient
   public Collection<Template> getTemplates() {
     return this.templates;

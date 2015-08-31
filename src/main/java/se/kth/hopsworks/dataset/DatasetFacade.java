@@ -96,7 +96,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
   public void flushEm() {
     em.flush();
   }
-  
+
   public void merge(Dataset dataset) {
     em.merge(dataset);
   }

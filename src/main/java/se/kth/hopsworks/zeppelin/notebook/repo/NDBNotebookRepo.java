@@ -1,4 +1,3 @@
-
 package se.kth.hopsworks.zeppelin.notebook.repo;
 
 import java.io.IOException;

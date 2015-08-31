@@ -335,13 +335,12 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
 
   @Override
   public int compareTo(Field field) {
-    if(this.getId() > field.getId()){
+    if (this.getId() > field.getId()) {
       return 1;
-    }
-    else if(this.getId() < field.getId()){
+    } else if (this.getId() < field.getId()) {
       return -1;
     }
-    
+
     return 0;
   }
 

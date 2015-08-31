@@ -22,10 +22,10 @@ public enum JobState {
   FRAMEWORK_FAILURE("Framework failure"),
   STARTING_APP_MASTER("Starting Application Master"),
   APP_MASTER_START_FAILED("Failed starting AM");
-  
+
   private final String readable;
-  
-  private JobState(String readable){
+
+  private JobState(String readable) {
     this.readable = readable;
   }
 

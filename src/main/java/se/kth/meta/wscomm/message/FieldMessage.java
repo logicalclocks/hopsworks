@@ -23,7 +23,7 @@ public class FieldMessage extends ContentMessage {
   private static final Logger logger = Logger.getLogger(FieldMessage.class.
           getName());
 
-  public FieldMessage(){
+  public FieldMessage() {
     super();
     this.TYPE = "FieldMessage";
   }

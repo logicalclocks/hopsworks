@@ -181,13 +181,12 @@ public class MTable implements Serializable, EntityIntf, Comparable<MTable> {
 
   @Override
   public int compareTo(MTable table) {
-    if(this.getId() > table.getId()){
+    if (this.getId() > table.getId()) {
       return 1;
-    }
-    else if(this.getId() < table.getId()){
+    } else if (this.getId() < table.getId()) {
       return -1;
     }
-    
+
     return 0;
   }
 }

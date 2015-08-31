@@ -1,4 +1,3 @@
-
 package se.kth.hopsworks.zeppelin.socket;
 
 import java.util.HashMap;
@@ -15,19 +14,23 @@ import javax.websocket.server.ServerEndpointConfig;
  * @author ermiasg
  */
 public class ZeppelinEndpointConfig extends ServerEndpointConfig.Configurator {
-private static final Logger logger = Logger.getLogger(ZeppelinEndpointConfig.class.
+
+  private static final Logger logger = Logger.getLogger(
+          ZeppelinEndpointConfig.class.
           getName());
+
   @Override
   public void modifyHandshake(ServerEndpointConfig config,
           HandshakeRequest request, HandshakeResponse response) {
-    
+
     HttpSession httpSession = (HttpSession) request.getHttpSession();
     ServletContext context = (ServletContext) httpSession.getServletContext();
     Map<String, String> cookies = new HashMap<>();
     String cookie = request.getHeaders().get("Cookie").get(0);
     String[] cookieParts = cookie.split("; ");//should have space after ;
-    for (String c : cookieParts){
-      cookies.put(c.substring(0, c.indexOf("=")), c.substring(c.indexOf("=")+1, c.length()));
+    for (String c : cookieParts) {
+      cookies.put(c.substring(0, c.indexOf("=")), c.
+              substring(c.indexOf("=") + 1, c.length()));
     }
     config.getUserProperties().put("httpSession", httpSession);
     config.getUserProperties().put("user", request.getUserPrincipal().getName());

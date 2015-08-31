@@ -103,7 +103,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projects).build();
   }
- 
+
   @GET
   @Path("/getProjectInfo/{projectName}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -117,7 +117,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             proj).build();
   }
-  
+
   @GET
   @Path("getDatasetInfo/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -131,16 +131,16 @@ public class ProjectService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NOT_FOUND);
     }
-    
+
     Inode parent = inodes.findParent(inode);
     Project proj = projectFacade.findByName(parent.getInodePK().getName());
     Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
-    
+
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NOT_FOUND);
     }
-    
+
     List<Dataset> projectsContainingInode = datasetFacade.findByInode(inode);
     List<String> sharedWith = new ArrayList<>();
     for (Dataset d : projectsContainingInode) {
@@ -152,7 +152,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             dataset).build();
   }
-  
+
   @GET
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)

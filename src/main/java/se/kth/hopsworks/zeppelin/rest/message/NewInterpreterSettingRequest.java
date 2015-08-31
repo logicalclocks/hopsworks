@@ -14,17 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package se.kth.hopsworks.zeppelin.rest.message;
 
 import java.util.Map;
 import org.apache.zeppelin.interpreter.InterpreterOption;
 
 /**
- *  NewInterpreterSetting rest api request message
+ * NewInterpreterSetting rest api request message
  *
  */
 public class NewInterpreterSettingRequest {
+
   String name;
   String group;
   InterpreterOption option;

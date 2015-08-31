@@ -37,43 +37,43 @@ public class AppScriptServlet extends HttpServlet {
     response.setContentType("text/html;charset=UTF-8");
     try (PrintWriter out = response.getWriter()) {
 
-        ServletContext context = getServletContext();
-        // Read the script file chunk by chunk
-        InputStream is = context.getResourceAsStream(
-                "/zeppelin/scripts/scripts.js");
-        StringBuilder script = new StringBuilder();
-        byte[] buffer = new byte[1024];
-        while (is.available() > 0) {
-          int numRead = is.read(buffer);
-          if (numRead <= 0) {
-            break;
-          }
-          script.append(new String(buffer, 0, numRead, "UTF-8"));
+      ServletContext context = getServletContext();
+      // Read the script file chunk by chunk
+      InputStream is = context.getResourceAsStream(
+              "/zeppelin/scripts/scripts.js");
+      StringBuilder script = new StringBuilder();
+      byte[] buffer = new byte[1024];
+      while (is.available() > 0) {
+        int numRead = is.read(buffer);
+        if (numRead <= 0) {
+          break;
         }
+        script.append(new String(buffer, 0, numRead, "UTF-8"));
+      }
 
         // Replace the strings "function getPort(){...}" & "function getRestApiBase(){...}" to return
-        // the proper value
-        int startIndex = script.indexOf("function getPort()");
-        int endIndex = script.indexOf("}", startIndex);
+      // the proper value
+      int startIndex = script.indexOf("function getPort()");
+      int endIndex = script.indexOf("}", startIndex);
 
-        if (startIndex >= 0 && endIndex >= 0) {
-          String replaceString
-                  = "function getPort(){return '"+ this.websocketPort +"/hopsworks/websocket'; }";
-          script.replace(startIndex, endIndex + 1, replaceString);
+      if (startIndex >= 0 && endIndex >= 0) {
+        String replaceString
+                = "function getPort(){return '" + this.websocketPort
+                + "/hopsworks/websocket'; }";
+        script.replace(startIndex, endIndex + 1, replaceString);
 
-          int startIndexRest = script.indexOf("function getRestApiBase()");
-          int endIndexRest = script.indexOf("}", startIndexRest);
+        int startIndexRest = script.indexOf("function getRestApiBase()");
+        int endIndexRest = script.indexOf("}", startIndexRest);
 
-          //this should not be hard-coded!
-          if (startIndexRest >= 0 && endIndexRest >= 0) {
-            String replaceStringRest
-                    = "function getRestApiBase(){ return 'http://localhost:8080/hopsworks/api'; }";
-            script.replace(startIndexRest, endIndexRest + 1, replaceStringRest);
-          }
+        //this should not be hard-coded!
+        if (startIndexRest >= 0 && endIndexRest >= 0) {
+          String replaceStringRest
+                  = "function getRestApiBase(){ return 'http://localhost:8080/hopsworks/api'; }";
+          script.replace(startIndexRest, endIndexRest + 1, replaceStringRest);
         }
-        out.println(script.toString());
+      }
+      out.println(script.toString());
 
-      
     }
   }
 

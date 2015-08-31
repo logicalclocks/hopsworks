@@ -102,7 +102,7 @@ public class NotebookServer implements
     this.project = getProject((String) config.getUserProperties().get(
             "projectID"));
     authenticateUser(conn, this.project, this.sender);
-    if(this.userRole == null){
+    if (this.userRole == null) {
       return;
     }
     this.notebook = setupNotebook(this.project);
@@ -298,7 +298,7 @@ public class NotebookServer implements
           if (conn.getUserProperties().get("projectID").equals(
                   this.project.getId())) {
             conn.getBasicRemote().sendText(serializeMessage(m));
-         }
+          }
         } catch (IOException ex) {
           logger.log(Level.SEVERE, "Unable to send message " + m, ex);
         }
@@ -323,7 +323,7 @@ public class NotebookServer implements
       logger.log(Level.SEVERE, "Unable to send message " + m, ex);
     }
   }
-  
+
   private void broadcastNote(Note note) {
     broadcast(note.id(), new Message(OP.NOTE).put("note", note));
   }

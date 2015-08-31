@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package se.kth.hopsworks.zeppelin.rest.message;
 
 import java.util.List;
@@ -24,6 +23,7 @@ import org.apache.zeppelin.interpreter.Interpreter;
  * InterpreterSetting information for binding
  */
 public class InterpreterSettingListForNoteBind {
+
   String id;
   String name;
   String group;
@@ -31,7 +31,7 @@ public class InterpreterSettingListForNoteBind {
   private List<Interpreter> interpreters;
 
   public InterpreterSettingListForNoteBind(String id, String name,
-      String group, List<Interpreter> interpreters, boolean selected) {
+          String group, List<Interpreter> interpreters, boolean selected) {
     super();
     this.id = id;
     this.name = name;

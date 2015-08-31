@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package se.kth.hopsworks.zeppelin.server;
 
 import com.google.gson.Gson;
@@ -33,6 +32,7 @@ import org.apache.zeppelin.interpreter.InterpreterSerializer;
  * @param <T>
  */
 public class JsonResponse<T> {
+
   private javax.ws.rs.core.Response.Status status;
   private String message;
   private T body;
@@ -58,7 +58,8 @@ public class JsonResponse<T> {
     this.body = body;
   }
 
-  public JsonResponse(javax.ws.rs.core.Response.Status status, String message, T body) {
+  public JsonResponse(javax.ws.rs.core.Response.Status status, String message,
+          T body) {
     this.status = status;
     this.message = message;
     this.body = body;
@@ -98,7 +99,7 @@ public class JsonResponse<T> {
   @Override
   public String toString() {
     GsonBuilder gsonBuilder = new GsonBuilder()
-      .registerTypeAdapter(Interpreter.class, new InterpreterSerializer());
+            .registerTypeAdapter(Interpreter.class, new InterpreterSerializer());
     if (pretty) {
       gsonBuilder.setPrettyPrinting();
     }
@@ -131,7 +132,8 @@ public class JsonResponse<T> {
   }
 
   public javax.ws.rs.core.Response build() {
-    ResponseBuilder r = javax.ws.rs.core.Response.status(status).entity(this.toString());
+    ResponseBuilder r = javax.ws.rs.core.Response.status(status).entity(this.
+            toString());
     if (cookies != null) {
       for (NewCookie nc : cookies) {
         r.cookie(nc);

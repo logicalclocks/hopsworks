@@ -13,9 +13,10 @@ public enum ProjectServiceEnum {
   MAPREDUCE("MapReduce"),
   YARN("Yarn"),
   PRIVACY("Privacy");
-  
+
   private final String readable;
-  private ProjectServiceEnum(String readable){
+
+  private ProjectServiceEnum(String readable) {
     this.readable = readable;
   }
 

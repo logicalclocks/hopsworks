@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package se.kth.hopsworks.zeppelin.rest;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -27,9 +26,11 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 public class NotebookResponse {
+
   private String msg;
 
-  public NotebookResponse() {}
+  public NotebookResponse() {
+  }
 
   public NotebookResponse(String msg) {
     this.msg = msg;

@@ -67,10 +67,10 @@ public class Protocol {
        */
       case ADD_NEW_TEMPLATE:
         return this.builder.addNewTemplate(message);
-        
+
       case REMOVE_TEMPLATE:
         return this.builder.removeTemplate(message);
-        
+
       case STORE_FIELD:
       case EXTEND_TEMPLATE:
       case STORE_TEMPLATE:
@@ -86,7 +86,7 @@ public class Protocol {
         return this.builder.fetchTemplates(message);
 
       case DELETE_TABLE:
-        MTable table = (MTable) message.parseSchema().get(0);        
+        MTable table = (MTable) message.parseSchema().get(0);
         this.builder.checkDeleteTable(table);
         return this.builder.createSchema(message);
 
@@ -106,7 +106,7 @@ public class Protocol {
       case FETCH_TABLE_METADATA:
         table = (MTable) message.parseSchema().get(0);
         return this.builder.fetchTableMetadata(table);
-        
+
       case FETCH_FIELD_TYPES:
         return this.builder.fetchFieldTypes(message);
 
@@ -122,15 +122,15 @@ public class Protocol {
       case TEST:
       case QUIT:
         return new TextMessage(message.getSender(), message.getMessage());
-        
+
       case IS_TABLE_EMPTY:
         table = (MTable) message.parseSchema().get(0);
         return this.builder.checkTableFields(table);
-        
+
       case IS_FIELD_EMPTY:
         field = (Field) message.parseSchema().get(0);
         return this.builder.checkFieldContents(field);
-        
+
       case UPDATE_METADATA:
         RawData raw = (RawData) message.parseSchema().get(0);
         this.utils.updateMetadata(raw);

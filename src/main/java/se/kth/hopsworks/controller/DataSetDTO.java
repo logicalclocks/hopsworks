@@ -46,8 +46,9 @@ public class DataSetDTO {
     this.sharedWith = sharedWith;
     this.projectTeam = new ArrayList<>();
     //this have to be done because project team contains too much info.
-    for(ProjectTeam member : project.getProjectTeamCollection()) {
-      projectTeam.add(new UserCardDTO(member.getUser().getFname(), member.getUser().getLname(), member.getUser().getEmail()));
+    for (ProjectTeam member : project.getProjectTeamCollection()) {
+      projectTeam.add(new UserCardDTO(member.getUser().getFname(), member.
+              getUser().getLname(), member.getUser().getEmail()));
     }
   }
 
@@ -146,7 +147,7 @@ public class DataSetDTO {
   public void setProjectTeam(List<UserCardDTO> projectTeam) {
     this.projectTeam = projectTeam;
   }
-  
+
   @Override
   public String toString() {
     return "DataSetDTO{" + "name=" + name + ", description=" + description

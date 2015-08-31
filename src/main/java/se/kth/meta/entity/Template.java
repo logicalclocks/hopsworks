@@ -163,10 +163,9 @@ public class Template implements Serializable, EntityIntf, Comparable<Template> 
 
   @Override
   public int compareTo(Template t) {
-    if(this.getId() > t.getId()){
+    if (this.getId() > t.getId()) {
       return 1;
-    }
-    else if(this.getId() < t.getId()){
+    } else if (this.getId() < t.getId()) {
       return -1;
     }
     return 0;

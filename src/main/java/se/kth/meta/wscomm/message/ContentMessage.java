@@ -21,7 +21,7 @@ public abstract class ContentMessage implements Message {
   private static final Logger logger = Logger.
           getLogger(ContentMessage.class.getName());
 
-  protected String TYPE ;
+  protected String TYPE;
   protected String sender;
   protected String message;
   protected String status;
