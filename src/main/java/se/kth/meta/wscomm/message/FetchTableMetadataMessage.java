@@ -10,7 +10,7 @@ import se.kth.meta.entity.MTable;
 
 /**
  * A message asking for a table's metadata
- * 
+ * <p>
  * @author vangelis
  */
 public class FetchTableMetadataMessage extends FetchMetadataMessage {
@@ -33,10 +33,10 @@ public class FetchTableMetadataMessage extends FetchMetadataMessage {
   }
 
   @Override
-  public void init(JsonObject obj){
+  public void init(JsonObject obj) {
     super.init(obj);
   }
-  
+
   @Override
   public List<EntityIntf> parseSchema() {
     JsonObject obj = Json.createReader(new StringReader(this.message)).

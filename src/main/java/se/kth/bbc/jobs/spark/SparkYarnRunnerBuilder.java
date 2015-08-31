@@ -85,9 +85,13 @@ public class SparkYarnRunnerBuilder {
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
     builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
-    builder.addToAppMasterEnvironment("CLASSPATH",
-            classPath
-            + ":" + Constants.SPARK_DEFAULT_CLASSPATH);
+    if (classPath == null || classPath.isEmpty()) {
+      builder.addToAppMasterEnvironment("CLASSPATH",
+              Constants.SPARK_DEFAULT_CLASSPATH);
+    } else {
+      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
+              + Constants.SPARK_DEFAULT_CLASSPATH);
+    }
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }

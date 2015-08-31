@@ -1,11 +1,11 @@
 package se.kth.bbc.jobs;
 
-import se.kth.bbc.jobs.execution.HopsJob;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 

@@ -1,6 +1,5 @@
 package se.kth.bbc.jobs.jobhistory;
 
-import se.kth.bbc.jobs.model.description.JobDescription;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
@@ -24,6 +23,7 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.hopsworks.user.model.Users;
 
 /**

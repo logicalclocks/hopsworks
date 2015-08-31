@@ -126,6 +126,10 @@ public class YarnRunner {
     //Set up container launch context
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
             localResources, env, amCommands, null, null, null);
+// TODO: implement this for real. doAs
+//    UserGroupInformation proxyUser = UserGroupInformation.
+//            createProxyUser("user", UserGroupInformation.
+//                    getCurrentUser());
 
     //Finally set up context
     appContext.setAMContainerSpec(amContainer); //container spec
@@ -577,6 +581,9 @@ public class YarnRunner {
       this.amMemory = config.getAmMemory();
       this.amVCores = config.getAmVCores();
       this.appName = config.getAppName();
+      for (Entry<String, String> e : config.getLocalResources().entrySet()) {
+        addLocalResource(e.getKey(), e.getValue(), false);
+      }
       return this;
     }
 

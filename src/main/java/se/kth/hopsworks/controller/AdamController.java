@@ -10,7 +10,6 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.adam.AdamJob;
-import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
@@ -85,21 +84,6 @@ public class AdamController {
    * @return
    */
   private boolean areJarsAvailable() {
-    try {
-      boolean adamJarMissing = false;
-      for (String s : Constants.ADAM_HDFS_JARS) {
-        if (!fops.exists(s)) {
-          adamJarMissing = true;
-          logger.log(Level.WARNING, "Missing Adam jar: {0}", s);
-        }
-      }
-      if (adamJarMissing) {
-        return false;
-      }
-    } catch (IOException e) {
-      return false;
-    }
-
     boolean isInHdfs;
     try {
       isInHdfs = fops.exists(Constants.DEFAULT_SPARK_JAR_HDFS_PATH);

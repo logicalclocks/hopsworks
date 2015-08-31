@@ -1,8 +1,6 @@
 package se.kth.bbc.jobs.model.description;
 
 import com.google.common.base.Strings;
-import se.kth.bbc.jobs.model.configuration.JobConfiguration;
-import se.kth.bbc.jobs.model.configuration.JsonReduceableConverter;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
@@ -32,6 +30,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
+import se.kth.bbc.jobs.model.configuration.JsonReduceableConverter;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.user.model.Users;
 

@@ -1,4 +1,3 @@
-
 package se.kth.hopsworks.dataset;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -9,6 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 public class RequestDTO {
+
   private Integer inodeId;
   private Integer projectId;
   private String message;
@@ -45,6 +45,5 @@ public class RequestDTO {
   public void setMessage(String message) {
     this.message = message;
   }
-  
-  
+
 }

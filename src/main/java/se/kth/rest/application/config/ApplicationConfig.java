@@ -1,7 +1,6 @@
 package se.kth.rest.application.config;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
 
 /**
  *
@@ -40,6 +39,6 @@ public class ApplicationConfig extends ResourceConfig {
     //register(org.glassfish.jersey.filter.LoggingFilter.class);
 
     // Enable Tracing support.
-    property(ServerProperties.TRACING, "ALL");
+    //property(ServerProperties.TRACING, "OFF");
   }
 }

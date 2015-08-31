@@ -13,11 +13,11 @@ import se.kth.meta.db.RawDataFacade;
 import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.db.TupleToFileFacade;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.Field;
+import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.InodeTableComposite;
-import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
+import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.Template;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.ApplicationException;
@@ -78,10 +78,10 @@ public class Utils {
 
       try {
         logger.log(Level.INFO, "STORE/UPDATE TABLE: {0} ", t);
-        
+
         //persist the parent
         int tableId = this.tableFacade.addTable(t);
-        
+
         for (Field field : tableFields) {
           //associate each field(child) with its table(parent)
           field.setTableid(tableId);
@@ -127,39 +127,31 @@ public class Utils {
       logger.log(Level.INFO, "DELETING TABLE {0} ", table.getName());
       this.tableFacade.deleteTable(table);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteTable encountered a problem " + e.
-              getMessage());
+      throw new ApplicationException("Failed to delete table " + table, e);
     }
   }
 
   public void deleteField(Field field) throws ApplicationException {
-
     try {
       logger.log(Level.INFO, "DELETING FIELD {0} ", field);
       this.fieldFacade.deleteField(field);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteField encountered a problem " + e.
-              getMessage());
+      throw new ApplicationException("Failed to delete field " + field, e);
     }
   }
 
   public void removeFieldPredefinedValues(int fieldid) throws
           ApplicationException {
     try {
-
       this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteField encountered a problem " + e.
-              getMessage());
+      throw new ApplicationException("Failed to delete predefined value for id "
+              + fieldid, e);
     }
   }
 
   public void storeMetadata(List<EntityIntf> composite, List<EntityIntf> raw)
           throws ApplicationException {
-
     try {
       /*
        * get the inodeid present in the entities in the list. It is the
@@ -173,7 +165,6 @@ public class Utils {
 
       //every rawData entity carries the same inodeid
       for (EntityIntf raww : raw) {
-
         RawData r = (RawData) raww;
         r.setData(r.getData().replaceAll("\"", ""));
         r.setTupleid(tupleid);
@@ -181,11 +172,8 @@ public class Utils {
         logger.log(Level.INFO, r.toString());
         this.rawDataFacade.addRawData(r);
       }
-
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: storeMetadata(List<?> list) encountered a problem "
-              + e.getMessage());
+      throw new ApplicationException("Failed to store metadata.", e);
     }
   }
 
@@ -197,14 +185,11 @@ public class Utils {
    */
   public void updateMetadata(RawData raw) throws ApplicationException {
     try {
-
       RawData rawdata = this.rawDataFacade.getRawData(raw.getId());
       rawdata.setData(raw.getData());
       this.rawDataFacade.addRawData(rawdata);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: updateMetadata(RawData) encountered a problem " + e.
-              getMessage());
+      throw new ApplicationException("Failed to update metadata " + raw, e);
     }
   }
 }

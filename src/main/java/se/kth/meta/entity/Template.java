@@ -39,7 +39,7 @@ import se.kth.bbc.project.fb.Inode;
           query = "SELECT t FROM Template t WHERE t.id = :templateid"),
   @NamedQuery(name = "Template.findByName",
           query = "SELECT t FROM Template t WHERE t.name = :name")})
-public class Template implements Serializable, EntityIntf, Comparable {
+public class Template implements Serializable, EntityIntf, Comparable<Template> {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -162,17 +162,12 @@ public class Template implements Serializable, EntityIntf, Comparable {
   }
 
   @Override
-  public int compareTo(Object o) {
-
-    Template neww = (Template) o;
-    
-    if(this.getId() > neww.getId()){
+  public int compareTo(Template t) {
+    if (this.getId() > t.getId()) {
       return 1;
-    }
-    else if(this.getId() < neww.getId()){
+    } else if (this.getId() < t.getId()) {
       return -1;
     }
-    
     return 0;
   }
 

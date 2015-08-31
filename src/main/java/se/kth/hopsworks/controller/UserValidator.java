@@ -4,8 +4,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.Response;
+import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.hopsworks.rest.AppException;
-import se.kth.hopsworks.user.model.SecurityQuestions;
 
 /**
  * @author André<amore@kth.se>
@@ -66,7 +66,7 @@ public class UserValidator {
     if (question == null || question.isEmpty()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.SEC_Q_EMPTY);
-    } else if (SecurityQuestions.getQuestion(question) == null) {
+    } else if (SecurityQuestion.getQuestion(question) == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.SEC_Q_NOT_IN_LIST);
     }

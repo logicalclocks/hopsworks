@@ -19,11 +19,11 @@ public class TableMessage extends ContentMessage {
   private static final Logger logger = Logger.getLogger(TableMessage.class.
           getName());
 
-  public TableMessage(){
+  public TableMessage() {
     super();
     this.TYPE = "TableMessage";
   }
-  
+
   @Override
   public void init(JsonObject json) {
     this.sender = json.getString("sender");

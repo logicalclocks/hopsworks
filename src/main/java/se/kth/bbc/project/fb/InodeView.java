@@ -32,10 +32,12 @@ public final class InodeView {
 
   public InodeView() {
   }
+
   /**
-   * Constructor for sub folders 
+   * Constructor for sub folders
+   * <p>
    * @param i
-   * @param path 
+   * @param path
    */
   public InodeView(Inode i, String path) {
     this.name = i.getInodePK().getName();
@@ -54,11 +56,13 @@ public final class InodeView {
     // top level datasets. 
     this.status = true;
   }
+
   /**
    * Constructor for top level datasets.
+   * <p>
    * @param parent
    * @param ds
-   * @param path 
+   * @param path
    */
   public InodeView(Inode parent, Dataset ds, String path) {
     this.name = ds.getInode().getInodePK().getName();
@@ -69,17 +73,20 @@ public final class InodeView {
     this.underConstruction = ds.getInode().getUnderConstruction();
     this.parent = false;
     this.path = path;
-    this.modification = new Date(ds.getInode().getModificationTime().longValue());
+    this.modification
+            = new Date(ds.getInode().getModificationTime().longValue());
     this.accessTime = new Date(ds.getInode().getAccessTime().longValue());
-    this.shared = (!parent.inodePK.getName().equals(ds.getProjectId().getName()));
-    if (this.shared){
-      this.name = parent.inodePK.getName() + Constants.SHARED_FILE_SEPARATOR + this.name;
+    this.shared
+            = (!parent.inodePK.getName().equals(ds.getProjectId().getName()));
+    if (this.shared) {
+      this.name = parent.inodePK.getName() + Constants.SHARED_FILE_SEPARATOR
+              + this.name;
     }
     this.owningProjectName = parent.inodePK.getName();
     this.description = ds.getDescription();
     this.status = ds.getStatus();
   }
-  
+
   private InodeView(String name, boolean dir, boolean parent, String path) {
     this.name = name;
     this.dir = dir;

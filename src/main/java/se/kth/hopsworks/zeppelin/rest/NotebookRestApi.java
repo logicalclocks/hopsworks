@@ -1,9 +1,11 @@
 package se.kth.hopsworks.zeppelin.rest;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-
+import javax.ejb.EJB;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -11,29 +13,21 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
 import org.apache.zeppelin.interpreter.InterpreterSetting;
-import se.kth.hopsworks.zeppelin.rest.message.InterpreterSettingListForNoteBind;
-import se.kth.hopsworks.zeppelin.server.JsonResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import javax.ejb.EJB;
-import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.quartz.SchedulerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.zeppelin.notebook.Notebook;
+import se.kth.hopsworks.zeppelin.rest.message.InterpreterSettingListForNoteBind;
+import se.kth.hopsworks.zeppelin.server.JsonResponse;
 import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
 import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 

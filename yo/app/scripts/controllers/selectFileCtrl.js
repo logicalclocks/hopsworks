@@ -33,7 +33,7 @@ angular.module('hopsWorksApp')
               } else if (!selectedFilePath.match(regex)) {
                 growl.error(errorMsg, {title: "Invalid file extension", ttl: 15000});
               } else {
-                $modalInstance.close(selectedFilePath);
+                $modalInstance.close("hdfs://" + selectedFilePath);
               }
             };
 

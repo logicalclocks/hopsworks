@@ -342,6 +342,25 @@ CREATE TABLE `dataset_request` (
    ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
+-- Glassfish timers
+-- ----------------------
+
+CREATE TABLE `EJB__TIMER__TBL` (
+  `CREATIONTIMERAW` bigint(20) NOT NULL,
+  `BLOB` blob,
+  `TIMERID` varchar(255) NOT NULL,
+  `CONTAINERID` bigint(20) NOT NULL,
+  `OWNERID` varchar(255) DEFAULT NULL,
+  `STATE` int(11) NOT NULL,
+  `PKHASHCODE` int(11) NOT NULL,
+  `INTERVALDURATION` bigint(20) NOT NULL,
+  `INITIALEXPIRATIONRAW` bigint(20) NOT NULL,
+  `LASTEXPIRATIONRAW` bigint(20) NOT NULL,
+  `SCHEDULE` varchar(255) DEFAULT NULL,
+  `APPLICATIONID` bigint(20) NOT NULL,
+  PRIMARY KEY (`TIMERID`)
+) ENGINE=ndbcluster;
+
 -- VIEWS --------------
 -- ---------------------
 
