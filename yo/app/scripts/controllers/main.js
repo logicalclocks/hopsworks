@@ -27,6 +27,11 @@ angular.module('hopsWorksApp')
               ModalService.profile('md');
             };
 
+              self.sshKeysModal = function () {
+                  ModalService.sshKeys('md');
+              };
+
+
             self.view = function (selected, projectOrDataset) {
               if (projectOrDataset === 'parent') {
               ProjectService.getProjectInfo({projectName:selected.name}).$promise.then(
