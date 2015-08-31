@@ -154,7 +154,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td class="text-right">Application master memory <i class="fa fa-info-circle" tooltip="The amount of memory that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></td>
+                  <td class="text-right">Application master memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></td>
                   <td>
                     <input type="number" ng-model="newJobCtrl.runConfig.amMemory" min="0" class="form-control">
                   </td>
@@ -181,8 +181,8 @@
                   <td><input type="number" ng-model="newJobCtrl.runConfig.executorCores" class="form-control"></td>
                 </tr>
                 <tr ng-show="newJobCtrl.jobtype == 1">
-                  <td class="text-right">Executor memory <i class="fa fa-info-circle" tooltip="The amount of memory that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></td>
-                  <td><input type="text" ng-model="newJobCtrl.runConfig.executorMemory" class="form-control"></td>
+                  <td class="text-right">Executor memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></td>
+                  <td><input type="number" min="0" ng-model="newJobCtrl.runConfig.executorMemory" class="form-control"></td>
                 </tr>
               </tbody>
             </table>

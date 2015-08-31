@@ -84,7 +84,7 @@ angular.module('hopsWorksApp')
               "visible": false,
               "value": "",
               "title": "Configure and create"};
-            
+
             this.undoable = false; //Signify if a clear operation can be undone.
 
             /**
@@ -153,7 +153,7 @@ angular.module('hopsWorksApp')
             };
 
             this.undoClear = function () {
-              if(self.undoneState !== null){
+              if (self.undoneState !== null) {
                 self.jobtype = self.undoneState.jobtype;
                 self.jobname = self.undoneState.jobname;
                 self.localResources = self.undoneState.localResources;
@@ -181,10 +181,14 @@ angular.module('hopsWorksApp')
             this.createJob = function () {
               self.runConfig.appName = self.jobname;
               self.runConfig.localResources = self.localResources;
-              self.runConfig.schedule = {
-                "start": $('#scheduleDatePicker').data("DateTimePicker").date().valueOf(),
-                "unit": self.schedule.unit.toUpperCase(),
-                "number": self.schedule.number};
+              if ($('#scheduleDatePicker').data("DateTimePicker").date()) {
+                self.runConfig.schedule = {
+                  "start": $('#scheduleDatePicker').data("DateTimePicker").date().valueOf(),
+                  "unit": self.schedule.unit.toUpperCase(),
+                  "number": self.schedule.number};
+              } else {
+                self.runConfig.schedule = null;
+              }
               JobService.createNewJob(self.projectId, self.getJobType(), self.runConfig).then(
                       function (success) {
                         $location.path('project/' + self.projectId + '/jobs');

@@ -19,7 +19,7 @@ public class YarnJobConfiguration extends JobConfiguration {
 
   private String amQueue = "default";
   // Memory for App master (in MB)
-  private int amMemory = 1024;
+  private int amMemory = 256;
   //Number of cores for appMaster
   private int amVCores = 1;
   //List of paths to be added to local resources
