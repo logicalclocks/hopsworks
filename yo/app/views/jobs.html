@@ -23,14 +23,6 @@
                 <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
                   <div class="file-manager">
                     <h5 style="margin: 0px; font-weight: bold; color: #2e353d;">Filter: </h5>
-                    <button type="button" class="btn btn-info" ng-model="jobsCtrl.jobFilter.creator.email" btn-checkbox btn-checkbox-true="mainCtrl.email" btn-checkbox-false="''">
-                      My jobs
-                    </button>
-                    <div class="btn-group">
-                      <label class="btn btn-info" ng-model="jobsCtrl.jobFilter.jobType" btn-radio="'CUNEIFORM'" uncheckable ng-change='jobsCtrl.checkJobTypeFilter()'>Cuneiform</label>
-                      <label class="btn btn-info" ng-model="jobsCtrl.jobFilter.jobType" btn-radio="'SPARK'" uncheckable ng-change='jobsCtrl.checkJobTypeFilter()'>Spark</label>
-                      <label class="btn btn-info" ng-model="jobsCtrl.jobFilter.jobType" btn-radio="'ADAM'" uncheckable ng-change='jobsCtrl.checkJobTypeFilter()'>ADAM</label>
-                    </div>
                     <input type="text" ng-model="jobsCtrl.jobFilter.name" placeholder="Job name"/>
                     
 

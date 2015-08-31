@@ -15,7 +15,10 @@
         <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / New job</h3>
 
         <div class="panel-header">
-          <h2>New job definition</h2>
+          <h2>New job definition 
+            <i class="fa fa-times-circle" tooltip="Clear the current state." style="margin-left: 10px" ng-click="newJobCtrl.clear()" ng-hide="newJobCtrl.undoable"></i>
+            <i class="fa fa-undo" tooltip="Restore the previous state." style="margin-left: 10px" ng-click="newJobCtrl.undoClear()" ng-show="newJobCtrl.undoable"></i>
+          </h2>
         </div>
         <accordion close-others="false">
           <accordion-group heading="{{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" is-open="newJobCtrl.accordion1.isOpen">

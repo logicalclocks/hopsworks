@@ -84,6 +84,93 @@ angular.module('hopsWorksApp')
               "visible": false,
               "value": "",
               "title": "Configure and create"};
+            
+            this.undoable = false; //Signify if a clear operation can be undone.
+
+            /**
+             * Clear the current state (and allow for undo).
+             * @returns {undefined}
+             */
+            this.clear = function () {
+              var state = {
+                "jobtype": self.jobtype,
+                "jobname": self.jobname,
+                "localResources": self.localResources,
+                "phase": self.phase,
+                "runConfig": self.runConfig,
+                "sparkState": self.sparkState,
+                "adamState": self.adamState,
+                "schedule": self.schedule,
+                "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5],
+              };
+              self.undoneState = state;
+              self.undoable = true;
+              self.jobtype = null;
+              self.jobname = null;
+              self.localResources = {"entry": []};
+              self.phase = 0;
+              self.runConfig = null;
+              self.sparkState = {
+                "selectedJar": null //The path to the selected jar
+              };
+              self.adamState = {//Will hold ADAM-specific state
+                "processparameter": null, //The parameter currently being processed
+                "commandList": null, //The ADAM command list.
+                "selectedCommand": null //The selected ADAM command
+              };
+              self.schedule = {
+                "unit": "hour",
+                "number": 1,
+                "addition": "",
+                "startDate": ""
+              };
+              //Variables for front-end magic
+              self.accordion1 = {//Contains the job name
+                "isOpen": true,
+                "visible": true,
+                "value": "",
+                "title": "Job name"};
+              self.accordion2 = {//Contains the job type
+                "isOpen": false,
+                "visible": false,
+                "value": "",
+                "title": "Job type"};
+              self.accordion3 = {// Contains the main execution file (jar, workflow,...)
+                "isOpen": false,
+                "visible": false,
+                "value": "",
+                "title": ""};
+              self.accordion4 = {// Contains the job setup (main class, input variables,...)
+                "isOpen": false,
+                "visible": false,
+                "value": "",
+                "title": ""};
+              self.accordion5 = {//Contains the configuration and creation
+                "isOpen": false,
+                "visible": false,
+                "value": "",
+                "title": "Configure and create"};
+            };
+
+            this.undoClear = function () {
+              if(self.undoneState !== null){
+                self.jobtype = self.undoneState.jobtype;
+                self.jobname = self.undoneState.jobname;
+                self.localResources = self.undoneState.localResources;
+                self.phase = self.undoneState.phase;
+                self.runConfig = self.undoneState.runConfig;
+                self.sparkState = self.undoneState.sparkState;
+                self.adamState = self.undoneState.adamState;
+                self.schedule = self.undoneState.schedule
+                self.accordion1 = self.undoneState.accordions[0];
+                self.accordion2 = self.undoneState.accordions[1];
+                self.accordion3 = self.undoneState.accordions[2];
+                self.accordion4 = self.undoneState.accordions[3];
+                self.accordion5 = self.undoneState.accordions[4];
+              }
+              self.unodeState = null;
+              self.undoable = false;
+            };
 
             /**
              * Create the job.
@@ -95,8 +182,8 @@ angular.module('hopsWorksApp')
               self.runConfig.appName = self.jobname;
               self.runConfig.localResources = self.localResources;
               self.runConfig.schedule = {
-                "start": $('#scheduleDatePicker').data("DateTimePicker").date().valueOf(), 
-                "unit": self.schedule.unit.toUpperCase(), 
+                "start": $('#scheduleDatePicker').data("DateTimePicker").date().valueOf(),
+                "unit": self.schedule.unit.toUpperCase(),
                 "number": self.schedule.number};
               JobService.createNewJob(self.projectId, self.getJobType(), self.runConfig).then(
                       function (success) {
@@ -121,6 +208,8 @@ angular.module('hopsWorksApp')
               }
               self.accordion1.value = " - " + self.jobname; //Edit panel title
               self.removed = false;
+              self.undoneState = null; //Clear previous state.
+              self.undoable = false;
             };
 
             /**
