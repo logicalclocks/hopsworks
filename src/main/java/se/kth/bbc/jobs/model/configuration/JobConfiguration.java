@@ -1,8 +1,8 @@
 package se.kth.bbc.jobs.model.configuration;
 
 import com.google.common.base.Strings;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.EnumSet;
+import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
@@ -22,7 +22,9 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 public abstract class JobConfiguration implements JsonReduceable {
 
   protected String appName;
+  protected ScheduleDTO schedule;
   protected final static String KEY_APPNAME = "APPNAME";
+  protected final static String KEY_SCHEDULE = "SCHEDULE";
 
   protected JobConfiguration() {
     //Needed for JAXB
@@ -47,11 +49,18 @@ public abstract class JobConfiguration implements JsonReduceable {
     this.appName = appName;
   }
 
+  public ScheduleDTO getSchedule() {
+    return schedule;
+  }
+
+  public void setSchedule(ScheduleDTO schedule) {
+    this.schedule = schedule;
+  }
+
   /**
    * As found in Effective Java, the equals contract cannot be satisfied for
    * inheritance hierarchies that add fields in subclasses. Since this is the
-   * main goal of extension of this class, these objects are not meant to be
-   * compared.
+   * main goal of extension of this class, these objects should not be compared.
    * <p>
    * @param o
    * @return
@@ -68,13 +77,30 @@ public abstract class JobConfiguration implements JsonReduceable {
     if (!Strings.isNullOrEmpty(appName)) {
       obj.set(KEY_APPNAME, appName);
     }
+    if (schedule != null) {
+      obj.set(KEY_SCHEDULE, schedule);
+    }
     return obj;
   }
 
   @Override
   public void updateFromJson(MutableJsonObject json) throws
           IllegalArgumentException {
+    //First: check correctness
+    ScheduleDTO sch = null;
+    if (json.containsKey(KEY_SCHEDULE)) {
+      MutableJsonObject mj = json.getJsonObject(KEY_SCHEDULE);
+      try {
+        sch = new ScheduleDTO();
+        sch.updateFromJson(mj);
+      } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException(
+                "Failed to parse JobConfiguration: invalid schedule.", e);
+      }
+    }
+    //Then: set values
     this.appName = json.getString(KEY_APPNAME, null);
+    this.schedule = sch;
   }
 
   public static class JobConfigurationFactory {
@@ -141,13 +167,9 @@ public abstract class JobConfiguration implements JsonReduceable {
       return conf;
     }
 
-    public static List<JobType> getSupportedTypes() {
-      List<JobType> list = new ArrayList<>(4);
-      list.add(JobType.ADAM);
-      list.add(JobType.CUNEIFORM);
-      list.add(JobType.SPARK);
-      list.add(JobType.YARN);
-      return list;
+    public static Set<JobType> getSupportedTypes() {
+      return EnumSet.of(JobType.ADAM, JobType.CUNEIFORM, JobType.SPARK,
+              JobType.YARN);
     }
   }
 }

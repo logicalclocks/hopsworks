@@ -82,6 +82,11 @@ angular.module('hopsWorksApp')
                   break;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState;
+              var schedule = {
+                "unit": self.job.runConfig.schedule.unit,
+                "number": self.job.runConfig.schedule.number,
+                "addition": (self.job.runConfig.schedule.number > 1)?"s":""
+              };
               if (jobType == 0) {
                 mainFileTxt = "Workflow file";
                 mainFileVal = self.job.runConfig.wf.name;
@@ -111,6 +116,7 @@ angular.module('hopsWorksApp')
                 "runConfig": self.job.runConfig,
                 "sparkState": sparkState,
                 "adamState": adamState,
+                "schedule": schedule,
                 "accordion1": {//Contains the job name
                   "isOpen": false,
                   "visible": true,

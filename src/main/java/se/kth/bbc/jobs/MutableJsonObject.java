@@ -10,6 +10,7 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
 import javax.json.JsonValue;
+import se.kth.bbc.jobs.model.JsonReduceable;
 
 /**
  * Represents a mutable JSON object with only String values.
@@ -86,6 +87,17 @@ public class MutableJsonObject {
    */
   public void set(String key, MutableJsonObject value) {
     internalJsons.put(key, value);
+  }
+  
+  /**
+   * Add a String-JSON object pair. If the key already exists, the value is
+   * overwritten. 
+   * <p>
+   * @param key
+   * @param value
+   */
+  public void set(String key, JsonReduceable value) {
+    internalJsons.put(key, value.getReducedJsonObject());
   }
 
   /**
@@ -229,6 +241,11 @@ public class MutableJsonObject {
       return false;
     }
     return true;
+  }
+  
+  @Override
+  public String toString(){
+    return this.toJson();
   }
 
 }

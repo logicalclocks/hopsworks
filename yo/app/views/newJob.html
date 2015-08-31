@@ -111,7 +111,7 @@
                   </td>
                   <td>
                     <input type="text" ng-model="arg.value" ng-hide="arg.path && !arg.value" ng-required="arg.required" class="form-control">
-                    <button ng-show="arg.path && !arg.value" ng-click="newJobCtrl.selectFile('ADAM',arg)" class="btn btn-default">Select</button>
+                    <button ng-show="arg.path && !arg.value" ng-click="newJobCtrl.selectFile('ADAM', arg)" class="btn btn-default">Select</button>
                   </td>
                 </tr>
                 <tr>
@@ -135,8 +135,6 @@
               </table>
             </div>
           </accordion-group>
-
-
           <!-- Set some run configuration -->
           <accordion-group heading="{{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}" 
                            is-open="newJobCtrl.accordion5.isOpen" 
@@ -215,6 +213,37 @@
                   </tr>
                 </tbody>
               </table>
+            </div>
+            <!-- Set schedule -->
+            <div>
+              <h3>Schedule
+                <i class="fa fa-info-circle" tooltip="Set a schedule for execution of this job. You do not need to set this and can always run a job at any time independent of the set schedule." style="margin-left: 10px"></i>
+              </h3>
+              <div>
+                Every 
+                <input type="number" ng-model="newJobCtrl.schedule.number" min="1" max="999" ng-change="newJobCtrl.updateNumberOfScheduleUnits()" style="width: 50px"> 
+                <select class="dropdown" ng-model="newJobCtrl.schedule.unit">
+                  <option value="minute">minute{{newJobCtrl.schedule.addition}}</option>
+                  <option value="hour">hour{{newJobCtrl.schedule.addition}}</option>
+                  <option value="day">day{{newJobCtrl.schedule.addition}}</option>
+                  <option value="week">week{{newJobCtrl.schedule.addition}}</option>
+                  <option value="month">month{{newJobCtrl.schedule.addition}}</option>
+                </select>
+
+                <div class="form-group">
+                  Starting on 
+                  <div class='input-group date col-md-6' id='scheduleDatePicker'>
+                    <input type='text' class="form-control">
+                    <span class="input-group-addon">
+                      <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                  </div>
+                </div>
+                <script type="text/javascript">
+                                  $(function () {
+                                  $('#scheduleDatePicker').datetimepicker();
+                                  });                </script>
+              </div>
             </div>
             <div>
               <!-- Creation button -->
