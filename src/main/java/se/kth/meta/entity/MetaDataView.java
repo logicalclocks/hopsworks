@@ -49,7 +49,6 @@ public final class MetaDataView {
     return this.metadataview;
   }
 
-  //It could change to a list of views
   public void setMetadataView(List<MetaDataView> metadataview) {
     this.metadataview = metadataview;
   }
