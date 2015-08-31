@@ -84,12 +84,6 @@ angular.module('hopsWorksApp')
               "visible": false,
               "value": "",
               "title": "Configure and create"};
-            this.accordion6 = {//Contains the schedule
-              "isOpen": false,
-              "visible": false,
-              "value": "",
-              "title": "Schedule (optional)"};
-
 
             /**
              * Create the job.
@@ -163,7 +157,6 @@ angular.module('hopsWorksApp')
               self.accordion4.isOpen = false; //Close job setup
               self.accordion4.visible = false; //Hide job setup
               self.accordion5.visible = false; // Hide job configuration
-              self.accordion6.visible = false; //Hide schedule
               self.accordion3.value = ""; //Reset selected file
             };
 
@@ -196,7 +189,6 @@ angular.module('hopsWorksApp')
               self.accordion5.visible = true; // Show job config
               self.accordion3.value = " - " + path; // Set file selection title
               self.accordion3.isOpen = false; //Close file selection
-              self.accordion6.visible = true; //Show schedule
             };
 
             /**
@@ -294,6 +286,8 @@ angular.module('hopsWorksApp')
                 self.localResources = stored.localResources;
                 self.phase = stored.phase;
                 self.runConfig = stored.runConfig;
+                self.schedule = stored.schedule;
+                self.schedule.unit = self.schedule.unit.toLowerCase();
                 if (self.jobtype == 1) {
                   self.sparkState = stored.sparkState;
                 } else if (self.jobtype == 2) {
@@ -306,7 +300,6 @@ angular.module('hopsWorksApp')
                 self.accordion3 = stored.accordion3;
                 self.accordion4 = stored.accordion4;
                 self.accordion5 = stored.accordion5;
-                self.accordion6 = stored.accordion6;
               }
               if (self.adamState.commandList == null) {
                 self.getCommandList();
@@ -353,8 +346,7 @@ angular.module('hopsWorksApp')
                 "accordion2": self.accordion2,
                 "accordion3": self.accordion3,
                 "accordion4": self.accordion4,
-                "accordion5": self.accordion5,
-                "accordion6": self.accordion6
+                "accordion5": self.accordion5
               };
               StorageService.store(self.projectId + "newjob", state);
             });
