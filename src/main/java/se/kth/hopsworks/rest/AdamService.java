@@ -101,10 +101,10 @@ public class AdamService {
           @Context HttpServletRequest req) {
     JsonArrayBuilder array = Json.createArrayBuilder();
     AdamCommand[] allcommands = AdamCommand.values();
-    for (AdamCommand ac:allcommands) {
+    for (AdamCommand ac : allcommands) {
       JsonObjectBuilder obj = Json.createObjectBuilder();
       obj.add("name", ac.getCommand());
-      obj.add("description",ac.getDescription());
+      obj.add("description", ac.getDescription());
       array.add(obj);
     }
     return Response.ok(array.build()).build();

@@ -87,7 +87,6 @@ public class ResponseBuilder {
   }
 
   public Message fetchTemplates(Message message) {
-
     List<Template> templates = this.templateFacade.loadTemplates();
 
     Collections.sort(templates);
@@ -98,10 +97,9 @@ public class ResponseBuilder {
   }
 
   public Message fetchFieldTypes(Message message) {
-
     List<FieldType> ftypes = this.fieldTypeFacade.loadFieldTypes();
     Collections.sort(ftypes);
-    
+
     FieldTypeMessage newMsg = new FieldTypeMessage();
 
     String jsonMsg = newMsg.buildSchema((List<EntityIntf>) (List<?>) ftypes);
@@ -113,7 +111,6 @@ public class ResponseBuilder {
   }
 
   public Message createSchema(Message message) {
-
     ContentMessage cmsg = (ContentMessage) message;
 
     List<MTable> tables = this.templateFacade.loadTemplateContent(cmsg.
@@ -134,7 +131,6 @@ public class ResponseBuilder {
    * @throws se.kth.meta.exception.ApplicationException
    */
   public Message fetchTableMetadata(MTable table) throws ApplicationException {
-
     try {
       FetchTableMetadataMessage message
               = new FetchTableMetadataMessage("Server", "");
@@ -147,7 +143,7 @@ public class ResponseBuilder {
 
       return message;
     } catch (DatabaseException e) {
-      throw new ApplicationException("Server", e.getMessage());
+      throw new ApplicationException("Failed to fetch metadata for " + table, e);
     }
   }
 
@@ -160,7 +156,6 @@ public class ResponseBuilder {
    */
   public Message fetchInodeMetadata(InodeTableComposite itc) throws
           ApplicationException {
-
     try {
       FetchMetadataMessage message = new FetchMetadataMessage("Server", "");
 
@@ -186,7 +181,6 @@ public class ResponseBuilder {
             }
           }
         }
-
         field.setRawData(toKeep);
       }
 
@@ -197,7 +191,8 @@ public class ResponseBuilder {
 
       return message;
     } catch (DatabaseException e) {
-      throw new ApplicationException("Server", e.getMessage());
+      throw new ApplicationException("Failed to fetch metadata for inode " + itc,
+              e);
     }
   }
 
@@ -217,10 +212,9 @@ public class ResponseBuilder {
       for (Field f : fields) {
         this.checkDeleteField(f);
       }
-
       this.utils.deleteTable(t);
     } catch (DatabaseException e) {
-      throw new ApplicationException("Server", e.getMessage());
+      throw new ApplicationException("Failed to delete table " + table, e);
     }
   }
 
@@ -247,9 +241,8 @@ public class ResponseBuilder {
         TupleToFile ttf = this.tupletofileFacade.getTupletofile(id);
         this.checkDeleteTupleToFile(ttf);
       }
-
     } catch (DatabaseException e) {
-      throw new ApplicationException("Server", e.getMessage());
+      throw new ApplicationException("Failed to delete field " + field, e);
     }
   }
 
@@ -263,10 +256,8 @@ public class ResponseBuilder {
    */
   private void checkDeleteTupleToFile(TupleToFile ttf) throws
           ApplicationException {
-
     try {
       List<RawData> rawlist = ttf.getRawData();
-
       /*
        * remove a tuple if and only if all the raw data entries composing this
        * tuple have been removed
@@ -275,7 +266,7 @@ public class ResponseBuilder {
         this.tupletofileFacade.deleteTTF(ttf);
       }
     } catch (DatabaseException e) {
-      throw new ApplicationException("Server", e.getMessage());
+      throw new ApplicationException("Failed to delete tuple " + ttf, e);
     }
   }
 
@@ -288,9 +279,7 @@ public class ResponseBuilder {
    * @throws se.kth.meta.exception.ApplicationException
    */
   public Message checkTableFields(MTable table) throws ApplicationException {
-
     try {
-
       TextMessage message = new TextMessage("Server");
 
       MTable t = this.tableFacade.getTable(table.getId());
@@ -303,13 +292,12 @@ public class ResponseBuilder {
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, "Could not retrieve table " + table.getId()
               + ". ", e);
-      throw new ApplicationException("Server", e.getMessage());
+      throw new ApplicationException("Failed to check existence for " + table, e);
     }
   }
 
   public Message checkFieldContents(Field field) throws ApplicationException {
     try {
-
       TextMessage message = new TextMessage("Server");
 
       Field f = this.fieldFacade.getField(field.getId());
@@ -322,7 +310,7 @@ public class ResponseBuilder {
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, "Could not retrieve field " + field.getId()
               + ".", e);
-      throw new ApplicationException("Server", e.getMessage());
+      throw new ApplicationException("Failed to check contents of " + field, e);
     }
   }
 
@@ -335,11 +323,9 @@ public class ResponseBuilder {
    */
   private List<Integer> groupByTupleid(List<RawData> list) {
     Map<Integer, List<RawData>> grouped = new HashMap<>();
-
     for (RawData raw : list) {
       grouped.put(raw.getTupleid(), null);
     }
-
     return new LinkedList<>(grouped.keySet());
   }
 }

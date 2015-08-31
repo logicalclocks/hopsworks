@@ -16,21 +16,21 @@ import se.kth.meta.entity.Field;
  */
 public class CheckFieldContentMessage extends ContentMessage {
 
-  private static final Logger logger = Logger.getLogger(CheckFieldContentMessage.class.
+  private static final Logger logger = Logger.getLogger(
+          CheckFieldContentMessage.class.
           getName());
 
-  
   public CheckFieldContentMessage() {
     super();
     this.TYPE = "CheckFieldContentMessage";
   }
 
-  public CheckFieldContentMessage(String sender, String message){
+  public CheckFieldContentMessage(String sender, String message) {
     this();
     this.sender = sender;
     this.message = message;
   }
-  
+
   @Override
   public void init(JsonObject json) {
     this.sender = json.getString("sender");

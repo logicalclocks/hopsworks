@@ -40,7 +40,7 @@ public class UpdateMetadataMessage extends MetadataMessage {
   /**
    * parses the incoming message and returns a RawData object wrapped in a list.
    * <p>
-   * @return 
+   * @return
    */
   @Override
   public List<EntityIntf> parseSchema() {
@@ -52,14 +52,14 @@ public class UpdateMetadataMessage extends MetadataMessage {
 
       int rawId = obj.getInt("rawid");
       String rawdata = obj.getString("rawdata");
-      
+
       RawData raw = new RawData();
       raw.setId(rawId);
       raw.setData(rawdata);
-      
+
       data.add(raw);
       return data;
-      
+
     } catch (NullPointerException e) {
       logger.log(Level.SEVERE, "Raw id or data was not present in the message");
     }

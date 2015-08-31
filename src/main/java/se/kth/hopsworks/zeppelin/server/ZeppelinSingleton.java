@@ -1,6 +1,3 @@
-/*
- * 
- */
 package se.kth.hopsworks.zeppelin.server;
 
 import java.net.URL;
@@ -38,7 +35,8 @@ public enum ZeppelinSingleton {
       this.conf = loadConfig();
       this.schedulerFactory = new SchedulerFactory();
       this.notebookServer = setupNotebookServer();
-      this.replFactory = new InterpreterFactory(conf, new InterpreterOption(true), notebookServer);
+      this.replFactory = new InterpreterFactory(conf,
+              new InterpreterOption(true), notebookServer);
     } catch (Exception e) {
       logger.log(Level.SEVERE, "Error in initializing singleton class.", e);
     }

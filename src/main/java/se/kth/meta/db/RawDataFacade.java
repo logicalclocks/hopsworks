@@ -47,7 +47,6 @@ public class RawDataFacade extends AbstractFacade<RawData> {
    * @throws se.kth.meta.exception.DatabaseException
    */
   public int addRawData(RawData raw) throws DatabaseException {
-
     try {
       RawData r = this.contains(raw) ? raw : this.getRawData(raw.getId());
 
@@ -64,18 +63,15 @@ public class RawDataFacade extends AbstractFacade<RawData> {
         r = raw;
         this.em.persist(r);
       }
-
       this.em.flush();
       this.em.clear();
       return r.getId();
     } catch (IllegalStateException | SecurityException e) {
-
-      throw new DatabaseException(RawDataFacade.class.getName(), e.getMessage());
+      throw new DatabaseException("Failed to add raw data " + raw, e);
     }
   }
 
   public int getLastInsertedTupleId() throws DatabaseException {
-
     String queryString = "RawData.lastInsertedTupleId";
 
     Query query = this.em.createNamedQuery(queryString);

@@ -16,21 +16,27 @@
  */
 package se.kth.hopsworks.zeppelin.socket;
 
+import com.google.common.base.Strings;
+import com.google.gson.Gson;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.websocket.CloseReason;
+import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
-
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.display.AngularObject;
 import org.apache.zeppelin.display.AngularObjectRegistry;
 import org.apache.zeppelin.display.AngularObjectRegistryListener;
@@ -39,25 +45,18 @@ import org.apache.zeppelin.interpreter.InterpreterSetting;
 import org.apache.zeppelin.notebook.JobListenerFactory;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Paragraph;
-import org.apache.zeppelin.scheduler.Job;
-import org.apache.zeppelin.scheduler.JobListener;
-import org.apache.zeppelin.scheduler.Job.Status;
-import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
-import se.kth.hopsworks.zeppelin.socket.Message.OP;
+import org.apache.zeppelin.scheduler.Job;
+import org.apache.zeppelin.scheduler.Job.Status;
+import org.apache.zeppelin.scheduler.JobListener;
 import org.quartz.SchedulerException;
-import com.google.common.base.Strings;
-import com.google.gson.Gson;
-import java.lang.reflect.Constructor;
-import java.util.Set;
-import javax.ejb.EJB;
-import javax.websocket.EndpointConfig;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
 import se.kth.hopsworks.zeppelin.notebook.Notebook;
+import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
+import se.kth.hopsworks.zeppelin.socket.Message.OP;
 
 /**
  * Zeppelin websocket service.
@@ -103,7 +102,7 @@ public class NotebookServer implements
     this.project = getProject((String) config.getUserProperties().get(
             "projectID"));
     authenticateUser(conn, this.project, this.sender);
-    if(this.userRole == null){
+    if (this.userRole == null) {
       return;
     }
     this.notebook = setupNotebook(this.project);
@@ -299,7 +298,7 @@ public class NotebookServer implements
           if (conn.getUserProperties().get("projectID").equals(
                   this.project.getId())) {
             conn.getBasicRemote().sendText(serializeMessage(m));
-         }
+          }
         } catch (IOException ex) {
           logger.log(Level.SEVERE, "Unable to send message " + m, ex);
         }
@@ -324,7 +323,7 @@ public class NotebookServer implements
       logger.log(Level.SEVERE, "Unable to send message " + m, ex);
     }
   }
-  
+
   private void broadcastNote(Note note) {
     broadcast(note.id(), new Message(OP.NOTE).put("note", note));
   }

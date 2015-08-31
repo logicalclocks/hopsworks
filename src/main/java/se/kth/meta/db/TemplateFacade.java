@@ -47,7 +47,6 @@ public class TemplateFacade extends AbstractFacade<Template> {
    * @throws se.kth.meta.exception.DatabaseException
    */
   public void addTemplate(Template template) throws DatabaseException {
-
     this.em.persist(template);
   }
 
@@ -61,22 +60,18 @@ public class TemplateFacade extends AbstractFacade<Template> {
         //if the object is unmanaged it has to be managed before it is removed
         this.em.remove(this.em.merge(t));
       }
-
     } catch (SecurityException | IllegalStateException ex) {
-      throw new DatabaseException(TemplateFacade.class.getName(),
-              "Could not remove template " + ex.getMessage());
+      throw new DatabaseException("Could not remove template " + template, ex);
     }
   }
 
   public List<Template> loadTemplates() {
-
     String queryString = "Template.findAll";
     Query query = this.em.createNamedQuery(queryString);
     return query.getResultList();
   }
 
   public List<MTable> loadTemplateContent(int templateId) {
-
     String queryString = "MTable.findByTemplateId";
 
     Query query = this.em.createNamedQuery(queryString);
@@ -88,7 +83,6 @@ public class TemplateFacade extends AbstractFacade<Template> {
     for (MTable table : modifiedEntities) {
       this.em.refresh(table);
     }
-    
     Collections.sort(modifiedEntities);
     return modifiedEntities;
   }
@@ -121,7 +115,6 @@ public class TemplateFacade extends AbstractFacade<Template> {
    */
   public void updateTemplatesInodesMxN(Template template) throws
           DatabaseException {
-
     this.em.merge(template);
   }
 

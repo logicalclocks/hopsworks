@@ -31,7 +31,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.Constants;
@@ -45,8 +44,6 @@ import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.DatasetController;
 import se.kth.hopsworks.controller.FileTemplateDTO;
-import se.kth.meta.entity.Template;
-import se.kth.meta.exception.DatabaseException;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
@@ -54,6 +51,8 @@ import se.kth.hopsworks.dataset.DatasetRequest;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.meta.db.TemplateFacade;
+import se.kth.meta.entity.Template;
+import se.kth.meta.exception.DatabaseException;
 
 /**
  * @author André<amore@kth.se>

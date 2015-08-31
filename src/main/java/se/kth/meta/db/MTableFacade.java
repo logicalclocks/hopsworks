@@ -1,6 +1,5 @@
 package se.kth.meta.db;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -44,11 +43,8 @@ public class MTableFacade extends AbstractFacade<MTable> {
    * @throws se.kth.meta.exception.DatabaseException
    */
   public int addTable(MTable table) throws DatabaseException {
-
     try {
-
       MTable t = this.getTable(table.getId());
-
       if (t != null && t.getId() != -1) {
         /*
          * if the table exists just update it, along with its corresponding
@@ -69,13 +65,11 @@ public class MTableFacade extends AbstractFacade<MTable> {
         t.resetFields();
         this.em.persist(t);
       }
-
       this.em.flush();
       this.em.clear();
       return t.getId();
     } catch (IllegalStateException | SecurityException e) {
-
-      throw new DatabaseException(MTableFacade.class.getName(), e.getMessage());
+      throw new DatabaseException("Failed to add table " + table, e);
     }
   }
 
@@ -89,10 +83,8 @@ public class MTableFacade extends AbstractFacade<MTable> {
    * @throws se.kth.meta.exception.DatabaseException
    */
   public void deleteTable(MTable table) throws DatabaseException {
-
     try {
       MTable t = this.contains(table) ? table : this.getTable(table.getId());
-
       //remove the table
       if (this.em.contains(t)) {
         this.em.remove(t);
@@ -100,20 +92,18 @@ public class MTableFacade extends AbstractFacade<MTable> {
         //if the object is unmanaged it has to be managed before it is removed
         this.em.remove(this.em.merge(t));
       }
-
     } catch (SecurityException | IllegalStateException ex) {
-      throw new DatabaseException(MTableFacade.class.getName(),
-              "Could not delete table " + ex.getMessage());
+      throw new DatabaseException("Failed to remove table " + table, ex);
     }
   }
-  
+
   /**
    * Checks if a table instance is a managed entity
    * <p>
    * @param table
-   * @return 
+   * @return
    */
-  public boolean contains(MTable table){
+  public boolean contains(MTable table) {
     return this.em.contains(table);
   }
 }

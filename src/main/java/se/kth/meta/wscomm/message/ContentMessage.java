@@ -6,8 +6,8 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.Field;
+import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.Template;
 import se.kth.meta.exception.ApplicationException;
@@ -21,7 +21,7 @@ public abstract class ContentMessage implements Message {
   private static final Logger logger = Logger.
           getLogger(ContentMessage.class.getName());
 
-  protected String TYPE ;
+  protected String TYPE;
   protected String sender;
   protected String message;
   protected String status;
