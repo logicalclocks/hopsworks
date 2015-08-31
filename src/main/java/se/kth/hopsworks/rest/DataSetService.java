@@ -125,7 +125,7 @@ public class DataSetService {
     Collection<Dataset> dsInProject = this.project.getDatasetCollection();
     for (Dataset ds : dsInProject) {
       parent = inodes.findParent(ds.getInode());
-      kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode())));
+        kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode())));
     }
 
     GenericEntity<List<InodeView>> inodViews
@@ -135,7 +135,7 @@ public class DataSetService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             inodViews).build();
   }
-
+   
   /**
    * Get the inodes in the given project-relative path.
    * <p>
@@ -270,7 +270,7 @@ public class DataSetService {
     }
     datasetFacade.persistDataset(newDS);
     if (dsReq != null) {
-      datasetRequest.remove(dsReq);//the dataset is shared so remove the request.
+       datasetRequest.remove(dsReq);//the dataset is shared so remove the request.
     }
 
     logActivity(ActivityFacade.SHARED_DATA + dataSet.getName()
@@ -313,7 +313,7 @@ public class DataSetService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
-
+  
   @GET
   @Path("/reject/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -654,7 +654,7 @@ public class DataSetService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
-
+  
   private boolean createDataset(String dsPath, Inode parent, String dsName,
           int template) throws AppException {
     boolean success = false;

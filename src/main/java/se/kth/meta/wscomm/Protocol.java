@@ -8,8 +8,8 @@ import javax.ejb.Stateless;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.InodeTableComposite;
+import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
-import se.kth.meta.entity.MetaData;
 import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.wscomm.message.Command;
 import se.kth.meta.wscomm.message.Message;
@@ -71,9 +71,6 @@ public class Protocol {
       case REMOVE_TEMPLATE:
         return this.builder.removeTemplate(message);
         
-      case UPDATE_TEMPLATE_NAME:
-        return this.builder.updateTemplateName(message);
-        
       case STORE_FIELD:
       case EXTEND_TEMPLATE:
       case STORE_TEMPLATE:
@@ -118,7 +115,7 @@ public class Protocol {
         List<EntityIntf> composite = ((StoreMetadataMessage) message).
                 superParseSchema();
         List<EntityIntf> rawData = message.parseSchema();
-        this.utils.storeRawData(composite, rawData);
+        this.utils.storeMetadata(composite, rawData);
         return new TextMessage("Server", "Metadata was stored successfully");
 
       case BROADCAST:
@@ -135,8 +132,8 @@ public class Protocol {
         return this.builder.checkFieldContents(field);
         
       case UPDATE_METADATA:
-        MetaData metadata = (MetaData) message.parseSchema().get(0);
-        this.utils.updateMetadata(metadata);
+        RawData raw = (RawData) message.parseSchema().get(0);
+        this.utils.updateMetadata(raw);
         return new TextMessage("Server", "Raw data was updated successfully");
     }
 

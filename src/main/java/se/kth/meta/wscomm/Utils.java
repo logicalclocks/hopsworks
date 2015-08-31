@@ -9,7 +9,6 @@ import javax.ejb.Stateless;
 import se.kth.meta.db.FieldFacade;
 import se.kth.meta.db.FieldPredefinedValueFacade;
 import se.kth.meta.db.MTableFacade;
-import se.kth.meta.db.MetaDataFacade;
 import se.kth.meta.db.RawDataFacade;
 import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.db.TupleToFileFacade;
@@ -19,7 +18,6 @@ import se.kth.meta.entity.Field;
 import se.kth.meta.entity.InodeTableComposite;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
-import se.kth.meta.entity.MetaData;
 import se.kth.meta.entity.Template;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.ApplicationException;
@@ -46,47 +44,20 @@ public class Utils {
   private RawDataFacade rawDataFacade;
   @EJB
   private TupleToFileFacade tupletoFileFacade;
-  @EJB
-  private MetaDataFacade metadataFacade;
 
   public Utils() {
   }
 
-  /**
-   * Persist a new template in the database
-   * <p>
-   * @param template
-   * @return
-   * @throws ApplicationException
-   */
-  public int addNewTemplate(Template template) throws ApplicationException {
+  public void addNewTemplate(Template template) throws ApplicationException {
 
     try {
-      return this.templateFacade.addTemplate(template);
+      this.templateFacade.addTemplate(template);
     } catch (DatabaseException e) {
       throw new ApplicationException("Could not add new template " + template.
               getName() + " " + e.getMessage());
     }
   }
 
-  /**
-   * Updates a template name. addNewTemplate handles persisting/updating the
-   * entity
-   * <p>
-   * @param template
-   * @return
-   * @throws ApplicationException
-   */
-  public int updateTemplateName(Template template) throws ApplicationException {
-    return this.addNewTemplate(template);
-  }
-
-  /**
-   * Deletes a template from the database
-   * <p>
-   * @param template
-   * @throws ApplicationException
-   */
   public void removeTemplate(Template template) throws ApplicationException {
     try {
       this.templateFacade.removeTemplate(template);
@@ -96,13 +67,6 @@ public class Utils {
     }
   }
 
-  /**
-   * Persist a list of tables and all their corresponding child entities in the
-   * database
-   * <p>
-   * @param list
-   * @throws ApplicationException
-   */
   public void addTables(List<EntityIntf> list) throws ApplicationException {
 
     for (EntityIntf entry : list) {
@@ -114,9 +78,10 @@ public class Utils {
 
       try {
         logger.log(Level.INFO, "STORE/UPDATE TABLE: {0} ", t);
-
+        
         //persist the parent
         int tableId = this.tableFacade.addTable(t);
+        
         for (Field field : tableFields) {
           //associate each field(child) with its table(parent)
           field.setTableid(tableId);
@@ -139,13 +104,6 @@ public class Utils {
     }
   }
 
-  /**
-   * Stores the predefined values for a field
-   * <p>
-   * @param list
-   * @param fieldId
-   * @throws ApplicationException
-   */
   private void addFieldsPredefinedValues(List<EntityIntf> list, int fieldId)
           throws ApplicationException {
 
@@ -164,12 +122,6 @@ public class Utils {
     }
   }
 
-  /**
-   * Removes a table from the database
-   * <p>
-   * @param table
-   * @throws ApplicationException
-   */
   public void deleteTable(MTable table) throws ApplicationException {
     try {
       logger.log(Level.INFO, "DELETING TABLE {0} ", table.getName());
@@ -181,12 +133,6 @@ public class Utils {
     }
   }
 
-  /**
-   * Removes a field from the database
-   * <p>
-   * @param field
-   * @throws ApplicationException
-   */
   public void deleteField(Field field) throws ApplicationException {
 
     try {
@@ -199,15 +145,10 @@ public class Utils {
     }
   }
 
-  /**
-   * Removes a field's predefined values
-   * <p>
-   * @param fieldid
-   * @throws ApplicationException
-   */
   public void removeFieldPredefinedValues(int fieldid) throws
           ApplicationException {
     try {
+
       this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),
@@ -216,16 +157,7 @@ public class Utils {
     }
   }
 
-  /**
-   * Stores the raw data for an inode. Creates a tuple first and
-   * associates it with the given inode. Raw data at this point is just a field
-   * id and a tupleid
-   * <p>
-   * @param composite
-   * @param raw
-   * @throws ApplicationException
-   */
-  public void storeRawData(List<EntityIntf> composite, List<EntityIntf> raw)
+  public void storeMetadata(List<EntityIntf> composite, List<EntityIntf> raw)
           throws ApplicationException {
 
     try {
@@ -243,23 +175,16 @@ public class Utils {
       for (EntityIntf raww : raw) {
 
         RawData r = (RawData) raww;
-        r.getRawdataPK().setTupleid(tupleid);
+        r.setData(r.getData().replaceAll("\"", ""));
+        r.setTupleid(tupleid);
 
-        List<EntityIntf> metadataList
-                = (List<EntityIntf>) (List<?>) new LinkedList<>(r.getMetaData());
-        r.resetMetadata();
-
-        //Persist the parent first
         logger.log(Level.INFO, r.toString());
         this.rawDataFacade.addRawData(r);
-
-        //move on to persist the child entities
-        this.storeMetaData(metadataList, tupleid);
       }
 
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: storeRawData(List<?> list) encountered a problem "
+              "Utils.java: storeMetadata(List<?> list) encountered a problem "
               + e.getMessage());
     }
   }
@@ -267,46 +192,19 @@ public class Utils {
   /**
    * Updates a single raw data record.
    * <p>
-   * @param meta
+   * @param raw
    * @throws ApplicationException
    */
-  public void updateMetadata(MetaData meta) throws ApplicationException {
+  public void updateMetadata(RawData raw) throws ApplicationException {
     try {
 
-      MetaData metadata = this.metadataFacade.getMetadataById(meta.
-              getMetaDataPK().getId());
-      metadata.setData(meta.getData());
-      this.metadataFacade.addMetadata(metadata);
+      RawData rawdata = this.rawDataFacade.getRawData(raw.getId());
+      rawdata.setData(raw.getData());
+      this.rawDataFacade.addRawData(rawdata);
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),
-              "Utils.java: updateRawData(RawData) encountered a problem " + e.
+              "Utils.java: updateMetadata(RawData) encountered a problem " + e.
               getMessage());
-    }
-  }
-
-  /**
-   * Stores the actual metadata for an inode. Associates a raw data record with
-   * a metadata record in the meta_data table
-   * <p>
-   * @param metadatalist
-   * @param tupleid
-   * @throws ApplicationException
-   */
-  public void storeMetaData(List<EntityIntf> metadatalist, int tupleid) throws
-          ApplicationException {
-
-    try {
-      for (EntityIntf entity : metadatalist) {
-        MetaData metadata = (MetaData) entity;
-        metadata.getMetaDataPK().setTupleid(tupleid);
-
-        //logger.log(Level.INFO, metadata.toString());
-        this.metadataFacade.addMetadata(metadata);
-      }
-    } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: storeMetadata(List<?> list) encountered a problem "
-              + e.getMessage());
     }
   }
 }

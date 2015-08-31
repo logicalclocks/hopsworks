@@ -258,20 +258,13 @@ CREATE TABLE `meta_tuple_to_file` (
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_raw_data` (
-  `fieldid` INT(11) NOT NULL,
-  `tupleid` INT(11) NOT NULL,
-  PRIMARY KEY (`fieldid`, `tupleid`),
-  FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  FOREIGN KEY (`tupleid`) REFERENCES `meta_tuple_to_file` (`tupleid`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=ndbcluster;
-
-CREATE TABLE `meta_data` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `data` LONGTEXT NOT NULL,
-  `fieldid` INT(11) NOT NULL,
-  `tupleid` INT(11) NOT NULL,
-  PRIMARY KEY (`id`, `fieldid`, `tupleid`),
-  FOREIGN KEY (`fieldid`, `tupleid`) REFERENCES `meta_raw_data` (`fieldid`, `tupleid`) ON DELETE CASCADE ON UPDATE NO ACTION
+  `fieldid` INT(11) DEFAULT NULL,
+  `tupleid` INT(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`tupleid`) REFERENCES `meta_tuple_to_file` (`tupleid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_template_to_inode` (

@@ -31,14 +31,6 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({templateId: templateid})
               });
             },
-            updateTemplateName: function (user, template) {
-              return WSComm.send({
-                sender: user,
-                type: 'TemplateMessage',
-                action: 'update_template_name',
-                message: JSON.stringify({templateId: template.id, templateName: template.name})
-              });
-            },
             extendTemplate: function (user, templateId, board) {
               return WSComm.send({
                 sender: user,
@@ -135,7 +127,7 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({tableid: tableId, inodeid: inodeId})
               });
             },
-            fetchTableMetadata: function (user, tableId) {
+            fetchTableMetadata: function(user, tableId){
               return WSComm.send({
                 sender: user,
                 type: 'FetchTableMetadataMessage',
@@ -151,7 +143,7 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify(data)
               });
             },
-            isTableEmpty: function (user, tableId) {
+            isTableEmpty: function(user, tableId){
               return WSComm.send({
                 sender: user,
                 type: 'CheckTableContentMessage',
@@ -159,7 +151,7 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({tableid: tableId})
               });
             },
-            isFieldEmpty: function (user, fieldId) {
+            isFieldEmpty: function(user, fieldId){
               return WSComm.send({
                 sender: user,
                 type: 'CheckFieldContentMessage',
@@ -167,12 +159,12 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({fieldid: fieldId})
               });
             },
-            updateMetadata: function (user, metaObj) {
+            updateRawdata: function(user, rawObj){
               return WSComm.send({
                 sender: user,
                 type: 'UpdateMetadataMessage',
                 action: 'update_metadata',
-                message: JSON.stringify({metaid: metaObj.id, metadata: metaObj.data})
+                message: JSON.stringify({rawid: rawObj.rawid, rawdata: rawObj.raw})
               });
             }
           };

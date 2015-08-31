@@ -4,13 +4,10 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 import se.kth.meta.entity.RawData;
-import se.kth.meta.entity.RawDataPK;
 import se.kth.meta.exception.DatabaseException;
 
 /**
@@ -35,33 +32,26 @@ public class RawDataFacade extends AbstractFacade<RawData> {
     super(RawData.class);
   }
 
-  public RawData getRawData(RawDataPK rawdataPK) throws DatabaseException {
+  public RawData getRawData(int rawid) throws DatabaseException {
 
-    TypedQuery<RawData> q = this.em.createNamedQuery("RawData.findByPrimaryKey",
-            RawData.class);
-    q.setParameter("rawdataPK", rawdataPK);
-
-    try {
-      return q.getSingleResult();
-    } catch (NoResultException e) {
-      return null;
-    }
+    return this.em.find(RawData.class, rawid);
   }
 
   /**
    * adds a new record into 'raw_data' table. RawData is the object that's
-   * going to be persisted/updated in the database
+   * going to be persisted to the database
    * <p>
+   *
    * @param raw
+   * @return the id of the affected row
    * @throws se.kth.meta.exception.DatabaseException
    */
-  public void addRawData(RawData raw) throws DatabaseException {
+  public int addRawData(RawData raw) throws DatabaseException {
 
     try {
-      RawData r = this.contains(raw) ? raw : this.getRawData(raw.getRawdataPK());
+      RawData r = this.contains(raw) ? raw : this.getRawData(raw.getId());
 
-      if (r != null && r.getRawdataPK().getTupleid() != -1 && r.getRawdataPK().
-              getFieldid() != -1) {
+      if (r != null && r.getId() != -1) {
         /*
          * if the row exists just update it.
          */
@@ -77,6 +67,7 @@ public class RawDataFacade extends AbstractFacade<RawData> {
 
       this.em.flush();
       this.em.clear();
+      return r.getId();
     } catch (IllegalStateException | SecurityException e) {
 
       throw new DatabaseException(RawDataFacade.class.getName(), e.getMessage());

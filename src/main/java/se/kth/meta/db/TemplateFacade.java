@@ -44,46 +44,24 @@ public class TemplateFacade extends AbstractFacade<Template> {
    * adds a new record into 'templates' table.
    *
    * @param template The template name to be added
-   * @return
    * @throws se.kth.meta.exception.DatabaseException
    */
-  public int addTemplate(Template template) throws DatabaseException {
+  public void addTemplate(Template template) throws DatabaseException {
 
-    try {
-      Template t = this.getTemplate(template.getId());
-
-      if (t != null && t.getId() != -1) {
-
-        t.copy(template);
-        this.em.merge(t);
-      } else {
-
-        t = template;
-        t.getMTables().clear();
-        this.em.persist(t);
-      }
-
-      this.em.flush();
-      this.em.clear();
-      return t.getId();
-    } catch (IllegalStateException | SecurityException e) {
-
-      throw new DatabaseException(MTableFacade.class.getName(), e.getMessage());
-    }
+    this.em.persist(template);
   }
 
   public void removeTemplate(Template template) throws DatabaseException {
     try {
       Template t = this.getTemplate(template.getId());
 
-      if (t != null) {
-        if (this.em.contains(t)) {
-          this.em.remove(t);
-        } else {
-          //if the object is unmanaged it has to be managed before it is removed
-          this.em.remove(this.em.merge(t));
-        }
+      if (this.em.contains(t)) {
+        this.em.remove(t);
+      } else {
+        //if the object is unmanaged it has to be managed before it is removed
+        this.em.remove(this.em.merge(t));
       }
+
     } catch (SecurityException | IllegalStateException ex) {
       throw new DatabaseException(TemplateFacade.class.getName(),
               "Could not remove template " + ex.getMessage());
@@ -110,7 +88,7 @@ public class TemplateFacade extends AbstractFacade<Template> {
     for (MTable table : modifiedEntities) {
       this.em.refresh(table);
     }
-
+    
     Collections.sort(modifiedEntities);
     return modifiedEntities;
   }

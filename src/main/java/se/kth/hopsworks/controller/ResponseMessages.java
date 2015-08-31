@@ -130,6 +130,4 @@ public class ResponseMessages {
           = "The template id is empty";
   public final static String TEMPLATE_NOT_ATTACHED
           = "The template could not be attached to a file";
-  public final static String UPLOAD_PATH_NOT_SPECIFIED
-          = "The path to upload the template was not specified";
 }

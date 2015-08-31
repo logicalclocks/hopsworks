@@ -9,7 +9,6 @@ import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
-import se.kth.meta.entity.MetaData;
 
 /**
  * Represents a message request for stored metadata filtered by table id and
@@ -92,16 +91,11 @@ public class FetchMetadataMessage extends MetadataMessage {
       List<RawData> data = fi.getRawData();
 
       for (RawData raw : data) {
-        //JsonObjectBuilder rawdata = Json.createObjectBuilder();
-        //rawdata.add("rawid", raw.getId());
-        JsonArrayBuilder inner = Json.createArrayBuilder();
+        JsonObjectBuilder rawdata = Json.createObjectBuilder();
+        rawdata.add("rawid", raw.getId());
+        rawdata.add("raw", raw.getData());
         
-        List<MetaData> metadata = raw.getMetaData();
-        for(MetaData m: metadata){
-          //load the actual metadata
-          rd.add(m.getData());
-        }
-        //rd.add(inner);
+        rd.add(rawdata);
       }
       field.add("data", rd);
       fields.add(field);
@@ -150,4 +144,5 @@ public class FetchMetadataMessage extends MetadataMessage {
             + "\"action\": \"" + this.action + "\", "
             + "\"message\": \"" + this.message + "\"}";
   }
+
 }

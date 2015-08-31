@@ -18,14 +18,14 @@ angular.module('hopsWorksApp')
               return index;
             },
             setIndex: function (value) {
-              //console.log("setting the index " + value);
+              console.log("setting the index " + value);
               index = value;
             },
             getProjectName: function () {
               return projectName;
             },
             setProjectName: function (value) {
-              //console.log("setting the parent " + value);
+              console.log("setting the parent " + value);
               projectName = value;
             }
           };

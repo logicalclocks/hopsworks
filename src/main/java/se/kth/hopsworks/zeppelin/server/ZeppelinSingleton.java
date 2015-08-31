@@ -43,7 +43,7 @@ public enum ZeppelinSingleton {
       logger.log(Level.SEVERE, "Error in initializing singleton class.", e);
     }
   }
-
+  
   public ZeppelinConfiguration getConf() {
     return this.conf;
   }
@@ -68,7 +68,7 @@ public enum ZeppelinSingleton {
   public InterpreterFactory getReplFactory() {
     return this.replFactory;
   }
-
+  
   private ZeppelinConfiguration loadConfig() {
     ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     URL url;
