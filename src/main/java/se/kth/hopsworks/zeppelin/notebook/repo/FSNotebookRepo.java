@@ -122,20 +122,33 @@ public class FSNotebookRepo implements NotebookRepo {
     for (FileObject f : rootchildren) {
       if (isDirectory(f)) {
         FileObject noteJson = f.resolveFile("note.json", NameScope.CHILD);
-        if (noteJson.exists()) {
+        if (noteJson.exists() && !listContainsNote(children, f)) {
           children.add(f);
         }
       }
     }
-
+    
     return children;
+  }
+  
+  private boolean listContainsNote(List<FileObject> list, FileObject note){
+    for (FileObject fileObj: list){
+      if (fileObj.getName().getBaseName().equals(note.getName().getBaseName())){
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
   public List<NoteInfo> list() throws IOException {
     FileObject rootDir = getRootDir();
-    FileObject projectDir = rootDir.resolveFile(this.project.getName(),
+    FileObject projectDir = null;
+    if (this.project != null) {
+      projectDir = rootDir.resolveFile(this.project.getName(),
             NameScope.CHILD);
+    }
+    
 
     LinkedList<FileObject> children = getNotes(rootDir, projectDir);
 
@@ -214,17 +227,13 @@ public class FSNotebookRepo implements NotebookRepo {
     FileObject rootDir = fsManager.resolveFile(getPath("/"));
     FileObject projectDir = rootDir.resolveFile(this.project.getName(),
             NameScope.CHILD);
-    FileObject noteDir = rootDir.resolveFile(noteId, NameScope.CHILD);
-
+    FileObject noteDir = projectDir.resolveFile(noteId, NameScope.CHILD);
+           
     if (noteDir.exists() && isDirectory(noteDir)) {
       return getNote(noteDir);
     }
 
-    if (!projectDir.exists() || !isDirectory(projectDir)) {
-      throw new IOException(projectDir.getName().toString() + " not found");
-    }
-
-    noteDir = projectDir.resolveFile(noteId, NameScope.CHILD);
+    noteDir = rootDir.resolveFile(noteId, NameScope.CHILD);
     return getNote(noteDir);
   }
 

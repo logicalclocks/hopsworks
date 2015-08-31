@@ -23,7 +23,7 @@ public class FieldMessage extends ContentMessage {
   private static final Logger logger = Logger.getLogger(FieldMessage.class.
           getName());
 
-  public FieldMessage() {
+  public FieldMessage(){
     super();
     this.TYPE = "FieldMessage";
   }
@@ -82,29 +82,18 @@ public class FieldMessage extends ContentMessage {
     String type = obj.getString("type");
     String maxsize = obj.getJsonObject("sizefield").getString("value");
 
+    try {
+      //sanitize maxsize in case the user has entered shit
+      maxsize = (!"".equals(maxsize)) ? maxsize : "0";
+      Integer.parseInt(maxsize);
+    } catch (NumberFormatException e) {
+      maxsize = "0";
+    }
+
     boolean searchable = obj.getBoolean("searchable");
     boolean required = obj.getBoolean("required");
     String description = obj.getString("description");
     int fieldtypeid = obj.getInt("fieldtypeid");
-
-    try {
-      /*
-       * check the field type id. If the field type id is other than 1, that
-       * means the field is either a single or multi selection dropdown list
-       * so the number of characters this field should hold (size) doesn't
-       * matter.
-       * Only a text field applies a max characters limit
-       */
-      if (fieldtypeid != 1) {
-        maxsize = "0";
-      } else {
-        //sanitize maxsize in case the user has entered shit
-        maxsize = (!"".equals(maxsize)) ? maxsize : "0";
-        Integer.parseInt(maxsize);
-      }
-    } catch (NumberFormatException e) {
-      maxsize = "0";
-    }
 
     Field field = new Field(fieldId, tableId, name, type,
             Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0),

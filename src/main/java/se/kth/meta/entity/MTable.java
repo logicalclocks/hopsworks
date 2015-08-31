@@ -142,7 +142,7 @@ public class MTable implements Serializable, EntityIntf, Comparable {
   }
 
   public void resetFields() {
-    this.fields.clear();
+    this.fields = new LinkedList<>();
   }
 
   public Template getTemplate() {
@@ -176,20 +176,20 @@ public class MTable implements Serializable, EntityIntf, Comparable {
 
   @Override
   public String toString() {
-    return "entity.Tables[ id=" + this.id + ", name=" + this.name
-            + ", templateId=" + this.templateid + " ]";
+    return "entity.Tables[ id=" + id + ", name=" + name + " ]";
   }
 
   @Override
   public int compareTo(Object o) {
     MTable table = (MTable) o;
-
-    if (this.getId() > table.getId()) {
+    
+    if(this.getId() > table.getId()){
       return 1;
-    } else if (this.getId() < table.getId()) {
+    }
+    else if(this.getId() < table.getId()){
       return -1;
     }
-
+    
     return 0;
   }
 }

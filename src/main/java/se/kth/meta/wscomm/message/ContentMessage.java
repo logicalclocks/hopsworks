@@ -87,12 +87,6 @@ public abstract class ContentMessage implements Message {
     }
   }
 
-  /**
-   * Creates a json response with just the template names
-   * <p>
-   * @param entities
-   * @return 
-   */
   private String templateNames(List<EntityIntf> entities) {
     JsonObjectBuilder builder = Json.createObjectBuilder();
 
@@ -114,12 +108,6 @@ public abstract class ContentMessage implements Message {
     return builder.build().toString();
   }
 
-  /**
-   * Creates a json response with all the content a template carries
-   * <p>
-   * @param entities
-   * @return 
-   */
   private String templateContents(List<EntityIntf> entities) {
     JsonObjectBuilder builder = Json.createObjectBuilder();
 

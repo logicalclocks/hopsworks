@@ -5,7 +5,7 @@
        class="toggled"
        ng-controller="DatasetsCtrl as datasetsCtrl">
 
-    <div ng-controller="MetadataCtrl as metadataCtrl">
+    <div ng-controller="MetaSliderCtrl as metaSliderCtrl">
 
       <div class="overlay"></div>
       <section layout="row" flex="">
@@ -131,11 +131,11 @@
 
             <div class="md-toolbar-tools">
               <h2 style="margin:0;">
-                <span>Metadata designer</span>
+                <span>Metadata manager</span>
               </h2>
               <span flex></span>
               <button style="font-size:15px;height:28px;color:white;padding-top: 3px; padding-right: 3px"
-                      ng-click="metadataCtrl.storeTemplate('true')"
+                      ng-click="metaSliderCtrl.storeTemplate('true')"
                       class="btn btn-success">
                 <i class="fa fa-save"></i>
                 Save
@@ -146,10 +146,11 @@
           <md-content layout-padding style="overflow: hidden; padding: 15px;">
             <div class="row">
 
+
               <!-- Left menu -->
               <div class="col-md-2" style="height: 100%; border-right: 1px dashed lightgrey; min-width: 233px; max-width: 233px">
-                <button class="btn btn-primary"
-                        style="width: 100%; margin-top: -7px; border-radius: 0px; padding:10px;"
+                <button class="btn btn-info"
+                        style="width: 100%;margin-top: -7px;border-radius: 0px; padding:10px;"
                         data-toggle="collapse"
                         data-target="#collapseNewTemplate"
                         aria-expanded="false"
@@ -158,23 +159,24 @@
                   <span class="pull-left">New template</span>
                 </button>
 
-                <div style="width: 100%; height: 50px; background-color: #f5f5f5;"
+
+                <div style="width: 100%; background-color: #46b8da; height: 50px;"
                      class="collapse"
                      id="collapseNewTemplate">
-                  <div class="input-group-btn search-panel">
+                  <div class="input-group">
                     <input type="text"
-                           ng-model="metadataCtrl.newTemplateName"
-                           style="margin:10px; height: 30px; width: 145px;border-radius: 0; text-indent: 5px;color: black"
+                           ng-model="metaSliderCtrl.newTemplateName"
+                           style="margin:10px; height: 30px; width: 145px;border: medium none; text-indent: 5px;"
                            placeholder="Template name..."/>
                     <button class="btn btn-success"
-                            ng-click="metadataCtrl.addNewTemplate()"
-                            style="border-radius: 0px; margin-left: -13px;margin-top: -3px; height: 30px;">
+                            ng-click="metaSliderCtrl.addNewTemplate()"
+                            style="border-radius: 0px; margin-left: -13px;margin-top: -3px;  height: 30px;">
                       <i class="fa fa-floppy-o fa-lg"></i>
                     </button>
                   </div>
                 </div>
 
-                <button class="btn btn-primary"
+                <button class="btn btn-info"
                         style="width: 100%;border-radius: 0px; padding:10px;"
                         data-toggle="collapse"
                         data-target="#collapseExtendTemplate"
@@ -184,113 +186,70 @@
                   <span class="pull-left">Extend template</span>
                 </button>
 
-                <div style="width: 100%; height: 50px; background-color: #f5f5f5;"
+                <div style="width: 100%; background-color: #46b8da; height: 50px;"
                      class="collapse"
                      id="collapseExtendTemplate">
-                  <div class="input-group-btn search-panel">
+                  <div class="input-group styleSelect">
                     <input type="text"
-                           ng-model="metadataCtrl.extendedTemplateName"
-                           style="margin:10px; height: 30px; width: 145px;border-radius: 0; text-indent: 5px; color:black"
+                           ng-model="metaSliderCtrl.newTemplateName"
+                           style="margin:10px; height: 30px; width: 145px;border: medium none; text-indent: 5px;"
                            placeholder="Template name..."/>
                     <button class="btn btn-success"
-                            ng-click="metadataCtrl.extendTemplate()"
+                            ng-click="metaSliderCtrl.extendTemplate()"
                             style="border-radius: 0px; margin-left: -13px;margin-top: -3px;  height: 30px;">
                       <i class="fa fa-floppy-o fa-lg"></i>
                     </button>
 
                     <select name="extendedFromName"
-                            ng-model="metadataCtrl.extendedFrom"
+                            ng-model="metaSliderCtrl.extendedFrom"
                             class="form-control"
                             style="border-radius: 0px;margin: 9px;width: 188px;margin-top:0px;">
                       <option ng-repeat="template in datasetsCtrl.availableTemplates"
                               value="{{template.id}}">
-                        {{template.name}} 
+                        {{template.name}}
                       </option>
                     </select>
+
                   </div>
                 </div>
 
-                <button class="btn btn-primary"
-                        style="width: 100%;border-radius: 0px; padding:10px;"
-                        ng-click="metadataCtrl.importTemplate()">
-                  <i class="fa fa-plus fa-lg pull-left" style="width: 30px;margin-top: 4px;"></i>
-                  <span class="pull-left">Upload template</span>
-                </button>
-
-                <button class="btn btn-primary"
-                        style="width: 100%;border-radius: 0px; padding:10px;margin-top: 10px;">
+                <button class="btn btn-info"
+                        style="width: 100%;border-radius: 0px; padding:10px;margin-top: 10px; background-color:#31b0d5;">
                   <span class="pull-left" style="font-weight: bold;margin-left: 10px;">Available templates</span>
                 </button>
 
-                <div><!--ng-mouseover="metadataCtrl.toggleTemplate(template)" 
-                        ng-mouseleave="metadataCtrl.toggleTemplate(template)"-->
-                  <!--SEARCH FOR TEMPLATES-->
-                  <div class="list-group-item"
-                       style="height:55px; background-color: #f5f5f5;">
-                    <div class="input-group-btn search-panel pull-left"
-                         style="width: 83px;">
-                    </div>
-                    <input type="hidden" name="search_param" value="all" id="search_param">
-                    <input type="text" class="form-control pull-left" ng-model="searchTemplate"
-                           style="width: 175px; border-radius: 0;"
-                           name="x" placeholder="Find a template...">
-                  </div>
-                  <ul class="datasetList btn-primary">
-                    <li ng-repeat="template in metadataCtrl.availableTemplates| filter: searchTemplate: false"
-                        ng-click="metadataCtrl.toggleTemplate(template);
-                                          metadataCtrl.fetchTemplate(template.id)"
-                        context-menu
-                        data-target="templateMenu-{{$index}}"
-                        tooltip="{{template.name}}">
+                <div>
+                  <ul class="datasetList">
+                    <li ng-repeat="template in datasetsCtrl.availableTemplates"
+                        ng-click="metaSliderCtrl.fetchTemplate(template.id)">
                       <span>
-                        <!--when the user clicks on a template name a check appears-->
                         <i class="fa fa-check pull-left"
                            style="color: lightgreen; width: 15px; margin-top:3px;"
-                           ng-if="template.showing"></i>
+                           ng-if="metaSliderCtrl.currentTemplateID == template.id"></i>
 
-                        <!--onaftersave="metadataCtrl.updateTemplateName(template)"-->
-                        <a href="#" editable-text="template.name" buttons="no"
-                           style="color:white; font-size: 14px;"
-                           ng-mousedown="metadataCtrl.editingTemplate = 'true';"
-                           ng-click="$event.stopPropagation()"
-                           onaftersave="metadataCtrl.updateTemplateName(template)"
-                           blur="submit">
-                          {{template.name| cut:true:10:' ...'}}
-                        </a>
+                        {{template.name}}
 
                         <button class="btn btn-danger pull-right"
-                                ng-click="metadataCtrl.removeTemplate(template.id)"
-                                ng-if="template.showing"
+                                ng-click="metaSliderCtrl.removeTemplate(template.id)"
                                 style="margin-top: 1px; width: 20px; height: 20px;padding:2px;">
                           <i class="fa fa-times"></i>
                         </button>
-                        <button class="btn pull-right"
-                                ng-if="template.showing"
-                                ng-click="$event.stopPropagation();"
-                                style="background-color: #f5f5f5; margin-top: 1px; width: 20px; height: 20px;padding:2px;">
-                          <a class="pointer"
-                             role="menuitem"
-                             tabindex="1"
-                             download="template.json"
-                             ng-mousedown="metadataCtrl.createDownloadURL(template);"
-                             ng-href="{{metadataCtrl.url}}">
-                            <span><i class="fa fa-download"></i>
-                              Download</span>
-                          </a>
-                        </button>
                       </span>
                     </li>
+
                   </ul>
 
-                  <ul class="datasetList btn-primary"
+
+                  <ul class="datasetList"
                       style="margin-top:10px;"
-                      ng-if="metadataCtrl.currentTemplateID !== - 1 && !metadataCtrl.editingTemplate">
-                    <li ng-click="metadataCtrl.addNewList()">
+                      ng-if="metaSliderCtrl.currentTemplateID !== -1">
+                    <li ng-click="metaSliderCtrl.addNewList()">
                       <span>
                         Add table
                         <button class="btn btn-success pull-right"
                                 style="margin-top: 1px; width: 20px; height: 20px;padding:2px;">
                           <i class="fa fa-plus"></i>
+
                         </button>
                       </span>
                     </li>
@@ -302,35 +261,38 @@
               <!-- Rightside tables -->
               <div class="col-md-10">
 
-                <div ng-repeat="column in metadataCtrl.currentBoard.columns">
+                <div ng-repeat="column in metaSliderCtrl.currentBoard.columns">
                   <div ng-if="($index % 3 == 0) && ($index !== 0)" class="row"></div>
 
                   <div class="col-md-4">
 
+
+
                     <div class="panel panel-default">
-                      <div class="panel-heading" style="background-color: #4b91ea; border-bottom: 3px solid #46b8da;">
+                      <div class="panel-heading" style="border-bottom: 3px solid #46b8da;">
+
 
                         <div align="right">
-                          <button class="btn btn-success pull-right" ng-click="metadataCtrl.addField(column)"
-                             tooltip="Add card to table"
-                             style="margin-top: 1px; width: 20px; height: 20px;padding:2px;">
-                            <!--<i class="fa fa-plus addNewCard"></i>-->
-                              <i class="fa fa-plus"></i>
-                          </button>
 
-                          <button class="btn btn-danger pull-right" ng-click="metadataCtrl.checkDeleteTable(column)"
-                             tooltip="Remove table"
-                             style="margin-top: 1px; width: 20px; height: 20px; padding:2px;">
-                            <i class="fa fa-trash-o"></i>
-                          </button>
+                          <a ng-click="metaSliderCtrl.addCard(column)"
+                             title="Add card to table">
+                            <i class="fa fa-plus addNewCard"></i>
+                          </a>
+
+                          <a ng-click="metaSliderCtrl.checkDeleteTable(column)"
+                             title="Remove table">
+                            <i class="fa fa-trash-o removeList"></i>
+                          </a>
                         </div>
 
+
                         <span editable-text="column.name"
-                              style="color:white; font-size: 16px;"
-                              onaftersave="metadataCtrl.storeTemplate()"
+                              style="font-size: 16px;"
+                              onaftersave="metaSliderCtrl.storeTemplate()"
                               class="column-title ng-binding">
                           {{column.name}}
                         </span>
+
 
                       </div>
                       <div class="panel-body">
@@ -340,7 +302,6 @@
                           <li class="card"
                               ng-repeat="card in column.cards"
                               as-sortable-item
-                              style="line-height:1em;"
                               ng-include="'views/metadata/card.html'">
                           </li>
                         </ul>

@@ -53,6 +53,7 @@ public class WebSocketEndpoint {
     this.httpSession = (HttpSession) config.getUserProperties().get(
             "httpSession");
 
+    logger.log(Level.INFO, "CONNECTED USER {0}", this.sender);
     logger.log(Level.INFO, "PROJECT ID {0}", projectId);
 
     this.project = getProject(projectId);
@@ -86,12 +87,12 @@ public class WebSocketEndpoint {
   public void message(Session session, Message msg) {
     //query string is the client I want to communicate with
     String receiver = session.getQueryString();
-
+    logger.log(Level.INFO, "HOPSWORKS: QUERY STRING {0}", session.
+            getQueryString());
     logger.log(Level.INFO, "RECEIVED MESSAGE: {0}", msg.toString());
     Message response = this.protocol.GFR(msg);
-    
     //broadcast the response back to everybody in the same project
-    this.broadcast(response, session);
+    broadcast(response, session);
   }
 
   @OnClose
