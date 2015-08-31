@@ -10,8 +10,8 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.Field;
+import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.MTable;
 
 /**
@@ -23,7 +23,7 @@ public class FieldMessage extends ContentMessage {
   private static final Logger logger = Logger.getLogger(FieldMessage.class.
           getName());
 
-  public FieldMessage(){
+  public FieldMessage() {
     super();
     this.TYPE = "FieldMessage";
   }

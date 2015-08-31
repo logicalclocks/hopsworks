@@ -26,11 +26,11 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
 import se.kth.bbc.jobs.jobhistory.JobType;
-import se.kth.bbc.jobs.model.configuration.JobConfiguration;
-import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.CuneiformController;
+import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
@@ -53,6 +53,8 @@ public class CuneiformService {
   private UserFacade userFacade;
   @EJB
   private ActivityFacade activityFacade;
+  @EJB
+  private JobController jobController;
 
   private Project project;
 
@@ -154,7 +156,7 @@ public class CuneiformService {
       if (Strings.isNullOrEmpty(config.getAppName())) {
         config.setAppName("Untitled Cuneiform job");
       }
-      JobDescription created = jobFacade.create(user, project, config);
+      JobDescription created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();

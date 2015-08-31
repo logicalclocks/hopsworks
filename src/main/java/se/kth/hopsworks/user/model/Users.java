@@ -22,6 +22,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.model.User;
 
 /**
@@ -146,7 +147,7 @@ public class Users implements Serializable {
   @Size(max = 20)
   @Enumerated(EnumType.STRING)
   @Column(name = "security_question")
-  private SecurityQuestions securityQuestion;
+  private SecurityQuestion securityQuestion;
   @Size(max = 128)
   @Column(name = "security_answer")
   private String securityAnswer;
@@ -318,11 +319,11 @@ public class Users implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public SecurityQuestions getSecurityQuestion() {
+  public SecurityQuestion getSecurityQuestion() {
     return securityQuestion;
   }
 
-  public void setSecurityQuestion(SecurityQuestions securityQuestion) {
+  public void setSecurityQuestion(SecurityQuestion securityQuestion) {
     this.securityQuestion = securityQuestion;
   }
 

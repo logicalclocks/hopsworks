@@ -7,8 +7,8 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.Field;
-import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
+import se.kth.meta.entity.RawData;
 
 /**
  * Represents a message request for stored metadata filtered by table id and
@@ -94,7 +94,7 @@ public class FetchMetadataMessage extends MetadataMessage {
         JsonObjectBuilder rawdata = Json.createObjectBuilder();
         rawdata.add("rawid", raw.getId());
         rawdata.add("raw", raw.getData());
-        
+
         rd.add(rawdata);
       }
       field.add("data", rd);

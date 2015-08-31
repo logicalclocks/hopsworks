@@ -1,7 +1,7 @@
 package se.kth.bbc.jobs.adam;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 
@@ -38,18 +38,18 @@ public class AdamJobConfiguration extends SparkJobConfiguration {
   }
 
   @Override
-  public DatabaseJsonObject getReducedJsonObject() {
+  public MutableJsonObject getReducedJsonObject() {
     if (selectedCommand == null) {
       throw new NullPointerException("Null command in AdamJobConfiguration.");
     }
-    DatabaseJsonObject obj = super.getReducedJsonObject();
+    MutableJsonObject obj = super.getReducedJsonObject();
     obj.set(KEY_TYPE, JobType.ADAM.name());
     obj.set(KEY_COMMAND, selectedCommand.getReducedJsonObject());
     return obj;
   }
 
   @Override
-  public void updateFromJson(DatabaseJsonObject json) throws
+  public void updateFromJson(MutableJsonObject json) throws
           IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
@@ -60,7 +60,7 @@ public class AdamJobConfiguration extends SparkJobConfiguration {
       if (type != JobType.ADAM) {
         throw new IllegalArgumentException("JobType must be ADAM.");
       }
-      DatabaseJsonObject jsonCommand = json.getJsonObject(KEY_COMMAND);
+      MutableJsonObject jsonCommand = json.getJsonObject(KEY_COMMAND);
       command = new AdamCommandDTO();
       command.updateFromJson(jsonCommand);
     } catch (Exception e) {

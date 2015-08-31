@@ -2,7 +2,6 @@ package se.kth.hopsworks.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -104,7 +103,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projects).build();
   }
- 
+
   @GET
   @Path("/getProjectInfo/{projectName}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -118,7 +117,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             proj).build();
   }
-  
+
   @GET
   @Path("getDatasetInfo/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -132,16 +131,16 @@ public class ProjectService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NOT_FOUND);
     }
-    
+
     Inode parent = inodes.findParent(inode);
     Project proj = projectFacade.findByName(parent.getInodePK().getName());
     Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
-    
+
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NOT_FOUND);
     }
-    
+
     List<Dataset> projectsContainingInode = datasetFacade.findByInode(inode);
     List<String> sharedWith = new ArrayList<>();
     for (Dataset d : projectsContainingInode) {
@@ -153,7 +152,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             dataset).build();
   }
-  
+
   @GET
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -265,6 +264,9 @@ public class ProjectService {
               ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);
       json.setErrorMsg(ResponseMessages.PROJECT_FOLDER_NOT_CREATED + "\n "
               + json.getErrorMsg());
+    } catch (IllegalArgumentException e) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), e.
+              getLocalizedMessage());
     } catch (EJBException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.FOLDER_INODE_NOT_CREATED, ex);

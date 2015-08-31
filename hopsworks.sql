@@ -342,6 +342,7 @@ CREATE TABLE `dataset_request` (
    ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
+
 CREATE TABLE `ssh_keys` (
   `uid` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -352,6 +353,24 @@ CREATE TABLE `ssh_keys` (
   CONSTRAINT `FK_248_381` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
+-- Glassfish timers
+-- ----------------------
+
+CREATE TABLE `EJB__TIMER__TBL` (
+  `CREATIONTIMERAW` bigint(20) NOT NULL,
+  `BLOB` blob,
+  `TIMERID` varchar(255) NOT NULL,
+  `CONTAINERID` bigint(20) NOT NULL,
+  `OWNERID` varchar(255) DEFAULT NULL,
+  `STATE` int(11) NOT NULL,
+  `PKHASHCODE` int(11) NOT NULL,
+  `INTERVALDURATION` bigint(20) NOT NULL,
+  `INITIALEXPIRATIONRAW` bigint(20) NOT NULL,
+  `LASTEXPIRATIONRAW` bigint(20) NOT NULL,
+  `SCHEDULE` varchar(255) DEFAULT NULL,
+  `APPLICATIONID` bigint(20) NOT NULL,
+  PRIMARY KEY (`TIMERID`)
+) ENGINE=ndbcluster;
 
 -- VIEWS --------------
 -- ---------------------

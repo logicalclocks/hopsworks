@@ -26,7 +26,7 @@ public class StoreMetadataMessage extends MetadataMessage {
     super();
     super.TYPE = "StoreMetadataMessage";
   }
-  
+
   /**
    * Used to send custom messages
    *
@@ -40,10 +40,10 @@ public class StoreMetadataMessage extends MetadataMessage {
   }
 
   //returns the inode id and table id wrapped in an entity class in a list
-  public List<EntityIntf> superParseSchema(){
+  public List<EntityIntf> superParseSchema() {
     return super.parseSchema();
   }
-  
+
   @Override
   public List<EntityIntf> parseSchema() {
     JsonObject obj = Json.createReader(new StringReader(this.message)).

@@ -2,7 +2,7 @@ package se.kth.bbc.jobs.spark;
 
 import com.google.common.base.Strings;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 
@@ -21,7 +21,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   private int numberOfExecutors = 1;
   private int executorCores = 1;
-  private String executorMemory = "1g";
+  private int executorMemory = 512;
 
   protected static final String KEY_JARPATH = "JARPATH";
   protected static final String KEY_MAINCLASS = "MAINCLASS";
@@ -112,22 +112,21 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.executorCores = executorCores;
   }
 
-  public String getExecutorMemory() {
+  public int getExecutorMemory() {
     return executorMemory;
   }
 
   /**
-   * Set the memory requested for each executor. The given string should have
-   * the form of a number followed by a 'm' or 'g' signifying the metric.
+   * Set the memory requested for each executor in MB.
    * <p>
    * @param executorMemory
-   * @throws IllegalArgumentException If the given string is null or empty.
+   * @throws IllegalArgumentException If the given value is not strictly positive.
    */
-  public void setExecutorMemory(String executorMemory) throws
+  public void setExecutorMemory(int executorMemory) throws
           IllegalArgumentException {
-    if (Strings.isNullOrEmpty(executorMemory)) {
+    if (executorMemory < 1) {
       throw new IllegalArgumentException(
-              "Executor memory string cannot be empty.");
+              "Executor memory must be greater than 1MB.");
     }
     this.executorMemory = executorMemory;
   }
@@ -138,8 +137,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   }
 
   @Override
-  public DatabaseJsonObject getReducedJsonObject() {
-    DatabaseJsonObject obj = super.getReducedJsonObject();
+  public MutableJsonObject getReducedJsonObject() {
+    MutableJsonObject obj = super.getReducedJsonObject();
     //First: fields that are possibly null or empty:
     if (!Strings.isNullOrEmpty(args)) {
       obj.set(KEY_ARGS, args);
@@ -152,18 +151,19 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     }
     //Then: fields that can never be null or emtpy.
     obj.set(KEY_EXECCORES, "" + executorCores);
-    obj.set(KEY_EXECMEM, executorMemory);
+    obj.set(KEY_EXECMEM, ""+executorMemory);
     obj.set(KEY_NUMEXECS, "" + numberOfExecutors);
     obj.set(KEY_TYPE, JobType.SPARK.name());
     return obj;
   }
 
   @Override
-  public void updateFromJson(DatabaseJsonObject json) throws
+  public void updateFromJson(MutableJsonObject json) throws
           IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
-    String jsonArgs, jsonExeccors, jsonExecmem, jsonJarpath, jsonMainclass, jsonNumexecs;
+    String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs;
+    int jsonExecmem, jsonExeccors;
     try {
       String jsonType = json.getString(KEY_TYPE);
       type = JobType.valueOf(jsonType);
@@ -175,8 +175,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       jsonJarpath = json.getString(KEY_JARPATH, null);
       jsonMainclass = json.getString(KEY_MAINCLASS, null);
       //Then: fields that cannot be null or emtpy.
-      jsonExeccors = json.getString(KEY_EXECCORES);
-      jsonExecmem = json.getString(KEY_EXECMEM);
+      jsonExeccors = Integer.parseInt(json.getString(KEY_EXECCORES));
+      jsonExecmem = Integer.parseInt(json.getString(KEY_EXECMEM));
       jsonNumexecs = json.getString(KEY_NUMEXECS);
     } catch (Exception e) {
       throw new IllegalArgumentException(
@@ -187,7 +187,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     super.updateFromJson(json);
     //Third: we're now sure everything is valid: actually update the state
     this.args = jsonArgs;
-    this.executorCores = Integer.parseInt(jsonExeccors);
+    this.executorCores = jsonExeccors;
     this.executorMemory = jsonExecmem;
     this.jarPath = jsonJarpath;
     this.mainClass = jsonMainclass;

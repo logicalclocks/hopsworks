@@ -11,9 +11,9 @@ import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
-import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.jobs.yarn.YarnRunner;
@@ -99,8 +99,13 @@ public final class CuneiformJob extends YarnJob {
       JSONArray outputpaths = jobj.getJSONArray("output");
       for (int i = 0; i < outputpaths.length(); i++) {
         String outfile = outputpaths.getString(i);
+        String destPath = "/" + Constants.DIR_ROOT + "/" + jobDescription.
+                getProject().getName() + "/"
+                + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().
+                getId() + "/" + Utils.getFileName(outfile);
+        services.getFileOperations().renameInHdfs(outfile, destPath);
         services.getJobOutputFileFacade().create(getExecution(), Utils.
-                getFileName(outfile), outfile);
+                getFileName(outfile), destPath);
       }
     } catch (IOException | JSONException e) {
       logger.log(Level.SEVERE,

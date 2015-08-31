@@ -3,14 +3,15 @@
  * Controller for the job detail dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('JobDetailCtrl', ['$scope', '$modalInstance', 'growl', 'JobService', 'job', 'projectId', '$interval',
-          function ($scope, $modalInstance, growl, JobService, job, projectId, $interval) {
+        .controller('JobDetailCtrl', ['$scope', '$modalInstance', 'growl', 'JobService', 'job', 'projectId', '$interval', 'StorageService', '$routeParams', '$location',
+          function ($scope, $modalInstance, growl, JobService, job, projectId, $interval, StorageService, $routeParams, $location) {
 
             var self = this;
             this.job = job;
             this.jobtype; //Holds the type of job.
             this.execFile; //Holds the name of the main execution file
             this.showExecutions = false;
+            this.projectId = $routeParams.projectID;
 
             var getConfiguration = function () {
               JobService.getConfiguration(projectId, job.id).then(
@@ -66,5 +67,85 @@ angular.module('hopsWorksApp')
             self.poller = $interval(function () {
               getExecutions();
             }, 3000);
+
+            self.copy = function () {
+              var jobType;
+              switch (self.job.jobType.toUpperCase()) {
+                case "CUNEIFORM":
+                  jobType = 0;
+                  break;
+                case "SPARK":
+                  jobType = 1;
+                  break;
+                case "ADAM":
+                  jobType = 2;
+                  break;
+              }
+              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState;
+              var schedule = {
+                "unit": self.job.runConfig.schedule.unit,
+                "number": self.job.runConfig.schedule.number,
+                "addition": (self.job.runConfig.schedule.number > 1)?"s":""
+              };
+              if (jobType == 0) {
+                mainFileTxt = "Workflow file";
+                mainFileVal = self.job.runConfig.wf.name;
+                jobDetailsTxt = "Input variables";
+              } else if (jobType == 1) {
+                sparkState = {
+                  "selectedJar": getFileName(self.job.runConfig.jarPath)
+                };
+                mainFileTxt = "JAR file";
+                mainFileVal = sparkState.selectedJar;
+                jobDetailsTxt = "Job details";
+              } else if (jobType == 2) {
+                adamState = {
+                  "processparameter": null,
+                  "commandList": null,
+                  "selectedCommand": self.job.runConfig.selectedCommand.command
+                };
+                mainFileTxt = "ADAM command";
+                mainFileVal = adamState.selectedCommand;
+                jobDetailsTxt = "Job arguments";
+              }
+              var state = {
+                "jobtype": jobType,
+                "jobname": self.job.name,
+                "localResources": self.job.runConfig.localResources,
+                "phase": 4,
+                "runConfig": self.job.runConfig,
+                "sparkState": sparkState,
+                "adamState": adamState,
+                "schedule": schedule,
+                "accordion1": {//Contains the job name
+                  "isOpen": false,
+                  "visible": true,
+                  "value": " - " + self.job.name,
+                  "title": "Job name"},
+                "accordion2": {//Contains the job type
+                  "isOpen": false,
+                  "visible": true,
+                  "value": " - " + self.job.jobType,
+                  "title": "Job type"},
+                "accordion3": {// Contains the main execution file (jar, workflow,...)
+                  "isOpen": false,
+                  "visible": true,
+                  "value": " - " + mainFileVal,
+                  "title": mainFileTxt},
+                "accordion4": {// Contains the job setup (main class, input variables,...)
+                  "isOpen": false,
+                  "visible": true,
+                  "value": "",
+                  "title": jobDetailsTxt},
+                "accordion5": {//Contains the configuration and creation
+                  "isOpen": false,
+                  "visible": true,
+                  "value": "",
+                  "title": "Configure and create"}
+              };
+              StorageService.store(self.projectId + "newjob", state);              
+              $modalInstance.dismiss('cancel');
+              $location.path('project/' + self.projectId + '/newjob');
+            };
 
           }]);

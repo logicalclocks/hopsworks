@@ -20,18 +20,17 @@ public class CheckTableContentMessage extends ContentMessage {
           CheckTableContentMessage.class.
           getName());
 
-  
   public CheckTableContentMessage() {
     super();
     this.TYPE = "CheckTableContentMessage";
   }
 
-  public CheckTableContentMessage(String sender, String message){
+  public CheckTableContentMessage(String sender, String message) {
     this();
     this.sender = sender;
     this.message = message;
   }
-  
+
   @Override
   public void init(JsonObject json) {
     this.sender = json.getString("sender");

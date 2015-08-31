@@ -56,8 +56,6 @@ public class UploadService {
   @EJB
   private StagingManager stagingManager;
   @EJB
-  private FolderNameValidator datasetNameValidator;
-  @EJB
   private TemplateFacade template;
 
   private String path;
@@ -92,7 +90,7 @@ public class UploadService {
       if (parent != null) {
         parent = inodes.findByParentAndName(parent, pathArray[i]);
       } else {
-        datasetNameValidator.isValidName(pathArray[i]);
+        FolderNameValidator.isValidName(pathArray[i]);
         exist = false;
       }
     }

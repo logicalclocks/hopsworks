@@ -28,8 +28,8 @@ import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.dataset.DatasetRequest;
-import se.kth.hopsworks.dataset.RequestDTO;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
+import se.kth.hopsworks.dataset.RequestDTO;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
@@ -143,7 +143,8 @@ public class RequestService {
             + " if you want to share this dataset. \n";
 
     try {
-      emailBean.sendEmail(project.getOwner().getEmail(), "Access request for dataset "
+      emailBean.sendEmail(project.getOwner().getEmail(),
+              "Access request for dataset "
               + ds.getInode().getInodePK().getName(), msg);
     } catch (MessagingException ex) {
       json.setErrorMsg("Could not send e-mail to " + project.getOwner().
@@ -171,7 +172,7 @@ public class RequestService {
               "Incomplete request!");
     }
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    
+
     Project project = projectFacade.find(requestDTO.getProjectId());
 
     if (project == null) {
@@ -191,7 +192,8 @@ public class RequestService {
             + "if you want to add this person as a member in your project. \n";
 
     try {
-      emailBean.sendEmail(project.getOwner().getEmail(), "Join request for project "
+      emailBean.sendEmail(project.getOwner().getEmail(),
+              "Join request for project "
               + project.getName(), msg);
     } catch (MessagingException ex) {
       json.setErrorMsg("Could not send e-mail to " + project.getOwner().
