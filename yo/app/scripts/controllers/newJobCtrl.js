@@ -365,6 +365,21 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
+            
+            /**
+             * Remove the given entry from the localResources list.
+             * @param {type} lib
+             * @returns {undefined}
+             */
+            this.removeLibrary = function(lib){
+              var arlen = self.localResources.entry.length;
+              for(var i=0;i<arlen;i++){
+                if(self.localResources.entry[i].key === lib.key){
+                  self.localResources.entry.splice(i,1);
+                  return;
+                }
+              }
+            };
 
             /**
              * Init method: restore any previous state.

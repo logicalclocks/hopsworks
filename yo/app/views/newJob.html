@@ -50,9 +50,9 @@
               <span>Select...</span>
             </button>
             <!-- ADAM -->
-<!--            <div ng-show="newJobCtrl.jobtype == 2">
-              <div class="row" ng-repeat="command in newJ"
-            </div>-->
+            <!--            <div ng-show="newJobCtrl.jobtype == 2">
+                          <div class="row" ng-repeat="command in newJ"
+                        </div>-->
             <table ng-show="newJobCtrl.jobtype == 2">
               <tr ng-repeat="command in newJobCtrl.adamState.commandList">
                 <td>
@@ -203,6 +203,7 @@
                     <td>
                       Path <i class="fa fa-info-circle" tooltip="The HDFS path to the selected jar file." style="margin-left: 10px"></i>
                     </td>
+                    <td></td>
                   </tr>
                 </thead>
                 <tbody>
@@ -212,6 +213,9 @@
                     </td>
                     <td>
                       {{jar.value}}
+                    </td>
+                    <td>
+                      <i class="fa fa-times-circle" tooltip="Remove this library." style="margin-left: 10px" ng-click="newJobCtrl.removeLibrary(jar)"></i>
                     </td>
                   </tr>
                 </tbody>
@@ -245,7 +249,7 @@
                 <script type="text/javascript">
                                   $(function () {
                                   $('#scheduleDatePicker').datetimepicker();
-                                  });                </script>
+                                  });</script>
               </div>
             </div>
             <div>
