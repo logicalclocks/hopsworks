@@ -17,7 +17,7 @@ angular.module('hopsWorksApp')
 
             self.addSshKey = function () {
               self.working = true;
-              UserService.addSshKey(self.key).then(
+              UserService.addSshKey(key.name, key.publicKey).then(
                       function (success) {
                         self.keys.push(success.data);
                         self.keys[self.keys.length-1].status = false;
@@ -30,11 +30,9 @@ angular.module('hopsWorksApp')
                       });
             };
 
-            self.getSshKeys();
-
-            self.removeSshKey = function (name) {
+            self.removeSshKey = function (keyName) {
               self.working = true;
-              UserService.removeSshKey(name).then(
+              UserService.removeSshKey(keyName).then(
                       function (success) {
                         growl.success("Your ssh key has been removed.", {title: 'Success', ttl: 5000, referenceId: 1});
                         self.working = false;
@@ -66,5 +64,8 @@ angular.module('hopsWorksApp')
             self.close = function () {
               $modalInstance.dismiss('cancel');
             };
+
+
+            self.getSshKeys();
 
           }]);
