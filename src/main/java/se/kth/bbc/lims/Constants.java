@@ -17,9 +17,7 @@ public class Constants {
 
   //Relative output path (within hdfs project folder) which to write cuneiform in-/output to
   public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH
-          = "Logs/Cuneiform/Output/";
-  public static final String CUNEIFORM_DEFAULT_INPUT_PATH
-          = "Logs/Cuneiform/Input/";
+          = "Logs/Cuneiform/";
 
   //Default configuration locations
   public static final String DEFAULT_HADOOP_CONF_DIR
@@ -37,7 +35,7 @@ public class Constants {
   public static final String ENV_KEY_HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
 
   //YARN constants
-  public static final String YARN_DEFAULT_OUTPUT_PATH = "Logs/Yarn/Output/";
+  public static final String YARN_DEFAULT_OUTPUT_PATH = "Logs/Yarn/";
   public static final String HADOOP_COMMON_HOME_KEY = "HADOOP_COMMON_HOME";
   public static final String HADOOP_COMMON_HOME_VALUE
           = "/srv/hadoop";
@@ -59,7 +57,7 @@ public class Constants {
   public static final String SPARK_AM_MAIN
           = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String DEFAULT_SPARK_JAR_PATH = "/srv/spark/spark.jar";
-  public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/Output/";
+  public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
   public static final String DEFAULT_SPARK_JAR_HDFS_PATH
           = "hdfs:///user/spark/spark.jar";
   public static final String SPARK_DEFAULT_CLASSPATH
@@ -70,7 +68,7 @@ public class Constants {
   public static final String ADAM_DEFAULT_JAR_HDFS_PATH
           = "hdfs:///user/adam/repo/adam-cli.jar";
   //Or: "adam-cli/target/appassembler/repo/org/bdgenomics/adam/adam-cli/0.15.1-SNAPSHOT/adam-cli-0.15.1-SNAPSHOT.jar"
-  public static final String ADAM_DEFAULT_OUTPUT_PATH = "Logs/Adam/Output/";
+  public static final String ADAM_DEFAULT_OUTPUT_PATH = "Logs/Adam/";
   public static final String ADAM_DEFAULT_HDFS_REPO = "/user/adam/repo/";
 
   //Directory names in HDFS
