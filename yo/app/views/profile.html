@@ -51,8 +51,10 @@
 
         <div class="row">
           <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
-            <input type="submit" class="btn btn-block btn-primary mt-lg" value="Save"
-                   ng-disabled="profileForm.$pristine"/>
+            <button type="submit" class="btn btn-block btn-primary mt-lg"
+                     ng-disabled="profileForm.$pristine || profileCtrl.working">Save
+              <i ng-if="profileCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+            </button>
           </div>
           <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
             <input type="button" class="btn btn-block btn-primary mt-lg" ng-click="profileCtrl.reset()"
@@ -106,21 +108,11 @@
           <input id="id-password" name="user_password"
                  ng-model="profileCtrl.loginCredes.newPassword"
                  ng-minlength="6"
-                 ng-maxlength="10"
                  ng-pattern="/(?=.*[a-z])(?=.*[A-Z])(?=.*[\d\W]).*$/"
                  required
                  class="form-control"
                  type="password">
           <span class="fa fa-lock form-control-feedback text-muted"></span>
-          <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password.$dirty) &amp;&amp; credentialsForm.user_password.$error.required"
-                class="text-danger ng-hide">This field is required</span>
-          <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.minlength"
-                class="text-danger ng-hide">Password should be at least 6 characters. </span>
-          <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.maxlength"
-                class="text-danger ng-hide">Password should be at most 10 characters. </span>
-          <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.pattern"
-                class="text-danger ng-hide">Password should including one uppercase letter,
-            one special character and/or alphanumeric characters. </span>
         </div>
       </div>
       <div class="col-xs-6 col-sm-6 col-md-6">
@@ -130,14 +122,30 @@
                  match="regCtrl.newUser.chosenPassword"
                  class="form-control" type="password">
           <span class="fa fa-lock form-control-feedback text-muted"></span>
-          <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password_confirm.$dirty) &amp;&amp; credentialsForm.user_password_confirm.$invalid"
-                class="text-danger ng-hide">Password does Not match</span>
         </div>
       </div>
     </div>
     <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12">
+          <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password.$dirty) &amp;&amp; credentialsForm.user_password.$error.required"
+                class="text-danger ng-hide">This field is required</span>
+          <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.minlength"
+                class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
+              one special character and/or alphanumeric characters. </span>                 
+          <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.pattern"
+                class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
+              one special character and/or alphanumeric characters. </span>
+          <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password_confirm.$dirty) &amp;&amp; credentialsForm.user_password_confirm.$invalid"
+                class="text-danger ng-hide">The two passwords you entered do not match</span>
+        </div>
+    </div>
+    <div class="row">
       <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
-        <button type="submit" class="btn btn-block btn-primary mt-lg">Save</button>
+        <button class="btn btn-block btn-primary mt-lg" type="submit" 
+              ng-disabled="profileCtrl.credentialWorking">
+          <i ng-if="profileCtrl.credentialWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+          Save
+        </button>
       </div>
     </div>
   </form>

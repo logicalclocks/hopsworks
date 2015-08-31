@@ -5,17 +5,20 @@ angular.module('hopsWorksApp')
           function ($location, $cookies, AuthService) {
 
             var self = this;
-
+            self.working = false;
             self.user = {email: '', password: ''};
 
             self.login = function () {
+              self.working = true;
               AuthService.login(self.user).then(
                       function (success) {
+                        self.working = false;
                         $cookies.email = self.user.email;
                         $location.path('/');
                       }, function (error) {
-                self.errorMessage = error.data.errorMsg;
-                console.log(self.errorMessage);
+                        self.working = false;
+                        self.errorMessage = error.data.errorMsg;
+                        console.log(self.errorMessage);
               });
             };
 

@@ -86,21 +86,11 @@
                   <input id="id-password" name="user_password"
                          ng-model="regCtrl.newUser.chosenPassword"
                          ng-minlength="6"
-                         ng-maxlength="10"
                          ng-pattern="/(?=.*[a-z])(?=.*[A-Z])(?=.*[\d\W]).*$/"
                          required
                          class="form-control"
                          type="password">
                   <span class="fa fa-lock form-control-feedback text-muted"></span>
-                  <span ng-show="(registerForm.$submitted || registerForm.user_password.$dirty) &amp;&amp; registerForm.user_password.$error.required"
-                        class="text-danger ng-hide">This field is required</span>
-                  <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.minlength"
-                        class="text-danger ng-hide">Password should be at least 6 characters. </span>
-                  <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.maxlength"
-                        class="text-danger ng-hide">Password should be at most 10 characters. </span>
-                  <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.pattern"
-                        class="text-danger ng-hide">Password should including one uppercase letter,
-                    one special character and/or alphanumeric characters. </span>
                 </div>
               </div>
               <div class="col-xs-12 col-sm-6 col-md-6">
@@ -109,11 +99,23 @@
                   <input name="user_password_confirm" ng-model="regCtrl.newUser.repeatedPassword"
                          match="regCtrl.newUser.chosenPassword"
                          class="form-control" type="password">
-                  <span class="fa fa-lock form-control-feedback text-muted"></span>
-                  <span ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) &amp;&amp; registerForm.user_password_confirm.$invalid"
-                        class="text-danger ng-hide">Password does Not match</span>
+                  <span class="fa fa-lock form-control-feedback text-muted"></span>               
                 </div>
               </div>
+            </div>
+            <div class="row">
+                  <div class="col-xs-12 col-sm-12 col-md-12">
+                    <span ng-show="(registerForm.$submitted || registerForm.user_password.$dirty) &amp;&amp; registerForm.user_password.$error.required"
+                          class="text-danger ng-hide">This field is required</span>
+                    <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.minlength"
+                          class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
+                        one special character and/or alphanumeric characters. </span>                 
+                    <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.pattern"
+                          class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
+                        one special character and/or alphanumeric characters. </span>
+                    <span ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) &amp;&amp; registerForm.user_password_confirm.$invalid"
+                          class="text-danger ng-hide">The two passwords you entered do not match</span>
+                  </div>
             </div>
             <div class="row">
               <div class="checkbox c-checkbox pull-left col-md-6">
@@ -135,12 +137,16 @@
 
               <div class="col-md-12">
 
-                <button type="submit" class="btn btn-block btn-primary mt-lg">Create account
+                <button type="submit" class="btn btn-block btn-primary mt-lg" data-ng-disabled="regCtrl.working">Create account
                 </button>
               </div>
 
             </div>
           </form>
+          <div style="text-align: center" class="text-muted" ng-show="regCtrl.working">
+            <i class="fa fa-spinner fa-spin"></i> 
+            Registering your new account.
+          </div>
           <div ng-show="regCtrl.successMessage" class="alert  alert-success text-center ng-binding ng-hide">{{regCtrl.successMessage}}</div>
           <div ng-show="regCtrl.errorMessage" class="alert alert-danger text-center ng-binding ng-hide">{{regCtrl.errorMessage}}</div>
           <p class="pt-lg text-center">Have an account?</p>

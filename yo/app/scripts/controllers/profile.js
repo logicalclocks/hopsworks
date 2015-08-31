@@ -5,6 +5,8 @@ angular.module('hopsWorksApp')
           function (UserService, $location, $scope, md5, growl, $modalInstance) {
 
             var self = this;
+            self.working = false;
+            self.credentialWorking = false;
 
             self.emailHash = '';
             self.master = {};
@@ -38,27 +40,32 @@ angular.module('hopsWorksApp')
             self.profile();
 
             self.updateProfile = function () {
+              self.working = true;
               UserService.UpdateProfile(self.user).then(
                       function (success) {
+                        self.working = false;
                         self.user = success.data;
                         self.master = angular.copy(self.user);
                         growl.success("Your profile is now saved.", {title: 'Success', ttl: 5000, referenceId: 1});
                         $scope.profileForm.$setPristine();
                       }, function (error) {
-                self.errorMsg = error.data.errorMsg;
-                growl.error("Could not update your profile.", {title: 'Error', ttl: 5000, referenceId: 1});
+                        self.working = false;
+                        self.errorMsg = error.data.errorMsg;
+                        growl.error("Could not update your profile.", {title: 'Error', ttl: 5000, referenceId: 1});
               });
             };
 
             self.changeLoginCredentials = function () {
-
+              self.credentialWorking = true;
               if ($scope.credentialsForm.$valid) {
                 UserService.changeLoginCredentials(self.loginCredes).then(
                         function (success) {
+                          self.credentialWorking = false;
                           growl.success("Your password is now updated.", {title: 'Success', ttl: 5000, referenceId: 1});
                         }, function (error) {
-                  self.errorMsg = error.data.errorMsg;
-                  growl.error("Could not update your password.", {title: 'Error', ttl: 5000, referenceId: 1});
+                          self.credentialWorking = false;
+                          self.errorMsg = error.data.errorMsg;
+                          growl.error("Could not update your password.", {title: 'Error', ttl: 5000, referenceId: 1});
                 });
               }
             };

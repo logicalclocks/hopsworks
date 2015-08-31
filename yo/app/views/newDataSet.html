@@ -19,8 +19,7 @@
           </md-input-container>
 
           <span
-            ng-show="(dataSetForm.$submitted || dataSetForm.dataSet_name.$dirty) & amp;
-                & amp;
+            ng-show="(dataSetForm.$submitted || dataSetForm.dataSet_name.$dirty) &amp;&amp;
                 dataSetForm.dataSet_name.$error.required"
             class="text-danger ng-hide">This field is required</span>
 
@@ -70,8 +69,11 @@
     <div class="modal-footer">
 
       <button  class="btn btn-default" type="button" ng-click="datasetCreatorCtrl.close()">Cancel</button>
-      <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.dataSet_name.$error.required">Create</button>
-
+      <button class="btn btn-primary" type="submit" 
+              ng-disabled="dataSetForm.dataSet_name.$error.required || datasetCreatorCtrl.working">
+        <i ng-if="datasetCreatorCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+        Create
+      </button>
     </div>
   </form>
 
