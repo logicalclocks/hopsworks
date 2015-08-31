@@ -8,8 +8,8 @@ import javax.ejb.Stateless;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.InodeTableComposite;
-import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
+import se.kth.meta.entity.MetaData;
 import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.wscomm.message.Command;
 import se.kth.meta.wscomm.message.Message;
@@ -135,8 +135,8 @@ public class Protocol {
         return this.builder.checkFieldContents(field);
         
       case UPDATE_METADATA:
-        RawData raw = (RawData) message.parseSchema().get(0);
-        this.utils.updateRawData(raw);
+        MetaData metadata = (MetaData) message.parseSchema().get(0);
+        this.utils.updateMetadata(metadata);
         return new TextMessage("Server", "Raw data was updated successfully");
     }
 

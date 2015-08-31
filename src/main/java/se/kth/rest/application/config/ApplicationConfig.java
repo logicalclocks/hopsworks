@@ -33,7 +33,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.TransactionExceptionMapper.class);
     register(se.kth.hopsworks.rest.UploadService.class);
     register(se.kth.hopsworks.rest.UserService.class);
-    register(se.kth.hopsworks.rest.TemplateService.class);
+    register(se.kth.hopsworks.rest.MetadataService.class);
 
     // register resources and features
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);

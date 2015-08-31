@@ -209,14 +209,15 @@
                                   <div class="input-group-lg" align="center">
                                     <div ng-repeat="table in metadataCtrl.meta"><h2>{{table.name}}</h2>
                                       <div>
-                                        <div ng-repeat="field in table.rest.fields"><b>{{field.name}}</b>
-                                          <div ng-repeat="value in field.data">
-                                            <a href="#" editable-text="value.raw" buttons="no"
-                                               onaftersave="metadataCtrl.updateRawdata(value)"
+                                        <div ng-repeat="field in table.rest"><b><i>{{field.tagName}}</i></b>
+                                          <div ng-repeat="value in field.metadataView">
+                                            <a href="#" editable-text="value.data" buttons="no"
+                                               onaftersave="metadataCtrl.updateMetadata(value)"
+                                               blur="submit"
                                                style="font-size: 16px;"
                                                class="column-title ng-binding"
                                                >
-                                              {{value.raw}}
+                                              {{value.data}}
                                             </a>
                                           </div>
                                         </div>
@@ -395,11 +396,11 @@
                                   button-label="value"
                                   item-label="value"
                                   tick-property="ticked"
-                                  output-properties="value">
+                                  output-properties="value"
+                                  >
                                 </div>
                               </div>
                             </div>
-
                           </div>
                         </div>
                         <hr>

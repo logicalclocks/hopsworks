@@ -167,12 +167,12 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({fieldid: fieldId})
               });
             },
-            updateRawdata: function (user, rawObj) {
+            updateMetadata: function (user, metaObj) {
               return WSComm.send({
                 sender: user,
                 type: 'UpdateMetadataMessage',
                 action: 'update_metadata',
-                message: JSON.stringify({rawid: rawObj.rawid, rawdata: rawObj.raw})
+                message: JSON.stringify({metaid: metaObj.id, metadata: metaObj.data})
               });
             }
           };

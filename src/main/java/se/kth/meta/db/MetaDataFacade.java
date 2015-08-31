@@ -47,6 +47,19 @@ public class MetaDataFacade extends AbstractFacade<MetaData> {
       return null;
     }
   }
+  
+  public MetaData getMetadataById(int id){
+    
+    TypedQuery<MetaData> q = this.em.createNamedQuery(
+            "MetaData.findById", MetaData.class);
+    q.setParameter("id", id);
+    
+    try{
+      return q.getSingleResult();
+    }catch(NoResultException e){
+      return null;
+    }
+  }
 
   /**
    * adds a new record into 'meta_data' table. MetaData is the object that's

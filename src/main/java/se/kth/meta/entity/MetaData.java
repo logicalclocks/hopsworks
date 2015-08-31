@@ -6,9 +6,6 @@ import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.Lob;
@@ -33,7 +30,9 @@ import javax.xml.bind.annotation.XmlRootElement;
           = "SELECT m FROM MetaData m"),
   @NamedQuery(name = "MetaData.findByPrimaryKey",
           query
-          = "SELECT m FROM MetaData m WHERE m.metadataPK = :metadataPK")
+          = "SELECT m FROM MetaData m WHERE m.metadataPK = :metadataPK"),
+  @NamedQuery(name = "MetaData.findById",
+          query = "SELECT m FROM MetaData m WHERE m.metadataPK.id = :id")
 })
 public class MetaData implements EntityIntf, Serializable {
 

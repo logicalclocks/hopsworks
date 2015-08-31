@@ -267,15 +267,16 @@ public class Utils {
   /**
    * Updates a single raw data record.
    * <p>
-   * @param raw
+   * @param meta
    * @throws ApplicationException
    */
-  public void updateRawData(RawData raw) throws ApplicationException {
+  public void updateMetadata(MetaData meta) throws ApplicationException {
     try {
 
-      RawData rawdata = this.rawDataFacade.getRawData(raw.getRawdataPK());
-      rawdata.setMetaData(raw.getMetaData());
-      this.rawDataFacade.addRawData(rawdata);
+      MetaData metadata = this.metadataFacade.getMetadataById(meta.
+              getMetaDataPK().getId());
+      metadata.setData(meta.getData());
+      this.metadataFacade.addMetadata(metadata);
     } catch (DatabaseException e) {
       throw new ApplicationException(e.getMessage(),
               "Utils.java: updateRawData(RawData) encountered a problem " + e.

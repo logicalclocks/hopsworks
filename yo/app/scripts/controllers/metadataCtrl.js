@@ -59,7 +59,14 @@ angular.module('hopsWorksApp')
                       });
 
               //truncate metaData object
-              self.metaData = {};
+              angular.forEach(self.metaData, function (value, key) {
+                if (!angular.isArray(value)) {
+                  self.metaData[key] = "";
+                } else {
+                  self.metaData[key] = [];
+                }
+              });
+              //self.metaData = {};
             };
 
             /* -- TEMPLATE HANDLING FUNCTIONS -- */
@@ -503,13 +510,13 @@ angular.module('hopsWorksApp')
              * @param {type} raw
              * @returns {undefined}
              */
-            self.updateRawdata = function (raw) {
-              console.log("META " + JSON.stringify(raw));
-              MetadataActionService.updateRawdata($cookies['email'], raw)
+            self.updateMetadata = function (metadata) {
+              console.log("META " + JSON.stringify(metadata));
+              MetadataActionService.updateMetadata($cookies['email'], metadata)
                       .then(function (response) {
                         growl.success(response.board, {title: 'Success', ttl: 5000});
                       }, function (dialogResponse) {
-                        growl.info("Could not update metadata " + raw.raw + ".", {title: 'Info', ttl: 5000});
+                        growl.info("Could not update metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
                       });
             };
 
@@ -527,7 +534,6 @@ angular.module('hopsWorksApp')
 
               MetadataActionService.fetchTemplate($cookies['email'], templateId)
                       .then(function (response) {
-                        console.log("LOADED TEMPLATE " + JSON.stringify(response.board) + " template id " + templateId);
                         self.currentBoard = JSON.parse(response.board);
                         self.initializeMetadataTabs(JSON.parse(response.board));
                         self.fetchMetadataForTemplate();
@@ -535,7 +541,7 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Fetches all the metadata a template holds
+             * Fetches all the metadata a template holds, for a selected inode
              * 
              * @returns {undefined}
              */
@@ -547,9 +553,10 @@ angular.module('hopsWorksApp')
               var currentfile = MetadataHelperService.getCurrentFile();
 
               angular.forEach(tables, function (table, key) {
-                MetadataActionService.fetchMetadata($cookies['email'], table.id, currentfile.id)
+                dataSetService.fetchMetadata(currentfile.id, table.id)
                         .then(function (response) {
-                          self.reconstructMetadata(table.name, JSON.parse(response.board));
+                          var content = response.data[0];
+                          self.reconstructMetadata(table.name, content.metadataView);
                         });
               });
             };
@@ -568,7 +575,8 @@ angular.module('hopsWorksApp')
 
               self.meta.push({name: tableName, rest: rawdata});
               self.metadataView = {};
-              console.log("RECONSTRUCTED ARRAY  " + JSON.stringify(self.meta));
+
+              //console.log("RECONSTRUCTED METADATA " + JSON.stringify(self.meta));
             };
 
             /**
@@ -644,14 +652,14 @@ angular.module('hopsWorksApp')
                          * it means that the upload was successful and the
                          * window closed automatically
                          */
+                        growl.success("The template was uploaded successfully",
+                                {title: 'Success', ttl: 15000});
                       },
                               function (closed) {
                                 //trigger the necessary variable change in the service
                                 MetadataHelperService.fetchAvailableTemplates()
                                         .then(function (response) {
                                           self.availableTemplates = JSON.parse(response.board).templates;
-                                          growl.success("The template was uploaded successfully",
-                                                  {title: 'Success', ttl: 15000});
                                         });
                               });
             };
