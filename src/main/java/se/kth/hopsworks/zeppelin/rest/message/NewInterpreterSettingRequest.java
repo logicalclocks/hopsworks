@@ -18,7 +18,6 @@
 package se.kth.hopsworks.zeppelin.rest.message;
 
 import java.util.Map;
-
 import org.apache.zeppelin.interpreter.InterpreterOption;
 
 /**

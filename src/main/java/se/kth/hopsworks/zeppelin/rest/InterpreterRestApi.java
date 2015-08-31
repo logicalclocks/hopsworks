@@ -16,11 +16,11 @@
  */
 package se.kth.hopsworks.zeppelin.rest;
 
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -30,19 +30,16 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
 import org.apache.zeppelin.interpreter.Interpreter;
+import org.apache.zeppelin.interpreter.Interpreter.RegisteredInterpreter;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
-import org.apache.zeppelin.interpreter.Interpreter.RegisteredInterpreter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import se.kth.hopsworks.zeppelin.rest.message.NewInterpreterSettingRequest;
 import se.kth.hopsworks.zeppelin.rest.message.UpdateInterpreterSettingRequest;
 import se.kth.hopsworks.zeppelin.server.JsonResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.gson.Gson;
 import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
 
 /**

@@ -18,7 +18,6 @@
 package se.kth.hopsworks.zeppelin.rest.message;
 
 import java.util.List;
-
 import org.apache.zeppelin.interpreter.Interpreter;
 
 /**

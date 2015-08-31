@@ -5,7 +5,6 @@
  */
 package se.kth.hopsworks.rest;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -34,8 +33,8 @@ import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.dataset.DatasetRequest;
-import se.kth.hopsworks.dataset.RequestDTO;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
+import se.kth.hopsworks.dataset.RequestDTO;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
