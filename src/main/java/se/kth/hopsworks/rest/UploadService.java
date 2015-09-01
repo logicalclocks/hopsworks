@@ -1,7 +1,6 @@
 package se.kth.hopsworks.rest;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,8 +59,6 @@ public class UploadService {
   @EJB
   private StagingManager stagingManager;
   @EJB
-  private FolderNameValidator datasetNameValidator;
-  @EJB
   private TemplateFacade template;
   @EJB
   private ResponseBuilder responseBuilder;
@@ -98,7 +95,7 @@ public class UploadService {
       if (parent != null) {
         parent = inodes.findByParentAndName(parent, pathArray[i]);
       } else {
-        datasetNameValidator.isValidName(pathArray[i]);
+        FolderNameValidator.isValidName(pathArray[i]);
         exist = false;
       }
     }
