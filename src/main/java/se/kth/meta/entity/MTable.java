@@ -37,7 +37,7 @@ import javax.validation.constraints.Size;
   @NamedQuery(name = "MTable.findByTemplateId",
           query
           = "SELECT DISTINCT t FROM MTable t WHERE t.templateid = :templateid")})
-public class MTable implements Serializable, EntityIntf, Comparable<MTable> {
+public class MTable implements Serializable, EntityIntf, Comparable {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -142,7 +142,7 @@ public class MTable implements Serializable, EntityIntf, Comparable<MTable> {
   }
 
   public void resetFields() {
-    this.fields = new LinkedList<>();
+    this.fields.clear();
   }
 
   public Template getTemplate() {
@@ -176,11 +176,14 @@ public class MTable implements Serializable, EntityIntf, Comparable<MTable> {
 
   @Override
   public String toString() {
-    return "entity.Tables[ id=" + id + ", name=" + name + " ]";
+    return "entity.Tables[ id=" + this.id + ", name=" + this.name
+            + ", templateId=" + this.templateid + " ]";
   }
 
   @Override
-  public int compareTo(MTable table) {
+  public int compareTo(Object o) {
+    MTable table = (MTable) o;
+
     if (this.getId() > table.getId()) {
       return 1;
     } else if (this.getId() < table.getId()) {

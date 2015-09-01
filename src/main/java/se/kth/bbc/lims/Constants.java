@@ -81,6 +81,7 @@ public class Constants {
   public static final String DIR_FASTQ = "fastq";
   public static final String DIR_FASTA = "fasta";
   public static final String DIR_VCF = "vcf";
+  public static final String DIR_TEMPLATES = "Templates";
 
   //Filename conventions
   public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#";

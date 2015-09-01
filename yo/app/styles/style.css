@@ -136,11 +136,12 @@ a:focus {
 
 
 .datasetList {
-  background-color: #46b8da;
+  /* disabled to use btn-primary style color instead */
+  /* background-color: #46b8da; */
   list-style-type:none;
-  color:white;
+  /* color:white; */
   padding-left: 0;
-  text-indent: 15px;
+  /* text-indent: 15px; */
 }
 
 .datasetList > li {
@@ -180,6 +181,11 @@ div.scroll > ul > li > textarea {
   /* Ensures that tables in a dialog box are presented correctly in Chrome*/
     table-layout: fixed;
     word-wrap: break-word;
+}
+
+/* editable link (edit in place) style */
+.editable-controls .editable-input { 
+  color: #2e353d;
 }
 
 .glyphicon-info-sign {

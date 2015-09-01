@@ -194,7 +194,7 @@ public class DataSetService {
     if (inodes.getInodeAtPath(fullPath) == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               ResponseMessages.FILE_NOT_FOUND);
-  }
+    }
     try {
       is = fileOps.getInputStream(fullPath);
       logger.
@@ -382,7 +382,7 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
     String newPath = getFullPath(dataSetName.getName());
-    while(newPath.startsWith("/")){
+    while (newPath.startsWith("/")) {
       newPath = newPath.substring(1);
     }
     String[] fullPathArray = newPath.split(File.separator);
@@ -471,13 +471,15 @@ public class DataSetService {
   @Path("fileExists/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response checkFileExist(@PathParam("path") String path) throws AppException {
+  public Response checkFileExist(@PathParam("path") String path) throws
+          AppException {
     if (path == null) {
       path = "";
     }
     path = getFullPath(path);
     Configuration conf = new Configuration();
-    conf.addResource(new org.apache.hadoop.fs.Path(Constants.DEFAULT_HADOOP_CONF_DIR + "core-site.xml"));
+    conf.addResource(new org.apache.hadoop.fs.Path(
+            Constants.DEFAULT_HADOOP_CONF_DIR + "core-site.xml"));
     FileSystem hdfs;
     try {
       hdfs = FileSystem.get(conf);
@@ -485,17 +487,17 @@ public class DataSetService {
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "File does not exist: " + path);
+              "File does not exist: " + path);
     }
     Response.ResponseBuilder response = Response.ok();
     return response.build();
   }
-  
-  
+
   @Path("fileDownload/{path: .+}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public DownloadService downloadDS(@PathParam("path") String path) throws AppException {
-     if (path == null) {
+  public DownloadService downloadDS(@PathParam("path") String path) throws
+          AppException {
+    if (path == null) {
       path = "";
     }
     path = getFullPath(path);
@@ -514,7 +516,7 @@ public class DataSetService {
     downloader.setPath(path);
     return downloader;
   }
-  
+
   @Path("upload/{path: .+}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public UploadService upload(
