@@ -22,7 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 public class AppScriptServlet extends HttpServlet {
 
   private final static Logger logger = Logger.getLogger(AppScriptServlet.class.
-          getName());
+          getName()); 
 
   private final ZeppelinSingleton zeppelin = ZeppelinSingleton.SINGLETON;
   private final int websocketPort;
