@@ -110,7 +110,7 @@ public class MetadataService {
     if (inodeid == null || tableid == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
-    }
+    } 
 
     //metadata associated to a specific table and inode
     List<MetaDataView> metadata = new LinkedList<>();
