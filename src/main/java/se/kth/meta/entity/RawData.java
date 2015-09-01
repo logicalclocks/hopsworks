@@ -1,20 +1,19 @@
 package se.kth.meta.entity;
 
 import java.io.Serializable;
-import javax.persistence.Basic;
-import javax.persistence.Column;
+import java.util.List;
+import javax.persistence.CascadeType;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -27,92 +26,63 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
   @NamedQuery(name = "RawData.findAll",
           query = "SELECT r FROM RawData r"),
-  @NamedQuery(name = "RawData.findById",
-          query = "SELECT r FROM RawData r WHERE r.id = :id"),
+  @NamedQuery(name = "RawData.findByPrimaryKey",
+          query = "SELECT r FROM RawData r WHERE r.rawdataPK = :rawdataPK"),
   @NamedQuery(name = "RawData.findByFieldid",
-          query = "SELECT r FROM RawData r WHERE r.fieldid = :fieldid"),
+          query = "SELECT r FROM RawData r WHERE r.rawdataPK.fieldid = :fieldid"),
   @NamedQuery(name = "RawData.findByTupleid",
-          query = "SELECT r FROM RawData r WHERE r.tupleid = :tupleid"),
+          query = "SELECT r FROM RawData r WHERE r.rawdataPK.tupleid = :tupleid"),
   @NamedQuery(name = "RawData.lastInsertedTupleId",
           query
-          = "SELECT r FROM RawData r GROUP BY r.tupleid ORDER BY r.tupleid desc")})
-public class RawData implements Serializable, EntityIntf {
+          = "SELECT r FROM RawData r GROUP BY r.rawdataPK.tupleid ORDER BY r.rawdataPK.tupleid desc")})
+public class RawData implements EntityIntf, Serializable {
 
   private static final long serialVersionUID = 1L;
-  @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE)
-  @Basic(optional = false)
-  @Column(name = "id")
-  private Integer id;
 
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "fieldid")
-  private int fieldid;
+  @EmbeddedId
+  private RawDataPK rawdataPK;
 
   @ManyToOne(optional = false)
   @PrimaryKeyJoinColumn(name = "fieldid",
           referencedColumnName = "fieldid")
   private Field fields;
 
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "tupleid")
-  private int tupleid;
-
-  @Basic(optional = false)
-  @NotNull
-  @Lob
-  @Size(min = 1,
-          max = 65535)
-  @Column(name = "data")
-  private String data;
-
   @ManyToOne(optional = false)
   @PrimaryKeyJoinColumn(name = "tupleid",
           referencedColumnName = "tupleid")
   private TupleToFile tupleToFile;
 
+  @OneToMany(mappedBy = "rawdata",
+          targetEntity = Metadata.class,
+          fetch = FetchType.LAZY,
+          cascade = {CascadeType.ALL})
+  private List<Metadata> metadata;
+
   public RawData() {
-    this.id = -1;
+    this.rawdataPK = new RawDataPK(-1, -1);
   }
 
-  public RawData(Integer id) {
-    this.id = id;
+  public RawData(RawDataPK rawdataPK) {
+    this.rawdataPK = rawdataPK;
   }
 
-  public RawData(int fieldid, int tupleid, String data) {
-    this.fieldid = fieldid;
-    this.tupleid = tupleid;
-    this.data = data;
+  public RawData(int fieldid, int tupleid) {
+    this.rawdataPK = new RawDataPK(fieldid, tupleid);
   }
 
   @Override
   public void copy(EntityIntf raw) {
     RawData r = (RawData) raw;
 
-    this.id = r.getId();
-    this.fieldid = r.getFieldid();
-    this.tupleid = r.getTupleid();
-    this.data = r.getData();
+    this.rawdataPK.copy(r.getRawdataPK());
   }
 
-  @Override
-  public Integer getId() {
-    return id;
+  public void setRawdataPK(RawDataPK rawdataPK) {
+    this.rawdataPK = rawdataPK;
   }
 
-  @Override
-  public void setId(Integer id) {
-    this.id = id;
-  }
-
-  public int getFieldid() {
-    return fieldid;
-  }
-
-  public void setFieldid(int fieldid) {
-    this.fieldid = fieldid;
+  public RawDataPK getRawdataPK() {
+    return this.rawdataPK;
   }
 
   /*
@@ -125,17 +95,6 @@ public class RawData implements Serializable, EntityIntf {
   public Field getField() {
     return this.fields;
   }
-  /*
-   * -------------------------------
-   */
-
-  public int getTupleid() {
-    return tupleid;
-  }
-
-  public void setTupleid(int tupleid) {
-    this.tupleid = tupleid;
-  }
 
   /*
    * get and set the parent entity
@@ -147,19 +106,37 @@ public class RawData implements Serializable, EntityIntf {
   public TupleToFile getTupleToFile() {
     return this.tupleToFile;
   }
-
-  public String getData() {
-    return data;
+  
+  /*
+   * get and set the metadata
+   */
+  public void setMetadata(List<Metadata> metadata){
+    this.metadata = metadata;
+  }
+  
+  public List<Metadata> getMetadata(){
+    return this.metadata;
+  }
+  
+  public void resetMetadata(){
+    this.metadata.clear();
   }
 
-  public void setData(String data) {
-    this.data = data;
+  @Override
+  public Integer getId() {
+    throw new UnsupportedOperationException("Not necessary for this entity.");
+  }
+
+  @Override
+  public void setId(Integer id) {
+    throw new UnsupportedOperationException("Not necessary for this entity.");
   }
 
   @Override
   public int hashCode() {
     int hash = 0;
-    hash += (id != null ? id.hashCode() : 0);
+    hash += (this.rawdataPK != null ? this.rawdataPK.hashCode() : 0);
+    
     return hash;
   }
 
@@ -170,17 +147,15 @@ public class RawData implements Serializable, EntityIntf {
       return false;
     }
     RawData other = (RawData) object;
-    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
-            equals(other.id))) {
-      return false;
-    }
-    return true;
+
+    return !((this.rawdataPK == null && other.getRawdataPK() != null)
+            || (this.rawdataPK != null
+            && !this.rawdataPK.equals(other.getRawdataPK())));
   }
 
   @Override
   public String toString() {
-    return "entity.RawData[ id=" + id + ", fieldid=" + fieldid + ", tupleid="
-            + tupleid + ", data=" + data + " ]";
+    return "se.kth.meta.entity.RawData[ rawdataPK= " + this.rawdataPK + " ]";
   }
 
 }
