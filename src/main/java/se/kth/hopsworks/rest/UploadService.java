@@ -1,6 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +20,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import se.kth.bbc.fileoperations.FileOperations;
@@ -37,6 +37,8 @@ import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.entity.Template;
 import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.exception.DatabaseException;
+import se.kth.meta.wscomm.ResponseBuilder;
+import se.kth.meta.wscomm.message.UploadedTemplateMessage;
 
 /**
  *
@@ -57,6 +59,8 @@ public class UploadService {
   private InodeFacade inodes;
   @EJB
   private StagingManager stagingManager;
+  @EJB
+  private FolderNameValidator datasetNameValidator;
   @EJB
   private TemplateFacade template;
   @EJB
@@ -94,7 +98,7 @@ public class UploadService {
       if (parent != null) {
         parent = inodes.findByParentAndName(parent, pathArray[i]);
       } else {
-        FolderNameValidator.isValidName(pathArray[i]);
+        datasetNameValidator.isValidName(pathArray[i]);
         exist = false;
       }
     }
@@ -105,16 +109,6 @@ public class UploadService {
     logger.log(Level.INFO, "Constructor end. by setting fileParent to {0}",
             this.fileParent);
     this.path = uploadPath;
-  }
-
-  /**
-   * Sets the template id to be attached to the file that's being uploaded.
-   * <p>
-   * <p>
-   * @param templateId
-   */
-  public void setTemplateId(int templateId) {
-    this.templateId = templateId;
   }
 
   /**
@@ -269,7 +263,7 @@ public class UploadService {
           }
           fileContent = Utils.getFileContents(filePath);
         }
-
+        
         this.path = Utils.ensurePathEndsInSlash(this.path);
         fileOps.copyToHDFSFromLocal(true, stagingManager.getStagingPath()
                 + this.path + fileName, this.path

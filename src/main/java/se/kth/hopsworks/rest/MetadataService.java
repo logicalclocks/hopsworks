@@ -28,8 +28,8 @@ import se.kth.meta.db.MTableFacade;
 import se.kth.meta.db.TupleToFileFacade;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.MTable;
-import se.kth.meta.entity.MetaData;
-import se.kth.meta.entity.MetaDataView;
+import se.kth.meta.entity.Metadata;
+import se.kth.meta.entity.MetadataView;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.DatabaseException;
@@ -113,7 +113,7 @@ public class MetadataService {
     } 
 
     //metadata associated to a specific table and inode
-    List<MetaDataView> metadata = new LinkedList<>();
+    List<MetadataView> metadata = new LinkedList<>();
 
     try {
       List<TupleToFile> tuples = ttf.getTuplesByInode(inodeid);
@@ -122,11 +122,11 @@ public class MetadataService {
       List<Field> fields = table.getFields();
 
       //groups metadata per table
-      MetaDataView metatopView = new MetaDataView(table.getName());
+      MetadataView metatopView = new MetadataView(table.getName());
 
       for (Field field : fields) {
         //groups metadata per field
-        MetaDataView metainnerView = new MetaDataView(field.getName());
+        MetadataView metainnerView = new MetadataView(field.getName());
 
         /*
          * Load raw data based on the field id. Keep only data related to
@@ -139,12 +139,12 @@ public class MetadataService {
 
             //filter out irrelevant metadata
             if (raw.getRawdataPK().getTupleid() == tuple.getId()) {
-              List<MetaData> meta = new LinkedList<>(raw.getMetaData());
+              List<Metadata> meta = new LinkedList<>(raw.getMetadata());
 
-              for (MetaData mt : meta) {
+              for (Metadata mt : meta) {
                 //all metadata for an inode a field carries
-                metainnerView.getMetadataView().add(new MetaDataView(mt.
-                        getMetaDataPK().getId(), mt.getData()));
+                metainnerView.getMetadataView().add(new MetadataView(mt.
+                        getMetadataPK().getId(), mt.getData()));
               }
             }
           }
@@ -153,8 +153,8 @@ public class MetadataService {
       }
 
       metadata.add(metatopView);
-      GenericEntity<List<MetaDataView>> response
-              = new GenericEntity<List<MetaDataView>>(metadata) {
+      GenericEntity<List<MetadataView>> response
+              = new GenericEntity<List<MetadataView>>(metadata) {
               };
 
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
