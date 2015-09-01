@@ -12,9 +12,9 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.Field;
 import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.FieldType;
+import se.kth.meta.entity.Field;
 import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.Template;
 import se.kth.meta.exception.ApplicationException;
@@ -30,10 +30,6 @@ public class TemplateMessage extends ContentMessage {
           getName());
 
   private final String TYPE = "TemplateMessage";
-  private String sender;
-  private String message;
-  private String action;
-  private String status;
 
   public TemplateMessage() {
     this.status = "OK";
@@ -51,7 +47,7 @@ public class TemplateMessage extends ContentMessage {
     this.message = json.getString("message");
     this.action = json.getString("action");
     this.setStatus("OK");
-    super.setAction(this.action);
+    this.setAction(this.action);
 
     //when asking for template names list, tempid is null
     try {
@@ -62,6 +58,11 @@ public class TemplateMessage extends ContentMessage {
       logger.log(Level.SEVERE, "Error while retrieving the templateid."
               + " Probably fetching the templates");
     }
+  }
+
+  @Override
+  public void setAction(String action) {
+    super.setAction(action);
   }
 
   @Override
@@ -78,9 +79,9 @@ public class TemplateMessage extends ContentMessage {
   }
 
   /**
-   * Returns the template object. It is used only when creating a new template
-   * or deleting one. The message carries either the template name or the
-   * template id depending on the desired action.
+   * Returns the template object. It is used when creating a new template
+   * deleting or when updating one. The message carries either the template name
+   * or the template id depending on the desired action.
    *
    * @return the template to be added in the database
    * @throws se.kth.meta.exception.ApplicationException
@@ -93,19 +94,23 @@ public class TemplateMessage extends ContentMessage {
 
     try {
       switch (Command.valueOf(this.action.toUpperCase())) {
+
         case ADD_NEW_TEMPLATE:
           temp = new Template(-1, object.getString("templateName"));
           break;
         case REMOVE_TEMPLATE:
           temp = new Template(object.getInt("templateId"));
           break;
+        case UPDATE_TEMPLATE_NAME:
+          temp = new Template(object.getInt("templateId"), object.getString(
+                  "templateName"));
+          break;
         default:
           throw new ApplicationException("Unknown command in received message");
       }
     } catch (NullPointerException e) {
-      logger.
-              log(Level.SEVERE,
-                      "Error while retrieving the template attributes.");
+      logger.log(Level.SEVERE,
+              "Error while retrieving the template attributes.");
       throw new ApplicationException(
               "Error while retrieving the template attributes.");
     }
@@ -115,7 +120,6 @@ public class TemplateMessage extends ContentMessage {
 
   @Override
   public List<EntityIntf> parseSchema() {
-
     JsonObject obj = Json.createReader(new StringReader(this.message)).
             readObject();
     JsonObject board = obj.getJsonObject("bd");
