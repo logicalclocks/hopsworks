@@ -69,3 +69,9 @@ a:focus,
 .dropdown-menu > li > a:hover {
   color: #ffffff;
 }
+
+
+.ssh-key
+{
+  max-height: 200px;
+}

@@ -98,10 +98,10 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              sshkeys: function (size) {
+              sshKeys: function (size) {
                 var modalInstance = $modal.open({
-                  templateUrl: 'views/sshkeys.html',
-                  controller: 'SshkeysCtrl as sshkeysCtrl',
+                  templateUrl: 'views/sshKeys.html',
+                  controller: 'SshKeysCtrl as sshKeysCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',

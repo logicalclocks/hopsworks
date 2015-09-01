@@ -34,7 +34,7 @@ public class UsersController {
   @EJB
   private UserFacade userBean;
   @EJB
-  private SshkeysFacade sshkeysBean;
+  private SshkeysFacade sshKeysBean;
   @EJB
   private UserValidator userValidator;
   @EJB
@@ -239,16 +239,16 @@ public class UsersController {
     SshKeys key = new SshKeys();
     key.setSshKeysPK(new SshKeysPK(id, name));
     key.setPublicKey(sshKey);
-    sshkeysBean.persist(key);
+    sshKeysBean.persist(key);
     return new SshKeyDTO(key);
   }
 
   public void removeSshKey(int id, String name) {
-    sshkeysBean.removeByIdName(id, name);
+    sshKeysBean.removeByIdName(id, name);
   }
 
   public List<SshKeyDTO> getSshKeys(int id) {
-    List<SshKeys> keys = sshkeysBean.findAllById();
+    List<SshKeys> keys = sshKeysBean.findAllById(id);
     List<SshKeyDTO> dtos = new ArrayList<>();
     for (SshKeys sshKey : keys) {
       dtos.add(new SshKeyDTO(sshKey));

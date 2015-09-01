@@ -19,7 +19,7 @@ angular.module('hopsWorksApp')
                 return $http.post('/api/user/newProject', newProject);
               },
               addSshKey: function (name, sshKey) {
-                return $http.post('/api/user/addSshKey', "name=" + name + "&sshkey=" + sshKey);
+                return $http.post('/api/user/addSshKey', "name=" + name + "&sshKey=" + sshKey);
               },
               removeSshKey: function (name) {
                 return $http.post('/api/user/removeSshKey', "name="+name);

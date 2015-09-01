@@ -25,9 +25,9 @@ public class SshkeysFacade extends AbstractFacade<SshKeys> {
     super(SshKeys.class);
   }
 
-  public List<SshKeys> findAllById() {
-    TypedQuery<SshKeys> query = em.createNamedQuery("SshKeys.findByUid",
-            SshKeys.class);
+  public List<SshKeys> findAllById(int id) {
+    TypedQuery<SshKeys> query = em.createNamedQuery("SshKeys.findByUid", SshKeys.class);
+    query.setParameter("uid", id);
     return query.getResultList();
   }
 
@@ -59,7 +59,7 @@ public class SshkeysFacade extends AbstractFacade<SshKeys> {
   }
 
   /**
-   * Get all sshkeys with user UID
+   * Get all ssh keys with user UID
    *
    * @param uid
    * @return
