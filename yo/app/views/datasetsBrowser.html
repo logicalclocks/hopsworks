@@ -76,7 +76,7 @@
                           <tbody ng-model="datasetsCtrl.files">
 
                             <tr ng-click="datasetsCtrl.back()">
-                              <td style="padding: 0px" colspan="4">&nbsp&nbsp
+                              <td style="padding: 0px" colspan="4">&nbsp &nbsp
                                 <a style="font-size:25px">..</a>
                               </td>
                             </tr>
@@ -87,7 +87,7 @@
 
                                 ng-class="{ 'highlight': datasetsCtrl.selected === $index, 'expanded': expanded }"
                                 ng-dblclick="datasetsCtrl.openDir(file)"
-                                ng-click="datasetsCtrl.select($index, file); metaSliderCtrl.setMetadataTemplate(file)"
+                                ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file)"
                                 id="table-{{ $index}}">
 
                               <td>
