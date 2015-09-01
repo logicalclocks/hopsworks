@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import se.kth.meta.db.FieldFacade;
-import se.kth.meta.db.FieldPredefinedValueFacade;
 import se.kth.meta.db.FieldTypeFacade;
 import se.kth.meta.db.MTableFacade;
 import se.kth.meta.db.TemplateFacade;
@@ -30,7 +29,9 @@ import se.kth.meta.wscomm.message.FetchMetadataMessage;
 import se.kth.meta.wscomm.message.FetchTableMetadataMessage;
 import se.kth.meta.wscomm.message.FieldTypeMessage;
 import se.kth.meta.wscomm.message.Message;
+import se.kth.meta.wscomm.message.TemplateMessage;
 import se.kth.meta.wscomm.message.TextMessage;
+import se.kth.meta.wscomm.message.UploadedTemplateMessage;
 
 /**
  * Helper class to assist Protocol in constructing responses. Keeps Protocol
@@ -56,13 +57,18 @@ public class ResponseBuilder {
   private FieldTypeFacade fieldTypeFacade;
   @EJB
   private FieldFacade fieldFacade;
-  @EJB
-  private FieldPredefinedValueFacade fpf;
 
   public ResponseBuilder() {
     logger.log(Level.INFO, "ResponseBuilder initialized");
   }
 
+  /**
+   * Persists a new template in the database
+   * <p>
+   * @param message
+   * @return
+   * @throws ApplicationException
+   */
   public Message addNewTemplate(Message message) throws ApplicationException {
     ContentMessage cmsg = (ContentMessage) message;
 
@@ -72,6 +78,13 @@ public class ResponseBuilder {
     return this.fetchTemplates(message);
   }
 
+  /**
+   * Removes a template from the database
+   * <p>
+   * @param message
+   * @return
+   * @throws ApplicationException
+   */
   public Message removeTemplate(Message message) throws ApplicationException {
     ContentMessage cmsg = (ContentMessage) message;
 
@@ -81,12 +94,45 @@ public class ResponseBuilder {
     return this.fetchTemplates(message);
   }
 
+  /**
+   * Updates the name of a given template
+   * <p>
+   * @param message
+   * @return
+   * @throws ApplicationException
+   */
+  public Message updateTemplateName(Message message) throws ApplicationException {
+    ContentMessage cmsg = (ContentMessage) message;
+
+    Template template = cmsg.getTemplate();
+    this.utils.updateTemplateName(template);
+
+    TextMessage response = new TextMessage("Server");
+    response.setMessage("Template updated successfully");
+    
+    return response;
+  }
+
+  /**
+   * Persists a whole metadata template (schema) in the database. The message
+   * contains all the tables and fields this template contains
+   * <p>
+   * @param message
+   * @throws ApplicationException
+   */
   public void storeSchema(Message message) throws ApplicationException {
     List<EntityIntf> schema = message.parseSchema();
     this.utils.addTables(schema);
   }
 
+  /**
+   * Retrieves all the templates (template names) from the database
+   * <p>
+   * @param message
+   * @return
+   */
   public Message fetchTemplates(Message message) {
+
     List<Template> templates = this.templateFacade.loadTemplates();
 
     Collections.sort(templates);
@@ -96,7 +142,14 @@ public class ResponseBuilder {
     return message;
   }
 
+  /**
+   * Retrieves all the field types from the database
+   * <p>
+   * @param message
+   * @return
+   */
   public Message fetchFieldTypes(Message message) {
+
     List<FieldType> ftypes = this.fieldTypeFacade.loadFieldTypes();
     Collections.sort(ftypes);
 
@@ -111,6 +164,7 @@ public class ResponseBuilder {
   }
 
   public Message createSchema(Message message) {
+
     ContentMessage cmsg = (ContentMessage) message;
 
     List<MTable> tables = this.templateFacade.loadTemplateContent(cmsg.
@@ -125,12 +179,13 @@ public class ResponseBuilder {
   /**
    * Fetches ALL the metadata a metadata table carries. It does not do any
    * filtering
-   *
+   * <p>
    * @param table
    * @return
    * @throws se.kth.meta.exception.ApplicationException
    */
   public Message fetchTableMetadata(MTable table) throws ApplicationException {
+
     try {
       FetchTableMetadataMessage message
               = new FetchTableMetadataMessage("Server", "");
@@ -143,7 +198,7 @@ public class ResponseBuilder {
 
       return message;
     } catch (DatabaseException e) {
-      throw new ApplicationException("Failed to fetch metadata for " + table, e);
+      throw new ApplicationException("Server", e.getMessage());
     }
   }
 
@@ -156,6 +211,7 @@ public class ResponseBuilder {
    */
   public Message fetchInodeMetadata(InodeTableComposite itc) throws
           ApplicationException {
+
     try {
       FetchMetadataMessage message = new FetchMetadataMessage("Server", "");
 
@@ -176,11 +232,12 @@ public class ResponseBuilder {
         for (RawData raw : rawList) {
           for (TupleToFile ttf : ttfList) {
 
-            if (raw.getTupleid() == ttf.getId()) {
+            if (raw.getRawdataPK().getTupleid() == ttf.getId()) {
               toKeep.add(raw);
             }
           }
         }
+
         field.setRawData(toKeep);
       }
 
@@ -191,8 +248,7 @@ public class ResponseBuilder {
 
       return message;
     } catch (DatabaseException e) {
-      throw new ApplicationException("Failed to fetch metadata for inode " + itc,
-              e);
+      throw new ApplicationException("Server", e.getMessage());
     }
   }
 
@@ -212,9 +268,10 @@ public class ResponseBuilder {
       for (Field f : fields) {
         this.checkDeleteField(f);
       }
+
       this.utils.deleteTable(t);
     } catch (DatabaseException e) {
-      throw new ApplicationException("Failed to delete table " + table, e);
+      throw new ApplicationException("Server", e.getMessage());
     }
   }
 
@@ -241,8 +298,9 @@ public class ResponseBuilder {
         TupleToFile ttf = this.tupletofileFacade.getTupletofile(id);
         this.checkDeleteTupleToFile(ttf);
       }
+
     } catch (DatabaseException e) {
-      throw new ApplicationException("Failed to delete field " + field, e);
+      throw new ApplicationException("Server", e.getMessage());
     }
   }
 
@@ -256,8 +314,10 @@ public class ResponseBuilder {
    */
   private void checkDeleteTupleToFile(TupleToFile ttf) throws
           ApplicationException {
+
     try {
       List<RawData> rawlist = ttf.getRawData();
+
       /*
        * remove a tuple if and only if all the raw data entries composing this
        * tuple have been removed
@@ -266,7 +326,7 @@ public class ResponseBuilder {
         this.tupletofileFacade.deleteTTF(ttf);
       }
     } catch (DatabaseException e) {
-      throw new ApplicationException("Failed to delete tuple " + ttf, e);
+      throw new ApplicationException("Server", e.getMessage());
     }
   }
 
@@ -279,7 +339,9 @@ public class ResponseBuilder {
    * @throws se.kth.meta.exception.ApplicationException
    */
   public Message checkTableFields(MTable table) throws ApplicationException {
+
     try {
+
       TextMessage message = new TextMessage("Server");
 
       MTable t = this.tableFacade.getTable(table.getId());
@@ -292,12 +354,21 @@ public class ResponseBuilder {
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, "Could not retrieve table " + table.getId()
               + ". ", e);
-      throw new ApplicationException("Failed to check existence for " + table, e);
+      throw new ApplicationException("Server", e.getMessage());
     }
   }
 
+  /**
+   * Checks if a fields is associated (contains) raw data (metadata) in the
+   * database. This is necessary when the user wants to delete a field
+   * <p>
+   * @param field
+   * @return
+   * @throws ApplicationException
+   */
   public Message checkFieldContents(Field field) throws ApplicationException {
     try {
+
       TextMessage message = new TextMessage("Server");
 
       Field f = this.fieldFacade.getField(field.getId());
@@ -310,7 +381,7 @@ public class ResponseBuilder {
     } catch (DatabaseException e) {
       logger.log(Level.SEVERE, "Could not retrieve field " + field.getId()
               + ".", e);
-      throw new ApplicationException("Failed to check contents of " + field, e);
+      throw new ApplicationException("Server", e.getMessage());
     }
   }
 
@@ -323,9 +394,35 @@ public class ResponseBuilder {
    */
   private List<Integer> groupByTupleid(List<RawData> list) {
     Map<Integer, List<RawData>> grouped = new HashMap<>();
+
     for (RawData raw : list) {
-      grouped.put(raw.getTupleid(), null);
+      grouped.put(raw.getRawdataPK().getTupleid(), null);
     }
+
     return new LinkedList<>(grouped.keySet());
+  }
+
+  /**
+   * Persists an uploaded template to the database. The template comes from an
+   * uploaded file and contains the template name and all the template tables
+   * and fields. First create a 'new template' command message and then a 'store
+   * template content' command message
+   * <p>
+   * @param message
+   * @throws se.kth.meta.exception.ApplicationException
+   */
+  public void persistUploadedTemplate(UploadedTemplateMessage message) throws
+          ApplicationException {
+
+    //compile the message
+    message.parseSchema();
+    TemplateMessage tmplMsg = (TemplateMessage) message.addNewTemplateMessage();
+    Template template = tmplMsg.getTemplate();
+
+    int templateId = this.utils.addNewTemplate(template);
+
+    tmplMsg = (TemplateMessage) message.addNewTemplateContentMessage(templateId);
+
+    this.storeSchema(tmplMsg);
   }
 }
