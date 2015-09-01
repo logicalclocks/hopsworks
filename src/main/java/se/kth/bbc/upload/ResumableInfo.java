@@ -72,7 +72,7 @@ public class ResumableInfo {
    * <p>
    * @return true if finished.
    */
-  public synchronized boolean addChuckAndCheckIfFinished(
+  public synchronized boolean addChunkAndCheckIfFinished(
           ResumableChunkNumber rcn, long contentLength) {
     if (!uploadedChunks.contains(rcn)) {
       uploadedContentLength += contentLength;
