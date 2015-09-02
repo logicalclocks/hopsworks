@@ -37,7 +37,9 @@ public class FieldPredefinedValueFacade extends AbstractFacade<FieldPredefinedVa
     try {
       this.em.persist(value);
     } catch (IllegalStateException | SecurityException e) {
-      throw new DatabaseException("Could not add predefined value.", e);
+
+      throw new DatabaseException(FieldPredefinedValueFacade.class.getName(),
+              "Could not add predefined value " + e.getMessage());
     }
   }
 

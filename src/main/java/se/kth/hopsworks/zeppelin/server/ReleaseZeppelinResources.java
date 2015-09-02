@@ -14,7 +14,7 @@ import se.kth.hopsworks.zeppelin.notebook.Notebook;
 @Startup
 @Singleton
 public class ReleaseZeppelinResources {
-  private static final Logger logger = Logger.getLogger(ReleaseZeppelinResources.class.
+ private static final Logger logger = Logger.getLogger(ReleaseZeppelinResources.class.
           getName());
   private final ZeppelinSingleton zeppelin = ZeppelinSingleton.SINGLETON;
 

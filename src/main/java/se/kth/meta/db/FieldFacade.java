@@ -69,7 +69,10 @@ public class FieldFacade extends AbstractFacade<Field> {
       this.em.clear();
       return f.getId();
     } catch (IllegalStateException | SecurityException e) {
-      throw new DatabaseException("Could not add field.", e);
+
+      throw new DatabaseException(FieldFacade.class.getName(),
+              "Could not add field "
+              + e.getMessage());
     }
   }
 

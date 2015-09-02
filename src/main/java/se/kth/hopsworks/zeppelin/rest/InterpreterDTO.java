@@ -63,8 +63,4 @@ public class InterpreterDTO {
   public void setNotRunning(boolean notRunning) {
     this.notRunning = notRunning;
   }
-
-  
-  
-  
 }
