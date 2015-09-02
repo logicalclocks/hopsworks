@@ -304,9 +304,10 @@ md-backdrop.md-sidenav-backdrop {
   position: fixed;
 }
 
+.dropdown {
+  z-index: 1000;
+}
 .dropdown-amore {
-  -webkit-border-radius: 0px;
-  -moz-border-radius: 0px;
   border-radius: 0px;
   width: 250px;
   margin:0px;

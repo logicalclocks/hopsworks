@@ -76,9 +76,16 @@
                           <tbody ui-sortable ng-model="datasetsCtrl.files">
 
                             <tr ng-click="datasetsCtrl.back()">
-                              <td style="padding: 0px" colspan="4">&nbsp &nbsp
+                              <td style="padding: 0px" colspan="5">&nbsp &nbsp
                                 <a style="font-size:25px">..</a>
                               </td>
+                              <td>
+                              <i ng-if="datasetsCtrl.working"
+                                   title="Fetching files in this dir"
+                                   style="color: lightgrey; margin-top:3px;"
+                                   class="fa fa-spinner fa-spin pull-right" >
+                              </i>
+                            </td>
                             </tr>
 
                             <tr ng-repeat="file in datasetsCtrl.files | orderBy: 'name'"
@@ -147,16 +154,21 @@
                               </td>
 
                               <td style="margin:0px;width:25px;">
-                                <i ng-if="$index >= 5"
-                                   title="This file is compressed"
-                                   style="color: lightgrey; margin-top:3px;"
-                                   class="glyphicon glyphicon-compressed">
-                                </i>
-                                <i ng-if="file.underConstruction"
-                                   title="File under construction"
-                                   style="color: lightgrey; margin-top:3px;"
-                                   class="glyphicon glyphicon-transfer">
-                                </i>
+                                  <i ng-if="$index >= 5 && (!file.underConstruction && !datasetsCtrl.working)"
+                                     title="This file is compressed"
+                                     style="color: lightgrey; margin-top:3px;"
+                                     class="glyphicon glyphicon-compressed">
+                                  </i>
+                                  <i ng-if="file.underConstruction && !datasetsCtrl.working"
+                                     title="File under construction"
+                                     style="color: lightgrey; margin-top:3px;"
+                                     class="glyphicon glyphicon-transfer">
+                                  </i>
+                                  <i ng-if="file.dir && datasetsCtrl.working && ($index === datasetsCtrl.selected)"
+                                     title="Fetching files in this dir"
+                                     style="color: lightgrey; margin-top:3px;"
+                                     class="fa fa-spinner fa-spin pull-right">
+                                  </i>
                               </td>
                             </tr>
                           </tbody>
