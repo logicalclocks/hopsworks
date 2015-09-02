@@ -88,7 +88,7 @@ public enum AdamCommand {
                     "Parquet page size (default = 1mb)", false, false),
             new AdamOption("print_metrics",
                     "Print metrics to the log on completion", false, true)}),
-  COUNT_KMERS("Counts the k-mers/q-mers from a read dataset.",
+  COUNT_KMERS("Count the k-mers/q-mers from a read dataset.",
           new AdamArgument[]{
             new AdamArgument("INPUT",
                     "The ADAM, BAM or SAM file to count kmers from.", true),
@@ -225,7 +225,7 @@ public enum AdamCommand {
             new AdamOption("validation",
                     "SAM tools validation level; when STRICT, checks that all reads are paired.",
                     false, false)}),
-  PLUGIN("Executes an ADAMPlugin.",
+  PLUGIN("Execute an ADAMPlugin.",
           new AdamArgument[]{
             new AdamArgument("PLUGIN", "The ADAMPlugin to run.", true),
             new AdamArgument("INPUT", "The input location.", true)},
@@ -325,7 +325,7 @@ public enum AdamCommand {
             new AdamOption("print_metrics",
                     "Print metrics to the log on completion", false, true)}),
   ANNO2ADAM(
-          "Convert a annotation file (in VCF format) to the corresponding ADAM format.",
+          "Convert an annotation file (in VCF format) to the corresponding ADAM format.",
           new AdamArgument[]{
             new AdamArgument("VCF", "The VCF file to convert.", true),
             new AdamArgument("ADAM",
@@ -369,7 +369,7 @@ public enum AdamCommand {
             new AdamOption("print_metrics",
                     "Print metrics to the log on completion", false, true)}),
   FASTA2ADAM(
-          "Converts a text FASTA sequence file into an ADAMNucleotideContig Parquet file which represents assembled sequences.",
+          "Convert a text FASTA sequence file into an ADAMNucleotideContig Parquet file which represents assembled sequences.",
           new AdamArgument[]{
             new AdamArgument("FASTA", "The FASTA file to convert.", true),
             new AdamArgument("ADAM", "Location to write ADAM data.", true, true)},
@@ -415,7 +415,7 @@ public enum AdamCommand {
                     "Parquet page size (default = 1mb)", false, false),
             new AdamOption("print_metrics",
                     "Print metrics to the log on completion", false, true)}),
-  MPILEUP("output the samtool mpileup text from ADAM reference-oriented data.",
+  MPILEUP("Output the samtool mpileup text from ADAM reference-oriented data.",
           new AdamArgument[]{
             new AdamArgument("ADAMREADS", "ADAM read-oriented data.", true)},
           new AdamOption[]{
@@ -492,7 +492,7 @@ public enum AdamCommand {
             new AdamOption("print_metrics",
                     "Print metrics to the log on completion", false, true)}),
   //TODO: check what happens here
-  VIZ("Generates images from sections of the genome.",
+  VIZ("Generate images from sections of the genome.",
           new AdamArgument[]{
             new AdamArgument("INPUT", "The ADAM Records file to view.", true),
             new AdamArgument("REFNAME", "The reference to view.", true)},
@@ -512,7 +512,7 @@ public enum AdamCommand {
                     false, false),
             new AdamOption("print_metrics",
                     "Print metrics to the log on completion", false, true)}),
-  PRINT_TAGS("Prints the values and counts of all tags in a set of records.",
+  PRINT_TAGS("Print the values and counts of all tags in a set of records.",
           new AdamArgument[]{
             new AdamArgument("INPUT", "The ADAM file to scan for tags", true)},
           new AdamOption[]{
@@ -651,64 +651,7 @@ public enum AdamCommand {
   }
 
   public String getCommand() {
-    switch (this) {
-      case COMPARE:
-        return "compare";
-      case FINDREADS:
-        return "findreads";
-      case DEPTH:
-        return "depth";
-      case COUNT_KMERS:
-        return "count_kmers";
-      case TRANSFORM:
-        return "transform";
-      case ADAM2FASTQ:
-        return "adam2fastq";
-      case PLUGIN:
-        return "plugin";
-      case BAM2ADAM:
-        return "bam2adam";
-      case VCF2FLATGENOTYPE:
-        return "vcf2flatgenotype";
-      case VCF2ADAM:
-        return "vcf2adam";
-      case ANNO2ADAM:
-        return "anno2adam";
-      case ADAM2VCF:
-        return "adam2vcf";
-      case FASTA2ADAM:
-        return "fasta2adam";
-      case READS2REF:
-        return "reads2ref";
-      case MPILEUP:
-        return "mpileup";
-      case FEATURES2ADAM:
-        return "features2adam";
-      /*
-       * case WIGFIX2BED:
-       * return "wigfix2bed";
-       */
-      case PRINT:
-        return "print";
-      case PRINT_GENES:
-        return "print_genes";
-      case FLAGSTAT:
-        return "flagstat";
-      case VIZ:
-        return "viz";
-      case PRINT_TAGS:
-        return "print_tags";
-      case LISTDICT:
-        return "listdict";
-      case SUMMARIZE_GENOTYPES:
-        return "summarize_genotypes";
-      case ALLELECOUNT:
-        return "allelecount";
-      case VIEW:
-        return "view";
-      default:
-        throw new IllegalStateException("Impossible enum value.");
-    }
+    return this.name().toLowerCase();
   }
 
   @Override
@@ -723,61 +666,7 @@ public enum AdamCommand {
   }
 
   public static AdamCommand getFromCommand(String command) {
-    switch (command) {
-      case "compare":
-        return COMPARE;
-      case "findreads":
-        return FINDREADS;
-      case "depth":
-        return DEPTH;
-      case "count_kmers":
-        return COUNT_KMERS;
-      case "transform":
-        return TRANSFORM;
-      case "adam2fastq":
-        return ADAM2FASTQ;
-      case "plugin":
-        return PLUGIN;
-      case "bam2adam":
-        return BAM2ADAM;
-      case "vcf2flatgenotype":
-        return VCF2FLATGENOTYPE;
-      case "vcf2adam":
-        return VCF2ADAM;
-      case "anno2adam":
-        return ANNO2ADAM;
-      case "adam2vcf":
-        return ADAM2VCF;
-      case "fasta2adam":
-        return FASTA2ADAM;
-      case "reads2ref":
-        return READS2REF;
-      case "mpileup":
-        return MPILEUP;
-      case "features2adam":
-        return FEATURES2ADAM;
-      case "print":
-        return PRINT;
-      case "print_genes":
-        return PRINT_GENES;
-      case "flagstat":
-        return FLAGSTAT;
-      case "viz":
-        return VIZ;
-      case "print_tags":
-        return PRINT_TAGS;
-      case "listdict":
-        return LISTDICT;
-      case "summarize_genotypes":
-        return SUMMARIZE_GENOTYPES;
-      case "allelecount":
-        return ALLELECOUNT;
-      case "view":
-        return VIEW;
-      default:
-        throw new IllegalArgumentException("Argument " + command
-                + " does not represent a valid ADAM command.");
-    }
+    return AdamCommand.valueOf(command.toUpperCase());
   }
 
 }

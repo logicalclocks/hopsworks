@@ -13,9 +13,9 @@ import javax.ws.rs.core.Response;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
-import se.kth.hopsworks.filters.AllowedRoles;
 import org.apache.hadoop.fs.Path;
 import se.kth.bbc.lims.Constants;
+import se.kth.hopsworks.filters.AllowedRoles;
 
 /**
  *

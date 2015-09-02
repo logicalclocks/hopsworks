@@ -1,12 +1,12 @@
 package se.kth.bbc.jobs.jobhistory;
 
-import se.kth.bbc.jobs.model.description.JobDescription;
 import java.util.Collection;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;

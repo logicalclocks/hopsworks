@@ -13,6 +13,13 @@ angular.module('hopsWorksApp')
             this.projectId = $routeParams.projectID;
             this.jobs; // Will contain all the jobs.
             this.running; //Will contain run information
+            this.jobFilter = {
+              "creator":{
+                "email":""
+              },
+              "jobType":"",
+              "name":""
+            };
 
             var getAllJobs = function () {
               JobService.getAllJobsInProject(self.projectId).then(
@@ -55,6 +62,16 @@ angular.module('hopsWorksApp')
             self.showDetails = function (job) {
               ModalService.jobDetails('lg', job, self.projectId);
             };
+            
+            /**
+             * Check if the jobType filter is null, and set to empty string if it is.
+             * @returns {undefined}
+             */
+            this.checkJobTypeFilter = function(){
+              if(self.jobFilter.jobType == null){
+                self.jobFilter.jobType = "";
+              }
+            };
 
             /**
              * Close the poller if the controller is destroyed.
@@ -69,7 +86,6 @@ angular.module('hopsWorksApp')
               }, 5000);
             };
             startPolling();
-
 
           }]);
 

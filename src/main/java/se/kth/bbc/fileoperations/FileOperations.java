@@ -2,14 +2,19 @@ package se.kth.bbc.fileoperations;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.validation.ValidationException;
 import org.apache.hadoop.fs.Path;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.controller.FolderNameValidator;
 
 /**
  * Session bean for file operations. Translates high-level operations into
@@ -47,8 +52,22 @@ public class FileOperations {
    * @param path
    * @return
    * @throws IOException
+   * @throws IllegalArgumentException if the given path contains an invalid
+   * folder name.
    */
   public boolean mkDir(String path) throws IOException {
+    if(!path.startsWith("/")){
+      path = "/"+path;
+    }
+    String[] pathParts = path.substring(1).split("/");
+    for (String s : pathParts) {
+      try {
+        FolderNameValidator.isValidName(s);
+      } catch (ValidationException e) {
+        throw new IllegalArgumentException("Illegal folder name: " + s
+                + ". Reason: " + e.getLocalizedMessage(), e);
+      }
+    }
     Path location = new Path(path);
     return fsOps.mkdir(location);
   }
@@ -60,6 +79,8 @@ public class FileOperations {
    * @param src
    * @param destination
    * @throws IOException
+   * @throws IllegalArgumentException If the destination path contains an
+   * invalid folder name.
    */
   public void copyToHDFSFromLocal(boolean deleteSource, String src,
           String destination)
@@ -116,6 +137,8 @@ public class FileOperations {
    * @param source
    * @param destination
    * @throws IOException
+   * @thows IllegalArgumentException If the destination path contains an invalid
+   * folder name.
    */
   public void renameInHdfs(String source, String destination) throws IOException {
     //Check if source and destination are the same
@@ -137,7 +160,7 @@ public class FileOperations {
       destDir = Utils.getDirectoryPart(tmp);
     }
     if (!exists(destDir)) {
-      mkDir("hdfs://" + destDir);
+      mkDir(destDir);
     }
     Path src = new Path(source);
     Path dst = new Path(destination);
@@ -165,6 +188,8 @@ public class FileOperations {
    * @param src
    * @param dst
    * @throws IOException
+   * @throws IllegalArgumentException If the destination path contains an
+   * invalid folder name.
    */
   public void copyWithinHdfs(String src, String dst) throws IOException {
     //Convert into Paths
@@ -226,6 +251,30 @@ public class FileOperations {
     }
     return "hdfs:///" + Constants.DIR_ROOT + "/" + projectname + "/"
             + relativePath;
+  }
+
+  /**
+   * Get a list of the names of the child files (so no directories) of the given
+   * path.
+   * <p>
+   * @param path
+   * @return A list of filenames, empty if the given path does not have
+   * children.
+   */
+  public List<String> getChildNames(String path) {
+    Inode inode = inodes.getInodeAtPath(path);
+    if (inode.isDir()) {
+      List<Inode> inodekids = inodes.getChildren(inode);
+      ArrayList<String> retList = new ArrayList<>(inodekids.size());
+      for (Inode i : inodekids) {
+        if (!i.isDir()) {
+          retList.add(i.getInodePK().getName());
+        }
+      }
+      return retList;
+    } else {
+      return Collections.EMPTY_LIST;
+    }
   }
 
 }

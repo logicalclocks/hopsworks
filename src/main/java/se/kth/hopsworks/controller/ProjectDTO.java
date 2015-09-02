@@ -48,7 +48,7 @@ public class ProjectDTO {
     this.services = services;
     this.projectTeam = projectTeam;
   }
-  
+
   public ProjectDTO(Project project, List<String> services,
           List<ProjectTeam> projectTeam, List<InodeView> datasets) {
     this.projectId = project.getId();

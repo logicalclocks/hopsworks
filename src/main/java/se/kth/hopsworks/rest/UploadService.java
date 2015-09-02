@@ -34,7 +34,10 @@ import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.entity.Template;
+import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.exception.DatabaseException;
+import se.kth.meta.wscomm.ResponseBuilder;
+import se.kth.meta.wscomm.message.UploadedTemplateMessage;
 
 /**
  *
@@ -56,9 +59,9 @@ public class UploadService {
   @EJB
   private StagingManager stagingManager;
   @EJB
-  private FolderNameValidator datasetNameValidator;
-  @EJB
   private TemplateFacade template;
+  @EJB
+  private ResponseBuilder responseBuilder;
 
   private String path;
   private Inode fileParent;
@@ -92,7 +95,7 @@ public class UploadService {
       if (parent != null) {
         parent = inodes.findByParentAndName(parent, pathArray[i]);
       } else {
-        datasetNameValidator.isValidName(pathArray[i]);
+        FolderNameValidator.isValidName(pathArray[i]);
         exist = false;
       }
     }
@@ -106,8 +109,37 @@ public class UploadService {
   }
 
   /**
-   * Sets the template id to be attached to the file that's being uploaded.
+   * Sets the path for the file to be uploaded. It does not require a project
+   * name since the file to be uploaded is a template schema, irrelevant to any
+   * project or dataset. The only requirement is that the upload has to be
+   * performed in the Uploads directory
    * <p>
+   * @param path
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  public void setUploadPath(String path) throws AppException {
+    String[] pathArray = path.split(File.separator);
+    if (pathArray.length < 2) { // if path does not contain project name.
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Not a valid path!");
+    }
+
+    //check if the parent directory exists. If it doesn't create it first
+    if (!fileOps.isDir(File.separator + pathArray[0])) {
+      try {
+        fileOps.mkDir(File.separator + pathArray[0]);
+      } catch (IOException e) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "Upload directory could not be created in the file system");
+      }
+    }
+
+    this.path = path;
+  }
+
+  /**
+   * Sets the template id to be attached to the file that's being uploaded.
    * <p>
    * @param templateId
    */
@@ -200,7 +232,7 @@ public class UploadService {
     boolean finished = false;
 
     //Mark as uploaded and check if finished
-    if (info.addChuckAndCheckIfFinished(new ResumableInfo.ResumableChunkNumber(
+    if (info.addChunkAndCheckIfFinished(new ResumableInfo.ResumableChunkNumber(
             resumableChunkNumber), content_length)) { //Check if all chunks uploaded, and change filename
       ResumableInfoStorage.getInstance().remove(info);
       logger.log(Level.INFO, "All finished.");
@@ -213,6 +245,22 @@ public class UploadService {
 
     if (finished) {
       try {
+        String fileContent = null;
+
+        //if it is about a template file check its validity
+        if ((this.path + fileName).endsWith(".json")) {
+
+          String filePath = stagingManager.getStagingPath() + this.path
+                  + fileName;
+
+          if (!Utils.checkJsonValidity(filePath)) {
+            json.setErrorMsg("This was an invalid json file");
+            return noCacheResponse.getNoCacheResponseBuilder(
+                    Response.Status.NOT_ACCEPTABLE).entity(json).build();
+          }
+          fileContent = Utils.getFileContents(filePath);
+        }
+        
         this.path = Utils.ensurePathEndsInSlash(this.path);
         fileOps.copyToHDFSFromLocal(true, stagingManager.getStagingPath()
                 + this.path + fileName, this.path
@@ -223,6 +271,10 @@ public class UploadService {
           this.attachTemplateToInode(info, this.path + fileName);
         }
 
+        //if it is about a template file persist it in the database as well
+        if ((this.path + fileName).endsWith(".json")) {
+          this.persistUploadedTemplate(fileContent);
+        }
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(json).build();
@@ -254,6 +306,25 @@ public class UploadService {
     }
   }
 
+  /**
+   * Persist a template to the database after it has been uploaded to hopsfs
+   * <p>
+   * @param filePath
+   * @throws AppException
+   */
+  private void persistUploadedTemplate(String fileContent) throws AppException {
+    try {
+      //the file content has to be wrapped in a TemplateMessage message
+      UploadedTemplateMessage message = new UploadedTemplateMessage();
+      message.setMessage(fileContent);
+
+      this.responseBuilder.persistUploadedTemplate(message);
+    } catch (ApplicationException e) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), e.getMessage());
+    }
+  }
+
   private int getResumableChunkNumber(HttpServletRequest request) {
     return HttpUtils.toInt(request.getParameter("flowChunkNumber"), -1);
   }
@@ -263,8 +334,8 @@ public class UploadService {
           AppException {
     //this will give us a tmp folder
     String base_dir = stagingManager.getStagingPath();
-    //this will create a folder if it doesnot exist inside the tmp folder 
-    //spesific to where the file is being uploaded
+    //this will create a folder if it does not exist inside the tmp folder 
+    //specific to where the file is being uploaded
     File userTmpDir = new File(base_dir + hdfsPath);
     if (!userTmpDir.exists()) {
       userTmpDir.mkdirs();
@@ -317,8 +388,8 @@ public class UploadService {
           int templateId) throws AppException {
     //this will give us a tmp folder
     String base_dir = stagingManager.getStagingPath();
-    //this will create a folder if it doesnot exist inside the tmp folder 
-    //spesific to where the file is being uploaded
+    //this will create a folder if it does not exist inside the tmp folder 
+    //specific to where the file is being uploaded
     File userTmpDir = new File(base_dir + hdfsPath);
     if (!userTmpDir.exists()) {
       userTmpDir.mkdirs();

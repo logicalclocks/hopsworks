@@ -49,9 +49,9 @@ public class RequestAuthFilter implements ContainerRequestFilter {
     Method method = resourceInfo.getResourceMethod();
 
     String[] pathParts = path.split("/");
-    log.log(Level.INFO, "Filtering request path: {0}", path);
-    log.log(Level.INFO, "Method called: {0}", method.getName());
-    //intercepted method must be project operations on a specific project
+    log.log(Level.FINEST, "Filtering request path: {0}", pathParts[0]);
+    log.log(Level.FINEST, "Method called: {0}", method.getName());
+    //intercepted method must be a project operations on a specific project
     //with an id (/project/projectId/... or /activity/projectId/...). 
     if (pathParts.length > 1 && (pathParts[0].equalsIgnoreCase("project")
             || pathParts[0].equalsIgnoreCase("activity") 
@@ -70,9 +70,8 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       }
       
       Project project = projectBean.find(projectId);
-      log.log(Level.INFO, "Filtering project request path: {0}", project.getName());
+      log.log(Level.FINEST, "Filtering project request path: {0}", project.getName());
       
-
       if (!method.isAnnotationPresent(AllowedRoles.class)) {
         //Should throw exception if there is a method that is not annotated in this path.
         requestContext.abortWith(Response.
@@ -85,7 +84,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
 
       //If the resource is allowed for all roles continue with the request. 
       if (rolesSet.contains(AllowedRoles.ALL)) {
-        log.log(Level.INFO, "Accessing resource that is allowed for all");
+        log.log(Level.FINEST, "Accessing resource that is allowed for all");
         return;
       }
 

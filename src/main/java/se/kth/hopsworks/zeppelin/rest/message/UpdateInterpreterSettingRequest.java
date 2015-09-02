@@ -14,32 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package se.kth.hopsworks.zeppelin.rest.message;
 
 import java.util.Properties;
-
 import org.apache.zeppelin.interpreter.InterpreterOption;
 
 /**
  *
  */
 public class UpdateInterpreterSettingRequest {
+
   InterpreterOption option;
   Properties properties;
 
   public UpdateInterpreterSettingRequest(InterpreterOption option,
-      Properties properties) {
+          Properties properties) {
     super();
     this.option = option;
     this.properties = properties;
   }
+
   public InterpreterOption getOption() {
     return option;
   }
+
   public Properties getProperties() {
     return properties;
   }
-
 
 }

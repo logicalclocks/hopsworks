@@ -43,5 +43,7 @@ public enum Command {
   //
   IS_FIELD_EMPTY,
   //
-  UPDATE_METADATA
+  UPDATE_METADATA,
+  //
+  UPDATE_TEMPLATE_NAME
 }

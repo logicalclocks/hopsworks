@@ -19,9 +19,9 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import se.kth.meta.entity.Template;
 import org.eclipse.persistence.annotations.Convert;
 import org.eclipse.persistence.annotations.Converter;
+import se.kth.meta.entity.Template;
 
 /**
  *
@@ -300,7 +300,7 @@ public class Inode implements Serializable {
   public void setSize(long size) {
     this.size = size;
   }
-  
+
   @XmlTransient
   public Collection<Template> getTemplates() {
     return this.templates;

@@ -1,8 +1,6 @@
 package se.kth.hopsworks.rest;
 
 import com.google.common.base.Strings;
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -22,8 +20,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.adam.AdamCommand;
 import se.kth.bbc.jobs.adam.AdamCommandDTO;
@@ -32,6 +28,7 @@ import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.project.Project;
+import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
@@ -56,6 +53,8 @@ public class AdamService {
   private UserFacade userFacade;
   @EJB
   private ActivityFacade activityFacade;
+  @EJB
+  private JobController jobController;
 
   AdamService setProject(Project project) {
     this.project = project;
@@ -102,10 +101,10 @@ public class AdamService {
           @Context HttpServletRequest req) {
     JsonArrayBuilder array = Json.createArrayBuilder();
     AdamCommand[] allcommands = AdamCommand.values();
-    for (AdamCommand ac:allcommands) {
+    for (AdamCommand ac : allcommands) {
       JsonObjectBuilder obj = Json.createObjectBuilder();
       obj.add("name", ac.getCommand());
-      obj.add("description",ac.getDescription());
+      obj.add("description", ac.getDescription());
       array.add(obj);
     }
     return Response.ok(array.build()).build();
@@ -162,7 +161,7 @@ public class AdamService {
       if (Strings.isNullOrEmpty(config.getAppName())) {
         config.setAppName("Untitled ADAM job");
       }
-      JobDescription created = jobFacade.create(user, project, config);
+      JobDescription created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();

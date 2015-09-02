@@ -124,10 +124,12 @@ public class ResponseMessages {
           = "The shared dataset is removed from this project.";
   public final static String DATASET_NOT_FOUND
           = "DataSet not found.";
-  
+
   //Template
   public final static String TEMPLATE_INODEID_EMPTY
           = "The template id is empty";
   public final static String TEMPLATE_NOT_ATTACHED
           = "The template could not be attached to a file";
+  public final static String UPLOAD_PATH_NOT_SPECIFIED
+          = "The path to upload the template was not specified";
 }

@@ -7,7 +7,7 @@ import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.jobs.DatabaseJsonObject;
+import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.model.JsonReduceable;
 import se.kth.bbc.lims.Utils;
 
@@ -283,12 +283,12 @@ public class WorkflowDTO implements JsonReduceable {
   }
 
   @Override
-  public DatabaseJsonObject getReducedJsonObject() {
-    DatabaseJsonObject obj = new DatabaseJsonObject();
+  public MutableJsonObject getReducedJsonObject() {
+    MutableJsonObject obj = new MutableJsonObject();
     obj.set(KEY_PATH, path);
     obj.set(KEY_NAME, name);
     //Construct input object and add to object
-    DatabaseJsonObject inputs = new DatabaseJsonObject();
+    MutableJsonObject inputs = new MutableJsonObject();
     for (InputParameter ip : inputParams) {
       if (ip.getValue() != null) {
         inputs.set(ip.getName(), ip.getValue());
@@ -296,7 +296,7 @@ public class WorkflowDTO implements JsonReduceable {
     }
     obj.set(KEY_INPUT, inputs);
     //Construct output object
-    DatabaseJsonObject outputs = new DatabaseJsonObject();
+    MutableJsonObject outputs = new MutableJsonObject();
     for (OutputParameter op : outputParams) {
       outputs.set(op.getName(), op.isQueried() ? "true" : "false");
     }
@@ -305,7 +305,7 @@ public class WorkflowDTO implements JsonReduceable {
   }
 
   @Override
-  public void updateFromJson(DatabaseJsonObject json) throws
+  public void updateFromJson(MutableJsonObject json) throws
           IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     String jsonPath, jsonName;
@@ -314,12 +314,12 @@ public class WorkflowDTO implements JsonReduceable {
     try {
       jsonPath = json.getString(KEY_PATH);
       jsonName = json.getString(KEY_NAME);
-      DatabaseJsonObject jsonInputs = json.getJsonObject(KEY_INPUT);
+      MutableJsonObject jsonInputs = json.getJsonObject(KEY_INPUT);
       inputs = new ArrayList<>(jsonInputs.size());
       for (String s : jsonInputs.keySet()) {
         inputs.add(new InputParameter(s, jsonInputs.getString(s)));
       }
-      DatabaseJsonObject jsonOutputs = json.getJsonObject(KEY_OUTPUT);
+      MutableJsonObject jsonOutputs = json.getJsonObject(KEY_OUTPUT);
       outputs = new ArrayList<>(jsonOutputs.size());
       for (String s : jsonOutputs.keySet()) {
         outputs.add(new OutputParameter(s, "true".equals(jsonOutputs.

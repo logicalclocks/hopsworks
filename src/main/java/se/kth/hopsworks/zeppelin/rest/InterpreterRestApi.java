@@ -16,11 +16,13 @@
  */
 package se.kth.hopsworks.zeppelin.rest;
 
+import com.google.gson.Gson;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
+import javax.ejb.EJB;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -30,33 +32,26 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
 import org.apache.zeppelin.interpreter.Interpreter;
+import org.apache.zeppelin.interpreter.Interpreter.RegisteredInterpreter;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
-import org.apache.zeppelin.interpreter.Interpreter.RegisteredInterpreter;
-import se.kth.hopsworks.zeppelin.rest.message.NewInterpreterSettingRequest;
-import se.kth.hopsworks.zeppelin.rest.message.UpdateInterpreterSettingRequest;
-import se.kth.hopsworks.zeppelin.server.JsonResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.gson.Gson;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import javax.ejb.EJB;
-import org.apache.commons.vfs2.FileSystemException;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Paragraph;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.quartz.SchedulerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.zeppelin.notebook.Notebook;
+import se.kth.hopsworks.zeppelin.rest.message.NewInterpreterSettingRequest;
+import se.kth.hopsworks.zeppelin.rest.message.UpdateInterpreterSettingRequest;
+import se.kth.hopsworks.zeppelin.server.JsonResponse;
 import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
 import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
