@@ -25,7 +25,7 @@ angular.module('hopsWorksApp')
                 return $http.post('/api/user/removeSshKey', "name="+name);
               },
               getSshKeys: function () {
-                return $http.post('/api/user/getSshKeys');
+                return $http.get('/api/user/getSshKeys');
               }
             };
           }]);

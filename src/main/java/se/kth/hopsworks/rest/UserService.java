@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import se.kth.bbc.project.fb.InodeView;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UsersController;
 import se.kth.hopsworks.filters.AllowedRoles;
@@ -150,23 +151,21 @@ public class UserService {
     @POST
     @Path("addSshKey")
     @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
     public Response addSshkey(@FormParam("name") String name,
                               @FormParam("sshKey") String sshKey,
                               @Context SecurityContext sc,
                               @Context HttpServletRequest req) throws AppException {
-        JsonResponse json = new JsonResponse();
         Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
         int id = user.getUid();
         SshKeyDTO dto = userController.addSshKey(id, name, sshKey);
-        json.setStatus("OK");
-        json.setSuccessMessage(ResponseMessages.SSH_KEY_ADDED);
-        json.setData(dto);
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(dto).build();
     }
 
     @POST
     @Path("removeSshKey")
     @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
     public Response removeSshkey(@FormParam("name") String name,
                                  @Context SecurityContext sc,
                                  @Context HttpServletRequest req) throws AppException {
@@ -180,22 +179,21 @@ public class UserService {
                 json).build();
     }
 
-    @POST
+    @GET
     @Path("getSshKeys")
     @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
     public Response getSshkeys(@Context SecurityContext sc,
                                @Context HttpServletRequest req) throws AppException {
-        JsonResponse json = new JsonResponse();
-
         Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
         int id = user.getUid();
         List<SshKeyDTO> sshKeys = userController.getSshKeys(id);
 
-        json.setStatus("OK");
-        json.setSuccessMessage(ResponseMessages.SSH_KEYS_LISTED);
-        json.setData(sshKeys);
 
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-                json).build();
+        GenericEntity<List<SshKeyDTO>> sshKeyViews
+                = new GenericEntity<List<SshKeyDTO>>(sshKeys) {
+        };
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(sshKeyViews).build();
+
     }
 }

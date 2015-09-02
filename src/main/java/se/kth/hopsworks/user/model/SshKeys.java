@@ -23,7 +23,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "hopsworks.ssh_keys")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "SshKeys.findByUid", query = "SELECT s FROM SshKeys s WHERE s.sshKeysPK.uid = :uid")})
+  @NamedQuery(name = "SshKeys.findByUid", query = "SELECT s FROM SshKeys s WHERE s.sshKeysPK.uid = :uid"),
+  @NamedQuery(name = "SshKeys.findByUidName", query = "SELECT s FROM SshKeys s WHERE s.sshKeysPK.uid = :uid and s.sshKeysPK.name = :name")
+})
 public class SshKeys implements Serializable {
   private static final long serialVersionUID = 1L;
   @EmbeddedId

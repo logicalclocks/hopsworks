@@ -42,8 +42,12 @@ public class SshkeysFacade extends AbstractFacade<SshKeys> {
   public void removeByIdName(int uid, String name) {
     SshKeysPK pk = new SshKeysPK(uid, name);
     if (pk != null) {
-      SshKeys sshKey = new SshKeys(pk);
-      em.remove(sshKey);
+      TypedQuery<SshKeys> query = em.createNamedQuery("SshKeys.findByUidName", SshKeys.class);
+      query.setParameter("name", name);
+      query.setParameter("uid", uid);
+      SshKeys item = query.getSingleResult();
+      SshKeys sk = em.merge(item);
+      em.remove(sk);
     }
   }
 
