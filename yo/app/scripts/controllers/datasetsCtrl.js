@@ -13,7 +13,7 @@ angular.module('hopsWorksApp')
                   ModalService, growl, $location, MetadataHelperService) {
 
             var self = this;
-            
+
             //Some variables to keep track of state.
             self.files = []; //A list of files currently displayed to the user.
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
@@ -180,19 +180,14 @@ angular.module('hopsWorksApp')
             self.uploadFile = function () {
               var templateId = -1;
 
-              ModalService.selectTemplate('sm', true, templateId).then(
+              ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
                       function (success) {
-                        templateId = success.templateId;
-
-                        ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
-                                function (success) {
-                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
-                                  getDirContents();
-                                }, function (error) {
-                          growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
-                          getDirContents();
-                        });
-                      });
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                        getDirContents();
+                      }, function (error) {
+                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+                getDirContents();
+              });
             };
 
             /**
@@ -227,12 +222,12 @@ angular.module('hopsWorksApp')
                           var filePath = getPath(downloadPathArray);
                           dataSetService.checkFileExist(filePath).then(
                                   function (success) {
-                                   dataSetService.fileDownload(filePath);
+                                    dataSetService.fileDownload(filePath);
                                   }, function (error) {
-                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                           });
-                          
-                          
+
+
                         }
                 );
               } else {
