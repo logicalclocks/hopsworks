@@ -261,6 +261,7 @@
                         <button class="btn btn-danger pull-right"
                                 ng-click="metadataCtrl.removeTemplate(template.id)"
                                 ng-if="template.showing"
+                                tooltip="Delete the template"
                                 style="margin-top: 1px; width: 20px; height: 20px;padding:2px;">
                           <i class="fa fa-times"></i>
                         </button>
@@ -272,10 +273,10 @@
                              role="menuitem"
                              tabindex="1"
                              download="template.json"
+                             tooltip="Download the template"
                              ng-mousedown="metadataCtrl.createDownloadURL(template);"
                              ng-href="{{metadataCtrl.url}}">
-                            <span><i class="fa fa-download"></i>
-                              Download</span>
+                            <span><i class="fa fa-download"></i></span>
                           </a>
                         </button>
                       </span>
