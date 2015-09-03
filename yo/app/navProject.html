@@ -16,12 +16,19 @@
         </a>
       </li>
       
-      <li ng-click="projectCtrl.goToJobs()">
+      <li ng-click="projectCtrl.goToJobs()" ng-show="projectCtrl.showJobs()">
         <a>
           Jobs <span class="sub_icon fa fa-cogs fa-lg pull-right"></span>
         </a>
       </li>
-      
+
+      <li ng-click="projectCtrl.goToSsh()">
+        <a>
+          DATASETS <span class="sub_icon fa fa-terminal fa-lg pull-right"></span>
+        </a>
+      </li>
+
+
       <li ng-click="projectCtrl.goToDatasets()">
         <a>
           DATASETS <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>

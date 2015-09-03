@@ -6,13 +6,9 @@ package se.kth.bbc.project.services;
  */
 public enum ProjectServiceEnum {
 
-  CUNEIFORM("Cuneiform"),
   ZEPPELIN("Zeppelin"),
-  SPARK("Spark"),
-  ADAM("ADAM"),
-  MAPREDUCE("MapReduce"),
-  YARN("Yarn"),
-  PRIVACY("Privacy");
+  SSH("Ssh Access"),
+  JOBS("Jobs");
 
   private final String readable;
 

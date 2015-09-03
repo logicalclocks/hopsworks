@@ -1,16 +1,16 @@
 package se.kth.meta.db;
 
-import java.util.logging.Logger;
+import se.kth.kthfsdashboard.user.AbstractFacade;
+import se.kth.meta.entity.Metadata;
+import se.kth.meta.entity.MetadataPK;
+import se.kth.meta.exception.DatabaseException;
+
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import org.bouncycastle.asn1.cms.MetaData;
-import se.kth.kthfsdashboard.user.AbstractFacade;
-import se.kth.meta.entity.Metadata;
-import se.kth.meta.entity.MetadataPK;
-import se.kth.meta.exception.DatabaseException;
+import java.util.logging.Logger;
 
 /**
  *

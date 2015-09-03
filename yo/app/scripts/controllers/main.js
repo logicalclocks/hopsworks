@@ -31,6 +31,10 @@ angular.module('hopsWorksApp')
                 ModalService.sshKeys('lg');
             };
 
+            self.getHostname = function()  {
+                return $location.host();
+            };
+
 
             self.view = function (selected, projectOrDataset) {
                 if (projectOrDataset === 'parent') {

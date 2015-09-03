@@ -12,7 +12,7 @@ angular.module('hopsWorksApp')
             self.projectMembers = [];
             self.projectTeam = [];
             // We could instead implement a service to get all the available types but this will do it for now
-            self.projectTypes = ['CUNEIFORM', 'SPARK', 'ADAM', 'ZEPPELIN'];
+            self.projectTypes = ['JOBS', 'ZEPPELIN', 'SSH'];
 
 
             self.selectionProjectTypes = [];

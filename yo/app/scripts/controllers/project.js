@@ -21,7 +21,7 @@ angular.module('hopsWorksApp')
             self.projectMembers = [];
 
             // We could instead implement a service to get all the available types but this will do it for now
-            self.projectTypes = ['CUNEIFORM', 'SPARK', 'ADAM', 'ZEPPELIN'];
+            self.projectTypes = ['JOBS', 'ZEPPELIN', 'SSH'];
             self.alreadyChoosenServices = [];
             self.selectionProjectTypes = [];
             self.pId = $routeParams.projectID;
@@ -157,6 +157,11 @@ angular.module('hopsWorksApp')
               $location.path('project/' + self.pId + '/jobs');
             };
 
+            self.goToSsh = function () {
+              $location.path('project/' + self.pId + '/ssh');
+            };
+
+
             self.goToService = function (service) {
                 $location.path('project/' + self.pId + '/' + service.toLowerCase());
             };
@@ -210,6 +215,16 @@ angular.module('hopsWorksApp')
               return false;
             };
 
+            self.showJobs = function () {
+              var len = self.alreadyChoosenServices.length;
+              for (var i = 0; i < len; i++) {
+                if (self.alreadyChoosenServices[i] === 'Jobs') {
+                  return true;
+                }
+              }
+              return false;
+            };
+
             self.saveAllowed = function () {
               if (self.currentProject.projectName.length === 0) {
                 return true;
@@ -217,7 +232,7 @@ angular.module('hopsWorksApp')
             };
 
             // Dummy data
-            $scope.labels = ["Adam", "Spark", "Yarn", "MapReduce", "Zeppelin", "Cuneiform"];
+            $scope.labels = ["Jobs", "Zeppelin"];
 
 
             $scope.data = [

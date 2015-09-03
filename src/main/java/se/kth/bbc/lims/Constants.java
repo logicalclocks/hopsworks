@@ -83,6 +83,11 @@ public class Constants {
   public static final String DIR_VCF = "vcf";
   public static final String DIR_TEMPLATES = "Templates";
 
+  // Hopsworks
+
+  public static final String HOPS_USERNAME_SEPARATOR = "__";
+
+
   //Filename conventions
   public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#";
   public static final String PRINT_FILENAME_DISALLOWED_CHARS
