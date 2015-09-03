@@ -35,6 +35,10 @@ angular.module('hopsWorksApp')
                 return $location.host();
             };
 
+            self.getUser = function()  {
+                return self.email.substring(0, self.email.indexOf("@"));
+            };
+
 
             self.view = function (selected, projectOrDataset) {
                 if (projectOrDataset === 'parent') {

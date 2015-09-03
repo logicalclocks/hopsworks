@@ -211,8 +211,7 @@ public class ProjectService {
     }
 
     if (!projectServices.isEmpty()) {
-      boolean added = projectController.addServices(project, projectServices,
-              userEmail);
+      boolean added = projectController.addServices(project, projectServices, userEmail);
       if (added) {
         json.setSuccessMessage(ResponseMessages.PROJECT_SERVICE_ADDED);
         updated = true;
@@ -275,11 +274,11 @@ public class ProjectService {
     }
 
     if (project != null) {
+        //add members of the project
+        failedMembers = projectController.addMembers(project, owner, projectDTO.
+                getProjectTeam());
       //add the services for the project
       projectController.addServices(project, projectServices, owner);
-      //add members of the project
-      failedMembers = projectController.addMembers(project, owner, projectDTO.
-              getProjectTeam());
     }
 
     json.setStatus("201");// Created  

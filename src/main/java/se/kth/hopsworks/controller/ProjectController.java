@@ -31,6 +31,9 @@ import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.rest.AppException;
+import se.kth.hopsworks.user.model.SshKeys;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.SshkeysFacade;
 import se.kth.hopsworks.util.LocalhostServices;
 
 /**
@@ -59,6 +62,8 @@ public class ProjectController {
     private InodeFacade inodes;
     @EJB
     private DatasetController datasetController;
+    @EJB
+    private SshkeysFacade sshKeysBean;
 
     /**
      * Creates a new project(project), the related DIR, the different services
@@ -162,7 +167,19 @@ public class ProjectController {
                     user, project);
             if (sshAdded == true) {
                 try {
-                    LocalhostServices.createUserAccount(userEmail, project.getName());
+
+                    // For all members of the project, create an account for them and copy their public keys to ~/.ssh/authorized_keys
+                    List<ProjectTeam> members = projectTeamFacade.findMembersByProject(project);
+                    for (ProjectTeam pt: members ) {
+                        User myUser = pt.getUser();
+                        List<SshKeys> keys = sshKeysBean.findAllById(myUser.getUid());
+                        List<String> publicKeys = new ArrayList<>();
+                        for (SshKeys k : keys) {
+                            publicKeys.add(k.getPublicKey());
+                        }
+                        LocalhostServices.createUserAccount(myUser.getUsername(), project.getName(), publicKeys);
+                    }
+
                 } catch (IOException e) {
                     // TODO - propagate exception?
                     logger.warning("Could not create user account: " + LocalhostServices.getProjectUsername(userEmail, project.getName()));
@@ -311,8 +328,7 @@ public class ProjectController {
                     }
 
                     projectTeam.setTimestamp(new Date());
-                    newMember = userBean.getUserByEmail(projectTeam.getProjectTeamPK().
-                            getTeamMember());
+                    newMember = userBean.getUserByEmail(projectTeam.getProjectTeamPK().getTeamMember());
                     if (newMember != null && !projectTeamFacade.isUserMemberOfProject(
                             project, newMember)) {
                         //this makes sure that the member is added to the project sent as the
@@ -323,18 +339,24 @@ public class ProjectController {
                                 new Object[]{newMember.getEmail(),
                                         project.getName()});
 
+                        List<SshKeys> keys = sshKeysBean.findAllById(newMember.getUid());
+                        List<String> publicKeys = new ArrayList<>();
+                        for (SshKeys k : keys) {
+                            publicKeys.add(k.getPublicKey());
+                        }
+
                         logActivity(ActivityFacade.NEW_MEMBER + projectTeam.
                                         getProjectTeamPK().getTeamMember(),
                                 ActivityFacade.FLAG_PROJECT, user, project);
+                        createUserAccount(project, projectTeam, publicKeys, failedList);
                     } else if (newMember == null) {
                         failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
                                 + " was not found in the system.");
                     } else {
                         failedList.add(newMember.getEmail()
-                                + " is alrady a member in this project.");
+                                + " is already a member in this project.");
                     }
 
-                    createUserAccount(project, projectTeam, failedList);
 
                 }
             } catch (EJBException ejb) {
@@ -347,13 +369,12 @@ public class ProjectController {
         return failedList;
     }
 
-
     // Create Account for user on localhost if the SSH service is enabled
-    private void createUserAccount(Project project, ProjectTeam projectTeam, List<String> failedList) {
+    private void createUserAccount(Project project, ProjectTeam projectTeam, List<String> publicKeys, List<String> failedList) {
         for (ProjectServices ps : project.getProjectServicesCollection()) {
             if (ps.getProjectServicesPK().getService().compareTo(ProjectServiceEnum.SSH) == 0) {
                 try {
-                    LocalhostServices.createUserAccount(projectTeam.getProjectTeamPK().getTeamMember(), project.getName());
+                    LocalhostServices.createUserAccount(projectTeam.getProjectTeamPK().getTeamMember(), project.getName(), publicKeys);
                 } catch (IOException e) {
                     failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
                             + "could not create the account on localhost. Try again later.");
@@ -362,7 +383,6 @@ public class ProjectController {
                 }
             }
         }
-
     }
 
     /**

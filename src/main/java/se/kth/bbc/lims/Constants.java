@@ -1,5 +1,8 @@
 package se.kth.bbc.lims;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 /**
  * Constants class to facilitate deployment on different servers. TODO: move
  * this to configuration file to be read!
@@ -84,7 +87,7 @@ public class Constants {
   public static final String DIR_TEMPLATES = "Templates";
 
   // Hopsworks
-
+  public final static Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERNAME_SEPARATOR = "__";
 
 

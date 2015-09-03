@@ -9,9 +9,20 @@
             <div class="content-wrapper">
                 <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Ssh Access</h3>
                 <div growl reference="10" class="pull-right" ></div>
-                <div class="row" style="margin: 10px">
+                <div class="row" style="margin: 50px">
 
-                    ssh {{mainCtrl.email}}__{{projectCtrl.currentProject.projectName}}@{{mainCtrl.getHostname()}}
+
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Ssh Connection Details</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-md-8 col-lg-6">{{mainCtrl.getUser()}}__{{projectCtrl.currentProject.projectName}}@{{mainCtrl.getHostname()}}</div>
+                            <span class="glyphicon glyphicon-question-sign col-md-1" tooltip-placement="right" tooltip="You can login using SSH to this project-specific account on the host specified
+                            assuming you have access to one of the SSH keys you have registered. The account has no password enabled and you can only access it using a SSH-Key."></span>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </section>
