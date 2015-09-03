@@ -1,0 +1,40 @@
+<form ng-submit="modifyFieldCtrl.modifyField()" class="noMargin" name="modifyFieldForm">
+  <div class="modal-header" align="center">
+    <button type="button" class="close" ng-click="detachTemplateCtrl.cancel()">&times;</button>
+    <h3 class="modal-title">Select a template to remove</h3>
+  </div>
+
+  <div class="modal-body">
+
+    <div align="center" class="row">
+
+      <label class="control-label" ng-show="detachTemplateCtrl.noTemplates">
+        <font color="red">This file/folder has no templates attached to it</font>
+      </label>
+      <p></p>
+      
+      <label class="control-label" for="newCardType">Templates attached to '<i>{{detachTemplateCtrl.filename}}</i>'</label>
+      <div class="columnHeader">
+        <ui-select  ng-model="detachTemplateCtrl.selectedTemplate" theme="select2"
+                    ng-disabled="detachTemplateCtrl.noTemplates"
+                    on-select="detachTemplateCtrl.update()" style="min-width: 15em;">
+
+          <ui-select-match placeholder="Select a field type...">{{$select.selected.templateName}}</ui-select-match>
+
+          <ui-select-choices repeat="item in detachTemplateCtrl.templates | filter: $select.search">
+            <h4>
+              <span ng-bind-html="item.templateId + ', ' + item.templateName"></span>
+            </h4>
+          </ui-select-choices>
+        </ui-select>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer" style="padding-top: 15px;">
+    <button type="button" class="btn btn-default" ng-click="detachTemplateCtrl.cancel()">Close</button>
+    <button type="button" class="btn btn-primary" 
+            ng-disabled="detachTemplateCtrl.noTemplates"
+            ng-click="detachTemplateCtrl.detachTemplate()">Remove template</button>
+  </div>
+</form>

@@ -93,7 +93,7 @@ public class MetadataFacade extends AbstractFacade<Metadata> {
       this.em.clear();
     } catch (IllegalStateException | SecurityException e) {
 
-      throw new DatabaseException(RawDataFacade.class.getName(), e.getMessage());
+      throw new DatabaseException("Could not add metadata " + metadata, e);
     }
   }
 

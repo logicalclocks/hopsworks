@@ -250,8 +250,8 @@ angular.module('hopsWorksApp')
               var data = {inodePath: "", templateId: -1};
               data.inodePath = file.path;
 
-              ModalService.selectTemplate('sm', false, templateId).then(
-                      function (success) {
+              ModalService.selectTemplate('sm', false, templateId)
+                      .then(function (success) {
                         data.templateId = success.templateId;
                         console.log("RETURNED TEMPLATE ID " + data.templateId);
 
@@ -264,6 +264,25 @@ angular.module('hopsWorksApp')
                           growl.info("Could not attach template to file " + file.name + ".",
                                   {title: 'Info', ttl: 5000});
                         });
+                      });
+            };
+
+            /**
+             * Removes the selected template from the selected inode. Affects the association table
+             * 
+             * @param {type} file
+             * @returns {undefined}
+             */
+            self.detachTemplate = function (file) {
+              var templateId = -1;
+
+              ModalService.detachTemplate('sm', file, templateId)
+                      .then(function (success) {
+
+                        dataSetService.detachTemplate(success.fileId, success.templateId)
+                                .then(function (success) {
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                                });
                       });
             };
 

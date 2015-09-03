@@ -101,6 +101,12 @@ angular.module('hopsWorksApp')
 
                   return $http(regReq);
                 },
+                fetchTemplatesForInode: function(inodeid){
+                  return $http.get('/api/metadata/fetchtemplatesforinode/' + inodeid);
+                },
+                detachTemplate: function(inodeid, templateid){
+                  return $http.get('/api/metadata/detachtemplate/' + inodeid + '/' + templateid);
+                },
                 fetchMetadata: function (inodeId, tableId) {
                   return $http.get('/api/metadata/fetchmetadata/' + inodeId + '/' + tableId);
                 }

@@ -366,7 +366,6 @@ angular.module('hopsWorksApp')
                 var modalInstance = $modal.open({
                   templateUrl: 'views/metadata/newFieldModal.html',
                   controller: 'NewFieldCtrl as newFieldCtrl',
-                  scope: scope,
                   size: 'md',
                   backdrop: 'static',
                   resolve: {
@@ -383,6 +382,34 @@ angular.module('hopsWorksApp')
                       }],
                     scope: function () {
                       return scope;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
+              detachTemplate: function (size, file, templateId) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/metadata/detachTemplateDialog.html',
+                  controller: 'DetachTemplateCtrl as detachTemplateCtrl',
+                  size: size,
+                  backdrop: 'static',
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    templateId: function () {
+                      return templateId;
+                    },
+                    file: function(){
+                      return file;
                     }
                   }
                 });

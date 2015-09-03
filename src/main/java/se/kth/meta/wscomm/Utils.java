@@ -64,8 +64,8 @@ public class Utils {
     try {
       return this.templateFacade.addTemplate(template);
     } catch (DatabaseException e) {
-      throw new ApplicationException("Could not add new template " + template.
-              getName() + " " + e.getMessage());
+      throw new ApplicationException("Utils.java: Could not add new template "
+              + template.getName(), e);
     }
   }
 
@@ -91,8 +91,8 @@ public class Utils {
     try {
       this.templateFacade.removeTemplate(template);
     } catch (DatabaseException e) {
-      throw new ApplicationException("Could not remove template " + template.
-              getName() + " " + e.getMessage());
+      throw new ApplicationException("Utils.java: Could not remove template "
+              + template.getName(), e);
     }
   }
 
@@ -133,8 +133,8 @@ public class Utils {
           this.addFieldsPredefinedValues(predef, fieldid);
         }
       } catch (DatabaseException e) {
-        throw new ApplicationException("Could not add table " + t.getName()
-                + " " + e.getMessage());
+        throw new ApplicationException("Utils.java: Could not add table " + t.
+                getName(), e);
       }
     }
   }
@@ -159,8 +159,8 @@ public class Utils {
         this.fieldPredefinedValueFacade.addFieldPredefinedValue(predefval);
       }
     } catch (DatabaseException e) {
-      throw new ApplicationException("Could not add predefined value " + e.
-              getMessage());
+      throw new ApplicationException(
+              "Utils.java: Could not add predefined values", e);
     }
   }
 
@@ -175,9 +175,8 @@ public class Utils {
       logger.log(Level.INFO, "DELETING TABLE {0} ", table.getName());
       this.tableFacade.deleteTable(table);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteTable encountered a problem " + e.
-              getMessage());
+      throw new ApplicationException("Utils.java: could not delete table "
+              + table);
     }
   }
 
@@ -193,9 +192,8 @@ public class Utils {
       logger.log(Level.INFO, "DELETING FIELD {0} ", field);
       this.fieldFacade.deleteField(field);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteField encountered a problem " + e.
-              getMessage());
+      throw new ApplicationException("Utils.java: could not delete field "
+              + field);
     }
   }
 
@@ -210,9 +208,8 @@ public class Utils {
     try {
       this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteField encountered a problem " + e.
-              getMessage());
+      throw new ApplicationException(
+              "Utils.java: could not remove field predefined values ", e);
     }
   }
 
@@ -258,9 +255,7 @@ public class Utils {
       }
 
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: storeRawData(List<?> list) encountered a problem "
-              + e.getMessage());
+      throw new ApplicationException("Utils.java: could not store raw data ", e);
     }
   }
 
@@ -278,9 +273,7 @@ public class Utils {
       metadata.setData(meta.getData());
       this.metadataFacade.addMetadata(metadata);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: updateRawData(RawData) encountered a problem " + e.
-              getMessage());
+      throw new ApplicationException("Utils.java: could not update metadata ", e);
     }
   }
 
@@ -304,9 +297,7 @@ public class Utils {
         this.metadataFacade.addMetadata(metadata);
       }
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: storeMetadata(List<?> list) encountered a problem "
-              + e.getMessage());
+      throw new ApplicationException("Utils.java: could not store metadata ", e);
     }
   }
 }

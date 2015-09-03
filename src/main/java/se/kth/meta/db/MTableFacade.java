@@ -75,7 +75,7 @@ public class MTableFacade extends AbstractFacade<MTable> {
       return t.getId();
     } catch (IllegalStateException | SecurityException e) {
 
-      throw new DatabaseException(MTableFacade.class.getName(), e.getMessage());
+      throw new DatabaseException("Could not add table " + table, e);
     }
   }
 
@@ -102,8 +102,7 @@ public class MTableFacade extends AbstractFacade<MTable> {
       }
 
     } catch (SecurityException | IllegalStateException ex) {
-      throw new DatabaseException(MTableFacade.class.getName(),
-              "Could not delete table " + ex.getMessage());
+      throw new DatabaseException("Could not delete table " + table, ex);
     }
   }
   
