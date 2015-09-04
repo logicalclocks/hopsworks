@@ -23,7 +23,9 @@ angular.module('hopsWorksApp')
 
             self.addSshKey = function () {
                 self.working = true;
-                UserService.addSshKey(self.key.name, self.key.publicKey).then(
+                self.key.status = false;
+                UserService.addSshKey(self.key).then(
+                //UserService.addSshKey(self.key.name, self.key.publicKey).then(
                     function (success) {
                         growl.success("Your ssh key has been successfully added.", {
                             title: 'Success',

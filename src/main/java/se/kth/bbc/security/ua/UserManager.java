@@ -27,7 +27,8 @@ public class UserManager {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  // Strating user id from 1000 to create a POSIX compliant username: meb1000
+  // Starting user id from 1000 to create a POSIX compliant username: meb1000
+  // http://askubuntu.com/questions/405638/what-are-the-disadvantages-of-having-a-dot-in-a-user-name
   private final int STARTING_USER = 1000;
 
   // BiobankCloud prefix username prefix

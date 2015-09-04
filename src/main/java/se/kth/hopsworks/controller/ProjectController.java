@@ -182,7 +182,7 @@ public class ProjectController {
 
                 } catch (IOException e) {
                     // TODO - propagate exception?
-                    logger.warning("Could not create user account: " + LocalhostServices.getProjectUsername(userEmail, project.getName()));
+                    logger.warning("Could not create user account: " + e.getMessage());
                 }
             }
 
@@ -374,7 +374,9 @@ public class ProjectController {
         for (ProjectServices ps : project.getProjectServicesCollection()) {
             if (ps.getProjectServicesPK().getService().compareTo(ProjectServiceEnum.SSH) == 0) {
                 try {
-                    LocalhostServices.createUserAccount(projectTeam.getProjectTeamPK().getTeamMember(), project.getName(), publicKeys);
+                    String email = projectTeam.getProjectTeamPK().getTeamMember();
+                    User user = userBean.getUserByEmail(email);
+                    LocalhostServices.createUserAccount(user.getUsername(), project.getName(), publicKeys);
                 } catch (IOException e) {
                     failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
                             + "could not create the account on localhost. Try again later.");
@@ -473,7 +475,7 @@ public class ProjectController {
         try {
             LocalhostServices.deleteUserAccount(email, project.getName());
         } catch (IOException e) {
-            String errMsg = "Could not delete user account: " + LocalhostServices.getProjectUsername(email, project.getName()) + " ";
+            String errMsg = "Could not delete user account: " + LocalhostServices.getUsernameInProject(email, project.getName()) + " ";
             logger.warning(errMsg + e.getMessage());
             //  TODO: Should this be rethrown to give a HTTP Response to client??
         }

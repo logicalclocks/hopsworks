@@ -8,11 +8,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -150,15 +146,20 @@ public class UserService {
 
     @POST
     @Path("addSshKey")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-    public Response addSshkey(@FormParam("name") String name,
-                              @FormParam("sshKey") String sshKey,
+    public Response addSshkey(SshKeyDTO sshkey,
                               @Context SecurityContext sc,
                               @Context HttpServletRequest req) throws AppException {
+//    public Response addSshkey(@FormParam("name") String name,
+//                              @FormParam("sshKey") String sshKey,
+//                              @Context SecurityContext sc,
+//                              @Context HttpServletRequest req) throws AppException {
         Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
         int id = user.getUid();
-        SshKeyDTO dto = userController.addSshKey(id, name, sshKey);
+        SshKeyDTO dto = userController.addSshKey(id, sshkey.getName(), sshkey.getPublicKey());
+//        SshKeyDTO dto = userController.addSshKey(id, name, sshKey);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(dto).build();
     }
 
