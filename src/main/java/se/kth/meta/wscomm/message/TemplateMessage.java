@@ -49,7 +49,7 @@ public class TemplateMessage extends ContentMessage {
     this.setStatus("OK");
     this.setAction(this.action);
 
-    //when asking for template names list, tempid is null
+    //when asking for a template names list, tempid is null
     try {
       JsonObject object = Json.createReader(new StringReader(this.message)).
               readObject();
