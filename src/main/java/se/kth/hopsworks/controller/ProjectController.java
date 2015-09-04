@@ -80,7 +80,7 @@ public class ProjectController {
     //this needs to be an atomic operation (all or nothing) REQUIRES_NEW
     //will make sure a new transaction is created even if this method is
     //called from within a transaction.
-    public Project createProject(ProjectDTO newProject, String email) throws
+    public Project  createProject(ProjectDTO newProject, String email) throws
             IOException {
         User user = userBean.getUserByEmail(email);
         //if there is no project by the same name for this user and project name is valid
@@ -125,7 +125,8 @@ public class ProjectController {
         return null;
     }
 
-    /**
+    /**ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5zPIrw76ZtEsDoxc2ZyX8AiHfpTCWZRAVcL6XGNLCOLLXVqOPTgZat9PKQit4WWqfl4+IZ9HL5V2VOxZllN7VZuPGXp+4hgWuB8E1TXMBCkdTtsPiQD46/JSjufXvn9bKHR+0xvjxH5JlNWCuWmXJcbdcj+IcDEny2KdIW5BhpM6hGN1DwZIzf/Po8eB5JUOgoK6UqlriuC0QNwc4ifBqnBU+slrLz/aseISgHdUMx83U+/J2hNZiEjKLvsI8VlAxhEPyR0w7jpCeOpGHfJK4M3eY1rnwAOtsoX1LQv+PT8E7iWZaYYnXJMj6dzw0O5T8ovu9rsUkZlxDz7UYF/Op jdowling@jim-dell
+
      * Returns a Project
      * <p/>
      *

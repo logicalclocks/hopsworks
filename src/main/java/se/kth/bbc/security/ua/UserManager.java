@@ -32,7 +32,7 @@ public class UserManager {
   private final int STARTING_USER = 1000;
 
   // BiobankCloud prefix username prefix
-  private final String USERNAME_PREFIX = "meb";
+//  private final String USERNAME_PREFIX = "meb";
 
   /**
    * Register a new group for user.
@@ -328,12 +328,15 @@ public class UserManager {
    * @return
    */
   public User register(String fname, String lname, String email, String title,
-          String tel, String orcid, int uid, String password, String otpSecret,
+          String tel, String orcid, String password, String otpSecret,
           SecurityQuestion question, String answer, int status, int yubikey,
           String validationKey) {
 
     // assigne a username
-    String uname = USERNAME_PREFIX + uid;
+//    String uname = USERNAME_PREFIX + uid;
+
+    String uname = email.substring(0, email.lastIndexOf("@"));
+
 
     User user = new User();
     user.setUsername(uname);

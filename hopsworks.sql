@@ -7,8 +7,8 @@ CREATE TABLE `bbc_group` (
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `users` (
-  `uid` INT(10) NOT NULL DEFAULT '1000',
-  `username` VARCHAR(10) NOT NULL,
+  `uid` INT(24) NOT NULL DEFAULT '1000',
+  `username` VARCHAR(16) NOT NULL,
   `password` VARCHAR(128) NOT NULL,
   `email` VARCHAR(45) DEFAULT NULL,
   `fname` VARCHAR(30) DEFAULT NULL,

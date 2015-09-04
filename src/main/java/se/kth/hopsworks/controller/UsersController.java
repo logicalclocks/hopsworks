@@ -60,7 +60,11 @@ public class UsersController {
       }
 
       int uid = userBean.lastUserID() + 1;
-      String uname = Users.USERNAME_PREFIX + uid;
+      String uname = newUser.getEmail().substring(0, newUser.getEmail().lastIndexOf("@"));
+      if (uname.length() > 16) {
+        uname = uname.substring(0,15);
+      }
+//      String uname = Users.USERNAME_PREFIX + uid;
       List<BbcGroup> groups = new ArrayList<>();
       groups.add(groupBean.findByGroupName(BbcGroup.USER));
 

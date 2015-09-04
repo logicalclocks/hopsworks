@@ -317,7 +317,7 @@ public class UserRegistration implements Serializable {
       String activationKey = SecurityUtils.getRandomString(64);
 
       // Generates a UNIX compliant account
-      int uid = mgr.lastUserID() + 1;
+//      int uid = mgr.lastUserID() + 1;
 
       // Register the new request in the platform
       userTransaction.begin();
@@ -328,7 +328,7 @@ public class UserRegistration implements Serializable {
               title,
               tel,
               orcid,
-              uid,
+//              uid,
               SecurityUtils.converToSHA256(password),
               otpSecret,
               security_question,
@@ -438,7 +438,7 @@ public class UserRegistration implements Serializable {
 
     try {
       // Generates a UNIX compliant account
-      int uid = mgr.lastUserID() + 1;
+//      int uid = mgr.lastUserID() + 1;
 
       String activationKey = SecurityUtils.getRandomString(64);
 
@@ -451,7 +451,7 @@ public class UserRegistration implements Serializable {
               title,
               tel,
               orcid,
-              uid,
+//              uid,
               SecurityUtils.converToSHA256(password),
               "-1",
               security_question, SecurityUtils.converToSHA256(security_answer),

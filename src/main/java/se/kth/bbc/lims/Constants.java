@@ -89,6 +89,7 @@ public class Constants {
   // Hopsworks
   public final static Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERNAME_SEPARATOR = "__";
+  public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
 
 
   //Filename conventions
