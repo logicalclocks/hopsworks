@@ -3,6 +3,7 @@ package se.kth.hopsworks.rest;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
@@ -22,15 +23,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.lims.Constants;
+import se.kth.bbc.project.fb.Inode;
+import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.meta.db.MTableFacade;
+import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.db.TupleToFileFacade;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.Metadata;
 import se.kth.meta.entity.MetadataView;
 import se.kth.meta.entity.RawData;
+import se.kth.meta.entity.Template;
+import se.kth.meta.entity.TemplateView;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.DatabaseException;
 
@@ -55,6 +61,10 @@ public class MetadataService {
   private TupleToFileFacade ttf;
   @EJB
   private MTableFacade mtf;
+  @EJB
+  private TemplateFacade templatefacade;
+  @EJB
+  private InodeFacade inodefacade;
 
   private String path;
 
@@ -110,7 +120,7 @@ public class MetadataService {
     if (inodeid == null || tableid == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
-    } 
+    }
 
     //metadata associated to a specific table and inode
     List<MetadataView> metadata = new LinkedList<>();
@@ -165,5 +175,152 @@ public class MetadataService {
       throw new AppException(Response.Status.NO_CONTENT.getStatusCode(),
               "Could not fetch the metadata for the file " + inodeid + ".");
     }
+  }
+
+  /**
+   * Fetches all templates attached to a specific inode
+   * <p>
+   * @param inodeid
+   * @param sc
+   * @param req
+   * @return
+   * @throws AppException
+   */
+  @GET
+  @Path("fetchtemplatesforinode/{inodeid}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response fetchTemplatesforInode(
+          @PathParam("inodeid") Integer inodeid,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    if (inodeid == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Incomplete request!");
+    }
+
+    Inode inode = this.inodefacade.findById(inodeid);
+    List<Template> templates = new LinkedList<>(inode.getTemplates());
+    List<TemplateView> tViews = new LinkedList<>();
+
+    for (Template template : templates) {
+      tViews.add(new TemplateView(template.getId(), template.getName()));
+    }
+
+    GenericEntity<List<TemplateView>> t
+            = new GenericEntity<List<TemplateView>>(tViews) {
+            };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            t).build();
+  }
+
+  /**
+   * Fetches all templates not attached to a specific inode
+   * <p>
+   * @param inodeid
+   * @param sc
+   * @param req
+   * @return
+   * @throws AppException
+   */
+  @GET
+  @Path("fetchavailabletemplatesforinode/{inodeid}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response fetchAvailableTemplatesForInode(
+          @PathParam("inodeid") Integer inodeid,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    if (inodeid == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Incomplete request!");
+    }
+
+    Inode inode = this.inodefacade.findById(inodeid);
+    List<Template> nodeTemplates = new LinkedList<>(inode.getTemplates());
+    List<Template> allTemplates = this.templatefacade.findAll();
+    List<TemplateView> toreturn = new LinkedList<>();
+
+    boolean found = false;
+    for (Template template : allTemplates) {
+      found = false;
+
+      for (Template temp : nodeTemplates) {
+        if (Objects.equals(template.getId(), temp.getId())) {
+          found = true;
+        }
+      }
+      if(!found){
+        toreturn.add(new TemplateView(template.getId(), template.getName()));
+      }
+    }
+
+    GenericEntity<List<TemplateView>> t
+            = new GenericEntity<List<TemplateView>>(toreturn) {
+            };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            t).build();
+  }
+
+  /**
+   * Fetch all templates attached to a specific inode
+   * <p>
+   * @param inodeid
+   * @param templateid
+   * @param sc
+   * @param req
+   * @return
+   * @throws AppException
+   */
+  @GET
+  @Path("detachtemplate/{inodeid}/{templateid}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response detachTemplateFromInode(
+          @PathParam("inodeid") Integer inodeid,
+          @PathParam("templateid") Integer templateid,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    if (inodeid == null || templateid == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Incomplete request!");
+    }
+
+    Inode inode = this.inodefacade.findById(inodeid);
+    List<Template> templates = new LinkedList<>(inode.getTemplates());
+
+    if (templates.isEmpty()) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "The inode does not have any templates attached to it");
+    }
+
+    Template toremove = null;
+
+    for (Template template : templates) {
+      if (Objects.equals(template.getId(), templateid)) {
+        template.getInodes().remove(inode);
+        toremove = template;
+      }
+    }
+
+    try {
+      this.templatefacade.updateTemplatesInodesMxN(toremove);
+    } catch (DatabaseException e) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Failed to remove template from inode " + inodeid);
+    }
+
+    JsonResponse json = new JsonResponse();
+    json.setSuccessMessage("The template was successfully removed from inode "
+            + inode.getInodePK().getName());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
   }
 }
