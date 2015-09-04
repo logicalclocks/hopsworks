@@ -13,18 +13,18 @@
       </label>
       <p></p>
       
-      <label class="control-label" for="newCardType">Templates attached to '<i>{{detachTemplateCtrl.filename}}</i>'</label>
+      <label class="control-label">Templates attached to '<i>{{detachTemplateCtrl.filename}}</i>'</label>
       <div class="columnHeader">
         <ui-select  ng-model="detachTemplateCtrl.selectedTemplate" theme="select2"
                     ng-disabled="detachTemplateCtrl.noTemplates"
                     on-select="detachTemplateCtrl.update()" style="min-width: 15em;">
 
-          <ui-select-match placeholder="Select a field type...">{{$select.selected.templateName}}</ui-select-match>
+          <ui-select-match placeholder="Select a template...">{{$select.selected.templateName}}</ui-select-match>
 
-          <ui-select-choices repeat="item in detachTemplateCtrl.templates | filter: $select.search">
-            <h4>
-              <span ng-bind-html="item.templateId + ', ' + item.templateName"></span>
-            </h4>
+          <ui-select-choices repeat="template in detachTemplateCtrl.templates | filter: $select.search">
+            <small>
+              <span ng-bind-html="template.templateId + ', ' + template.templateName"></span>
+            </small>
           </ui-select-choices>
         </ui-select>
       </div>

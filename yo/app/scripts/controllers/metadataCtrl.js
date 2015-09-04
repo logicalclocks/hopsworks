@@ -250,7 +250,7 @@ angular.module('hopsWorksApp')
               var data = {inodePath: "", templateId: -1};
               data.inodePath = file.path;
 
-              ModalService.selectTemplate('sm', false, templateId)
+              ModalService.attachTemplate('sm', file, templateId)
                       .then(function (success) {
                         data.templateId = success.templateId;
                         console.log("RETURNED TEMPLATE ID " + data.templateId);
