@@ -1,0 +1,77 @@
+.messages .message-meta {
+    overflow: hidden;
+}
+.messages .message-avatar {
+    float: left;
+    margin-right: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 3px;
+}
+
+.messages > li:hover {
+    background-color: #f5f7fa;
+}
+
+.messages > li {
+    border-bottom: 1px solid #f5f7fa;
+}
+.messages > li > div{
+    padding-top: 10px;
+    padding-bottom: 5px;
+}
+.message-box .my-avatar {
+    float: left;
+    margin-right: 10px;
+    width: 30px;
+    height: 30px;
+    border: 1px;
+}
+.message-preview {
+    clear: both;
+    color: #909fa7;
+    max-height: 400px;
+}
+.message-list{
+    max-height: 500px;
+}
+.message-to-list {
+    margin-top: 6px;
+}
+
+.message-panel .scroll:hover {
+    overflow-y: auto;
+    height: auto;
+}
+
+.message-box {
+    margin-top: 25px;
+    border-top: 1px solid #e4eaec;
+}
+
+.message-box .message-box-body {
+    overflow: hidden;
+    zoom: 1;
+}
+.message-panel .panel-body {
+    padding: 15px 5px 5px 5px;
+}
+.message-panel .scroll {
+    border: none;
+    box-shadow:none;
+    height: auto;
+    overflow: hidden;
+}
+.message-panel .scroll > div {
+    padding-right: 11px;
+}
+
+ul.messages {
+    list-style: none;
+    padding: 0px;
+}
+.message-panel {
+    background-color: #ffffff;
+    margin: 2px 0px 0px 0px;
+
+}

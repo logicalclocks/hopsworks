@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MainCtrl', ['$cookies', '$location', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService','ProjectService','growl',
-          function ($cookies, $location, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl) {
+        .controller('MainCtrl', ['$cookies', '$location', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService','ProjectService','growl','MessageService',
+          function ($cookies, $location, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl, MessageService) {
 
             var self = this;
             self.email = $cookies['email'];
@@ -55,6 +55,16 @@ angular.module('hopsWorksApp')
                     }
                 );
               }
+            };
+            
+            self.messages = MessageService.getMessages();
+            self.openMessageModal = function (selected) {
+                ModalService.messages('lg', selected)
+                    .then(function (success) {
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                    }, function (error) {
+
+                    });
             };
             
             self.searchTerm = "";

@@ -93,7 +93,7 @@
             </div>
            </div>
             </div>
-            <div ng-show="viewSearchResultCtrl.type === 'Dataset'" class="col-xs-9" style="padding-left: 0px">
+            <div ng-if="viewSearchResultCtrl.type === 'Dataset'" class="col-xs-9" style="padding-left: 0px">
               <label class="text-muted control-label">Projects</label>
               <ui-select name="project_name" theme="select2"
                            ng-model="viewSearchResultCtrl.request.projectId" style="min-width: 300px;" required>

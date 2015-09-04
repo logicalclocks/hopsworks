@@ -69,3 +69,49 @@ a:focus,
 .dropdown-menu > li > a:hover {
   color: #ffffff;
 }
+
+.navbar-nav
+.open
+.dropdown-messages {
+  right: 5%;
+  min-width: 500px;
+  box-shadow:1px 1px 1px 1px #ccc;
+  padding: 20px;
+}
+
+.navbar-nav
+.open
+.dropdown-messages > li {
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 5px;
+}
+.navbar-nav
+.open
+.dropdown-messages > li > div {
+  padding-top: 10px;
+  padding-bottom: 5px;
+}
+.navbar-nav
+.open
+.dropdown-messages > li > div:hover {
+  background-color: #f5f7fa;
+}
+nav.navbar-sics ul.dropdown-messages a {
+  color: #005fcc;
+  padding-top: 10px;
+  padding-left: 0px;
+}
+
+.navbar-nav
+.open
+.dropdown-messages > a {
+  margin-top: 10px;
+  color: #005fcc;
+}
+
+.navbar-nav
+.open
+.dropdown-messages > a:hover  {
+  color: #005580;
+
+}
