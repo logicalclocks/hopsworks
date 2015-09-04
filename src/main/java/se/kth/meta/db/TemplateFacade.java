@@ -68,7 +68,7 @@ public class TemplateFacade extends AbstractFacade<Template> {
       return t.getId();
     } catch (IllegalStateException | SecurityException e) {
 
-      throw new DatabaseException(TemplateFacade.class.getName(), e.getMessage());
+      throw new DatabaseException("Could not add template " + template, e);
     }
   }
 
@@ -85,8 +85,7 @@ public class TemplateFacade extends AbstractFacade<Template> {
         }
       }
     } catch (SecurityException | IllegalStateException ex) {
-      throw new DatabaseException(TemplateFacade.class.getName(),
-              "Could not remove template " + ex.getMessage());
+      throw new DatabaseException("Could not remove template " + template, ex);
     }
   }
 

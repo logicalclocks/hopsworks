@@ -86,6 +86,7 @@ public class FieldMessage extends ContentMessage {
     boolean required = obj.getBoolean("required");
     String description = obj.getString("description");
     int fieldtypeid = obj.getInt("fieldtypeid");
+    int position = obj.getInt("position");
 
     try {
       /*
@@ -108,7 +109,7 @@ public class FieldMessage extends ContentMessage {
 
     Field field = new Field(fieldId, tableId, name, type,
             Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0),
-            (short) ((required) ? 1 : 0), description, fieldtypeid);
+            (short) ((required) ? 1 : 0), description, fieldtypeid, position);
 
     //-- ATTACH the field's parent entity (FieldType)
     field.setFieldTypeId(fieldtypeid);

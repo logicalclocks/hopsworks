@@ -93,7 +93,8 @@ angular.module('hopsWorksApp')
                   sizefield: card.sizefield,
                   description: card.description,
                   fieldtypeid: card.fieldtypeid,
-                  fieldtypeContent: card.fieldtypeContent
+                  fieldtypeContent: card.fieldtypeContent,
+                  position: card.position
                 })
               });
             },
@@ -115,7 +116,8 @@ angular.module('hopsWorksApp')
                   forceDelete: card.forceDelete,
                   description: card.description,
                   fieldtypeid: card.fieldtypeid,
-                  fieldtypeContent: card.fieldtypeContent
+                  fieldtypeContent: card.fieldtypeContent,
+                  position: card.position
                 })
               });
             },

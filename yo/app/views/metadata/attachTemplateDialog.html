@@ -1,0 +1,44 @@
+<div>
+
+  <span>
+    <div class="controls">
+      <div class="modal-header" align="center">
+        <button type="button" class="close" ng-click="attachTemplateCtrl.close()">&times;</button>
+        <h3 class="modal-title">Select a template to add</h3>
+      </div>
+
+      <p></p>
+      <div align="center">
+        <label class="control-label" ng-show="!attachTemplateCtrl.noTemplates">Available templates</label>
+      </div>
+
+      <div align="center">
+        <label class="control-label" ng-show="attachTemplateCtrl.noTemplates">
+          <font color="red">All available templates are already attached to this file</font>
+        </label>
+      </div>
+      <p></p>
+
+      <div class="columnHeader">
+        <ui-select ng-model="attachTemplateCtrl.selectedTemplate" theme="select2"
+                   ng-disabled="attachTemplateCtrl.noTemplates"
+                   on-select="attachTemplateCtrl.update()" style="min-width: 15em;">
+
+          <ui-select-match placeholder="Select a template...">{{$select.selected.templateName}}</ui-select-match>
+
+          <ui-select-choices repeat="template in attachTemplateCtrl.templates | filter: $select.search">
+            <small>
+              <span ng-bind-html="'' + template.templateName | highlight: $select.search"></span>
+            </small>
+          </ui-select-choices>
+        </ui-select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" ng-click="attachTemplateCtrl.close()">Close</button>
+        <button type="button" class="btn btn-primary" ng-disabled="attachTemplateCtrl.noTemplates" ng-click="attachTemplateCtrl.getTemplate()">OK</button>
+      </div>
+
+    </div>
+  </span>
+
+</div>

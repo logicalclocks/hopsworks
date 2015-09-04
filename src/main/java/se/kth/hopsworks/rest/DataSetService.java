@@ -566,9 +566,6 @@ public class DataSetService {
     Template temp = template.findByTemplateId(templateid);
     temp.getInodes().add(inode);
 
-    logger.log(Level.INFO, "ATTACHING TEMPLATE {0} TO INODE {0}",
-            new Object[]{templateid, inode.getId()});
-
     try {
       //persist the relationship
       this.template.updateTemplatesInodesMxN(temp);

@@ -118,7 +118,7 @@ public class UploadService {
    * @throws se.kth.hopsworks.rest.AppException
    */
   public void setUploadPath(String path) throws AppException {
-    String[] pathArray = path.split(File.separator);
+    String[] pathArray = path.substring(1).split(File.separator);
     if (pathArray.length < 2) { // if path does not contain project name.
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Not a valid path!");

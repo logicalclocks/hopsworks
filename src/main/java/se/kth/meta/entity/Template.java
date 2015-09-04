@@ -23,6 +23,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.project.fb.Inode;
 
 /**
@@ -117,6 +118,7 @@ public class Template implements Serializable, EntityIntf, Comparable<Template> 
     this.name = name;
   }
 
+  @JsonIgnore
   public List<MTable> getMTables() {
     return this.tables;
   }
@@ -126,6 +128,7 @@ public class Template implements Serializable, EntityIntf, Comparable<Template> 
   }
 
   @XmlTransient
+  @JsonIgnore
   public Collection<Inode> getInodes() {
     return this.inodes;
   }

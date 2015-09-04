@@ -32,7 +32,7 @@
                     <thead>
                     <th style="border-bottom: 1px solid #e7eaec; color: #2e353d; font-size: 22px">
                       <i class="glyphicon glyphicon-folder-open" style="padding-right: 10px;"></i>
-                      {{datasetsCtrl.pathArray[0] | limitTo: 17 }}{{datasetsCtrl.pathArray[0].length > 17 ? '...' : ''}}
+                      {{datasetsCtrl.pathArray[0]| limitTo: 17 }}{{datasetsCtrl.pathArray[0].length > 17 ? '...' : ''}}
                     </th>
                     </thead>
                   </table>
@@ -81,7 +81,7 @@
                               </td>
                             </tr>
 
-                            <tr ng-repeat="file in datasetsCtrl.files | orderBy: 'name'"
+                            <tr ng-repeat="file in datasetsCtrl.files| orderBy: 'name'"
                                 context-menu
                                 data-target="menu-{{ $index}}"
 
@@ -127,15 +127,25 @@
                                          role="menuitem"
                                          tabindex="3"
                                          ng-click="metadataCtrl.attachTemplate(file); $event.stopPropagation();">
-                                        <span><i class="fa fa-camera-retro"></i>
-                                          Attach template</span>
+                                        <span><i class="fa fa-upload"></i>
+                                          Add metadata template</span>
                                       </a>
                                     </li>
 
                                     <li>
                                       <a class="pointer"
                                          role="menuitem"
-                                         tabindex="3"
+                                         tabindex="4"
+                                         ng-click="metadataCtrl.detachTemplate(file); $event.stopPropagation();">
+                                        <span><i class="fa fa-download"></i>
+                                          Remove metadata template</span>
+                                      </a>
+                                    </li>
+
+                                    <li>
+                                      <a class="pointer"
+                                         role="menuitem"
+                                         tabindex="5"
                                          ng-click="datasetsCtrl.deleteFile(file.name)">
                                         <span><i class="fa fa-trash"></i>
                                           Remove</span>
@@ -173,7 +183,7 @@
                           <md-tabs md-dynamic-height md-border-bottom>
                             <md-tab label="Details">
                               <md-content>
-                                <table id="mytable1" ng-show="datasetsCtrl.selected > -1 && datasetsCtrl.selected != undefined" class="table table-bordred table-striped" style="margin-top: 16px;">
+                                <table id="mytable1" ng-show="datasetsCtrl.selected > - 1 && datasetsCtrl.selected != undefined" class="table table-bordred table-striped" style="margin-top: 16px;">
                                   <tr style="background-color: #fafafa">
                                     <td style="color:lightgrey;">Size</td>
                                     <td style="color: grey;">{{(datasetsCtrl.fileDetail.size == 0? '_': projectCtrl.sizeOnDisk(datasetsCtrl.fileDetail.size))}}</td>
@@ -358,7 +368,7 @@
                   <ul class="card-list" ng-model="column.cards">
                     <li ng-repeat="card in tab.cards" style="padding-bottom: 0;">
                       <div style="padding-bottom: 0;">
- 
+
                         <!--The table section-->
                         <div class="row col-md-15" style="padding-bottom: 0;">
                           <!--The row section-->
