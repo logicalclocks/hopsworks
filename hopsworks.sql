@@ -238,6 +238,7 @@ CREATE TABLE `meta_fields` (
   `type` VARCHAR(255) DEFAULT NULL,
   `description` VARCHAR(250) NOT NULL,
   `fieldtypeid` MEDIUMINT(11) NOT NULL,
+  `position` MEDIUMINT(11) DEFAULT '0',
   PRIMARY KEY (`fieldid`),
   FOREIGN KEY (`tableid`) REFERENCES `meta_tables` (`tableid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   FOREIGN KEY (`fieldtypeid`) REFERENCES `meta_field_types` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION

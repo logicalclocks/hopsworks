@@ -480,24 +480,42 @@ angular.module('hopsWorksApp')
               console.log("Card " + card.title + " became required " + card.required);
             };
 
+
             /**
-             * Allows editing the size (max chars) of a field
-             * 
-             * @param {type} card
-             * @returns {undefined}
+             * Configuration object for the ng-sortable directive. Provides some drag n drop callbacks 
+             * that help us take control over the objects dragged around 
              */
-            self.editSizeField = function (card) {
-
-              card.sizefield.showing = !card.sizefield.showing;
-              console.log("Card " + card.title + " showing " + card.sizefield.showing + " max size " + card.sizefield.value);
-
-              self.editedField = card;
-            };
-
-            self.doneEditingSizeField = function (card) {
-
-              card.sizefield.showing = false;
-              self.editedField = null;
+            self.fieldSortOptions = {
+              /*
+               * Triggered when an item is moved from one container (table) to another
+               */
+              itemMoved: function (event) {
+                /*
+                 * event.dest is the destination object. Handles object moving between different table objects,
+                 * resetting their position attribute. 'value' is the field under processing
+                 */
+                angular.forEach(event.dest.sortableScope.$parent.column.cards, function (value, key) {
+                  value.position = (key + 1);
+                });
+                
+                self.storeTemplate(false);
+              },
+              /*
+               * Triggered when a field changes position inside the same container (table). Does not apply on cards
+               * that move from one table to another
+               */
+              orderChanged: function (event) {
+                /*
+                 * event.dest is the destination object. Handles object moving inside the same table,
+                 * resetting their position attributes. 'value' is the field under processing
+                 */
+                angular.forEach(event.dest.sortableScope.$parent.column.cards, function (value, key) {
+                  value.position = (key + 1);
+                });
+                
+                self.storeTemplate(false);
+              },
+              containment: '#board'
             };
 
             /**

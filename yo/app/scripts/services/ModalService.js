@@ -366,6 +366,7 @@ angular.module('hopsWorksApp')
                 var modalInstance = $modal.open({
                   templateUrl: 'views/metadata/newFieldModal.html',
                   controller: 'NewFieldCtrl as newFieldCtrl',
+                  scope: scope,
                   size: 'md',
                   backdrop: 'static',
                   resolve: {

@@ -79,7 +79,8 @@ angular.module('hopsWorksApp')
                 sizefield: this.sizefield,
                 description: this.description,
                 fieldtypeid: this.selectedItem.id,
-                fieldtypeContent: fieldTypeContent
+                fieldtypeContent: fieldTypeContent,
+                position: 0 //a new field hasn't gotten any user defined position yet
               });
             };
 
