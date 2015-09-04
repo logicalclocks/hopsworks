@@ -39,6 +39,10 @@ import se.kth.meta.entity.Template;
 import se.kth.meta.entity.TemplateView;
 import se.kth.meta.entity.TupleToFile;
 import se.kth.meta.exception.DatabaseException;
+import se.kth.meta.wscomm.Protocol;
+import se.kth.meta.wscomm.message.ContentMessage;
+import se.kth.meta.wscomm.message.Message;
+import se.kth.meta.wscomm.message.TemplateMessage;
 
 /**
  *
@@ -65,6 +69,8 @@ public class MetadataService {
   private TemplateFacade templatefacade;
   @EJB
   private InodeFacade inodefacade;
+  @EJB
+  private Protocol protocol;
 
   private String path;
 
@@ -253,7 +259,7 @@ public class MetadataService {
           found = true;
         }
       }
-      if(!found){
+      if (!found) {
         toreturn.add(new TemplateView(template.getId(), template.getName()));
       }
     }
@@ -322,5 +328,48 @@ public class MetadataService {
             + inode.getInodePK().getName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
+  }
+
+  /**
+   * Fetches the content of a given template
+   * <p>
+   * @param templateid
+   * @param sender
+   * @param sc
+   * @param req
+   * @return
+   * @throws AppException
+   */
+  @GET
+  @Path("fetchtemplate/{templateid}/{sender}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response fetchTemplate(
+          @PathParam("templateid") Integer templateid,
+          @PathParam("sender") String sender,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    if (templateid == null || sender == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Incomplete request!");
+    }
+    
+    String json = "{\"message\": \"{\"tempid\": " + templateid + "}\"}";
+
+    //create a request message
+    TemplateMessage templateMessage = new TemplateMessage();
+    templateMessage.setSender(sender);
+    templateMessage.setAction("fetch_template");
+    templateMessage.setMessage(json);
+    ((ContentMessage)templateMessage).setTemplateid(templateid);
+    
+    Message message = this.protocol.GFR(templateMessage);
+    
+    JsonResponse response = new JsonResponse();
+    //message contains all template content
+    response.setSuccessMessage(message.getMessage());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            response).build();
   }
 }

@@ -569,10 +569,13 @@ angular.module('hopsWorksApp')
               MetadataHelperService.setCurrentFile(file);
               self.currentFile = MetadataHelperService.getCurrentFile();
 
-              MetadataActionService.fetchTemplate($cookies['email'], templateId)
+              dataSetService.fetchTemplate(templateId, $cookies['email'])
                       .then(function (response) {
-                        self.currentBoard = JSON.parse(response.board);
-                        self.initializeMetadataTabs(JSON.parse(response.board));
+                        
+                        var board = response.data.successMessage;
+                
+                        self.currentBoard = JSON.parse(board);
+                        self.initializeMetadataTabs(JSON.parse(board));
                         self.fetchMetadataForTemplate();
                       });
             };
