@@ -49,7 +49,7 @@ public class TemplateMessage extends ContentMessage {
     this.setStatus("OK");
     this.setAction(this.action);
 
-    //when asking for template names list, tempid is null
+    //when asking for a template names list, tempid is null
     try {
       JsonObject object = Json.createReader(new StringReader(this.message)).
               readObject();
@@ -164,6 +164,7 @@ public class TemplateMessage extends ContentMessage {
       String maxsize;
       String description;
       int fieldtypeid;
+      int position;
 
       //retrieve the table fields/attributes
       for (int j = 0; j < fields.size(); j++) {
@@ -187,6 +188,7 @@ public class TemplateMessage extends ContentMessage {
           maxsize = field.getJsonObject("sizefield").getString("value");
           description = field.getString("description");
           fieldtypeid = field.getInt("fieldtypeid");
+          position = field.getInt("position");
 
           try {
             //just in case the user has entered shit
@@ -200,7 +202,7 @@ public class TemplateMessage extends ContentMessage {
           Field f = new Field(fieldId, tableId, fieldName,
                   "VARCHAR(50)", Integer.parseInt(maxsize),
                   (short) ((searchable) ? 1 : 0), (short) ((required) ? 1 : 0),
-                  description, fieldtypeid);
+                  description, fieldtypeid, position);
           f.setFieldTypes(new FieldType(fieldtypeid));
 
           //get the predefined values of the field if it is a yes/no field or a dropdown list field

@@ -169,7 +169,8 @@ public class ResponseBuilder {
 
     List<MTable> tables = this.templateFacade.loadTemplateContent(cmsg.
             getTemplateid());
-
+    Collections.sort(tables);
+    
     String jsonMsg = cmsg.buildSchema((List<EntityIntf>) (List<?>) tables);
     message.setMessage(jsonMsg);
 

@@ -10,7 +10,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import java.util.logging.Logger;
+import se.kth.kthfsdashboard.user.AbstractFacade;
+import se.kth.meta.entity.Metadata;
+import se.kth.meta.entity.MetadataPK;
+import se.kth.meta.exception.DatabaseException;
 
 /**
  *
@@ -94,7 +97,7 @@ public class MetadataFacade extends AbstractFacade<Metadata> {
       this.em.clear();
     } catch (IllegalStateException | SecurityException e) {
 
-      throw new DatabaseException(RawDataFacade.class.getName(), e.getMessage());
+      throw new DatabaseException("Could not add metadata " + metadata, e);
     }
   }
 

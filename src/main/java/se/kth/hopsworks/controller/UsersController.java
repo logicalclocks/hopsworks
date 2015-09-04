@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
@@ -20,6 +21,7 @@ import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
 import se.kth.hopsworks.users.*;
+import se.kth.hopsworks.util.LocalhostServices;
 
 /**
  * @author André<amore@kth.se>
@@ -60,10 +62,8 @@ public class UsersController {
       }
 
       int uid = userBean.lastUserID() + 1;
-      String uname = newUser.getEmail().substring(0, newUser.getEmail().lastIndexOf("@"));
-      if (uname.length() > 16) {
-        uname = uname.substring(0,15);
-      }
+      String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
+
 //      String uname = Users.USERNAME_PREFIX + uid;
       List<BbcGroup> groups = new ArrayList<>();
       groups.add(groupBean.findByGroupName(BbcGroup.USER));

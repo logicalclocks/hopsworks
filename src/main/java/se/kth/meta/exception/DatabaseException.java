@@ -4,23 +4,20 @@ package se.kth.meta.exception;
  *
  * @author Vangelis
  */
-public class DatabaseException extends ExceptionIntf {
+public class DatabaseException extends Exception {
 
-  private String message;
-  private String Class;
-
-  public DatabaseException(String message) {
-    super(message);
-    this.message = message;
+  private String exception;
+  
+  public DatabaseException(String exception) {
+    super(exception);
   }
 
-  public DatabaseException(String Class, String message) {
-    this(message);
-    this.Class = Class;
+  public DatabaseException(String exception, Throwable throwable) {
+    super(exception, throwable);
   }
 
   @Override
   public String getMessage() {
-    return this.message;
+    return this.exception;
   }
 }

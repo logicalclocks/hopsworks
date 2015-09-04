@@ -16,6 +16,7 @@ import se.kth.bbc.security.ua.model.PeopleGroupPK;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.ua.model.Userlogins;
 import se.kth.bbc.security.ua.model.Yubikey;
+import se.kth.hopsworks.util.LocalhostServices;
 
 /**
  *
@@ -335,8 +336,9 @@ public class UserManager {
     // assigne a username
 //    String uname = USERNAME_PREFIX + uid;
 
-    String uname = email.substring(0, email.lastIndexOf("@"));
-
+    // http://paulgorman.org/technical/presentations/linux_username_conventions.pdf
+    // http://serverfault.com/questions/73084/what-characters-should-i-use-or-not-use-in-usernames-on-linux
+    String uname = LocalhostServices.getUsernameFromEmail(email);
 
     User user = new User();
     user.setUsername(uname);

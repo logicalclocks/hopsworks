@@ -152,7 +152,8 @@ public abstract class ContentMessage implements Message {
         card.add("required", c.getRequired());
         card.add("description", c.getDescription());
         card.add("fieldtypeid", c.getFieldTypeId());
-
+        card.add("position", c.getPosition());
+        
         //"fieldtypeContent":[{"id":-1,"fieldid":-1,"value":"cc"},{"id":-1,"fieldid":-1,"value":"ccc"},{"id":-1,"fieldid":-1,"value":"cccc"}]
         JsonObjectBuilder temp = Json.createObjectBuilder();
         temp.add("showing", false);

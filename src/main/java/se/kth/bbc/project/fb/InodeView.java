@@ -25,6 +25,7 @@ public final class InodeView {
   private Date modification;
   private Date accessTime;
   private int id;
+  private int parentId;
   private int template;
   private String description;
   private boolean status = true;
@@ -43,6 +44,7 @@ public final class InodeView {
     this.name = i.getInodePK().getName();
     this.dir = i.isDir();
     this.id = i.getId();
+    this.parentId = i.getInodePK().getParentId();
     this.size = i.getSize();
     //put the template id in the REST response
     this.template = i.getTemplate();
@@ -114,6 +116,10 @@ public final class InodeView {
   public void setDir(boolean dir) {
     this.dir = dir;
   }
+  
+  public void setParentId(int parentId){
+    this.parentId = parentId;
+  }
 
   public void setId(int id) {
     this.id = id;
@@ -151,6 +157,10 @@ public final class InodeView {
     return this.id;
   }
 
+  public int getParentId(){
+    return this.parentId;
+  }
+  
   public int getTemplate() {
     return this.template;
   }

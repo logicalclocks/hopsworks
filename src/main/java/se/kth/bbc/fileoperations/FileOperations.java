@@ -56,8 +56,8 @@ public class FileOperations {
    * folder name.
    */
   public boolean mkDir(String path) throws IOException {
-    if(!path.startsWith("/")){
-      path = "/"+path;
+    if (!path.startsWith("/")) {
+      path = "/" + path;
     }
     String[] pathParts = path.substring(1).split("/");
     for (String s : pathParts) {

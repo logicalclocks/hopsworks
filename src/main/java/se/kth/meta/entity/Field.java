@@ -120,6 +120,11 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
   @Column(name = "description")
   private String description;
 
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "position")
+  private int position;
+
   public Field() {
   }
 
@@ -129,7 +134,8 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
   }
 
   public Field(Integer id, int tableid, String name, String type, int maxsize,
-          short searchable, short required, String description, int fieldtypeid) {
+          short searchable, short required, String description, int fieldtypeid,
+          int position) {
     this.id = id;
     this.tableid = tableid;
     this.name = name;
@@ -139,6 +145,7 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
     this.required = required;
     this.description = description;
     this.fieldtypeid = fieldtypeid;
+    this.position = position;
     this.raw = new LinkedList<>();
     this.fieldPredefinedValues = new LinkedList<>();
   }
@@ -157,6 +164,7 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
     this.raw = f.getRawData();
     this.description = f.getDescription();
     this.fieldtypeid = f.getFieldTypeId();
+    this.position = f.getPosition();
     this.fieldPredefinedValues = f.getFieldPredefinedValues();
   }
 
@@ -184,6 +192,14 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
 
   public void setFieldTypeId(int fieldtypeid) {
     this.fieldtypeid = fieldtypeid;
+  }
+
+  public int getPosition() {
+    return this.position;
+  }
+
+  public void setPosition(int position) {
+    this.position = position;
   }
 
   /*
@@ -333,12 +349,31 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
     return "entity.Fields[ id=" + id + " ]";
   }
 
+  /**
+   * Fields have to be ordered according to their order, which is user defined
+   * <p>
+   * @param field
+   * @return
+   */
   @Override
   public int compareTo(Field field) {
-    if (this.getId() > field.getId()) {
-      return 1;
-    } else if (this.getId() < field.getId()) {
-      return -1;
+
+    //if the field has not gotten a position index on the table 
+    //(it is newly created) sort it by id. Otherwise sort it by position 
+    switch (this.getPosition()) {
+      case 0:
+        if (this.getId() > field.getId()) {
+          return 1;
+        } else if (this.getId() < field.getId()) {
+          return -1;
+        }
+        break;
+      default:
+        if (this.getPosition() > field.getPosition()) {
+          return 1;
+        } else if (this.getPosition() < field.getPosition()) {
+          return -1;
+        }
     }
 
     return 0;

@@ -90,6 +90,7 @@ public class Constants {
   public final static Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERNAME_SEPARATOR = "__";
   public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
+  public static final int MAX_USERNME_LEN = 16;
 
 
   //Filename conventions
