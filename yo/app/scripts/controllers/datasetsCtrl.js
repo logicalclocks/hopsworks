@@ -226,8 +226,6 @@ angular.module('hopsWorksApp')
                                   }, function (error) {
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                           });
-
-
                         }
                 );
               } else {
@@ -242,7 +240,7 @@ angular.module('hopsWorksApp')
             self.back = function () {
               var newPathArray = self.pathArray.slice(0);
               newPathArray.pop();
-              if (newPathArray.length == 0) {
+              if (newPathArray.length === 0) {
                 $location.path('/project/' + self.projectId + '/datasets');
               } else {
                 getDirContents(newPathArray);
@@ -291,7 +289,12 @@ angular.module('hopsWorksApp')
             self.close = function () {
               $mdSidenav('right').close()
                       .then(function () {
-                        $log.debug("Closed metadata designer");
+                        $log.debug("Closed metadata designer (right)");
+                      });
+
+              $mdSidenav('left').close()
+                      .then(function () {
+                        $log.debug("Closed metadata designer (left)");
                       });
             };
 
