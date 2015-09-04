@@ -233,34 +233,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              selectTemplate: function (size, showSkipButton, templateId) {
-                var modalInstance = $modal.open({
-                  templateUrl: 'views/templateDropdown.html',
-                  controller: 'TemplateDropdownCtrl as templateDropdownCtrl',
-                  size: size,
-                  backdrop: 'static',
-                  resolve: {
-                    auth: ['$q', '$location', 'AuthService',
-                      function ($q, $location, AuthService) {
-                        return AuthService.session().then(
-                                function (success) {
-                                },
-                                function (err) {
-                                  $location.path('/login');
-                                  $location.replace();
-                                  return $q.reject(err);
-                                });
-                      }],
-                    templateId: function () {
-                      return templateId;
-                    },
-                    showSkipButton: function () {
-                      return showSkipButton;
-                    }
-                  }
-                });
-                return modalInstance.result;
-              },
               selectFile: function (size, regex, errorMsg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/selectFile.html',
@@ -383,6 +355,62 @@ angular.module('hopsWorksApp')
                       }],
                     scope: function () {
                       return scope;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
+              attachTemplate: function (size, file, templateId) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/metadata/attachTemplateDialog.html',
+                  controller: 'AttachTemplateCtrl as attachTemplateCtrl',
+                  size: size,
+                  backdrop: 'static',
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    templateId: function () {
+                      return templateId;
+                    },
+                    file: function () {
+                      return file;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
+              detachTemplate: function (size, file, templateId) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/metadata/detachTemplateDialog.html',
+                  controller: 'DetachTemplateCtrl as detachTemplateCtrl',
+                  size: size,
+                  backdrop: 'static',
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    templateId: function () {
+                      return templateId;
+                    },
+                    file: function () {
+                      return file;
                     }
                   }
                 });

@@ -1,6 +1,7 @@
 package se.kth.meta.entity;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import javax.persistence.Basic;
@@ -120,6 +121,7 @@ public class MTable implements Serializable, EntityIntf, Comparable {
   }
 
   public List<Field> getFields() {
+    Collections.sort(this.fields);
     return this.fields;
   }
 

@@ -183,19 +183,14 @@ angular.module('hopsWorksApp')
             self.uploadFile = function () {
               var templateId = -1;
 
-              ModalService.selectTemplate('sm', true, templateId).then(
+              ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
                       function (success) {
-                        templateId = success.templateId;
-
-                        ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
-                                function (success) {
-                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
-                                  getDirContents();
-                                }, function (error) {
-                          growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
-                          getDirContents();
-                        });
-                      });
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                        getDirContents();
+                      }, function (error) {
+                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+                getDirContents();
+              });
             };
 
             /**
@@ -230,12 +225,10 @@ angular.module('hopsWorksApp')
                           var filePath = getPath(downloadPathArray);
                           dataSetService.checkFileExist(filePath).then(
                                   function (success) {
-                                   dataSetService.fileDownload(filePath);
+                                    dataSetService.fileDownload(filePath);
                                   }, function (error) {
-                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                           });
-                          
-                          
                         }
                 );
               } else {
@@ -299,7 +292,12 @@ angular.module('hopsWorksApp')
             self.close = function () {
               $mdSidenav('right').close()
                       .then(function () {
-                        $log.debug("Closed metadata designer");
+                        $log.debug("Closed metadata designer (right)");
+                      });
+
+              $mdSidenav('left').close()
+                      .then(function () {
+                        $log.debug("Closed metadata designer (left)");
                       });
             };
 
