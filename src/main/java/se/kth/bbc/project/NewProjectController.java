@@ -20,6 +20,8 @@ import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
+import se.kth.bbc.project.services.ProjectServices;
+import se.kth.hopsworks.util.LocalhostServices;
 
 /**
  *
@@ -31,12 +33,12 @@ public class NewProjectController implements Serializable {
 
   private static final String TEMPLATE_BBC = "Biobank";
   private static final ProjectServiceEnum[] SERVICES_BBC = {
-    ProjectServiceEnum.CUNEIFORM, ProjectServiceEnum.ZEPPELIN,
-    ProjectServiceEnum.ADAM};
+    ProjectServiceEnum.ZEPPELIN,
+    ProjectServiceEnum.JOBS};
   private static final String TEMPLATE_CUSTOM = "Custom...";
-  private static final String TEMPLATE_SPARK = "Spark";
-  private static final ProjectServiceEnum[] SERVICES_SPARK = {
-    ProjectServiceEnum.SPARK};
+//  private static final String TEMPLATE_SPARK = "Spark";
+//  private static final ProjectServiceEnum[] SERVICES_SPARK = {
+//    ProjectServiceEnum.SPARK};
   private ProjectServiceEnum[] customServices; // Services selected by user
   private String chosenTemplate; // Chosen template: if custom, customServices is used
   private String newProjectName; //The name of the new project
@@ -81,7 +83,7 @@ public class NewProjectController implements Serializable {
   public List<String> getProjectTemplates() {
     List<String> values = new ArrayList<>(4);
     values.add(TEMPLATE_BBC);
-    values.add(TEMPLATE_SPARK);
+//    values.add(TEMPLATE_SPARK);
     values.add(TEMPLATE_CUSTOM);
     return values;
   }
@@ -208,6 +210,7 @@ public class NewProjectController implements Serializable {
     fileOps.mkDir(samplesPath);
   }
 
+
   //load the necessary information for displaying the project page
   private String loadNewProject(Project project) {
     return studies.fetchProject(project);
@@ -218,9 +221,9 @@ public class NewProjectController implements Serializable {
       case TEMPLATE_BBC:
         projectServices.persistServicesForProject(project, SERVICES_BBC);
         break;
-      case TEMPLATE_SPARK:
-        projectServices.persistServicesForProject(project, SERVICES_SPARK);
-        break;
+//      case TEMPLATE_SPARK:
+//        projectServices.persistServicesForProject(project, SERVICES_BBC);
+//        break;
       case TEMPLATE_CUSTOM:
         projectServices.persistServicesForProject(project, customServices);
         break;

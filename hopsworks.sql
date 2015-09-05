@@ -7,8 +7,8 @@ CREATE TABLE `bbc_group` (
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `users` (
-  `uid` INT(10) NOT NULL DEFAULT '1000',
-  `username` VARCHAR(10) NOT NULL,
+  `uid` INT(16) NOT NULL DEFAULT '1000',
+  `username` VARCHAR(16) NOT NULL,
   `password` VARCHAR(128) NOT NULL,
   `email` VARCHAR(45) DEFAULT NULL,
   `fname` VARCHAR(30) DEFAULT NULL,
@@ -350,6 +350,7 @@ CREATE TABLE `dataset_request` (
    ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
+
 -- Glassfish timers
 -- ----------------------
 
@@ -380,3 +381,27 @@ CREATE VIEW `users_groups` AS
   `g`.`group_name` AS `group_name` 
   from 
     ((`people_group` `ug` join `users` `u` on((`u`.`uid` = `ug`.`uid`))) join `bbc_group` `g` on((`g`.`gid` = `ug`.`gid`)));
+
+
+
+
+-- SSH Access -----------
+-------------------------
+
+CREATE TABLE `ssh_keys` (
+  `uid` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `public_key` varchar(2000) NOT NULL,
+  PRIMARY KEY (`uid`, `name`),
+  KEY `name_idx` (`name`),
+  KEY `uid_idx` (`uid`),
+  CONSTRAINT `FK_248_381` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
+
+
+CREATE VIEW `hops_users` AS select concat(`pt`.`team_member`,'__',`p`.`projectname`) AS `project_user` from ((`project` `p` join `project_team` `pt`) join `ssh_keys` `sk`) where `pt`.`team_member` in (select `u`.`email` from (`users` `u` join `ssh_keys` `s`) where (`u`.`uid` = `s`.`uid`)); 
+
+CREATE TABLE authorized_sshkeys (project varchar(64) not null, user varchar(48) not null, sshkey_name varchar(64) not null, primary key (project, user, sshkey_name), key idx_user(user), key idx_project(project)) engine=ndbcluster;
+
+
+

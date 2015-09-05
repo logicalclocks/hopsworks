@@ -16,6 +16,7 @@ import se.kth.bbc.security.ua.model.PeopleGroupPK;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.ua.model.Userlogins;
 import se.kth.bbc.security.ua.model.Yubikey;
+import se.kth.hopsworks.util.LocalhostServices;
 
 /**
  *
@@ -27,11 +28,12 @@ public class UserManager {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  // Strating user id from 1000 to create a POSIX compliant username: meb1000
+  // Starting user id from 1000 to create a POSIX compliant username: meb1000
+  // http://askubuntu.com/questions/405638/what-are-the-disadvantages-of-having-a-dot-in-a-user-name
   private final int STARTING_USER = 1000;
 
   // BiobankCloud prefix username prefix
-  private final String USERNAME_PREFIX = "meb";
+//  private final String USERNAME_PREFIX = "meb";
 
   /**
    * Register a new group for user.
@@ -327,12 +329,16 @@ public class UserManager {
    * @return
    */
   public User register(String fname, String lname, String email, String title,
-          String tel, String orcid, int uid, String password, String otpSecret,
+          String tel, String orcid, String password, String otpSecret,
           SecurityQuestion question, String answer, int status, int yubikey,
           String validationKey) {
 
     // assigne a username
-    String uname = USERNAME_PREFIX + uid;
+//    String uname = USERNAME_PREFIX + uid;
+
+    // http://paulgorman.org/technical/presentations/linux_username_conventions.pdf
+    // http://serverfault.com/questions/73084/what-characters-should-i-use-or-not-use-in-usernames-on-linux
+    String uname = LocalhostServices.getUsernameFromEmail(email);
 
     User user = new User();
     user.setUsername(uname);

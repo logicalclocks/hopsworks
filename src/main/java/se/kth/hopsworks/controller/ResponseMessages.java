@@ -58,6 +58,12 @@ public class ResponseMessages {
           = "Your have successfully changed your security questions and answer.";
   public final static String PROFILE_UPDATED
           = "Your profile was updated successfully.";
+    public final static String SSH_KEY_ADDED
+            = "Your ssh key was added successfully.";
+    public final static String SSH_KEY_REMOVED
+            = "Your ssh key was deleted successfully.";
+    public final static String SSH_KEYS_LISTED
+            = "Your ssh keys were listed successfully.";
 
   //project error response
   public final static String PROJECT_NOT_FOUND = "Project wasn't found.";
