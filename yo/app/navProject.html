@@ -9,20 +9,31 @@
           ? '...' : ''}}
         </a>
       </li>
+      
+      <li ng-click="projectCtrl.goToService('Zeppelin')" ng-show="projectCtrl.showZeppelin()">
+        <a>
+          Zeppelin <img class="pull-right" style="margin-left:10px" width="30" src="images/zeppelin_logo.png"/>
+        </a>
+      </li>
+      
+      <li ng-click="projectCtrl.goToJobs()" ng-show="projectCtrl.showJobs()">
+        <a>
+          Jobs <span class="sub_icon fa fa-cogs fa-lg pull-right"></span>
+        </a>
+      </li>
 
-      <li ng-repeat="typeObject in projectCtrl.alreadyChoosenServices">
-        <a href="">
-          {{typeObject}} <span class="sub_icon fa fa-globe fa-lg pull-right"></span>
+      <li ng-click="projectCtrl.goToSsh()">
+        <a>
+          Ssh <span class="sub_icon fa fa-terminal fa-lg pull-right"></span>
         </a>
       </li>
 
 
       <li ng-click="projectCtrl.goToDatasets()">
         <a>
-          DATASETS <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
+          Data Sets<span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
         </a>
       </li>
-
 
       <li ng-click="projectCtrl.projectSettingModal()" style="margin-top:40px;">
         <a>
@@ -35,8 +46,6 @@
           Members <span class="sub_icon fa fa-users fa-lg pull-right"></span>
         </a>
       </li>
-
-
     </ul>
   </nav>
 </aside>

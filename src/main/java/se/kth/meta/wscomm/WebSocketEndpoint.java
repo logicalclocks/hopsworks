@@ -1,10 +1,6 @@
 package se.kth.meta.wscomm;
 
-import se.kth.meta.db.Dbao;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -46,7 +42,7 @@ public class WebSocketEndpoint {
   private Project project;
   private String userRole;
   private HttpSession httpSession;//this might be used to check the underlying http session
-  private Dbao db;
+  @EJB
   private Protocol protocol;
 
   @OnOpen
@@ -56,32 +52,31 @@ public class WebSocketEndpoint {
     this.sender = (String) config.getUserProperties().get("user");
     this.httpSession = (HttpSession) config.getUserProperties().get(
             "httpSession");
-    this.protocol = (Protocol) config.getUserProperties().get("protocol");
 
-    logger.log(Level.SEVERE, "CONNECTED USER {0}", this.sender);
-    logger.log(Level.SEVERE, "PROJECT ID {0}", projectId);
+    logger.log(Level.INFO, "PROJECT ID {0}", projectId);
 
     this.project = getProject(projectId);
+
     if (this.project == null) {
       try {
         sendError(session, "Project does not exist.");
         session.close();
         return;
       } catch (IOException ex) {
-        logger.log(Level.SEVERE, null, ex);
+        logger.log(Level.SEVERE, ex.getMessage(), ex);
       }
     }
 
     //returns the user role in project. Null if the user has no role in project
     this.userRole = projectTeamBean.findCurrentRole(this.project, this.sender);
-    logger.log(Level.SEVERE, "User role in this projuct {0}", this.userRole);
+    logger.log(Level.INFO, "User role in this product {0}", this.userRole);
 
     if (this.userRole == null) {
       try {
         session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY,
                 "You do not have a role in this project."));
       } catch (IOException ex) {
-        logger.log(Level.SEVERE, null, ex);
+        logger.log(Level.SEVERE, ex.getMessage(), ex);
       }
     }
     session.getUserProperties().put("projectID", this.project.getId());
@@ -91,17 +86,16 @@ public class WebSocketEndpoint {
   public void message(Session session, Message msg) {
     //query string is the client I want to communicate with
     String receiver = session.getQueryString();
-    logger.log(Level.SEVERE, "HOPSWORKS: QUERY STRING {0}", session.
-            getQueryString());
-    logger.log(Level.SEVERE, "RECEIVED MESSAGE: {0}", msg.toString());
+
+    logger.log(Level.INFO, "RECEIVED MESSAGE: {0}", msg.toString());
     Message response = this.protocol.GFR(msg);
     //broadcast the response back to everybody in the same project
-    broadcast(response, session);
+    this.broadcast(response, session);
   }
 
   @OnClose
   public void onClose(Session session) {
-    logger.log(Level.SEVERE,
+    logger.log(Level.INFO,
             "HOPSWORKS: USER {0} SESSION DESTROYED sessions {1}",
             new Object[]{this.sender, session.getOpenSessions().size()});
     Message message = new TextMessage(this.sender, " Left");
@@ -121,7 +115,6 @@ public class WebSocketEndpoint {
                   new Object[]{msg, s.getUserPrincipal()});
         }
       } catch (IOException | EncodeException ex) {
-        logger.log(Level.SEVERE, null, ex);
         this.sendError(session, ex.getMessage());
       }
     }
@@ -129,7 +122,6 @@ public class WebSocketEndpoint {
 
   @OnError
   public void error(Session session, Throwable t) {
-    //t.printStackTrace();
     logger.log(Level.SEVERE, t.getMessage(), t);
   }
 

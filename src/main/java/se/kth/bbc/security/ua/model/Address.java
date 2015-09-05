@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.ua.model;
 
 import java.io.Serializable;
@@ -27,7 +22,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "address")
+@Table(name = "hopsworks.address")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Address.findAll",

@@ -9,6 +9,7 @@
 
   <div class="row">
     <div class="col-md-5" style="max-width: 400px">
+
       <input type="text"
              id="srch-term"
              ng-model="searchInput"
@@ -64,49 +65,49 @@
 
           <table class="table">
             <tbody>
-            <tr style="font-weight: bold;" ng-show="!memberCtrl.newMembers.projectTeam.length == 0">
-              <td style="width:70%;border-top:none;">Member</td>
-              <td style="width:20%;border-top:none;">Role</td>
-              <td style="width:10%;border-top:none;"></td>
-            </tr>
+              <tr style="font-weight: bold;" ng-show="!memberCtrl.newMembers.projectTeam.length == 0">
+                <td style="width:70%;border-top:none;">Member</td>
+                <td style="width:20%;border-top:none;">Role</td>
+                <td style="width:10%;border-top:none;"></td>
+              </tr>
 
-            <tr ng-show="memberCtrl.newMembers.projectTeam.length == 0">
-              <td style="border-top: none;">
-                No members added yet...
-              </td>
-            </tr>
+              <tr ng-show="memberCtrl.newMembers.projectTeam.length == 0">
+                <td style="border-top: none;">
+                  No members added yet...
+                </td>
+              </tr>
 
-            <tr ng-repeat="newMember in memberCtrl.newMembers.projectTeam">
+              <tr ng-repeat="newMember in memberCtrl.newMembers.projectTeam">
 
-              <td>
-                <div class="media">
-                  <div class="media-body" style="padding-top:8px;">
-                    <h4 class="media-heading" style="margin-bottom:0px;">
-                      <b>{{newMember.projectTeamPK.teamMember}}</b>
-                    </h4>
+                <td>
+                  <div class="media">
+                    <div class="media-body" style="padding-top:8px;">
+                      <h4 class="media-heading" style="margin-bottom:0px;">
+                        <b>{{newMember.projectTeamPK.teamMember}}</b>
+                      </h4>
+                    </div>
                   </div>
-                </div>
-              </td>
-              <td>
-                <select name="role"
-                        ng-model="newMember.teamRole"
-                        class="form-control">
-                  <option ng-repeat="role in memberCtrl.roles"
-                          value="{{role}}">
-                    {{role}}
-                  </option>
-                </select>
-              </td>
-              <td>
-                <button type="button"
-                        style="width:32px; height: 32px; border-radius: 16px;"
-                        ng-click="memberCtrl.removeMember(newMember.projectTeamPK.teamMember)"
-                        class="btn btn-danger pull-right">
-                  <em class="fa fa-trash"></em>
-                </button>
-              </td>
+                </td>
+                <td>
+                  <select name="role"
+                          ng-model="newMember.teamRole"
+                          class="form-control">
+                    <option ng-repeat="role in memberCtrl.roles"
+                            value="{{role}}">
+                      {{role}}
+                    </option>
+                  </select>
+                </td>
+                <td>
+                  <button type="button"
+                          style="width:32px; height: 32px; border-radius: 16px;"
+                          ng-click="memberCtrl.removeMember(newMember.projectTeamPK.teamMember)"
+                          class="btn btn-danger pull-right">
+                    <em class="fa fa-trash"></em>
+                  </button>
+                </td>
 
-            </tr>
+              </tr>
             </tbody>
           </table>
 
@@ -128,11 +129,8 @@
 
       </div>
 
-
     </div>
   </div>
-
-
 
   <form name="tableform"
         style="padding-top:20px;"
@@ -141,56 +139,56 @@
 
     <table class="table">
       <tbody>
-      <tr style="font-weight: bold">
-        <td style="width:75%;border-top:none;">Members</td>
-        <td style="width:18%;border-top:none;">Role</td>
-        <td style="width:7%;border-top:none;">Action</td>
-      </tr>
+        <tr style="font-weight: bold">
+          <td style="width:75%;border-top:none;">Members</td>
+          <td style="width:18%;border-top:none;">Role</td>
+          <td style="width:7%;border-top:none;">Action</td>
+        </tr>
 
-      <tr ng-repeat="member in memberCtrl.members | filter:searchInput">
-        <td ng-class="{'text-muted' : member.user.email == mainCtrl.email}">
-          <div class="media">
-            <a class="pull-left">
-              <img src="http://gravatar.com/avatar/{{mainCtrl.emailHash}}?d=mm"
-                   style="height: 50px; margin-right: 10px;border: 2px solid white;margin-top:3px;"
-                   class="profile-image img-circle">
-            </a>
+        <tr ng-repeat="member in memberCtrl.members| filter:searchInput">
+          <td ng-class="{'text-muted' : member.user.email == mainCtrl.email}">
+            <div class="media">
+              <a class="pull-left">
+                <img src="http://gravatar.com/avatar/{{mainCtrl.emailHash}}?d=mm"
+                     style="height: 50px; margin-right: 10px;border: 2px solid white;margin-top:3px;"
+                     class="profile-image img-circle">
+              </a>
 
-            <div class="media-body" style="padding-top:8px;">
-              <h4 class="media-heading" style="margin-bottom:0px;">
-                <b>{{member.user.fname}} {{member.user.lname}} <span ng-show="member.user.email == mainCtrl.email"> (me)</span></b>
-              </h4>
+              <div class="media-body" style="padding-top:8px;">
+                <h4 class="media-heading" style="margin-bottom:0px;">
+                  <b>{{member.user.fname}} {{member.user.lname}} <span ng-show="member.user.email == mainCtrl.email"> (me)</span></b>
+                </h4>
 
-              <p><span style="font-size:12px;">{{member.user.email}}</span></p>
+                <p><span style="font-size:12px;">{{member.user.email}}</span></p>
+              </div>
             </div>
-          </div>
-        </td>
-        <td>
-          <select name="role"
-                  ng-options="role for role in memberCtrl.roles"
-                  ng-model="member.teamRole"
-                  ng-change="memberCtrl.selectChanged($index,member.user.email,member.teamRole)"
-                  ng-disabled="member.user.email == mainCtrl.email"
-                  class="form-control">
-          </select>
+          </td>
+          <td>
+            <select name="role"
+                    ng-options="role for role in memberCtrl.roles"
+                    ng-model="member.teamRole"
+                    ng-change="memberCtrl.selectChanged($index, member.user.email, member.teamRole)"
+                    ng-disabled="member.user.email == mainCtrl.email"
+                    class="form-control">
+            </select>
 
-          <span style="color: green;" ng-show="memberCtrl.showThisIndex == $index">
-            <i class="fa fa-check-square-o"></i>
-            Saved!
-          </span>
+            <span style="color: green;" ng-show="memberCtrl.showThisIndex == $index">
+              <i class="fa fa-check-square-o"></i>
+              Saved!
+            </span>
 
 
-        </td>
-        <td>
-          <button type="button"
-                  style="width:32px; height: 32px; border-radius: 16px;"
-                  ng-disabled="member.user.email == mainCtrl.email"
-                  ng-click="memberCtrl.deleteMemberFromBackend(member.user.email)"
-                  class="btn btn-danger pull-right">
-            <em class="fa fa-trash"></em>
-          </button>
-        </td>
-      </tr>
+          </td>
+          <td>
+            <button type="button"
+                    style="width:32px; height: 32px; border-radius: 16px;"
+                    ng-disabled="member.user.email == mainCtrl.email"
+                    ng-click="memberCtrl.deleteMemberFromBackend(member.user.email)"
+                    class="btn btn-danger pull-right">
+              <em class="fa fa-trash"></em>
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
   </form>

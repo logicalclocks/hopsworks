@@ -92,7 +92,6 @@ textarea.form-control {
   right: 0;
 }
 
-
 .text-danger {
   color: #f05050;
 }
@@ -144,7 +143,7 @@ textarea.form-control {
   line-height: 0;
   font-size: 16px;
   color: #929292;
-  margin: -20px -20px 20px;
+  margin: -23px -23px 23px;
   padding: 27px 23px 22px;
   font-weight: 400;
   background-color: #fafbfc;

@@ -1,42 +1,53 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.hopsworks.controller;
 
-import javax.ejb.Stateless;
-import javax.ws.rs.core.Response;
+import javax.validation.ValidationException;
 import se.kth.bbc.lims.Constants;
-import se.kth.hopsworks.rest.AppException;
 
 /**
- *
+ * Validator for folder names. A folder name is valid if:
+ * <ul>
+ * <li> It is not empty. </li>
+ * <li> It is not longer than 24 characters.</li>
+ * <li> It does not end with a dot.</li>
+ * <li> It does not contain any of the disallowed characters space, /, \, ?, *,
+ * :, |, ', \", &lt;, &gt; >, %, (, ), &, ;, #</li>
+ * </ul>
+ * <p>
  * @author Ermias
  */
-@Stateless
 public class FolderNameValidator {
 
-  public boolean isValidName(String name) throws AppException {
+  /**
+   * Check if the given String is a valid folder name.
+   * <p>
+   * @param name
+   * @return
+   * @throws ValidationException If the given String is not a valid folder name.
+   */
+  public static boolean isValidName(String name) {
+    String reason = "";
+    boolean valid = true;
     if (name == null || name.isEmpty()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.FOLDER_NAME_NOT_SET);
-    }
-    if (name.length() > 24) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.FOLDER_NAME_TOO_LONG);
-    }
-    if (name.endsWith(".")) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.FOLDER_NAME_ENDS_WITH_DOT);
-    }
-    for (char c : Constants.FILENAME_DISALLOWED_CHARS.toCharArray()) {
-      if (name.contains("" + c)) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
-                + Constants.FILENAME_DISALLOWED_CHARS);
+      valid = false;
+      reason = ResponseMessages.FOLDER_NAME_NOT_SET;
+    } else if (name.length() > 24) {
+      valid = false;
+      reason = ResponseMessages.FOLDER_NAME_TOO_LONG;
+    } else if (name.endsWith(".")) {
+      valid = false;
+      reason = ResponseMessages.FOLDER_NAME_ENDS_WITH_DOT;
+    } else {
+      for (char c : Constants.FILENAME_DISALLOWED_CHARS.toCharArray()) {
+        if (name.contains("" + c)) {
+          valid = false;
+          reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
+                  + Constants.FILENAME_DISALLOWED_CHARS;
+        }
       }
     }
-    return true;
+    if (!valid) {
+      throw new ValidationException(reason);
+    }
+    return valid;
   }
 }

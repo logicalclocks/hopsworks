@@ -5,20 +5,16 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import se.kth.bbc.lims.Constants;
 
 /**
@@ -32,34 +28,25 @@ public class FileSystemOperations {
   //TODO: use fs.copyFromLocalFile
   private static final Logger logger = Logger.getLogger(
           FileSystemOperations.class.getName());
-  private FileSystem fs;
+  private DistributedFileSystem dfs;
   private Configuration conf;
 
   @PostConstruct
   public void init() {
     try {
-      fs = getFs();
+      dfs = getFs();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
     }
   }
 
-  /**
-   * Copy a file to HDFS. The file will end up at <i>location</i>. The
-   * InputStream represents the file.
-   *
-   * @param location Location to which the file should be copied. Includes the
-   * filename.
-   * @param is The inputstream representing the file.
-   * @throws IOException
-   * @throws URISyntaxException
-   */
-  public void copyToHDFS(Path location, InputStream is) throws IOException,
-          URISyntaxException {
-    // Write file
-    if (!fs.exists(location)) {
-      try (FSDataOutputStream os = fs.create(location, false)) {
-        IOUtils.copyBytes(is, os, 131072, true); //TODO: check what this 131072 means...
+  @PreDestroy
+  public void closeFs() {
+    if (dfs != null) {
+      try {
+        dfs.close();
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, "Error while closing file system.", ex);
       }
     }
   }
@@ -69,19 +56,23 @@ public class FileSystemOperations {
    *
    * @param location The location of the file.
    * @return An InputStream for the file.
+   * @throws java.io.IOException When an error occurs upon HDFS opening.
    */
   public InputStream getInputStream(Path location) throws IOException {
-    return fs.open(location, 1048576); //TODO: undo hard coding of weird constant here...
+    return dfs.open(location, 1048576); //TODO: undo hard coding of weird constant here...
   }
 
   /**
    * Create a new folder on the given path. Equivalent to mkdir -p.
-   *
+   * <p>
    * @param location The path to the new folder, its name included.
    * @return True if successful.
+   * <p>
+   * @throws java.io.IOException
    */
   public boolean mkdir(Path location) throws IOException {
-    return fs.mkdirs(location, null);
+
+    return dfs.mkdirs(location, null);
   }
 
   /**
@@ -94,14 +85,19 @@ public class FileSystemOperations {
    * @throws IOException
    */
   public boolean rm(Path location, boolean recursive) throws IOException {
-    if (fs.exists(location)) {
-      return fs.delete(location, recursive);
-    } else {
-      return true;
+    if (dfs.exists(location)) {
+      return dfs.delete(location, recursive);
     }
+    return true;
   }
 
-  private FileSystem getFs() throws IOException {
+  /**
+   * Get the HDFS file system with the Hadoop config files.
+   * <p>
+   * @return
+   * @throws IOException
+   */
+  private DistributedFileSystem getFs() throws IOException {
 
     String coreConfDir = System.getenv("HADOOP_CONF_DIR");
     //If still not found: throw exception
@@ -139,13 +135,22 @@ public class FileSystemOperations {
     conf.addResource(hadoopPath);
     conf.addResource(yarnPath);
     conf.addResource(hdfsPath);
+    //Need a different type of instantiation to get statistics object initialized
+    //TODO: here we could use .get(Configuration conf, String user). FileSystem then will have to be instantiated, opened and closed on every method call. Now it's just done on EJB instance creation.
     FileSystem fs = FileSystem.get(conf);
-    return fs;
+    return (DistributedFileSystem) fs;
   }
 
+  /**
+   * Get the contents of the file at the given path.
+   * <p>
+   * @param file
+   * @return
+   * @throws IOException
+   */
   public String cat(Path file) throws IOException {
     StringBuilder out = new StringBuilder();
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(dfs.
             open(file)));) {
       String line;
       line = br.readLine();
@@ -157,12 +162,29 @@ public class FileSystemOperations {
     }
   }
 
-  public void copyFromLocal(Path source, Path destination) throws IOException {
-    fs.copyFromLocalFile(false, source, destination);
+  /**
+   * Copy a file from one filesystem to the other.
+   * <p>
+   * @param deleteSource If true, the file at the source path will be deleted
+   * after copying.
+   * @param source
+   * @param destination
+   * @throws IOException
+   */
+  public void copyFromLocal(boolean deleteSource, Path source, Path destination)
+          throws IOException {
+    dfs.copyFromLocalFile(deleteSource, source, destination);
   }
 
+  /**
+   * Move a file in HDFS from one path to another.
+   * <p>
+   * @param source
+   * @param destination
+   * @throws IOException
+   */
   public void moveWithinHdfs(Path source, Path destination) throws IOException {
-    fs.rename(source, destination);
+    dfs.rename(source, destination);
   }
 
   /**
@@ -173,18 +195,25 @@ public class FileSystemOperations {
    * @throws IOException
    */
   public void copyInHdfs(Path src, Path dst) throws IOException {
-    Path[] srcs = FileUtil.stat2Paths(fs.globStatus(src), src);
-    if (srcs.length > 1 && !fs.isDirectory(dst)) {
+    Path[] srcs = FileUtil.stat2Paths(dfs.globStatus(src), src);
+    if (srcs.length > 1 && !dfs.isDirectory(dst)) {
       throw new IOException("When copying multiple files, "
               + "destination should be a directory.");
     }
     for (Path src1 : srcs) {
-      FileUtil.copy(fs, src1, fs, dst, false, conf);
+      FileUtil.copy(dfs, src1, dfs, dst, false, conf);
     }
   }
 
+  /**
+   * Copy the file at the HDFS source path to the local destination.
+   * <p>
+   * @param src
+   * @param dst
+   * @throws IOException
+   */
   public void copyToLocal(Path src, Path dst) throws IOException {
-    fs.copyToLocalFile(src, dst);
+    dfs.copyToLocalFile(src, dst);
   }
 
 }

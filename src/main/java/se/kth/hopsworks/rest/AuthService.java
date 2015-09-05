@@ -1,7 +1,5 @@
 package se.kth.hopsworks.rest;
 
-import se.kth.hopsworks.controller.ResponseMessages;
-import se.kth.hopsworks.controller.UserStatusValidator;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -20,6 +18,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.hopsworks.controller.ResponseMessages;
+import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserDTO;
@@ -78,13 +78,16 @@ public class AuthService {
     JsonResponse json = new JsonResponse();
     Users user = userBean.findByEmail(email);
 
+    req.getServletContext().log("USER: " + user);
     req.getServletContext().log("1 step: " + email);
 
     //only login if not already logged in...
     if (sc.getUserPrincipal() == null) {
       if (user != null && statusValidator.checkStatus(user.getStatus())) {
         try {
-          req.getServletContext().log("going to login " + user.getStatus());
+
+          req.getServletContext().log("going to login. User status: " + user.
+                  getStatus());
           req.login(email, password);
           req.getServletContext().log("3 step: " + email);
           userController.resetFalseLogin(user);

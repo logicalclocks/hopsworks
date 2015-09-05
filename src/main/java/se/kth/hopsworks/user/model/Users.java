@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.hopsworks.user.model;
 
 import java.io.Serializable;
@@ -27,13 +22,15 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.bbc.security.ua.SecurityQuestion;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  * @author André<amore@kth.se>
  * @author Ermias<ermiasg@kth.se>
  */
 @Entity
-@Table(name = "users")
+@Table(name = "hopsworks.users")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Users.findAll",
@@ -92,7 +89,7 @@ public class Users implements Serializable {
 
   public static final int ALLOWED_FALSE_LOGINS = 5;
   //hopsworks user prefix username prefix
-  public static final String USERNAME_PREFIX = "meb";
+//  public static final String USERNAME_PREFIX = "meb";
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -150,7 +147,7 @@ public class Users implements Serializable {
   @Size(max = 20)
   @Enumerated(EnumType.STRING)
   @Column(name = "security_question")
-  private SecurityQuestions securityQuestion;
+  private SecurityQuestion securityQuestion;
   @Size(max = 128)
   @Column(name = "security_answer")
   private String securityAnswer;
@@ -173,7 +170,7 @@ public class Users implements Serializable {
   @NotNull
   @Column(name = "status")
   private int status;
-  @JoinTable(name = "people_group",
+  @JoinTable(name = "hopsworks.people_group",
           joinColumns = {
             @JoinColumn(name = "uid",
                     referencedColumnName = "uid")},
@@ -322,11 +319,11 @@ public class Users implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public SecurityQuestions getSecurityQuestion() {
+  public SecurityQuestion getSecurityQuestion() {
     return securityQuestion;
   }
 
-  public void setSecurityQuestion(SecurityQuestions securityQuestion) {
+  public void setSecurityQuestion(SecurityQuestion securityQuestion) {
     this.securityQuestion = securityQuestion;
   }
 
@@ -420,4 +417,8 @@ public class Users implements Serializable {
     return "se.kth.hopsworks.model.Users[ uid=" + uid + " ]";
   }
 
+  public User asUser() {
+    return new User(uid, username, password, activated, falseLogin, status,
+            isonline ? 1 : 0);
+  }
 }

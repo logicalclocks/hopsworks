@@ -51,6 +51,12 @@
       <type>jar</type>
     </dependency>
     <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.10</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
       <version>7.0</version>
@@ -76,9 +82,28 @@
       <artifactId>json</artifactId>
       <version>20140107</version>
     </dependency>
+    <!--Zeppelin dependencies -->
+    <dependency>
+      <groupId>org.apache.zeppelin</groupId>
+      <artifactId>zeppelin</artifactId>
+      <version>0.5.0-incubating</version>
+      <type>pom</type>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.zeppelin</groupId>
+      <artifactId>zeppelin-zengine</artifactId>
+      <version>0.5.0-incubating</version>
+    </dependency>
+    <dependency>		
+      <groupId>org.apache.zeppelin</groupId>		
+      <artifactId>zeppelin-web</artifactId>		
+      <version>0.5.0-incubating</version>		
+      <type>war</type>		
+    </dependency>
+    <!--End of Zeppelin dependencies -->
   </dependencies>
   <build>
-    <finalName>hop-dashboard</finalName>
+    <finalName>hopsworks</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -105,7 +130,22 @@
           </execution>
         </executions>
       </plugin>
-      
+      <!--maven war plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>2.6</version>
+        <configuration>
+          <overlays>
+            <overlay>
+              <groupId>org.apache.zeppelin</groupId>
+              <artifactId>zeppelin-web</artifactId>
+              <type>war</type>
+              <targetPath>zeppelin</targetPath>
+            </overlay>
+          </overlays>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-clean-plugin</artifactId>
         <version>2.5</version>
@@ -130,7 +170,6 @@
             </resource>
           </webResources>
         </configuration>
-
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -184,7 +223,6 @@
           </dependency>
         </dependencies>
       </plugin>
-      
     </plugins>
   </build>
 

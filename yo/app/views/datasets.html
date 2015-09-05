@@ -1,318 +1,511 @@
 <div ng-controller="MainCtrl as mainCtrl">
-    <div ng-include="'nav.html'"></div>
-    <div id="wrapper"
-         class="toggled"
-         ng-controller="DatasetsCtrl as datasetsCtrl">
-        <div class="overlay"></div>
-        <section layout="row" flex="">
+  <div ng-include="'nav.html'"></div>
 
-            <md-content flex="" layout-padding="">
-                <div ng-include="'navProject.html'"></div>
-                <div layout="column" layout-fill="" layout-align="top center">
-                    <div class="content-wrapper">
-                        <h3 id="projectBread" style="display: none;"> {{datasetsCtrl.currentProject.projectName}} /{{datasetsCtrl.currentDataSet}}</h3>
-                        <div class="row">
-                            <div class="col-lg-2" style="max-width: 250px">
-                        <div class="ibox float-e-margins">
-                            <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
-                                <div class="file-manager">
-                                    <h5 style="margin: 0px; font-weight: bold; color: #2e353d;">Filter: </h5>
-                                    <a class="file-control active">All</a>
-                                    <a class="file-control">Last month</a>
-                                    <a class="file-control">Today</a>
+  <div id="wrapper"
+       class="toggled"
+       ng-controller="DatasetsCtrl as datasetsCtrl">
 
-                                    <div class="hr-line-dashed"></div>
-                                    <div class="btn-group"
-                                         style="width: 100%;">
-                                        <button style="width: 100%;"
-                                                ng-click="datasetsCtrl.newDataSetModal()"
-                                                class="btn btn-warning">
-                                            New dataset
-                                        </button>
-                                    </div>
-                                    <div class="btn-group"
-                                         style="width: 100%; margin-top: 10px;">
-                                        <button style="width: 100%;"
-                                                ng-click="datasetsCtrl.toggleRight()"
-                                                class="btn btn-primary">
-                                            Metadata designer
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ibox-content"></div>
+    <div ng-controller="MetadataCtrl as metadataCtrl">
+
+      <div class="overlay"></div>
+      <section layout="row" flex="">
+
+        <md-content flex="" layout-padding="">
+          <div ng-include="'navProject.html'"></div>
+          <div layout="column" layout-fill="" layout-align="top center">
+            <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl">
+              <h3 id="projectBread" style="display: none;"> {{projectCtrl.currentProject.projectName}} /{{datasetsCtrl.pathArray[0]}}</h3>
+              <div class="row">
+                <div class="col-lg-2" style="max-width: 250px">
+                  <div class="ibox float-e-margins">
+                    <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
+                      <div class="file-manager">
+                        <h5 style="margin: 0px; font-weight: bold; color: #2e353d;">Filter: </h5>
+                        <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined" class="file-control active">All</a>
+                        <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true" class="file-control">Shared</a>
+                        <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true" class="file-control">Exclusive</a>
+                        <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false" class="file-control">Pending</a>
+
+                        <div class="hr-line-dashed"></div>
+                        <div class="btn-group"
+                             style="width: 100%;">
+                          <button style="width: 100%;"
+                                  ng-click="datasetsCtrl.newDataSetModal()"
+                                  class="btn btn-warning">
+                            New dataset
+                          </button>
                         </div>
-                    </div>
-                            <div class="col-lg-10">
-                        <div ng-repeat="dataset in datasetsCtrl.datasets">
-                            <div ng-if="($index % 6 == 0) && ($index !== 0)" class="row"></div>
-                            <div ng-click="projectCtrl.goToSpecificDataset(dataset.name)"
-                                 ng-init="(iscollapsed$index) = true"
-                                 class="file-box"
-                                 ng-mouseenter="(iscollapsed$index) = false"
-                                 ng-mouseleave="(iscollapsed$index) = true"
-                                 context-menu
-                                 data-target="menu-{{ $index}}">
-                                <div class="file">
-                                    <a>
-                                        <span class="corner"></span>
-
-                                        <div class="icon">
-                                            <i class="fa fa-file"></i>
-                                        </div>
-                                        <div class="file-name">
-                                            {{dataset.name}}
-                                            <br>
-                                            <small><b>Added:</b> {{dataset.modification| date:'medium'}}</small>
-                                            <br/>
-
-                                            <div collapse="(iscollapsed$index)" style="text-decoration: none;">
-                                                <small><b>Modified:</b> {{dataset.modification| date:'medium'}}</small>
-                                                <br/>
-                                                <small><b>Created:</b> April 24, 2015</small>
-                                                <br/>
-                                                <small><b>Description:</b> A dataset that contains {{dataset.name}} info</small>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="dropdown position-fixed" id="menu-{{$index}}">
-                                <ul class="dropdown-menu dropdown-amore">
-                                    <li>
-                                        <a class="pointer"
-                                           role="menuitem"
-                                           tabindex="1"
-                                           ng-click="panel.highlight = true">
-                      <span><i class="fa fa-file-archive-o"></i>
-                        Compress</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="pointer"
-                                           role="menuitem"
-                                           tabindex="2"
-                                           ng-click="">
-                      <span><i class="fa fa-share-alt"></i>
-                        Share...</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="pointer"
-                                           role="menuitem"
-                                           tabindex="3"
-                                           ng-click="datasetsCtrl.deleteFile(dataset.name)">
-                      <span><i class="fa fa-trash"></i>
-                        Remove</span>
-                                        </a>
-                                    </li>
-
-                                </ul>
-                            </div>
+                        <div class="btn-group"
+                             style="width: 100%; margin-top: 10px;">
+                          <button style="width: 100%;"
+                                  ng-click="datasetsCtrl.toggleRight()"
+                                  class="btn btn-primary">
+                            Metadata designer
+                          </button>
                         </div>
+                      </div>
                     </div>
-                        </div>
-                    </div>
+                    <div class="ibox-content"></div>
+                  </div>
                 </div>
-                <div flex=""></div>
-            </md-content>
-            <!-- Slideout - Metadata -->
-            <md-sidenav class="md-sidenav-right md-whiteframe-z2"
-                                        md-component-id="right"
-                                        style="margin-top: 0px;">
+                <div class="col-lg-10">
+                  <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared:datasetsCtrl.shared, status: datasetsCtrl.status} | orderBy: 'name'">
+                    <div ng-if="($index % 6 == 0) && ($index !== 0)" class="row"></div>
+                    <div ng-click="projectCtrl.browseDataset(dataset)"
+                         ng-init="(iscollapsed$index) = true"
+                         class="file-box"
+                         ng-mouseenter="(iscollapsed$index) = false"
+                         ng-mouseleave="(iscollapsed$index) = true"
+                         context-menu
+                         data-target="menu-{{ $index}}">
+                      <div class="file">
+                        <a>
+                          <span class="corner"></span>
 
-                <md-toolbar class="md-theme-light"
-                                            style="background-color: #f1f1f1;color: gray; height: 39px; min-height: 39px;">
+                          <div class="icon">
+                            <i class="fa fa-file"></i>
+                          </div>
+                          <div class="file-name">
+                            {{dataset.name}}
+                            <br>
+                            <small><b>Added:</b> {{dataset.modification| date:'medium'}}</small>
+                            <br/>
 
-                                    <div class="md-toolbar-tools">
-                                        <h2 style="margin:0;">
-                                            <span>Metadata manager</span>
-                                        </h2>
-                                        <span flex></span>
-                                        <button style="font-size:15px;height:28px;color:white;padding-top: 3px; padding-right: 3px"
-                                                ng-click="datasetsCtrl.close()"
-                                                class="btn btn-success">
-                                            <i class="fa fa-save"></i>
-                                            Save
-                                        </button>
-                                    </div>
-                                </md-toolbar>
+                            <div collapse="(iscollapsed$index)" style="text-decoration: none;">
+                              <small><b>Modified:</b> {{dataset.modification| date:'medium'}}</small>
+                              <br/>
+                              <small><b>Created:</b> April 24, 2015</small>
+                              <br/>
+                              <small><b>Description:</b> A dataset that contains {{dataset.name}} info</small>
+                            </div>
+                          </div>
+                        </a>
+                      </div>
+                    </div>
+                    <div class="dropdown position-fixed" id="menu-{{$index}}">
+                      <ul class="dropdown-menu dropdown-amore">
+                        <li>
+                          <a class="pointer"
+                             role="menuitem"
+                             tabindex="1"
+                             ng-click="panel.highlight = true">
+                            <span><i class="fa fa-file-archive-o"></i>
+                              Compress</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a class="pointer"
+                             role="menuitem"
+                             tabindex="2"
+                             ng-click="datasetsCtrl.share(dataset.name)">
+                            <span><i class="fa fa-share-alt"></i>
+                              Share...</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a class="pointer"
+                             role="menuitem"
+                             tabindex="3"
+                             ng-click="metadataCtrl.attachTemplate(dataset); $event.stopPropagation();">
+                            <span><i class="fa fa-upload"></i>
+                              Add metadata template</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a class="pointer"
+                             role="menuitem"
+                             tabindex="4"
+                             ng-click="metadataCtrl.detachTemplate(dataset); $event.stopPropagation();">
+                            <span><i class="fa fa-download"></i>
+                              Remove metadata template</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a class="pointer"
+                             role="menuitem"
+                             tabindex="5"
+                             ng-click="datasetsCtrl.select($index, dataset); 
+                               metadataCtrl.setMetadataTemplate(dataset);
+                               datasetsCtrl.toggleLeft(); 
+                               $event.stopPropagation();">
+                            <span><i class="fa fa-share-alt"></i>
+                              Add metadata</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a class="pointer"
+                             role="menuitem"
+                             tabindex="6"
+                             ng-click="datasetsCtrl.deleteFile(dataset.name)">
+                            <span><i class="fa fa-trash"></i>
+                              Remove</span>
+                          </a>
+                        </li>
 
-                <md-content layout-padding style="overflow: hidden; padding: 15px;">
-                                    <div class="row">
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div flex=""></div>
+        </md-content>
+        <!-- Slideout - METADATA DESIGNER -->
+        <md-sidenav class="md-sidenav-right md-whiteframe-z2"
+                    md-component-id="right"
+                    style="margin-top: 0px;">
 
+          <md-toolbar class="md-theme-light"
+                      style="background-color: #f1f1f1;color: gray; height: 39px; min-height: 39px;">
 
-                                        <!-- Left menu -->
-                                        <div class="col-md-2" style="height: 100%; border-right: 1px dashed lightgrey; min-width: 233px; max-width: 233px">
-                                            <button class="btn btn-info"
-                                                    style="width: 100%;margin-top: -7px;border-radius: 0px; padding:10px;"
-                                                    data-toggle="collapse"
-                                                    data-target="#collapseNewTemplate"
-                                                    aria-expanded="false"
-                                                    aria-controls="collapseNewTemplate">
-                                                <i class="fa fa-plus fa-lg pull-left" style="width: 30px;margin-top: 4px;"></i>
-                                                <span class="pull-left">New template</span>
-                                            </button>
+            <div class="md-toolbar-tools">
+              <h2 style="margin:0;">
+                <span>Metadata designer</span>
+              </h2>
+              <span flex></span>
+              <button style="font-size:15px;height:28px;color:white;padding-top: 3px; padding-right: 3px"
+                      ng-click="metadataCtrl.storeTemplate('true')"
+                      class="btn btn-success">
+                <i class="fa fa-save"></i>
+                Save
+              </button>
+            </div>
+          </md-toolbar>
 
+          <md-content layout-padding style="overflow: hidden; padding: 15px;">
+            <div class="row">
 
-                                            <div style="width: 100%; background-color: #46b8da; height: 50px;"
-                                                 class="collapse"
-                                                 id="collapseNewTemplate">
-                                                <div class="input-group">
-                                                    <input type="text"
-                                                           ng-model="datasetsCtrl.newTemplateName"
-                                                           style="margin:10px; height: 30px; width: 145px;border: medium none; text-indent: 5px;"
-                                                           placeholder="Template name..."/>
-                                                    <button class="btn btn-success"
-                                                            ng-click="datasetsCtrl.addNewTemplate()"
-                                                            style="border-radius: 0px; margin-left: -13px;margin-top: -3px;  height: 30px;">
-                                                        <i class="fa fa-floppy-o fa-lg"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
+              <!-- Left menu -->
+              <div class="col-md-2" style="height: 100%; border-right: 1px dashed lightgrey; min-width: 233px; max-width: 233px">
+                <button class="btn btn-primary"
+                        style="width: 100%; margin-top: -7px; border-radius: 0px; padding:10px;"
+                        data-toggle="collapse"
+                        data-target="#collapseNewTemplate"
+                        aria-expanded="false"
+                        aria-controls="collapseNewTemplate">
+                  <i class="fa fa-plus fa-lg pull-left" style="width: 30px;margin-top: 4px;"></i>
+                  <span class="pull-left">New template</span>
+                </button>
 
-                                            <button class="btn btn-info"
-                                                    style="width: 100%;border-radius: 0px; padding:10px;"
-                                                    data-toggle="collapse"
-                                                    data-target="#collapseExtendTemplate"
-                                                    aria-expanded="false"
-                                                    aria-controls="collapseExtendTemplate">
-                                                <i class="fa fa-plus fa-lg pull-left" style="width: 30px;margin-top: 4px;"></i>
-                                                <span class="pull-left">Extend template</span>
-                                            </button>
+                <div style="width: 100%; height: 50px; background-color: #f5f5f5;"
+                     class="collapse"
+                     id="collapseNewTemplate">
+                  <div class="input-group-btn search-panel">
+                    <input type="text"
+                           ng-model="metadataCtrl.newTemplateName"
+                           style="margin:10px; height: 30px; width: 145px;border-radius: 0; text-indent: 5px;color: black"
+                           placeholder="Template name..."/>
+                    <button class="btn btn-success"
+                            ng-click="metadataCtrl.addNewTemplate()"
+                            style="border-radius: 0px; margin-left: -13px;margin-top: -3px; height: 30px;">
+                      <i class="fa fa-floppy-o fa-lg"></i>
+                    </button>
+                  </div>
+                </div>
 
-                                            <div style="width: 100%; background-color: #46b8da; height: 50px;"
-                                                 class="collapse"
-                                                 id="collapseExtendTemplate">
-                                                <div class="input-group styleSelect">
-                                                    <input type="text"
-                                                           ng-model="datasetsCtrl.newTemplateName"
-                                                           style="margin:10px; height: 30px; width: 145px;border: medium none; text-indent: 5px;"
-                                                           placeholder="Template name..."/>
-                                                    <button class="btn btn-success"
-                                                            ng-click="datasetsCtrl.extendTemplate()"
-                                                            style="border-radius: 0px; margin-left: -13px;margin-top: -3px;  height: 30px;">
-                                                        <i class="fa fa-floppy-o fa-lg"></i>
-                                                    </button>
+                <button class="btn btn-primary"
+                        style="width: 100%;border-radius: 0px; padding:10px;"
+                        data-toggle="collapse"
+                        data-target="#collapseExtendTemplate"
+                        aria-expanded="false"
+                        aria-controls="collapseExtendTemplate">
+                  <i class="fa fa-plus fa-lg pull-left" style="width: 30px;margin-top: 4px;"></i>
+                  <span class="pull-left">Extend template</span>
+                </button>
 
-                                                    <select name="extendedFromName"
-                                                            ng-model="extendedFrom"
-                                                            class="form-control"
-                                                            style="border-radius: 0px;margin: 9px;width: 188px;margin-top:0px;">
-                                                        <option ng-repeat="template in datasetsCtrl.availableTemplates"
-                                                                value="{{template.id}}">
-                                                            {{template.name}}
-                                                        </option>
-                                                    </select>
+                <div style="width: 100%; height: 50px; background-color: #f5f5f5;"
+                     class="collapse"
+                     id="collapseExtendTemplate">
+                  <div class="input-group-btn search-panel">
+                    <input type="text"
+                           ng-model="metadataCtrl.extendedTemplateName"
+                           style="margin:10px; height: 30px; width: 145px;border-radius: 0; text-indent: 5px; color:black"
+                           placeholder="Template name..."/>
+                    <button class="btn btn-success"
+                            ng-click="metadataCtrl.extendTemplate()"
+                            style="border-radius: 0px; margin-left: -13px;margin-top: -3px;  height: 30px;">
+                      <i class="fa fa-floppy-o fa-lg"></i>
+                    </button>
 
-                                                </div>
-                                            </div>
+                    <select name="extendedFromName"
+                            ng-model="metadataCtrl.extendedFrom"
+                            class="form-control"
+                            style="border-radius: 0px;margin: 9px;width: 188px;margin-top:0px;">
+                      <option ng-repeat="template in datasetsCtrl.availableTemplates"
+                              value="{{template.id}}">
+                        {{template.name}} 
+                      </option>
+                    </select>
+                  </div>
+                </div>
 
-                                            <button class="btn btn-info"
-                                                    style="width: 100%;border-radius: 0px; padding:10px;margin-top: 10px; background-color:#31b0d5;">
-                                                <span class="pull-left" style="font-weight: bold;margin-left: 10px;">Available templates</span>
-                                            </button>
+                <button class="btn btn-primary"
+                        style="width: 100%;border-radius: 0px; padding:10px;"
+                        ng-click="metadataCtrl.importTemplate()">
+                  <i class="fa fa-plus fa-lg pull-left" style="width: 30px;margin-top: 4px;"></i>
+                  <span class="pull-left">Upload template</span>
+                </button>
 
-                                            <div>
-                                                <ul class="datasetList">
-                                                    <li ng-repeat="template in datasetsCtrl.availableTemplates"
-                                                        ng-click="datasetsCtrl.fetchTemplate(template.id)">
-                            <span>
-                              <i class="fa fa-check pull-left"
-                                 style="color: lightgreen; width: 15px; margin-top:3px;"
-                                 ng-if="datasetsCtrl.currentTemplateID == template.id"></i>
+                <button class="btn btn-primary"
+                        style="width: 100%;border-radius: 0px; padding:10px;margin-top: 10px;">
+                  <span class="pull-left" style="font-weight: bold;margin-left: 10px;">Available templates</span>
+                </button>
 
-                              {{template.name}}
+                <div><!--ng-mouseover="metadataCtrl.toggleTemplate(template)" 
+                        ng-mouseleave="metadataCtrl.toggleTemplate(template)"-->
+                  <!--SEARCH FOR TEMPLATES-->
+                  <div class="list-group-item"
+                       style="height:55px; background-color: #f5f5f5;">
+                    <div class="input-group-btn search-panel pull-left"
+                         style="width: 83px;">
+                    </div>
+                    <input type="hidden" name="search_param" value="all" id="search_param">
+                    <input type="text" class="form-control pull-left" ng-model="searchTemplate"
+                           style="width: 175px; border-radius: 0;"
+                           name="x" placeholder="Find a template...">
+                  </div>
+                  <ul class="datasetList btn-primary">
+                    <li ng-repeat="template in metadataCtrl.availableTemplates| filter: searchTemplate: false"
+                        ng-click="metadataCtrl.toggleTemplate(template);
+                                          metadataCtrl.fetchTemplate(template.id)"
+                        context-menu
+                        data-target="templateMenu-{{$index}}"
+                        tooltip="{{template.name}}">
+                      <span>
+                        <!--when the user clicks on a template name a check appears-->
+                        <i class="fa fa-check pull-left"
+                           style="color: lightgreen; width: 15px; margin-top:3px;"
+                           ng-if="template.showing"></i>
 
-                              <button class="btn btn-danger pull-right"
-                                      ng-click="datasetsCtrl.removeTemplate(template.id)"
-                                      style="margin-top: 1px; width: 20px; height: 20px;padding:2px;">
-                                  <i class="fa fa-times"></i>
-                              </button>
-                            </span>
-                                                    </li>
+                        <!--onaftersave="metadataCtrl.updateTemplateName(template)"-->
+                        <a href="#" editable-text="template.name" buttons="no"
+                           style="color:white; font-size: 14px;"
+                           ng-mousedown="metadataCtrl.editingTemplate = 'true';"
+                           ng-click="$event.stopPropagation()"
+                           onaftersave="metadataCtrl.updateTemplateName(template)"
+                           blur="submit">
+                          {{template.name| cut:true:10:' ...'}}
+                        </a>
 
-                                                </ul>
+                        <button class="btn btn-danger pull-right"
+                                ng-click="metadataCtrl.removeTemplate(template.id)"
+                                ng-if="template.showing"
+                                tooltip="Delete the template"
+                                style="margin-top: 1px; width: 20px; height: 20px;padding:2px;">
+                          <i class="fa fa-times"></i>
+                        </button>
+                        <button class="btn pull-right"
+                                ng-if="template.showing"
+                                ng-click="$event.stopPropagation();"
+                                style="background-color: #f5f5f5; margin-top: 1px; width: 20px; height: 20px;padding:2px;">
+                          <a class="pointer"
+                             role="menuitem"
+                             tabindex="1"
+                             download="template.json"
+                             tooltip="Download the template"
+                             ng-mousedown="metadataCtrl.createDownloadURL(template);"
+                             ng-href="{{metadataCtrl.url}}">
+                            <span><i class="fa fa-download"></i></span>
+                          </a>
+                        </button>
+                      </span>
+                    </li>
+                  </ul>
 
+                  <ul class="datasetList btn-primary"
+                      style="margin-top:10px;"
+                      ng-if="metadataCtrl.currentTemplateID !== - 1 && !metadataCtrl.editingTemplate">
+                    <li ng-click="metadataCtrl.addNewList()">
+                      <span>
+                        Add table
+                        <button class="btn btn-success pull-right"
+                                style="margin-top: 1px; width: 20px; height: 20px;padding:2px;">
+                          <i class="fa fa-plus"></i>
+                        </button>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <!-- END Left menu -->
 
-                                                <ul class="datasetList"
-                                                    style="margin-top:10px;"
-                                                    ng-if="datasetsCtrl.currentTemplateID">
-                                                    <li ng-click="datasetsCtrl.addNewList()">
-                            <span>
-                              Add table
-                              <button class="btn btn-success pull-right"
-                                      style="margin-top: 1px; width: 20px; height: 20px;padding:2px;">
-                                  <i class="fa fa-plus"></i>
+              <!-- Rightside tables -->
+              <div class="col-md-10">
 
-                              </button>
-                            </span>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        <!-- END Left menu -->
+                <div ng-repeat="column in metadataCtrl.currentBoard.columns">
+                  <div ng-if="($index % 3 == 0) && ($index !== 0)" class="row"></div>
 
-                                        <!-- Rightside tables -->
-                                        <div class="col-md-10">
+                  <div class="col-md-4">
 
-                                            <div ng-repeat="column in datasetsCtrl.currentBoard.columns">
-                                                <div ng-if="($index % 3 == 0) && ($index !== 0)" class="row"></div>
+                    <div class="panel panel-default">
+                      <div class="panel-heading" style="background-color: #4b91ea; border-bottom: 3px solid #46b8da;">
 
-                                                <div class="col-md-4">
+                        <div align="right">
+                          <button class="btn btn-success pull-right" ng-click="metadataCtrl.addField(column)"
+                                  tooltip="Add card to table"
+                                  style="margin-top: 1px; width: 20px; height: 20px;padding:2px;">
+                            <!--<i class="fa fa-plus addNewCard"></i>-->
+                            <i class="fa fa-plus"></i>
+                          </button>
 
+                          <button class="btn btn-danger pull-right" ng-click="metadataCtrl.checkDeleteTable(column)"
+                                  tooltip="Remove table"
+                                  style="margin-top: 1px; width: 20px; height: 20px; padding:2px;">
+                            <i class="fa fa-trash-o"></i>
+                          </button>
+                        </div>
 
+                        <span editable-text="column.name"
+                              style="color:white; font-size: 16px;"
+                              onaftersave="metadataCtrl.storeTemplate()"
+                              class="column-title ng-binding">
+                          {{column.name}}
+                        </span>
 
-                                                    <div class="panel panel-default">
-                                                        <div class="panel-heading" style="border-bottom: 3px solid #46b8da;">
+                      </div>
+                      <div class="panel-body">
+                        <ul class="cards card-list"
+                            as-sortable="metadataCtrl.fieldSortOptions"
+                            ng-model="column.cards">
+                          <li class="card"
+                              ng-repeat="card in column.cards"
+                              as-sortable-item
+                              style="line-height:1em;"
+                              ng-include="'views/metadata/card.html'">
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- END Rightside tables -->
+            </div>
+          </md-content>
+        </md-sidenav>
+        <!--END OF METADATA DESIGNER-->
+        
+        <!--ADD METADATA SLIDER-->
+        <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left"
+                    style="margin-top: 0px;">
 
+          <md-toolbar class="md-theme-light"
+                      style="background-color: #f1f1f1;color: gray; height: 39px; min-height: 39px;">
 
-                                                            <div align="right">
+            <div class="md-toolbar-tools">
+              <h2 style="margin:0;">
+                <span>Metadata manager</span>
+              </h2>
+              <span flex></span>
+              <button style="font-size:15px;height:28px;color:white;padding-top: 3px;"
+                      ng-click="metadataCtrl.submitMetadata(metadataCtrl.metaData); datasetsCtrl.close()"
+                      class="btn btn-success">
+                <i class="fa fa-save"></i>
+                Save
+              </button>
+            </div>
 
-                                                                <a ng-click="datasetsCtrl.addCard(column)"
-                                                                   title="Add card to table">
-                                                                    <i class="fa fa-plus addNewCard"></i>
-                                                                </a>
+          </md-toolbar>
+          <md-content layout-padding>
+            <p>Associating metadata to: <a><b>'{{metadataCtrl.currentFile.name}}'</b></a></p>
 
-                                                                <a ng-click="datasetsCtrl.deleteList(column)"
-                                                                   title="Remove table">
-                                                                    <i class="fa fa-trash-o removeList"></i>
-                                                                </a>
-                                                            </div>
+            <label class="control-label" ng-show="datasetsCtrl.currentTemplateID === - 1">
+              <font color="red">There is no template attached to file {{metadataCtrl.currentFile.name}}</font>
+            </label>
+            <p></p>
 
+            <tabset justified="false">
+              <tab ng-repeat="tab in metadataCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
+                   disabled="tab.disabled" select="metadataCtrl.onTabSelect(tab)"
+                   style="padding-left: 1em;">
 
-                              <span editable-text="column.name"
-                                    style="font-size: 16px;"
-                                    onaftersave="datasetsCtrl.storeTemplate()"
-                                    class="column-title ng-binding">
-                                {{column.name}}
+                <form name="{{tab.title}}{{$index}}" ng-submit="metadataCtrl.submitMetadata(metadataCtrl.metaData)"
+                      style="padding:0em 1em 50em 1em;">
+
+                  <ul class="card-list" ng-model="column.cards">
+                    <li ng-repeat="card in tab.cards" style="padding-bottom: 0;">
+                      <div style="padding-bottom: 0;">
+
+                        <!--The table section-->
+                        <div class="row col-md-15" style="padding-bottom: 0;">
+                          <!--The row section-->
+                          <div class="col-md-12" style="padding-bottom: 0;">
+                            <div tabindex="1" class="col-md-2">
+                              <span class="card-title pull-right btn btn-xs"
+                                    style="font-size: 1em">{{card.title}}</span>
+                            </div>
+
+                            <div tabindex="2" class="col-md-1" style="padding-bottom: 0;">
+                              <span class="field-info pull-left" tooltip="{{card.description}}">
+                                <i class="fa fa-exclamation-circle"></i>
                               </span>
+                            </div>
 
+                            <div tabindex="3" class="pull-left col-md-9" style="padding-bottom: 0;">
+                              <!--text input field type-->
+                              <div ng-if="card.fieldtypeid === 1">
+                                <input value="" class="fillInMetadataInput" id="sizeFieldInput"
+                                       tooltips title="{{card.description}}"
+                                       ng-show="true"
+                                       ng-model="metadataCtrl.metaData[card.id]"/>
+                              </div>
 
-                                                        </div>
-                                                        <div class="panel-body">
-                                                            <ul class="cards card-list"
-                                                                as-sortable="kanbanSortOptions"
-                                                                ng-model="column.cards">
-                                                                <li class="card"
-                                                                    ng-repeat="card in column.cards"
-                                                                    as-sortable-item
-                                                                    ng-include="'views/metadata/card.html'">
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!-- END Rightside tables -->
-                                    </div>
-                                </md-content>
-            </md-sidenav>
+                              <!--single select list input type-->
+                              <div ng-if="card.fieldtypeid === 2">
 
-        </section>
+                                <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
+                                  <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                  <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                    <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                    <small>
+                                      <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                    </small>
+                                  </ui-select-choices>
+                                </ui-select>
+                              </div>
+
+                              <!--multi select list input type-->
+                              <div ng-if="card.fieldtypeid === 3">
+                                <div
+                                  isteven-multi-select
+                                  input-model="card.fieldtypeContent"
+                                  output-model="metadataCtrl.metaData[card.id]"
+                                  button-label="value"
+                                  item-label="value"
+                                  tick-property="ticked"
+                                  output-properties="value"
+                                  >
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <hr>
+                      </div>
+                    </li>
+                  </ul>
+                  <hr/>
+                  <div>
+                    <button class="btn btn-default">
+                      <i class="glyphicon glyphicon-floppy-save"></i>
+                      Save
+                    </button>
+                    <button class="btn btn-default" type="button"
+                            ng-click="datasetsCtrl.close()">
+                      <i class="glyphicon glyphicon-chevron-left"></i>
+                      Back
+                    </button>
+                  </div>
+                </form>
+              </tab>
+            </tabset>
+          </md-content>
+        </md-sidenav>
+        <!--END OF ADD METADATA SLIDER-->
+        
+      </section>
     </div>
-    <!-- /#wrapper -->
+  </div>
+  <!-- /#wrapper -->
 </div>
-
-

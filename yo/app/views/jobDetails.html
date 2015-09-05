@@ -1,0 +1,221 @@
+<!-- A dialog presenting job details. -->
+
+<div class="modal-header">
+  <button class="close" ng-click="jobDetailCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Job details - {{jobDetailCtrl.job.name}}</h2>
+</div>
+<div class="modal-body">
+
+  <div ng-controller="JobsCtrl as jobsCtrl" style="margin-bottom: 10px">
+    <span class="h3">{{jobDetailCtrl.jobtype}} job running {{jobDetailCtrl.execFile}}</span>
+    <button ng-click="jobDetailCtrl.copy()" class="btn btn-primary pull-right">
+      <span class="glyphicon glyphicon-pencil" aria-hidden="true"/>Edit as new
+    </button>
+    <button ng-click="jobsCtrl.runJob(jobDetailCtrl.job.id)" class="btn btn-warning pull-right">
+      <span class="glyphicon glyphicon-play" aria-hidden="true"/>Run now
+    </button>
+  </div>
+
+  <accordion close-others="false">
+    <accordion-group heading="Configuration">
+      <!-- Cuneiform configuration -->
+      <div ng-show="jobDetailCtrl.job.runConfig.type == 'cuneiformJobConfiguration'">
+        <div>
+          <div ng-show="jobDetailCtrl.job.runConfig.wf.inputParams.length > 0">
+            <strong>Input parameters <i class="fa fa-info-circle" tooltip="The unbound input parameters to the selected workflow. They have been bound to the given value for this job." style="margin-left: 10px"></i></strong>
+          </div>
+          <div ng-repeat="param in jobDetailCtrl.job.runConfig.wf.inputParams" class="row">
+            <div class="text-right col-md-4">{{param.name}}</div>
+            <div class="col-md-8"> {{param.value}}</div>
+          </div>
+          <div>
+            <strong>Configuration parameters</strong>
+          </div>
+          <div class="row">
+            <div class="text-right col-md-4">Application master memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
+            <div  class="col-md-8">
+              {{jobDetailCtrl.job.runConfig.amMemory}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="text-right col-md-4">Application master vcores <i class="fa fa-info-circle" tooltip="The number of cores that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
+            <div class="col-md-8">
+              {{jobDetailCtrl.job.runConfig.amVCores}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="text-right col-md-4">ResourceManager queue <i class="fa fa-info-circle" tooltip="The queue in the ResourceManager in which this application should be submitted." style="margin-left: 10px"></i></div>
+            <div class="col-md-8">
+              {{jobDetailCtrl.job.runConfig.amQueue}}
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Spark configuration -->
+      <div ng-show="jobDetailCtrl.job.runConfig.type == 'sparkJobConfiguration'">
+        <div class="row">
+          <div>
+            <strong>Job details</strong>
+          </div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.mainClass}}</div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">Job arguments <i class="fa fa-info-circle" tooltip="The arguments to be passed to the main method of the class entered above." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.args}}</div>
+        </div>
+        <div class="row">
+          <div>
+            <strong>Configuration parameters</strong>
+          </div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">Application master memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">
+            {{jobDetailCtrl.job.runConfig.amMemory}}
+          </div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">Application master vcores <i class="fa fa-info-circle" tooltip="The number of cores that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">
+            {{jobDetailCtrl.job.runConfig.amVCores}}
+          </div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">ResourceManager queue <i class="fa fa-info-circle" tooltip="The queue in the ResourceManager in which this application should be submitted." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">
+            {{jobDetailCtrl.job.runConfig.amQueue}}
+          </div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">Number of executors <i class="fa fa-info-circle" tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numberOfExecutors}}</div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">Number of executor cores <i class="fa fa-info-circle" tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.executorCores}}</div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">Executor memory (MB)<i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.executorMemory}}</div>
+        </div>
+      </div>
+      <!-- Adam configuration -->
+      <div ng-show="jobDetailCtrl.job.runConfig.type == 'adamJobConfiguration'">
+        <div class="row">
+          <h3>{{jobDetailCtrl.job.runConfig.selectedCommand.description}}</h3>
+        </div>
+        <div class="row">
+          <div>
+            <strong>Arguments</strong>
+          </div>
+        </div>
+        <div ng-repeat="arg in jobDetailCtrl.job.runConfig.selectedCommand.arguments" class="row">
+          <div class="text-right col-md-4">
+            {{arg.name}} <span ng-show="arg.required">*</span> <i class="fa fa-info-circle" tooltip="{{arg.description}}"></i>
+          </div>
+          <div class="col-md-8">
+            {{arg.value}}
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-8">
+            <strong>Options</strong>
+          </div>
+        </div>
+        <div ng-repeat="opt in jobDetailCtrl.job.runConfig.selectedCommand.options" class="row">
+          <div class="text-right col-md-4">
+            {{opt.name}} <i class="fa fa-info-circle" tooltip="{{opt.description}}"></i>
+          </div>
+          <div class="col-md-8">
+            {{opt.value}}
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <strong>Configuration parameters</strong>
+          </div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">Application master memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">
+            {{jobDetailCtrl.job.runConfig.amMemory}}
+          </div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">Application master vcores <i class="fa fa-info-circle" tooltip="The number of cores that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">
+            {{jobDetailCtrl.job.runConfig.amVCores}}
+          </div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">ResourceManager queue <i class="fa fa-info-circle" tooltip="The queue in the ResourceManager in which this application should be submitted." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">
+            {{jobDetailCtrl.job.runConfig.amQueue}}
+          </div>
+        </div>
+      </div>
+    </accordion-group>
+
+    <accordion-group heading="Execution history">
+      <span ng-show="!jobDetailCtrl.showExecutions">
+        There are no registered executions for this job.
+      </span>
+      <table ng-show="jobDetailCtrl.showExecutions" class="table chrome-table">
+        <thead>
+          <tr>
+            <th>
+              Submission time
+            </th>
+            <th>
+              Current state
+            </th>
+            <th>
+              Execution duration (ms)
+            </th>
+            <th>
+              Stdout
+            </th>
+            <th>
+              Stderr
+            </th>
+            <th>
+              Output files
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="exec in jobDetailCtrl.job.executions">
+            <td>
+              {{exec.submissionTime| date:'medium'}}
+            </td>
+            <td>
+              {{exec.state}}
+            </td>
+            <td>
+              {{exec.executionDuration}}
+            </td>
+            <td>
+              {{exec.stdoutPath}}
+            </td>
+            <td>
+              {{exec.stderrPath}}
+            </td>
+            <td>
+              <span ng-repeat="output in exec.jobOutputFileCollection">
+                {{output.jobOutputFilePK.name}}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </accordion-group>
+  </accordion>
+
+
+
+</div>
+

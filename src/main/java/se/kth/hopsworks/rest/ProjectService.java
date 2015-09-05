@@ -2,7 +2,6 @@ package se.kth.hopsworks.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,11 +27,17 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeam;
+import se.kth.bbc.project.fb.Inode;
+import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.services.ProjectServiceEnum;
+import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ProjectDTO;
 import se.kth.hopsworks.controller.ResponseMessages;
+import se.kth.hopsworks.dataset.Dataset;
+import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 
 /**
@@ -47,6 +52,8 @@ import se.kth.hopsworks.filters.AllowedRoles;
 public class ProjectService {
 
   @EJB
+  private ProjectFacade projectFacade;
+  @EJB
   private ProjectController projectController;
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -54,6 +61,12 @@ public class ProjectService {
   private ProjectMembers projectMembers;
   @Inject
   private DataSetService dataSet;
+  @Inject
+  private JobService jobs;
+  @EJB
+  private DatasetFacade datasetFacade;
+  @EJB
+  private InodeFacade inodes;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
           getName());
@@ -73,6 +86,71 @@ public class ProjectService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projects).build();
+  }
+
+  @GET
+  @Path("/getAll")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getAllProjects(@Context SecurityContext sc,
+          @Context HttpServletRequest req) {
+
+    List<Project> list = projectFacade.findAll();
+    GenericEntity<List<Project>> projects
+            = new GenericEntity<List<Project>>(list) {
+            };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            projects).build();
+  }
+
+  @GET
+  @Path("/getProjectInfo/{projectName}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getProjectByName(@PathParam("projectName") String projectName,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    ProjectDTO proj = projectController.getProjectByName(projectName);
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            proj).build();
+  }
+
+  @GET
+  @Path("getDatasetInfo/{inodeId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getDatasetInfo(
+          @PathParam("inodeId") Integer inodeId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    Inode inode = inodes.findById(inodeId);
+    if (inode == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NOT_FOUND);
+    }
+
+    Inode parent = inodes.findParent(inode);
+    Project proj = projectFacade.findByName(parent.getInodePK().getName());
+    Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
+
+    if (ds == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NOT_FOUND);
+    }
+
+    List<Dataset> projectsContainingInode = datasetFacade.findByInode(inode);
+    List<String> sharedWith = new ArrayList<>();
+    for (Dataset d : projectsContainingInode) {
+      if (!d.getProjectId().getId().equals(proj.getId())) {
+        sharedWith.add(d.getProjectId().getName());
+      }
+    }
+    DataSetDTO dataset = new DataSetDTO(ds, proj, sharedWith);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            dataset).build();
   }
 
   @GET
@@ -133,8 +211,7 @@ public class ProjectService {
     }
 
     if (!projectServices.isEmpty()) {
-      boolean added = projectController.addServices(project, projectServices,
-              userEmail);
+      boolean added = projectController.addServices(project, projectServices, userEmail);
       if (added) {
         json.setSuccessMessage(ResponseMessages.PROJECT_SERVICE_ADDED);
         updated = true;
@@ -178,17 +255,17 @@ public class ProjectService {
       }
     }
 
-    projectDTO.setOwner(owner);
-    projectDTO.setCreated(new Date());
     try {
       //save the project
-      project = projectController.createProject(projectDTO.getProjectName(),
-              owner);
+      project = projectController.createProject(projectDTO, owner);
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);
       json.setErrorMsg(ResponseMessages.PROJECT_FOLDER_NOT_CREATED + "\n "
               + json.getErrorMsg());
+    } catch (IllegalArgumentException e) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), e.
+              getLocalizedMessage());
     } catch (EJBException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.FOLDER_INODE_NOT_CREATED, ex);
@@ -197,11 +274,11 @@ public class ProjectService {
     }
 
     if (project != null) {
+        //add members of the project
+        failedMembers = projectController.addMembers(project, owner, projectDTO.
+                getProjectTeam());
       //add the services for the project
       projectController.addServices(project, projectServices, owner);
-      //add members of the project
-      failedMembers = projectController.addMembers(project, owner, projectDTO.
-              getProjectTeam());
     }
 
     json.setStatus("201");// Created  
@@ -285,5 +362,13 @@ public class ProjectService {
     this.dataSet.setProjectId(id);
 
     return this.dataSet;
+  }
+
+  @Path("{projectId}/jobs")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public JobService jobs(@PathParam("projectId") Integer projectId) throws
+          AppException {
+    Project project = projectController.findProjectById(projectId);
+    return this.jobs.setProject(project);
   }
 }

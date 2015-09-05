@@ -1,11 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.upload;
 
-import java.io.*;
 import java.util.HashMap;
 
 /**
@@ -38,24 +32,27 @@ public class ResumableInfoStorage {
    * @param resumableFilename
    * @param resumableRelativePath
    * @param resumableFilePath
+   * @param resumableTemplateId
    * @return
    */
   public synchronized ResumableInfo get(int resumableChunkSize,
           long resumableTotalSize,
           String resumableIdentifier, String resumableFilename,
-          String resumableRelativePath, String resumableFilePath) {
+          String resumableRelativePath, String resumableFilePath,
+          int resumableTemplateId) {
 
     ResumableInfo info = mMap.get(resumableIdentifier);
 
     if (info == null) {
       info = new ResumableInfo();
 
-      info.resumableChunkSize = resumableChunkSize;
-      info.resumableTotalSize = resumableTotalSize;
-      info.resumableIdentifier = resumableIdentifier;
-      info.resumableFilename = resumableFilename;
-      info.resumableRelativePath = resumableRelativePath;
-      info.resumableFilePath = resumableFilePath;
+      info.setResumableChunkSize(resumableChunkSize);
+      info.setResumableTotalSize(resumableTotalSize);
+      info.setResumableIdentifier(resumableIdentifier);
+      info.setResumableFilename(resumableFilename);
+      info.setResumableRelativePath(resumableRelativePath);
+      info.setResumableFilePath(resumableFilePath);
+      info.setResumableTemplateId(resumableTemplateId);
 
       mMap.put(resumableIdentifier, info);
     }
@@ -68,6 +65,6 @@ public class ResumableInfoStorage {
    * @param info
    */
   public void remove(ResumableInfo info) {
-    mMap.remove(info.resumableIdentifier);
+    mMap.remove(info.getResumableIdentifier());
   }
 }

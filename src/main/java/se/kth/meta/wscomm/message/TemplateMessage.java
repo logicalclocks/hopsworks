@@ -1,8 +1,5 @@
 package se.kth.meta.wscomm.message;
 
-import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.Fields;
-import se.kth.meta.entity.Tables;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -14,9 +11,12 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
-import se.kth.meta.entity.FieldPredefinedValues;
-import se.kth.meta.entity.FieldTypes;
-import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.EntityIntf;
+import se.kth.meta.entity.FieldPredefinedValue;
+import se.kth.meta.entity.FieldType;
+import se.kth.meta.entity.Field;
+import se.kth.meta.entity.MTable;
+import se.kth.meta.entity.Template;
 import se.kth.meta.exception.ApplicationException;
 
 /**
@@ -30,10 +30,6 @@ public class TemplateMessage extends ContentMessage {
           getName());
 
   private final String TYPE = "TemplateMessage";
-  private String sender;
-  private String message;
-  private String action;
-  private String status;
 
   public TemplateMessage() {
     this.status = "OK";
@@ -51,9 +47,9 @@ public class TemplateMessage extends ContentMessage {
     this.message = json.getString("message");
     this.action = json.getString("action");
     this.setStatus("OK");
-    super.setAction(this.action);
+    this.setAction(this.action);
 
-    //when asking for template names list, tempid is null
+    //when asking for a template names list, tempid is null
     try {
       JsonObject object = Json.createReader(new StringReader(this.message)).
               readObject();
@@ -62,6 +58,11 @@ public class TemplateMessage extends ContentMessage {
       logger.log(Level.SEVERE, "Error while retrieving the templateid."
               + " Probably fetching the templates");
     }
+  }
+
+  @Override
+  public void setAction(String action) {
+    super.setAction(action);
   }
 
   @Override
@@ -78,34 +79,38 @@ public class TemplateMessage extends ContentMessage {
   }
 
   /**
-   * Returns the template object. It is used only when creating a new template
-   * or deleting one. The message carries either the template name or the
-   * template id depending on the desired action.
+   * Returns the template object. It is used when creating a new template
+   * deleting or when updating one. The message carries either the template name
+   * or the template id depending on the desired action.
    *
    * @return the template to be added in the database
    * @throws se.kth.meta.exception.ApplicationException
    */
   @Override
-  public Templates getTemplate() throws ApplicationException {
-    Templates temp = null;
+  public Template getTemplate() throws ApplicationException {
+    Template temp = null;
     JsonObject object = Json.createReader(new StringReader(this.message)).
             readObject();
 
     try {
       switch (Command.valueOf(this.action.toUpperCase())) {
+
         case ADD_NEW_TEMPLATE:
-          temp = new Templates(-1, object.getString("templateName"));
+          temp = new Template(-1, object.getString("templateName"));
           break;
         case REMOVE_TEMPLATE:
-          temp = new Templates(object.getInt("templateId"));
+          temp = new Template(object.getInt("templateId"));
+          break;
+        case UPDATE_TEMPLATE_NAME:
+          temp = new Template(object.getInt("templateId"), object.getString(
+                  "templateName"));
           break;
         default:
           throw new ApplicationException("Unknown command in received message");
       }
     } catch (NullPointerException e) {
-      logger.
-              log(Level.SEVERE,
-                      "Error while retrieving the template attributes.");
+      logger.log(Level.SEVERE,
+              "Error while retrieving the template attributes.");
       throw new ApplicationException(
               "Error while retrieving the template attributes.");
     }
@@ -115,7 +120,6 @@ public class TemplateMessage extends ContentMessage {
 
   @Override
   public List<EntityIntf> parseSchema() {
-
     JsonObject obj = Json.createReader(new StringReader(this.message)).
             readObject();
     JsonObject board = obj.getJsonObject("bd");
@@ -146,7 +150,7 @@ public class TemplateMessage extends ContentMessage {
         tableId = -1;
       }
 
-      Tables table = new Tables(tableId, tableName);
+      MTable table = new MTable(tableId, tableName);
       table.setTemplateid(super.getTemplateid());
 
       //get the table attributes/fields
@@ -160,6 +164,7 @@ public class TemplateMessage extends ContentMessage {
       String maxsize;
       String description;
       int fieldtypeid;
+      int position;
 
       //retrieve the table fields/attributes
       for (int j = 0; j < fields.size(); j++) {
@@ -170,8 +175,7 @@ public class TemplateMessage extends ContentMessage {
 
           /*
            * if a template is being extended, cancel the field id so that they
-           * are
-           * reinserted and attached to the new template
+           * are reinserted and attached to the new template
            */
           if (Command.valueOf(this.action.toUpperCase())
                   == Command.EXTEND_TEMPLATE) {
@@ -184,28 +188,29 @@ public class TemplateMessage extends ContentMessage {
           maxsize = field.getJsonObject("sizefield").getString("value");
           description = field.getString("description");
           fieldtypeid = field.getInt("fieldtypeid");
+          position = field.getInt("position");
 
           try {
             //just in case the user has entered shit
             Double.parseDouble(maxsize);
-            //sanitize fucking maxsize
+            //sanitize maxsize
             maxsize = (!"".equals(maxsize)) ? maxsize : "0";
           } catch (NumberFormatException e) {
             maxsize = "0";
           }
 
-          Fields f = new Fields(fieldId, tableId, fieldName,
+          Field f = new Field(fieldId, tableId, fieldName,
                   "VARCHAR(50)", Integer.parseInt(maxsize),
                   (short) ((searchable) ? 1 : 0), (short) ((required) ? 1 : 0),
-                  description, fieldtypeid);
-          f.setFieldTypes(new FieldTypes(fieldtypeid));
+                  description, fieldtypeid, position);
+          f.setFieldTypes(new FieldType(fieldtypeid));
 
           //get the predefined values of the field if it is a yes/no field or a dropdown list field
           if (fieldtypeid != 1) {
 
             JsonArray predefinedFieldValues = field.getJsonArray(
                     "fieldtypeContent");
-            List<FieldPredefinedValues> ll = new LinkedList<>();
+            List<FieldPredefinedValue> ll = new LinkedList<>();
 
             for (JsonValue predefinedFieldValue : predefinedFieldValues) {
 
@@ -213,7 +218,7 @@ public class TemplateMessage extends ContentMessage {
                       predefinedFieldValue.toString())).readObject();
               String defaultValue = defaultt.getString("value");
 
-              FieldPredefinedValues predefValue = new FieldPredefinedValues(-1,
+              FieldPredefinedValue predefValue = new FieldPredefinedValue(-1,
                       f.getId(), defaultValue);
               //predefValue.setFields(field);
               ll.add(predefValue);
@@ -225,7 +230,6 @@ public class TemplateMessage extends ContentMessage {
           table.addField(f);
 
         } catch (NullPointerException e) {
-          System.err.println("-- find is null mapping to " + (false));
           searchable = false;
           required = false;
         }
@@ -273,8 +277,9 @@ public class TemplateMessage extends ContentMessage {
   @Override
   public String toString() {
     return "{\"sender\": \"" + this.sender + "\", "
-            + "\"action\": \"" + this.action + "\", "
             + "\"type\": \"" + this.TYPE + "\", "
+            + "\"status\": \"" + this.status + "\", "
+            + "\"action\": \"" + this.action + "\", "
             + "\"message\": \"" + this.message + "\"}";
   }
 

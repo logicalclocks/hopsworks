@@ -1,72 +1,124 @@
 package se.kth.meta.wscomm;
 
 import java.util.LinkedList;
-import se.kth.meta.db.Dbao;
-import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.Fields;
-import se.kth.meta.entity.RawData;
-import se.kth.meta.entity.Tables;
-import se.kth.meta.exception.ApplicationException;
-import se.kth.meta.exception.DatabaseException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import se.kth.meta.entity.FieldPredefinedValues;
-import se.kth.meta.entity.Templates;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import se.kth.meta.db.FieldFacade;
+import se.kth.meta.db.FieldPredefinedValueFacade;
+import se.kth.meta.db.MTableFacade;
+import se.kth.meta.db.MetadataFacade;
+import se.kth.meta.db.RawDataFacade;
+import se.kth.meta.db.TemplateFacade;
+import se.kth.meta.db.TupleToFileFacade;
+import se.kth.meta.entity.EntityIntf;
+import se.kth.meta.entity.FieldPredefinedValue;
+import se.kth.meta.entity.Field;
+import se.kth.meta.entity.InodeTableComposite;
+import se.kth.meta.entity.RawData;
+import se.kth.meta.entity.MTable;
+import se.kth.meta.entity.Metadata;
+import se.kth.meta.entity.Template;
 import se.kth.meta.entity.TupleToFile;
+import se.kth.meta.exception.ApplicationException;
+import se.kth.meta.exception.DatabaseException;
 
 /**
  *
  * @author Vangelis
  */
+@Stateless(name = "utils")
 public class Utils {
 
   private static final Logger logger = Logger.getLogger(Utils.class.getName());
 
-  private Dbao db;
+  @EJB
+  private TemplateFacade templateFacade;
+  @EJB
+  private MTableFacade tableFacade;
+  @EJB
+  private FieldFacade fieldFacade;
+  @EJB
+  private FieldPredefinedValueFacade fieldPredefinedValueFacade;
+  @EJB
+  private RawDataFacade rawDataFacade;
+  @EJB
+  private TupleToFileFacade tupletoFileFacade;
+  @EJB
+  private MetadataFacade metadataFacade;
 
-  public Utils(Dbao db) {
-    this.db = db;
+  public Utils() {
   }
 
-  public void addNewTemplate(Templates template) throws ApplicationException {
+  /**
+   * Persist a new template in the database
+   * <p>
+   * @param template
+   * @return
+   * @throws ApplicationException
+   */
+  public int addNewTemplate(Template template) throws ApplicationException {
 
     try {
-      this.db.addTemplate(template);
+      return this.templateFacade.addTemplate(template);
     } catch (DatabaseException e) {
-      throw new ApplicationException("Could not add new template " + template.
-              getName() + ""
-              + " " + e.getMessage());
+      throw new ApplicationException("Utils.java: Could not add new template "
+              + template.getName(), e);
     }
   }
 
-  public void removeTemplate(Templates template) throws ApplicationException {
+  /**
+   * Updates a template name. addNewTemplate handles persisting/updating the
+   * entity
+   * <p>
+   * @param template
+   * @return
+   * @throws ApplicationException
+   */
+  public int updateTemplateName(Template template) throws ApplicationException {
+    return this.addNewTemplate(template);
+  }
+
+  /**
+   * Deletes a template from the database
+   * <p>
+   * @param template
+   * @throws ApplicationException
+   */
+  public void removeTemplate(Template template) throws ApplicationException {
     try {
-      this.db.removeTemplate(template);
+      this.templateFacade.removeTemplate(template);
     } catch (DatabaseException e) {
-      throw new ApplicationException("Could not remove template " + template.
-              getName() + ""
-              + " " + e.getMessage());
+      throw new ApplicationException("Utils.java: Could not remove template "
+              + template.getName(), e);
     }
   }
 
+  /**
+   * Persist a list of tables and all their corresponding child entities in the
+   * database
+   * <p>
+   * @param list
+   * @throws ApplicationException
+   */
   public void addTables(List<EntityIntf> list) throws ApplicationException {
 
     for (EntityIntf entry : list) {
-      Tables t = (Tables) entry;
+      MTable t = (MTable) entry;
       String tableName = t.getName();
 
-      List<Fields> tableFields = new LinkedList<>(t.getFields());
+      List<Field> tableFields = new LinkedList<>(t.getFields());
       t.resetFields();
 
       try {
+        logger.log(Level.INFO, "STORE/UPDATE TABLE: {0} ", t);
+
         //persist the parent
-        int tableId = this.db.addTable(t);
-
-        logger.log(Level.INFO, "TABLE: {0}", tableName);
-
-        for (Fields field : tableFields) {
-          //associate each field(child) with the table(parent) it belongs to
+        int tableId = this.tableFacade.addTable(t);
+        for (Field field : tableFields) {
+          //associate each field(child) with its table(parent)
           field.setTableid(tableId);
 
           List<EntityIntf> predef = new LinkedList<>(
@@ -74,101 +126,178 @@ public class Utils {
 
           field.resetFieldPredefinedValues();
           //persist the child
-          int fieldid = this.db.addField(field);
+          int fieldid = this.fieldFacade.addField(field);
           //remove any previous predefined values
           this.removeFieldPredefinedValues(fieldid);
           //add the new predefined values
           this.addFieldsPredefinedValues(predef, fieldid);
         }
-      } catch (DatabaseException ex) {
-        logger.log(Level.SEVERE, null, ex);
-        throw new ApplicationException("Could not add table " + t.getName()
-                + " " + ex.getMessage());
+      } catch (DatabaseException e) {
+        throw new ApplicationException("Utils.java: Could not add table " + t.
+                getName(), e);
       }
     }
   }
 
+  /**
+   * Stores the predefined values for a field
+   * <p>
+   * @param list
+   * @param fieldId
+   * @throws ApplicationException
+   */
   private void addFieldsPredefinedValues(List<EntityIntf> list, int fieldId)
           throws ApplicationException {
 
     try {
       for (EntityIntf entry : list) {
-        FieldPredefinedValues predefval = (FieldPredefinedValues) entry;
+        FieldPredefinedValue predefval = (FieldPredefinedValue) entry;
 
         //associate each child with its parent
         predefval.setFieldid(fieldId);
         //persist the entity
-        this.db.addFieldPredefinedValue(predefval);
+        this.fieldPredefinedValueFacade.addFieldPredefinedValue(predefval);
       }
     } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, null, e);
-      throw new ApplicationException("Could not add predefined value " + e.
-              getMessage());
+      throw new ApplicationException(
+              "Utils.java: Could not add predefined values", e);
     }
   }
 
-  public void deleteTable(Tables table) throws ApplicationException {
+  /**
+   * Removes a table from the database
+   * <p>
+   * @param table
+   * @throws ApplicationException
+   */
+  public void deleteTable(MTable table) throws ApplicationException {
     try {
-      logger.log(Level.SEVERE, "DELETING TABLE {0} ", table.getName());
-      this.db.deleteTable(table);
+      logger.log(Level.INFO, "DELETING TABLE {0} ", table.getName());
+      this.tableFacade.deleteTable(table);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteTable "
-              + "encountered a problem");
+      throw new ApplicationException("Utils.java: could not delete table "
+              + table);
     }
   }
 
-  public void deleteField(Fields field) throws ApplicationException {
+  /**
+   * Removes a field from the database
+   * <p>
+   * @param field
+   * @throws ApplicationException
+   */
+  public void deleteField(Field field) throws ApplicationException {
 
     try {
-      logger.log(Level.SEVERE, "DELETING FIELD {0} ", field);
-      this.db.deleteField(field);
+      logger.log(Level.INFO, "DELETING FIELD {0} ", field);
+      this.fieldFacade.deleteField(field);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteField "
-              + "encountered a problem");
+      throw new ApplicationException("Utils.java: could not delete field "
+              + field);
     }
   }
 
+  /**
+   * Removes a field's predefined values
+   * <p>
+   * @param fieldid
+   * @throws ApplicationException
+   */
   public void removeFieldPredefinedValues(int fieldid) throws
           ApplicationException {
     try {
-      logger.log(Level.SEVERE, "DELETING PREDEFINED VALUES FOR FIELD {0} ",
-              fieldid);
-      this.db.deleteFieldPredefinedValues(fieldid);
+      this.fieldPredefinedValueFacade.deleteFieldPredefinedValues(fieldid);
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: method deleteField "
-              + "encountered a problem");
+      throw new ApplicationException(
+              "Utils.java: could not remove field predefined values ", e);
     }
   }
 
-  public void storeMetadata(List<EntityIntf> list) throws ApplicationException {
+  /**
+   * Stores the raw data for an inode. Creates a tuple first and
+   * associates it with the given inode. Raw data at this point is just a field
+   * id and a tupleid
+   * <p>
+   * @param composite
+   * @param raw
+   * @throws ApplicationException
+   */
+  public void storeRawData(List<EntityIntf> composite, List<EntityIntf> raw)
+          throws ApplicationException {
 
     try {
-      int tupleid = this.db.getLastInsertedTupleId() + 1;
-      int inodeid = -1;
+      /*
+       * get the inodeid present in the entities in the list. It is the
+       * same for all the entities, since they constitute a single tuple
+       */
+      InodeTableComposite itc = (InodeTableComposite) composite.get(0);
+
+      //create a metadata tuple attached to be attached to an inodeid
+      TupleToFile ttf = new TupleToFile(-1, itc.getInodeid());
+      int tupleid = this.tupletoFileFacade.addTupleToFile(ttf);
 
       //every rawData entity carries the same inodeid
-      for (EntityIntf raw : list) {
+      for (EntityIntf raww : raw) {
 
-        RawData r = (RawData) raw;
-        r.setData(r.getData().replaceAll("\"", ""));
-        r.setTupleid(tupleid);
-        inodeid = r.getInodeid();
+        RawData r = (RawData) raww;
+        r.getRawdataPK().setTupleid(tupleid);
 
+        List<EntityIntf> metadataList
+                = (List<EntityIntf>) (List<?>) new LinkedList<>(r.getMetadata());
+        r.resetMetadata();
+
+        //Persist the parent first
         logger.log(Level.INFO, r.toString());
-        ((Dbao) this.db).addRawData(r);
+        this.rawDataFacade.addRawData(r);
+
+        //move on to persist the child entities
+        this.storeMetaData(metadataList, tupleid);
       }
 
-      TupleToFile ttf = new TupleToFile(tupleid, inodeid);
-      ((Dbao) this.db).addTupleToFile(ttf);
-
     } catch (DatabaseException e) {
-      throw new ApplicationException(e.getMessage(),
-              "Utils.java: storeMetadata(List<?> list) "
-              + "encountered a problem");
+      throw new ApplicationException("Utils.java: could not store raw data ", e);
     }
   }
 
+  /**
+   * Updates a single raw data record.
+   * <p>
+   * @param meta
+   * @throws ApplicationException
+   */
+  public void updateMetadata(Metadata meta) throws ApplicationException {
+    try {
+
+      Metadata metadata = this.metadataFacade.getMetadataById(meta.
+              getMetadataPK().getId());
+      metadata.setData(meta.getData());
+      this.metadataFacade.addMetadata(metadata);
+    } catch (DatabaseException e) {
+      throw new ApplicationException("Utils.java: could not update metadata ", e);
+    }
+  }
+
+  /**
+   * Stores the actual metadata for an inode. Associates a raw data record with
+   * a metadata record in the meta_data table
+   * <p>
+   * @param metadatalist
+   * @param tupleid
+   * @throws ApplicationException
+   */
+  public void storeMetaData(List<EntityIntf> metadatalist, int tupleid) throws
+          ApplicationException {
+
+    try {
+      for (EntityIntf entity : metadatalist) {
+        Metadata metadata = (Metadata) entity;
+        metadata.getMetadataPK().setTupleid(tupleid);
+
+        //logger.log(Level.INFO, metadata.toString());
+        this.metadataFacade.addMetadata(metadata);
+      }
+    } catch (DatabaseException e) {
+      throw new ApplicationException("Utils.java: could not store metadata ", e);
+    }
+  }
 }

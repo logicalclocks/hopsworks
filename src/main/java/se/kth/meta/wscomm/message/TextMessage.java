@@ -1,5 +1,6 @@
 package se.kth.meta.wscomm.message;
 
+import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
 
@@ -8,6 +9,9 @@ import javax.json.JsonObject;
  * @author Vangelis
  */
 public class TextMessage extends PlainMessage {
+
+  private static final Logger logger = Logger.
+          getLogger(TextMessage.class.getName());
 
   private final String TYPE = "TextMessage";
   private String sender;
@@ -44,7 +48,6 @@ public class TextMessage extends PlainMessage {
     this.sender = json.getString("sender");
     this.message = json.getString("message");
     this.action = json.getString("action");
-    //System.out.println("TextMessage INIT " + sender + " " + message + " " + action);
   }
 
   @Override
@@ -60,7 +63,7 @@ public class TextMessage extends PlainMessage {
             .add("type", this.TYPE)
             .add("status", this.status)
             .add("message", this.message)
-            .build() //pretty necessary so as to build the actual json structure
+            .build()
             .toString();
 
     return value;
@@ -100,6 +103,7 @@ public class TextMessage extends PlainMessage {
   public String toString() {
     return "{\"sender\": \"" + this.sender + "\", "
             + "\"type\": \"" + this.TYPE + "\", "
+            + "\"status\": \"" + this.status + "\", "
             + "\"action\": \"" + this.action + "\", "
             + "\"message\": \"" + this.message + "\"}";
   }

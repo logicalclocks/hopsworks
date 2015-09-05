@@ -1,14 +1,6 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.hopsworks.controller;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -18,20 +10,18 @@ import javax.ejb.TransactionAttributeType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
+
 import org.apache.commons.codec.digest.DigestUtils;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.security.ua.EmailBean;
+import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
+import se.kth.bbc.security.ua.model.Userlogins;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
-import se.kth.hopsworks.users.BbcGroupFacade;
-import se.kth.hopsworks.users.UserDTO;
-import se.kth.hopsworks.users.UserFacade;
-import se.kth.hopsworks.user.model.BbcGroup;
-import se.kth.hopsworks.user.model.SecurityQuestions;
-import se.kth.hopsworks.user.model.UserAccountStatus;
-import se.kth.hopsworks.user.model.Users;
-import se.kth.hopsworks.users.UserLoginsFacade;
-import se.kth.bbc.security.ua.model.Userlogins;
+import se.kth.hopsworks.user.model.*;
+import se.kth.hopsworks.users.*;
+import se.kth.hopsworks.util.LocalhostServices;
 
 /**
  * @author André<amore@kth.se>
@@ -39,12 +29,14 @@ import se.kth.bbc.security.ua.model.Userlogins;
  */
 @Stateless
 //the operations in this method does not need any transaction
-//the acctual persisting will in the facades transaction.
+//the actual persisting will in the facades transaction.
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UsersController {
 
   @EJB
   private UserFacade userBean;
+  @EJB
+  private SshkeysFacade sshKeysBean;
   @EJB
   private UserValidator userValidator;
   @EJB
@@ -56,21 +48,23 @@ public class UsersController {
 
   public void registerUser(UserDTO newUser) throws AppException {
     if (userValidator.isValidEmail(newUser.getEmail())
-            && userValidator.isValidPassword(newUser.getChosenPassword(),
-                    newUser.getRepeatedPassword())
-            && userValidator.isValidsecurityQA(newUser.getSecurityQuestion(),
-                    newUser.getSecurityAnswer())) {
+        && userValidator.isValidPassword(newUser.getChosenPassword(),
+            newUser.getRepeatedPassword())
+        && userValidator.isValidsecurityQA(newUser.getSecurityQuestion(),
+            newUser.getSecurityAnswer())) {
       if (newUser.getToS()) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.TOS_NOT_AGREED);
+            ResponseMessages.TOS_NOT_AGREED);
       }
       if (userBean.findByEmail(newUser.getEmail()) != null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.USER_EXIST);
+            ResponseMessages.USER_EXIST);
       }
 
       int uid = userBean.lastUserID() + 1;
-      String uname = Users.USERNAME_PREFIX + uid;
+      String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
+
+//      String uname = Users.USERNAME_PREFIX + uid;
       List<BbcGroup> groups = new ArrayList<>();
       groups.add(groupBean.findByGroupName(BbcGroup.USER));
 
@@ -81,11 +75,11 @@ public class UsersController {
       user.setLname(newUser.getLastName());
       user.setMobile(newUser.getTelephoneNum());
       user.setStatus(UserAccountStatus.ACCOUNT_INACTIVE.getValue());
-      user.setSecurityQuestion(SecurityQuestions.getQuestion(newUser.
-              getSecurityQuestion()));
+      user.setSecurityQuestion(SecurityQuestion.getQuestion(newUser.
+          getSecurityQuestion()));
       user.setPassword(DigestUtils.sha256Hex(newUser.getChosenPassword()));
       user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer().
-              toLowerCase()));
+          toLowerCase()));
       user.setBbcGroupCollection(groups);
 
       userBean.persist(user);
@@ -93,56 +87,56 @@ public class UsersController {
   }
 
   public void recoverPassword(String email, String securityQuestion,
-          String securityAnswer, HttpServletRequest req) throws AppException {
+      String securityAnswer, HttpServletRequest req) throws AppException {
     if (userValidator.isValidEmail(email) && userValidator.isValidsecurityQA(
-            securityQuestion, securityAnswer)) {
+        securityQuestion, securityAnswer)) {
 
       Users user = userBean.findByEmail(email);
       if (user == null) {
         throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                ResponseMessages.USER_DOES_NOT_EXIST);
+            ResponseMessages.USER_DOES_NOT_EXIST);
       }
       if (!user.getSecurityQuestion().getValue().equalsIgnoreCase(
-              securityQuestion)
-              || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(
-                              securityAnswer.toLowerCase()))) {
+          securityQuestion)
+          || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(
+                  securityAnswer.toLowerCase()))) {
         registerFalseLogin(user);
         registerLoginInfo(user, "False recovery", req);
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.SEC_QA_INCORRECT);
+            ResponseMessages.SEC_QA_INCORRECT);
       }
 
       String randomPassword = getRandomPassword(
-              UserValidator.PASSWORD_MIN_LENGTH);
+          UserValidator.PASSWORD_MIN_LENGTH);
       try {
         String message = UserAccountsEmailMessages.buildTempResetMessage(
-                randomPassword);
+            randomPassword);
         emailBean.sendEmail(email,
-                UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
+            UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
         user.setPassword(DigestUtils.sha256Hex(randomPassword));
         userBean.update(user);
         resetFalseLogin(user);
         registerLoginInfo(user, "Successful recovery", req);
       } catch (MessagingException ex) {
         Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE,
-                "Could not send email: ", ex);
+            "Could not send email: ", ex);
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.EMAIL_SENDING_FAILURE);
+            ResponseMessages.EMAIL_SENDING_FAILURE);
       }
     }
   }
 
   public void changePassword(String email, String oldPassword,
-          String newPassword, String confirmedPassword) throws AppException {
+      String newPassword, String confirmedPassword) throws AppException {
     Users user = userBean.findByEmail(email);
 
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              ResponseMessages.USER_WAS_NOT_FOUND);
+          ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (!user.getPassword().equals(DigestUtils.sha256Hex(oldPassword))) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PASSWORD_INCORRECT);
+          ResponseMessages.PASSWORD_INCORRECT);
     }
     if (userValidator.isValidPassword(newPassword, confirmedPassword)) {
       user.setPassword(DigestUtils.sha256Hex(newPassword));
@@ -151,34 +145,32 @@ public class UsersController {
   }
 
   public void changeSecQA(String email, String oldPassword,
-          String securityQuestion, String securityAnswer) throws AppException {
+      String securityQuestion, String securityAnswer) throws AppException {
     Users user = userBean.findByEmail(email);
 
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              ResponseMessages.USER_WAS_NOT_FOUND);
+          ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (!user.getPassword().equals(DigestUtils.sha256Hex(oldPassword))) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PASSWORD_INCORRECT);
+          ResponseMessages.PASSWORD_INCORRECT);
     }
 
     if (userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
-      user.setSecurityQuestion(SecurityQuestions.getQuestion(securityQuestion));
-      user.
-              setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer.
-                              toLowerCase()));
+      user.setSecurityQuestion(SecurityQuestion.getQuestion(securityQuestion));
+      user.setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer. toLowerCase()));
       userBean.update(user);
     }
   }
 
   public UserDTO updateProfile(String email, String firstName, String lastName,
-          String telephoneNum) throws AppException {
+      String telephoneNum) throws AppException {
     Users user = userBean.findByEmail(email);
 
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              ResponseMessages.USER_WAS_NOT_FOUND);
+          ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (firstName != null) {
       user.setFname(firstName);
@@ -203,12 +195,12 @@ public class UsersController {
   }
 
   public void registerLoginInfo(Users user, String action,
-          HttpServletRequest req) {
+      HttpServletRequest req) {
     String ip = req.getRemoteAddr();
     String userAgent = req.getHeader("User-Agent");
     String browser = null;
     Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE,
-            "User agent --->>> {0}", userAgent);
+        "User agent --->>> {0}", userAgent);
     if (userAgent.contains("MSIE")) {
       browser = "Internet Explorer";
     } else if (userAgent.contains("Firefox")) {
@@ -245,6 +237,27 @@ public class UsersController {
       user.setFalseLogin(0);
       userBean.update(user);
     }
+  }
+
+  public SshKeyDTO addSshKey(int id, String name, String sshKey) {
+    SshKeys key = new SshKeys();
+    key.setSshKeysPK(new SshKeysPK(id, name));
+    key.setPublicKey(sshKey);
+    sshKeysBean.persist(key);
+    return new SshKeyDTO(key);
+  }
+
+  public void removeSshKey(int id, String name) {
+    sshKeysBean.removeByIdName(id, name);
+  }
+
+  public List<SshKeyDTO> getSshKeys(int id) {
+    List<SshKeys> keys = sshKeysBean.findAllById(id);
+    List<SshKeyDTO> dtos = new ArrayList<>();
+    for (SshKeys sshKey : keys) {
+      dtos.add(new SshKeyDTO(sshKey));
+    }
+    return dtos;
   }
 
 }

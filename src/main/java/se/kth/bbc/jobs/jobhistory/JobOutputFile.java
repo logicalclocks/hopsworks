@@ -13,30 +13,32 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
  * @author stig
  */
 @Entity
-@Table(name = "job_output_files")
+@Table(name = "hopsworks.job_output_files")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "JobOutputFile.findAll",
           query
           = "SELECT j FROM JobOutputFile j"),
-  @NamedQuery(name = "JobOutputFile.findByJobId",
+  @NamedQuery(name = "JobOutputFile.findByExecutionId",
           query
-          = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.jobId = :jobId"),
+          = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.executionId = :executionId"),
   @NamedQuery(name = "JobOutputFile.findByName",
           query
           = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.name = :name"),
   @NamedQuery(name = "JobOutputFile.findByPath",
           query
           = "SELECT j FROM JobOutputFile j WHERE j.path = :path"),
-  @NamedQuery(name = "JobOutputFile.findByNameAndJobId",
+  @NamedQuery(name = "JobOutputFile.findByNameAndExecutionId",
           query
-          = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.name = :name AND j.jobOutputFilePK.jobId = :jobId")})
+          = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.name = :name AND j.jobOutputFilePK.executionId = :executionId")})
 public class JobOutputFile implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -51,13 +53,13 @@ public class JobOutputFile implements Serializable {
   @Column(name = "path")
   private String path;
 
-  @JoinColumn(name = "job_id",
+  @JoinColumn(name = "execution_id",
           referencedColumnName = "id",
           insertable = false,
           updatable
           = false)
   @ManyToOne(optional = false)
-  private JobHistory jobHistory;
+  private Execution execution;
 
   public JobOutputFile() {
   }
@@ -71,8 +73,8 @@ public class JobOutputFile implements Serializable {
     this.path = path;
   }
 
-  public JobOutputFile(long jobId, String name) {
-    this.jobOutputFilePK = new JobOutputFilePK(jobId, name);
+  public JobOutputFile(long executionId, String name) {
+    this.jobOutputFilePK = new JobOutputFilePK(executionId, name);
   }
 
   public JobOutputFilePK getJobOutputFilePK() {
@@ -91,12 +93,14 @@ public class JobOutputFile implements Serializable {
     this.path = path;
   }
 
-  public JobHistory getJobHistory() {
-    return jobHistory;
+  @XmlTransient
+  @JsonIgnore
+  public Execution getExecution() {
+    return execution;
   }
 
-  public void setJobHistory(JobHistory jobHistory) {
-    this.jobHistory = jobHistory;
+  public void setExecution(Execution execution) {
+    this.execution = execution;
   }
 
   @Override

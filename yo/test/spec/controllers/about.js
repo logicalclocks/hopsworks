@@ -6,7 +6,7 @@ describe('Controller: HomeCtrl', function () {
   beforeEach(module('hopsWorksApp'));
 
   var AboutCtrl,
-    scope;
+          scope;
 
   // Initialize the controller and a mock scope
   beforeEach(inject(function ($controller, $rootScope) {

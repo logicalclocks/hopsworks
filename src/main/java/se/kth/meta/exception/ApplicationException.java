@@ -4,7 +4,7 @@ package se.kth.meta.exception;
  *
  * @author Vangelis
  */
-public class ApplicationException extends ExceptionIntf {
+public class ApplicationException extends Exception {
 
   private String description;
   private String exception;
@@ -16,16 +16,15 @@ public class ApplicationException extends ExceptionIntf {
     this.description = "";
   }
 
-  public ApplicationException(String exception, String description) {
+  public ApplicationException(String exception, Throwable throwable) {
+    super(exception, throwable);
+  }
+
+  public ApplicationException(String exception, String description){
     this(exception);
     this.description = description;
   }
-
-  public ApplicationException(String Class, String description, String exception) {
-    this(exception, description);
-    this.Class = Class;
-  }
-
+  
   public String getDescription() {
     return this.description;
   }

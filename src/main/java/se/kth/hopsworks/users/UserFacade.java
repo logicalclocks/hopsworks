@@ -3,17 +3,13 @@ package se.kth.hopsworks.users;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
-/**
- *
- * @author Jim Dowling<jdowling@sics.se>
- *
- */
 @Stateless
 public class UserFacade extends AbstractFacade<Users> {
 
@@ -45,14 +41,15 @@ public class UserFacade extends AbstractFacade<Users> {
   }
 
   public List<Users> findAllUsers() {
-    Query query = em.createNativeQuery("SELECT * FROM users", Users.class);
+    Query query = em.createNativeQuery("SELECT * FROM hopsworks.users",
+            Users.class);
     return query.getResultList();
   }
 
   public List<Users> filterUsersBasedOnProject(String name) {
 
     Query query = em.createNativeQuery(
-            "SELECT * FROM users WHERE email NOT IN (SELECT team_member FROM ProjectTeam WHERE name=?)",
+            "SELECT * FROM hopsworks.users WHERE email NOT IN (SELECT team_member FROM hopsworks.ProjectTeam WHERE name=?)",
             Users.class).setParameter(1, name);
     return query.getResultList();
   }
@@ -62,7 +59,9 @@ public class UserFacade extends AbstractFacade<Users> {
   }
 
   public int lastUserID() {
-    Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM users p");
+
+    Query query = em.createNativeQuery(
+            "SELECT MAX(p.uid) FROM hopsworks.users p");
     Object obj = query.getSingleResult();
 
     if (obj == null) {
@@ -89,12 +88,18 @@ public class UserFacade extends AbstractFacade<Users> {
     }
   }
 
+  /**
+   * Get the user with the given email.
+   * <p>
+   * @param email
+   * @return The user with given email, or null if no such user exists.
+   */
   public Users findByEmail(String email) {
     try {
       return em.createNamedQuery("Users.findByEmail", Users.class).setParameter(
               "email", email)
               .getSingleResult();
-    } catch (Exception e) {
+    } catch (NoResultException e) {
       return null;
     }
   }

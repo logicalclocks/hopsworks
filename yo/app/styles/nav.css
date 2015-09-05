@@ -11,9 +11,9 @@ nav.navbar-sics { background: #2e353d; border-color: #ccc; box-shadow: 0 0 2px 0
 nav.navbar-sics a { color: #337ab7; }
 
 nav.navbar-sics ul.navbar-nav a {
-    border-color: #fff;
-    color: #fff;
-    padding-left: 25px;
+  border-color: #fff;
+  color: #fff;
+  padding-left: 25px;
 }
 
 nav.navbar-sics ul.navbar-nav a:hover,
@@ -32,30 +32,30 @@ nav.navbar-sics span.badge { background: #337ab7; font-weight: normal; font-size
 nav.navbar-sics span.badge.new { background: rgba(255, 0, 0, 0.8); color: #fff; }
 
 .list-group-item:last-child {
-    border-bottom-left-radius: 0px;
-    border-bottom-right-radius: 0px;
+  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 0px;
 }
 
 .list-group-item:first-child {
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
 }
 
 .list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {
-    background-color: #2e353d;
-    border-color: #2e353d;
-    color: #fff;
-    z-index: 100;
-    height: 43px;
+  background-color: #2e353d;
+  border-color: #2e353d;
+  color: #fff;
+  z-index: 100;
+  height: 43px;
 }
 
 .btn-lightgrey {
-    background-color: #60b044;
-    background-image: linear-gradient(#8add6d, #60b044);
-    background-repeat: repeat-x;
-    border-color: #5ca941;
-    color: #fff;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.15);
+  background-color: #60b044;
+  background-image: linear-gradient(#8add6d, #60b044);
+  background-repeat: repeat-x;
+  border-color: #5ca941;
+  color: #fff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.15);
 }
 
 .navbar-default
@@ -67,5 +67,6 @@ a:focus,
 .navbar-nav
 .open
 .dropdown-menu > li > a:hover {
-    color: #ffffff;
+  color: #ffffff;
 }
+

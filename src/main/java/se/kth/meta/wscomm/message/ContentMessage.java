@@ -1,14 +1,15 @@
 package se.kth.meta.wscomm.message;
 
 import java.util.List;
+import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.FieldPredefinedValues;
-import se.kth.meta.entity.Fields;
-import se.kth.meta.entity.Tables;
-import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.Field;
+import se.kth.meta.entity.FieldPredefinedValue;
+import se.kth.meta.entity.MTable;
+import se.kth.meta.entity.Template;
 import se.kth.meta.exception.ApplicationException;
 
 /**
@@ -17,15 +18,26 @@ import se.kth.meta.exception.ApplicationException;
  */
 public abstract class ContentMessage implements Message {
 
+  private static final Logger logger = Logger.
+          getLogger(ContentMessage.class.getName());
+
+  protected String TYPE;
+  protected String sender;
+  protected String message;
+  protected String status;
   protected int templateId;
   protected String action;
-  protected Templates template;
+  protected Template template;
 
-  public void setTemplate(Templates template) {
+  public ContentMessage() {
+    this.status = "OK";
+  }
+
+  public void setTemplate(Template template) {
     this.template = template;
   }
 
-  public Templates getTemplate() throws ApplicationException {
+  public Template getTemplate() throws ApplicationException {
     return this.template;
   }
 
@@ -52,7 +64,7 @@ public abstract class ContentMessage implements Message {
    * message action. It's the inverse of parseSchema()
    * <p>
    *
-   * @param entities Entities is a list of Tables objects
+   * @param entities Entities is a list of MTable objects
    * @return the schema as a JSON string
    */
   @Override
@@ -75,6 +87,12 @@ public abstract class ContentMessage implements Message {
     }
   }
 
+  /**
+   * Creates a json response with just the template names
+   * <p>
+   * @param entities
+   * @return
+   */
   private String templateNames(List<EntityIntf> entities) {
     JsonObjectBuilder builder = Json.createObjectBuilder();
 
@@ -83,13 +101,11 @@ public abstract class ContentMessage implements Message {
     JsonArrayBuilder templates = Json.createArrayBuilder();
     for (EntityIntf e : entities) {
 
-      Templates te = (Templates) e;
+      Template te = (Template) e;
       JsonObjectBuilder template = Json.createObjectBuilder();
 
       template.add("id", te.getId());
       template.add("name", te.getName());
-//            System.out.println("TEMPLATE ID " + te.getId());
-//            System.out.println("TEMPLATE NAME " + te.getName());
       templates.add(template);
     }
 
@@ -98,6 +114,12 @@ public abstract class ContentMessage implements Message {
     return builder.build().toString();
   }
 
+  /**
+   * Creates a json response with all the content a template carries
+   * <p>
+   * @param entities
+   * @return
+   */
   private String templateContents(List<EntityIntf> entities) {
     JsonObjectBuilder builder = Json.createObjectBuilder();
 
@@ -111,18 +133,18 @@ public abstract class ContentMessage implements Message {
     //create the columns/lists/tables of the board
     for (EntityIntf ta : entities) {
 
-      Tables t = (Tables) ta;
+      MTable t = (MTable) ta;
       JsonObjectBuilder column = Json.createObjectBuilder();
 
       column.add("id", t.getId());
       column.add("name", t.getName());
 
-      List<Fields> fields = t.getFields();
+      List<Field> fields = t.getFields();
       //array holding the cards
       JsonArrayBuilder cards = Json.createArrayBuilder();
 
       //create the column cards
-      for (Fields c : fields) {
+      for (Field c : fields) {
         JsonObjectBuilder card = Json.createObjectBuilder();
         card.add("id", c.getId());
         card.add("title", c.getName());
@@ -130,7 +152,8 @@ public abstract class ContentMessage implements Message {
         card.add("required", c.getRequired());
         card.add("description", c.getDescription());
         card.add("fieldtypeid", c.getFieldTypeId());
-
+        card.add("position", c.getPosition());
+        
         //"fieldtypeContent":[{"id":-1,"fieldid":-1,"value":"cc"},{"id":-1,"fieldid":-1,"value":"ccc"},{"id":-1,"fieldid":-1,"value":"cccc"}]
         JsonObjectBuilder temp = Json.createObjectBuilder();
         temp.add("showing", false);
@@ -138,7 +161,7 @@ public abstract class ContentMessage implements Message {
         card.add("sizefield", temp);
 
         JsonArrayBuilder arr = Json.createArrayBuilder();
-        for (FieldPredefinedValues value : c.getFieldPredefinedValues()) {
+        for (FieldPredefinedValue value : c.getFieldPredefinedValues()) {
           JsonObjectBuilder obj = Json.createObjectBuilder();
           obj.add("id", value.getId());
           obj.add("fieldid", value.getFieldid());

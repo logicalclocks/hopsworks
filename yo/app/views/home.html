@@ -1,8 +1,13 @@
 <div class="container" ng-controller="MainCtrl as mainCtrl" style="padding-top:25px;">
   <div ng-include="'nav.html'"></div>
-  <div class="row">
+  <div ng-show="mainCtrl.searchReturned !== ''" class="row">
+    <div id="projectSearchResults">
+      <div ng-include="'views/searchResult.html'"></div>
+    </div>
+  </div>
+  <div ng-show="mainCtrl.searchReturned === ''" class="row">
     <div class="col-md-8" style="padding-left:56px; min-width: 500px">
-      <div class="">
+      <div>
         <div class="widget-body">
           <div class="timeline clearfix">
             <div class="mid-line"></div>
@@ -31,7 +36,8 @@
               </div>
             </div>
 
-            <pagination total-items="homeCtrl.totalItems"
+            <pagination ng-show="homeCtrl.totalPages > 1"
+                        total-items="homeCtrl.totalItems"
                         ng-model="homeCtrl.currentPage"
                         max-size="homeCtrl.pageSize"
                         class="pagination-sm"
@@ -47,6 +53,7 @@
       </div>
     </div>
     <div class="col-md-4 sidebar" style="min-width: 390px; max-width: 390px">
+
       <span class="list-group-item active">
         <span class="badge pull-left" style="margin-right: 10px;">{{homeCtrl.projects.length}}</span> Projects
 
@@ -69,7 +76,8 @@
             <span id="search_concept">Filter by</span>
             <span class="caret"></span>
           </button>
-          <ul class="dropdown-menu">
+
+          <ul class="dropdown-menu" role="menu">
             <li><a href="#its_equal"> My own</a></li>
             <li><a href="#greather_than"> Private</a></li>
             <li><a href="#less_than"> Public </a></li>
@@ -90,6 +98,7 @@
       <div ng-repeat="project in homeCtrl.projects| filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects - 1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
         <a href="#/project/{{project.project.id}}"
            class="list-group-item"
+           context-menu
            data-target="menu-{{$index}}">
           <div ng-if="project.teamRole == 'Data scientist'">
             <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"></i>
@@ -136,8 +145,5 @@
       </div>
       <pager total-items="homeCtrl.totalItemsProjects" ng-model="homeCtrl.currentPageProjects"></pager>
     </div>
-
-
   </div>
-
 </div>

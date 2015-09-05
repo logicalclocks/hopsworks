@@ -10,8 +10,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.project.Project;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -27,6 +27,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   // String constants
   public static final String NEW_PROJECT = " created a new project ";
   public static final String NEW_DATA = " added a new dataset ";
+  public static final String SHARED_DATA = " shared dataset ";
   public static final String NEW_MEMBER = " added a member ";
   public static final String NEW_SAMPLE = " added a new sample ";
   public static final String CHANGE_ROLE = " changed the role of ";
@@ -39,6 +40,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String PROJECT_NAME_CHANGED = " changed project name ";
   public static final String PROJECT_DESC_CHANGED
           = " changed project description.";
+  public static final String CREATED_JOB = " created a new job ";
   // Flag constants
   public static final String FLAG_PROJECT = "PROJECT";
   public static final String FLAG_DATASET = "DATASET";

@@ -25,6 +25,8 @@ public enum Command {
   //
   FETCH_METADATA,
   //
+  FETCH_TABLE_METADATA,
+  //
   FETCH_FIELD_TYPES,
   //
   DELETE_TABLE,
@@ -35,5 +37,13 @@ public enum Command {
   //
   QUIT,
   //
-  TEST
+  TEST,
+  //
+  IS_TABLE_EMPTY,
+  //
+  IS_FIELD_EMPTY,
+  //
+  UPDATE_METADATA,
+  //
+  UPDATE_TEMPLATE_NAME
 }

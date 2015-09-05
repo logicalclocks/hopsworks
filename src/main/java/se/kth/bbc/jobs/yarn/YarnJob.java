@@ -5,36 +5,47 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.jobs.HopsJob;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
-import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
+import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.jobhistory.JobState;
+import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
  * @author stig
  */
-public class YarnJob extends HopsJob {
+public abstract class YarnJob extends HopsJob {
 
   private static final Logger logger = Logger.getLogger(YarnJob.class.getName());
 
   private static final int DEFAULT_MAX_STATE_POLL_RETRIES = 10;
   private static final int DEFAULT_POLL_TIMEOUT_INTERVAL = 1; //in seconds
 
-  private final YarnRunner runner;
+  protected YarnRunner runner;
   private YarnMonitor monitor = null;
-  private final FileOperations fops;
 
   private String stdOutFinalDestination, stdErrFinalDestination;
   private boolean started = false;
 
   private JobState finalState = null;
 
-  public YarnJob(JobHistoryFacade facade, YarnRunner runner, FileOperations fops) {
-    super(facade);
-    this.runner = runner;
-    this.fops = fops;
+  /**
+   *
+   * @param job
+   * @param user
+   * @param services
+   * @throws IllegalArgumentException If the JobDescription does not contain a
+   * YarnJobConfiguration object.
+   */
+  public YarnJob(JobDescription job, Users user,
+          AsynchronousJobExecutor services) {
+    super(job, services, user);
+    if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
+      throw new IllegalArgumentException(
+              "JobDescription must contain a YarnJobConfiguration object. Received class: "
+              + job.getJobConfig().getClass());
+    }
   }
 
   public final void setStdOutFinalDestination(String stdOutFinalDestination) {
@@ -45,8 +56,12 @@ public class YarnJob extends HopsJob {
     this.stdErrFinalDestination = stdErrFinalDestination;
   }
 
-  protected final void updateArgs() {
-    super.updateArgs(runner.getAmArgs());
+  protected final String getStdOutFinalDestination() {
+    return this.stdOutFinalDestination;
+  }
+
+  protected final String getStdErrFinalDestination() {
+    return this.stdErrFinalDestination;
   }
 
   protected final boolean appFinishedSuccessfully() {
@@ -60,23 +75,28 @@ public class YarnJob extends HopsJob {
     return finalState;
   }
 
-  protected final YarnRunner getRunner() {
-    return runner;
-  }
-
-  protected final FileOperations getFileOperations() {
-    return fops;
-  }
-
-  protected final boolean startJob() {
+  /**
+   * Start the YARN application master.
+   * <p>
+   * @return True if the AM was started, false otherwise.
+   * @throws IllegalStateException If the YarnRunner has not been set yet.
+   */
+  protected final boolean startApplicationMaster() throws IllegalStateException {
+    if (runner == null) {
+      throw new IllegalStateException(
+              "The YarnRunner has not been initialized yet.");
+    }
     try {
       updateState(JobState.STARTING_APP_MASTER);
       monitor = runner.startAppMaster();
       started = true;
+      updateExecution(null, -1, null, null, monitor.getApplicationId().
+              toString(), null, null);
       return true;
     } catch (YarnException | IOException e) {
       logger.log(Level.SEVERE,
-              "Failed to start application master for job " + getJobId()
+              "Failed to start application master for execution "
+              + getExecution()
               + ". Aborting execution",
               e);
       updateState(JobState.APP_MASTER_START_FAILED);
@@ -84,6 +104,12 @@ public class YarnJob extends HopsJob {
     }
   }
 
+  /**
+   * Monitor the state of the job.
+   * <p>
+   * @return True if monitoring succeeded all the way, false if failed in
+   * between.
+   */
   protected final boolean monitor() {
     try (YarnMonitor r = monitor.start()) {
       if (!started) {
@@ -99,8 +125,8 @@ public class YarnJob extends HopsJob {
         failures = 0;
       } catch (YarnException | IOException ex) {
         logger.log(Level.WARNING,
-                "Failed to get application state for job id "
-                + getJobId(), ex);
+                "Failed to get application state for execution"
+                + getExecution(), ex);
         appState = null;
         failures = 1;
       }
@@ -128,22 +154,22 @@ public class YarnJob extends HopsJob {
         } catch (YarnException | IOException ex) {
           failures++;
           logger.log(Level.WARNING,
-                  "Failed to get application state for job id "
-                  + getJobId() + ". Tried " + failures + " time(s).", ex);
+                  "Failed to get application state for execution "
+                  + getExecution() + ". Tried " + failures + " time(s).", ex);
         }
       }
 
       if (failures > DEFAULT_MAX_STATE_POLL_RETRIES) {
         try {
           logger.log(Level.SEVERE,
-                  "Killing application, jobId {0}, because unable to poll for status.",
-                  getJobId());
+                  "Killing application, {0}, because unable to poll for status.",
+                  getExecution());
           r.cancelJob();
           updateState(JobState.KILLED);
           finalState = JobState.KILLED;
         } catch (YarnException | IOException ex) {
           logger.log(Level.SEVERE,
-                  "Failed to cancel job, jobId " + getJobId()
+                  "Failed to cancel execution, " + getExecution()
                   + " after failing to poll for status.", ex);
           updateState(JobState.FRAMEWORK_FAILURE);
           finalState = JobState.FRAMEWORK_FAILURE;
@@ -155,62 +181,54 @@ public class YarnJob extends HopsJob {
     }
   }
 
-  protected final void copyLogs() {
+  /**
+   * Copy the AM logs to their final destination.
+   */
+  protected void copyLogs() {
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
-          fops.copyToHDFSFromPath(runner.getStdOutPath(),
-                  stdOutFinalDestination);
-          getJobHistoryFacade().updateStdOutPath(getJobId(),
+          services.getFileOperations().copyToHDFSFromLocal(true, runner.
+                  getStdOutPath(),
                   stdOutFinalDestination);
         } else {
-          //TODO: move in HDFS
-          getJobHistoryFacade().updateStdOutPath(getJobId(),
-                  runner.getStdOutPath());
+          services.getFileOperations().renameInHdfs(runner.getStdOutPath(),
+                  stdOutFinalDestination);
         }
-
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
-          fops.copyToHDFSFromPath(runner.getStdErrPath(),
-                  stdErrFinalDestination);
-          getJobHistoryFacade().updateStdErrPath(getJobId(),
+          services.getFileOperations().copyToHDFSFromLocal(true, runner.
+                  getStdErrPath(),
                   stdErrFinalDestination);
         } else {
-          //TODO: move in HDFS
-          getJobHistoryFacade().updateStdErrPath(getJobId(),
-                  runner.getStdErrPath());
+          services.getFileOperations().renameInHdfs(runner.getStdErrPath(),
+                  stdErrFinalDestination);
         }
       }
+      updateExecution(null, -1, stdOutFinalDestination, stdErrFinalDestination,
+              null, null, null);
     } catch (IOException e) {
-      //TODO: figure out how to handle this
-      logger.log(Level.SEVERE, "Exception while trying to write logs for job "
-              + getJobId() + " to HDFS.", e);
+      logger.log(Level.SEVERE,
+              "Exception while trying to write logs for execution "
+              + getExecution() + " to HDFS.", e);
     }
   }
 
   @Override
-  public HopsJob getInstance(JobHistory jh) throws IllegalArgumentException {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  protected void runJobInternal() {
-    //Update job history object
-    updateArgs();
-
-    //Keep track of time and start job
-    long startTime = System.currentTimeMillis();
+  protected void runJob() {
     // Try to start the AM
-    boolean proceed = startJob();
+    boolean proceed = startApplicationMaster();
 
     if (!proceed) {
       return;
     }
+    proceed = monitor();
+    //If not ok: return
+    if (!proceed) {
+      return;
+    }
     copyLogs();
-    long endTime = System.currentTimeMillis();
-    long duration = endTime - startTime;
-    getJobHistoryFacade().update(getJobId(), getFinalState(), duration);
-
+    updateState(getFinalState());
   }
 }

@@ -1,6 +1,5 @@
 <div growl></div>
 
-
 <div class="modal-header">
   <button class="close"
           ng-click="projectCtrl.close()"
@@ -20,20 +19,16 @@
       <div class="col-md-8">
         <fieldset>
           <div class="control-group col-md-offset-1">
+            <label for="projectname" style="color: black;">Name</label>
             <md-input-container>
-              <label for="projectname" style="color: black;">Name</label>
               <input name="project_name"
                      type="text"
                      id="projectname"
                      ng-model="projectCtrl.currentProject.projectName"
                      required
-                     disabled
-                     >
+                     disabled>
             </md-input-container>
-                        <span
-                          ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp; projectForm.project_name.$error.required"
-                          class="text-danger ng-hide">This field is required</span>
-
+         
             <p></p>
 
             <label for="projectname" class="control-label">Description</label>
@@ -56,19 +51,21 @@
             <md-checkbox class="md-primary"
                          ng-repeat="projectType in projectCtrl.projectTypes"
                          ng-click="projectCtrl.exists(projectType)">
-              {{ projectType }}
+              {{ projectType}}
+
             </md-checkbox>
           </div>
         </fieldset>
       </div>
 
-
     </div>
   </div>
   <div class="modal-footer">
     <button class="btn btn-default" type="button" ng-click="projectCtrl.close()">Cancel</button>
-    <button class="btn btn-primary" type="submit" ng-disabled="projectForm.project_name.$error.required">
-      Save
+    <button class="btn btn-primary" type="submit" 
+              ng-disabled="projectCtrl.working">
+        <i ng-if="projectCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+        Save
     </button>
   </div>
 </form>

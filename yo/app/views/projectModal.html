@@ -12,9 +12,8 @@
         <fieldset>
 
           <div class="control-group col-md-offset-1">
-
-            <md-input-container>
-              <label for="projectname" style="color: black;">Name</label>
+            <label for="projectname" style="color: black;">Name</label>
+            <md-input-container>            
               <input name="project_name" type="text" id="projectname"
                      ng-model="projectCreatorCtrl.projectName"
                      required
@@ -22,7 +21,8 @@
             </md-input-container>
 
             <span
-              ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp; projectForm.project_name.$error.required"
+              ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp;
+                  projectForm.project_name.$error.required"
               class="text-danger ng-hide">This field is required</span>
 
             <p></p>
@@ -30,8 +30,8 @@
             <label for="projectname" class="control-label">Description</label>
 
             <div class="controls">
-                        <textarea class="form-control" style="resize:none;" ng-model="projectCreatorCtrl.projectDesc"
-                                  rows="3"></textarea>
+              <textarea class="form-control" style="resize:none;" ng-model="projectCreatorCtrl.projectDesc"
+                        rows="3"></textarea>
             </div>
 
 
@@ -49,8 +49,9 @@
                   <div ng-bind-html="projectCreatorCtrl.card.email | highlight: $select.search"></div>
                   <small>
                     <i class="fa fa-user-plus"></i>
-                                    <span style="font-size: 14px;;"
-                                          ng-bind-html="''+card.email | highlight: $select.search"></span>
+                    <span style="font-size: 14px;;"
+                          ng-bind-html="''+card.email | highlight: $select.search"></span>
+
                     <br/>
                     <span ng-bind-html="''+card.firstname | highlight: $select.search"></span>
                     <span ng-bind-html="''+card.lastname | highlight: $select.search"></span>
@@ -66,18 +67,11 @@
                   <span style="margin-right:10px;"> {{member}}</span>
                   <span class="close" style="float: none;">× </span>
                 </button>
-
               </div>
-
             </div>
-
-
           </div>
-
-
         </fieldset>
       </div>
-
 
       <div class="col-md-4">
         <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Services</h3>
@@ -87,7 +81,8 @@
             <md-checkbox class="md-primary"
                          ng-repeat="projectType in projectCreatorCtrl.projectTypes"
                          ng-click="projectCreatorCtrl.exists(projectType)">
-              {{ projectType }}
+              {{ projectType}}
+
             </md-checkbox>
           </div>
 
@@ -96,11 +91,13 @@
       </div>
     </div>
 
-
     <div class="modal-footer">
 
       <button class="btn btn-default" type="button" ng-click="projectCreatorCtrl.close()">Cancel</button>
-      <button class="btn btn-primary" type="submit" ng-disabled="projectForm.project_name.$error.required">Create
+      <button class="btn btn-primary" type="submit" 
+              ng-disabled="projectForm.project_name.$error.required || projectCreatorCtrl.working">
+        <i ng-if="projectCreatorCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+        Create
       </button>
 
     </div>

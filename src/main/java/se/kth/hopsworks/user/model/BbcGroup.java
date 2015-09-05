@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.hopsworks.user.model;
 
 import java.io.Serializable;
@@ -26,7 +21,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author Ermias<ermiasg@kth.se>
  */
 @Entity
-@Table(name = "bbc_group")
+@Table(name = "hopsworks.bbc_group")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "BbcGroup.findAll",

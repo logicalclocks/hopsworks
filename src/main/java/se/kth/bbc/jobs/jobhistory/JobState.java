@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs.jobhistory;
 
+import java.util.EnumSet;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 
 /**
@@ -8,49 +9,29 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
  */
 public enum JobState {
 
-  INITIALIZING,
-  FINISHED,
-  RUNNING,
-  ACCEPTED,
-  FAILED,
-  KILLED,
-  NEW,
-  NEW_SAVING,
-  SUBMITTED,
-  FRAMEWORK_FAILURE,
-  STARTING_APP_MASTER,
-  APP_MASTER_START_FAILED;
+  INITIALIZING("Initializing"),
+  INITIALIZATION_FAILED("Initialization failed"),
+  FINISHED("Finished"),
+  RUNNING("Running"),
+  ACCEPTED("Accepted"),
+  FAILED("Failed"),
+  KILLED("Killed"),
+  NEW("New"),
+  NEW_SAVING("New, saving"),
+  SUBMITTED("Submitted"),
+  FRAMEWORK_FAILURE("Framework failure"),
+  STARTING_APP_MASTER("Starting Application Master"),
+  APP_MASTER_START_FAILED("Failed starting AM");
+
+  private final String readable;
+
+  private JobState(String readable) {
+    this.readable = readable;
+  }
 
   @Override
   public String toString() {
-    switch (this) {
-      case INITIALIZING:
-        return "Initializing";
-      case FINISHED:
-        return "Finished";
-      case RUNNING:
-        return "Running";
-      case ACCEPTED:
-        return "Accepted";
-      case FAILED:
-        return "Failed";
-      case KILLED:
-        return "Killed";
-      case NEW:
-        return "New";
-      case NEW_SAVING:
-        return "New saving";
-      case SUBMITTED:
-        return "Submitted";
-      case FRAMEWORK_FAILURE:
-        return "Framework failure";
-      case STARTING_APP_MASTER:
-        return "Starting Application Master";
-      case APP_MASTER_START_FAILED:
-        return "AM start failed";
-      default:
-        throw new IllegalStateException("Illegal enum value.");
-    }
+    return readable;
   }
 
   public static JobState getJobState(YarnApplicationState yarnstate) {
@@ -83,10 +64,16 @@ public enum JobState {
       case KILLED:
       case FRAMEWORK_FAILURE:
       case APP_MASTER_START_FAILED:
+      case INITIALIZATION_FAILED:
         return true;
       default:
         return false;
     }
+  }
+
+  public static EnumSet<JobState> getRunningStates() {
+    return EnumSet.of(INITIALIZING, RUNNING, ACCEPTED, NEW, NEW_SAVING,
+            SUBMITTED, STARTING_APP_MASTER);
   }
 
 }

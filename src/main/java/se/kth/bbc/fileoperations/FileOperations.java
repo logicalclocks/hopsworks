@@ -1,19 +1,20 @@
 package se.kth.bbc.fileoperations;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.util.logging.Level;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.validation.ValidationException;
 import org.apache.hadoop.fs.Path;
-import se.kth.bbc.lims.StagingManager;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.controller.FolderNameValidator;
 
 /**
  * Session bean for file operations. Translates high-level operations into
@@ -25,15 +26,13 @@ import se.kth.bbc.project.fb.InodeFacade;
 @Stateless
 public class FileOperations {
 
-  private static final Logger logger = Logger.getLogger(
-          FileOperationsManagedBean.class.getName());
+  private static final Logger logger = Logger.getLogger(FileOperations.class.
+          getName());
 
   @EJB
   private FileSystemOperations fsOps;
   @EJB
   private InodeFacade inodes;
-  @EJB
-  private StagingManager stagingManager;
 
   /**
    * Get an InputStream for the file on the given path.
@@ -53,91 +52,53 @@ public class FileOperations {
    * @param path
    * @return
    * @throws IOException
+   * @throws IllegalArgumentException if the given path contains an invalid
+   * folder name.
    */
   public boolean mkDir(String path) throws IOException {
+    if (!path.startsWith("/")) {
+      path = "/" + path;
+    }
+    String[] pathParts = path.substring(1).split("/");
+    for (String s : pathParts) {
+      try {
+        FolderNameValidator.isValidName(s);
+      } catch (ValidationException e) {
+        throw new IllegalArgumentException("Illegal folder name: " + s
+                + ". Reason: " + e.getLocalizedMessage(), e);
+      }
+    }
     Path location = new Path(path);
     return fsOps.mkdir(location);
   }
 
   /**
-   * Copy a file from the local system to HDFS. The method first updates the
-   * inode status to "copying to HDFS" and then copies the file to HDFS.
-   * Afterwards updates the status to "available".
-   *
-   * @param localFilename The name of the local file to be copied. Will be
-   * sought for in the temp folder.
-   * @param destination The path on HDFS on which the file should be created.
-   * Includes the file name.
+   * Copy a file from the local path to the HDFS destination.
+   * <p>
+   * @param deleteSource If true, deletes the source file after copying.
+   * @param src
+   * @param destination
+   * @throws IOException
+   * @throws IllegalArgumentException If the destination path contains an
+   * invalid folder name.
    */
-  public void copyToHDFS(String localFilename, String destination)
+  public void copyToHDFSFromLocal(boolean deleteSource, String src,
+          String destination)
           throws IOException {
-    //Get the local file
-    File localfile = getLocalFile(localFilename);
-
+    //Make sure the directories exist
     String dirs = Utils.getDirectoryPart(destination);
     mkDir(dirs);
-
     //Actually copy to HDFS
     Path destp = new Path(destination);
-    try (FileInputStream fis = new FileInputStream(localfile)) {
-      fsOps.copyToHDFS(destp, fis);
-    } catch (IOException | URISyntaxException ex) {
-      logger.log(Level.SEVERE, "Error while copying to HDFS", ex);
-      throw new IOException(ex);
-    }
-  }
-
-  public void copyToHDFSFromPath(String path, String destination)
-          throws IOException {
-    //Get the local file
-    File localfile = new File(path);
-
-    String dirs = Utils.getDirectoryPart(destination);
-    mkDir(dirs);
-
-    //Actually copy to HDFS
-    Path destp = new Path(destination);
-    try (FileInputStream fis = new FileInputStream(localfile)) {
-      fsOps.copyToHDFS(destp, fis);
-    } catch (IOException | URISyntaxException ex) {
-      logger.log(Level.SEVERE, "Error while copying to HDFS", ex);
-      throw new IOException(ex);
-    }
+    Path srcp = new Path(src);
+    fsOps.copyFromLocal(deleteSource, srcp, destp);
   }
 
   /**
-   * Write an input stream to a HDFS file. An Inode is also created.
+   * Delete the file at the given path.
    *
-   * @param is The InputStream to be written.
-   * @param size The length of the file.
-   * @param destination The path on HDFS at which the file should be created.
-   * Includes the filename.
-   */
-  public void writeToHDFS(InputStream is, long size, String destination) throws
-          IOException {
-    //Actually copy to HDFS
-    Path destp = new Path(destination);
-    try {
-      fsOps.copyToHDFS(destp, is);
-    } catch (IOException | URISyntaxException ex) {
-      logger.log(Level.SEVERE, null, ex);
-      throw new IOException(ex);
-    }
-  }
-
-  private File getLocalFile(String localFilename) {
-    return new File(getLocalFilePath(localFilename));
-  }
-
-  private String getLocalFilePath(String localFilename) {
-    return stagingManager.getStagingPath() + File.separator + localFilename;
-  }
-
-  /**
-   * Delete the file represented by Inode i.
-   *
-   * @param path The Inode to be removed.
-   * @return
+   * @param path The path to the file to be removed.
+   * @return true if the file has been deleted, false otherwise.
    * @throws IOException
    */
   public boolean rm(String path) throws IOException {
@@ -159,45 +120,59 @@ public class FileOperations {
   }
 
   /**
-   * Copy a file from the local file system to HDFS after its upload. Finds
-   * the corresponding Inode for the file and copies the file, updating the
-   * Inode.
-   *
-   * @param localFilename The local name of the uploaded file.
-   * @param destination The path in HDFS where the file should end up.
-   * Includes the file name.
+   * Get the contents of the file at the given path.
+   * <p>
+   * @param path
+   * @return
+   * @throws IOException
    */
-  public void copyAfterUploading(String localFilename, String destination)
-          throws IOException {
-    copyToHDFS(localFilename, destination);
-  }
-
   public String cat(String path) throws IOException {
     Path p = new Path(path);
     return fsOps.cat(p);
   }
 
   /**
-   * Copy a file from local filesystem to HDFS. Do not create an Inode for the
-   * file.
-   * (Used internally for prepping running jobs.)
+   * Move the file from the source path to the destination path.
    * <p>
-   * @param localPath
-   * @param hdfsPath
+   * @param source
+   * @param destination
+   * @throws IOException
+   * @thows IllegalArgumentException If the destination path contains an invalid
+   * folder name.
    */
-  public void copyFromLocalNoInode(String localPath, String hdfsPath) throws
-          IOException {
-    Path source = new Path(localPath);
-    Path destination = new Path(hdfsPath);
-    fsOps.copyFromLocal(source, destination);
-  }
-
   public void renameInHdfs(String source, String destination) throws IOException {
+    //Check if source and destination are the same
+    if (source.equals(destination)) {
+      return;
+    }
+    //If source does not start with hdfs, prepend.
+    if (!source.startsWith("hdfs")) {
+      source = "hdfs://" + source;
+    }
+
+    //Check destination place, create directory.
+    String destDir;
+    if (!destination.startsWith("hdfs")) {
+      destDir = Utils.getDirectoryPart(destination);
+      destination = "hdfs://" + destination;
+    } else {
+      String tmp = destination.substring("hdfs://".length());
+      destDir = Utils.getDirectoryPart(tmp);
+    }
+    if (!exists(destDir)) {
+      mkDir(destDir);
+    }
     Path src = new Path(source);
     Path dst = new Path(destination);
     fsOps.moveWithinHdfs(src, dst);
   }
 
+  /**
+   * Check if the inode at the given path is a directory.
+   * <p>
+   * @param path
+   * @return
+   */
   public boolean isDir(String path) {
     Inode i = inodes.getInodeAtPath(path);
     if (i != null) {
@@ -207,6 +182,15 @@ public class FileOperations {
     }
   }
 
+  /**
+   * Copy a file from one location (src) in HDFS to another (dst).
+   * <p>
+   * @param src
+   * @param dst
+   * @throws IOException
+   * @throws IllegalArgumentException If the destination path contains an
+   * invalid folder name.
+   */
   public void copyWithinHdfs(String src, String dst) throws IOException {
     //Convert into Paths
     Path srcPath = new Path(src);
@@ -218,6 +202,13 @@ public class FileOperations {
     fsOps.copyInHdfs(srcPath, dstPath);
   }
 
+  /**
+   * Copy from HDFS to the local file system.
+   * <p>
+   * @param hdfsPath
+   * @param localPath
+   * @throws IOException
+   */
   public void copyToLocal(String hdfsPath, String localPath) throws IOException {
     if (!hdfsPath.startsWith("hdfs:")) {
       hdfsPath = "hdfs://" + hdfsPath;
@@ -228,7 +219,62 @@ public class FileOperations {
     fsOps.copyToLocal(new Path(hdfsPath), new Path(localPath));
   }
 
+  /**
+   * Check if the path exists in HDFS.
+   * <p>
+   * @param path
+   * @return
+   * @throws IOException
+   */
   public boolean exists(String path) throws IOException {
+    if (path.startsWith("hdfs:")) {
+      path = path.substring(5);
+      while (path.charAt(1) == '/') {
+        path = path.substring(1);
+      }
+    }
     return inodes.existsPath(path);
   }
+
+  /**
+   * Get the absolute HDFS path of the form
+   * <i>hdfs:///projects/projectname/relativepath</i>
+   * <p>
+   * @param projectname
+   * @param relativePath
+   * @return
+   */
+  public String getAbsoluteHDFSPath(String projectname, String relativePath) {
+    //Strip relativePath from all leading slashes
+    while (relativePath.startsWith("/")) {
+      relativePath = relativePath.substring(1);
+    }
+    return "hdfs:///" + Constants.DIR_ROOT + "/" + projectname + "/"
+            + relativePath;
+  }
+
+  /**
+   * Get a list of the names of the child files (so no directories) of the given
+   * path.
+   * <p>
+   * @param path
+   * @return A list of filenames, empty if the given path does not have
+   * children.
+   */
+  public List<String> getChildNames(String path) {
+    Inode inode = inodes.getInodeAtPath(path);
+    if (inode.isDir()) {
+      List<Inode> inodekids = inodes.getChildren(inode);
+      ArrayList<String> retList = new ArrayList<>(inodekids.size());
+      for (Inode i : inodekids) {
+        if (!i.isDir()) {
+          retList.add(i.getInodePK().getName());
+        }
+      }
+      return retList;
+    } else {
+      return Collections.EMPTY_LIST;
+    }
+  }
+
 }

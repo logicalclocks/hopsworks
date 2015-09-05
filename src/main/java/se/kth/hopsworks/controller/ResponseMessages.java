@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.hopsworks.controller;
 
 /**
@@ -63,6 +58,12 @@ public class ResponseMessages {
           = "Your have successfully changed your security questions and answer.";
   public final static String PROFILE_UPDATED
           = "Your profile was updated successfully.";
+    public final static String SSH_KEY_ADDED
+            = "Your ssh key was added successfully.";
+    public final static String SSH_KEY_REMOVED
+            = "Your ssh key was deleted successfully.";
+    public final static String SSH_KEYS_LISTED
+            = "Your ssh keys were listed successfully.";
 
   //project error response
   public final static String PROJECT_NOT_FOUND = "Project wasn't found.";
@@ -91,7 +92,7 @@ public class ResponseMessages {
           = "A directory with the same name already exists. "
           + "If you want to replace it delete it first then try recreating.";
   public final static String FILE_NAME_EXIST
-          = "File already exists at this path.";
+          = "File with the same name already exists.";
   public final static String FILE_NOT_FOUND = "File not found.";
   public final static String PROJECT_SERVICE_NOT_FOUND
           = " service was not found. ";
@@ -125,4 +126,16 @@ public class ResponseMessages {
           = "DataSet name can not be empty.";
   public final static String DATASET_REMOVED_FROM_HDFS
           = "DataSet removed from hdfs.";
+  public final static String SHARED_DATASET_REMOVED
+          = "The shared dataset is removed from this project.";
+  public final static String DATASET_NOT_FOUND
+          = "DataSet not found.";
+
+  //Template
+  public final static String TEMPLATE_INODEID_EMPTY
+          = "The template id is empty";
+  public final static String TEMPLATE_NOT_ATTACHED
+          = "The template could not be attached to a file";
+  public final static String UPLOAD_PATH_NOT_SPECIFIED
+          = "The path to upload the template was not specified";
 }

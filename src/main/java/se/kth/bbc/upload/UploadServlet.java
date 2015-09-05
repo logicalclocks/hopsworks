@@ -44,10 +44,10 @@ public class UploadServlet extends HttpServlet {
     long content_length;
     //Seek to position
     try (RandomAccessFile raf
-            = new RandomAccessFile(info.resumableFilePath, "rw");
+            = new RandomAccessFile(info.getResumableFilePath(), "rw");
             InputStream is = request.getInputStream()) {
       //Seek to position
-      raf.seek((resumableChunkNumber - 1) * (long) info.resumableChunkSize);
+      raf.seek((resumableChunkNumber - 1) * (long) info.getResumableChunkSize());
       //Save to file
       long readed = 0;
       content_length = request.getContentLength();
@@ -66,7 +66,7 @@ public class UploadServlet extends HttpServlet {
 
     //Mark as uploaded and check if finished
     try (PrintWriter c = response.getWriter()) {
-      if (info.addChuckAndCheckIfFinished(
+      if (info.addChunkAndCheckIfFinished(
               new ResumableInfo.ResumableChunkNumber(
                       resumableChunkNumber), content_length)) { //Check if all chunks uploaded, and change filename
         ResumableInfoStorage.getInstance().remove(info);
@@ -80,8 +80,10 @@ public class UploadServlet extends HttpServlet {
     if (finished) {
       try {
         uploadPath = Utils.ensurePathEndsInSlash(uploadPath);
-        fileOps.copyAfterUploading(info.resumableFilename, uploadPath
-                + info.resumableFilename);
+        fileOps.copyToHDFSFromLocal(true, new File(stagingManager.
+                getStagingPath(), info.getResumableFilename()).
+                getAbsolutePath(), uploadPath
+                + info.getResumableFilename());
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Failed to write to HDSF", e);
       }
@@ -128,8 +130,8 @@ public class UploadServlet extends HttpServlet {
 
     ResumableInfo info = storage.get(resumableChunkSize, resumableTotalSize,
             resumableIdentifier, resumableFilename, resumableRelativePath,
-            resumableFilePath);
-    if (!info.vaild()) {
+            resumableFilePath, -1);
+    if (!info.valid()) {
       storage.remove(info);
       throw new ServletException("Invalid request params.");
     }

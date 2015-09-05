@@ -126,6 +126,10 @@ public class YarnRunner {
     //Set up container launch context
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
             localResources, env, amCommands, null, null, null);
+// TODO: implement this for real. doAs
+//    UserGroupInformation proxyUser = UserGroupInformation.
+//            createProxyUser("user", UserGroupInformation.
+//                    getCurrentUser());
 
     //Finally set up context
     appContext.setAMContainerSpec(amContainer); //container spec
@@ -556,6 +560,30 @@ public class YarnRunner {
 
     public Builder addAmJarToLocalResources(boolean value) {
       this.shouldAddAmJarToLocalResources = value;
+      return this;
+    }
+
+    public Builder amQueue(String queuename) {
+      this.amQueue = queuename;
+      return this;
+    }
+
+    /**
+     * Set the configuration of the Yarn Application to the values contained in
+     * the YarnJobConfiguration object. This overrides any defaults or
+     * previously set values contained in the config file.
+     * <p>
+     * @param config
+     * @return
+     */
+    public Builder setConfig(YarnJobConfiguration config) {
+      this.amQueue = config.getAmQueue();
+      this.amMemory = config.getAmMemory();
+      this.amVCores = config.getAmVCores();
+      this.appName = config.getAppName();
+      for (Entry<String, String> e : config.getLocalResources().entrySet()) {
+        addLocalResource(e.getKey(), e.getValue(), false);
+      }
       return this;
     }
 

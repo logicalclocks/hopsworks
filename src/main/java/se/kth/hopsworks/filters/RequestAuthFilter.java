@@ -49,20 +49,29 @@ public class RequestAuthFilter implements ContainerRequestFilter {
     Method method = resourceInfo.getResourceMethod();
 
     String[] pathParts = path.split("/");
-    log.log(Level.INFO, "Filtering request path: {0}", pathParts[0]);
+    log.log(Level.FINEST, "Filtering request path: {0}", pathParts[0]);
+    log.log(Level.FINEST, "Method called: {0}", method.getName());
     //intercepted method must be a project operations on a specific project
-    //with an id (/project/name/... or /activity/name/...). Project creation will have time stamp so
-    //we do not need to sotre that here
+    //with an id (/project/projectId/... or /activity/projectId/...). 
     if (pathParts.length > 1 && (pathParts[0].equalsIgnoreCase("project")
-            || pathParts[0].equalsIgnoreCase("activity"))) {
+            || pathParts[0].equalsIgnoreCase("activity") 
+            || pathParts[0].equalsIgnoreCase("notebook")
+            || pathParts[0].equalsIgnoreCase("interpreter"))) {
 
       JsonResponse json = new JsonResponse();
-
-      log.log(Level.INFO, "Filtering project request path: {0}", pathParts[1]);
-      log.log(Level.INFO, "Method called: {0}", method.getName());
-      log.log(Level.INFO, "Annotations present: {0}",
-              method.getAnnotations().length);
-
+      Integer projectId;
+      String userRole;
+      try{
+        projectId = Integer.valueOf(pathParts[1]);
+      }catch(NumberFormatException ne) {
+        //if the second pathparam is not a project id return.
+        log.log(Level.INFO, "No project id, leaving interceptor.");
+        return;
+      }
+      
+      Project project = projectBean.find(projectId);
+      log.log(Level.FINEST, "Filtering project request path: {0}", project.getName());
+      
       if (!method.isAnnotationPresent(AllowedRoles.class)) {
         //Should throw exception if there is a method that is not annotated in this path.
         requestContext.abortWith(Response.
@@ -75,10 +84,10 @@ public class RequestAuthFilter implements ContainerRequestFilter {
 
       //If the resource is allowed for all roles continue with the request. 
       if (rolesSet.contains(AllowedRoles.ALL)) {
-        log.log(Level.INFO, "Accessing resource that is allowed for all");
+        log.log(Level.FINEST, "Accessing resource that is allowed for all");
         return;
       }
-      
+
       if (requestContext.getSecurityContext().getUserPrincipal() == null) {
         requestContext.abortWith(Response.
                 status(Response.Status.UNAUTHORIZED).build());
@@ -88,13 +97,6 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       //if the resource is only allowed for some roles check if the user have the requierd role for the resource.
       String userEmail = requestContext.getSecurityContext().getUserPrincipal().
               getName();
-
-      Integer projectId;
-      String userRole;
-      projectId = Integer.valueOf(pathParts[1]);
-      Project project = projectBean.find(projectId);
-
-      log.log(Level.SEVERE, "PROJECT FOUND {0} ", project);
 
       userRole = projectTeamBean.findCurrentRole(project, userEmail);
 

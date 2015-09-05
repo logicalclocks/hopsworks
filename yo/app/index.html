@@ -1,9 +1,10 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>HopsWorks</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
+    <link rel="icon" type="image/png" href="images/Hops.png" />
     <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Lobster'>
     <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Varela+Round'>
     <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Roboto:500'>
@@ -20,6 +21,11 @@
     <link rel="stylesheet" href="bower_components/angular-chart.js/dist/angular-chart.css" />
     <link rel="stylesheet" href="bower_components/select2/select2.css" />
     <link rel="stylesheet" href="bower_components/angular-ui-select/dist/select.css" />
+    <link rel="stylesheet" href="bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
+    <link rel="stylesheet" href="bower_components/ng-sortable/dist/ng-sortable.css" />
+    <link rel="stylesheet" href="bower_components/ng-sortable/dist/ng-sortable.style.css" />
+    <link rel="stylesheet" href="bower_components/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css" />
+    <link rel="stylesheet" href="bower_components/angular-multi-select/isteven-multi-select.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
@@ -31,9 +37,6 @@
     <link rel="stylesheet" href="styles/filebrowser.css">
     <link rel="stylesheet" href="styles/board.css">
     <!-- endbuild -->
-
-
-
   </head>
   <body  ng-app="hopsWorksApp">
     <!--[if lt IE 7]>
@@ -43,7 +46,6 @@
     <div style="margin-top:50px;">
       <div ng-view=""></div>
     </div>
-
 
     <!-- build:js(.) scripts/vendor.js -->
     <!-- bower:js -->
@@ -72,34 +74,60 @@
     <script src="bower_components/select2/select2.js"></script>
     <script src="bower_components/angular-ui-select2/src/select2.js"></script>
     <script src="bower_components/angular-ui-select/dist/select.js"></script>
+    <script src="bower_components/moment/moment.js"></script>
+    <script src="bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="bower_components/ng-sortable/dist/ng-sortable.js"></script>
+    <script src="bower_components/bootstrap-switch/dist/js/bootstrap-switch.js"></script>
+    <script src="bower_components/angular-multi-select/isteven-multi-select.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
     <!-- build:js({.tmp,app}) scripts/scripts.js -->
 
     <script src="scripts/app.js"></script>
+    <script src="scripts/util.js"></script>
 
+    <script src="scripts/directives/switch.js"></script>
     <script src="scripts/directives/modal.js"></script>
     <script src="scripts/directives/passwordMatch.js"></script>
 
-    <script src="scripts/controllers/main.js"></script>
+    <script src="scripts/controllers/dataSetCreatorCtrl.js"></script>
+    <script src="scripts/controllers/datasetsCtrl.js"></script>
+    <script src="scripts/controllers/fileUpload.js"></script>
+    <script src="scripts/controllers/memberCtrl.js"></script>
     <script src="scripts/controllers/home.js"></script>
     <script src="scripts/controllers/login.js"></script>
-    <script src="scripts/controllers/registration.js"></script>
+    <script src="scripts/controllers/main.js"></script>
+    <script src="scripts/controllers/modal.js"></script>
+    <script src="scripts/controllers/newFieldCtrl.js"></script>
+    <script src="scripts/controllers/newTableCtrl.js"></script>
     <script src="scripts/controllers/profile.js"></script>
     <script src="scripts/controllers/project.js"></script>
     <script src="scripts/controllers/projectCreator.js"></script>
-    <script src="scripts/controllers/modal.js"></script>
     <script src="scripts/controllers/recoverCtrl.js"></script>
-    <script src="scripts/controllers/datasetsCtrl.js"></script>
-    <script src="scripts/controllers/dataSetCreator.js"></script>
-    <script src="scripts/controllers/memberCtrl.js"></script>
-    <script src="scripts/controllers/newCardCtrl.js"></script>
-    <script src="scripts/controllers/newTableCtrl.js"></script>
-    <script src="scripts/controllers/fileUpload.js"></script>
+    <script src="scripts/controllers/newlistCtrl.js"></script>
+    <script src="scripts/controllers/modifyFieldCtrl.js"></script>
+    <script src="scripts/controllers/registration.js"></script>
+    <script src="scripts/controllers/selectFileCtrl.js"></script>
+    <script src="scripts/controllers/attachTemplateCtrl.js"></script>
+    <script src="scripts/controllers/shareDatasetCtrl.js"></script>
+    <script src="scripts/controllers/viewSearchResultCtrl.js"></script>
+    <script src="scripts/controllers/jobsCtrl.js"></script>
+    <script src="scripts/controllers/newJobCtrl.js"></script>
+    <script src="scripts/controllers/jobDetailCtrl.js"></script>
+    <script src="scripts/controllers/metadataCtrl.js"></script>
+    <script src="scripts/controllers/importTemplateCtrl.js"></script>
+    <script src="scripts/controllers/zeppelinCtrl.js"></script>
+    <script src="scripts/controllers/SshKeysCtrl.js"></script>
+    <script src="scripts/controllers/detachTemplateCtrl.js"></script>
 
+    <!-- Services -->
     <script src="scripts/services/AuthInterceptorService.js"></script>
     <script src="scripts/services/AuthService.js"></script>
+    <script src="scripts/services/UtilsService.js"></script>
+    <script src="scripts/services/ElasticService.js"></script>
+    <script src="scripts/services/MetadataService.js"></script>
+    <script src="scripts/services/DataSetService.js"></script>
     <script src="scripts/services/ProjectService.js"></script>
     <script src="scripts/services/UserService.js"></script>
     <script src="scripts/services/RequestInterceptorService.js"></script>
@@ -108,8 +136,16 @@
     <script src="scripts/services/ActivityService.js"></script>
     <script src="scripts/services/SecurityQuestions.js"></script>
     <script src="scripts/services/MembersService.js"></script>
-    <script src="scripts/services/MetadataService.js"></script>
+    <script src="scripts/services/MetadataActionService.js"></script>
     <script src="scripts/services/DataSetService.js"></script>
+    <script src="scripts/services/CuneiformService.js"></script>
+    <script src="scripts/services/SparkService.js"></script>
+    <script src="scripts/services/AdamService.js"></script>
+    <script src="scripts/services/JobService.js"></script>
+    <script src="scripts/services/RequestService.js"></script>
+    <script src="scripts/services/MetadataHelperService.js"></script>
+    <script src="scripts/services/StorageService.js"></script>
+    <script src="scripts/services/ZeppelinService.js"></script>
     <!-- endbuild -->
 
   </body>
