@@ -150,14 +150,6 @@ public class NewProjectController implements Serializable {
         logger.log(Level.FINE, "{0} - project created successfully.", project.
                 getName());
 
-        // if the user has select the SSH service, create local UNIX accounts
-//        if (chosenTemplate.compareTo(TEMPLATE_CUSTOM) == 0) {
-//          for (ProjectServiceEnum pse : customServices) {
-//            if (pse == ProjectServiceEnum.SSH) {
-//              LocalhostServices.createUserAccount();
-//            }
-//          }
-//        }
         return loadNewProject(project);
       } else {
         MessagesController.addErrorMessage(
