@@ -442,14 +442,11 @@ public class ResponseBuilder {
     String dirPart = path.getDirPart(path.getPath());
     String basePath = path.getDirPartUntil(lastDirName);
     
-    //for now just copy the directory to a temporary place
-    this.utils.copyDir(dirPart, "/temp");
-    //remove the directory from its initial place
-    this.utils.removeDir(dirPart);
-    //copy the folder from the temp directory back to where it was
-    this.utils.copyDir("/temp/" + lastDirName, basePath);
-    //clean the temporary directory
-    this.utils.removeDir("/temp/" + lastDirName);
+    //rename - add an underscore
+    this.utils.renameDir(path, "_");
+    
+    //rename revert back to the initial name
+    this.utils.renameDir(path, "");
     
     RenameDirMessage message = new RenameDirMessage();
     message.setSender("Server");
