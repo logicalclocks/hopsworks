@@ -37,7 +37,6 @@ public class FileOperationsManagedBean implements Serializable {
   /**
    * Download the file at the specified inode.
    *
-   * @param inode The file to download.
    * @return StreamedContent of the file to be downloaded.
    */
   public StreamedContent downloadFile(String path) {
@@ -76,7 +75,7 @@ public class FileOperationsManagedBean implements Serializable {
       location = path + File.separator + newFolderName;
     }
     try {
-      boolean success = fileOps.mkDirs(location);
+      boolean success = fileOps.mkDir(location);
       if (success) {
         newFolderName = null;
       } else {

@@ -32,7 +32,6 @@ import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.user.model.SshKeys;
-import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.SshkeysFacade;
 import se.kth.hopsworks.util.LocalhostServices;
 
@@ -254,7 +253,7 @@ public class ProjectController {
     projectTeamFacade.persistProjectTeam(st);
   }
 
-  //create project on HDFS
+  //create project in HDFS
   private boolean mkProjectDIR(String projectName) throws IOException {
 
     String rootDir = Constants.DIR_ROOT;

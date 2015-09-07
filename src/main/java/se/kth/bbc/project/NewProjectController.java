@@ -20,8 +20,6 @@ import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
-import se.kth.bbc.project.services.ProjectServices;
-import se.kth.hopsworks.util.LocalhostServices;
 
 /**
  *
@@ -204,10 +202,10 @@ public class NewProjectController implements Serializable {
     String samplesPath = projectPath + File.separator
             + Constants.DIR_SAMPLES;
 
-    fileOps.mkDirs(projectPath);
-    fileOps.mkDirs(resultsPath);
-    fileOps.mkDirs(cuneiformPath);
-    fileOps.mkDirs(samplesPath);
+    fileOps.mkDir(projectPath);
+    fileOps.mkDir(resultsPath);
+    fileOps.mkDir(cuneiformPath);
+    fileOps.mkDir(samplesPath);
   }
 
 
