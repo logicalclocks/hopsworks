@@ -14,6 +14,7 @@ import se.kth.meta.db.FieldTypeFacade;
 import se.kth.meta.db.MTableFacade;
 import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.db.TupleToFileFacade;
+import se.kth.meta.entity.DirPath;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.FieldType;
@@ -30,6 +31,7 @@ import se.kth.meta.wscomm.message.FetchTableMetadataMessage;
 import se.kth.meta.wscomm.message.FieldTypeMessage;
 import se.kth.meta.wscomm.message.Message;
 import se.kth.meta.wscomm.message.TemplateMessage;
+import se.kth.meta.wscomm.message.RenameDirMessage;
 import se.kth.meta.wscomm.message.TextMessage;
 import se.kth.meta.wscomm.message.UploadedTemplateMessage;
 
@@ -425,5 +427,33 @@ public class ResponseBuilder {
     tmplMsg = (TemplateMessage) message.addNewTemplateContentMessage(templateId);
 
     this.storeSchema(tmplMsg);
+  }
+
+  /**
+   * Creates an inode mutation by copying a folder from a given path to the
+   * destination path. SHOULD change to mv, but mv fails for now
+   * <p>
+   * @param path
+   * @return
+   * @throws ApplicationException
+   */
+  public Message inodeMutationResponse(DirPath path) throws ApplicationException {
+    String lastDirName = path.getParent();
+    String dirPart = path.getDirPart(path.getPath());
+    String basePath = path.getDirPartUntil(lastDirName);
+    
+    //for now just copy the directory to a temporary place
+    this.utils.copyDir(dirPart, "/temp");
+    //remove the directory from its initial place
+    this.utils.removeDir(dirPart);
+    //copy the folder from the temp directory back to where it was
+    this.utils.copyDir("/temp/" + lastDirName, basePath);
+    //clean the temporary directory
+    this.utils.removeDir("/temp/" + lastDirName);
+    
+    RenameDirMessage message = new RenameDirMessage();
+    message.setSender("Server");
+    message.setMessage("Renaming the dir was successful");
+    return message;
   }
 }

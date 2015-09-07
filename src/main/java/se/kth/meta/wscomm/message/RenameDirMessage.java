@@ -1,30 +1,32 @@
 package se.kth.meta.wscomm.message;
 
+import java.io.StringReader;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
+import se.kth.meta.entity.DirPath;
+import se.kth.meta.entity.EntityIntf;
 
 /**
  *
- * @author Vangelis
+ * @author vangelis
  */
-public class TextMessage extends PlainMessage {
+public class RenameDirMessage extends TextMessage {
+
+  private final String TYPE = "RenameDirMessage";
 
   private static final Logger logger = Logger.
-          getLogger(TextMessage.class.getName());
-
-  private final String TYPE = "TextMessage";
-  protected String sender;
-  protected String message;
-  protected String action;
-  protected String status;
+          getLogger(RenameDirMessage.class.getName());
 
   /**
    * Default constructor. Used by the class loader to create an instance of
    * this class
    */
-  public TextMessage() {
-    this.status = "OK";
+  public RenameDirMessage() {
+    super();
   }
 
   /**
@@ -32,12 +34,12 @@ public class TextMessage extends PlainMessage {
    *
    * @param sender the message sender
    */
-  public TextMessage(String sender) {
+  public RenameDirMessage(String sender) {
     this();
     this.sender = sender;
   }
 
-  public TextMessage(String sender, String message) {
+  public RenameDirMessage(String sender, String message) {
     this(sender);
     this.message = message;
   }
@@ -67,6 +69,32 @@ public class TextMessage extends PlainMessage {
             .toString();
 
     return value;
+  }
+
+  @Override
+  public List<EntityIntf> parseSchema() {
+    JsonObject obj = Json.createReader(new StringReader(this.message)).
+            readObject();
+
+    List<EntityIntf> list = null;
+
+    try {
+      String path = obj.getString("path");
+
+      DirPath dir = new DirPath(path);
+      list = new LinkedList<>();
+      list.add(dir);
+    } catch (NullPointerException e) {
+      logger.log(Level.SEVERE, "Inodeid path not present in the message");
+    }
+
+    return list;
+  }
+
+  @Override
+  public String buildSchema(List<EntityIntf> list) {
+
+    return "Inode renamed successfully";
   }
 
   @Override

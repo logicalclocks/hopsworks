@@ -1,6 +1,7 @@
 package se.kth.rest.application.config;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 
 /**
  *

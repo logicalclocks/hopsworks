@@ -1,11 +1,14 @@
 package se.kth.meta.wscomm;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.meta.db.FieldFacade;
 import se.kth.meta.db.FieldPredefinedValueFacade;
 import se.kth.meta.db.MTableFacade;
@@ -13,6 +16,7 @@ import se.kth.meta.db.MetadataFacade;
 import se.kth.meta.db.RawDataFacade;
 import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.db.TupleToFileFacade;
+import se.kth.meta.entity.DirPath;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.Field;
@@ -48,7 +52,10 @@ public class Utils {
   private TupleToFileFacade tupletoFileFacade;
   @EJB
   private MetadataFacade metadataFacade;
+  @EJB
+  private FileOperations fops;
 
+  
   public Utils() {
   }
 
@@ -298,6 +305,100 @@ public class Utils {
       }
     } catch (DatabaseException e) {
       throw new ApplicationException("Utils.java: could not store metadata ", e);
+    }
+  }
+
+  /**
+   * Renames a given dir path. Used when attaching metadata to already
+   * indexed inodes as a means to get those inodes again in the metadata log
+   * table. Elastic rivers will pick them up again along with their metadata
+   * <p>
+   * @param path
+   * @param specialChar
+   * @throws ApplicationException
+   */
+  public void renameDir(DirPath path, String specialChar) throws
+          ApplicationException {
+
+    String pathh = path.getPath();
+    int pathLength = path.getLength();
+    String oldDirPath = null;
+    String newDirPath = null;
+
+    //the path refers to a folder
+    if (this.fops.isDir(pathh)) {
+      oldDirPath = pathh;
+    } else {
+      //the path refers to a file
+      oldDirPath = se.kth.bbc.lims.Utils.getDirectoryPart(pathh);
+      //refresh the length, file name was removed
+      pathLength = oldDirPath.length();
+    }
+
+    if (oldDirPath.endsWith(File.separator)) {
+      //leave out the trailing slash
+      newDirPath = oldDirPath.substring(0, pathLength - 2);
+      oldDirPath = newDirPath;
+    } else {
+      newDirPath = oldDirPath;
+    }
+
+    if (specialChar.equals("_")) {
+      //add the underscore to the dir name
+      newDirPath += "_";
+    } else {
+      oldDirPath += "_";
+    }
+
+    try {
+      this.fops.renameInHdfs(oldDirPath, newDirPath);
+    } catch (IOException e) {
+      throw new ApplicationException("ApplicationException",
+              "Utils.java: renameDir(String) encountered a problem " + e.
+              getMessage());
+    }
+  }
+
+  /**
+   * Copies a given dir to destination. Used when attaching metadata to already
+   * indexed inodes as a means to get those inodes again in the metadata log
+   * table. Elastic rivers will pick them up again along with their metadata
+   * <p>
+   * @param path the source path
+   * @param destination the destination path
+   * @throws ApplicationException
+   */
+  public void copyDir(String path, String destination) throws
+          ApplicationException {
+    
+    try {
+      //create the destination path if it doesn't exist
+      if (!this.fops.isDir(destination)) {
+        this.fops.mkDir(destination);
+      }
+
+      //copy the dir to the destination
+      this.fops.copyWithinHdfs(path, destination);
+    } catch (IOException e) {
+      throw new ApplicationException("ApplicationException",
+              "Utils.java: copyDir(String, String) encountered a problem " + e.
+              getMessage());
+    }
+  }
+  
+  /**
+   * Removes a dir recursively from the file system.
+   * 
+   * @param path. The path of the directory to be removed
+   * @throws ApplicationException 
+   */
+  public void removeDir(String path) throws ApplicationException {
+    try{
+      this.fops.rmRecursive(path);
+    }
+    catch(IOException e){
+      throw new ApplicationException("ApplicationException",
+      "Utils.java: removeDir(String) encountered a problem " + e.getMessage());
     }
   }
 }

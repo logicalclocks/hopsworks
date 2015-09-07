@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.validation.ValidationException;
-import org.apache.hadoop.fs.Path;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
@@ -68,8 +67,9 @@ public class FileOperations {
                 + ". Reason: " + e.getLocalizedMessage(), e);
       }
     }
+
     Path location = new Path(path);
-    return fsOps.mkdir(location);
+    return fsOps.mkdirs(location);
   }
 
   /**
@@ -275,6 +275,17 @@ public class FileOperations {
     } else {
       return Collections.EMPTY_LIST;
     }
+  }
+
+  /**
+   * Marks a file/folder in location as metadata enabled
+   * <p>
+   * @param location
+   * @throws IOException
+   */
+  public void setMetaEnabled(String location) throws IOException {
+    Path path = new Path(location);
+    this.fsOps.setMetaEnabled(path);
   }
 
 }

@@ -56,6 +56,11 @@ angular.module('hopsWorksApp')
               MetadataActionService.storeMetadata($cookies['email'], self.metaData)
                       .then(function (response) {
                         console.log("Metadata saved " + response.status);
+                        //rename the corresponding folder
+                        MetadataActionService.renameDir($cookies['email'], self.currentFile.path)
+                                .then(function(resp){
+                                  console.log("FILE RENAMED " + JSON.stringify(resp));
+                        });
                       });
 
               //truncate metaData object
@@ -552,6 +557,10 @@ angular.module('hopsWorksApp')
               MetadataActionService.updateMetadata($cookies['email'], metadata)
                       .then(function (response) {
                         growl.success(response.board, {title: 'Success', ttl: 5000});
+                        MetadataActionService.renameDir($cookies['email'], self.currentFile.path)
+                                .then(function(resp){
+                                  console.log("REEEENAMED FOLDER " + JSON.stringify(resp));
+                        });
                       }, function (dialogResponse) {
                         growl.info("Could not update metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
                       });
@@ -566,6 +575,7 @@ angular.module('hopsWorksApp')
 
               var templateId = file.template;
               self.currentTemplateID = templateId;
+              self.currentFile = file;
               MetadataHelperService.setCurrentFile(file);
               self.currentFile = MetadataHelperService.getCurrentFile();
 

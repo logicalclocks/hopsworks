@@ -45,5 +45,7 @@ public enum Command {
   //
   UPDATE_METADATA,
   //
-  UPDATE_TEMPLATE_NAME
+  UPDATE_TEMPLATE_NAME,
+  //
+  RENAME_DIR
 }
