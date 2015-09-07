@@ -89,7 +89,7 @@ public class Users implements Serializable {
 
   public static final int ALLOWED_FALSE_LOGINS = 5;
   //hopsworks user prefix username prefix
-  public static final String USERNAME_PREFIX = "meb";
+//  public static final String USERNAME_PREFIX = "meb";
 
   private static final long serialVersionUID = 1L;
   @Id

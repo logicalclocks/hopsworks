@@ -1,0 +1,80 @@
+<div class="modal-header">
+    <button class="close" ng-click="sshKeysCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;</button>
+    <h2 class="modal-title">Ssh Keys</h2>
+</div>
+<div class="modal-body" id="sshKeysModal">
+    <div class="row">
+
+        <div growl reference="1" class="pull-right"></div>
+
+        <div class="col-xs-12 col-sm-12 col-md-12 pull-right">
+
+            <form method="post"
+                  name="sshKeysForm"
+                  ng-submit="sshKeysCtrl.addSshKey()"
+                  class="form-validate"
+                  novalidate>
+
+                <div class="row">
+                    <div class="col-xs-12 col-sm-6 col-md-6">
+                        <div class="form-group has-feedback">
+                            <label class="text-muted">Name</label>
+                            <input name="keyName" placeholder="Name" autocomplete="off"
+                                   ng-model="sshKeysCtrl.key.name" required class="form-control "
+                                   type="text">
+              <span ng-show="(sshKeysForm.$submitted || sshKeysForm.key.name.$dirty) &amp;&amp; sshKeysForm.key.name.$error.required"
+                    class="text-danger ng-hide">You forgot to enter a name for your ssh key.</span>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-12 col-md-12">
+                        <div class="form-group has-feedback">
+                            <label class="text-muted">Public Key</label>
+                            <textarea name="sshKey" placeholder="Open SSH Public Key" autocomplete="off"
+                                      ng-model="sshKeysCtrl.key.publicKey" required class="form-control "
+                                      rows="5"/>
+              <span ng-show="(sshKeysForm.$submitted || sshKeysForm.key.publicKey.$dirty) &amp;&amp; sshKeysForm.key.publicKey.$error.required"
+                    class="text-danger ng-hide">You forgot to enter your public openssh key.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
+                        <button type="submit" class="btn btn-block btn-primary mt-lg"
+                                ng-disabled="sshKeysForm.$pristine || sshKeysCtrl.working"
+                                >Add Key
+                            <i ng-if="sshKeysCtrl.working" style="margin-top: 2px"
+                               class="fa fa-spinner fa-spin pull-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="col-xs-12 col-sm-12 col-md-12">
+
+                <!--<div class="control-group col-md-offset-1">-->
+                <label style="color: black;">Registered Ssh Keys</label>
+                <accordion close-others="false">
+                    <accordion-group ng-repeat="key in keys track by $index" is-disabled="true"
+                                     is-open="keys[$index].status">
+                        <accordion-heading>
+            <span class="col-xs-1 col-sm-1 col-md-1 col-lg-1 pull-left"
+                  ng-click="keys[$index].status = !keys[$index].status">
+              <i class="fa fa-key"></i>
+            </span>
+                            <span class="col-md-8 col-lg-8" ng-click="keys[$index].status = !keys[$index].status">{{keys[$index].name}}</span>
+            <span class="col-xs-1 col-sm-1 col-md-2 col-lg-2 text-center pull-right"
+                  ng-click="sshKeysCtrl.removeSshKey(keys[$index].name)">
+              <i class="glyphicon glyphicon-minus"></i>
+            </span>
+                            <br/>
+
+                        </accordion-heading>
+                        <p class="col-md-10 col-lg-12">{{keys[$index].publicKey}}</p>
+                    </accordion-group>
+                </accordion>
+            </div>
+        </div>
+
+    </div>
+</div>
