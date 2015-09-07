@@ -6,14 +6,20 @@ angular.module('hopsWorksApp')
             var self = this;
             self.email = $cookies['email'];
             self.refreshing = false;
+            self.loading = false;
+            self.loadingMsg = false;
             self.filterText;
             self.selectedMsg = selected;
+            self.trash;
+            
+            
             var message = {to:[{},{}], from:"", subject:"", date:"", msg:""};
 
             self.messages = MessageService.getMessages();
-
+            self.trash = MessageService.getTrash();
 
             self.select = function(msg){
+                msg.unread = false;
                 self.selectedMsg = msg;
             };
 
@@ -25,3 +31,4 @@ angular.module('hopsWorksApp')
                 $modalInstance.dismiss('cancel');
             };
         }]);
+

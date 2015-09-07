@@ -12,17 +12,26 @@ angular.module('hopsWorksApp')
         var dsmsg = "I am writing this message to request access to a dataset in your project." +
             " Click here to go to the requested <a>/project/dataset</a>";
         var messages = [
-            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}, {email:"jdowling@sics.se",name:"Jim Dowling"}],from:"Evelyn Holmes", fromEmail:"evelyn@example.com", subject:"Project join request", date:"2015-08-28T19:37:02+02:00", content:msg, unread:true},
-            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}], from:"Jim Dowling", fromEmail:"jdowling@sics.se", subject:"Project join request", date:"2015-08-28T19:37:02+02:00", content:msg, unread:true},
-            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}], from:"Jim Dowling", fromEmail:"jdowling@sics.se", subject:"DataSet access request", date:"2015-08-28T19:37:02+02:00", content:dsmsg, unread:true},
-            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}, {email:"admin@kth.se", name:"Admin Admin"}], from:"Jone J", fromEmail:"jone@sics.se", subject:"Project join request", date:"2015-08-28T19:37:02+02:00", content:msg, unread:true},
-            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}], from:"Evangelos Savvidis", fromEmail:"vangelis@kth.se", subject:"DataSet access request", date:"2015-08-28T19:37:02+02:00", content:dsmsg, unread:true},
-            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}], from:"Stig Viaene ", fromEmail:"stig@sics.se", subject:"Project join request", date:"2015-08-28T19:37:02+02:00", content:msg, unread:false},
-            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}], from:"Solomon Lemma", fromEmail:"solomon@gmail.com", subject:"DataSet access request", date:"2015-08-28T19:37:02+02:00", content:dsmsg, unread:false}
+            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}, {email:"jdowling@sics.se",name:"Jim Dowling"}],from:"Evelyn Holmes", fromEmail:"evelyn@example.com", subject:"Project join request", date:"2015-08-28T19:37:02+02:00", content:msg, unread:true, deleted:false},
+            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}], from:"Jim Dowling", fromEmail:"jdowling@sics.se", subject:"Project join request", date:"2015-08-28T19:37:02+02:00", content:msg, unread:true, deleted:false},
+            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}], from:"Jim Dowling", fromEmail:"jdowling@sics.se", subject:"DataSet access request", date:"2015-08-28T19:37:02+02:00", content:dsmsg, unread:true, deleted:false},
+            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}, {email:"admin@kth.se", name:"Admin Admin"}], from:"Jone J", fromEmail:"jone@sics.se", subject:"Project join request", date:"2015-08-28T19:37:02+02:00", content:msg, unread:true, deleted:false},
+            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}], from:"Evangelos Savvidis", fromEmail:"vangelis@kth.se", subject:"DataSet access request", date:"2015-08-28T19:37:02+02:00", content:dsmsg, unread:true, deleted:false},
+            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}], from:"Stig Viaene ", fromEmail:"stig@sics.se", subject:"Project join request", date:"2015-08-28T19:37:02+02:00", content:msg, unread:false, deleted:false},
+            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}], from:"Solomon Lemma", fromEmail:"solomon@gmail.com", subject:"DataSet access request", date:"2015-08-28T19:37:02+02:00", content:dsmsg, unread:false, deleted:false}
+        ];
+
+        var trash = [
+            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}, {email:"jdowling@sics.se",name:"Jim Dowling"}],from:"Evelyn Holmes", fromEmail:"evelyn@example.com", subject:"Project join request", date:"2015-08-28T19:37:02+02:00", content:msg, unread:true, deleted:true},
+            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}], from:"Jim Dowling", fromEmail:"jdowling@sics.se", subject:"Project join request", date:"2015-08-28T19:37:02+02:00", content:msg, unread:true, deleted:true},
+            {to:[{email:"ermiasg@kth.se", name:"Ermias G"}], from:"Jim Dowling", fromEmail:"jdowling@sics.se", subject:"DataSet access request", date:"2015-08-28T19:37:02+02:00", content:dsmsg, unread:false, deleted:true}
         ];
         return {
             getMessages: function () {
                 return messages;
+            },
+            getTrash: function () {
+                return trash;
             }
         };
 
