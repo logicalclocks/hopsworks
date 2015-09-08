@@ -254,7 +254,7 @@ CREATE TABLE `meta_field_predefined_values` (
 
 CREATE TABLE `meta_tuple_to_file` (
   `tupleid` INT(11) NOT NULL AUTO_INCREMENT,
-  `inodeid` INT(11) DEFAULT NULL,
+  `inodeid` INT(11) NOT NULL,
   PRIMARY KEY (`tupleid`)
 ) ENGINE=ndbcluster;
 
@@ -263,7 +263,7 @@ CREATE TABLE `meta_raw_data` (
   `tupleid` INT(11) NOT NULL,
   PRIMARY KEY (`fieldid`, `tupleid`),
   FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  FOREIGN KEY (`tupleid`) REFERENCES `meta_tuple_to_file` (`tupleid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`tupleid`) REFERENCES `meta_tuple_to_file` (`tupleid`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_data` (
