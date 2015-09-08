@@ -14,10 +14,10 @@ import se.kth.meta.db.FieldTypeFacade;
 import se.kth.meta.db.MTableFacade;
 import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.db.TupleToFileFacade;
-import se.kth.meta.entity.DirPath;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.Field;
 import se.kth.meta.entity.FieldType;
+import se.kth.meta.entity.HdfsMetadataLog;
 import se.kth.meta.entity.InodeTableComposite;
 import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.RawData;
@@ -111,7 +111,7 @@ public class ResponseBuilder {
 
     TextMessage response = new TextMessage("Server");
     response.setMessage("Template updated successfully");
-    
+
     return response;
   }
 
@@ -172,7 +172,7 @@ public class ResponseBuilder {
     List<MTable> tables = this.templateFacade.loadTemplateContent(cmsg.
             getTemplateid());
     Collections.sort(tables);
-    
+
     String jsonMsg = cmsg.buildSchema((List<EntityIntf>) (List<?>) tables);
     message.setMessage(jsonMsg);
 
@@ -433,22 +433,25 @@ public class ResponseBuilder {
    * Creates an inode mutation by copying a folder from a given path to the
    * destination path. SHOULD change to mv, but mv fails for now
    * <p>
-   * @param path
+   * @param log
    * @return
    * @throws ApplicationException
    */
-  public Message inodeMutationResponse(DirPath path) throws ApplicationException {
-    String lastDirName = path.getParent();
-    String dirPart = path.getDirPart(path.getPath());
-    String basePath = path.getDirPartUntil(lastDirName);
+  public Message inodeMutationResponse(HdfsMetadataLog log) throws
+          ApplicationException {
+    
+    //for now write directly to hdfs_metadata_log table
+    this.utils.createMetadataLog(log);
+    
+    //String lastDirName = path.getParent();
+    //String dirPart = path.getDirPart(path.getPath());
+    //String basePath = path.getDirPartUntil(lastDirName);
     
     //rename - add an underscore
-    this.utils.renameDir(path, "_");
-    
-    //rename revert back to the initial name
-    this.utils.renameDir(path, "");
-    
-    RenameDirMessage message = new RenameDirMessage();
+    //this.utils.renameDir(path, "_");
+    //rename - revert back to the initial name
+    //this.utils.renameDir(path, "");
+    TextMessage message = new TextMessage();
     message.setSender("Server");
     message.setMessage("Renaming the dir was successful");
     return message;

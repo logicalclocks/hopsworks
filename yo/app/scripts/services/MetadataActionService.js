@@ -177,12 +177,12 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({metaid: metaObj.id, metadata: metaObj.data})
               });
             },
-            renameDir: function(user, path){
+            createFileMutation: function(user, projectId, inodeid){
               return WSComm.send({
                 sender: user,
-                type: 'RenameDirMessage',
-                action: 'rename_dir',
-                message: JSON.stringify({path: path})
+                type: 'CreateMetadataLogMessage',
+                action: 'create_meta_log',
+                message: JSON.stringify({projectid: projectId, inodeid: inodeid})
               });
             }
           };

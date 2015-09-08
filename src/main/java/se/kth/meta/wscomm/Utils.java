@@ -11,6 +11,7 @@ import javax.ejb.Stateless;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.meta.db.FieldFacade;
 import se.kth.meta.db.FieldPredefinedValueFacade;
+import se.kth.meta.db.HdfsMetadataLogFacade;
 import se.kth.meta.db.MTableFacade;
 import se.kth.meta.db.MetadataFacade;
 import se.kth.meta.db.RawDataFacade;
@@ -20,6 +21,7 @@ import se.kth.meta.entity.DirPath;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldPredefinedValue;
 import se.kth.meta.entity.Field;
+import se.kth.meta.entity.HdfsMetadataLog;
 import se.kth.meta.entity.InodeTableComposite;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.MTable;
@@ -54,8 +56,9 @@ public class Utils {
   private MetadataFacade metadataFacade;
   @EJB
   private FileOperations fops;
+  @EJB
+  private HdfsMetadataLogFacade mlf;
 
-  
   public Utils() {
   }
 
@@ -370,7 +373,7 @@ public class Utils {
    */
   public void copyDir(String path, String destination) throws
           ApplicationException {
-    
+
     try {
       //create the destination path if it doesn't exist
       if (!this.fops.isDir(destination)) {
@@ -385,20 +388,36 @@ public class Utils {
               getMessage());
     }
   }
-  
+
   /**
    * Removes a dir recursively from the file system.
-   * 
+   * <p>
    * @param path. The path of the directory to be removed
-   * @throws ApplicationException 
+   * @throws ApplicationException
    */
   public void removeDir(String path) throws ApplicationException {
-    try{
+    try {
       this.fops.rmRecursive(path);
-    }
-    catch(IOException e){
+    } catch (IOException e) {
       throw new ApplicationException("ApplicationException",
-      "Utils.java: removeDir(String) encountered a problem " + e.getMessage());
+              "Utils.java: removeDir(String) encountered a problem " + e.
+              getMessage());
+    }
+  }
+
+  /**
+   * Creates a fake inode operation in hdfs_metadata_log table.
+   * <p>
+   * @param log
+   * @throws ApplicationException 
+   */
+  public void createMetadataLog(HdfsMetadataLog log) throws ApplicationException {
+
+    try {
+      this.mlf.addHdfsMetadataLog(log);
+    } catch (DatabaseException e) {
+
+      throw new ApplicationException("Could not add metadata log", e);
     }
   }
 }

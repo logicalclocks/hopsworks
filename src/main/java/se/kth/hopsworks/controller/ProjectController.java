@@ -76,7 +76,7 @@ public class ProjectController {
    * created. For whatever reason.
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    //this needs to be an atomic operation (all or nothing) REQUIRES_NEW
+  //this needs to be an atomic operation (all or nothing) REQUIRES_NEW
   //will make sure a new transaction is created even if this method is
   //called from within a transaction.
   public Project createProject(ProjectDTO newProject, String email) throws
@@ -107,8 +107,6 @@ public class ProjectController {
         logger.log(Level.FINE, "{0} - project created successfully.", project.
                 getName());
 
-        logger.log(Level.FINE, "{0} - project directory created successfully.",
-                project.getName());
         //Create default DataSets
         for (Constants.DefaultDataset ds : Constants.DefaultDataset.values()) {
           datasetController.createDataset(user, project, ds.getName(), ds.
@@ -321,7 +319,7 @@ public class ProjectController {
               ResponseMessages.PROJECT_NOT_FOUND);
     }
     projectFacade.remove(project);
-        //if we remove the project we cant store activity that has a reference to it!!
+    //if we remove the project we cant store activity that has a reference to it!!
     //logActivity(ActivityFacade.REMOVED_PROJECT,
     //ActivityFacade.FLAG_PROJECT, user, project);
 
@@ -371,7 +369,7 @@ public class ProjectController {
                   getTeamMember());
           if (newMember != null && !projectTeamFacade.isUserMemberOfProject(
                   project, newMember)) {
-                        //this makes sure that the member is added to the project sent as the
+            //this makes sure that the member is added to the project sent as the
             //first param b/c the securty check was made on the parameter sent as path.
             projectTeam.getProjectTeamPK().setProjectId(project.getId());
             projectTeamFacade.persistProjectTeam(projectTeam);
@@ -440,6 +438,11 @@ public class ProjectController {
    */
   public ProjectDTO getProjectByID(Integer projectID) throws AppException {
     Project project = projectFacade.find(projectID);
+
+    //find the project as an inode from hops database
+    Inode inode = inodes.getInodeAtPath(File.separator + Constants.DIR_ROOT
+            + File.separator + project.getName());
+
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
@@ -452,7 +455,7 @@ public class ProjectController {
     for (ProjectServiceEnum s : projectServices) {
       services.add(s.toString());
     }
-    return new ProjectDTO(project, services, projectTeam);
+    return new ProjectDTO(project, inode.getId(), services, projectTeam);
   }
 
   /**
@@ -464,7 +467,13 @@ public class ProjectController {
    * @throws se.kth.hopsworks.rest.AppException
    */
   public ProjectDTO getProjectByName(String name) throws AppException {
+    //find the project entity from hopsworks database
     Project project = projectFacade.findByName(name);
+
+    //find the project as an inode from hops database
+    Inode inode = inodes.getInodeAtPath(File.separator + Constants.DIR_ROOT
+            + File.separator + project.getName());
+
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
@@ -485,7 +494,9 @@ public class ProjectController {
       parent = inodes.findParent(ds.getInode());
       kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode())));
     }
-    return new ProjectDTO(project, services, projectTeam, kids);
+
+    //send the project back to client
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids);
   }
 
   /**

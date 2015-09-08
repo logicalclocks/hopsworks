@@ -5,9 +5,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import se.kth.meta.entity.DirPath;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.Field;
+import se.kth.meta.entity.HdfsMetadataLog;
 import se.kth.meta.entity.InodeTableComposite;
 import se.kth.meta.entity.MTable;
 import se.kth.meta.entity.Metadata;
@@ -140,9 +140,12 @@ public class Protocol {
         this.utils.updateMetadata(metadata);
         return new TextMessage("Server", "Raw data was updated successfully");
         
-      case RENAME_DIR:
-        DirPath path = (DirPath) message.parseSchema().get(0);
-        return this.builder.inodeMutationResponse(path);
+      case CREATE_META_LOG:
+        //renaming dir is deprecated
+        //DirPath path = (DirPath) message.parseSchema().get(0);
+        //create a metadata log manually
+        HdfsMetadataLog log = (HdfsMetadataLog) message.parseSchema().get(0);
+        return this.builder.inodeMutationResponse(log);
     }
 
     return new TextMessage();

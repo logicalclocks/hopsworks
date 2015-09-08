@@ -47,5 +47,7 @@ public enum Command {
   //
   UPDATE_TEMPLATE_NAME,
   //
-  RENAME_DIR
+  RENAME_DIR,
+  //
+  CREATE_META_LOG
 }

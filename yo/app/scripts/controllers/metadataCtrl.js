@@ -7,9 +7,9 @@
 angular.module('hopsWorksApp')
         .controller('MetadataCtrl', ['$cookies', '$modal', '$scope', '$routeParams',
           '$filter', 'DataSetService', 'ModalService', 'growl', 'MetadataActionService',
-          'MetadataHelperService',
+          'MetadataHelperService', 'ProjectService',
           function ($cookies, $modal, $scope, $routeParams, $filter, DataSetService,
-                  ModalService, growl, MetadataActionService, MetadataHelperService) {
+                  ModalService, growl, MetadataActionService, MetadataHelperService, ProjectService) {
 
             var self = this;
             self.metaData = {};
@@ -28,6 +28,7 @@ angular.module('hopsWorksApp')
             self.blob;
             self.templateContents = {};
             self.editingTemplate = false;
+            self.projectInodeid = -1;
             var dataSetService = DataSetService($routeParams.projectID);
 
             //fetch all the available templates
@@ -40,6 +41,16 @@ angular.module('hopsWorksApp')
                       console.log("AVAILABLE TEMPLATES " + JSON.stringify(self.availableTemplates));
                     });
 
+            //get the current project to get its inodeid
+            ProjectService.get({}, {'id': parseInt($routeParams.projectID)})
+                    .$promise.then(
+                            function (success) {
+                              self.projectInodeid = success.inodeid;
+                              console.log("parent id " + self.projectInodeid);
+
+                            }, function (error) {
+                    });
+
             /**
              * submit form data when the 'save' button is clicked
              */
@@ -49,16 +60,21 @@ angular.module('hopsWorksApp')
               }
 
               var currentfile = MetadataHelperService.getCurrentFile();
+              var projectInodeid = -1;
               self.metaData.inodeid = currentfile.id;
               self.metaData.tableid = self.currentTableId;
+
               console.log("saving " + JSON.stringify(self.metaData));
 
+              //after the project inodeid is available proceed to store metadata
               MetadataActionService.storeMetadata($cookies['email'], self.metaData)
                       .then(function (response) {
                         console.log("Metadata saved " + response.status);
+
                         //rename the corresponding folder
-                        MetadataActionService.renameDir($cookies['email'], self.currentFile.path)
+                        MetadataActionService.createFileMutation($cookies['email'], parseInt(self.projectInodeid), self.currentFile.id)
                                 .then(function (resp) {
+                                  console.log(JSON.stringify(resp));
                                   MetadataHelperService.setCloseSlider("true");
                                 });
                       });
@@ -126,6 +142,7 @@ angular.module('hopsWorksApp')
              */
             self.extendTemplate = function () {
 
+              //don't proceed if there is no selected template to extend
               if (self.toExtend === -1) {
                 growl.info("Select a template first.", {title: 'Info', ttl: 5000});
                 return;
@@ -143,7 +160,7 @@ angular.module('hopsWorksApp')
                         MetadataActionService.fetchTemplate($cookies['email'], parseInt(self.toExtend))
                                 .then(function (response) {
                                   var templateToExtend = JSON.parse(response.board);
-                                  //console.log(JSON.stringify(cleanBoard));
+
                                   //associate existing contents with the new template
                                   MetadataActionService.extendTemplate($cookies['email'], newlyCreatedID, templateToExtend)
                                           .then(function (data) {
@@ -566,7 +583,6 @@ angular.module('hopsWorksApp')
                         growl.success(response.board, {title: 'Success', ttl: 5000});
                         MetadataActionService.renameDir($cookies['email'], self.currentFile.path)
                                 .then(function (resp) {
-                                  console.log("REEEENAMED FOLDER " + JSON.stringify(resp));
                                 });
                       }, function (dialogResponse) {
                         growl.info("Could not update metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
