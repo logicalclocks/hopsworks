@@ -49,7 +49,7 @@
     <validation-mode>NONE</validation-mode>
     <properties>
       <property name="eclipselink.target-database" value="MYSQL"/>
-      <property name="eclipselink.logging.level" value="INFO"/>
+      <property name="eclipselink.logging.level" value="SEVERE"/>
       <property name="eclipselink.logging.parameters" value="true"/>
     </properties>
   </persistence-unit>
