@@ -4,6 +4,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 import se.kth.meta.entity.HdfsMetadataLog;
@@ -35,7 +36,7 @@ public class HdfsMetadataLogFacade extends AbstractFacade<HdfsMetadataLog> {
     TypedQuery<HdfsMetadataLog> q = this.em.createNamedQuery(
             "HdfsMetadataLog.findMostRecentMutation",
             HdfsMetadataLog.class);
-    
+
     q.setParameter("datasetid", hm.getHdfsMetadataLogPK().getDatasetId());
     q.setParameter("inodeid", hm.getHdfsMetadataLogPK().getInodeid());
 
@@ -57,26 +58,20 @@ public class HdfsMetadataLogFacade extends AbstractFacade<HdfsMetadataLog> {
   public void addHdfsMetadataLog(HdfsMetadataLog log) throws DatabaseException {
 
     try {
-      HdfsMetadataLog hm = this.getMostRecentMetaLog(log);
-      HdfsMetadataLog toSave;
+      //try to add a metadata log until there is no primary key violation
+      while (true) {
+        try {
 
-      if (hm != null) {
-        int parentid = hm.getHdfsMetadataLogPK().getDatasetId();
-        int inodeid = hm.getHdfsMetadataLogPK().getInodeid();
-        
-        //increase the logical time to be valid
-        int ltime = hm.getHdfsMetadataLogPK().getLtime() + 1;
-
-        toSave = new HdfsMetadataLog(
-                new HdfsMetadataLogPK(parentid, inodeid, ltime), 0);
-      } else {
-        toSave = new HdfsMetadataLog(log);
+          this.em.persist(log);
+          this.em.flush();
+          this.em.clear();
+          break;
+        } catch (PersistenceException e) {
+          //increase the logical time
+          log.getHdfsMetadataLogPK().setLtime(log.getHdfsMetadataLogPK().
+                  getLtime() + 1);
+        }
       }
-
-      this.em.persist(toSave);
-      this.em.flush();
-      this.em.clear();
-      
     } catch (IllegalStateException | SecurityException ee) {
 
       throw new DatabaseException(ee.getMessage(), ee);
