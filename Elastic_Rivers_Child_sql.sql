@@ -41,6 +41,7 @@ LEFT JOIN (
 ) as metadata
 
 ON metadata.inodeid = composite._id
+ORDER BY composite.logical_time ASC
 
 
 -- SELECT ALL CHILDREN THAT HAVE BEEN DELETED/RENAMED (OPERATION 1) AND ARE NOT YET PROCESSED

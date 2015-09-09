@@ -27,7 +27,7 @@ FROM (
 
 LEFT JOIN(
 	SELECT mtt.inodeid, GROUP_CONCAT( md.data SEPARATOR  '_' ) AS EXTENDED_METADATA
-	FROM meta_tuple_to_file mtt, meta_data md
+	FROM hopsworks.meta_tuple_to_file mtt, hopsworks.meta_data md
 	WHERE mtt.tupleid = md.tupleid
 	GROUP BY (mtt.inodeid)
 	LIMIT 0 , 30
@@ -35,6 +35,7 @@ LEFT JOIN(
 ) as metadata
 
 ON metadata.inodeid = composite._id
+ORDER BY composite.logical_time ASC
 
 
 -- SELECT ALL PARENTS THAT HAVE BEEN DELETED/RENAMED (OPERATION 1)
