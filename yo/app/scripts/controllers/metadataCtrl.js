@@ -52,7 +52,7 @@ angular.module('hopsWorksApp')
                     });
 
             /**
-             * submit form data when the 'save' button is clicked
+             * submit form data when the 'save' button is clicked or when the enter key is hit
              */
             self.submitMetadata = function () {
               if (!self.metaData) {
@@ -60,23 +60,15 @@ angular.module('hopsWorksApp')
               }
 
               var currentfile = MetadataHelperService.getCurrentFile();
-              var projectInodeid = -1;
               self.metaData.inodeid = currentfile.id;
               self.metaData.tableid = self.currentTableId;
 
-              console.log("saving " + JSON.stringify(self.metaData));
 
               //after the project inodeid is available proceed to store metadata
-              MetadataActionService.storeMetadata($cookies['email'], self.metaData)
+              MetadataActionService.storeMetadata($cookies['email'], parseInt(self.projectInodeid), self.currentFile.id, self.metaData)
                       .then(function (response) {
                         console.log("Metadata saved " + response.status);
-
-                        //rename the corresponding folder
-                        MetadataActionService.createFileMutation($cookies['email'], parseInt(self.projectInodeid), self.currentFile.id)
-                                .then(function (resp) {
-                                  console.log(JSON.stringify(resp));
-                                  MetadataHelperService.setCloseSlider("true");
-                                });
+                        MetadataHelperService.setCloseSlider("true");
                       });
 
               //truncate metaData object

@@ -191,7 +191,7 @@ public class ProjectController {
 
   /**
    * change the name of a project but not fully implemented to change the
-   * related folder name in hdsf
+   * related folder name in hdfs
    * <p/>
    *
    * @param project

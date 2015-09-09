@@ -15,18 +15,18 @@ import se.kth.meta.entity.HdfsMetadataLogPK;
  *
  * @author vangelis
  */
-public class CreateMetadataLogMessage extends TextMessage {
+public class MetadataLogMessage extends TextMessage {
 
   private final String TYPE = "CreateMetadataLogMessage";
 
   private static final Logger logger = Logger.
-          getLogger(CreateMetadataLogMessage.class.getName());
+          getLogger(MetadataLogMessage.class.getName());
 
   /**
    * Default constructor. Used by the class loader to create an instance of
    * this class
    */
-  public CreateMetadataLogMessage() {
+  public MetadataLogMessage() {
     super();
   }
 
@@ -35,12 +35,12 @@ public class CreateMetadataLogMessage extends TextMessage {
    *
    * @param sender the message sender
    */
-  public CreateMetadataLogMessage(String sender) {
+  public MetadataLogMessage(String sender) {
     this();
     this.sender = sender;
   }
 
-  public CreateMetadataLogMessage(String sender, String message) {
+  public MetadataLogMessage(String sender, String message) {
     this(sender);
     this.message = message;
   }
@@ -80,11 +80,11 @@ public class CreateMetadataLogMessage extends TextMessage {
     List<EntityIntf> list = null;
 
     try {
-      int datasetId = obj.getInt("projectid");
+      int datasetid = obj.getInt("datasetid");
       int inodeid = obj.getInt("inodeid");
       
       HdfsMetadataLog metaLog = new HdfsMetadataLog();
-      HdfsMetadataLogPK pk = new HdfsMetadataLogPK(datasetId, inodeid, 0);
+      HdfsMetadataLogPK pk = new HdfsMetadataLogPK(datasetid, inodeid, 0);
       metaLog.setHdfsMetadataLogPK(pk);
       list = new LinkedList<>();
       list.add(metaLog);

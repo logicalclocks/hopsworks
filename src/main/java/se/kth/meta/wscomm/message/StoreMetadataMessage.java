@@ -24,6 +24,9 @@ public class StoreMetadataMessage extends MetadataMessage {
   private static final Logger logger = Logger.
           getLogger(StoreMetadataMessage.class.getName());
 
+  private int datasetId;
+  private int inodeId;
+
   public StoreMetadataMessage() {
     super();
     super.TYPE = "StoreMetadataMessage";
@@ -41,6 +44,21 @@ public class StoreMetadataMessage extends MetadataMessage {
     this.message = message;
   }
 
+  public Message getMetadataLogMessage() {
+    JsonObject obj = Json.createReader(new StringReader(this.message)).
+            readObject();
+
+    //initialize the projectid and projectInodeid - the actual parent node
+    this.datasetId = obj.getInt("parentid");
+    this.inodeId = obj.getInt("inodeid");
+    
+    String json = "{\"datasetid\": " + this.datasetId + ", \"inodeid\": " + this.inodeId + "}";
+    MetadataLogMessage msg = new MetadataLogMessage();
+    msg.setMessage(json);
+    
+    return msg;
+  }
+
   //returns the inode id and table id wrapped in an entity class in a list
   public List<EntityIntf> superParseSchema() {
     return super.parseSchema();
@@ -51,13 +69,14 @@ public class StoreMetadataMessage extends MetadataMessage {
     JsonObject obj = Json.createReader(new StringReader(this.message)).
             readObject();
 
+    JsonObject meta = obj.getJsonObject("metadata");
     List<EntityIntf> data = new LinkedList<>();
 
-    Set<Entry<String, JsonValue>> set = obj.entrySet();
+    Set<Entry<String, JsonValue>> set = meta.entrySet();
     /*
      * processes a json string of the following format:
      * "{"1":"singleTwo","2":[{"value":"multiOne"},{"value":"multiThree"}],"1025":"55","inodeid":5,"tableid":1}"}
-     * 
+     *
      * Numbers are field ids and the strings are the values they carry. Values
      * may be single or multi strings
      */

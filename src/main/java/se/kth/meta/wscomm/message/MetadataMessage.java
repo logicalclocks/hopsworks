@@ -64,7 +64,7 @@ public class MetadataMessage implements Message {
 
   /**
    * Instantiates the custom entity InodeTableComposite to pass table id and
-   * inode id to the protocol. This way raw data can be filtered by table id and
+   * inode id to protocol. This way raw data can be filtered by table id and
    * inode id and be grouped in the front end.
    *
    * @return the list with the RawData objects
@@ -74,11 +74,12 @@ public class MetadataMessage implements Message {
     JsonObject obj = Json.createReader(new StringReader(this.message)).
             readObject();
 
+    JsonObject metadata = obj.getJsonObject("metadata");
     List<EntityIntf> list = null;
 
     try {
-      int inodeid = obj.getInt("inodeid");
-      int tableid = obj.getInt("tableid");
+      int inodeid = metadata.getInt("inodeid");
+      int tableid = metadata.getInt("tableid");
 
       InodeTableComposite itc = new InodeTableComposite(tableid, inodeid);
       list = new LinkedList<>();
@@ -92,7 +93,7 @@ public class MetadataMessage implements Message {
 
   @Override
   public String buildSchema(List<EntityIntf> entity) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    throw new UnsupportedOperationException("Not necessary for this message.");
   }
 
   @Override

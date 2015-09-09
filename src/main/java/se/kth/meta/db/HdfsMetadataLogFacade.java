@@ -29,16 +29,18 @@ public class HdfsMetadataLogFacade extends AbstractFacade<HdfsMetadataLog> {
     return this.em;
   }
 
-  public HdfsMetadataLog getHdfsMetadataLog(HdfsMetadataLog hm) throws
+  public HdfsMetadataLog getMostRecentMetaLog(HdfsMetadataLog hm) throws
           DatabaseException {
 
     TypedQuery<HdfsMetadataLog> q = this.em.createNamedQuery(
-            "HdfsMetadataLog.findByPrimaryKey",
+            "HdfsMetadataLog.findMostRecentMutation",
             HdfsMetadataLog.class);
-    q.setParameter("pk", hm.getHdfsMetadataLogPK());
+    
+    q.setParameter("datasetid", hm.getHdfsMetadataLogPK().getDatasetId());
+    q.setParameter("inodeid", hm.getHdfsMetadataLogPK().getInodeid());
 
     try {
-      return q.getSingleResult();
+      return (!q.getResultList().isEmpty()) ? q.getResultList().get(0) : null;
     } catch (NoResultException e) {
       return null;
     }
@@ -55,34 +57,26 @@ public class HdfsMetadataLogFacade extends AbstractFacade<HdfsMetadataLog> {
   public void addHdfsMetadataLog(HdfsMetadataLog log) throws DatabaseException {
 
     try {
-      HdfsMetadataLog hm = this.getHdfsMetadataLog(log);
+      HdfsMetadataLog hm = this.getMostRecentMetaLog(log);
+      HdfsMetadataLog toSave;
 
       if (hm != null) {
         int parentid = hm.getHdfsMetadataLogPK().getDatasetId();
         int inodeid = hm.getHdfsMetadataLogPK().getInodeid();
-        int ltime = hm.getHdfsMetadataLogPK().getLtime();
-
-        //try mutliple times until the logical time is the correct one
-        while (true) {
-          //increase the logical time until we have a valid entry
-          ltime++;
-
-          HdfsMetadataLog h = new HdfsMetadataLog(
-                  new HdfsMetadataLogPK(parentid, inodeid, ltime), 0);
-
-          if (this.getHdfsMetadataLog(h) == null) {
-            break;
-          }
-
-          System.out.println("TRYING TO STORE " + h.getHdfsMetadataLogPK());
-        }
         
-        hm = new HdfsMetadataLog(new HdfsMetadataLogPK(parentid, inodeid, ltime), 0);
-        this.em.persist(hm);
-        this.em.flush();
-        this.em.clear();
+        //increase the logical time to be valid
+        int ltime = hm.getHdfsMetadataLogPK().getLtime() + 1;
+
+        toSave = new HdfsMetadataLog(
+                new HdfsMetadataLogPK(parentid, inodeid, ltime), 0);
+      } else {
+        toSave = new HdfsMetadataLog(log);
       }
 
+      this.em.persist(toSave);
+      this.em.flush();
+      this.em.clear();
+      
     } catch (IllegalStateException | SecurityException ee) {
 
       throw new DatabaseException(ee.getMessage(), ee);

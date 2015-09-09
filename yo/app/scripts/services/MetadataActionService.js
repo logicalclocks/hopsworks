@@ -145,12 +145,17 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({tableid: tableId})
               });
             },
-            storeMetadata: function (user, data) {
+            //contains an inode mutation message as well (projectid, inodeid)
+            storeMetadata: function (user, parentid, inodeid, data) {
               return WSComm.send({
                 sender: user,
                 type: 'StoreMetadataMessage',
                 action: 'store_metadata',
-                message: JSON.stringify(data)
+                message: JSON.stringify({
+                  parentid: parentid,
+                  inodeid: inodeid,
+                  metadata: data
+                })
               });
             },
             isTableEmpty: function (user, tableId) {
@@ -177,12 +182,12 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({metaid: metaObj.id, metadata: metaObj.data})
               });
             },
-            createFileMutation: function(user, projectId, inodeid){
+            createFileMutation: function(user, projectid, inodeid){
               return WSComm.send({
                 sender: user,
-                type: 'CreateMetadataLogMessage',
+                type: 'MetadataLogMessage',
                 action: 'create_meta_log',
-                message: JSON.stringify({projectid: projectId, inodeid: inodeid})
+                message: JSON.stringify({projectid: projectid, inodeid: inodeid})
               });
             }
           };

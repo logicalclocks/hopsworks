@@ -453,7 +453,7 @@ public class ResponseBuilder {
     //this.utils.renameDir(path, "");
     TextMessage message = new TextMessage();
     message.setSender("Server");
-    message.setMessage("Renaming the dir was successful");
+    message.setMessage("Metadata added - Inode mutation was successful");
     return message;
   }
 }

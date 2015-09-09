@@ -1,7 +1,6 @@
 package se.kth.meta.entity;
 
 import java.io.Serializable;
-import java.util.logging.Level;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
@@ -23,7 +22,12 @@ import javax.validation.constraints.NotNull;
           = "SELECT h FROM HdfsMetadataLog h"),
   @NamedQuery(name = "HdfsMetadataLog.findByPrimaryKey",
           query
-          = "SELECT h FROM HdfsMetadataLog h WHERE h.pk = :pk")
+          = "SELECT h FROM HdfsMetadataLog h WHERE h.pk = :pk"),
+  //find the most recent inode mutation
+  @NamedQuery(name = "HdfsMetadataLog.findMostRecentMutation",
+          query
+          = "SELECT h FROM HdfsMetadataLog h WHERE h.pk.datasetId = :datasetid "
+                  + "AND h.pk.inodeid = :inodeid ORDER BY h.pk.ltime DESC")
 })
 public class HdfsMetadataLog implements EntityIntf, Serializable {
 
@@ -40,9 +44,15 @@ public class HdfsMetadataLog implements EntityIntf, Serializable {
   }
 
   public HdfsMetadataLog(HdfsMetadataLogPK pk, int operationn) {
+    this.pk = pk;
     this.operation = operationn;
   }
 
+  public HdfsMetadataLog(HdfsMetadataLog log){
+    this.pk = new HdfsMetadataLogPK(log.getHdfsMetadataLogPK());
+    this.operation = log.getOperation();
+  }
+  
   public void copy(HdfsMetadataLog log) {
     this.pk.copy(log.getHdfsMetadataLogPK());
     this.operation = log.getOperation();
