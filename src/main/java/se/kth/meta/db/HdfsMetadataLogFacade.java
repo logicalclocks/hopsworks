@@ -57,25 +57,13 @@ public class HdfsMetadataLogFacade extends AbstractFacade<HdfsMetadataLog> {
    */
   public void addHdfsMetadataLog(HdfsMetadataLog log) throws DatabaseException {
 
-    try {
-      //try to add a metadata log until there is no primary key violation
-      while (true) {
         try {
-
+          
           this.em.persist(log);
           this.em.flush();
-          this.em.clear();
-          break;
         } catch (PersistenceException e) {
-          //increase the logical time
-          log.getHdfsMetadataLogPK().setLtime(log.getHdfsMetadataLogPK().
-                  getLtime() + 1);
+          throw new DatabaseException(e.getMessage(), e);
         }
-      }
-    } catch (IllegalStateException | SecurityException ee) {
-
-      throw new DatabaseException(ee.getMessage(), ee);
-    }
   }
 
   public boolean contains(HdfsMetadataLog hm) {

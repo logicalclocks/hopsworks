@@ -38,12 +38,12 @@ public class HdfsMetadataLogPK implements Serializable {
     this.ltime = ltime;
   }
 
-  public HdfsMetadataLogPK(HdfsMetadataLogPK pk){
+  public HdfsMetadataLogPK(HdfsMetadataLogPK pk) {
     this.datasetId = pk.getDatasetId();
     this.inodeid = pk.getInodeid();
     this.ltime = pk.getLtime();
   }
-  
+
   public void copy(HdfsMetadataLogPK pk) {
     this.datasetId = pk.getDatasetId();
     this.inodeid = pk.getInodeid();
@@ -75,7 +75,9 @@ public class HdfsMetadataLogPK implements Serializable {
   }
 
   @Override
-  public String toString(){
-    return "se.kth.meta.entity.HdfsMetadataLogPK[ dataset_id= " + this.datasetId + ", inode_id= " + this.inodeid + ", logical_time= " + this.ltime +" ]";
+  public String toString() {
+    return "se.kth.meta.entity.HdfsMetadataLogPK[ dataset_id= " + this.datasetId
+            + ", inode_id= " + this.inodeid + ", logical_time= " + this.ltime
+            + " ]";
   }
 }

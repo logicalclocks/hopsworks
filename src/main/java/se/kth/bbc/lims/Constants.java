@@ -91,6 +91,7 @@ public class Constants {
   public static final String HOPS_USERNAME_SEPARATOR = "__";
   public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
   public static final int MAX_USERNME_LEN = 16;
+  public static final int MAX_RETRIES = 50;
 
 
   //Filename conventions

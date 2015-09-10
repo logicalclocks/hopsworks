@@ -8,6 +8,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.persistence.PersistenceException;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.meta.db.FieldFacade;
 import se.kth.meta.db.FieldPredefinedValueFacade;
@@ -257,7 +260,7 @@ public class Utils {
         r.resetMetadata();
 
         //Persist the parent first
-        logger.log(Level.INFO, r.toString());
+        //logger.log(Level.INFO, r.toString());
         this.rawDataFacade.addRawData(r);
 
         //move on to persist the child entities
@@ -409,15 +412,11 @@ public class Utils {
    * Creates a fake inode operation in hdfs_metadata_log table.
    * <p>
    * @param log
-   * @throws ApplicationException 
+   * @throws se.kth.meta.exception.DatabaseException 
    */
-  public void createMetadataLog(HdfsMetadataLog log) throws ApplicationException {
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void createMetadataLog(HdfsMetadataLog log) throws DatabaseException {
 
-    try {
       this.mlf.addHdfsMetadataLog(log);
-    } catch (DatabaseException e) {
-
-      throw new ApplicationException("Could not add metadata log", e);
-    }
   }
 }

@@ -44,7 +44,7 @@ public class HdfsMetadataLog implements EntityIntf, Serializable {
   }
 
   public HdfsMetadataLog(HdfsMetadataLogPK pk, int operationn) {
-    this.pk = pk;
+    this.pk = new HdfsMetadataLogPK(pk);
     this.operation = operationn;
   }
 

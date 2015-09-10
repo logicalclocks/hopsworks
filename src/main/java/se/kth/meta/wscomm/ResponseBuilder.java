@@ -7,8 +7,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
 import se.kth.meta.db.FieldFacade;
 import se.kth.meta.db.FieldTypeFacade;
 import se.kth.meta.db.MTableFacade;
@@ -31,7 +40,6 @@ import se.kth.meta.wscomm.message.FetchTableMetadataMessage;
 import se.kth.meta.wscomm.message.FieldTypeMessage;
 import se.kth.meta.wscomm.message.Message;
 import se.kth.meta.wscomm.message.TemplateMessage;
-import se.kth.meta.wscomm.message.RenameDirMessage;
 import se.kth.meta.wscomm.message.TextMessage;
 import se.kth.meta.wscomm.message.UploadedTemplateMessage;
 
@@ -41,7 +49,7 @@ import se.kth.meta.wscomm.message.UploadedTemplateMessage;
  * <p>
  * @author vangelis
  */
-@Stateless(name = "responseBuilder")
+@Stateless
 public class ResponseBuilder {
 
   private static final Logger logger = Logger.
@@ -439,21 +447,45 @@ public class ResponseBuilder {
    */
   public Message inodeMutationResponse(HdfsMetadataLog log) throws
           ApplicationException {
-    
-    //for now write directly to hdfs_metadata_log table
-    this.utils.createMetadataLog(log);
-    
-    //String lastDirName = path.getParent();
-    //String dirPart = path.getDirPart(path.getPath());
-    //String basePath = path.getDirPartUntil(lastDirName);
-    
-    //rename - add an underscore
-    //this.utils.renameDir(path, "_");
-    //rename - revert back to the initial name
-    //this.utils.renameDir(path, "");
-    TextMessage message = new TextMessage();
-    message.setSender("Server");
-    message.setMessage("Metadata added - Inode mutation was successful");
-    return message;
+
+    int i = 0;
+    double factor = 0.4;
+
+    while (i < se.kth.bbc.lims.Constants.MAX_RETRIES) {
+      try {
+        this.sleep((int) (10 * factor));
+        //write directly to hdfs_metadata_log table
+        this.utils.createMetadataLog(log);
+        return this.textResponse(
+                "Inode mutation was successful");
+      } catch (DatabaseException ex) {
+
+      } finally {
+        i++;
+        factor += 0.4;
+      }
+      log.getHdfsMetadataLogPK().setLtime(log.getHdfsMetadataLogPK().
+              getLtime() + 1);
+    }
+
+    //flow control reached here, means the log was not persisted to database 
+    throw new ApplicationException(
+            "Inode log was not written to database. Max number of retries reached");
+  }
+
+  private Message textResponse(String message) {
+    TextMessage response = new TextMessage();
+    response.setSender("Server");
+    response.setMessage(message);
+
+    return response;
+  }
+
+  private void sleep(int mSec) {
+    try {
+      Thread.sleep(mSec);
+    } catch (InterruptedException e) {
+
+    }
   }
 }

@@ -27,6 +27,7 @@ import se.kth.meta.wscomm.message.TextMessage;
  * @author Vangelis
  */
 @Stateless(name = "protocol")
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class Protocol {
 
   private static final Logger logger = Logger.
@@ -70,8 +71,55 @@ public class Protocol {
    * @return
    * @throws ApplicationException
    */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Message processMessage(Message message) throws ApplicationException {
+
+    Command action = Command.valueOf(message.getAction().toUpperCase());
+
+    if (action == Command.STORE_METADATA) {
+      return processMessageCm(message);
+    }
+
+    return processMessageNm(message);
+  }
+
+  /**
+   * Handles the case of attaching metadata to an inode. Action store metadata
+   * has to be followed by an inode mutation (i.e. add an entry to
+   * hdfs_metadata_log table) so that elastic rivers will pick up the already
+   * indexed inode, but this time along with its attached metadata.
+   * Those two actions have to be executed atomically (either all or nothing)
+   * <p>
+   * @param message. The incoming message
+   * @return
+   * @throws ApplicationException
+   */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  private Message processMessageCm(Message message) throws ApplicationException {
+
+    //Persist metadata
+    List<EntityIntf> composite = ((StoreMetadataMessage) message).
+            superParseSchema();
+    List<EntityIntf> rawData = message.parseSchema();
+    this.utils.storeRawData(composite, rawData);
+
+    //create meta-log
+    MetadataLogMessage msg
+            = (MetadataLogMessage) ((StoreMetadataMessage) message).
+            getMetadataLogMessage();
+    HdfsMetadataLog log = (HdfsMetadataLog) msg.parseSchema().get(0);
+
+    return this.builder.inodeMutationResponse(log);
+  }
+
+  /**
+   * Processes incoming messages according to the command they carry, and
+   * produces the appropriate message response
+   * <p>
+   * @param message. The incoming message
+   * @return
+   * @throws ApplicationException
+   */
+  private Message processMessageNm(Message message) throws ApplicationException {
 
     Command action = Command.valueOf(message.getAction().toUpperCase());
 
@@ -127,26 +175,6 @@ public class Protocol {
 
       case FETCH_FIELD_TYPES:
         return this.builder.fetchFieldTypes(message);
-
-      /*
-       * Store metadata action has to be followed by creating an inode mutation
-       * (i.e. add an entry to hdfs_metadata_log table) so that elastic rivers
-       * will pick up the already indexed inode, but this time along with its
-       * attached metadata
-       */
-      case STORE_METADATA:
-        List<EntityIntf> composite = ((StoreMetadataMessage) message).
-                superParseSchema();
-        List<EntityIntf> rawData = message.parseSchema();
-        this.utils.storeRawData(composite, rawData);
-        //do not return anything, continue execution in the next case
-
-      case CREATE_META_LOG:
-        MetadataLogMessage msg
-                = (MetadataLogMessage) ((StoreMetadataMessage) message).
-                getMetadataLogMessage();
-        HdfsMetadataLog log = (HdfsMetadataLog) msg.parseSchema().get(0);
-        return this.builder.inodeMutationResponse(log);
 
       case BROADCAST:
       case TEST:
