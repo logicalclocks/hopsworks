@@ -8,7 +8,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 import se.kth.meta.entity.HdfsMetadataLog;
-import se.kth.meta.entity.HdfsMetadataLogPK;
 import se.kth.meta.exception.DatabaseException;
 
 /**

@@ -12,8 +12,7 @@ angular.module('hopsWorksApp')
                   method: 'POST',
                   //hops server
                   //url: 'http://193.10.66.222:9200/project/' + index + '/_search',
-                  url: 'http://193.10.67.135:9200/project/' + index + '/_search',
-                  //url: 'http://localhost:9200/project/' + index + '/_search',
+                  url: 'http://193.10.66.125:9200/project/' + index + '/_search',
                   contentType: 'application/x-www-form-urlencoded',
                   data: JSON.stringify(query)
                 };
@@ -69,27 +68,22 @@ angular.module('hopsWorksApp')
                           query: {
                             //combine the results of a prefix and a fuzzy query
                             bool: {
-                              must: {
-                                //matches names with the given prefix
-                                match_phrase_prefix: {
-                                  name: {
-                                    query: searchTerm,
-                                    slop: 0
+                              should:[
+                                  {
+                                      fuzzy_like_this_field : {
+                                          name : {
+                                              like_text : searchTerm
+                                          }
+                                      }
+                                  },
+                                  {
+                                      fuzzy_like_this:{
+                                          like_text: searchTerm,
+                                          fields: ["name", "EXTENDED_METADATA"],
+                                          fuzziness: 0.4
+                                      }
                                   }
-                                }
-                              },
-                              should: {
-                                fuzzy_like_this_field: {
-//                                                            multi_match : {
-//                                                              query: searchTerm, 
-//                                                              fields: [ "name", "EXTENDED_METADATA" ] 
-//                                                            }
-
-                                  name: {
-                                    like_text: searchTerm
-                                  }
-                                }
-                              }
+                              ]
                             }
                           }
                         }

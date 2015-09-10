@@ -454,10 +454,10 @@ public class ResponseBuilder {
     while (i < se.kth.bbc.lims.Constants.MAX_RETRIES) {
       try {
         this.sleep((int) (10 * factor));
+        
         //write directly to hdfs_metadata_log table
         this.utils.createMetadataLog(log);
-        return this.textResponse(
-                "Inode mutation was successful");
+        return this.textResponse("Inode mutation was successful");
       } catch (DatabaseException ex) {
 
       } finally {
