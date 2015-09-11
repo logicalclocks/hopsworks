@@ -53,7 +53,7 @@ WHERE ops.operation = 1
 AND ops.inode_id IN (SELECT inode_id FROM hopsworks.meta_inodes_ops_children_deleted WHERE processed = 0)
 
 
--- UPDATE AS PROCESSED ALL CHILDREN THAT HAVE BEEN PROCESSED (PROCESSED = 1)
+-- MARK AS PROCESSED ALL CHILDREN THAT HAVE BEEN PROCESSED (PROCESSED = 1)
 
 UPDATE hopsworks.meta_inodes_ops_children_deleted m,
 

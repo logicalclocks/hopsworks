@@ -55,7 +55,7 @@ WHERE ops.operation = 1 AND ops.dataset_id = temp.rootid
 AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_parents_deleted)
 
 
--- UPDATE AS PROCESSED ALL PARENTS THAT HAVE BEEN PROCESSED (PROCESSED = 1)
+-- MARK AS PROCESSED ALL PARENTS THAT HAVE BEEN PROCESSED (PROCESSED = 1)
 
 UPDATE hopsworks.meta_inodes_ops_parents_deleted m,
 
