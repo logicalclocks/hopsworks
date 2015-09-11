@@ -31,7 +31,7 @@ curl -XPUT 'localhost:9200/_river/parent/_meta' -d '{
 },
 
 {
-"statement" : "UPDATE hops.hdfs_metadata_log set logical_time = -1 WHERE inode_id NOT IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_parents_deleted)"
+"statement" : "UPDATE hops.hdfs_metadata_log set operation = -1 WHERE inode_id NOT IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_parents_deleted)"
 }
 
 ],
@@ -65,7 +65,7 @@ curl -XPUT 'localhost:9200/_river/child/_meta' -d '{
 },
 
 {
-"statement": "SELECT composite.*, metadata.EXTENDED_METADATA FROM (SELECT DISTINCT ops.inode_id as _id, ops.dataset_id as _parent, inodeinn.name as name, ops.* FROM hops.hdfs_metadata_log ops,   (SELECT outt.id as nodeinn_id, outt.parent_id as _parent, outt.* FROM hops.hdfs_inodes outt, (SELECT i.id as parentid FROM hops.hdfs_inodes i, (SELECT inn.id AS rootid FROM hops.hdfs_inodes inn WHERE inn.parent_id = 1) AS temp WHERE i.parent_id = temp.rootid) AS parent WHERE outt.parent_id = parent.parentid) as inodeinn WHERE ops.operation = 0 AND ops.inode_id = inodeinn.nodeinn_id AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_deleted) LIMIT 100)as composite LEFT JOIN (SELECT mtt.inodeid, GROUP_CONCAT( md.data SEPARATOR \"|\" ) AS EXTENDED_METADATA FROM hopsworks.meta_tuple_to_file mtt, hopsworks.meta_data md WHERE mtt.tupleid = md.tupleid GROUP BY (mtt.inodeid) LIMIT 0 , 30) as metadata ON metadata.inodeid = composite._id ORDER BY composite.logical_time ASC"
+"statement": "SELECT composite.*, metadata.EXTENDED_METADATA FROM (SELECT DISTINCT hi.id as _id, child._parent, hi.name, child.logical_time FROM hops.hdfs_inodes hi, (SELECT outt.inode_id as child_id, outt.dataset_id as _parent, outt.logical_time FROM hops.hdfs_metadata_log outt, (SELECT i.id as parentid FROM hops.hdfs_inodes i, (SELECT inn.id AS rootid FROM hops.hdfs_inodes inn WHERE inn.parent_id = 1) AS temp WHERE i.parent_id = temp.rootid) AS parent WHERE outt.dataset_id = parent.parentid AND outt.operation = 0) as child WHERE hi.id = child.child_id AND hi.id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_datasets_deleted) LIMIT 100)as composite LEFT JOIN (SELECT mtt.inodeid, GROUP_CONCAT( md.data SEPARATOR  '|' ) AS EXTENDED_METADATA FROM meta_tuple_to_file mtt, meta_data md WHERE mtt.tupleid = md.tupleid GROUP BY (mtt.inodeid) LIMIT 0 , 30) as metadata ON metadata.inodeid = composite._id ORDER BY composite.logical_time ASC"
 },
 
 {
@@ -81,11 +81,11 @@ curl -XPUT 'localhost:9200/_river/child/_meta' -d '{
 },
 
 {
-"statement" : "UPDATE hops.hdfs_metadata_log set logical_time = -1 WHERE inode_id NOT IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_deleted)"
+"statement" : "UPDATE hops.hdfs_metadata_log set operation = -1 WHERE inode_id NOT IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_deleted)"
 },
 
 {
-"statement" : "DELETE FROM hops.hdfs_metadata_log WHERE logical_time = -1"
+"statement" : "DELETE FROM hops.hdfs_metadata_log WHERE operation = -1"
 }
 ],
         "index" : "project",
