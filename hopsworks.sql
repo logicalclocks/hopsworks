@@ -303,6 +303,14 @@ CREATE TABLE `meta_inodes_ops_parents_deleted` (
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+CREATE TABLE `meta_inodes_ops_datasets_deleted` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` int(11) NOT NULL,
+  `parentid` int(11) NOT NULL,
+  `processed` tinyint(4) DEFAULT '0',
+  PRIMARY KEY (`id`,`inodeid`,`parentid`)
+) ENGINE=ndbcluster AUTO_INCREMENT=85 DEFAULT CHARSET=utf8;
+
 ---- Dataset table-------------------------------------------------
 CREATE TABLE `dataset` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
