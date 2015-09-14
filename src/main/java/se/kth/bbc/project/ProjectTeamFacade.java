@@ -336,4 +336,15 @@ public class ProjectTeamFacade {
     }
   }
 
+  public User findUserByEmail(String userEmail) {
+    TypedQuery<User> q = em.createNamedQuery(
+            "User.findByEmail", User.class);
+    q.setParameter("email", userEmail);
+    try {
+      return q.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+
 }

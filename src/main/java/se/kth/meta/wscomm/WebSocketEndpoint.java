@@ -18,6 +18,8 @@ import javax.websocket.server.ServerEndpoint;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeamFacade;
+import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.users.UserFacade;
 import se.kth.meta.wscomm.message.Message;
 import se.kth.meta.wscomm.message.TextMessage;
 
@@ -35,9 +37,9 @@ public class WebSocketEndpoint {
           getName());
 
   @EJB
-  private ProjectTeamFacade projectTeamBean;
+  private ProjectTeamFacade projectTeamFacade;
   @EJB
-  private ProjectFacade projectBean;
+  private ProjectFacade projectFacade;  
   private String sender;
   private Project project;
   private String userRole;
@@ -53,9 +55,7 @@ public class WebSocketEndpoint {
     this.httpSession = (HttpSession) config.getUserProperties().get(
             "httpSession");
 
-    logger.log(Level.INFO, "PROJECT ID {0}", projectId);
-
-    this.project = getProject(projectId);
+    this.project = this.getProject(projectId);
 
     if (this.project == null) {
       try {
@@ -67,9 +67,10 @@ public class WebSocketEndpoint {
       }
     }
 
+    User user = this.projectTeamFacade.findUserByEmail(this.sender);
     //returns the user role in project. Null if the user has no role in project
-    this.userRole = projectTeamBean.findCurrentRole(this.project, this.sender);
-    logger.log(Level.INFO, "User role in this product {0}", this.userRole);
+    this.userRole = this.projectTeamFacade.findCurrentRole(this.project, user);
+    logger.log(Level.INFO, "User role in this project {0}", this.userRole);
 
     if (this.userRole == null) {
       try {
@@ -145,7 +146,7 @@ public class WebSocketEndpoint {
     Project proj;
     try {
       pId = Integer.valueOf(projectId);
-      proj = projectBean.find(pId);
+      proj = this.projectFacade.find(pId);
     } catch (NumberFormatException e) {
       return null;
     }
