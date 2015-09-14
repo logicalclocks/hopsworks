@@ -1,6 +1,6 @@
 package se.kth.hopsworks.rest;
 
-import static com.google.common.collect.Multimaps.index;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
@@ -18,8 +18,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import org.elasticsearch.action.search.MultiSearchResponse;
-import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
@@ -36,7 +34,6 @@ import static org.elasticsearch.index.query.QueryBuilders.hasParentQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
 import org.elasticsearch.search.SearchHit;
-import se.kth.bbc.project.fb.InodeView;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 
@@ -132,24 +129,25 @@ public class ElasticService {
               totalHits());
       System.out.println("Maximum score: " + response.getHits().maxScore());
 
+      List<ElasticHit> elasticHits = new LinkedList<>();
       if (response.getHits().getHits().length > 0) {
         SearchHit[] hits = response.getHits().getHits();
 
-        GenericEntity<List> searchResults
-                = new GenericEntity<List>(hits) {
-                };
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-                entity(hits).build();
+        for (SearchHit hit : hits) {
+          elasticHits.add(new ElasticHit(hit));
+        }
       }
 
       client.close();
-      //no results so send back an empty array
+      GenericEntity<List<ElasticHit>> searchResults
+              = new GenericEntity<List<ElasticHit>>(elasticHits) {
+              };
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(new SearchHit[]{}).build();
+              entity(searchResults).build();
     }
 
+    //something went wrong so just throw an exception
     client.close();
-
     throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
   }
