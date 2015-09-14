@@ -1,5 +1,7 @@
 package se.kth.hopsworks.rest;
 
+import static com.google.common.collect.Multimaps.index;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -12,19 +14,30 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.elasticsearch.action.search.MultiSearchResponse;
-import org.elasticsearch.action.search.MultiSearchResponse.Item;
-import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.index.query.FilterBuilder;
+import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
+import static org.elasticsearch.index.query.FilterBuilders.termFilter;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
+import static org.elasticsearch.index.query.QueryBuilders.hasParentQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
 import org.elasticsearch.search.SearchHit;
+import se.kth.bbc.project.fb.InodeView;
+import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 
 /**
@@ -68,61 +81,77 @@ public class ElasticService {
               "Incomplete request!");
     }
 
-//    SearchResponse response = client.prepareSearch("project", "datasets")
-//            .setTypes("parent", "dataset")
-//            .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-//            .setQuery(QueryBuilders.termQuery("multi", "test")) // Query
-//            .setPostFilter(FilterBuilders.rangeFilter("age").from(12).to(18)) // Filter
-//            .setFrom(0).setSize(60).setExplain(true)
-//            .execute()
-//            .actionGet();
-//
-//    SearchHit[] results = response.getHits().getHits();
+    System.out.println("GLOBAL SEARCH");
 
-                
-    Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", "hopsworks").build();
-    TransportClient transportClient = new TransportClient(settings);
-            
-    Client client = transportClient
-                        .addTransportAddress(new InetSocketTransportAddress("193.10.66.125", 9300));
+    String datasetIndex = "datasets";
+    String projectIndex = "project";
 
-    SearchRequestBuilder srb1 = client.prepareSearch()
-            .setQuery(QueryBuilders.filteredQuery(
-                            QueryBuilders.boolQuery()
-                            .should(QueryBuilders.fuzzyQuery("name", searchTerm)),
-                            null));
+    String datasetType = "dataset";
+    String projectType = "parent";
 
-    SearchRequestBuilder srb2 = client.prepareSearch()
-            .setQuery(QueryBuilders.filteredQuery(
-                            QueryBuilders.boolQuery()
-                            .should(QueryBuilders.
-                                    fuzzyQuery("EXTENDED_METADATA", searchTerm)),
-                            null));
+    //some necessary client settings
+    final Settings settings = ImmutableSettings.settingsBuilder()
+            .put("client.transport.sniff", true) //being able to retrieve other nodes 
+            .put("cluster.name", "hopsworks").build();
 
-    MultiSearchResponse sr = client.prepareMultiSearch()
-            .add(srb1)
-            .add(srb2)
+    //initialize the client
+    Client client
+            = new TransportClient(settings)
+            .addTransportAddress(new InetSocketTransportAddress("193.10.66.125",
+                            9300));
+
+    //build the project query predicates
+    QueryBuilder namePMatch = prefixQuery("name", searchTerm);
+    FilterBuilder projectFilter = boolFilter()
+            .should(termFilter("name", searchTerm))
+            .should(termFilter("EXTENDED_METADATA", searchTerm));
+
+    //build the dataset query predicates
+    QueryBuilder nameDSMatch = prefixQuery("name", searchTerm);
+    FilterBuilder datasetFilter = boolFilter()
+            .should(termFilter("name", searchTerm))
+            .should(termFilter("EXTENDED_METADATA", searchTerm))
+            .should(termFilter("description", searchTerm));
+
+    //build the actual queries
+    QueryBuilder projectsQuery = QueryBuilders.filteredQuery(namePMatch,
+            projectFilter);
+    QueryBuilder datasetsQuery = QueryBuilders.filteredQuery(nameDSMatch,
+            datasetFilter);
+
+    //execute the queries
+    SearchResponse response = client.prepareSearch(projectIndex, datasetIndex).
+            setTypes(projectType, datasetType)
+            .setQuery(projectsQuery)
+            .setQuery(datasetsQuery)
+            .addHighlightedField("name")
             .execute().actionGet();
 
-    Item responses[] = sr.getResponses();
-    System.out.println("RESULTS " + responses.length);
+    if (response.status().getStatus() == 200) {
+      System.out.println("Matched number of documents: " + response.getHits().
+              totalHits());
+      System.out.println("Maximum score: " + response.getHits().maxScore());
 
-    for (Item item : responses) {
-      if (item.getResponse() != null) {
-        SearchHit[] results = item.getResponse().getHits().getHits();
-        
-        System.out.println("found " + results.length);
-        for (SearchHit shit : results) {
-          System.out.println("found " + shit);
-          System.out.println(shit.toString());
-        }
-      }else{
-        System.out.println("nothing found");
+      if (response.getHits().getHits().length > 0) {
+        SearchHit[] hits = response.getHits().getHits();
+
+        GenericEntity<List> searchResults
+                = new GenericEntity<List>(hits) {
+                };
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(hits).build();
       }
+
+      client.close();
+      //no results so send back an empty array
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(new SearchHit[]{}).build();
     }
 
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            responses).build();
+    client.close();
+
+    throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
   }
 
   /**
@@ -139,7 +168,7 @@ public class ElasticService {
   @Path("projectsearch/{projectName}/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response detachTemplateFromInode(
+  public Response projectSearch(
           @PathParam("projectName") String projectName,
           @PathParam("searchTerm") String searchTerm,
           @Context SecurityContext sc,
@@ -150,9 +179,56 @@ public class ElasticService {
               "Incomplete request!");
     }
 
-    JsonResponse json = new JsonResponse();
-    json.setSuccessMessage("Empty response for now.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+    String index = "project";
+    String type = "child";
+
+    final Settings settings = ImmutableSettings.settingsBuilder()
+            .put("client.transport.sniff", true) //being able to retrieve other nodes 
+            .put("cluster.name", "hopsworks").build();
+
+    Client client
+            = new TransportClient(settings)
+            .addTransportAddress(new InetSocketTransportAddress("193.10.66.125",
+                            9300));
+
+    QueryBuilder hasParentPart = hasParentQuery("parent", matchQuery("name",
+            projectName));
+
+    FilterBuilder multiMatchPart = boolFilter()
+            .should(termFilter("name", fuzzyQuery("name", searchTerm)))
+            .should(termFilter("name", QueryBuilders.prefixQuery("name",
+                                    searchTerm)))
+            .should(termFilter("EXTENDED_METADATA", fuzzyQuery(
+                                    "EXTENDED_METADATA", searchTerm)));
+
+    QueryBuilder query = QueryBuilders.filteredQuery(hasParentPart,
+            multiMatchPart);
+
+    SearchResponse response = client.prepareSearch(index).setTypes(type)
+            .setQuery(query).addHighlightedField("name")
+            .execute().actionGet();
+
+    if (response.status().getStatus() == 200) {
+      System.out.println("Matched number of documents: " + response.getHits().
+              totalHits());
+      System.out.println("Maximum score: " + response.getHits().maxScore());
+
+      for (SearchHit hit : response.getHits().getHits()) {
+        System.out.println("hit: " + hit.getIndex() + ":" + hit.getType()
+                + ":" + hit.getId());
+      }
+
+      client.close();
+
+      JsonResponse json = new JsonResponse();
+      json.setSuccessMessage("Elastic responded ok.");
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(response).build();
+    }
+
+    client.close();
+
+    throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
   }
 }
