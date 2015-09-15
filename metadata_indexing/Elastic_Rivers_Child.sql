@@ -38,7 +38,7 @@ FROM (
 		) as child 
 
 	WHERE hi.id = child.child_id 
-	AND hi.id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_datasets_deleted) LIMIT 100
+	AND hi.id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_deleted) LIMIT 100
 )as composite
 
 LEFT JOIN (
