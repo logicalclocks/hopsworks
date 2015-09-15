@@ -11,7 +11,7 @@ angular.module('hopsWorksApp')
             self.email = $cookies['email'];
             self.emailHash = md5.createHash(self.email || '');
             var elasticService = ElasticService();
-            
+
             self.logout = function () {
               AuthService.logout(self.user).then(
                       function (success) {
@@ -77,12 +77,12 @@ angular.module('hopsWorksApp')
             self.currentPage = 1;
             self.pageSize = 5;
 
-            self.hitEnter = function(evt){
-               if(angular.equals(evt.keyCode, 13)){
-                 self.search();
-               } 
+            self.hitEnter = function (evt) {
+              if (angular.equals(evt.keyCode, 13)) {
+                self.search();
+              }
             };
-            
+
             self.keyTyped = function (evt) {
 
               if (self.searchTerm.length > 3) {
@@ -100,28 +100,40 @@ angular.module('hopsWorksApp')
               self.projectName = UtilsService.getProjectName();
               self.currentPage = 1;
               self.pageSize = 5;
-              //var searchQuery = ElasticService.query(self.index, self.projectName, self.searchTerm);
+              self.searchResult = [];
+              self.searchReturned = "";
 
-              //triggering a global search
-              elasticService.globalSearch(self.searchTerm)
-                      .then(function (response) {
-                        
-                        //console.log("RECEIVED RESPONSE " + JSON.stringify(response.data));
-                        var data = response.data;
-                        self.searchResult = [];
-                        self.searchReturned = "";
-                        if (data.length > 0) {
-                          self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
-                          self.searchResult = data;
-                        } else {
-                          self.searchResult = [];
-                          self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
-                        }
-                        self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-                        self.resultItems = self.searchResult.length;
-                      }, function (error) {
-                      });
-                      
+              if (self.index === "parent") {
+                console.log("parent search");
+                //triggering a global search
+                elasticService.globalSearch(self.searchTerm)
+                        .then(function (response) {
+
+                          var searchHits = response.data;
+                          if (searchHits.length > 0) {
+                            self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
+                            self.searchResult = searchHits;
+                          } else {
+                            self.searchResult = [];
+                            self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
+                          }
+                          self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
+                          self.resultItems = self.searchResult.length;
+
+                        }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                        });
+              } else if (self.index === "child") {
+                console.log("child search");
+                elasticService.projectSearch(UtilsService.getProjectName(), self.searchTerm)
+                        .then(function (response) {
+
+                          self.searchHits = response.data;
+                        }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                        });
+              }
+
               datePicker();// this will load the function so that the date picker can call it.
             };
             var datePicker = function () {

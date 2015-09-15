@@ -58,12 +58,12 @@ public class ResponseMessages {
           = "Your have successfully changed your security questions and answer.";
   public final static String PROFILE_UPDATED
           = "Your profile was updated successfully.";
-    public final static String SSH_KEY_ADDED
-            = "Your ssh key was added successfully.";
-    public final static String SSH_KEY_REMOVED
-            = "Your ssh key was deleted successfully.";
-    public final static String SSH_KEYS_LISTED
-            = "Your ssh keys were listed successfully.";
+  public final static String SSH_KEY_ADDED
+          = "Your ssh key was added successfully.";
+  public final static String SSH_KEY_REMOVED
+          = "Your ssh key was deleted successfully.";
+  public final static String SSH_KEYS_LISTED
+          = "Your ssh keys were listed successfully.";
 
   //project error response
   public final static String PROJECT_NOT_FOUND = "Project wasn't found.";
@@ -140,6 +140,8 @@ public class ResponseMessages {
           = "The path to upload the template was not specified";
   public final static String ELASTIC_SERVER_NOT_FOUND
           = "Problem when reaching the elastic server";
-    public final static String ELASTIC_INDEX_NOT_FOUND
-          = "Elastic indices not found";
+  public final static String ELASTIC_INDEX_NOT_FOUND
+          = "Elastic indices does not exist";
+  public final static String ELASTIC_TYPE_NOT_FOUND
+          = "Elastic type does not exist";
 }

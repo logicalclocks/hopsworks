@@ -19,8 +19,11 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
+import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
+import org.elasticsearch.action.admin.indices.exists.types.TypesExistsResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
@@ -32,6 +35,7 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.FilterBuilder;
 import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
 import static org.elasticsearch.index.query.FilterBuilders.prefixFilter;
+import static org.elasticsearch.index.query.FilterBuilders.queryFilter;
 import static org.elasticsearch.index.query.FilterBuilders.termFilter;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -108,8 +112,6 @@ public class ElasticService {
               getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
     }
 
-    client.admin().indices().prepareExists(Constants.META_PROJECT_INDEX);
-
     //hit the indices - execute the queries
     SearchResponse response = client.prepareSearch(Constants.META_PROJECT_INDEX,
             Constants.META_DATASET_INDEX).
@@ -121,9 +123,9 @@ public class ElasticService {
             .execute().actionGet();
 
     if (response.status().getStatus() == 200) {
-//      logger.log(Level.INFO, "Matched number of documents: {0}", response.
-//              getHits().
-//              totalHits());
+      //logger.log(Level.INFO, "Matched number of documents: {0}", response.
+      //getHits().
+      //totalHits());
 
       //construct the response
       List<ElasticHit> elasticHits = new LinkedList<>();
@@ -183,44 +185,74 @@ public class ElasticService {
             .addTransportAddress(new InetSocketTransportAddress("193.10.66.125",
                             9300));
 
-    QueryBuilder hasParentPart = hasParentQuery("parent", matchQuery("name",
-            projectName));
+    //check if the indices are up and running
+    if (!this.indexExists(client, Constants.META_PROJECT_INDEX)) {
 
-    FilterBuilder multiMatchPart = boolFilter()
-            .should(termFilter("name", fuzzyQuery("name", searchTerm)))
-            .should(termFilter("name", QueryBuilders.prefixQuery("name",
-                                    searchTerm)))
-            .should(termFilter("EXTENDED_METADATA", fuzzyQuery(
-                                    "EXTENDED_METADATA", searchTerm)));
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
+    } else if (!this.typeExists(client, Constants.META_PROJECT_INDEX,
+            Constants.META_PROJECT_CHILD_TYPE)) {
 
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
+    }
+
+    //Query
+    //filter results by parent
+    QueryBuilder hasParentPart = hasParentQuery(
+            Constants.META_PROJECT_PARENT_TYPE,
+            matchQuery(Constants.META_NAME_FIELD, projectName));
+
+    //search into 'name' and 'extended_metadata' fields
+    QueryBuilder boolQuery = boolQuery()
+            .should(fuzzyQuery(Constants.META_NAME_FIELD, searchTerm))
+            .should(fuzzyQuery(Constants.META_DATA_FIELD, searchTerm))
+            .should(termsQuery(Constants.META_DATA_FIELD, searchTerm));
+
+    //wrap querybuilder into filterbuilder
+    FilterBuilder multiMatchPart = boolFilter().should(queryFilter(boolQuery));
+
+    //create the final query
     QueryBuilder query = QueryBuilders.filteredQuery(hasParentPart,
             multiMatchPart);
 
-    SearchResponse response = client.prepareSearch(Constants.META_PROJECT_INDEX)
-            .setTypes(Constants.META_PROJECT_CHILD_TYPE)
-            .setQuery(query).addHighlightedField("name")
+    QueryBuilder intersection = boolQuery()
+            .must(hasParentPart)
+            .must(boolQuery);
+
+    //hit the indices - execute the queries
+    SearchResponse response
+            = client.prepareSearch(Constants.META_PROJECT_INDEX).
+            setTypes(Constants.META_PROJECT_CHILD_TYPE)
+            .setQuery(query)
+            .addHighlightedField("name")
             .execute().actionGet();
 
     if (response.status().getStatus() == 200) {
-      System.out.println("Matched number of documents: " + response.getHits().
+      logger.log(Level.INFO, "Matched number of documents: {0}", response.
+              getHits().
               totalHits());
-      System.out.println("Maximum score: " + response.getHits().maxScore());
 
-      for (SearchHit hit : response.getHits().getHits()) {
-        System.out.println("hit: " + hit.getIndex() + ":" + hit.getType()
-                + ":" + hit.getId());
+      //construct the response
+      List<ElasticHit> elasticHits = new LinkedList<>();
+      if (response.getHits().getHits().length > 0) {
+        SearchHit[] hits = response.getHits().getHits();
+
+        for (SearchHit hit : hits) {
+          elasticHits.add(new ElasticHit(hit, hit.getSource(), "parent"));
+        }
       }
 
       client.close();
-
-      JsonResponse json = new JsonResponse();
-      json.setSuccessMessage("Elastic responded ok.");
+      GenericEntity<List<ElasticHit>> searchResults
+              = new GenericEntity<List<ElasticHit>>(elasticHits) {
+              };
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(response).build();
+              entity(searchResults).build();
     }
 
+    //something went wrong so throw an exception
     client.close();
-
     throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
   }
@@ -329,6 +361,26 @@ public class ElasticService {
     IndicesExistsResponse response = indicesExistsRequestBuilder
             .execute()
             .actionGet();
+
+    return response.isExists();
+  }
+
+  /**
+   * Checks if a given data type exists. It is a given that the index exists
+   * <p/>
+   * @param client
+   * @param typeName
+   * @return
+   */
+  private boolean typeExists(Client client, String indexName, String typeName) {
+    AdminClient admin = client.admin();
+    IndicesAdminClient indices = admin.indices();
+
+    ActionFuture<TypesExistsResponse> action = indices.typesExists(
+            new TypesExistsRequest(
+                    new String[]{indexName}, typeName));
+
+    TypesExistsResponse response = action.actionGet();
 
     return response.isExists();
   }

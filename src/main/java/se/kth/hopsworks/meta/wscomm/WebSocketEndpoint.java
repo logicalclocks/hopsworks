@@ -19,7 +19,6 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.bbc.security.ua.model.User;
-import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.meta.wscomm.message.Message;
 import se.kth.hopsworks.meta.wscomm.message.TextMessage;
 
