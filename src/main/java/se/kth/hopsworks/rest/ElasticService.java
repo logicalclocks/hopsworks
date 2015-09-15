@@ -2,6 +2,7 @@ package se.kth.hopsworks.rest;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -25,10 +26,14 @@ import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.FilterBuilders;
 import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
+import static org.elasticsearch.index.query.FilterBuilders.prefixFilter;
 import static org.elasticsearch.index.query.FilterBuilders.termFilter;
+import org.elasticsearch.index.query.OrFilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import static org.elasticsearch.index.query.QueryBuilders.hasParentQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
@@ -78,8 +83,6 @@ public class ElasticService {
               "Incomplete request!");
     }
 
-    System.out.println("GLOBAL SEARCH");
-
     String datasetIndex = "datasets";
     String projectIndex = "project";
 
@@ -88,53 +91,36 @@ public class ElasticService {
 
     //some necessary client settings
     final Settings settings = ImmutableSettings.settingsBuilder()
-            .put("client.transport.sniff", true) //being able to retrieve other nodes 
-            .put("cluster.name", "hopsworks").build();
+            .put("client.transport.sniff", true) //being able to inspect other nodes 
+            .put("cluster.name", "hopsworks")
+            .build();
 
     //initialize the client
     Client client
             = new TransportClient(settings)
             .addTransportAddress(new InetSocketTransportAddress("193.10.66.125",
                             9300));
-
-    //build the project query predicates
-    QueryBuilder namePMatch = prefixQuery("name", searchTerm);
-    FilterBuilder projectFilter = boolFilter()
-            .should(termFilter("name", searchTerm))
-            .should(termFilter("EXTENDED_METADATA", searchTerm));
-
-    //build the dataset query predicates
-    QueryBuilder nameDSMatch = prefixQuery("name", searchTerm);
-    FilterBuilder datasetFilter = boolFilter()
-            .should(termFilter("name", searchTerm))
-            .should(termFilter("EXTENDED_METADATA", searchTerm))
-            .should(termFilter("description", searchTerm));
-
-    //build the actual queries
-    QueryBuilder projectsQuery = QueryBuilders.filteredQuery(namePMatch,
-            projectFilter);
-    QueryBuilder datasetsQuery = QueryBuilders.filteredQuery(nameDSMatch,
-            datasetFilter);
-
-    //execute the queries
+    
+    //hit the indices - execute the queries
     SearchResponse response = client.prepareSearch(projectIndex, datasetIndex).
             setTypes(projectType, datasetType)
-            .setQuery(projectsQuery)
-            .setQuery(datasetsQuery)
+            .setQuery(this.getProjectComboQuery(searchTerm))
+            .setQuery(this.getDatasetComboQuery(searchTerm))
             .addHighlightedField("name")
             .execute().actionGet();
 
     if (response.status().getStatus() == 200) {
-      System.out.println("Matched number of documents: " + response.getHits().
+      logger.log(Level.INFO, "Matched number of documents: {0}", response.
+              getHits().
               totalHits());
-      System.out.println("Maximum score: " + response.getHits().maxScore());
 
+      //construct the response
       List<ElasticHit> elasticHits = new LinkedList<>();
       if (response.getHits().getHits().length > 0) {
         SearchHit[] hits = response.getHits().getHits();
 
         for (SearchHit hit : hits) {
-          elasticHits.add(new ElasticHit(hit));
+          elasticHits.add(new ElasticHit(hit, hit.getSource()));
         }
       }
 
@@ -146,7 +132,7 @@ public class ElasticService {
               entity(searchResults).build();
     }
 
-    //something went wrong so just throw an exception
+    //something went wrong so throw an exception
     client.close();
     throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
@@ -228,5 +214,63 @@ public class ElasticService {
 
     throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
+  }
+
+  /**
+   * Combines a prefix query with a filtered query (i.e. 'namePMatch'
+   * and 'projectFilter')
+   * <p>
+   * @param searchTerm
+   * @return 
+   */
+  private QueryBuilder getProjectComboQuery(String searchTerm) {
+    //build the project query predicates
+    QueryBuilder namePMatch = prefixQuery("name", searchTerm);
+    FilterBuilder projectFilter = boolFilter()
+            .should(prefixFilter("name", searchTerm))
+            .should(prefixFilter("EXTENDED_METADATA", searchTerm));
+
+    QueryBuilder projectsQuery = QueryBuilders.filteredQuery(namePMatch,
+            projectFilter);
+
+    return projectsQuery;
+  }
+
+  /**
+   * A boolean query with a 'must' and two 'should' filter predicates. It uses a
+   * prefix and fuzzy matches respectively
+   * <p>
+   * @param searchTerm
+   * @return  
+   */
+  private QueryBuilder getProjectBoolQuery(String searchTerm) {
+    
+    //the same as the above only shorter
+    QueryBuilder boolQuery = boolQuery()
+            .must(prefixQuery("name", searchTerm))
+            .should(fuzzyQuery("name", searchTerm))
+            .should(fuzzyQuery("EXTENDED_METADATA", searchTerm));
+
+    return boolQuery;
+  }
+
+  /**
+   * Combines a prefix query with a filtered query
+   * <p>
+   * @param searchTerm
+   * @return 
+   */
+  private QueryBuilder getDatasetComboQuery(String searchTerm) {
+    //build the dataset query predicates
+    QueryBuilder nameDSMatch = prefixQuery("name", searchTerm);
+    FilterBuilder datasetFilter = boolFilter()
+            .should(prefixFilter("name", searchTerm))
+            .should(prefixFilter("EXTENDED_METADATA", searchTerm))
+            .should(prefixFilter("description", searchTerm));
+
+    QueryBuilder datasetsQuery = QueryBuilders.filteredQuery(nameDSMatch,
+            datasetFilter);
+    
+    return datasetsQuery;
   }
 }
