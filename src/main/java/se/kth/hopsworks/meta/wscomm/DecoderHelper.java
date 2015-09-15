@@ -30,11 +30,12 @@ public class DecoderHelper {
     try {
       String message = this.json.getString("type");
       Class c = getClass().getClassLoader().loadClass(
-              "se.kth.meta.wscomm.message." + message);
+              "se.kth.hopsworks.meta.wscomm.message." + message);
       msg = (Message) c.newInstance();
     } catch (ClassNotFoundException | InstantiationException |
             IllegalAccessException e) {
-      throw new ApplicationException(e.getMessage());
+      throw new ApplicationException(
+              "Could not find the right class to initialize the message", e);
     }
 
     return msg;
