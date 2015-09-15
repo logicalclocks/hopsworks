@@ -46,7 +46,7 @@ FROM (
 		AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_datasets_deleted) LIMIT 100
 		)as composite 
 
-	WHERE dt.inode_pid = composite.dsid AND dt.inode_name = composite.name
+	WHERE dt.inode_pid = composite.dsid AND dt.inode_name = composite.name AND dt.searchable = 1
 ) as ds
 
 LEFT JOIN (
