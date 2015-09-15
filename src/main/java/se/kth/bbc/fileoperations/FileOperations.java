@@ -36,7 +36,7 @@ public class FileOperations {
 
   /**
    * Get an InputStream for the file on the given path.
-   * <p>
+   * <p/>
    * @param path The file to read.
    * @return Inputstream from the file in the file system.
    * @throws IOException
@@ -48,7 +48,7 @@ public class FileOperations {
 
   /**
    * Create the folders on the given path. Equivalent to mkdir -p.
-   * <p>
+   * <p/>
    * @param path
    * @return
    * @throws IOException
@@ -75,7 +75,7 @@ public class FileOperations {
 
   /**
    * Copy a file from the local path to the HDFS destination.
-   * <p>
+   * <p/>
    * @param deleteSource If true, deletes the source file after copying.
    * @param src
    * @param destination
@@ -122,7 +122,7 @@ public class FileOperations {
 
   /**
    * Get the contents of the file at the given path.
-   * <p>
+   * <p/>
    * @param path
    * @return
    * @throws IOException
@@ -134,7 +134,7 @@ public class FileOperations {
 
   /**
    * Move the file from the source path to the destination path.
-   * <p>
+   * <p/>
    * @param source
    * @param destination
    * @throws IOException
@@ -170,7 +170,7 @@ public class FileOperations {
 
   /**
    * Check if the inode at the given path is a directory.
-   * <p>
+   * <p/>
    * @param path
    * @return
    */
@@ -185,7 +185,7 @@ public class FileOperations {
 
   /**
    * Copy a file from one location (src) in HDFS to another (dst).
-   * <p>
+   * <p/>
    * @param src
    * @param dst
    * @throws IOException
@@ -205,7 +205,7 @@ public class FileOperations {
 
   /**
    * Copy from HDFS to the local file system.
-   * <p>
+   * <p/>
    * @param hdfsPath
    * @param localPath
    * @throws IOException
@@ -222,7 +222,7 @@ public class FileOperations {
 
   /**
    * Check if the path exists in HDFS.
-   * <p>
+   * <p/>
    * @param path
    * @return
    * @throws IOException
@@ -240,7 +240,7 @@ public class FileOperations {
   /**
    * Get the absolute HDFS path of the form
    * <i>hdfs:///projects/projectname/relativepath</i>
-   * <p>
+   * <p/>
    * @param projectname
    * @param relativePath
    * @return
@@ -257,7 +257,7 @@ public class FileOperations {
   /**
    * Get a list of the names of the child files (so no directories) of the given
    * path.
-   * <p>
+   * <p/>
    * @param path
    * @return A list of filenames, empty if the given path does not have
    * children.
@@ -280,7 +280,7 @@ public class FileOperations {
 
   /**
    * Marks a file/folder in location as metadata enabled
-   * <p>
+   * <p/>
    * @param location
    * @throws IOException
    */

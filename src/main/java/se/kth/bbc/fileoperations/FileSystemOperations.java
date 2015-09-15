@@ -65,10 +65,10 @@ public class FileSystemOperations {
 
   /**
    * Create a new folder on the given path. Equivalent to mkdir -p.
-   * <p>
+   * <p/>
    * @param location The path to the new folder, its name included.
    * @return True if successful.
-   * <p>
+   * <p/>
    * @throws java.io.IOException
    */
   public boolean mkdirs(Path location) throws IOException {
@@ -94,7 +94,7 @@ public class FileSystemOperations {
 
   /**
    * Get the HDFS file system with the Hadoop config files.
-   * <p>
+   * <p/>
    * @return
    * @throws IOException
    */
@@ -144,7 +144,7 @@ public class FileSystemOperations {
 
   /**
    * Get the contents of the file at the given path.
-   * <p>
+   * <p/>
    * @param file
    * @return
    * @throws IOException
@@ -165,7 +165,7 @@ public class FileSystemOperations {
 
   /**
    * Copy a file from one filesystem to the other.
-   * <p>
+   * <p/>
    * @param deleteSource If true, the file at the source path will be deleted
    * after copying.
    * @param source
@@ -179,7 +179,7 @@ public class FileSystemOperations {
 
   /**
    * Move a file in HDFS from one path to another.
-   * <p>
+   * <p/>
    * @param source
    * @param destination
    * @throws IOException
@@ -190,7 +190,7 @@ public class FileSystemOperations {
 
   /**
    * Copy a file within HDFS. Largely taken from Hadoop code.
-   * <p>
+   * <p/>
    * @param src
    * @param dst
    * @throws IOException
@@ -208,7 +208,7 @@ public class FileSystemOperations {
 
   /**
    * Copy the file at the HDFS source path to the local destination.
-   * <p>
+   * <p/>
    * @param src
    * @param dst
    * @throws IOException
@@ -221,7 +221,7 @@ public class FileSystemOperations {
    * Marks a folder/file in location as metaEnabled. This means that all file
    * operations from this path down the directory tree will be registered in
    * hdfs_metadata_log table
-   * <p>
+   * <p/>
    * @param location
    * @throws IOException
    */
@@ -231,10 +231,10 @@ public class FileSystemOperations {
 
   /**
    * Create a new folder on the given path only if the parent folders exist
-   * <p>
+   * <p/>
    * @param location The path to the new folder, its name included.
    * @return True if successful.
-   * <p>
+   * <p/>
    * @throws java.io.IOException
    */
   public boolean mkdir(Path location) throws IOException {

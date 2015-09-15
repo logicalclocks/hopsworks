@@ -14,7 +14,7 @@ import se.kth.bbc.jobs.model.JsonReduceable;
 
 /**
  * Represents a mutable JSON object with only String values.
- * <p>
+ * <p/>
  * @author stig
  */
 public class MutableJsonObject {
@@ -34,7 +34,7 @@ public class MutableJsonObject {
    * Convert a JsonObject into a DatabaseJsonObject. Note that a
    * DatabaseJsonObject cannot contain a Json array or Null. Other types are
    * converted.
-   * <p>
+   * <p/>
    * @param object
    * @throws IllegalArgumentException
    */
@@ -65,7 +65,7 @@ public class MutableJsonObject {
   /**
    * Add a String key-value pair. If the key already exists, the value is
    * overwritten.
-   * <p>
+   * <p/>
    * @param key
    * @param value
    * @throws NullPointerException If the value is null.
@@ -81,7 +81,7 @@ public class MutableJsonObject {
    * Add a String-JSON object pair. If the key already exists, the value is
    * overwritten. Changes in the original value are also reflected in this
    * object.
-   * <p>
+   * <p/>
    * @param key
    * @param value
    */
@@ -92,7 +92,7 @@ public class MutableJsonObject {
   /**
    * Add a String-JSON object pair. If the key already exists, the value is
    * overwritten. 
-   * <p>
+   * <p/>
    * @param key
    * @param value
    */
@@ -102,7 +102,7 @@ public class MutableJsonObject {
 
   /**
    * Get the string value for this key.
-   * <p>
+   * <p/>
    * @param key
    * @return
    * @throws IllegalArgumentException If the object does not contain a string
@@ -124,7 +124,7 @@ public class MutableJsonObject {
   /**
    * Get the string for the given key, or the given default if this key is not
    * present.
-   * <p>
+   * <p/>
    * @param key
    * @param defaultvalue
    * @return
@@ -146,7 +146,7 @@ public class MutableJsonObject {
 
   /**
    * Get the JSON object value for this key.
-   * <p>
+   * <p/>
    * @param key
    * @return
    * @throws IllegalArgumentException If the object does not contain an object
@@ -166,7 +166,7 @@ public class MutableJsonObject {
   /**
    * Check if this JSON object contains the given key on the highest level. This
    * means that no recursive checking is performed.
-   * <p>
+   * <p/>
    * @param key
    * @return
    */
@@ -176,7 +176,7 @@ public class MutableJsonObject {
 
   /**
    * Return the number of top-level elements in this object.
-   * <p>
+   * <p/>
    * @return
    */
   public int size() {
@@ -186,7 +186,7 @@ public class MutableJsonObject {
   /**
    * Get a view on the keys in this JSON object. The keyset is not backed by the
    * map, nor vice versa.
-   * <p>
+   * <p/>
    * @return
    */
   public Set<String> keySet() {
@@ -199,7 +199,7 @@ public class MutableJsonObject {
 
   /**
    * Get a String representation in JSON format of this object.
-   * <p>
+   * <p/>
    * @return
    */
   public String toJson() {
