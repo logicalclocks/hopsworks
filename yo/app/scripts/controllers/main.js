@@ -53,8 +53,7 @@ angular.module('hopsWorksApp')
                                   });
                         }, function (error) {
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                }
-                );
+                });
               } else if (projectOrDataset === 'child') {
                 ProjectService.getDatasetInfo({inodeId: selected.inode_id}).$promise.then(
                         function (success) {
@@ -66,8 +65,7 @@ angular.module('hopsWorksApp')
                                   });
                         }, function (error) {
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                }
-                );
+                });
               }
             };
 
@@ -108,7 +106,7 @@ angular.module('hopsWorksApp')
               elasticService.globalSearch(self.searchTerm)
                       .then(function (response) {
                         
-                        console.log("RECEIVED RESPONSE " + JSON.stringify(response.data));
+                        //console.log("RECEIVED RESPONSE " + JSON.stringify(response.data));
                         var data = response.data;
                         self.searchResult = [];
                         self.searchReturned = "";
@@ -124,23 +122,6 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                       });
                       
-//              ElasticService.search(searchQuery, self.index)
-//                      .then(function (response) {
-//                        var data = response.data.hits.hits;
-//                        self.searchResult = [];
-//                        self.searchReturned = "";
-//                        if (data.length > 0) {
-//                          self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
-//                          self.searchResult = data;
-//                        } else {
-//                          self.searchResult = [];
-//                          self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
-//                        }
-//                        self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-//                        self.resultItems = self.searchResult.length;
-//                      }, function (error) {
-//                      });
-
               datePicker();// this will load the function so that the date picker can call it.
             };
             var datePicker = function () {

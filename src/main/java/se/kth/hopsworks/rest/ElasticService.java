@@ -19,26 +19,31 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
+import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.FilterBuilders;
 import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
 import static org.elasticsearch.index.query.FilterBuilders.prefixFilter;
 import static org.elasticsearch.index.query.FilterBuilders.termFilter;
-import org.elasticsearch.index.query.OrFilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import static org.elasticsearch.index.query.QueryBuilders.hasParentQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import org.elasticsearch.search.SearchHit;
+import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 
@@ -62,7 +67,7 @@ public class ElasticService {
   /**
    * Searches for content composed of projects and datasets. Hits two elastic
    * indices: 'project' and 'dataset'
-   * <p>
+   * <p/>
    * @param searchTerm
    * @param sc
    * @param req
@@ -83,12 +88,6 @@ public class ElasticService {
               "Incomplete request!");
     }
 
-    String datasetIndex = "datasets";
-    String projectIndex = "project";
-
-    String datasetType = "dataset";
-    String projectType = "parent";
-
     //some necessary client settings
     final Settings settings = ImmutableSettings.settingsBuilder()
             .put("client.transport.sniff", true) //being able to inspect other nodes 
@@ -100,19 +99,31 @@ public class ElasticService {
             = new TransportClient(settings)
             .addTransportAddress(new InetSocketTransportAddress("193.10.66.125",
                             9300));
-    
+
+    //check if the indices are up and running
+    if (!this.indexExists(client, Constants.META_PROJECT_INDEX) || !this.
+            indexExists(client, Constants.META_DATASET_INDEX)) {
+
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
+    }
+
+    client.admin().indices().prepareExists(Constants.META_PROJECT_INDEX);
+
     //hit the indices - execute the queries
-    SearchResponse response = client.prepareSearch(projectIndex, datasetIndex).
-            setTypes(projectType, datasetType)
-            .setQuery(this.getProjectComboQuery(searchTerm))
-            .setQuery(this.getDatasetComboQuery(searchTerm))
+    SearchResponse response = client.prepareSearch(Constants.META_PROJECT_INDEX,
+            Constants.META_DATASET_INDEX).
+            setTypes(Constants.META_PROJECT_PARENT_TYPE,
+                    Constants.META_DATASET_TYPE)
+            .setQuery(this.getProjectDatasetQueryCombo(searchTerm))
+            //.setQuery(this.getDatasetComboQuery(searchTerm))
             .addHighlightedField("name")
             .execute().actionGet();
 
     if (response.status().getStatus() == 200) {
-      logger.log(Level.INFO, "Matched number of documents: {0}", response.
-              getHits().
-              totalHits());
+//      logger.log(Level.INFO, "Matched number of documents: {0}", response.
+//              getHits().
+//              totalHits());
 
       //construct the response
       List<ElasticHit> elasticHits = new LinkedList<>();
@@ -140,7 +151,7 @@ public class ElasticService {
 
   /**
    * Searches for content inside a specific project. Hits 'projects' index
-   * <p>
+   * <p/>
    * @param projectName
    * @param searchTerm
    * @param sc
@@ -162,9 +173,6 @@ public class ElasticService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-
-    String index = "project";
-    String type = "child";
 
     final Settings settings = ImmutableSettings.settingsBuilder()
             .put("client.transport.sniff", true) //being able to retrieve other nodes 
@@ -188,7 +196,8 @@ public class ElasticService {
     QueryBuilder query = QueryBuilders.filteredQuery(hasParentPart,
             multiMatchPart);
 
-    SearchResponse response = client.prepareSearch(index).setTypes(type)
+    SearchResponse response = client.prepareSearch(Constants.META_PROJECT_INDEX)
+            .setTypes(Constants.META_PROJECT_CHILD_TYPE)
             .setQuery(query).addHighlightedField("name")
             .execute().actionGet();
 
@@ -219,9 +228,9 @@ public class ElasticService {
   /**
    * Combines a prefix query with a filtered query (i.e. 'namePMatch'
    * and 'projectFilter')
-   * <p>
+   * <p/>
    * @param searchTerm
-   * @return 
+   * @return
    */
   private QueryBuilder getProjectComboQuery(String searchTerm) {
     //build the project query predicates
@@ -239,12 +248,12 @@ public class ElasticService {
   /**
    * A boolean query with a 'must' and two 'should' filter predicates. It uses a
    * prefix and fuzzy matches respectively
-   * <p>
+   * <p/>
    * @param searchTerm
-   * @return  
+   * @return
    */
   private QueryBuilder getProjectBoolQuery(String searchTerm) {
-    
+
     //the same as the above only shorter
     QueryBuilder boolQuery = boolQuery()
             .must(prefixQuery("name", searchTerm))
@@ -255,22 +264,72 @@ public class ElasticService {
   }
 
   /**
-   * Combines a prefix query with a filtered query
-   * <p>
+   * Performs a matchprasequery on the description field of the dataset. Name
+   * and extended_metadata fields are taken care of by the project query
+   * <p/>
    * @param searchTerm
-   * @return 
+   * @return
    */
   private QueryBuilder getDatasetComboQuery(String searchTerm) {
-    //build the dataset query predicates
-    QueryBuilder nameDSMatch = prefixQuery("name", searchTerm);
-    FilterBuilder datasetFilter = boolFilter()
-            .should(prefixFilter("name", searchTerm))
-            .should(prefixFilter("EXTENDED_METADATA", searchTerm))
-            .should(prefixFilter("description", searchTerm));
 
-    QueryBuilder datasetsQuery = QueryBuilders.filteredQuery(nameDSMatch,
-            datasetFilter);
-    
-    return datasetsQuery;
+    //a phrase query to match the dataset description
+    QueryBuilder phraseQuery = matchPhraseQuery(
+            Constants.META_DESCRIPTION_FIELD, searchTerm);
+
+    //build the dataset query predicates
+    QueryBuilder nameQuery = prefixQuery(Constants.META_NAME_FIELD, searchTerm);
+
+    //apply phrase filter on user metadata
+    QueryBuilder metadataPhraseQuery = matchPhraseQuery(
+            Constants.META_DATA_FIELD,
+            searchTerm);
+
+    //apply terms filter on user metadata as well
+    QueryBuilder metadataTermsQuery = termsQuery(Constants.META_DATA_FIELD,
+            searchTerm);
+
+    //aggregate the results
+    QueryBuilder datasetQuery = QueryBuilders.boolQuery()
+            .should(phraseQuery)
+            .should(nameQuery)
+            .should(metadataPhraseQuery)
+            .should(metadataTermsQuery);
+
+    return datasetQuery;
+  }
+
+  private QueryBuilder getProjectDatasetQueryCombo(String searchTerm) {
+
+    //get project and dataset results
+    QueryBuilder projects = this.getProjectComboQuery(searchTerm);
+    QueryBuilder datasets = this.getDatasetComboQuery(searchTerm);
+
+    //combine the results - take the union of the two sets
+    QueryBuilder union = QueryBuilders.boolQuery()
+            .should(projects)
+            .should(datasets);
+
+    return union;
+  }
+
+  /**
+   * Checks if a given index exists in elastic
+   * <p/>
+   * @param client
+   * @param indexName
+   * @return
+   */
+  private boolean indexExists(Client client, String indexName) {
+    AdminClient admin = client.admin();
+    IndicesAdminClient indices = admin.indices();
+
+    IndicesExistsRequestBuilder indicesExistsRequestBuilder = indices.
+            prepareExists(indexName);
+
+    IndicesExistsResponse response = indicesExistsRequestBuilder
+            .execute()
+            .actionGet();
+
+    return response.isExists();
   }
 }

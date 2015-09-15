@@ -14,7 +14,6 @@ angular.module('hopsWorksApp')
                  * @returns {unresolved}
                  */
                 globalSearch: function (searchTerm) {
-                  console.log("loooking for " + searchTerm);
                   return $http.get('/api/elastic/globalsearch/' + searchTerm);
                 },
                 /**

@@ -92,6 +92,14 @@ public class Constants {
   public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
   public static final int MAX_USERNME_LEN = 16;
   public static final int MAX_RETRIES = 50;
+  public static final String META_NAME_FIELD = "name";
+  public static final String META_DESCRIPTION_FIELD = "description";
+  public static final String META_DATA_FIELD = "EXTENDED_METADATA";
+  public static final String META_PROJECT_INDEX = "project";
+  public static final String META_DATASET_INDEX = "datasets";
+  public static final String META_PROJECT_PARENT_TYPE = "parent";
+  public static final String META_PROJECT_CHILD_TYPE = "child";
+  public static final String META_DATASET_TYPE = "dataset";
 
 
   //Filename conventions

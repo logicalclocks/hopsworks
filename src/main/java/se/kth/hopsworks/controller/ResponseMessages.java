@@ -140,4 +140,6 @@ public class ResponseMessages {
           = "The path to upload the template was not specified";
   public final static String ELASTIC_SERVER_NOT_FOUND
           = "Problem when reaching the elastic server";
+    public final static String ELASTIC_INDEX_NOT_FOUND
+          = "Elastic indices not found";
 }
