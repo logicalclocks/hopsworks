@@ -110,7 +110,7 @@ public class ProjectController {
         //Create default DataSets
         for (Constants.DefaultDataset ds : Constants.DefaultDataset.values()) {
           datasetController.createDataset(user, project, ds.getName(), ds.
-                  getDescription(), -1);
+                  getDescription(), -1, false);
         }
         return project;
       }

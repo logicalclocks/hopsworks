@@ -80,6 +80,10 @@ public class Dataset implements Serializable {
   private boolean editable = true;
   @Basic(optional = false)
   @NotNull
+  @Column(name = "searchable")
+  private boolean searchable = true;
+  @Basic(optional = false)
+  @NotNull
   @Column(name = "status")
   private boolean status = ACCEPTED;
   @OneToMany(cascade = CascadeType.ALL,
@@ -143,6 +147,14 @@ public class Dataset implements Serializable {
     this.editable = editable;
   }
 
+  public boolean isSearchable(){
+    return this.searchable;
+  }
+  
+  public void setSearchable(boolean searchable){
+    this.searchable = searchable;
+  }
+  
   public boolean getStatus() {
     return status;
   }

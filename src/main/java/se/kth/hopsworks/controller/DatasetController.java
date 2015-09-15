@@ -14,9 +14,9 @@ import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
-import se.kth.meta.db.TemplateFacade;
-import se.kth.meta.entity.Template;
-import se.kth.meta.exception.DatabaseException;
+import se.kth.hopsworks.meta.db.TemplateFacade;
+import se.kth.hopsworks.meta.entity.Template;
+import se.kth.hopsworks.meta.exception.DatabaseException;
 
 /**
  * Contains business logic pertaining DataSet management.
@@ -50,6 +50,8 @@ public class DatasetController {
    * be null.
    * @param templateId The id of the metadata template to be associated with
    * this DataSet.
+   * @param searchable Defines whether the dataset can be indexed or not (i.e.
+   * whether it can be visible in the search results or not)
    * @throws NullPointerException If any of the given parameters is null.
    * @throws IllegalArgumentException If the given DataSetDTO contains invalid
    * folder names, or the folder already exists.
@@ -57,7 +59,7 @@ public class DatasetController {
    * @see FolderNameValidator.java
    */
   public void createDataset(User user, Project project, String dataSetName,
-          String datasetDescription, int templateId)
+          String datasetDescription, int templateId, boolean searchable)
           throws IOException {
     //Parameter checking.
     if (user == null) {
@@ -94,6 +96,7 @@ public class DatasetController {
       try {
         ds = inodes.findByParentAndName(parent, dataSetName);
         Dataset newDS = new Dataset(ds, project);
+        newDS.setSearchable(searchable);
         if (datasetDescription != null) {
           newDS.setDescription(datasetDescription);
         }
@@ -144,7 +147,7 @@ public class DatasetController {
   public void createSubDirectory(Project project, String datasetName,
           String dsRelativePath, int templateId) throws IOException {
     //Preliminary
-    while(dsRelativePath.startsWith("/")){
+    while (dsRelativePath.startsWith("/")) {
       dsRelativePath = dsRelativePath.substring(1);
     }
     String[] relativePathArray = dsRelativePath.split(File.separator); //The array representing the DataSet-relative path

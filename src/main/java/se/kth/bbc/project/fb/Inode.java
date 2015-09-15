@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.eclipse.persistence.annotations.Convert;
 import org.eclipse.persistence.annotations.Converter;
-import se.kth.meta.entity.Template;
+import se.kth.hopsworks.meta.entity.Template;
 
 /**
  *

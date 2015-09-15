@@ -27,22 +27,22 @@ import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.meta.db.MTableFacade;
-import se.kth.meta.db.TemplateFacade;
-import se.kth.meta.db.TupleToFileFacade;
-import se.kth.meta.entity.Field;
-import se.kth.meta.entity.MTable;
-import se.kth.meta.entity.Metadata;
-import se.kth.meta.entity.MetadataView;
-import se.kth.meta.entity.RawData;
-import se.kth.meta.entity.Template;
-import se.kth.meta.entity.TemplateView;
-import se.kth.meta.entity.TupleToFile;
-import se.kth.meta.exception.DatabaseException;
-import se.kth.meta.wscomm.Protocol;
-import se.kth.meta.wscomm.message.ContentMessage;
-import se.kth.meta.wscomm.message.Message;
-import se.kth.meta.wscomm.message.TemplateMessage;
+import se.kth.hopsworks.meta.db.MTableFacade;
+import se.kth.hopsworks.meta.db.TemplateFacade;
+import se.kth.hopsworks.meta.db.TupleToFileFacade;
+import se.kth.hopsworks.meta.entity.Field;
+import se.kth.hopsworks.meta.entity.MTable;
+import se.kth.hopsworks.meta.entity.Metadata;
+import se.kth.hopsworks.meta.entity.MetadataView;
+import se.kth.hopsworks.meta.entity.RawData;
+import se.kth.hopsworks.meta.entity.Template;
+import se.kth.hopsworks.meta.entity.TemplateView;
+import se.kth.hopsworks.meta.entity.TupleToFile;
+import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.meta.wscomm.Protocol;
+import se.kth.hopsworks.meta.wscomm.message.ContentMessage;
+import se.kth.hopsworks.meta.wscomm.message.Message;
+import se.kth.hopsworks.meta.wscomm.message.TemplateMessage;
 
 /**
  *

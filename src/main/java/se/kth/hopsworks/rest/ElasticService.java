@@ -120,7 +120,7 @@ public class ElasticService {
         SearchHit[] hits = response.getHits().getHits();
 
         for (SearchHit hit : hits) {
-          elasticHits.add(new ElasticHit(hit, hit.getSource()));
+          elasticHits.add(new ElasticHit(hit, hit.getSource(), "parent"));
         }
       }
 

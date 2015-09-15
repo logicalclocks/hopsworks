@@ -18,7 +18,7 @@ public class DataSetDTO {
   private Integer inodeId;
   private String name;
   private String description;
-  private String searchable;
+  private boolean searchable;
   private boolean editable;
   private int template;
   private Integer projectId;
@@ -30,7 +30,7 @@ public class DataSetDTO {
   public DataSetDTO() {
   }
 
-  public DataSetDTO(String name, String description, String searchable,
+  public DataSetDTO(String name, String description, boolean searchable,
           int template) {
     this.name = name;
     this.description = description;
@@ -76,11 +76,11 @@ public class DataSetDTO {
     this.description = description;
   }
 
-  public String getSearchable() {
+  public boolean isSearchable() {
     return searchable;
   }
 
-  public void setSearchable(String searchable) {
+  public void setSearchable(boolean searchable) {
     this.searchable = searchable;
   }
 

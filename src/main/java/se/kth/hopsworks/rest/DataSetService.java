@@ -50,9 +50,9 @@ import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.dataset.DatasetRequest;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.meta.db.TemplateFacade;
-import se.kth.meta.entity.Template;
-import se.kth.meta.exception.DatabaseException;
+import se.kth.hopsworks.meta.db.TemplateFacade;
+import se.kth.hopsworks.meta.entity.Template;
+import se.kth.hopsworks.meta.exception.DatabaseException;
 
 /**
  * @author André<amore@kth.se>
@@ -350,10 +350,12 @@ public class DataSetService {
           DataSetDTO dataSet,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
+    
     User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    
     try {
       datasetController.createDataset(user, project, dataSet.getName(), dataSet.
-              getDescription(), dataSet.getTemplate());
+              getDescription(), dataSet.getTemplate(), dataSet.isSearchable());
     } catch (NullPointerException c) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), c.
               getLocalizedMessage());

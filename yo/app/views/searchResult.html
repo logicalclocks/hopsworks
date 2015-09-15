@@ -17,15 +17,15 @@
           <div class="right">
             <div class="r-arrow"></div>
             <div class="about-task">
-              <div class="header">{{result._source.name}}
+              <div class="header">{{result.name}}
                 <small class="muted">
-                  <div ng-click="mainCtrl.view(result._source, result._type)" class="pull-right btn btn-default btn-sm" >View</div>
+                  <div ng-click="mainCtrl.view(result.name, result.type)" class="pull-right btn btn-default btn-sm" >View</div>
                 </small>
               </div>
-              <p ng-show="result._type == 'child'" class="no-margin text-muted">
+              <p ng-show="result.type == 'child'" class="no-margin text-muted">
                 Description Dataset
               </p>
-              <p ng-show="result._type == 'parent'" class="no-margin text-muted">
+              <p ng-show="result.type == 'parent'" class="no-margin text-muted">
                 Description Project
               </p>
             </div>

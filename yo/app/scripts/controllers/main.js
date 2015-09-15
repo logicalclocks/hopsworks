@@ -41,9 +41,9 @@ angular.module('hopsWorksApp')
             };
 
 
-            self.view = function (selected, projectOrDataset) {
+            self.view = function (projectname, projectOrDataset) {
               if (projectOrDataset === 'parent') {
-                ProjectService.getProjectInfo({projectName: selected.name}).$promise.then(
+                ProjectService.getProjectInfo({projectName: projectname}).$promise.then(
                         function (success) {
                           ModalService.viewSearchResult('md', success, projectOrDataset)
                                   .then(function (success) {
@@ -108,8 +108,8 @@ angular.module('hopsWorksApp')
               elasticService.globalSearch(self.searchTerm)
                       .then(function (response) {
                         
-                        console.log("RECEIVED RESPONSE " + JSON.stringify(response));
-                        var data = response.data.hits.hits;
+                        console.log("RECEIVED RESPONSE " + JSON.stringify(response.data));
+                        var data = response.data;
                         self.searchResult = [];
                         self.searchReturned = "";
                         if (data.length > 0) {

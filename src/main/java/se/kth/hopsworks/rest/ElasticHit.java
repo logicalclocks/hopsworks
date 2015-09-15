@@ -3,6 +3,7 @@ package se.kth.hopsworks.rest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import javax.json.JsonObject;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.elasticsearch.search.SearchHit;
 
@@ -20,6 +21,8 @@ public class ElasticHit {
   private String name;
   //the rest of the hit (search match) data
   private Map<String, Object> map;
+  //whether the inode is a parent or child
+  private String type;
 
   public ElasticHit() {
   }
@@ -34,6 +37,11 @@ public class ElasticHit {
         this.setName(entry.getValue().toString());
       }
     }
+  }
+  
+  public ElasticHit(SearchHit hit, Map<String, Object> map, String type){
+    this(hit, map);
+    this.type = type;
   }
 
   public void setId(String id) {
@@ -52,11 +60,28 @@ public class ElasticHit {
     return this.name;
   }
 
+  public void setType(String type){
+    this.type = type;
+  }
+  
+  public String getType(){
+    return this.type;
+  }
+  
   public void setHits(Map<String, Object> source) {
     this.map = new HashMap<>(source);
   }
 
-  public Map<String, Object> getHits() {
-    return this.map;
+  public Map<String, String> getHits() {
+    //make hits more readable before returning them
+    Map<String, String> refined = new HashMap<>();
+    
+    for(Entry<String, Object> entry : this.map.entrySet()){
+      //convert value to string
+      String value = (entry.getValue() == null) ? "null" : entry.getValue().toString();
+      refined.put(entry.getKey(), value);
+    }
+    
+    return refined;
   }
 }

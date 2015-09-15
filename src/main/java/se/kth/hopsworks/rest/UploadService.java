@@ -32,12 +32,12 @@ import se.kth.bbc.upload.ResumableInfoStorage;
 import se.kth.hopsworks.controller.FolderNameValidator;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.meta.db.TemplateFacade;
-import se.kth.meta.entity.Template;
-import se.kth.meta.exception.ApplicationException;
-import se.kth.meta.exception.DatabaseException;
-import se.kth.meta.wscomm.ResponseBuilder;
-import se.kth.meta.wscomm.message.UploadedTemplateMessage;
+import se.kth.hopsworks.meta.db.TemplateFacade;
+import se.kth.hopsworks.meta.entity.Template;
+import se.kth.hopsworks.meta.exception.ApplicationException;
+import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.meta.wscomm.ResponseBuilder;
+import se.kth.hopsworks.meta.wscomm.message.UploadedTemplateMessage;
 
 /**
  *
