@@ -40,12 +40,11 @@ angular.module('hopsWorksApp')
               return self.email.substring(0, self.email.indexOf("@"));
             };
 
-
             self.view = function (name, id, dataType) {
               if (dataType === 'parent') {
                 ProjectService.getProjectInfo({projectName: name}).$promise.then(
                         function (success) {
-                          console.log(JSON.stringify(success));
+
                           ModalService.viewSearchResult('md', success, dataType)
                                   .then(function (success) {
                                     growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
@@ -56,16 +55,18 @@ angular.module('hopsWorksApp')
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                 });
               } else if (dataType === 'child' || dataType === 'dataset') {
+                //fetch the dataset
                 ProjectService.getDatasetInfo({inodeId: id}).$promise.then(
-                        function (success) {
+                        function (response) {
                           var projects;
 
-                          //fetch the projects to pass them in the modal
+                          //fetch the projects to pass them in the modal. Fixes empty projects array on ui-select initialization
                           ProjectService.query().$promise.then(
                                   function (success) {
                                     projects = success;
-                                    console.log("PROJECTS FETCHED " + JSON.stringify(projects));
-                                    ModalService.viewSearchResult('md', success, dataType, projects)
+
+                                    //show dataset
+                                    ModalService.viewSearchResult('md', response, dataType, projects)
                                             .then(function (success) {
                                               growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                                             }, function (error) {

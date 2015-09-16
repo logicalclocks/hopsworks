@@ -24,8 +24,6 @@ angular.module('hopsWorksApp')
               };
             } else if (datatype === 'child' || datatype === 'dataset') {
 
-
-
               self.type = 'Dataset';
               self.requestType = 'access';
               self.infoMembers = 'Members of the owning project.';

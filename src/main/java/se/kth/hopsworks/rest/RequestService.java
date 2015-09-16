@@ -64,7 +64,7 @@ public class RequestService {
   @EJB
   private UserManager userBean;
 
-  private final static Logger logger = Logger.getLogger(ProjectService.class.
+  private final static Logger logger = Logger.getLogger(RequestService.class.
           getName());
 
   @POST
@@ -130,7 +130,7 @@ public class RequestService {
       datasetRequest.persistDataset(dsRequest);
     }
 
-    // 
+    //email body
     String msg = "Hi " + project.getOwner().getFname() + " " + project.
             getOwner().getLname() + ", \n\n"
             + user.getFname() + " " + user.getLname()
@@ -151,8 +151,7 @@ public class RequestService {
               getEmail());
       datasetRequest.remove(dsRequest);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(
-                      json).build();
+              entity(json).build();
     }
     json.setSuccessMessage("Request sent successfully.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -180,7 +179,7 @@ public class RequestService {
               ResponseMessages.PROJECT_NOT_FOUND);
     }
 
-    // 
+    //email body
     String msg = "Hi " + project.getOwner().getFname() + " " + project.
             getOwner().getLname() + ", \n\n"
             + user.getFname() + " " + user.getLname()
