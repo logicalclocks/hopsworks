@@ -12,8 +12,15 @@
 
         <md-content flex="" layout-padding="">
           <div ng-include="'navProject.html'"></div>
+          
           <div layout="column" layout-fill="" layout-align="top center">
-            <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl">
+            <div ng-show="mainCtrl.searchReturned !== ''">
+              <div id="projectSearchResults">
+                <div ng-include="'views/searchResult.html'"></div>
+              </div>
+            </div>
+            
+            <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
               <h3 id="projectBread" style="display: none;"> {{projectCtrl.currentProject.projectName}} /{{datasetsCtrl.pathArray[0]}}</h3>
               <div class="row">
                 <div class="col-lg-2" style="max-width: 250px">
@@ -124,10 +131,10 @@
                           <a class="pointer"
                              role="menuitem"
                              tabindex="5"
-                             ng-click="datasetsCtrl.select($index, dataset); 
-                               metadataCtrl.setMetadataTemplate(dataset);
-                               datasetsCtrl.toggleLeft(); 
-                               $event.stopPropagation();">
+                             ng-click="datasetsCtrl.select($index, dataset);
+                                                       metadataCtrl.setMetadataTemplate(dataset);
+                                                       datasetsCtrl.toggleLeft();
+                                                       $event.stopPropagation();">
                             <span><i class="fa fa-share-alt"></i>
                               Add metadata</span>
                           </a>
@@ -384,7 +391,7 @@
           </md-content>
         </md-sidenav>
         <!--END OF METADATA DESIGNER-->
-        
+
         <!--ADD METADATA SLIDER-->
         <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left"
                     style="margin-top: 0px;">
@@ -502,7 +509,7 @@
           </md-content>
         </md-sidenav>
         <!--END OF ADD METADATA SLIDER-->
-        
+
       </section>
     </div>
   </div>
