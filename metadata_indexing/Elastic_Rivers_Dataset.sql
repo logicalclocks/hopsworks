@@ -5,7 +5,7 @@ INSERT INTO hopsworks.meta_inodes_ops_datasets_deleted (inodeid, parentid, proce
 
 -- SELECTIVELY DUMP A BATCH OF DATASET RECORDS INTO THE BUFFER TABLE - A TWO STEP PROCESS
 
--- FIRST TAKE ADDED RECORDS (OPERATION = 0 - implicit since added records reside in hdfs_inodes table)
+-- FIRST TAKE ADDED INODES (OPERATION = 0 - implicit since added records reside in hdfs_inodes table)
 
 INSERT INTO hopsworks.meta_inodes_ops_datasets_deleted (inodeid, parentid, processed) (
 
@@ -16,7 +16,7 @@ INSERT INTO hopsworks.meta_inodes_ops_datasets_deleted (inodeid, parentid, proce
 	WHERE i.parent_id = root.rootid) AS parent 
 	WHERE outt.parent_id = parent.parentid LIMIT 100);
 
--- THEN TAKE REMOVED RECORDS (OPERATION = 1)
+-- THEN TAKE REMOVED INODES (OPERATION = 1)
 
 INSERT INTO hopsworks.meta_inodes_ops_datasets_deleted (inodeid, parentid, processed) (
 
