@@ -8,7 +8,7 @@
           <div ng-show="mainCtrl.resultItems > 1" class="text-muted result">
             {{mainCtrl.resultItems}} results found.
           </div>
-          <div ng-show="mainCtrl.resultItems == 1" class="text-muted result">
+          <div ng-show="mainCtrl.resultItems === 1" class="text-muted result">
             {{mainCtrl.resultItems}} result found.
           </div>
         </div>
@@ -19,13 +19,13 @@
             <div class="about-task">
               <div class="header">{{result.name}}
                 <small class="muted">
-                  <div ng-click="mainCtrl.view(result.name, result.type)" class="pull-right btn btn-default btn-sm" >View</div>
+                  <div ng-click="mainCtrl.view(result.name, result.id, result.type)" class="pull-right btn btn-default btn-sm" >View</div>
                 </small>
               </div>
-              <p ng-show="result.type == 'child'" class="no-margin text-muted">
+              <p ng-show="result.type === 'child' || result.type === 'dataset'" class="no-margin text-muted">
                 Description Dataset
               </p>
-              <p ng-show="result.type == 'parent'" class="no-margin text-muted">
+              <p ng-show="result.type === 'parent'" class="no-margin text-muted">
                 Description Project
               </p>
             </div>

@@ -41,11 +41,12 @@ angular.module('hopsWorksApp')
             };
 
 
-            self.view = function (projectname, projectOrDataset) {
-              if (projectOrDataset === 'parent') {
-                ProjectService.getProjectInfo({projectName: projectname}).$promise.then(
+            self.view = function (name, id, dataType) {
+              if (dataType === 'parent') {
+                ProjectService.getProjectInfo({projectName: name}).$promise.then(
                         function (success) {
-                          ModalService.viewSearchResult('md', success, projectOrDataset)
+                          console.log(JSON.stringify(success));
+                          ModalService.viewSearchResult('md', success, dataType)
                                   .then(function (success) {
                                     growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                                   }, function (error) {
@@ -54,15 +55,26 @@ angular.module('hopsWorksApp')
                         }, function (error) {
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                 });
-              } else if (projectOrDataset === 'child') {
-                ProjectService.getDatasetInfo({inodeId: selected.inode_id}).$promise.then(
+              } else if (dataType === 'child' || dataType === 'dataset') {
+                ProjectService.getDatasetInfo({inodeId: id}).$promise.then(
                         function (success) {
-                          ModalService.viewSearchResult('md', success, projectOrDataset)
-                                  .then(function (success) {
-                                    growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
-                                  }, function (error) {
+                          var projects;
 
-                                  });
+                          //fetch the projects to pass them in the modal
+                          ProjectService.query().$promise.then(
+                                  function (success) {
+                                    projects = success;
+                                    console.log("PROJECTS FETCHED " + JSON.stringify(projects));
+                                    ModalService.viewSearchResult('md', success, dataType, projects)
+                                            .then(function (success) {
+                                              growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                                            }, function (error) {
+
+                                            });
+                                  }, function (error) {
+                            console.log('Error: ' + error);
+                          });
+
                         }, function (error) {
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                 });
@@ -104,12 +116,12 @@ angular.module('hopsWorksApp')
               self.searchReturned = "";
 
               if (self.index === "parent") {
-                console.log("parent search");
                 //triggering a global search
                 elasticService.globalSearch(self.searchTerm)
                         .then(function (response) {
 
                           var searchHits = response.data;
+                          console.log("RECEIVED RESPONSE " + JSON.stringify(response));
                           if (searchHits.length > 0) {
                             self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
                             self.searchResult = searchHits;
@@ -124,7 +136,6 @@ angular.module('hopsWorksApp')
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                         });
               } else if (self.index === "child") {
-                console.log("child search");
                 elasticService.projectSearch(UtilsService.getProjectName(), self.searchTerm)
                         .then(function (response) {
 
