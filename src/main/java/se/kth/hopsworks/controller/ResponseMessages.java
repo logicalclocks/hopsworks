@@ -141,7 +141,7 @@ public class ResponseMessages {
   public final static String ELASTIC_SERVER_NOT_FOUND
           = "Problem when reaching the elastic server";
   public final static String ELASTIC_INDEX_NOT_FOUND
-          = "Elastic indices does not exist";
+          = "Elastic indices do not exist";
   public final static String ELASTIC_TYPE_NOT_FOUND
           = "Elastic type does not exist";
 }

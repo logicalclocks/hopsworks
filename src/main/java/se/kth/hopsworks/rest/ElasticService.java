@@ -19,11 +19,15 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.lucene.search.PhraseQuery;
 import org.elasticsearch.action.ActionFuture;
+import org.elasticsearch.action.admin.indices.cache.clear.ClearIndicesCacheRequest;
+import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsResponse;
+import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
@@ -35,8 +39,6 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.FilterBuilder;
 import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
 import static org.elasticsearch.index.query.FilterBuilders.prefixFilter;
-import static org.elasticsearch.index.query.FilterBuilders.queryFilter;
-import static org.elasticsearch.index.query.FilterBuilders.termFilter;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
@@ -137,7 +139,7 @@ public class ElasticService {
         }
       }
 
-      client.close();
+      this.clientShutdown(client);
       GenericEntity<List<ElasticHit>> searchResults
               = new GenericEntity<List<ElasticHit>>(elasticHits) {
               };
@@ -146,7 +148,7 @@ public class ElasticService {
     }
 
     //something went wrong so throw an exception
-    client.close();
+    this.clientShutdown(client);
     throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
   }
@@ -184,7 +186,7 @@ public class ElasticService {
             = new TransportClient(settings)
             .addTransportAddress(new InetSocketTransportAddress("193.10.66.125",
                             9300));
-
+    
     //check if the indices are up and running
     if (!this.indexExists(client, Constants.META_PROJECT_INDEX)) {
 
@@ -203,28 +205,17 @@ public class ElasticService {
             Constants.META_PROJECT_PARENT_TYPE,
             matchQuery(Constants.META_NAME_FIELD, projectName));
 
-    //search into 'name' and 'extended_metadata' fields
-    QueryBuilder boolQuery = boolQuery()
-            .should(fuzzyQuery(Constants.META_NAME_FIELD, searchTerm))
-            .should(fuzzyQuery(Constants.META_DATA_FIELD, searchTerm))
-            .should(termsQuery(Constants.META_DATA_FIELD, searchTerm));
-
-    //wrap querybuilder into filterbuilder
-    FilterBuilder multiMatchPart = boolFilter().should(queryFilter(boolQuery));
-
-    //create the final query
-    QueryBuilder query = QueryBuilders.filteredQuery(hasParentPart,
-            multiMatchPart);
+    QueryBuilder totalQuery = this.getChildComboQuery(searchTerm);
 
     QueryBuilder intersection = boolQuery()
             .must(hasParentPart)
-            .must(boolQuery);
+            .should(totalQuery);
 
     //hit the indices - execute the queries
     SearchResponse response
             = client.prepareSearch(Constants.META_PROJECT_INDEX).
             setTypes(Constants.META_PROJECT_CHILD_TYPE)
-            .setQuery(query)
+            .setQuery(intersection)
             .addHighlightedField("name")
             .execute().actionGet();
 
@@ -243,7 +234,7 @@ public class ElasticService {
         }
       }
 
-      client.close();
+      this.clientShutdown(client);
       GenericEntity<List<ElasticHit>> searchResults
               = new GenericEntity<List<ElasticHit>>(elasticHits) {
               };
@@ -251,8 +242,7 @@ public class ElasticService {
               entity(searchResults).build();
     }
 
-    //something went wrong so throw an exception
-    client.close();
+    this.clientShutdown(client);
     throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
   }
@@ -296,13 +286,17 @@ public class ElasticService {
   }
 
   /**
-   * Performs a matchprasequery on the description field of the dataset. Name
-   * and extended_metadata fields are taken care of by the project query
+   * Applies several match filters on the description, name and
+   * extended_metadata
+   * fields of the dataset.
    * <p/>
    * @param searchTerm
    * @return
    */
   private QueryBuilder getDatasetComboQuery(String searchTerm) {
+
+    //look for active records (not deleted - operation = 0)
+    QueryBuilder operationQuery = matchQuery("operation", 0);
 
     //a phrase query to match the dataset description
     QueryBuilder phraseQuery = matchPhraseQuery(
@@ -322,6 +316,7 @@ public class ElasticService {
 
     //aggregate the results
     QueryBuilder datasetQuery = QueryBuilders.boolQuery()
+            //.must(operationQuery)
             .should(phraseQuery)
             .should(nameQuery)
             .should(metadataPhraseQuery)
@@ -330,6 +325,13 @@ public class ElasticService {
     return datasetQuery;
   }
 
+  /**
+   * Gathers the query filters applied on projects and datasets and returns a
+   * query combining all these
+   * <p>
+   * @param searchTerm
+   * @return
+   */
   private QueryBuilder getProjectDatasetQueryCombo(String searchTerm) {
 
     //get project and dataset results
@@ -342,6 +344,54 @@ public class ElasticService {
             .should(datasets);
 
     return union;
+  }
+
+  /**
+   * Performs a matchprasequery on the description field of the dataset. Name
+   * and extended_metadata fields are taken care of by the project query
+   * <p/>
+   * @param searchTerm
+   * @return
+   */
+  private QueryBuilder getChildComboQuery(String searchTerm) {
+
+    //look for active records (not deleted - operation = 0)
+    QueryBuilder operationQuery = matchQuery("operation", 0);
+
+    //TODO: add query on the description field, as soon as there is one
+    //build the dataset query predicates
+    QueryBuilder nameQuery = prefixQuery(Constants.META_NAME_FIELD, searchTerm);
+    
+    //apply fuzzy filter on the name
+    QueryBuilder nameFuzzy = fuzzyQuery(Constants.META_NAME_FIELD, searchTerm);
+    
+    //apply phrase filter on the name. Allow the user to keep typing and constantly getting results
+    QueryBuilder namePhrase = matchPhraseQuery(Constants.META_NAME_FIELD, searchTerm);
+
+    //apply phrase filter on user metadata
+    QueryBuilder metadataPhraseQuery = matchPhraseQuery(
+            Constants.META_DATA_FIELD,
+            searchTerm);
+
+    //apply terms filter on user metadata
+    QueryBuilder metadataTermsQuery = termsQuery(Constants.META_DATA_FIELD,
+            searchTerm);
+
+    //apply prefix filter on user metadata
+    QueryBuilder metadataPrefixQuery = prefixQuery(Constants.META_DATA_FIELD,
+            searchTerm);
+
+    //aggregate the results
+    QueryBuilder datasetQuery = QueryBuilders.boolQuery()
+            //.must(operationQuery)
+            .should(nameQuery)
+            .should(nameFuzzy)
+            .should(namePhrase);
+            //.should(metadataPhraseQuery)
+            //.should(metadataTermsQuery)
+            //.should(metadataPrefixQuery);
+
+    return datasetQuery;
   }
 
   /**
@@ -383,5 +433,26 @@ public class ElasticService {
     TypesExistsResponse response = action.actionGet();
 
     return response.isExists();
+  }
+
+  /**
+   * Shuts down the client and clears the cache
+   * <p/>
+   * @param client
+   */
+  private void clientShutdown(Client client) {
+
+    client.admin().indices().clearCache(new ClearIndicesCacheRequest(
+            Constants.META_PROJECT_INDEX, Constants.META_DATASET_INDEX));
+
+    client.close();
+  }
+  
+  /**
+   * Boots up a previously closed index
+   */
+  private void bootIndices(Client client){
+    
+    client.admin().indices().open(new OpenIndexRequest(Constants.META_PROJECT_INDEX, Constants.META_DATASET_INDEX));
   }
 }
