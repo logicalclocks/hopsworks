@@ -122,7 +122,7 @@ angular.module('hopsWorksApp')
                         .then(function (response) {
 
                           var searchHits = response.data;
-                          console.log("RECEIVED RESPONSE " + JSON.stringify(response));
+                          //console.log("RECEIVED RESPONSE " + JSON.stringify(response));
                           if (searchHits.length > 0) {
                             self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
                             self.searchResult = searchHits;
@@ -139,8 +139,19 @@ angular.module('hopsWorksApp')
               } else if (self.index === "child") {
                 elasticService.projectSearch(UtilsService.getProjectName(), self.searchTerm)
                         .then(function (response) {
-
-                          self.searchHits = response.data;
+                  
+                          var searchHits = response.data;
+                          //console.log("RECEIVED RESPONSE " + JSON.stringify(response));
+                          if (searchHits.length > 0) {
+                            self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
+                            self.searchResult = searchHits;
+                          } else {
+                            self.searchResult = [];
+                            self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
+                          }
+                          self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
+                          self.resultItems = self.searchResult.length;
+                          
                         }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                         });
