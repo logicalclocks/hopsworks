@@ -288,26 +288,26 @@ CREATE TABLE `meta_template_to_inode` (
 -- elastic jdbc-importer buffer tables -------
 
 CREATE TABLE `meta_inodes_ops_children_deleted` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `inodeid` int(11) NOT NULL,
-  `parentid` int(11) NOT NULL,
-  `processed` tinyint(4) DEFAULT '0',
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` INT(11) NOT NULL,
+  `parentid` INT(11) NOT NULL,
+  `processed` TINYINT(4) DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `meta_inodes_ops_parents_deleted` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `inodeid` int(11) NOT NULL,
-  `parentid` int(11) NOT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` INT(11) NOT NULL,
+  `parentid` INT(11) NOT NULL,
   `processed` tinyint(4) DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `meta_inodes_ops_datasets_deleted` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `inodeid` int(11) NOT NULL,
-  `parentid` int(11) NOT NULL,
-  `processed` tinyint(4) DEFAULT '0',
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` INT(11) NOT NULL,
+  `parentid` INT(11) NOT NULL,
+  `processed` TINYINT(4) DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=85 DEFAULT CHARSET=utf8;
 
@@ -382,9 +382,9 @@ CREATE VIEW `users_groups` AS
 -------------------------
 
 CREATE TABLE `ssh_keys` (
-  `uid` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `public_key` varchar(2000) NOT NULL,
+  `uid` INT(11) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
+  `public_key` VARCHAR(2000) NOT NULL,
   PRIMARY KEY (`uid`, `name`),
   KEY `name_idx` (`name`),
   KEY `uid_idx` (`uid`),
@@ -394,7 +394,7 @@ CREATE TABLE `ssh_keys` (
 
 CREATE VIEW `hops_users` AS select concat(`pt`.`team_member`,'__',`p`.`projectname`) AS `project_user` from ((`project` `p` join `project_team` `pt`) join `ssh_keys` `sk`) where `pt`.`team_member` in (select `u`.`email` from (`users` `u` join `ssh_keys` `s`) where (`u`.`uid` = `s`.`uid`)); 
 
-CREATE TABLE authorized_sshkeys (project varchar(64) not null, user varchar(48) not null, sshkey_name varchar(64) not null, primary key (project, user, sshkey_name), key idx_user(user), key idx_project(project)) engine=ndbcluster;
+CREATE TABLE authorized_sshkeys (project VARCHAR(64) NOT NULL, user VARCHAR(48) NOT NULL, sshkey_name VARCHAR(64) NOT NULL, PRIMARY KEY (project, user, sshkey_name), KEY idx_user(user), KEY idx_project(project)) engine=ndbcluster;
 
 
 
