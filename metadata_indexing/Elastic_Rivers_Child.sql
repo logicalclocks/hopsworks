@@ -37,10 +37,10 @@ INSERT INTO hopsworks.meta_inodes_ops_children_deleted (inodeid, parentid, proce
 
 SELECT composite.*, "child" as type, metadata.EXTENDED_METADATA
 FROM (
-	SELECT DISTINCT hi.id as _id, child._parent, hi.name, child.logical_time
-	FROM hops.hdfs_inodes hi,   
+	SELECT DISTINCT hi.id as _id, child._parent, hi.name, child.operation,
+	FROM hops.hdfs_inodes hi,  
 
-		(SELECT outt.inode_id as child_id, outt.dataset_id as _parent, outt.logical_time
+		(SELECT outt.inode_id as child_id, outt.dataset_id as _parent, outt.operation
 		FROM hops.hdfs_metadata_log outt, 
 
 			(SELECT i.id as parentid 
