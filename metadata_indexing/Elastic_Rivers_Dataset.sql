@@ -71,7 +71,7 @@ LEFT JOIN (
 
 ) as metadata 
 
-ON metadata.inodeid = ds._id ORDER BY parentid ASC
+ON metadata.inodeid = ds._id ORDER BY parentid ASC;
 
 -- SELECT ALL DATASETS THAT HAVE BEEN DELETED/RENAMED (OPERATION 1) AND ARE NOT YET PROCESSED
 
@@ -80,7 +80,7 @@ FROM hops.hdfs_metadata_log ops
 
 WHERE ops.operation = 1 
 
-AND ops.inode_id IN (SELECT inode_id FROM hopsworks.meta_inodes_ops_datasets_deleted WHERE processed = 0)
+AND ops.inode_id IN (SELECT inode_id FROM hopsworks.meta_inodes_ops_datasets_deleted WHERE processed = 0);
 
 
 -- MARK AS PROCESSED ALL DATASETS THAT HAVE BEEN PROCESSED (PROCESSED = 1)
@@ -96,14 +96,14 @@ UPDATE hopsworks.meta_inodes_ops_datasets_deleted m,
 WHERE p.parent_id = root.rootid) AS parent
 
 SET m.processed = 1
-WHERE m.parentid = parent.id AND m.inodeid IN (SELECT inode_id FROM hops.hdfs_metadata_log)
+WHERE m.parentid = parent.id AND m.inodeid IN (SELECT inode_id FROM hops.hdfs_metadata_log);
 
 
 -- DELETE ALL DATASETS THAT HAVE BEEN MARKED AS PROCESSED (PROCESSED = 1)
 
-DELETE FROM hopsworks.meta_inodes_ops_datasets_deleted WHERE processed = 1
+DELETE FROM hopsworks.meta_inodes_ops_datasets_deleted WHERE processed = 1;
 
 
 -- DELETE ALL PROCESSED DATASETS FROM THE HDFS_METADATA_LOG TABLE
 
-DELETE FROM hops.hdfs_metadata_log WHERE inode_id NOT IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_datasets_deleted)
+DELETE FROM hops.hdfs_metadata_log WHERE inode_id NOT IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_datasets_deleted);
