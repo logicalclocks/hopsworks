@@ -18,7 +18,13 @@
           </div>
 
           <div layout="column" layout-fill="" layout-align="top center">
-            <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl">
+            <div ng-show="mainCtrl.searchReturned !== ''">
+              <div id="projectSearchResults">
+                <div ng-include="'views/searchResult.html'"></div>
+              </div>
+            </div>
+            
+            <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
               <h3>
                 <a href="#/project/{{datasetsCtrl.projectId}}/datasets">
                   {{ projectCtrl.currentProject.projectName}}
