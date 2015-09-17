@@ -7,9 +7,15 @@ INSERT INTO hopsworks.meta_inodes_ops_parents_deleted (inodeid, parentid, proces
 
 INSERT INTO hopsworks.meta_inodes_ops_parents_deleted (inodeid, parentid, processed)
 
-(SELECT log.inode_id, log.dataset_id, 0 as processed FROM hops.hdfs_metadata_log log, 
-	(SELECT inn.id AS rootid FROM hops.hdfs_inodes inn WHERE inn.parent_id = 1) AS root 
-WHERE log.dataset_id = root.rootid LIMIT 100);
+	(SELECT log.inode_id, log.dataset_id, 0 as processed 
+	FROM hops.hdfs_metadata_log log, 
+
+		(SELECT inn.id AS rootid 
+		FROM hops.hdfs_inodes inn 
+		WHERE inn.parent_id = 1
+		) AS root 
+
+	WHERE log.dataset_id = root.rootid LIMIT 100);
 
 -- SELECT ALL PARENTS THAT HAVE BEEN ADDED (OPERATION 0)
 
