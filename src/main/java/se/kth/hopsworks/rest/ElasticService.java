@@ -203,30 +203,18 @@ public class ElasticService {
               getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
     }
 
-    //Query
-    //filter results by parent
-    QueryBuilder hasParentPart = hasParentQuery(
-            Constants.META_PROJECT_PARENT_TYPE,
-            matchQuery(Constants.META_NAME_FIELD, projectName));
-
-    QueryBuilder totalQuery = this.getChildComboQuery(searchTerm);
-
-    QueryBuilder intersection = boolQuery()
-            .must(hasParentPart)
-            .should(totalQuery);
-
     //hit the indices - execute the queries
     SearchResponse response
             = client.prepareSearch(Constants.META_PROJECT_INDEX).
             setTypes(Constants.META_PROJECT_CHILD_TYPE)
-            .setQuery(intersection)
+            .setQuery(this.getChildComboQuery(projectName, searchTerm))
             .addHighlightedField("name")
             .execute().actionGet();
 
     if (response.status().getStatus() == 200) {
-      logger.log(Level.INFO, "Matched number of documents: {0}", response.
-              getHits().
-              totalHits());
+      //logger.log(Level.INFO, "Matched number of documents: {0}", response.
+              //getHits().
+              //totalHits());
 
       //construct the response
       List<ElasticHit> elasticHits = new LinkedList<>();
@@ -357,52 +345,63 @@ public class ElasticService {
   }
 
   /**
-   * Performs a matchprasequery on the description field of the dataset. Name
-   * and extended_metadata fields are taken care of by the project query
+   * Performs multiple match queries on the child fields.
    * <p/>
+   * @param projectName
    * @param searchTerm
+   * 
    * @return
    */
-  private QueryBuilder getChildComboQuery(String searchTerm) {
+  private QueryBuilder getChildComboQuery(String projectName, String searchTerm) {
 
-    //look for active records (not deleted - operation = 0)
-    QueryBuilder operationQuery = matchQuery("operation", "0");
+    //Query
+    //filter results by parent
+    QueryBuilder hasParentPart = hasParentQuery(
+            Constants.META_PROJECT_PARENT_TYPE,
+            matchQuery(Constants.META_NAME_FIELD, projectName));
 
-    //TODO: add query on the description field, as soon as there is one
+    //look for active records (operation 0)
+    QueryBuilder operationQuery = matchQuery(
+            Constants.META_INODE_OPERATION_FIELD,
+            Constants.META_INODE_OPERATION_ADD);
+
+    //TODO: query the description field, as soon as there is one
+    //TODO: query the searchable field, as soon as there is one
     //build the dataset query predicates
-    QueryBuilder nameQuery = prefixQuery(Constants.META_NAME_FIELD, searchTerm);
-
-    //apply fuzzy filter on the name
-    QueryBuilder nameTerm = termsQuery(Constants.META_NAME_FIELD, searchTerm);
-
-    //apply phrase filter on the name. Allow the user to keep typing and constantly getting results
-    QueryBuilder namePhrase = matchPhraseQuery(Constants.META_NAME_FIELD,
-            searchTerm);
-
-    //apply phrase filter on user metadata
-    QueryBuilder metadataPhraseQuery = matchPhraseQuery(
-            Constants.META_DATA_FIELD,
-            searchTerm);
-
-    //apply terms filter on user metadata
-    QueryBuilder metadataTermsQuery = termsQuery(Constants.META_DATA_FIELD,
+    QueryBuilder namePrefixMatch = prefixQuery(Constants.META_NAME_FIELD,
             searchTerm);
 
     //apply prefix filter on user metadata
     QueryBuilder metadataPrefixQuery = prefixQuery(Constants.META_DATA_FIELD,
             searchTerm);
 
-    //aggregate the results
-    QueryBuilder datasetQuery = QueryBuilders.boolQuery()
-            //.must(operationQuery)
-            .should(nameQuery)
-            .should(nameTerm);
-    //.should(namePhrase);
-    //.should(metadataPhraseQuery)
-    //.should(metadataTermsQuery)
-    //.should(metadataPrefixQuery);
+    //apply phrase filter on user metadata
+    QueryBuilder metadataPhraseQuery = matchPhraseQuery(
+            Constants.META_DATA_FIELD, searchTerm);
 
-    return datasetQuery;
+    //apply terms filter on user metadata
+    QueryBuilder metadataTermsQuery = termsQuery(Constants.META_DATA_FIELD,
+            searchTerm);
+
+    //apply fuzzy filter on user metadata
+    QueryBuilder metadataFuzzyQuery = fuzzyQuery(Constants.META_DATA_FIELD,
+            searchTerm);
+
+    //aggregate the results
+    //aggregate the results
+    QueryBuilder childrenQuery = boolQuery()
+            .must(operationQuery)
+            .must(namePrefixMatch)
+            .should(metadataPrefixQuery)
+            .should(metadataPhraseQuery)
+            .should(metadataTermsQuery)
+            .should(metadataFuzzyQuery);
+    
+    QueryBuilder intersection = boolQuery()
+            .must(hasParentPart)
+            .must(childrenQuery);
+
+    return intersection;
   }
 
   /**
