@@ -40,6 +40,8 @@ public class ElasticHit {
       if (entry.getKey().equals("name")) {
         this.setName(entry.getValue().toString());
       }
+      
+      //logger.log(Level.FINE, "KEY -- {0} VALUE --- {1}", new Object[]{entry.getKey(), entry.getValue()});
     }
   }
 

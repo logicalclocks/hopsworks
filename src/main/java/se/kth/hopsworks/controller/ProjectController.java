@@ -68,6 +68,10 @@ public class ProjectController {
    * Creates a new project(project), the related DIR, the different services
    * in the project, and the master of the project.
    *
+   * this needs to be an atomic operation (all or nothing) REQUIRES_NEW will
+   * make sure a new transaction is created even if this method is called from
+   * within a transaction.
+   * <p>
    * @param newProject
    * @param email
    * @return
@@ -76,9 +80,6 @@ public class ProjectController {
    * created. For whatever reason.
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  //this needs to be an atomic operation (all or nothing) REQUIRES_NEW
-  //will make sure a new transaction is created even if this method is
-  //called from within a transaction.
   public Project createProject(ProjectDTO newProject, String email) throws
           IOException {
     User user = userBean.getUserByEmail(email);

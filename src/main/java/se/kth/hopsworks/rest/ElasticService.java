@@ -19,10 +19,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import org.apache.lucene.search.PhraseQuery;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.cache.clear.ClearIndicesCacheRequest;
-import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
@@ -36,9 +34,6 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.index.query.FilterBuilder;
-import static org.elasticsearch.index.query.FilterBuilders.boolFilter;
-import static org.elasticsearch.index.query.FilterBuilders.prefixFilter;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
@@ -114,9 +109,18 @@ public class ElasticService {
               getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
     }
 
+    //TODO. ADD SEARCHABLE FIELD IN PROJECTS (DB)
+    /*
+     * If projects contain a searchable field then the client can hit both
+     * indices (projects, datasets) with a single query. Right now the single
+     * query fails because of the lack of a searchable field in the projects.
+     * ADDED MANUALLY A SEARCHABLE FIELD IN THE RIVER. MAKES A PROJECT
+     * SEARCHABLE BY DEFAULT. NEEDS REFACTORING
+     */
     //hit the indices - execute the queries
-    SearchResponse response = client.prepareSearch(Constants.META_PROJECT_INDEX,
-            Constants.META_DATASET_INDEX).
+    SearchResponse response
+            = client.prepareSearch(Constants.META_PROJECT_INDEX,
+                    Constants.META_DATASET_INDEX).
             setTypes(Constants.META_PROJECT_PARENT_TYPE,
                     Constants.META_DATASET_TYPE)
             .setQuery(this.getProjectDatasetQueryCombo(searchTerm))
@@ -186,7 +190,7 @@ public class ElasticService {
             = new TransportClient(settings)
             .addTransportAddress(new InetSocketTransportAddress("193.10.66.125",
                             9300));
-    
+
     //check if the indices are up and running
     if (!this.indexExists(client, Constants.META_PROJECT_INDEX)) {
 
@@ -255,34 +259,34 @@ public class ElasticService {
    * @return
    */
   private QueryBuilder getProjectComboQuery(String searchTerm) {
+
     //build the project query predicates
-    QueryBuilder namePMatch = prefixQuery("name", searchTerm);
-    FilterBuilder projectFilter = boolFilter()
-            .should(prefixFilter("name", searchTerm))
-            .should(prefixFilter("EXTENDED_METADATA", searchTerm));
+    //match operation
+    QueryBuilder operationMatch = matchQuery(
+            Constants.META_INODE_OPERATION_FIELD,
+            Constants.META_INODE_OPERATION_ADD);
 
-    QueryBuilder projectsQuery = QueryBuilders.filteredQuery(namePMatch,
-            projectFilter);
+    //match searchable
+    QueryBuilder searchableMatch = matchQuery(
+            Constants.META_INODE_SEARCHABLE_FIELD, 1);
 
-    return projectsQuery;
-  }
+    //match name
+    QueryBuilder nameMatch = prefixQuery(Constants.META_NAME_FIELD, searchTerm);
 
-  /**
-   * A boolean query with a 'must' and two 'should' filter predicates. It uses a
-   * prefix and fuzzy matches respectively
-   * <p/>
-   * @param searchTerm
-   * @return
-   */
-  private QueryBuilder getProjectBoolQuery(String searchTerm) {
+    //match metadata
+    QueryBuilder metadataPrefixMatch = prefixQuery(Constants.META_DATA_FIELD,
+            searchTerm);
+    QueryBuilder metadataPhraseMatch = matchPhraseQuery(
+            Constants.META_DATA_FIELD, searchTerm);
 
-    //the same as the above only shorter
-    QueryBuilder boolQuery = boolQuery()
-            .must(prefixQuery("name", searchTerm))
-            .should(fuzzyQuery("name", searchTerm))
-            .should(fuzzyQuery("EXTENDED_METADATA", searchTerm));
+    QueryBuilder aggregateQuery = boolQuery()
+            .must(operationMatch)
+            .must(searchableMatch)
+            .must(nameMatch)
+            .should(metadataPrefixMatch)
+            .should(metadataPhraseMatch);
 
-    return boolQuery;
+    return aggregateQuery;
   }
 
   /**
@@ -294,35 +298,41 @@ public class ElasticService {
    * @return
    */
   private QueryBuilder getDatasetComboQuery(String searchTerm) {
+    //Queries
+    //look for active records (operation = 0)
+    QueryBuilder operationQuery = matchQuery(
+            Constants.META_INODE_OPERATION_FIELD,
+            Constants.META_INODE_OPERATION_ADD);
 
-    //look for active records (not deleted - operation = 0)
-    QueryBuilder operationQuery = matchQuery("operation", 0);
+    QueryBuilder searchable = matchQuery(Constants.META_INODE_SEARCHABLE_FIELD,
+            1);
+
+    //prefix name match
+    QueryBuilder namePrefixMatch = prefixQuery(Constants.META_NAME_FIELD,
+            searchTerm);
 
     //a phrase query to match the dataset description
-    QueryBuilder phraseQuery = matchPhraseQuery(
+    QueryBuilder descriptionMatch = termsQuery(
             Constants.META_DESCRIPTION_FIELD, searchTerm);
 
-    //build the dataset query predicates
-    QueryBuilder nameQuery = prefixQuery(Constants.META_NAME_FIELD, searchTerm);
+    //add a phrase match query to enable results to popup while typing phrases
+    QueryBuilder descriptionPhraseMatch = matchPhraseQuery(
+            Constants.META_DESCRIPTION_FIELD, searchTerm);
 
     //apply phrase filter on user metadata
-    QueryBuilder metadataPhraseQuery = matchPhraseQuery(
-            Constants.META_DATA_FIELD,
-            searchTerm);
-
-    //apply terms filter on user metadata as well
-    QueryBuilder metadataTermsQuery = termsQuery(Constants.META_DATA_FIELD,
-            searchTerm);
+    QueryBuilder metadataMatch = termsQuery(
+            Constants.META_DATA_FIELD, searchTerm);
 
     //aggregate the results
-    QueryBuilder datasetQuery = QueryBuilders.boolQuery()
-            //.must(operationQuery)
-            .should(phraseQuery)
-            .should(nameQuery)
-            .should(metadataPhraseQuery)
-            .should(metadataTermsQuery);
+    QueryBuilder datasetsQuery = boolQuery()
+            .must(operationQuery)
+            .must(searchable)
+            .must(namePrefixMatch)
+            .should(descriptionMatch)
+            .should(descriptionPhraseMatch)
+            .should(metadataMatch);
 
-    return datasetQuery;
+    return datasetsQuery;
   }
 
   /**
@@ -339,7 +349,7 @@ public class ElasticService {
     QueryBuilder datasets = this.getDatasetComboQuery(searchTerm);
 
     //combine the results - take the union of the two sets
-    QueryBuilder union = QueryBuilders.boolQuery()
+    QueryBuilder union = boolQuery()
             .should(projects)
             .should(datasets);
 
@@ -356,17 +366,18 @@ public class ElasticService {
   private QueryBuilder getChildComboQuery(String searchTerm) {
 
     //look for active records (not deleted - operation = 0)
-    QueryBuilder operationQuery = matchQuery("operation", 0);
+    QueryBuilder operationQuery = matchQuery("operation", "0");
 
     //TODO: add query on the description field, as soon as there is one
     //build the dataset query predicates
     QueryBuilder nameQuery = prefixQuery(Constants.META_NAME_FIELD, searchTerm);
-    
+
     //apply fuzzy filter on the name
-    QueryBuilder nameFuzzy = fuzzyQuery(Constants.META_NAME_FIELD, searchTerm);
-    
+    QueryBuilder nameTerm = termsQuery(Constants.META_NAME_FIELD, searchTerm);
+
     //apply phrase filter on the name. Allow the user to keep typing and constantly getting results
-    QueryBuilder namePhrase = matchPhraseQuery(Constants.META_NAME_FIELD, searchTerm);
+    QueryBuilder namePhrase = matchPhraseQuery(Constants.META_NAME_FIELD,
+            searchTerm);
 
     //apply phrase filter on user metadata
     QueryBuilder metadataPhraseQuery = matchPhraseQuery(
@@ -385,11 +396,11 @@ public class ElasticService {
     QueryBuilder datasetQuery = QueryBuilders.boolQuery()
             //.must(operationQuery)
             .should(nameQuery)
-            .should(nameFuzzy)
-            .should(namePhrase);
-            //.should(metadataPhraseQuery)
-            //.should(metadataTermsQuery)
-            //.should(metadataPrefixQuery);
+            .should(nameTerm);
+    //.should(namePhrase);
+    //.should(metadataPhraseQuery)
+    //.should(metadataTermsQuery)
+    //.should(metadataPrefixQuery);
 
     return datasetQuery;
   }
@@ -447,12 +458,13 @@ public class ElasticService {
 
     client.close();
   }
-  
+
   /**
    * Boots up a previously closed index
    */
-  private void bootIndices(Client client){
-    
-    client.admin().indices().open(new OpenIndexRequest(Constants.META_PROJECT_INDEX, Constants.META_DATASET_INDEX));
+  private void bootIndices(Client client) {
+
+    client.admin().indices().open(new OpenIndexRequest(
+            Constants.META_PROJECT_INDEX, Constants.META_DATASET_INDEX));
   }
 }

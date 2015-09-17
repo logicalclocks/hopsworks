@@ -100,6 +100,7 @@ public class DatasetController {
         ds = inodes.findByParentAndName(parent, dataSetName);
         Dataset newDS = new Dataset(ds, project);
         newDS.setSearchable(searchable);
+        
         if (datasetDescription != null) {
           newDS.setDescription(datasetDescription);
         }
