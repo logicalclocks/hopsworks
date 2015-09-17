@@ -93,6 +93,9 @@ public class DatasetController {
     success = createFolder(dsPath, templateId);
 
     if (success) {
+      //set the dataset meta enabled. Support 3 level indexing
+      this.fileOps.setMetaEnabled(dsPath);
+      
       try {
         ds = inodes.findByParentAndName(parent, dataSetName);
         Dataset newDS = new Dataset(ds, project);
