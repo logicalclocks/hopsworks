@@ -1,67 +1,63 @@
--- TAKE A BATCH OF RECORDS INTO THE BUFFER TABLE
+-- TAKE A BATCH OF RECORDS INTO THE BUFFER TABLE (deprecated. Use the one below instead)
 
 INSERT INTO hopsworks.meta_inodes_ops_datasets_deleted (inodeid, parentid, processed) 
 (SELECT hops.hdfs_metadata_log.inode_id, hops.hdfs_metadata_log.dataset_id, 0 FROM hops.hdfs_metadata_log LIMIT 100);
 
--- SELECTIVELY DUMP A BATCH OF DATASET RECORDS INTO THE BUFFER TABLE - A TWO STEP PROCESS
-
--- FIRST TAKE ADDED INODES (OPERATION = 0 - implicit since added records reside in hdfs_inodes table)
+-- SELECTIVELY DUMP A BATCH OF DATASET RECORDS INTO THE BUFFER TABLE - (picks up added and deleted records in one step)
 
 INSERT INTO hopsworks.meta_inodes_ops_datasets_deleted (inodeid, parentid, processed) (
 
-	SELECT outt.id as ds_id, outt.parent_id as parent, 0 as processed FROM hops.hdfs_inodes outt, 
-	(SELECT i.id as parentid FROM hops.hdfs_inodes i, 
-		(SELECT inn.id AS rootid FROM hops.hdfs_inodes inn WHERE inn.parent_id = 1) AS root 
+	SELECT log.inode_id, log.dataset_id, 0 as processed 
+	FROM hops.hdfs_metadata_log log, 
 
-	WHERE i.parent_id = root.rootid) AS parent 
-	WHERE outt.parent_id = parent.parentid LIMIT 100);
+		(SELECT p.inode_id as id, p.dataset_id, 0 as processed 
+		FROM hops.hdfs_metadata_log p, 
 
--- THEN TAKE REMOVED INODES (OPERATION = 1)
+			(SELECT inn.id 
+			FROM hops.hdfs_inodes inn 
+			WHERE inn.parent_id = 1
+			) AS root 
 
-INSERT INTO hopsworks.meta_inodes_ops_datasets_deleted (inodeid, parentid, processed) (
+		WHERE p.dataset_id = root.id
+		) AS parent 
 
-	SELECT log.inode_id as ds_id, log.dataset_id as parent, 0 as processed FROM hops.hdfs_metadata_log log,
+	WHERE log.dataset_id = parent.id LIMIT 100);
 
-		(SELECT i.id FROM hops.hdfs_inodes i, 
-			(SELECT inn.id AS rootid FROM hops.hdfs_inodes inn WHERE inn.parent_id = 1) AS root 
-
-		WHERE i.parent_id = root.rootid) AS parent 
-
-	WHERE log.operation = 1 AND log.dataset_id = parent.id LIMIT 100);
 
 -- SELECT ALL DATASETS (FIRST LEVEL CHILDREN) THAT HAVE BEEN ADDED (OPERATION 0)
 
-SELECT ds._id, ds.name, ds.inode_id, ds.dataset_id as parentid, ds.description, ds.operation, "dataset" as type, metadata.EXTENDED_METADATA 
+SELECT composite.*, "dataset" as type, metadata.EXTENDED_METADATA 
 FROM (
-	SELECT DISTINCT composite.*, dt.inode_pid, dt.inode_name, dt.description 
+			
+	SELECT DISTINCT dsop.*, dt.description 
 	FROM hopsworks.dataset dt,
 
-		(SELECT ops.inode_id as _id, ops.dataset_id as dsid, dataset.name, ops.* 
-		FROM hops.hdfs_metadata_log ops,   
+		(SELECT log.inode_id as _id, log.dataset_id as parentid, dataset.name, log.* 
+		FROM hops.hdfs_metadata_log log,
 
-			(SELECT outt.id as ds_id, outt.parent_id as parentt, outt.* 
-			FROM hops.hdfs_inodes outt, 
+			(SELECT p.id as parentid, p.parent_id as parentt, p.* 
+			FROM hops.hdfs_inodes p, 
 
-				(SELECT i.id as parentid 
+				(SELECT i.id
 				FROM hops.hdfs_inodes i, 
 
-					(SELECT inn.id AS rootid 
+					(SELECT inn.id
 					FROM hops.hdfs_inodes inn 
 					WHERE inn.parent_id = 1
 					) AS root 
 
-				WHERE i.parent_id = root.rootid
-				) AS parent 
+				WHERE i.parent_id = root.id
+				) AS project 
 
-			WHERE outt.parent_id = parent.parentid
-			) as dataset 
+			WHERE p.parent_id = project.id
+			)as dataset
+	
+		WHERE log.inode_id = dataset.id
+		)as dsop
 
-		WHERE ops.operation = 0 AND ops.inode_id = dataset.ds_id 
-		AND ops.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_datasets_deleted) LIMIT 100
-		)as composite 
-
-	WHERE dt.inode_pid = composite.dsid AND dt.inode_name = composite.name AND dt.searchable = 1
-) as ds
+	WHERE dt.inode_pid = dsop.parentid AND dt.inode_name = dsop.name 
+	AND dsop._id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_datasets_deleted) LIMIT 100
+	)as composite
 
 LEFT JOIN (
 
@@ -71,19 +67,34 @@ LEFT JOIN (
 
 ) as metadata 
 
-ON metadata.inodeid = ds._id ORDER BY parentid ASC;
+ON metadata.inodeid = composite._id ORDER BY composite.parentid ASC;
 
 -- SELECT ALL DATASETS THAT HAVE BEEN DELETED/RENAMED (OPERATION 1) AND ARE NOT YET PROCESSED
 
-SELECT ops.inode_id as _id, ops.dataset_id as parentid, ops.* 
-FROM hops.hdfs_metadata_log ops 
+SELECT log.inode_id as _id, log.dataset_id as parentid, log.logical_time, log.operation
+FROM hops.hdfs_metadata_log log,
 
-WHERE ops.operation = 1 
+	(SELECT log.dataset_id, log.inode_id
+	FROM hops.hdfs_metadata_log log, 
 
-AND ops.inode_id IN (SELECT inode_id FROM hopsworks.meta_inodes_ops_datasets_deleted WHERE processed = 0);
+		(SELECT inn.id 
+		FROM hops.hdfs_inodes inn 
+		WHERE inn.parent_id = 1
+		) AS root 
+
+	WHERE log.dataset_id = root.id
+	)AS project
+
+WHERE log.dataset_id = project.inode_id AND log.operation = 1 
+AND log.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_datasets_deleted WHERE processed = 0);
 
 
--- MARK AS PROCESSED ALL DATASETS THAT HAVE BEEN PROCESSED (PROCESSED = 1)
+-- DELETE ALL PROCESSED DATASETS FROM THE HDFS_METADATA_LOG TABLE
+
+DELETE FROM hops.hdfs_metadata_log WHERE inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_datasets_deleted);
+
+
+-- MARK AS PROCESSED ALL DATASETS THAT HAVE BEEN PROCESSED (PROCESSED = 1) (deprecated)
 
 UPDATE hopsworks.meta_inodes_ops_datasets_deleted m,
 
@@ -104,6 +115,7 @@ WHERE m.parentid = parent.id AND m.inodeid IN (SELECT inode_id FROM hops.hdfs_me
 DELETE FROM hopsworks.meta_inodes_ops_datasets_deleted WHERE processed = 1;
 
 
--- DELETE ALL PROCESSED DATASETS FROM THE HDFS_METADATA_LOG TABLE
 
-DELETE FROM hops.hdfs_metadata_log WHERE inode_id NOT IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_datasets_deleted);
+
+
+

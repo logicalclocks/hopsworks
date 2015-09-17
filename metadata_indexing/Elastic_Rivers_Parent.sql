@@ -1,4 +1,4 @@
--- TAKE A BATCH OF RECORDS INTO THE BUFFER TABLE
+-- TAKE A BATCH OF RECORDS INTO THE BUFFER TABLE (deprecated. Use the one below instead)
 
 INSERT INTO hopsworks.meta_inodes_ops_parents_deleted (inodeid, parentid, processed) 
 (SELECT hops.hdfs_metadata_log.inode_id, hops.hdfs_metadata_log.dataset_id, 0 FROM hops.hdfs_metadata_log LIMIT 100);
@@ -16,21 +16,21 @@ WHERE log.dataset_id = root.rootid LIMIT 100);
 SELECT composite.*, "parent" as type, metadata.EXTENDED_METADATA
 
 FROM (
-	SELECT log.inode_id as _id, parent.name, parent.meta_enabled, log.* 
+	SELECT log.inode_id as _id, project.name, project.meta_enabled, log.* 
 	FROM hops.hdfs_metadata_log log, 
 
 		(SELECT i.id, i.name, i.meta_enabled 
 		FROM hops.hdfs_inodes i, 
 
-			(SELECT inn.id AS rootid 
+			(SELECT inn.id 
 			FROM hops.hdfs_inodes inn 
 			WHERE inn.parent_id = 1
 			) AS root 
 
-		WHERE i.parent_id = root.rootid
-		) as parent 
+		WHERE i.parent_id = root.id
+		) as project 
 
-	WHERE log.operation = 0 AND log.inode_id = parent.id 
+	WHERE log.operation = 0 AND log.inode_id = project.id 
 	AND log.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_parents_deleted) LIMIT 100
 
 )as composite
@@ -54,11 +54,12 @@ ORDER BY composite.logical_time ASC;
 SELECT log.inode_id as _id, log.* 
 
 FROM hops.hdfs_metadata_log log, 
-	(SELECT inn.id AS rootid 
+	(SELECT inn.id 
 	FROM hops.hdfs_inodes inn 
-	WHERE inn.parent_id = 1) AS temp 
+	WHERE inn.parent_id = 1
+	) AS root 
 
-WHERE log.operation = 1 AND log.dataset_id = temp.rootid 
+WHERE log.operation = 1 AND log.dataset_id = root.id 
 AND log.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_parents_deleted);
 
 
@@ -73,12 +74,13 @@ UPDATE hopsworks.meta_inodes_ops_parents_deleted m,
 SET m.processed = 1
 WHERE m.parentid = root.id AND m.inodeid IN (SELECT inode_id FROM hops.hdfs_metadata_log);
 
+-- DELETE ALL PROCESSED PARENTS FROM THE HDFS_METADATA_LOG TABLE
 
--- DELETE ALL PARENTS THAT HAVE BEEN MARKED AS PROCESSED (PROCESSED = 1)
+DELETE FROM hops.hdfs_metadata_log WHERE inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_parents_deleted);
+
+-- DELETE ALL PARENTS THAT HAVE BEEN MARKED AS PROCESSED (PROCESSED = 1) (processed field can be phased out)
 
 DELETE FROM hopsworks.meta_inodes_ops_parents_deleted WHERE processed = 1;
 
 
--- DELETE ALL PROCESSED PARENTS FROM THE HDFS_METADATA_LOG TABLE
 
-DELETE FROM hops.hdfs_metadata_log WHERE inode_id NOT IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_parents_deleted);
