@@ -144,6 +144,8 @@ ORDER BY composite.logical_time ASC;
 
 
 -- SELECT ALL CHILDREN THAT HAVE BEEN DELETED/RENAMED (OPERATION 1) AND ARE NOT YET PROCESSED (returns dataset id as a parent)
+-- THE PARENT IS ASSUMED TO RESIDE IN THE LOGS TABLE IF THE PARENT IS ALREADY INDEXED (BUT NOT DELETED) THE QUERY WILL NOT FIND THE CORRESPONDING CHILDREN
+-- NEED TO LOOK UP IN HDFS_INODES FOR THE PARENT
 
 SELECT c.inode_id as _id, c.dataset_id as _parent, c.logical_time, c.operation
 FROM hops.hdfs_metadata_log c,
@@ -170,6 +172,8 @@ AND c.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_delete
 
 
 -- SELECT ALL CHILDREN THAT HAVE BEEN DELETED/RENAMED (OPERATION 1) AND ARE NOT YET PROCESSED (returns project id as a parent)
+-- THE PARENT IS ASSUMED TO RESIDE IN THE LOGS TABLE. IF THE PARENT IS ALREADY INDEXED (BUT NOT DELETED) THE QUERY WILL NOT FIND THE CORRESPONDING CHILDREN.
+-- NEED TO LOOK UP IN HDFS_INODES FOR THE PARENT
 
 SELECT c.inode_id as _id, dataset.parent as _parent, c.logical_time, c.operation
 FROM hops.hdfs_metadata_log c,
@@ -192,6 +196,60 @@ FROM hops.hdfs_metadata_log c,
 	) AS dataset
 
 WHERE c.dataset_id = dataset.inode_id AND c.operation = 1 
+AND c.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_deleted WHERE processed = 0);
+
+
+-- SELECT ALL CHILDREN THAT HAVE BEEN DELETED/RENAMED (OPERATION 1) AND ARE NOT YET PROCESSED (returns dataset id as a parent)
+-- THE PARENT IS NOT DELETED AND RESIDES IN THE HDFS_INODES TABLE.
+
+SELECT c.inode_id as _id, c.dataset_id as _parent, c.logical_time, c.operation
+FROM hops.hdfs_metadata_log c,
+
+	(SELECT d.parent_id, d.id, project.projectid as parent
+	FROM hops.hdfs_inodes d,
+
+		(SELECT p.parent_id, p.id as projectid
+		FROM hops.hdfs_inodes p, 
+
+			(SELECT inn.id 
+			FROM hops.hdfs_inodes inn 
+			WHERE inn.parent_id = 1
+			) AS root 
+
+		WHERE p.parent_id = root.id
+		)AS project
+
+	WHERE d.parent_id = project.projectid
+	) AS dataset
+
+WHERE c.dataset_id = dataset.id AND c.operation = 1 
+AND c.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_deleted WHERE processed = 0);
+
+
+-- SELECT ALL CHILDREN THAT HAVE BEEN DELETED/RENAMED (OPERATION 1) AND ARE NOT YET PROCESSED (returns project id as a parent)
+-- THE PARENT IS NOT DELETED AND RESIDES IN THE HDFS_INODES TABLE.
+
+SELECT c.inode_id as _id, dataset.parent as _parent, c.logical_time, c.operation
+FROM hops.hdfs_metadata_log c,
+
+	(SELECT d.parent_id, d.id, project.projectid as parent
+	FROM hops.hdfs_inodes d,
+
+		(SELECT p.parent_id, p.id as projectid
+		FROM hops.hdfs_inodes p, 
+
+			(SELECT inn.id 
+			FROM hops.hdfs_inodes inn 
+			WHERE inn.parent_id = 1
+			) AS root 
+
+		WHERE p.parent_id = root.id
+		)AS project
+
+	WHERE d.parent_id = project.projectid
+	) AS dataset
+
+WHERE c.dataset_id = dataset.id AND c.operation = 1 
 AND c.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_deleted WHERE processed = 0);
 
 

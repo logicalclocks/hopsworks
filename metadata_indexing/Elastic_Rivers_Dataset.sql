@@ -70,6 +70,7 @@ LEFT JOIN (
 ON metadata.inodeid = composite._id ORDER BY composite.parentid ASC;
 
 -- SELECT ALL DATASETS THAT HAVE BEEN DELETED/RENAMED (OPERATION 1) AND ARE NOT YET PROCESSED
+-- THEIR PARENT IS ASSUMED TO RESIDE IN THE HDFS_METADATA_LOG TABLE
 
 SELECT log.inode_id as _id, log.dataset_id as parentid, log.logical_time, log.operation
 FROM hops.hdfs_metadata_log log,
@@ -86,6 +87,27 @@ FROM hops.hdfs_metadata_log log,
 	)AS project
 
 WHERE log.dataset_id = project.inode_id AND log.operation = 1 
+AND log.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_datasets_deleted WHERE processed = 0);
+
+
+-- SELECT ALL DATASETS THAT HAVE BEEN DELETED/RENAMED (OPERATION 1) AND ARE NOT YET PROCESSED
+-- THEIR PARENT IS ASSUMED TO RESIDE IN THE HDFS_INODES TABLE
+
+SELECT log.inode_id as _id, log.dataset_id as parentid, log.logical_time, log.operation
+FROM hops.hdfs_metadata_log log,
+
+	(SELECT p.parent_id, p.id
+	FROM hops.hdfs_inodes p, 
+
+		(SELECT inn.id 
+		FROM hops.hdfs_inodes inn 
+		WHERE inn.parent_id = 1
+		) AS root 
+
+	WHERE p.parent_id = root.id
+	)AS project
+
+WHERE log.dataset_id = project.id AND log.operation = 1 
 AND log.inode_id IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_datasets_deleted WHERE processed = 0);
 
 
