@@ -29,7 +29,7 @@ INSERT INTO hopsworks.meta_inodes_ops_datasets_deleted (inodeid, parentid, proce
 SELECT composite.*, "dataset" as type, metadata.EXTENDED_METADATA 
 FROM (
 			
-	SELECT DISTINCT dsop.*, dt.description 
+	SELECT DISTINCT dsop.*, dt.description, dt.searchable
 	FROM hopsworks.dataset dt,
 
 		(SELECT log.inode_id as _id, log.dataset_id as parentid, dataset.name, log.* 
