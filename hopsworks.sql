@@ -285,6 +285,14 @@ CREATE TABLE `meta_template_to_inode` (
   FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster CHARSET=latin1;
 
+CREATE TABLE `meta_inode_basic_metadata` (
+  `inode_pid` INT(11) NOT NULL,
+  `inode_name` VARCHAR(3000) NOT NULL,
+  `description` VARCHAR(3000) DEFAULT NULL,
+  `searchable` TINYINT(1) NOT NULL DEFAULT '0'
+  PRIMARY KEY (`inode_pid`, `inode_name`)
+  FOREIGN KEY (`inode_pid`, `inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`, `name`) ON DELETE CASCADE ON UPDATE NO ACTION
+ 
 -- elastic jdbc-importer buffer tables -------
 
 CREATE TABLE `meta_inodes_ops_parents_buffer` (
