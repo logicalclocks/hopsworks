@@ -287,29 +287,37 @@ CREATE TABLE `meta_template_to_inode` (
 
 -- elastic jdbc-importer buffer tables -------
 
-CREATE TABLE `meta_inodes_ops_children_deleted` (
+CREATE TABLE `meta_inodes_ops_parents_buffer` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inodeid` INT(11) NOT NULL,
   `parentid` INT(11) NOT NULL,
-  `processed` TINYINT(4) DEFAULT '0',
+  `processed` TINYINT(1) DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-CREATE TABLE `meta_inodes_ops_parents_deleted` (
+CREATE TABLE `meta_inodes_ops_datasets_buffer` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inodeid` INT(11) NOT NULL,
   `parentid` INT(11) NOT NULL,
-  `processed` tinyint(4) DEFAULT '0',
-  PRIMARY KEY (`id`,`inodeid`,`parentid`)
-) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
-
-CREATE TABLE `meta_inodes_ops_datasets_deleted` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `inodeid` INT(11) NOT NULL,
-  `parentid` INT(11) NOT NULL,
-  `processed` TINYINT(4) DEFAULT '0',
+  `processed` TINYINT(1) DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=85 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `meta_inodes_ops_children_p_buffer` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` INT(11) NOT NULL,
+  `parentid` INT(11) NOT NULL,
+  `processed` TINYINT(1) DEFAULT '0',
+  PRIMARY KEY (`id`,`inodeid`,`parentid`)
+) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `meta_inodes_ops_children_d_buffer` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` INT(11) NOT NULL,
+  `parentid` INT(11) NOT NULL,
+  `processed` TINYINT(1) DEFAULT '0',
+  PRIMARY KEY (`id`,`inodeid`,`parentid`)
+) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 ---- Dataset table-------------------------------------------------
 CREATE TABLE `dataset` (
