@@ -105,7 +105,7 @@ public class ElasticService {
     if (!this.indexExists(client, Constants.META_PROJECT_INDEX) || !this.
             indexExists(client, Constants.META_DATASET_INDEX)) {
 
-      logger.log(Level.FINE, "Elastic indices missing");
+      logger.log(Level.FINE, ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
     }
@@ -123,7 +123,7 @@ public class ElasticService {
             = client.prepareSearch(Constants.META_PROJECT_INDEX,
                     Constants.META_DATASET_INDEX).
             setTypes(Constants.META_PROJECT_PARENT_TYPE,
-                    Constants.META_DATASET_TYPE)
+                    Constants.META_DATASET_PARENT_TYPE)
             .setQuery(this.getProjectDatasetQueryCombo(searchTerm))
             //.setQuery(this.getDatasetComboQuery(searchTerm))
             .addHighlightedField("name")
@@ -159,7 +159,7 @@ public class ElasticService {
   }
 
   /**
-   * Searches for content inside a specific project. Hits 'projects' index
+   * Searches for content inside a specific project. Hits 'project' index
    * <p/>
    * @param projectName
    * @param searchTerm
@@ -208,7 +208,91 @@ public class ElasticService {
     SearchResponse response
             = client.prepareSearch(Constants.META_PROJECT_INDEX).
             setTypes(Constants.META_PROJECT_CHILD_TYPE)
-            .setQuery(this.getChildComboQuery(projectName, searchTerm))
+            .setQuery(this.getChildComboQuery(projectName,
+                            Constants.META_PROJECT_PARENT_TYPE, searchTerm))
+            .addHighlightedField("name")
+            .execute().actionGet();
+
+    if (response.status().getStatus() == 200) {
+      //logger.log(Level.INFO, "Matched number of documents: {0}", response.
+      //getHits().
+      //totalHits());
+
+      //construct the response
+      List<ElasticHit> elasticHits = new LinkedList<>();
+      if (response.getHits().getHits().length > 0) {
+        SearchHit[] hits = response.getHits().getHits();
+
+        for (SearchHit hit : hits) {
+          elasticHits.add(new ElasticHit(hit));
+        }
+      }
+
+      this.clientShutdown(client);
+      GenericEntity<List<ElasticHit>> searchResults
+              = new GenericEntity<List<ElasticHit>>(elasticHits) {
+              };
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(searchResults).build();
+    }
+
+    this.clientShutdown(client);
+    throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
+  }
+
+  /**
+   * Searches for content inside a specific dataset. Hits 'dataset' index
+   * <p/>
+   * @param datasetName
+   * @param searchTerm
+   * @param sc
+   * @param req
+   * @return
+   * @throws AppException
+   */
+  @GET
+  @Path("datasetsearch/{datasetName}/{searchTerm}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response datasetSearch(
+          @PathParam("datasetName") String datasetName,
+          @PathParam("searchTerm") String searchTerm,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    if (datasetName == null || searchTerm == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Incomplete request!");
+    }
+    
+    final Settings settings = ImmutableSettings.settingsBuilder()
+            .put("client.transport.sniff", true) //being able to retrieve other nodes 
+            .put("cluster.name", "hopsworks").build();
+
+    Client client
+            = new TransportClient(settings)
+            .addTransportAddress(new InetSocketTransportAddress("193.10.66.125",
+                            9300));
+
+    //check if the indices are up and running
+    if (!this.indexExists(client, Constants.META_DATASET_INDEX)) {
+
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
+    } else if (!this.typeExists(client, Constants.META_DATASET_INDEX,
+            Constants.META_DATASET_CHILD_TYPE)) {
+
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
+    }
+
+    //hit the indices - execute the queries
+    SearchResponse response
+            = client.prepareSearch(Constants.META_DATASET_INDEX).
+            setTypes(Constants.META_DATASET_CHILD_TYPE)
+            .setQuery(this.getChildComboQuery(datasetName,
+                            Constants.META_DATASET_PARENT_TYPE, searchTerm))
             .addHighlightedField("name")
             .execute().actionGet();
 
@@ -353,13 +437,14 @@ public class ElasticService {
    * <p>
    * @return
    */
-  private QueryBuilder getChildComboQuery(String projectName, String searchTerm) {
+  private QueryBuilder getChildComboQuery(String parentName, String parentType,
+          String searchTerm) {
 
     //Query
     //filter results by parent
     QueryBuilder hasParentPart = hasParentQuery(
-            Constants.META_PROJECT_PARENT_TYPE,
-            matchQuery(Constants.META_NAME_FIELD, projectName));
+            parentType,
+            matchQuery(Constants.META_NAME_FIELD, parentName));
 
     //look for active records (operation 0)
     QueryBuilder operationQuery = matchQuery(

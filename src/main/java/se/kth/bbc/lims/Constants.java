@@ -99,7 +99,8 @@ public class Constants {
   public static final String META_DATASET_INDEX = "dataset";
   public static final String META_PROJECT_PARENT_TYPE = "parent";
   public static final String META_PROJECT_CHILD_TYPE = "child";
-  public static final String META_DATASET_TYPE = "dataset";
+  public static final String META_DATASET_PARENT_TYPE = "parent";
+  public static final String META_DATASET_CHILD_TYPE = "child";
   public static final String META_INODE_SEARCHABLE_FIELD = "searchable";
   public static final String META_INODE_OPERATION_FIELD = "operation";
   public static final int META_INODE_OPERATION_ADD = 0;

@@ -4,14 +4,24 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MainCtrl', ['$cookies', '$location', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService', 'ProjectService', 'growl',
-          function ($cookies, $location, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl) {
+        .controller('MainCtrl', ['$cookies', '$location', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService', 'ProjectService', 'growl', '$routeParams',
+          function ($cookies, $location, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl, $routeParams) {
 
             var self = this;
             self.email = $cookies['email'];
             self.emailHash = md5.createHash(self.email || '');
             var elasticService = ElasticService();
 
+            if(!angular.isUndefined($routeParams.datasetName)){
+              self.searchType = "datasetCentric";
+            }
+            else if(!angular.isUndefined($routeParams.projectID)){
+              self.searchType = "projectCentric";
+            }
+            else {
+              self.searchType = "global";
+            }
+            
             self.logout = function () {
               AuthService.logout(self.user).then(
                       function (success) {
@@ -108,15 +118,14 @@ angular.module('hopsWorksApp')
             };
 
             self.search = function () {
-              //ask for the index name and project name when it is time to search
-              self.index = UtilsService.getIndex();
+              //ask for the project name when it is time to search
               self.projectName = UtilsService.getProjectName();
               self.currentPage = 1;
               self.pageSize = 5;
               self.searchResult = [];
               self.searchReturned = "";
 
-              if (self.index === "parent") {
+              if (self.searchType === "global") {
                 //triggering a global search
                 elasticService.globalSearch(self.searchTerm)
                         .then(function (response) {
@@ -136,7 +145,7 @@ angular.module('hopsWorksApp')
                         }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                         });
-              } else if (self.index === "child") {
+              } else if (self.searchType === "projectCentric") {
                 elasticService.projectSearch(UtilsService.getProjectName(), self.searchTerm)
                         .then(function (response) {
                   
@@ -155,8 +164,27 @@ angular.module('hopsWorksApp')
                         }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                         });
+              }else if (self.searchType === "datasetCentric"){
+                elasticService.datasetSearch(UtilsService.getDatasetName(), self.searchTerm)
+                        .then(function (response) {
+                  
+                          var searchHits = response.data;
+                          //console.log("RECEIVED RESPONSE " + JSON.stringify(response));
+                          if (searchHits.length > 0) {
+                            self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
+                            self.searchResult = searchHits;
+                          } else {
+                            self.searchResult = [];
+                            self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
+                          }
+                          self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
+                          self.resultItems = self.searchResult.length;
+                          
+                        }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                        });
               }
-
+              
               datePicker();// this will load the function so that the date picker can call it.
             };
             var datePicker = function () {
