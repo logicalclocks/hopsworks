@@ -87,7 +87,7 @@ WHERE log.operation = 1;
 
 -- MARK AS PROCESSED ALL DATASETS THAT HAVE BEEN PROCESSED (PROCESSED = 1)
 
-UPDATE hopsworks.meta_inodes_ops_datasets_buffer m, SET m.processed = 1;
+UPDATE hopsworks.meta_inodes_ops_datasets_buffer m SET m.processed = 1;
 
 
 -- DELETE ALL PROCESSED DATASETS FROM THE HDFS_METADATA_LOG TABLE

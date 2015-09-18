@@ -94,7 +94,7 @@ FROM hopsworks.meta_inodes_ops_children_pr_buffer c
 WHERE c.operation = 1 LIMIT 100;
 
 
--- MARK AS PROCESSED ALL CHILDREN THAT HAVE BEEN PROCESSED (PROCESSED = 1 - deprecated)
+-- MARK AS PROCESSED ALL CHILDREN THAT HAVE BEEN PROCESSED (PROCESSED = 1)
 
 UPDATE hopsworks.meta_inodes_ops_children_pr_buffer b SET b.processed = 1;
 

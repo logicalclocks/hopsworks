@@ -51,7 +51,7 @@ WHERE log.operation = 1;
 
 -- MARK AS PROCESSED ALL PARENTS THAT HAVE BEEN PROCESSED (PROCESSED = 1)
 
-UPDATE hopsworks.meta_inodes_ops_parents_buffer m, SET m.processed = 1;
+UPDATE hopsworks.meta_inodes_ops_parents_buffer m SET m.processed = 1;
 
 
 -- DELETE ALL PROCESSED PARENTS FROM THE HDFS_METADATA_LOG TABLE
