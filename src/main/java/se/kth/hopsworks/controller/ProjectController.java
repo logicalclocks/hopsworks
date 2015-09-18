@@ -68,7 +68,7 @@ public class ProjectController {
    * Creates a new project(project), the related DIR, the different services
    * in the project, and the master of the project.
    *
-   * this needs to be an atomic operation (all or nothing) REQUIRES_NEW will
+   * This needs to be an atomic operation (all or nothing) REQUIRES_NEW will
    * make sure a new transaction is created even if this method is called from
    * within a transaction.
    * <p>
@@ -97,6 +97,10 @@ public class ProjectController {
        * to create the project in hopsworks
        */
       if (mkProjectDIR(project.getName())) {
+        
+        Inode projectInode = this.inodes.getProjectRoot(project.getName());
+        project.setInode(projectInode);
+        
         //Persist project object
         projectFacade.persistProject(project);
         projectFacade.flushEm();//flushing it to get project id

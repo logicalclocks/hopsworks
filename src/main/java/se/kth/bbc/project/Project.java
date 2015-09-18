@@ -12,10 +12,12 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -25,6 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.activity.Activity;
+import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.services.ProjectServices;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.dataset.Dataset;
@@ -117,12 +120,26 @@ public class Project implements Serializable {
   @Column(name = "description")
   private String description;
 
+  @JoinColumns({
+    @JoinColumn(name = "inode_pid",
+            referencedColumnName = "parent_id"),
+    @JoinColumn(name = "inode_name",
+            referencedColumnName = "name")
+  })
+  @ManyToOne(optional = false)
+  private Inode inode;
+
   public Project() {
   }
 
   public Project(String name) {
     this.name = name;
     this.archived = false;
+  }
+  
+  public Project(String name, Inode inode){
+    this(name);
+    this.inode = inode;
   }
 
   public Project(String name, User owner, Date timestamp) {
@@ -156,6 +173,14 @@ public class Project implements Serializable {
     this.name = name;
   }
 
+  public void setInode(Inode inode){
+    this.inode = inode;
+  }
+  
+  public Inode getInode(){
+    return this.inode;
+  }
+  
   public User getOwner() {
     return owner;
   }
