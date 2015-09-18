@@ -17,7 +17,7 @@ INSERT INTO hopsworks.meta_inodes_ops_parents_buffer (inodeid, parentid, operati
 
 SELECT composite.*, metadata.EXTENDED_METADATA
 FROM 
-	(SELECT i.id as _id, i.name, project.inodeid, project.parentid, project.operation, project.logical_time 
+	(SELECT DISTINCT i.id as _id, i.name, project.inodeid, project.parentid, project.operation, project.logical_time 
 	FROM hops.hdfs_inodes i, 
 
 		(SELECT log.inodeid, log.parentid, log.operation, log.logical_time
@@ -44,7 +44,7 @@ ORDER BY composite.logical_time ASC;
 
 -- SELECT ALL PARENTS THAT HAVE BEEN DELETED/RENAMED (OPERATION 1)
 
-SELECT log.inodeid as _id, log.* 
+SELECT DISTINCT log.inodeid as _id, log.parentid, log.operation, log.logical_time 
 FROM hopsworks.meta_inodes_ops_parents_buffer log
 WHERE log.operation = 1;
 
