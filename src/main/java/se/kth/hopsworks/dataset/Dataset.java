@@ -22,10 +22,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.Inode;
 
-/**
- *
- * @author ermiasg
- */
 @Entity
 @Table(name = "hopsworks.dataset")
 @XmlRootElement

@@ -18,6 +18,7 @@
     <class>se.kth.hopsworks.user.model.BbcGroup</class>
     <class>se.kth.hopsworks.user.model.Users</class>
     <class>se.kth.hopsworks.dataset.Dataset</class>
+    <class>se.kth.hopsworks.message.Message</class>
     <class>se.kth.hopsworks.dataset.DatasetRequest</class>
     <class>se.kth.bbc.project.metadata.ProjectMeta</class>
     <class>se.kth.bbc.project.privacy.model.Consent</class>

@@ -21,10 +21,6 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.project.ProjectTeam;
 
-/**
- *
- * @author ermiasg
- */
 @Entity
 @Table(name = "hopsworks.dataset_request")
 @XmlRootElement

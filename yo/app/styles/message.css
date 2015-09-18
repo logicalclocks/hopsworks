@@ -43,6 +43,10 @@
     color: #909fa7;
     max-height: 400px;
 }
+.message-view {
+    clear: both;
+    max-height: 400px;
+}
 .message-list{
     max-height: 500px;
 }
@@ -64,6 +68,10 @@
     overflow: hidden;
     zoom: 1;
 }
+.message-box .message-box-body > textarea {
+    width: 95%;
+    resize: vertical;
+}
 .message-panel .panel-body {
     padding: 15px 5px 5px 5px;
 }
@@ -72,9 +80,6 @@
     box-shadow:none;
     height: auto;
     overflow: hidden;
-}
-.message-panel .scroll > div {
-    padding-right: 11px;
 }
 .message-panel .scroll > ul {
     padding: 0px;
@@ -92,6 +97,11 @@ ul.messages {
 }
 .message-preview-div{
     padding-right: 20px;
+}
+
+.message-view{
+    padding-right: 15px;
+    padding-left: 15px;
 }
 .message-preview-div > button.close {
     display:none;

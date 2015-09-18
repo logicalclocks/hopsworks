@@ -9,10 +9,6 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
-/**
- *
- * @author ermiasg
- */
 @Stateless
 public class DatasetFacade extends AbstractFacade<Dataset> {
 

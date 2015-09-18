@@ -4,10 +4,10 @@
     <h2 class="modal-title">Messages</h2>
 </div>
 <div class="modal-body">
-
+<div growl reference="13" class="pull-right"></div>
 <div class="row" style="margin: 0px">
     <div class="panel message-panel col-md-4 " style="width: 29%;">
-        <a tooltip="Refresh Panel" class="pull-right" style="padding-top: 10px; padding-right: 15px; color: #c1c2c3">
+        <a ng-click="messageCtrl.refresh()" tooltip="Refresh Panel" class="pull-right" style="padding-top: 10px; padding-right: 15px; color: #c1c2c3">
             <i class="fa fa-refresh" ng-class="{'fa-spin':messageCtrl.refreshing}"></i>
         </a><br>
         <p></p>
@@ -27,20 +27,22 @@
                 </div>
                 <div class="panel-body message-list scroll">
                     <ul class="messages" >
-                        <li ng-class="{'unread': msg.unread, 'highlight': messageCtrl.selectedMsg === msg}" ng-repeat="msg in messageCtrl.messages | filter:messageCtrl.filterText | orderBy: 'date'">
-                            <div class="message-preview-div" ng-click="messageCtrl.select(msg)">
-                                <img class="message-avatar pull-left" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(msg.fromEmail)}}?d=mm">
-                                <button tooltip="Move to trash" class="close" ng-click="messageCtrl.delete()" aria-hidden="true" type="button">
+                        <li ng-class="{'unread': msg.unread, 'highlight': messageCtrl.selectedMsg.id === msg.id}" ng-repeat="msg in messageCtrl.messages | filter: search">
+                            <div class="message-preview-div">
+                                <img class="message-avatar pull-left" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(msg.from.email)}}?d=mm">
+                                <button tooltip="Move to trash" class="close" ng-click="messageCtrl.moveToTrash(msg, $index)" aria-hidden="true" type="button">
                                     &times;
                                 </button>
-                                <div class="message-meta">
+                                <div ng-click="messageCtrl.select(msg)">
+                                  <div  class="message-meta" >
                                     <div class="pull-left">
                                         <div class="message-subject">{{msg.subject | limitTo:25}}</div>
-                                        <div class="message-from">{{msg.from | limitTo:25}}</div>
-                                        <div class="text-muted">{{msg.date | date:'medium'}}</div>
+                                        <div class="message-from">{{msg.from.fname  | limitTo:10}} {{msg.from.lname  | limitTo:10}}</div>
+                                        <div class="text-muted">{{msg.dateSent | date:'medium'}}</div>
                                     </div>
-                                </div>
+                                  </div>
                                 <div class="message-preview">{{msg.content | limitTo:50}} {{msg.content.length > 50 ? ' ...' : ''}}</div>
+                                </div>
                             </div>
                         </li>
                     </ul>
@@ -61,23 +63,25 @@
                     <h4 class="text-muted"><i class="fa fa-spinner fa-spin"></i>Loading...</h4>
                 </div>
                 <div class="panel-body message-list scroll" ng-if="messageCtrl.trash !== undefined && messageCtrl.trash.length > 0">
-                    <a style="text-decoration:none;">Empty trash</a>
+                    <a ng-click="messageCtrl.emptyTrash()" style="text-decoration:none;">Empty trash</a>
                     <p></p>
                     <ul class="messages" >
-                        <li ng-class="{'unread': msg.unread, 'highlight': messageCtrl.selectedMsg === msg}" ng-repeat="msg in messageCtrl.trash | filter:messageCtrl.filterText | orderBy: 'date'">
-                            <div class="message-preview-div" ng-click="messageCtrl.select(msg)">
-                                <img class="message-avatar pull-left" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(msg.fromEmail)}}?d=mm">
-                                <button tooltip="Delete message" class="close" ng-click="messageCtrl.delete()" aria-hidden="true" type="button">
+                        <li ng-class="{'unread': msg.unread, 'highlight': messageCtrl.selectedMsg.id === msg.id}" ng-repeat="msg in messageCtrl.trash | filter: search">
+                            <div class="message-preview-div">
+                                <img class="message-avatar pull-left" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(msg.from.email)}}?d=mm">
+                                <button tooltip="Delete message" class="close" ng-click="messageCtrl.deleteMessage(msg, $index)" aria-hidden="true" type="button">
                                     &times;
                                 </button>
-                                <div class="message-meta">
+                                <div ng-click="messageCtrl.select(msg)">
+                                  <div class="message-meta">
                                     <div class="pull-left">
                                         <div class="message-subject">{{msg.subject | limitTo:25}}</div>
-                                        <div class="message-from">{{msg.from | limitTo:25}}</div>
-                                        <div class="text-muted">{{msg.date | date:'medium'}}</div>
+                                        <div class="message-from">{{msg.from.fname  | limitTo:10}} {{msg.from.lname  | limitTo:10}}</div>
+                                        <div class="text-muted">{{msg.dateSent | date:'medium'}}</div>
                                     </div>
+                                  </div>
+                                  <div class="message-preview">{{msg.content | limitTo:50}} {{msg.content.length > 50 ? ' ...' : ''}}</div>
                                 </div>
-                                <div class="message-preview">{{msg.content | limitTo:50}} {{msg.content.length > 50 ? ' ...' : ''}}</div>
                             </div>
                         </li>
                     </ul>
@@ -94,18 +98,24 @@
             <h4 class="text-muted"><i class="fa fa-spinner fa-spin"></i>Loading...</h4>
         </div>
         <div class="messages panel-body" ng-if="messageCtrl.selectedMsg">
-            <div class="pull-right text-muted">{{messageCtrl.selectedMsg.date | date:'medium'}}</div>
-            <img class="message-avatar pull-left" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(messageCtrl.selectedMsg.fromEmail)}}?d=mm">
+            <div class="pull-right text-muted">{{messageCtrl.selectedMsg.dateSent | date:'medium'}}</div>
+            <img class="message-avatar pull-left" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(messageCtrl.selectedMsg.from.email)}}?d=mm">
             <div class="pull-left">
                 <span>From:</span>
-                <span>{{messageCtrl.selectedMsg.from}} &lt;{{messageCtrl.selectedMsg.fromEmail}}&gt;</span>
-                <p class="message-list">To: <a title="e-mail: {{to.email}}" ng-repeat="to in messageCtrl.selectedMsg.to">{{ to.name }}; </a>
+                <span>{{messageCtrl.selectedMsg.from.fname}} {{messageCtrl.selectedMsg.from.lname}} &lt;{{messageCtrl.selectedMsg.from.email}}&gt;</span>
+                <p class="message-list">To: <a title="e-mail: {{to.email}}" ng-repeat="to in messageCtrl.selectedMsg.usersCollection" style="text-decoration:none;">
+                    {{ to.fname }} {{ to.lname }}; </a>                
                 </p>
             </div>
 
-            <div class="message-preview scroll">
-                <h3>Project join request</h3>
+            <div class="message-view scroll">
+                <h3>{{messageCtrl.selectedMsg.subject}}</h3>
                 <div ng-bind-html="messageCtrl.selectedMsg.content"></div>
+                <div>
+                    <a ng-if="messageCtrl.selectedMsg.path" ng-click="messageCtrl.close()" href="#/{{messageCtrl.selectedMsg.path}}">
+                      Go to requested path.
+                    </a>
+                </div>
             </div>
 
             <div class="message-box">
@@ -115,9 +125,11 @@
                         <img class="my-avatar img-rounded" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(messageCtrl.email)}}?d=mm">
                     </a>
                     <div class="message-box-body">
-                        <textarea placeholder="Reply here... " class="form-control"></textarea>
+                        <textarea placeholder="Reply here... " class="form-control" ng-model="messageCtrl.newMsg"></textarea>
                     </div>
-
+                    <div class="pull-right">
+                            <a ng-click="messageCtrl.reply()" class="fa fa-paper-plane fa-lg" style="margin-top:-35px; text-decoration: none"> </a>
+                    </div>
                 </div>
             </div>
         </div>

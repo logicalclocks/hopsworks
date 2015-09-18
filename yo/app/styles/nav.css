@@ -102,16 +102,13 @@ nav.navbar-sics ul.dropdown-messages a {
   padding-left: 0px;
 }
 
-.navbar-nav
-.open
-.dropdown-messages > a {
+nav.navbar-sics
+ul.dropdown-messages a {
   margin-top: 10px;
-  color: #005fcc;
+  color: #3485c3;
 }
 
-.navbar-nav
-.open
-.dropdown-messages > a:hover  {
-  color: #005580;
-
+nav.navbar-sics
+ul.dropdown-messages a:hover  {
+  color: #006190;
 }

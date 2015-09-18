@@ -65,28 +65,31 @@
       <div class="collapse navbar-collapse" id="navbar">
         <ul class="nav navbar-nav navbar-right"
             style="margin-right:10px;">
-          <li class="dropdown">
+          <li ng-click="mainCtrl.getMessages()" class="dropdown">
             <a class="dropdown-toggle" style="padding:5px 15px 0px 10px; margin-top: 13px; margin-bottom: -15px;" data-toggle="dropdown"  aria-expanded="false">
-              <i ng-if="true" class="fa fa-envelope fa-lg" title="Unread messages">
-                <span class="badge" style="background-color: #f89406; font-family: sans-serif; z-index: 100; position: absolute; top: -10px; right: -18px">{{mainCtrl.messages.length}}</span>
+              <i ng-if="mainCtrl.unreadMessages" class="fa fa-envelope fa-lg" title="Unread messages">
+                <span class="badge" style="background-color: #f89406; font-family: sans-serif; z-index: 100; position: absolute; top: -10px; right: -18px">{{mainCtrl.unreadMessages}}</span>
               </i>
-              <i ng-if="false" class="fa fa-envelope-o fa-lg" title="No unread message"></i>
+              <i ng-if="!mainCtrl.unreadMessages" class="fa fa-envelope-o fa-lg" title="No unread message"></i>
             </a>
             <ul class=" dropdown-menu dropdown-messages" >
-              <h3 class="text-muted"> Latest messages</h3>
-              <li ng-repeat="msg in mainCtrl.messages">
+              <h3 ng-if="mainCtrl.messages.length" class="text-muted"> Latest messages</h3>
+              <h3 ng-if="!mainCtrl.messages.length" class="text-muted"> No messages to show</h3>
+              <li ng-repeat="msg in mainCtrl.messages | limitTo:5">
                 <div>
                   <i ng-if="msg.unread" class="fa fa-circle pull-left" style="color:#f89406" title="Unread message"></i>
                   <i ng-if="!msg.unread" class="fa fa-circle pull-left" style="color:grey" title="Read message"></i>
-                  <div>
-                    <div class="text-muted pull-right">{{msg.date | date:'medium'}}</div>
+                  <div ng-click="mainCtrl.openMessageModal(msg)">
+                    <div class="text-muted pull-right">{{msg.dateSent | date:'medium'}}</div>
                     <div class="message-subject">{{msg.subject}}</div>
-                    <div class="message-from">{{msg.from}}</div>
-                    <div class="message-preview">{{msg.content | limitTo:80}}{{ msg.content.length > 80 ? ' ...' : ''}}</div>
+                    <div class="message-from">{{msg.from.fname}} {{msg.from.lname}}</div>
                   </div>
+                  <div class="message-preview">{{msg.content | limitTo:80}}{{ msg.content.length > 80 ? ' ...  ' : '  '}}
+                    <a ng-if="msg.path" href="#/{{msg.path}}"> go to requested path.</a>
                   </div>
+                </div>
               </li>
-              <a ng-click="mainCtrl.openMessageModal()" style="text-decoration:none;"> See all messages</a>
+              <a ng-if="mainCtrl.messages.length" ng-click="mainCtrl.openMessageModal()" style="text-decoration:none;"> See all messages</a>
             </ul>
           </li>
           <li class="dropdown">

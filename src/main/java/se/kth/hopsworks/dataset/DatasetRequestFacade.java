@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.hopsworks.dataset;
 
 import java.util.List;
@@ -14,10 +9,7 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
-/**
- *
- * @author ermiasg
- */
+
 @Stateless
 public class DatasetRequestFacade extends AbstractFacade<DatasetRequest> {
 

@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
@@ -23,10 +22,7 @@ import se.kth.hopsworks.user.model.*;
 import se.kth.hopsworks.users.*;
 import se.kth.hopsworks.util.LocalhostServices;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
+
 @Stateless
 //the operations in this method does not need any transaction
 //the actual persisting will in the facades transaction.

@@ -54,10 +54,6 @@ import se.kth.meta.db.TemplateFacade;
 import se.kth.meta.entity.Template;
 import se.kth.meta.exception.DatabaseException;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class DataSetService {

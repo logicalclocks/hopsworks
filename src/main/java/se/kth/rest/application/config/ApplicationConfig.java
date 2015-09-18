@@ -35,6 +35,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.zeppelin.rest.NotebookRestApi.class);
     register(se.kth.hopsworks.zeppelin.rest.ZeppelinRestApi.class);
     register(se.kth.hopsworks.rest.MetadataService.class);
+    register(se.kth.hopsworks.rest.MessageService.class);
     
     // register resources and features
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);

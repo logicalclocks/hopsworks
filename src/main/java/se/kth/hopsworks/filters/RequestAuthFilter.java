@@ -19,9 +19,6 @@ import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.hopsworks.rest.JsonResponse;
 
 /**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- *
  * Request filter that can be used to restrict users accesses to projects based
  * on the role they have for the project and the annotation on the method being
  * called.
