@@ -291,7 +291,9 @@ CREATE TABLE `meta_inodes_ops_parents_buffer` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inodeid` INT(11) NOT NULL,
   `parentid` INT(11) NOT NULL,
-  `processed` TINYINT(1) DEFAULT '0',
+  `operation` SMALLINT(11) NOT NULL,
+  `logical_time` INT(11) NOT NULL,
+  `processed` TINYINT(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
@@ -299,7 +301,9 @@ CREATE TABLE `meta_inodes_ops_datasets_buffer` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inodeid` INT(11) NOT NULL,
   `parentid` INT(11) NOT NULL,
-  `processed` TINYINT(1) DEFAULT '0',
+  `operation` SMALLINT(11) NOT NULL,
+  `logical_time` INT(11) NOT NULL,
+  `processed` TINYINT(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=85 DEFAULT CHARSET=utf8;
 
@@ -307,7 +311,9 @@ CREATE TABLE `meta_inodes_ops_children_p_buffer` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inodeid` INT(11) NOT NULL,
   `parentid` INT(11) NOT NULL,
-  `processed` TINYINT(1) DEFAULT '0',
+  `operation` SMALLINT(11) NOT NULL,
+  `logical_time` INT(11) NOT NULL,
+  `processed` TINYINT(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
@@ -315,7 +321,9 @@ CREATE TABLE `meta_inodes_ops_children_d_buffer` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inodeid` INT(11) NOT NULL,
   `parentid` INT(11) NOT NULL,
-  `processed` TINYINT(1) DEFAULT '0',
+  `operation` SMALLINT(11) NOT NULL,
+  `logical_time` INT(11) NOT NULL,
+  `processed` TINYINT(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
