@@ -105,6 +105,7 @@ public class ElasticService {
     if (!this.indexExists(client, Constants.META_PROJECT_INDEX) || !this.
             indexExists(client, Constants.META_DATASET_INDEX)) {
 
+      logger.log(Level.FINE, "Elastic indices missing");
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
     }
@@ -213,8 +214,8 @@ public class ElasticService {
 
     if (response.status().getStatus() == 200) {
       //logger.log(Level.INFO, "Matched number of documents: {0}", response.
-              //getHits().
-              //totalHits());
+      //getHits().
+      //totalHits());
 
       //construct the response
       List<ElasticHit> elasticHits = new LinkedList<>();
@@ -349,7 +350,7 @@ public class ElasticService {
    * <p/>
    * @param projectName
    * @param searchTerm
-   * 
+   * <p>
    * @return
    */
   private QueryBuilder getChildComboQuery(String projectName, String searchTerm) {
@@ -396,7 +397,7 @@ public class ElasticService {
             .should(metadataPhraseQuery)
             .should(metadataTermsQuery)
             .should(metadataFuzzyQuery);
-    
+
     QueryBuilder intersection = boolQuery()
             .must(hasParentPart)
             .must(childrenQuery);

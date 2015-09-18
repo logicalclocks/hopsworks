@@ -81,7 +81,8 @@
         <form class="navbar-form" role="search">
           <div class="col-md-offset-2 col-md-4 input-group">
             <input type="text" class="form-control" style="height: 28px;margin-top: 3px;" placeholder="Search"
-                   name="srch-term" id="srch-term" ng-model="mainCtrl.searchTerm" ng-change="mainCtrl.keyTyped()" ng-keyup="mainCtrl.hitEnter($event)">
+                   name="srch-term" id="srch-term" ng-model="mainCtrl.searchTerm" ng-model-options="{debounce: 500}"
+                   ng-change="mainCtrl.keyTyped()" ng-keyup="mainCtrl.hitEnter($event)">
 
             <div class="input-group-btn" style="width: 54px;">
               <button class="btn btn-default" style="color: #028e9b;margin-top: 3px; padding: 6px 12px;"

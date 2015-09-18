@@ -96,7 +96,7 @@ public class Constants {
   public static final String META_DESCRIPTION_FIELD = "description";
   public static final String META_DATA_FIELD = "EXTENDED_METADATA";
   public static final String META_PROJECT_INDEX = "project";
-  public static final String META_DATASET_INDEX = "datasets";
+  public static final String META_DATASET_INDEX = "dataset";
   public static final String META_PROJECT_PARENT_TYPE = "parent";
   public static final String META_PROJECT_CHILD_TYPE = "child";
   public static final String META_DATASET_TYPE = "dataset";
