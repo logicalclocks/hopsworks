@@ -289,9 +289,10 @@ CREATE TABLE `meta_inode_basic_metadata` (
   `inode_pid` INT(11) NOT NULL,
   `inode_name` VARCHAR(3000) NOT NULL,
   `description` VARCHAR(3000) DEFAULT NULL,
-  `searchable` TINYINT(1) NOT NULL DEFAULT '0'
-  PRIMARY KEY (`inode_pid`, `inode_name`)
+  `searchable` TINYINT(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`inode_pid`, `inode_name`),
   FOREIGN KEY (`inode_pid`, `inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`, `name`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=ndbcluster CHARSET=latin1;
  
 -- elastic jdbc-importer buffer tables -------
 
@@ -315,7 +316,7 @@ CREATE TABLE `meta_inodes_ops_datasets_buffer` (
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=85 DEFAULT CHARSET=utf8;
 
-CREATE TABLE `meta_inodes_ops_children_p_buffer` (
+CREATE TABLE `meta_inodes_ops_children_pr_buffer` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inodeid` INT(11) NOT NULL,
   `parentid` INT(11) NOT NULL,
@@ -325,7 +326,7 @@ CREATE TABLE `meta_inodes_ops_children_p_buffer` (
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-CREATE TABLE `meta_inodes_ops_children_d_buffer` (
+CREATE TABLE `meta_inodes_ops_children_ds_buffer` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inodeid` INT(11) NOT NULL,
   `parentid` INT(11) NOT NULL,
