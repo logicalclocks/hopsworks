@@ -78,18 +78,21 @@ CREATE TABLE `people_group` (
 
 CREATE TABLE `project` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inode_pid` INT(11) NOT NULL,
+  `inode_name` VARCHAR(3000) NOT NULL,
   `projectname` VARCHAR(128) NOT NULL,
   `username` VARCHAR(45) NOT NULL,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `retention_period` DATE DEFAULT NULL,
   `ethical_status` VARCHAR(30) DEFAULT NULL,
-  `archived` tinyINT(1) DEFAULT '0',
-  `deleted` tinyINT(1) DEFAULT '0',
+  `archived` TINYINT(1) DEFAULT '0',
+  `deleted` TINYINT(1) DEFAULT '0',
   `description` VARCHAR(3000) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE (`projectname`),
-  FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=ndbcluster;
+  FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=ndbcluster CHARSET=latin1;
 
 CREATE TABLE `activity` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -282,7 +285,7 @@ CREATE TABLE `meta_template_to_inode` (
   `inode_name` VARCHAR(3000) NOT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
+  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster CHARSET=latin1;
 
 CREATE TABLE `meta_inode_basic_metadata` (
@@ -291,7 +294,7 @@ CREATE TABLE `meta_inode_basic_metadata` (
   `description` VARCHAR(3000) DEFAULT NULL,
   `searchable` TINYINT(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`inode_pid`, `inode_name`),
-  FOREIGN KEY (`inode_pid`, `inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`, `name`) ON DELETE CASCADE ON UPDATE NO ACTION
+  FOREIGN KEY (`inode_pid`, `inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`, `name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster CHARSET=latin1;
  
 -- elastic jdbc-importer buffer tables -------
@@ -336,7 +339,7 @@ CREATE TABLE `meta_inodes_ops_children_ds_buffer` (
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
----- Dataset table-------------------------------------------------
+-- Dataset table-------------------------------------------------
 CREATE TABLE `dataset` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inode_pid` INT(11) NOT NULL,
@@ -404,7 +407,7 @@ CREATE VIEW `users_groups` AS
 
 
 -- SSH Access -----------
--------------------------
+-- -----------------------
 
 CREATE TABLE `ssh_keys` (
   `uid` INT(11) NOT NULL,
