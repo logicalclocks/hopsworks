@@ -87,23 +87,25 @@ public class ProjectController {
     if (FolderNameValidator.isValidName(newProject.getProjectName())
             && !projectFacade.
             projectExists(newProject.getProjectName())) {
-      //Create a new project object
-      Date now = new Date();
-      Project project = new Project(newProject.getProjectName(), user, now);
-      project.setDescription(newProject.getDescription());
 
       /*
        * first create the folder structure in hdfs. If it is successful move on
-       * to create the project in hopsworks
+       * to create the project in hopsworks database
        */
-      if (mkProjectDIR(project.getName())) {
-        
+      if (mkProjectDIR(newProject.getProjectName())) {
+
+        //Create a new project object
+        Date now = new Date();
+        Project project = new Project(newProject.getProjectName(), user, now);
+        project.setDescription(newProject.getDescription());
+
         Inode projectInode = this.inodes.getProjectRoot(project.getName());
         project.setInode(projectInode);
-        
+
         //Persist project object
-        projectFacade.persistProject(project);
-        projectFacade.flushEm();//flushing it to get project id
+        this.projectFacade.persistProject(project);
+        this.projectFacade.flushEm();
+        
         //Add the activity information
         logActivity(ActivityFacade.NEW_PROJECT,
                 ActivityFacade.FLAG_PROJECT, user, project);

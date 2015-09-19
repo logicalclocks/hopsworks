@@ -59,7 +59,10 @@ import se.kth.hopsworks.dataset.Dataset;
           = "SELECT count(t) FROM Project t WHERE t.owner = :owner"),
   @NamedQuery(name = "Project.findByOwnerAndName",
           query
-          = "SELECT t FROM Project t WHERE t.owner = :owner AND t.name = :name")})
+          = "SELECT t FROM Project t WHERE t.owner = :owner AND t.name = :name"),
+  @NamedQuery(name = "Project.findByInodeId",
+          query
+          = "SELECT t FROM Project t WHERE t.inode.inodePK.parentId = :parentid AND t.inode.inodePK.name = :name")})
 public class Project implements Serializable {
 
   @Column(name = "archived")
@@ -126,7 +129,7 @@ public class Project implements Serializable {
     @JoinColumn(name = "inode_name",
             referencedColumnName = "name")
   })
-  @ManyToOne(optional = false)
+  @OneToOne(optional = false)
   private Inode inode;
 
   public Project() {
@@ -136,8 +139,8 @@ public class Project implements Serializable {
     this.name = name;
     this.archived = false;
   }
-  
-  public Project(String name, Inode inode){
+
+  public Project(String name, Inode inode) {
     this(name);
     this.inode = inode;
   }
@@ -173,14 +176,14 @@ public class Project implements Serializable {
     this.name = name;
   }
 
-  public void setInode(Inode inode){
+  public void setInode(Inode inode) {
     this.inode = inode;
   }
-  
-  public Inode getInode(){
+
+  public Inode getInode() {
     return this.inode;
   }
-  
+
   public User getOwner() {
     return owner;
   }
@@ -211,11 +214,6 @@ public class Project implements Serializable {
 
   public void setDescription(String description) {
     this.description = description;
-  }
-
-  @Override
-  public String toString() {
-    return "se.kth.bbc.project.Project[ name=" + name + " ]";
   }
 
   public Project(Integer id) {
@@ -312,5 +310,11 @@ public class Project implements Serializable {
 
   public void setDatasetCollection(Collection<Dataset> datasetCollection) {
     this.datasetCollection = datasetCollection;
+  }
+
+  @Override
+  public String toString() {
+    return "se.kth.bbc.project.Project[ name=" + this.name + ", id=" + this.id
+            + ", parentId=" + this.inode.getInodePK().getParentId() + " ]";
   }
 }

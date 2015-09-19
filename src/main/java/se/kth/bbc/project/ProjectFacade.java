@@ -40,6 +40,18 @@ public class ProjectFacade extends AbstractFacade<Project> {
     return em.find(Project.class, id);
   }
 
+  public Project findByInodeId(Integer parentId, String name) {
+    TypedQuery<Project> query = this.em.
+            createNamedQuery("Project.findByInodeId", Project.class).
+            setParameter("parentid", parentId).setParameter("name", name);
+
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+
   /**
    * Find all the studies for which the given user is owner. This implies that
    * this user created all the returned studies.
