@@ -176,7 +176,7 @@ public class MessageService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               e.getMessage());
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(msg).build();
   }
 
   private void checkMsgUser(Message msg, Users user) throws AppException {

@@ -78,9 +78,12 @@ angular.module('hopsWorksApp')
                 if (self.newMsg !== "") {
                     MessageService.reply(self.selectedMsg.id, self.newMsg).then(
                         function (success) {
-                            self.selectedMsg.content = self.newMsg +
-                                "/n /n ---------------------------------------------------------------- /n /n"
-                                + self.selectedMsg.content;
+                           self.selectedMsg = success.data;
+                           for (var i = 0; i < self.messages.length; i++) {
+                               if (self.messages[i].id === self.selectedMsg.id) {
+                                   self.messages[i] = self.selectedMsg;
+                               }
+                           }
                         self.newMsg = "";
                         }, function (error) {
 

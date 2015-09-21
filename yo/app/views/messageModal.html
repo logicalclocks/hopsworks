@@ -41,7 +41,7 @@
                                         <div class="text-muted">{{msg.dateSent | date:'medium'}}</div>
                                     </div>
                                   </div>
-                                <div class="message-preview">{{msg.content | limitTo:50}} {{msg.content.length > 50 ? ' ...' : ''}}</div>
+                               <div ng-bind-html="msg.content | limitTo:50" class="message-preview"> {{msg.content.length > 50 ? ' ...' : ''}}</div>
                                 </div>
                             </div>
                         </li>

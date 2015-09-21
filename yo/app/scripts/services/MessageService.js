@@ -23,7 +23,7 @@ angular.module('hopsWorksApp')
                     method: 'POST',
                     url: '/api/message/reply/' + msgId,
                     headers: {
-                        'Content-Type': 'application/text'
+                        'Content-Type': 'text/plain'
                     },
                     data: msg
                 };

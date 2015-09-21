@@ -1,5 +1,6 @@
 package se.kth.hopsworks.message.controller;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
@@ -18,7 +19,7 @@ public class MessageController {
   private final static Logger logger = Logger.getLogger(MessageController.class.
           getName());
   public final String REPLY_SEPARATOR
-          = "/n /n------------------------------------------------------------ /n /n";
+          = "<br> ------------------------------------------------------------ <br>";
   public final int MAX_MESSAGE_SIZE = 65000;
   public final String MORE_MESSAGES = "Too many messages...";
   @EJB
@@ -40,9 +41,11 @@ public class MessageController {
     if (reply.length() > MAX_MESSAGE_SIZE) {
       throw new IllegalArgumentException("Message too long.");
     }
-    String replyMsg = reply + REPLY_SEPARATOR + msg.getContent();
+    String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S").format(msg.getDateSent());
+    String dateAndWriter = "On " + date + ", wrote " + msg.getFrom().getFname() + " " + msg.getFrom().getLname() + " : <br><br>";
+    String replyMsg = reply + REPLY_SEPARATOR + dateAndWriter + msg.getContent();
     if (replyMsg.length() > MAX_MESSAGE_SIZE) {//size of text in mysql is 65535
-      replyMsg = reply + REPLY_SEPARATOR + MORE_MESSAGES;
+      replyMsg = reply + REPLY_SEPARATOR + dateAndWriter + MORE_MESSAGES;
     }
     Message newMsg
             = new Message(user, msg.getFrom(), msg.getFrom(), now, replyMsg, true, false);
