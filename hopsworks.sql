@@ -79,7 +79,7 @@ CREATE TABLE `people_group` (
 CREATE TABLE `project` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inode_pid` INT(11) NOT NULL,
-  `inode_name` VARCHAR(3000) NOT NULL,
+  `inode_name` VARCHAR(255) NOT NULL,
   `projectname` VARCHAR(128) NOT NULL,
   `username` VARCHAR(45) NOT NULL,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -283,7 +283,7 @@ CREATE TABLE `meta_template_to_inode` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `template_id` INT(11) NOT NULL,
   `inode_pid` INT(11) NOT NULL,
-  `inode_name` VARCHAR(3000) NOT NULL,
+  `inode_name` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE CASCADE ON UPDATE NO ACTION,
   FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
@@ -291,7 +291,7 @@ CREATE TABLE `meta_template_to_inode` (
 
 CREATE TABLE `meta_inode_basic_metadata` (
   `inode_pid` INT(11) NOT NULL,
-  `inode_name` VARCHAR(3000) NOT NULL,
+  `inode_name` VARCHAR(255) NOT NULL,
   `description` VARCHAR(3000) DEFAULT NULL,
   `searchable` TINYINT(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`inode_pid`, `inode_name`),
@@ -344,7 +344,7 @@ CREATE TABLE `meta_inodes_ops_children_ds_buffer` (
 CREATE TABLE `dataset` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inode_pid` INT(11) NOT NULL,
-  `inode_name` VARCHAR(3000) NOT NULL,
+  `inode_name` VARCHAR(255) NOT NULL,
   `projectId` INT(11) NOT NULL,
   `description` VARCHAR(3000) DEFAULT NULL,
   `editable` TINYINT(1) NOT NULL DEFAULT '1',
