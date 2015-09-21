@@ -97,6 +97,7 @@ public class DatasetController {
       this.fileOps.setMetaEnabled(dsPath);
       
       try {
+        
         ds = inodes.findByParentAndName(parent, dataSetName);
         Dataset newDS = new Dataset(ds, project);
         newDS.setSearchable(searchable);
@@ -211,9 +212,10 @@ public class DatasetController {
   private boolean createFolder(String path, int template) throws IOException {
     boolean success = false;
     try {
+      
       success = fileOps.mkDir(path);
       //The inode has been created in the file system
-      if (success && template != 0) {
+      if (success && template != 0 && template != -1) {
         //Get the newly created Inode.
         Inode created = inodes.getInodeAtPath(path);
         Template templ = templates.findByTemplateId(template);

@@ -31,6 +31,7 @@ import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.rest.AppException;
+import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
 import se.kth.hopsworks.user.model.SshKeys;
 import se.kth.hopsworks.users.SshkeysFacade;
 import se.kth.hopsworks.util.LocalhostServices;
@@ -105,7 +106,6 @@ public class ProjectController {
         //Persist project object
         this.projectFacade.persistProject(project);
         this.projectFacade.flushEm();
-        
         //Add the activity information
         logActivity(ActivityFacade.NEW_PROJECT,
                 ActivityFacade.FLAG_PROJECT, user, project);
@@ -115,10 +115,6 @@ public class ProjectController {
                 getName());
 
         //Create default DataSets
-        for (Constants.DefaultDataset ds : Constants.DefaultDataset.values()) {
-          datasetController.createDataset(user, project, ds.getName(), ds.
-                  getDescription(), -1, false);
-        }
         return project;
       }
     } else {
@@ -127,6 +123,30 @@ public class ProjectController {
       throw new IllegalArgumentException(ResponseMessages.PROJECT_NAME_EXIST);
     }
     return null;
+  }
+
+  /**
+   * Project default datasets Logs and Resources need to be created in a
+   * separate transaction after the project creation is complete.
+   * <p/>
+   * @param username
+   * @param project
+   * @throws ProjectInternalFoldersFailedException
+   */
+  public void createProjectLogResources(String username, Project project) throws
+          ProjectInternalFoldersFailedException {
+
+    User user = userBean.getUserByEmail(username);
+
+    try {
+      for (Constants.DefaultDataset ds : Constants.DefaultDataset.values()) {
+        datasetController.createDataset(user, project, ds.getName(), ds.
+                getDescription(), -1, false);
+      }
+    } catch (IOException | EJBException e) {
+      throw new ProjectInternalFoldersFailedException(
+              "Could not create project resources ", e);
+    }
   }
 
   /**
@@ -319,21 +339,22 @@ public class ProjectController {
   public boolean removeByID(Integer projectID, String email,
           boolean deleteFilesOnRemove) throws IOException, AppException {
     boolean success = !deleteFilesOnRemove;
-    User user = userBean.getUserByEmail(email);
+    //User user = userBean.getUserByEmail(email);
     Project project = projectFacade.find(projectID);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
-    projectFacade.remove(project);
+
     //if we remove the project we cant store activity that has a reference to it!!
     //logActivity(ActivityFacade.REMOVED_PROJECT,
     //ActivityFacade.FLAG_PROJECT, user, project);
-
     if (deleteFilesOnRemove) {
       String path = File.separator + Constants.DIR_ROOT + File.separator
               + project.getName();
       success = fileOps.rmRecursive(path);
+    } else {
+      projectFacade.remove(project);
     }
     logger.log(Level.FINE, "{0} - project removed.", project.getName());
 
