@@ -103,7 +103,7 @@ CREATE TABLE `activity` (
   `flag` VARCHAR(128) DEFAULT NULL,
   `project_id` INT(11) NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
   FOREIGN KEY (`user_id`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
