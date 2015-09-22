@@ -51,9 +51,14 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
 
   public int addTupleToFile(TupleToFile ttf) throws DatabaseException {
 
-    this.em.persist(ttf);
-    this.em.flush();
+    if (ttf != null && ttf.getId() != -1) {
+      this.em.merge(ttf);
+    } else {
+      this.em.persist(ttf);
+    }
 
+    this.em.flush();
+    
     return ttf.getId();
   }
 

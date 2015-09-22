@@ -135,7 +135,7 @@ public class MetadataService {
     List<MetadataView> metadata = new LinkedList<>();
 
     try {
-      
+
       List<TupleToFile> tuples = ttf.getTuplesByInodeId(inodePid, inodeName);
       MTable table = mtf.getTable(tableid);
 
@@ -312,6 +312,7 @@ public class MetadataService {
 
     Template toremove = null;
 
+    //keep only the selected template to remove
     for (Template template : templates) {
       if (Objects.equals(template.getId(), templateid)) {
         template.getInodes().remove(inode);
@@ -320,7 +321,31 @@ public class MetadataService {
     }
 
     try {
+
+      //remove the inode-template association
       this.templatefacade.updateTemplatesInodesMxN(toremove);
+
+      //remove any associated metadata
+      List<TupleToFile> tuples = ttf.getTuplesByInodeId(inode.getInodePK().
+              getParentId(), inode.getInodePK().getName());
+
+      if (toremove != null) {
+        //scan all tables and fields this template carries
+        for (MTable table : toremove.getMTables()) {
+          for (Field field : table.getFields()) {
+
+            //apply the filter
+            for (RawData raw : field.getRawData()) {
+              for (TupleToFile tuple : tuples) {
+                if (raw.getRawdataPK().getTupleid() == tuple.getId()) {
+                  this.ttf.deleteTTF(tuple);
+                }
+              }
+            }
+          }
+        }
+      }
+
     } catch (DatabaseException e) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
@@ -358,7 +383,7 @@ public class MetadataService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    
+
     String json = "{\"message\": \"{\"tempid\": " + templateid + "}\"}";
 
     //create a request message
@@ -366,10 +391,10 @@ public class MetadataService {
     templateMessage.setSender(sender);
     templateMessage.setAction("fetch_template");
     templateMessage.setMessage(json);
-    ((ContentMessage)templateMessage).setTemplateid(templateid);
-    
+    ((ContentMessage) templateMessage).setTemplateid(templateid);
+
     Message message = this.protocol.GFR(templateMessage);
-    
+
     JsonResponse response = new JsonResponse();
     //message contains all template content
     response.setSuccessMessage(message.getMessage());
