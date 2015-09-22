@@ -386,7 +386,7 @@ CREATE VIEW `users_groups` AS
 
 
 -- SSH Access -----------
--------------------------
+-- -----------------------
 
 CREATE TABLE `ssh_keys` (
   `uid` int(11) NOT NULL,
