@@ -279,7 +279,7 @@ CREATE TABLE `meta_template_to_inode` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `template_id` INT(11) NOT NULL,
   `inode_pid` INT(11) NOT NULL,
-  `inode_name` VARCHAR(3000) NOT NULL,
+  `inode_name` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE CASCADE ON UPDATE NO ACTION,
   FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
@@ -307,7 +307,7 @@ CREATE TABLE `meta_inodes_ops_parents_deleted` (
 CREATE TABLE `dataset` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `inode_pid` int(11) NOT NULL,
-  `inode_name` varchar(3000) NOT NULL,
+  `inode_name` varchar(255) NOT NULL,
   `projectId` int(11) NOT NULL,
   `description` varchar(3000) DEFAULT NULL,
   `editable` tinyint(1) NOT NULL DEFAULT '1',
