@@ -42,17 +42,7 @@ public class StoreMetadataMessage extends MetadataMessage {
     this.message = message;
   }
 
-  public Message getMetadataLogMessage(Inode inode) {
-
-    String json = "{\"datasetid\": " + inode.getInodePK().getParentId()
-            + ", \"inodeid\": " + inode.getId() + "}";
-    MetadataLogMessage msg = new MetadataLogMessage();
-    msg.setMessage(json);
-
-    return msg;
-  }
-
-  //returns the inode id and table id wrapped in an entity class in a list
+  //returns the inode primary key and table id wrapped in an entity class in a list
   public List<EntityIntf> superParseSchema() {
     return super.parseSchema();
   }

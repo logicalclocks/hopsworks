@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
+import se.kth.bbc.project.fb.Inode;
 import se.kth.hopsworks.meta.entity.EntityIntf;
 import se.kth.hopsworks.meta.entity.InodeTableComposite;
 
@@ -92,6 +93,24 @@ public class MetadataMessage implements Message {
     }
 
     return list;
+  }
+
+  /**
+   * A message that translates into an inode mutation (add row in
+   * hdfs_metadata_log table). It is being used both by StoreMetadataMessage and
+   * UpdateMetadataMessage.
+   * <p>
+   * @param inode
+   * @return
+   */
+  public Message getMetadataLogMessage(Inode inode) {
+
+    String json = "{\"datasetid\": " + inode.getInodePK().getParentId()
+            + ", \"inodeid\": " + inode.getId() + "}";
+    MetadataLogMessage msg = new MetadataLogMessage();
+    msg.setMessage(json);
+
+    return msg;
   }
 
   @Override

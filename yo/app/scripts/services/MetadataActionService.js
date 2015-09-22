@@ -137,7 +137,8 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({
                   tableid: tableId, 
                   inodepid: inodePid,
-                  inodename: inodeName})
+                  inodename: inodeName
+                })
               });
             },
             fetchTableMetadata: function (user, tableId) {
@@ -178,12 +179,17 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({fieldid: fieldId})
               });
             },
-            updateMetadata: function (user, metaObj) {
+            updateMetadata: function (user, metaObj, inodepid, inodename) {
               return WSComm.send({
                 sender: user,
                 type: 'UpdateMetadataMessage',
                 action: 'update_metadata',
-                message: JSON.stringify({metaid: metaObj.id, metadata: metaObj.data})
+                message: JSON.stringify({
+                  metaid: metaObj.id, 
+                  inodepid: inodepid,
+                  inodename: inodename,
+                  tableid: -1, //table id is not necessary when updating metadata
+                  metadata: metaObj.data})
               });
             }
           };

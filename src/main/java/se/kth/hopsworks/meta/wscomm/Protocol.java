@@ -18,8 +18,10 @@ import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.meta.wscomm.message.Command;
 import se.kth.hopsworks.meta.wscomm.message.Message;
 import se.kth.hopsworks.meta.wscomm.message.MetadataLogMessage;
+import se.kth.hopsworks.meta.wscomm.message.MetadataMessage;
 import se.kth.hopsworks.meta.wscomm.message.StoreMetadataMessage;
 import se.kth.hopsworks.meta.wscomm.message.TextMessage;
+import se.kth.hopsworks.meta.wscomm.message.UpdateMetadataMessage;
 
 /**
  * Constructs responses depending on the incoming message requests. Maintains
@@ -65,8 +67,9 @@ public class Protocol {
   /**
    * Receives a user message, translates it into the command it represents,
    * executes the command and sends back the produced response.
-   * Command 'store_metadata' is always followed by 'create_meta_log', and these
-   * two must be atomic. Hence the TransactionAttribute annotation
+   * Commands 'store_metadata' and 'update_metadata' are always followed by
+   * 'create_meta_log', and these two must be atomic. Hence the
+   * TransactionAttribute annotation
    * <p>
    * @param message
    * @return
@@ -76,11 +79,14 @@ public class Protocol {
 
     Command action = Command.valueOf(message.getAction().toUpperCase());
 
-    if (action == Command.STORE_METADATA) {
-      return processMessageCm(message);
+    switch (action) {
+      case STORE_METADATA:
+        return this.processStoreMetadataMessageCm(message);
+      case UPDATE_METADATA:
+        return this.processUpdateMetadataMessageCm(message);
+      default:
+        return processMessageNm(message);
     }
-
-    return processMessageNm(message);
   }
 
   /**
@@ -95,21 +101,48 @@ public class Protocol {
    * @throws ApplicationException
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Message processMessageCm(Message message) throws ApplicationException {
+  private Message processStoreMetadataMessageCm(Message message) throws
+          ApplicationException {
 
-    //Persist metadata
     List<EntityIntf> composite = ((StoreMetadataMessage) message).
             superParseSchema();
+    
+    //variables not set in the json message
+    if(composite == null){
+      throw new ApplicationException("Incorrect json message/Missing values");
+    }
     List<EntityIntf> rawData = message.parseSchema();
+
+    //Persist metadata
     Inode inode = this.utils.storeRawData(composite, rawData);
 
-    //create meta-log
-    MetadataLogMessage msg
-            = (MetadataLogMessage) ((StoreMetadataMessage) message).
-            getMetadataLogMessage(inode);
-    HdfsMetadataLog log = (HdfsMetadataLog) msg.parseSchema().get(0);
+    return this.InodeMutation(inode, message);
+  }
 
-    return this.builder.inodeMutationResponse(log);
+  /**
+   * Handles the case of updating existing inode metadata. This action has to be
+   * followed by an inode mutation (i.e. add an entry to hdfs_metadata_log
+   * table) so that elastic rivers will pick up the already indexed inode
+   * <p>
+   * @param message
+   * @return
+   */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  private Message processUpdateMetadataMessageCm(Message message) throws
+          ApplicationException {
+
+    List<EntityIntf> composite = ((UpdateMetadataMessage) message).
+            superParseSchema();
+
+    if(composite == null){
+      throw new ApplicationException("Incorrect json message/Missing values");
+    }
+    //update metadata
+    Metadata metadata = (Metadata) message.parseSchema().get(0);
+    Inode inode = this.utils.updateMetadata(composite, metadata);
+
+    return this.InodeMutation(inode, message);
+
   }
 
   /**
@@ -189,13 +222,20 @@ public class Protocol {
       case IS_FIELD_EMPTY:
         field = (Field) message.parseSchema().get(0);
         return this.builder.checkFieldContents(field);
-
-      case UPDATE_METADATA:
-        Metadata metadata = (Metadata) message.parseSchema().get(0);
-        this.utils.updateMetadata(metadata);
-        return new TextMessage("Server", "Raw data was updated successfully");
     }
 
     return new TextMessage();
+  }
+
+  private Message InodeMutation(Inode inode, Message message) throws
+          ApplicationException {
+
+    //create a meta-log
+    MetadataLogMessage msg = (MetadataLogMessage) ((MetadataMessage) message).
+            getMetadataLogMessage(inode);
+
+    HdfsMetadataLog log = (HdfsMetadataLog) msg.parseSchema().get(0);
+
+    return this.builder.inodeMutationResponse(log);
   }
 }

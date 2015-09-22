@@ -558,7 +558,7 @@ angular.module('hopsWorksApp')
              */
             self.updateMetadata = function (metadata) {
 
-              MetadataActionService.updateMetadata($cookies['email'], metadata)
+              MetadataActionService.updateMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
                       .then(function (response) {
                         growl.success(response.board, {title: 'Success', ttl: 5000});
                 

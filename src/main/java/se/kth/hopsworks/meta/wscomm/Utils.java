@@ -245,7 +245,7 @@ public class Utils {
 
     try {
       /*
-       * get the inodeid present in the entities in the list. It is the
+       * get the inodeid from the entity in the list. It is the
        * same for all the entities, since they constitute a single tuple
        */
       InodeTableComposite itc = (InodeTableComposite) composite.get(0);
@@ -254,7 +254,7 @@ public class Utils {
       Inode parent = this.inodeFacade.findById(itc.getInodePid());
       Inode inode = this.inodeFacade.findByParentAndName(parent, itc.
               getInodeName());
-      
+
       //create a metadata tuple attached to be attached to an inodeid
       TupleToFile ttf = new TupleToFile(-1, inode);
       int tupleid = this.tupletoFileFacade.addTupleToFile(ttf);
@@ -277,7 +277,7 @@ public class Utils {
         this.storeMetaData(metadataList, tupleid);
       }
       return inode;
-      
+
     } catch (DatabaseException e) {
       throw new ApplicationException("Utils.java: could not store raw data ", e);
     }
@@ -286,16 +286,32 @@ public class Utils {
   /**
    * Updates a single raw data record.
    * <p>
+   * @param composite
    * @param meta
+   * @return 
    * @throws ApplicationException
    */
-  public void updateMetadata(Metadata meta) throws ApplicationException {
+  public Inode updateMetadata(List<EntityIntf> composite, Metadata meta) throws
+          ApplicationException {
     try {
+
+      /*
+       * get the inodeid from the entity in the list. It is the
+       * same for all the entities, since they constitute a single tuple
+       */
+      InodeTableComposite itc = (InodeTableComposite) composite.get(0);
+
+      //get the inode
+      Inode parent = this.inodeFacade.findById(itc.getInodePid());
+      Inode inode = this.inodeFacade.findByParentAndName(parent, itc.
+              getInodeName());
 
       Metadata metadata = this.metadataFacade.getMetadataById(meta.
               getMetadataPK().getId());
       metadata.setData(meta.getData());
       this.metadataFacade.addMetadata(metadata);
+      
+      return inode;
     } catch (DatabaseException e) {
       throw new ApplicationException("Utils.java: could not update metadata ", e);
     }
