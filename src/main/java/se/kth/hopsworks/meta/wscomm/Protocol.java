@@ -7,6 +7,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import se.kth.bbc.project.fb.Inode;
 import se.kth.hopsworks.meta.entity.EntityIntf;
 import se.kth.hopsworks.meta.entity.Field;
 import se.kth.hopsworks.meta.entity.HdfsMetadataLog;
@@ -100,12 +101,12 @@ public class Protocol {
     List<EntityIntf> composite = ((StoreMetadataMessage) message).
             superParseSchema();
     List<EntityIntf> rawData = message.parseSchema();
-    this.utils.storeRawData(composite, rawData);
+    Inode inode = this.utils.storeRawData(composite, rawData);
 
     //create meta-log
     MetadataLogMessage msg
             = (MetadataLogMessage) ((StoreMetadataMessage) message).
-            getMetadataLogMessage();
+            getMetadataLogMessage(inode);
     HdfsMetadataLog log = (HdfsMetadataLog) msg.parseSchema().get(0);
 
     return this.builder.inodeMutationResponse(log);

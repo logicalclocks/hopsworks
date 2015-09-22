@@ -6,6 +6,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import se.kth.bbc.project.fb.Inode;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 import se.kth.hopsworks.meta.entity.TupleToFile;
 import se.kth.hopsworks.meta.exception.DatabaseException;
@@ -37,13 +38,14 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
     return this.em.find(TupleToFile.class, tupleid);
   }
 
-  public List<TupleToFile> getTuplesByInode(int inodeid) throws
-          DatabaseException {
+  public List<TupleToFile> getTuplesByInodeId(Integer parentId, String inodeName)
+          throws DatabaseException {
 
     String queryString = "TupleToFile.findByInodeid";
 
     Query query = this.em.createNamedQuery(queryString);
-    query.setParameter("inodeid", inodeid);
+    query.setParameter("parentid", parentId);
+    query.setParameter("name", inodeName);
     return query.getResultList();
   }
 

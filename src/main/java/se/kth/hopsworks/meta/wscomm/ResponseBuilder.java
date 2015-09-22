@@ -227,8 +227,8 @@ public class ResponseBuilder {
       FetchMetadataMessage message = new FetchMetadataMessage("Server", "");
 
       MTable t = this.tableFacade.getTable(itc.getTableid());
-      List<TupleToFile> ttfList = this.tupletofileFacade.getTuplesByInode(itc.
-              getInodeid());
+      List<TupleToFile> ttfList = this.tupletofileFacade.getTuplesByInodeId(itc.
+              getInodePid(), itc.getInodeName());
 
       List<Field> fields = t.getFields();
 
@@ -438,8 +438,7 @@ public class ResponseBuilder {
   }
 
   /**
-   * Creates an inode mutation by copying a folder from a given path to the
-   * destination path. SHOULD change to mv, but mv fails for now
+   * Creates an inode mutation by writing directly to hdfs_metadata_log table.
    * <p>
    * @param log
    * @return
@@ -464,11 +463,13 @@ public class ResponseBuilder {
         i++;
         factor += 0.4;
       }
+      //increase the logical time
       log.getHdfsMetadataLogPK().setLtime(log.getHdfsMetadataLogPK().
               getLtime() + 1);
     }
 
-    //flow control reached here, means the log was not persisted to database 
+    //flow control reached here, means the log was not persisted to database.
+    //rollback the transaction
     throw new ApplicationException(
             "Inode log was not written to database. Max number of retries reached");
   }

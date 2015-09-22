@@ -10,12 +10,16 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.project.fb.Inode;
 
 /**
  *
@@ -30,10 +34,11 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "TupleToFile.findById",
           query = "SELECT t FROM TupleToFile t WHERE t.tupleid = :tupleid"),
   @NamedQuery(name = "TupleToFile.findByInodeid",
-          query = "SELECT t FROM TupleToFile t WHERE t.inodeid = :inodeid"),
+          query
+          = "SELECT t FROM TupleToFile t WHERE t.inode.inodePK.parentId = :parentid AND t.inode.inodePK.name = :name"),
   @NamedQuery(name = "TupleToFile.findByTupleidAndInodeid",
           query
-          = "SELECT t FROM TupleToFile t WHERE t.tupleid = :tupleid AND t.inodeid = :inodeid")})
+          = "SELECT t FROM TupleToFile t WHERE t.tupleid = :tupleid AND t.inode.inodePK.parentId = :parentid AND t.inode.inodePK.name = :name")})
 
 public class TupleToFile implements Serializable, EntityIntf {
 
@@ -46,10 +51,14 @@ public class TupleToFile implements Serializable, EntityIntf {
   @Column(name = "tupleid")
   private Integer tupleid;
 
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "inodeid")
-  private int inodeid;
+  @JoinColumns({
+    @JoinColumn(name = "inode_pid",
+            referencedColumnName = "parent_id"),
+    @JoinColumn(name = "inode_name",
+            referencedColumnName = "name")
+  })
+  @ManyToOne(optional = false)
+  private Inode inode;
 
   @OneToMany(mappedBy = "tupleToFile",
           targetEntity = RawData.class,
@@ -60,9 +69,9 @@ public class TupleToFile implements Serializable, EntityIntf {
   public TupleToFile() {
   }
 
-  public TupleToFile(int tupleid, int inodeid) {
+  public TupleToFile(int tupleid, Inode inode) {
     this.tupleid = tupleid;
-    this.inodeid = inodeid;
+    this.inode = inode;
   }
 
   public TupleToFile(Integer tupleid) {
@@ -74,7 +83,7 @@ public class TupleToFile implements Serializable, EntityIntf {
     TupleToFile t = (TupleToFile) ttf;
 
     this.tupleid = t.getId();
-    this.inodeid = t.getInodeid();
+    this.inode = new Inode(t.getInode());
     this.raw = t.getRawData();
   }
 
@@ -88,12 +97,12 @@ public class TupleToFile implements Serializable, EntityIntf {
     this.tupleid = id;
   }
 
-  public int getInodeid() {
-    return inodeid;
+  public Inode getInode() {
+    return this.inode;
   }
 
-  public void setInodeid(int inodeid) {
-    this.inodeid = inodeid;
+  public void setInode(Inode inode) {
+    this.inode = inode;
   }
 
   /*
@@ -131,7 +140,8 @@ public class TupleToFile implements Serializable, EntityIntf {
 
   @Override
   public String toString() {
-    return "se.kth.meta.entity.TupleToFile[ id=" + tupleid + " ]";
+    return "se.kth.meta.entity.TupleToFile[ id=" + this.tupleid + ", inode="
+            + this.inode + " ]";
   }
 
 }

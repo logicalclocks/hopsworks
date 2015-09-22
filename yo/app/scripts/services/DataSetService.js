@@ -113,8 +113,8 @@ angular.module('hopsWorksApp')
                 detachTemplate: function(inodeid, templateid){
                   return $http.get('/api/metadata/detachtemplate/' + inodeid + '/' + templateid);
                 },
-                fetchMetadata: function (inodeId, tableId) {
-                  return $http.get('/api/metadata/fetchmetadata/' + inodeId + '/' + tableId);
+                fetchMetadata: function (inodePid, inodeName, tableId) {
+                  return $http.get('/api/metadata/fetchmetadata/' + inodePid + '/' + inodeName + '/' + tableId);
                 }
               };
               return services;

@@ -10,8 +10,10 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.persistence.PersistenceException;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.project.fb.Inode;
+import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.bbc.project.fb.InodePK;
 import se.kth.hopsworks.meta.db.FieldFacade;
 import se.kth.hopsworks.meta.db.FieldPredefinedValueFacade;
 import se.kth.hopsworks.meta.db.HdfsMetadataLogFacade;
@@ -61,6 +63,8 @@ public class Utils {
   private FileOperations fops;
   @EJB
   private HdfsMetadataLogFacade mlf;
+  @EJB
+  private InodeFacade inodeFacade;
 
   public Utils() {
   }
@@ -233,9 +237,10 @@ public class Utils {
    * <p>
    * @param composite
    * @param raw
+   * @return The inode
    * @throws ApplicationException
    */
-  public void storeRawData(List<EntityIntf> composite, List<EntityIntf> raw)
+  public Inode storeRawData(List<EntityIntf> composite, List<EntityIntf> raw)
           throws ApplicationException {
 
     try {
@@ -245,8 +250,13 @@ public class Utils {
        */
       InodeTableComposite itc = (InodeTableComposite) composite.get(0);
 
+      //get the inode
+      Inode parent = this.inodeFacade.findById(itc.getInodePid());
+      Inode inode = this.inodeFacade.findByParentAndName(parent, itc.
+              getInodeName());
+      
       //create a metadata tuple attached to be attached to an inodeid
-      TupleToFile ttf = new TupleToFile(-1, itc.getInodeid());
+      TupleToFile ttf = new TupleToFile(-1, inode);
       int tupleid = this.tupletoFileFacade.addTupleToFile(ttf);
 
       //every rawData entity carries the same inodeid
@@ -266,7 +276,8 @@ public class Utils {
         //move on to persist the child entities
         this.storeMetaData(metadataList, tupleid);
       }
-
+      return inode;
+      
     } catch (DatabaseException e) {
       throw new ApplicationException("Utils.java: could not store raw data ", e);
     }
@@ -412,11 +423,11 @@ public class Utils {
    * Creates a fake inode operation in hdfs_metadata_log table.
    * <p>
    * @param log
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException 
+   * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void createMetadataLog(HdfsMetadataLog log) throws DatabaseException {
 
-      this.mlf.addHdfsMetadataLog(log);
+    this.mlf.addHdfsMetadataLog(log);
   }
 }

@@ -74,18 +74,21 @@ public class MetadataMessage implements Message {
     JsonObject obj = Json.createReader(new StringReader(this.message)).
             readObject();
 
-    JsonObject metadata = obj.getJsonObject("metadata");
     List<EntityIntf> list = null;
 
     try {
-      int inodeid = metadata.getInt("inodeid");
-      int tableid = metadata.getInt("tableid");
+      int inodePid = obj.getInt("inodepid");
+      String inodeName = obj.getString("inodename");
+      int tableid = obj.getInt("tableid");
 
-      InodeTableComposite itc = new InodeTableComposite(tableid, inodeid);
+      InodeTableComposite itc = new InodeTableComposite(tableid, inodePid,
+              inodeName);
+
       list = new LinkedList<>();
       list.add(itc);
     } catch (NullPointerException e) {
-      logger.log(Level.SEVERE, "Inodeid or tableid not present in the message");
+      logger.log(Level.SEVERE,
+              "Inodepid or inodename or tableid not present in the message");
     }
 
     return list;

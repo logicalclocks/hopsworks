@@ -56,13 +56,13 @@ public class HdfsMetadataLogFacade extends AbstractFacade<HdfsMetadataLog> {
    */
   public void addHdfsMetadataLog(HdfsMetadataLog log) throws DatabaseException {
 
-        try {
-          
-          this.em.persist(log);
-          this.em.flush();
-        } catch (PersistenceException e) {
-          throw new DatabaseException(e.getMessage(), e);
-        }
+    try {
+
+      this.em.persist(log);
+      this.em.flush();
+    } catch (PersistenceException e) {
+      throw new DatabaseException(e.getMessage(), e);
+    }
   }
 
   public boolean contains(HdfsMetadataLog hm) {

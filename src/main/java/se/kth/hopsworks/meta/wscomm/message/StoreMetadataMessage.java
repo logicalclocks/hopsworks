@@ -10,6 +10,7 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
+import se.kth.bbc.project.fb.Inode;
 import se.kth.hopsworks.meta.entity.EntityIntf;
 import se.kth.hopsworks.meta.entity.Metadata;
 import se.kth.hopsworks.meta.entity.RawData;
@@ -23,9 +24,6 @@ public class StoreMetadataMessage extends MetadataMessage {
 
   private static final Logger logger = Logger.
           getLogger(StoreMetadataMessage.class.getName());
-
-  private int datasetId;
-  private int inodeId;
 
   public StoreMetadataMessage() {
     super();
@@ -44,18 +42,13 @@ public class StoreMetadataMessage extends MetadataMessage {
     this.message = message;
   }
 
-  public Message getMetadataLogMessage() {
-    JsonObject obj = Json.createReader(new StringReader(this.message)).
-            readObject();
+  public Message getMetadataLogMessage(Inode inode) {
 
-    //initialize the projectid and projectInodeid - the actual parent node
-    this.datasetId = obj.getInt("parentid");
-    this.inodeId = obj.getInt("inodeid");
-    
-    String json = "{\"datasetid\": " + this.datasetId + ", \"inodeid\": " + this.inodeId + "}";
+    String json = "{\"datasetid\": " + inode.getInodePK().getParentId()
+            + ", \"inodeid\": " + inode.getId() + "}";
     MetadataLogMessage msg = new MetadataLogMessage();
     msg.setMessage(json);
-    
+
     return msg;
   }
 

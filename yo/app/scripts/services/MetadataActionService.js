@@ -129,12 +129,15 @@ angular.module('hopsWorksApp')
                 message: 'null'
               });
             },
-            fetchMetadata: function (user, tableId, inodeId) {
+            fetchMetadata: function (user, tableId, inodePid, inodeName) {
               return WSComm.send({
                 sender: user,
                 type: 'FetchMetadataMessage',
                 action: 'fetch_metadata',
-                message: JSON.stringify({tableid: tableId, inodeid: inodeId})
+                message: JSON.stringify({
+                  tableid: tableId, 
+                  inodepid: inodePid,
+                  inodename: inodeName})
               });
             },
             fetchTableMetadata: function (user, tableId) {
@@ -146,14 +149,15 @@ angular.module('hopsWorksApp')
               });
             },
             //contains an inode mutation message as well (projectid, inodeid)
-            storeMetadata: function (user, parentid, inodeid, data) {
+            storeMetadata: function (user, parentid, inodename, tableid, data) {
               return WSComm.send({
                 sender: user,
                 type: 'StoreMetadataMessage',
                 action: 'store_metadata',
                 message: JSON.stringify({
-                  parentid: parentid,
-                  inodeid: inodeid,
+                  inodepid: parentid,
+                  inodename: inodename,
+                  tableid: tableid,
                   metadata: data
                 })
               });
@@ -180,14 +184,6 @@ angular.module('hopsWorksApp')
                 type: 'UpdateMetadataMessage',
                 action: 'update_metadata',
                 message: JSON.stringify({metaid: metaObj.id, metadata: metaObj.data})
-              });
-            },
-            createFileMutation: function(user, projectid, inodeid){
-              return WSComm.send({
-                sender: user,
-                type: 'MetadataLogMessage',
-                action: 'create_meta_log',
-                message: JSON.stringify({projectid: projectid, inodeid: inodeid})
               });
             }
           };
