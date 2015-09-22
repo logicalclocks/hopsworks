@@ -25,6 +25,7 @@ import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.bbc.project.fb.InodePK;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.meta.db.MTableFacade;
@@ -106,7 +107,8 @@ public class MetadataService {
   /**
    * Fetch metadata associated to an inode by table id
    * <p>
-   * @param inodeid
+   * @param inodePid
+   * @param inodeName
    * @param tableid
    * @param sc
    * @param req
@@ -114,16 +116,17 @@ public class MetadataService {
    * @throws AppException
    */
   @GET
-  @Path("fetchmetadata/{inodeid}/{tableid}")
+  @Path("fetchmetadata/{inodepid}/{inodename}/{tableid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response fetchMetadata(
-          @PathParam("inodeid") Integer inodeid,
+          @PathParam("inodepid") Integer inodePid,
+          @PathParam("inodename") String inodeName,
           @PathParam("tableid") Integer tableid,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    if (inodeid == null || tableid == null) {
+    if (inodePid == null || inodeName == null || tableid == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
@@ -132,7 +135,8 @@ public class MetadataService {
     List<MetadataView> metadata = new LinkedList<>();
 
     try {
-      List<TupleToFile> tuples = ttf.getTuplesByInode(inodeid);
+      
+      List<TupleToFile> tuples = ttf.getTuplesByInodeId(inodePid, inodeName);
       MTable table = mtf.getTable(tableid);
 
       List<Field> fields = table.getFields();
@@ -179,7 +183,7 @@ public class MetadataService {
     } catch (DatabaseException ex) {
       logger.log(Level.WARNING, "Trying to fetch metadata.", ex);
       throw new AppException(Response.Status.NO_CONTENT.getStatusCode(),
-              "Could not fetch the metadata for the file " + inodeid + ".");
+              "Could not fetch the metadata for the file " + inodeName + ".");
     }
   }
 
