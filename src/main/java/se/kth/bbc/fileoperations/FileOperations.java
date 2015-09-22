@@ -288,5 +288,19 @@ public class FileOperations {
     Path path = new Path(location);
     this.fsOps.setMetaEnabled(path);
   }
-
+  
+  
+  /**
+   * Compress a file from the given location
+   * <p/>
+   * @param location
+   * @return
+   * @throws IOException 
+   */
+  public boolean compress(String location) throws IOException {
+    
+    Path path = new Path(location);
+    return this.fsOps.compress(path);
+  }
+  
 }

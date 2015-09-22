@@ -10,6 +10,8 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
+import io.hops.metadata.hdfs.entity.EncodingPolicy;
+import io.hops.metadata.hdfs.entity.EncodingStatus;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -31,10 +33,12 @@ public class FileSystemOperations {
           FileSystemOperations.class.getName());
   private DistributedFileSystem dfs;
   private Configuration conf;
+  private String CORE_CONF_DIR;
 
   @PostConstruct
   public void init() {
     try {
+      CORE_CONF_DIR = System.getenv("HADOOP_CONF_DIR");
       dfs = getDfs();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
@@ -100,28 +104,29 @@ public class FileSystemOperations {
    */
   private DistributedFileSystem getDfs() throws IOException {
 
-    String coreConfDir = System.getenv("HADOOP_CONF_DIR");
     //If still not found: throw exception
-    if (coreConfDir == null) {
+    if (CORE_CONF_DIR == null) {
       logger.log(Level.WARNING, "No configuration path set, using default: "
               + Constants.DEFAULT_HADOOP_CONF_DIR);
-      coreConfDir = Constants.DEFAULT_HADOOP_CONF_DIR;
+      CORE_CONF_DIR = Constants.DEFAULT_HADOOP_CONF_DIR;
     }
 
     //Get the configuration file at found path
-    File hadoopConfFile = new File(coreConfDir, "core-site.xml");
+    File hadoopConfFile = new File(CORE_CONF_DIR, "core-site.xml");
     if (!hadoopConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               hadoopConfFile);
       throw new IllegalStateException("No hadoop conf file: core-site.xml");
     }
-    File yarnConfFile = new File(coreConfDir, "yarn-site.xml");
+
+    File yarnConfFile = new File(CORE_CONF_DIR, "yarn-site.xml");
     if (!yarnConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               yarnConfFile);
       throw new IllegalStateException("No yarn conf file: yarn-site.xml");
     }
-    File hdfsConfFile = new File(coreConfDir, "hdfs-site.xml");
+
+    File hdfsConfFile = new File(CORE_CONF_DIR, "hdfs-site.xml");
     if (!hdfsConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               hdfsConfFile);
@@ -240,5 +245,48 @@ public class FileSystemOperations {
   public boolean mkdir(Path location) throws IOException {
 
     return dfs.mkdir(location, FsPermission.getDefault());
+  }
+
+  /**
+   * Compress a directory in the given path
+   * <p/>
+   * @param location
+   * @return
+   * @throws IOException
+   */
+  public boolean compress(Path location) throws IOException,
+          IllegalStateException {
+
+    //add the erasure coding configuration file
+    File erasureCodingConfFile
+            = new File(CORE_CONF_DIR, "erasure-coding-site.xml");
+    if (!erasureCodingConfFile.exists()) {
+      logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
+              erasureCodingConfFile);
+      throw new IllegalStateException(
+              "No erasure coding conf file: erasure-coding-site.xml");
+    }
+
+    this.conf.addResource(new Path(erasureCodingConfFile.getAbsolutePath()));
+
+    DistributedFileSystem localDfs = this.getDfs();
+    localDfs.setConf(this.conf);
+
+    EncodingPolicy policy = new EncodingPolicy("src", (short) 1);
+
+    String path = location.toUri().getPath();
+    localDfs.encodeFile(path, policy);
+
+//    EncodingStatus encodingStatus;
+//    while (!(encodingStatus = localDfs.getEncodingStatus(path)).isEncoded()) {
+//      try {
+//        Thread.sleep(1000);
+//        logger.log(Level.INFO, "ongoing file compression of {0} ", path);
+//      } catch (InterruptedException e) {
+//        logger.log(Level.SEVERE, "Wait for encoding thread was interrupted.");
+//        return false;
+//      }
+//    }
+    return true;
   }
 }

@@ -190,6 +190,20 @@ angular.module('hopsWorksApp')
               });
             };
 
+            self.compress = function (file) {
+              var pathArray = self.pathArray.slice(0);
+              pathArray.push(file.name);
+              var filePath = getPath(pathArray);
+              
+              dataSetService.checkFileExist(filePath).then(
+                      function (success) {
+                        
+                        console.log("FILE PATH IS " + filePath);
+                        dataSetService.compressFile(filePath);
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+              });
+            }
             /**
              * Opens a modal dialog for sharing.
              * @returns {undefined}

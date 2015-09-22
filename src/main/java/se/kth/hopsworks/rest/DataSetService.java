@@ -98,7 +98,7 @@ public class DataSetService {
 
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
-    this.project = projectFacade.find(projectId);
+    this.project = this.projectFacade.find(projectId);
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator
             + this.project.getName();
@@ -350,9 +350,9 @@ public class DataSetService {
           DataSetDTO dataSet,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    
+
     User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
-    
+
     try {
       datasetController.createDataset(user, project, dataSet.getName(), dataSet.
               getDescription(), dataSet.getTemplate(), dataSet.isSearchable());
@@ -517,6 +517,48 @@ public class DataSetService {
     DownloadService downloader = new DownloadService();
     downloader.setPath(path);
     return downloader;
+  }
+
+  @Path("compressFile/{path: .+}")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response compressFile(@PathParam("path") String path) throws
+          AppException {
+
+    if (path == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "File not found");
+    }
+
+    path = this.getFullPath(path);
+    String parts[] = path.split(File.separator);
+
+    if (!parts[2].equals(this.project.getName())) {
+      if (!this.dataset.isEditable()) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "You can not compress files in a shared dataset.");
+      }
+    }
+
+    if (!path.endsWith(File.separator)) {
+      path = path + File.separator;
+    }
+
+    String response = "File compressed suffessfully";
+
+    try {
+      if (!this.fileOps.compress(path)) {
+        response = "File size is too small.";
+      }
+    } catch (IOException e) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Could not compress file at path " + path + ". " + e.getMessage());
+    }
+    
+    JsonResponse json = new JsonResponse();
+    json.setSuccessMessage(response);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
   }
 
   @Path("upload/{path: .+}")

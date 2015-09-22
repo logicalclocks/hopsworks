@@ -110,7 +110,7 @@
                                       <a class="pointer"
                                          role="menuitem"
                                          tabindex="1"
-                                         ng-click="panel.highlight = true">
+                                         ng-click="panel.highlight = true; datasetsCtrl.compress(file); $event.stopPropagation();">
                                         <span><i class="fa fa-file-archive-o"></i>
                                           Compress</span>
                                       </a>
