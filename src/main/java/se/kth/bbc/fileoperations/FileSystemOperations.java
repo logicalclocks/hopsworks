@@ -277,16 +277,16 @@ public class FileSystemOperations {
     String path = location.toUri().getPath();
     localDfs.encodeFile(path, policy);
 
-//    EncodingStatus encodingStatus;
-//    while (!(encodingStatus = localDfs.getEncodingStatus(path)).isEncoded()) {
-//      try {
-//        Thread.sleep(1000);
-//        logger.log(Level.INFO, "ongoing file compression of {0} ", path);
-//      } catch (InterruptedException e) {
-//        logger.log(Level.SEVERE, "Wait for encoding thread was interrupted.");
-//        return false;
-//      }
-//    }
+    EncodingStatus encodingStatus;
+    while (!(encodingStatus = localDfs.getEncodingStatus(path)).isEncoded()) {
+      try {
+        Thread.sleep(1000);
+        logger.log(Level.INFO, "ongoing file compression of {0} ", path);
+      } catch (InterruptedException e) {
+        logger.log(Level.SEVERE, "Wait for encoding thread was interrupted.");
+        return false;
+      }
+    }
     return true;
   }
 }
