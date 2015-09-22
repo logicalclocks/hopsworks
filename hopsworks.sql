@@ -258,8 +258,11 @@ CREATE TABLE `meta_field_predefined_values` (
 
 CREATE TABLE `meta_tuple_to_file` (
   `tupleid` INT(11) NOT NULL AUTO_INCREMENT,
-  `inodeid` INT(11) NOT NULL,
-  PRIMARY KEY (`tupleid`)
+  `inode_pid` INT(11) NOT NULL,
+  `inode_name` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`tupleid`),
+  UNIQUE KEY(`inode_pid`, `inode_name`),
+  FOREIGN KEY (`inode_pid`, `inode_name`) REFERENCES `hops`.`hdfs_inodes` (`parent_id`, `name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_raw_data` (
@@ -285,6 +288,7 @@ CREATE TABLE `meta_template_to_inode` (
   `inode_pid` INT(11) NOT NULL,
   `inode_name` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY(`inode_pid`, `inode_name`),
   FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE CASCADE ON UPDATE NO ACTION,
   FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster CHARSET=latin1;
