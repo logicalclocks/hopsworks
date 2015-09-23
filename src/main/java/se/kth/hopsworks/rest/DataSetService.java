@@ -518,7 +518,7 @@ public class DataSetService {
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response isDir(@PathParam("path") String path) throws
           AppException {
-    
+
     if (path == null) {
       path = "";
     }
@@ -530,28 +530,54 @@ public class DataSetService {
 
       String message = "";
       JsonResponse response = new JsonResponse();
-      
+
       //if it exists and it's not a dir, it must be a file
       if (!exists || !isDir) {
         message = "FILE";
         response.setSuccessMessage(message);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(response).build();
-      } 
-      else if (exists && isDir) {
+      } else if (exists && isDir) {
         message = "DIR";
         response.setSuccessMessage(message);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(response).build();
       }
- 
+
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "File does not exist: " + path);
     }
     throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "The requested path does not resolve to a valid dir");
+            "The requested path does not resolve to a valid dir");
+  }
+
+  @GET
+  @Path("countFileBlocks/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response countFileBlocks(@PathParam("path") String path) throws
+          AppException {
+
+    if (path == null) {
+      path = "";
+    }
+    path = getFullPath(path);
+
+    try {
+
+      String blocks = this.fileOps.getFileBlocks(path);
+      String response = blocks;
+      
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(response).build();
+
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "File does not exist: " + path);
+    }
   }
 
   @Path("fileDownload/{path: .+}")

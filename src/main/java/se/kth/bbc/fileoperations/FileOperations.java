@@ -300,5 +300,18 @@ public class FileOperations {
     Path path = new Path(location);
     return this.fsOps.compress(path);
   }
+  
+  /**
+   * Returns the number of blocks of a file in the given path.
+   * The path has to resolve to a file.
+   * <p/>
+   * @param location
+   * @return
+   * @throws IOException 
+   */
+  public String getFileBlocks(String location) throws IOException {
+    Path path = new Path(location);
+    return this.fsOps.getFileBlocks(path);
+  }
 
 }

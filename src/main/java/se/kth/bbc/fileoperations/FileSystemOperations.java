@@ -13,6 +13,8 @@ import javax.ejb.Stateless;
 import io.hops.metadata.hdfs.entity.EncodingPolicy;
 import io.hops.metadata.hdfs.entity.EncodingStatus;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.ContentSummary;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -288,5 +290,31 @@ public class FileSystemOperations {
       }
     }
     return true;
+  }
+
+  /**
+   * Calculates the number of blocks a file holds. The given path has to resolve
+   * to a file
+   * <p/>
+   * @param path
+   * @return
+   * @throws IOException
+   */
+  public String getFileBlocks(Path path) throws IOException {
+
+    if (this.dfs.isFile(path)) {
+      FileStatus filestatus = this.dfs.getFileStatus(path);
+
+      //get the size of the file in bytes
+      long filesize = filestatus.getLen();
+      long noOfBlocks = (long) Math.ceil(filesize / filestatus.getBlockSize());
+
+      logger.log(Level.INFO, "File: {0}, No of blocks: {1}", new Object[]{path,
+        noOfBlocks});
+
+      return "" + noOfBlocks;
+    }
+
+    return "-1";
   }
 }

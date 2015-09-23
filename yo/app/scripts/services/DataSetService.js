@@ -44,6 +44,9 @@ angular.module('hopsWorksApp')
                 compressFile: function(fileName) {
                   return $http.get('/api/project/' + id + '/dataset/compressFile/' + fileName);
                 },
+                checkFileBlocks: function(fileName){
+                  return $http.get('/api/project/' + id + '/dataset/countFileBlocks/' + fileName);
+                },
                 isDir: function(path){
                   return $http.get('/api/project/' + id + '/dataset/isDir/' + path);
                 },

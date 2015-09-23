@@ -207,14 +207,23 @@ angular.module('hopsWorksApp')
                             //if the path is a file go on
                             dataSetService.checkFileExist(filePath).then(
                                     function (successs) {
-                                      ModalService.alert('sm', 'Confirm', 'This operation is going to run in the background').then(
-                                              function (successs) {
-                                                console.log("FILE PATH IS " + filePath);
-                                                dataSetService.compressFile(filePath);
-                                              });
-                                    }, function (error) {
-                              growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                            });
+                                      //check the number of blocks in the file
+                                      dataSetService.checkFileBlocks(filePath).then(
+                                              function (successss) {
+                                                var noOfBlocks = parseInt(successss.data.successMessage);
+                                                if (noOfBlocks >= 10) {
+                                                  ModalService.alert('sm', 'Confirm', 'This operation is going to run in the background').then(
+                                                          function (successss) {
+                                                            console.log("FILE PATH IS " + filePath);
+                                                            dataSetService.compressFile(filePath);
+                                                          });
+                                                }else{
+                                                  growl.error("The requested file is too small to be compressed", {title: 'Error', ttl: 5000});
+                                                }
+                                              }, function (error) {
+                                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                      });
+                                    });
                         }
 
                       }, function (error) {
