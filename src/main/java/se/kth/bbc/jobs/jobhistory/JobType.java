@@ -11,7 +11,7 @@ public enum JobType {
   FLINK("Flink"),
   SPARK("Spark"),
   ADAM("ADAM"),
-  ERASURE_CODE("ERASURE_CODE");
+  ERASURE_CODING("ERASURE_CODING");
 
   private final String readable;
 

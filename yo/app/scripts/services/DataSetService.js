@@ -42,7 +42,7 @@ angular.module('hopsWorksApp')
                   location.href='/hopsworks/api/project/' + id + '/dataset/fileDownload/' + fileName;
                 },
                 compressFile: function(fileName) {
-                  location.href='/hopsworks/api/project/' + id + '/dataset/compressFile/' + fileName;
+                  return $http.get('/api/project/' + id + '/dataset/compressFile/' + fileName);
                 },
                 upload: function (dataSetPath) {
                   return $http.post('/api/project/' + id + '/dataset/upload/' + dataSetPath);

@@ -32,7 +32,14 @@ import javax.ws.rs.core.SecurityContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import se.kth.bbc.activity.ActivityFacade;
+import se.kth.bbc.fileoperations.ErasureCodeJob;
+import se.kth.bbc.fileoperations.ErasureCodeJobConfiguration;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
+import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
+import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
@@ -44,6 +51,7 @@ import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.DatasetController;
 import se.kth.hopsworks.controller.FileTemplateDTO;
+import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
@@ -53,6 +61,8 @@ import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.UserFacade;
 
 /**
  * @author André<amore@kth.se>
@@ -87,6 +97,12 @@ public class DataSetService {
   private TemplateFacade template;
   @EJB
   private DatasetController datasetController;
+  @EJB
+  private AsynchronousJobExecutor async;
+  @EJB
+  private UserFacade userfacade;
+  @EJB
+  private JobController jobcontroller;
 
   private Integer projectId;
   private Project project;
@@ -521,7 +537,8 @@ public class DataSetService {
 
   @Path("compressFile/{path: .+}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response compressFile(@PathParam("path") String path) throws
+  public Response compressFile(@PathParam("path") String path,
+          @Context SecurityContext context) throws
           AppException {
 
     if (path == null) {
@@ -543,18 +560,34 @@ public class DataSetService {
       path = path + File.separator;
     }
 
-    String response = "File compressed suffessfully";
+    Users user = this.userfacade.findByEmail(context.getUserPrincipal().
+            getName());
 
-    try {
-      if (!this.fileOps.compress(path)) {
-        response = "File size is too small.";
-      }
-    } catch (IOException e) {
+    ErasureCodeJobConfiguration ecConfig
+            = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
+            getJobConfigurationTemplate(JobType.ERASURE_CODING);
+    ecConfig.setFilePath(path);
+            
+    //persist the job in the database
+    JobDescription jobdesc = this.jobcontroller.createJob(user, project,
+            ecConfig);
+    //instantiate the job
+    ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, user, this.async);
+    //persist a job execution instance in the database and get its id
+    Execution exec = encodeJob.requestExecutionId();
+
+    if (exec != null) {
+      //start the actual job execution i.e. compress the file in a different thread
+      this.async.startExecution(encodeJob);
+    } else {
+      logger.log(Level.SEVERE,
+              "Failed to persist JobHistory. Aborting execution.");
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
-              "Could not compress file at path " + path + ". " + e.getMessage());
+              "Failed to persist JobHistory. File compression aborted");
     }
-    
+
+    String response = "File compression runs in background";
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage(response);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
