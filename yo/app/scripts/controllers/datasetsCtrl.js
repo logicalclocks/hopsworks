@@ -194,16 +194,33 @@ angular.module('hopsWorksApp')
               var pathArray = self.pathArray.slice(0);
               pathArray.push(file.name);
               var filePath = getPath(pathArray);
-              
-              dataSetService.checkFileExist(filePath).then(
+
+              //check if the path is a dir
+              dataSetService.isDir(filePath).then(
                       function (success) {
-                        
-                        console.log("FILE PATH IS " + filePath);
-                        dataSetService.compressFile(filePath);
+                        var object = success.data.successMessage;
+                        switch (object) {
+                          case "DIR":
+                            ModalService.alert('sm', 'Alert', 'You can only compress files').then();
+                            break;
+                          case "FILE":
+                            //if the path is a file go on
+                            dataSetService.checkFileExist(filePath).then(
+                                    function (successs) {
+                                      ModalService.alert('sm', 'Confirm', 'This operation is going to run in the background').then(
+                                              function (successs) {
+                                                console.log("FILE PATH IS " + filePath);
+                                                dataSetService.compressFile(filePath);
+                                              });
+                                    }, function (error) {
+                              growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                            });
+                        }
+
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
-            }
+            };
+
             /**
              * Opens a modal dialog for sharing.
              * @returns {undefined}

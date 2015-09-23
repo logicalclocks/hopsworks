@@ -178,9 +178,8 @@ public class FileOperations {
     Inode i = inodes.getInodeAtPath(path);
     if (i != null) {
       return i.isDir();
-    } else {
-      return false;
     }
+    return false;
   }
 
   /**
@@ -288,19 +287,18 @@ public class FileOperations {
     Path path = new Path(location);
     this.fsOps.setMetaEnabled(path);
   }
-  
-  
+
   /**
    * Compress a file from the given location
    * <p/>
    * @param location
    * @return
-   * @throws IOException 
+   * @throws IOException
    */
   public boolean compress(String location) throws IOException {
-    
+
     Path path = new Path(location);
     return this.fsOps.compress(path);
   }
-  
+
 }

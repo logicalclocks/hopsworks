@@ -495,13 +495,14 @@ public class DataSetService {
       path = "";
     }
     path = getFullPath(path);
-    Configuration conf = new Configuration();
-    conf.addResource(new org.apache.hadoop.fs.Path(
-            Constants.DEFAULT_HADOOP_CONF_DIR + "core-site.xml"));
-    FileSystem hdfs;
+
     try {
-      hdfs = FileSystem.get(conf);
-      hdfs.open(new org.apache.hadoop.fs.Path(path));
+      boolean exists = this.fileOps.exists(path);
+
+      //check if the path is a file only if it exists
+      if (!exists || this.fileOps.isDir(path)) {
+        throw new IOException("The file does not exist");
+      }
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -509,6 +510,48 @@ public class DataSetService {
     }
     Response.ResponseBuilder response = Response.ok();
     return response.build();
+  }
+
+  @GET
+  @Path("isDir/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response isDir(@PathParam("path") String path) throws
+          AppException {
+    
+    if (path == null) {
+      path = "";
+    }
+    path = getFullPath(path);
+
+    try {
+      boolean exists = this.fileOps.exists(path);
+      boolean isDir = this.fileOps.isDir(path);
+
+      String message = "";
+      JsonResponse response = new JsonResponse();
+      
+      //if it exists and it's not a dir, it must be a file
+      if (!exists || !isDir) {
+        message = "FILE";
+        response.setSuccessMessage(message);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(response).build();
+      } 
+      else if (exists && isDir) {
+        message = "DIR";
+        response.setSuccessMessage(message);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(response).build();
+      }
+ 
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "File does not exist: " + path);
+    }
+    throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "The requested path does not resolve to a valid dir");
   }
 
   @Path("fileDownload/{path: .+}")
@@ -567,7 +610,7 @@ public class DataSetService {
             = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
             getJobConfigurationTemplate(JobType.ERASURE_CODING);
     ecConfig.setFilePath(path);
-            
+
     //persist the job in the database
     JobDescription jobdesc = this.jobcontroller.createJob(user, project,
             ecConfig);
