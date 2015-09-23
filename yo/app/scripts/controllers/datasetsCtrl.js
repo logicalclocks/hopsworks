@@ -190,6 +190,19 @@ angular.module('hopsWorksApp')
               });
             };
 
+            /**
+             * Applies erasure coding in the file represented by the given path.
+             * It checks
+             * .. if the given path resolves to an actual file
+             * .. if the given path is an existing file
+             * .. if the given file is large enough (comprises more than 10 blocks)
+             * 
+             * If all of the above are met, the compression takes place in an asynchronous operation
+             * and the user gets notified when it finishes via a message
+             * 
+             * @param {type} file
+             * @returns {undefined}
+             */
             self.compress = function (file) {
               var pathArray = self.pathArray.slice(0);
               pathArray.push(file.name);
