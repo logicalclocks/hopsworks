@@ -1,6 +1,8 @@
 #!/bin/bash
 # Deploy the frontend to the glassfish home directory and run bower
 
+cd ..
+
 # Check if GLASSFISH_HOME is set
 if [ -z "$GLASSFISH_HOME" ]; then
     echo "GLASSFISH_HOME is not set. Set it to the directory in which your glassfish instance is installed."
