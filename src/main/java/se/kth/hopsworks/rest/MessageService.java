@@ -120,6 +120,24 @@ public class MessageService {
     msgFacade.edit(msg);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
+  
+  @PUT
+  @Path("restoreFromTrash/{msgId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response restoreFromTrash(@PathParam("msgId") Integer msgId,
+          @Context SecurityContext sc) throws AppException {
+    String eamil = sc.getUserPrincipal().getName();
+    Users user = userFacade.findByEmail(eamil);
+    Message msg = msgFacade.find(msgId);
+    if (msg == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Message not found.");
+    }
+    checkMsgUser(msg, user);//check if the user is the owner of the message
+    msg.setDeleted(false);
+    msgFacade.edit(msg);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
 
   @DELETE
   @Path("{msgId}")

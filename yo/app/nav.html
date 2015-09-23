@@ -84,7 +84,8 @@
                     <div class="message-subject">{{msg.subject}}</div>
                     <div class="message-from">{{msg.from.fname}} {{msg.from.lname}}</div>
                   </div>
-                  <div class="message-preview">{{msg.content | limitTo:80}}{{ msg.content.length > 80 ? ' ...  ' : '  '}}
+                  <div class="message-preview">
+                    <div class="message-preview">{{msg.preview | limitTo:80}} {{msg.preview.length > 80 ? ' ...' : ''}}</div>
                     <a ng-if="msg.path" href="#/{{msg.path}}"> go to requested path.</a>
                   </div>
                 </div>

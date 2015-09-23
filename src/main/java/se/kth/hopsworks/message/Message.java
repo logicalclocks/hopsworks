@@ -118,13 +118,9 @@ public class Message implements Serializable {
     this.id = id;
   }
 
-  public Message(Users from, Users to, Users recipient, Date dateSent, String content, boolean unread,
+  public Message(Users from, Users to, Date dateSent, String content, boolean unread,
           boolean deleted) {
     this.from = from;
-    if (this.usersCollection == null) {
-     this.usersCollection = new ArrayList<>();
-    }
-    this.usersCollection.add(recipient);
     this.to = to;
     this.dateSent = dateSent;
     this.content = content;

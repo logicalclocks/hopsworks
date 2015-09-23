@@ -21,7 +21,7 @@ public class MessageController {
   public final String REPLY_SEPARATOR
           = "<br> ------------------------------------------------------------ <br>";
   public final int MAX_MESSAGE_SIZE = 65000;
-  public final String MORE_MESSAGES = "Too many messages...";
+  public final String MORE_MESSAGES = "Too many messages to show...";
   @EJB
   private MessageFacade messageFacade;
 
@@ -41,14 +41,14 @@ public class MessageController {
     if (reply.length() > MAX_MESSAGE_SIZE) {
       throw new IllegalArgumentException("Message too long.");
     }
-    String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S").format(msg.getDateSent());
-    String dateAndWriter = "On " + date + ", wrote " + msg.getFrom().getFname() + " " + msg.getFrom().getLname() + " : <br><br>";
-    String replyMsg = reply + REPLY_SEPARATOR + dateAndWriter + msg.getContent();
-    if (replyMsg.length() > MAX_MESSAGE_SIZE) {//size of text in mysql is 65535
-      replyMsg = reply + REPLY_SEPARATOR + dateAndWriter + MORE_MESSAGES;
+    String date = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(msg.getDateSent());
+    String dateAndWriter = "On " + date + ", " + user.getFname() + " " + user.getLname() + " wrote: <br><br>";
+    String replyMsg = REPLY_SEPARATOR + dateAndWriter + reply + msg.getContent();
+    if (replyMsg.length() > MAX_MESSAGE_SIZE) {//size of text in db is 65535
+      replyMsg = REPLY_SEPARATOR + dateAndWriter + reply + MORE_MESSAGES;
     }
     Message newMsg
-            = new Message(user, msg.getFrom(), msg.getFrom(), now, replyMsg, true, false);
+            = new Message(user, msg.getFrom(), now, replyMsg, true, false);
     messageFacade.create(newMsg);
     msg.setContent(replyMsg);
     messageFacade.edit(msg);
@@ -77,8 +77,11 @@ public class MessageController {
     if (msg.length() > MAX_MESSAGE_SIZE) {
       throw new IllegalArgumentException("Message too long.");
     }
+    String date = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(now);
+    String dateAndWriter = "On " + date + ", " + from.getFname() + " " + from.getLname() + " wrote: <br><br>";
+    String message = REPLY_SEPARATOR + dateAndWriter + msg;
     Message newMsg
-            = new Message(from, to, to, now, msg, true, false);
+            = new Message(from, to, now, message, true, false);
     newMsg.setPath(requestPath);
     messageFacade.create(newMsg);
   }

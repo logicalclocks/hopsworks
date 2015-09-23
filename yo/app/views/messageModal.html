@@ -6,7 +6,7 @@
 <div class="modal-body">
 <div growl reference="13" class="pull-right"></div>
 <div class="row" style="margin: 0px">
-    <div class="panel message-panel col-md-4 " style="width: 29%;">
+    <div class="panel message-panel col-xs-4 col-sm-4 col-md-4" style="width: 29%;">
         <a ng-click="messageCtrl.refresh()" tooltip="Refresh Panel" class="pull-right" style="padding-top: 10px; padding-right: 15px; color: #c1c2c3">
             <i class="fa fa-refresh" ng-class="{'fa-spin':messageCtrl.refreshing}"></i>
         </a><br>
@@ -41,7 +41,7 @@
                                         <div class="text-muted">{{msg.dateSent | date:'medium'}}</div>
                                     </div>
                                   </div>
-                               <div ng-bind-html="msg.content | limitTo:50" class="message-preview"> {{msg.content.length > 50 ? ' ...' : ''}}</div>
+                                  <div class="message-preview">{{msg.preview | limitTo:80}} {{msg.preview.length > 80 ? ' ...' : ''}}</div>
                                 </div>
                             </div>
                         </li>
@@ -80,7 +80,7 @@
                                         <div class="text-muted">{{msg.dateSent | date:'medium'}}</div>
                                     </div>
                                   </div>
-                                  <div class="message-preview">{{msg.content | limitTo:50}} {{msg.content.length > 50 ? ' ...' : ''}}</div>
+                                  <div class="message-preview">{{msg.preview | limitTo:80}} {{msg.preview.length > 80 ? ' ...' : ''}}</div>
                                 </div>
                             </div>
                         </li>
@@ -90,7 +90,7 @@
         </tabset>
 
     </div>
-    <div class="panel message-panel col-md-8 pull-right" style="width: 70%;">
+    <div class="panel message-panel col-xs-8 col-sm-8 col-md-8 pull-right" style="width: 70%;">
         <div class="panel-body" ng-if="messageCtrl.selectedMsg === undefined">
             <h4 class="text-muted">No message selected.</h4>
         </div>
@@ -98,18 +98,24 @@
             <h4 class="text-muted"><i class="fa fa-spinner fa-spin"></i>Loading...</h4>
         </div>
         <div class="messages panel-body" ng-if="messageCtrl.selectedMsg">
-            <div class="pull-right text-muted">{{messageCtrl.selectedMsg.dateSent | date:'medium'}}</div>
+            <div ng-if="messageCtrl.selectedMsg.deleted" class="pull-right" ng-click="messageCtrl.restore(messageCtrl.selectedMsg)">
+              <i class="fa fa-undo  text-muted"> Restore</i>
+            </div>
             <img class="message-avatar pull-left" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(messageCtrl.selectedMsg.from.email)}}?d=mm">
             <div class="pull-left">
-                <span>From:</span>
-                <span>{{messageCtrl.selectedMsg.from.fname}} {{messageCtrl.selectedMsg.from.lname}} &lt;{{messageCtrl.selectedMsg.from.email}}&gt;</span>
-                <p class="message-list">To: <a title="e-mail: {{to.email}}" ng-repeat="to in messageCtrl.selectedMsg.usersCollection" style="text-decoration:none;">
-                    {{ to.fname }} {{ to.lname }}; </a>                
-                </p>
+               <span>From: </span>
+                    <span>{{messageCtrl.selectedMsg.from.fname}} {{messageCtrl.selectedMsg.from.lname}} &lt;{{messageCtrl.selectedMsg.from.email}}&gt;</span>
+                    <br>
+                    <span>Subject: </span>
+                    <span>{{messageCtrl.selectedMsg.subject}}</span>
+                    <br>
+                    <span ng-if="messageCtrl.selectedMsg.usersCollection.length > 0" class="message-list">To: <a title="e-mail: {{to.email}}" ng-repeat="to in messageCtrl.selectedMsg.usersCollection" style="text-decoration:none;">
+                        {{ to.fname }} {{ to.lname }}; </a>
+                    </span>
+                    <br><br>
             </div>
 
             <div class="message-view scroll">
-                <h3>{{messageCtrl.selectedMsg.subject}}</h3>
                 <div ng-bind-html="messageCtrl.selectedMsg.content"></div>
                 <div>
                     <a ng-if="messageCtrl.selectedMsg.path" ng-click="messageCtrl.close()" href="#/{{messageCtrl.selectedMsg.path}}">
@@ -118,7 +124,7 @@
                 </div>
             </div>
 
-            <div class="message-box">
+            <div ng-if="!messageCtrl.selectedMsg.deleted" class="message-box">
                 <p></p>
                 <div >
                     <a class="pull-left">

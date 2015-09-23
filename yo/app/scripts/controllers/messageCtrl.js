@@ -123,6 +123,16 @@ angular.module('hopsWorksApp')
 
                     });
             };
+            self.restore = function (msg) {
+                MessageService.restoreFromTrash(msg.id).then(
+                    function (success) {
+                        getMessages();
+                        getTrash();
+                        msg.deleted = false;
+                    }, function (error) {
+
+                    });
+            };
 
             self.emailMd5Hash = function (email) {
                 return md5.createHash(email || '');

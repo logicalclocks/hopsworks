@@ -32,6 +32,9 @@ angular.module('hopsWorksApp')
             moveToTrash: function (msgId) {
                 return $http.put('/api/message/moveToTrash/' + msgId);
             },
+            restoreFromTrash: function (msgId) {
+                return $http.put('/api/message/restoreFromTrash/' + msgId);
+            },
             deleteMessage: function (msgId) {
                 return $http.delete('/api/message/' + msgId);
             }
