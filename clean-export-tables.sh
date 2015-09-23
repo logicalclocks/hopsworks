@@ -1,6 +1,6 @@
 #!/bin/bash
 
-schema=hopsworks.sql
+schema=sql/hopsworks.sql
 
 perl -pi -e "s/.*DEFINER=\`\w.*//g" schema 
 perl -pi -e "s/InnoDB/NDBCLUSTER/g" schema 
