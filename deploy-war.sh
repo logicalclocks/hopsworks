@@ -2,8 +2,8 @@
 set -e
 #mvn clean install
 
-cp hopsworks.sql ../hopsworks-chef/templates/default/tables.sql.erb
-cp rows.sql ../hopsworks-chef/templates/default/rows.sql.erb
+cp sql/hopsworks.sql ../hopsworks-chef/templates/default/tables.sql.erb
+cp sql/rows.sql ../hopsworks-chef/templates/default/rows.sql.erb
 #cd ../hopsworks-chef
 #git commit -am "Updating schema"
 #git push
