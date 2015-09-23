@@ -23,7 +23,7 @@ import se.kth.hopsworks.user.model.Users;
 
 /**
  * Interaction point between the Spark front- and backend.
- * <p>
+ * <p/>
  * @author stig
  */
 @Stateless
@@ -41,7 +41,7 @@ public class SparkController {
 
   /**
    * Start the Spark job as the given user.
-   * <p>
+   * <p/>
    * @param job
    * @param user
    * @return
@@ -84,7 +84,7 @@ public class SparkController {
    * Check if the Spark jars are in HDFS. If it's not, try and copy it there
    * from
    * the local filesystem. If it's still not there, then return false.
-   * <p>
+   * <p/>
    * @return
    */
   private boolean isSparkJarAvailable() {
@@ -116,7 +116,7 @@ public class SparkController {
   /**
    * Inspect the jar on the given path for execution. Returns a
    * SparkJobConfiguration object with a default configuration for this job.
-   * <p>
+   * <p/>
    * @param path
    * @return
    * @throws IOException

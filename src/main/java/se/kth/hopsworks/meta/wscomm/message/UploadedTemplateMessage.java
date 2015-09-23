@@ -11,7 +11,7 @@ import se.kth.hopsworks.meta.entity.EntityIntf;
 
 /**
  * Represents the message produced by an uploaded file
- * <p>
+ * <p/>
  * @author vangelis
  */
 public class UploadedTemplateMessage extends ContentMessage {
@@ -51,7 +51,7 @@ public class UploadedTemplateMessage extends ContentMessage {
   /**
    * Produces a TemplateMessage initialized with a template name ready to be
    * persisted in the database
-   * <p>
+   * <p/>
    * @return
    */
   public Message addNewTemplateMessage() {
@@ -70,7 +70,7 @@ public class UploadedTemplateMessage extends ContentMessage {
   /**
    * Produces a TemplateMessage initialized with the template contents ready to
    * be persisted in the database
-   * <p>
+   * <p/>
    * @param templateId
    * @return
    */

@@ -2,7 +2,7 @@ package se.kth.hopsworks.meta.entity;
 
 /**
  * JSONifiable version of a Template object.
- * <p>
+ * <p/>
  * @author vangelis
  */
 public class TemplateView {

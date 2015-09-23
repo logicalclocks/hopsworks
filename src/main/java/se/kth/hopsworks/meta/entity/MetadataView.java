@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * JSONifiable version of the Metadata entity so that it is restful accessed.
  * It either represents a flat list of metadata, or a group of metadata
- * <p>
+ * <p/>
  * @author vangelis
  */
 @XmlRootElement

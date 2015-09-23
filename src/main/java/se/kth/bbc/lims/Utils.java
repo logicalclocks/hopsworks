@@ -84,7 +84,7 @@ public final class Utils {
 
   /**
    * Checks if a given file contains actual json content.
-   * <p>
+   * <p/>
    * @param pathName
    * @return
    * @throws FileNotFoundException

@@ -65,7 +65,7 @@ public class ProjectPrivacyManager {
 
   /**
    * Get all the Consents for the given Project.
-   * <p>
+   * <p/>
    * @param project
    * @return The Consent object, or null if none has been found.
    */
@@ -79,7 +79,7 @@ public class ProjectPrivacyManager {
   //TODO: this method is very badly designed. Not sure if it's supposed to count the number of consents, or ...?
   /**
    * Get the consent by its name.
-   * <p>
+   * <p/>
    * @param name
    * @return The Consent object, or null if none has been found.
    * @throws ParseException

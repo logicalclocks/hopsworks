@@ -26,7 +26,7 @@ import se.kth.hopsworks.meta.wscomm.message.UpdateMetadataMessage;
 /**
  * Constructs responses depending on the incoming message requests. Maintains
  * the communication with the front end.
- * <p>
+ * <p/>
  * @author Vangelis
  */
 @Stateless(name = "protocol")
@@ -70,7 +70,7 @@ public class Protocol {
    * Commands 'store_metadata' and 'update_metadata' are always followed by
    * 'create_meta_log', and these two must be atomic. Hence the
    * TransactionAttribute annotation
-   * <p>
+   * <p/>
    * @param message
    * @return
    * @throws ApplicationException
@@ -95,7 +95,7 @@ public class Protocol {
    * hdfs_metadata_log table) so that elastic rivers will pick up the already
    * indexed inode, but this time along with its attached metadata.
    * Those two actions have to be executed atomically (either all or nothing)
-   * <p>
+   * <p/>
    * @param message. The incoming message
    * @return
    * @throws ApplicationException
@@ -123,7 +123,7 @@ public class Protocol {
    * Handles the case of updating existing inode metadata. This action has to be
    * followed by an inode mutation (i.e. add an entry to hdfs_metadata_log
    * table) so that elastic rivers will pick up the already indexed inode
-   * <p>
+   * <p/>
    * @param message
    * @return
    */
@@ -148,7 +148,7 @@ public class Protocol {
   /**
    * Processes incoming messages according to the command they carry, and
    * produces the appropriate message response
-   * <p>
+   * <p/>
    * @param message. The incoming message
    * @return
    * @throws ApplicationException

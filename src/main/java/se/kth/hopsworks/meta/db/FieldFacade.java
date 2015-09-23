@@ -78,7 +78,7 @@ public class FieldFacade extends AbstractFacade<Field> {
    * Deletes a fields entity. If the object is an
    * unmanaged entity it has to be merged to become managed so that the delete
    * can cascade down its associations if necessary
-   * <p>
+   * <p/>
    *
    * @param field the field object that's going to be re
    * @throws se.kth.hopsworks.meta.exception.DatabaseException when the field to be
@@ -100,7 +100,7 @@ public class FieldFacade extends AbstractFacade<Field> {
 
   /**
    * Checks if a field instance is a managed entity
-   * <p>
+   * <p/>
    * @param field
    * @return
    */

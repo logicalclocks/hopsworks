@@ -16,7 +16,7 @@ public class ServletAwareConfig extends ServerEndpointConfig.Configurator {
    * Intercept the handshake operation so that we can take a hold of the
    * ServletContext instance to be able to retrieve attributes stored to it
    * such as the database object and other similar class instances
-   * <p>
+   * <p/>
    * @param config
    * @param request
    * @param response
@@ -31,7 +31,7 @@ public class ServletAwareConfig extends ServerEndpointConfig.Configurator {
     config.getUserProperties().put("httpSession", httpSession);
     config.getUserProperties().put("user", request.getUserPrincipal().getName());
 
-    /**
+    /*
      * store these attributes to servletContext so that they are available to
      * every created user socket session
      */

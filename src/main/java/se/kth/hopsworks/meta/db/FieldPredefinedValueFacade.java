@@ -47,7 +47,7 @@ public class FieldPredefinedValueFacade extends AbstractFacade<FieldPredefinedVa
    * all its previously defined values need to be purged before the new
    * ones take their place i.e. a field gets its type changed from a dropdown
    * list to true/false, or to plain text
-   * <p>
+   * <p/>
    *
    * @param fieldid
    * @throws se.kth.hopsworks.meta.exception.DatabaseException when an error happens

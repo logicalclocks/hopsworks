@@ -62,7 +62,7 @@ public abstract class ContentMessage implements Message {
   /**
    * Builds a JSON object that represents the front end board based on the
    * message action. It's the inverse of parseSchema()
-   * <p>
+   * <p/>
    *
    * @param entities Entities is a list of MTable objects
    * @return the schema as a JSON string
@@ -89,7 +89,7 @@ public abstract class ContentMessage implements Message {
 
   /**
    * Creates a json response with just the template names
-   * <p>
+   * <p/>
    * @param entities
    * @return
    */
@@ -116,7 +116,7 @@ public abstract class ContentMessage implements Message {
 
   /**
    * Creates a json response with all the content a template carries
-   * <p>
+   * <p/>
    * @param entities
    * @return
    */

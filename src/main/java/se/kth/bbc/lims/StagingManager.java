@@ -8,7 +8,7 @@ import javax.ejb.Singleton;
 
 /**
  * Basically provides a temporary folder in which to stage uploaded files.
- * <p>
+ * <p/>
  * @author stig
  */
 @Singleton

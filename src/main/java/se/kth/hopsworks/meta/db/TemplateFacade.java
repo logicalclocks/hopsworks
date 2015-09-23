@@ -113,7 +113,7 @@ public class TemplateFacade extends AbstractFacade<Template> {
 
   /**
    * Find the Template that has <i>templateid</i> as id.
-   * <p>
+   * <p/>
    * @param templateid
    * @return Null if no such template was found.
    */
@@ -133,7 +133,7 @@ public class TemplateFacade extends AbstractFacade<Template> {
 
   /**
    * Update the relationship table <i>meta_template_to_inode</i>
-   * <p>
+   * <p/>
    * @param template
    * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */

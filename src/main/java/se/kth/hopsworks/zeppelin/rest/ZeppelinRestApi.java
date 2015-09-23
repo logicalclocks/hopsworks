@@ -11,7 +11,7 @@ public class ZeppelinRestApi {
 
   /**
    * Get the root endpoint Return always 200.
-   * <p>
+   * <p/>
    * @return 200 response
    */
   @GET

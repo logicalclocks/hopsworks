@@ -71,7 +71,7 @@ public class Utils {
 
   /**
    * Persist a new template in the database
-   * <p>
+   * <p/>
    * @param template
    * @return
    * @throws ApplicationException
@@ -89,7 +89,7 @@ public class Utils {
   /**
    * Updates a template name. addNewTemplate handles persisting/updating the
    * entity
-   * <p>
+   * <p/>
    * @param template
    * @return
    * @throws ApplicationException
@@ -100,7 +100,7 @@ public class Utils {
 
   /**
    * Deletes a template from the database
-   * <p>
+   * <p/>
    * @param template
    * @throws ApplicationException
    */
@@ -116,7 +116,7 @@ public class Utils {
   /**
    * Persist a list of tables and all their corresponding child entities in the
    * database
-   * <p>
+   * <p/>
    * @param list
    * @throws ApplicationException
    */
@@ -158,7 +158,7 @@ public class Utils {
 
   /**
    * Stores the predefined values for a field
-   * <p>
+   * <p/>
    * @param list
    * @param fieldId
    * @throws ApplicationException
@@ -183,7 +183,7 @@ public class Utils {
 
   /**
    * Removes a table from the database
-   * <p>
+   * <p/>
    * @param table
    * @throws ApplicationException
    */
@@ -199,7 +199,7 @@ public class Utils {
 
   /**
    * Removes a field from the database
-   * <p>
+   * <p/>
    * @param field
    * @throws ApplicationException
    */
@@ -216,7 +216,7 @@ public class Utils {
 
   /**
    * Removes a field's predefined values
-   * <p>
+   * <p/>
    * @param fieldid
    * @throws ApplicationException
    */
@@ -234,7 +234,7 @@ public class Utils {
    * Stores the raw data for an inode. Creates a tuple first and
    * associates it with the given inode. Raw data at this point is just a field
    * id and a tupleid
-   * <p>
+   * <p/>
    * @param composite
    * @param raw
    * @return The inode
@@ -285,7 +285,7 @@ public class Utils {
 
   /**
    * Updates a single raw data record.
-   * <p>
+   * <p/>
    * @param composite
    * @param meta
    * @return 
@@ -320,7 +320,7 @@ public class Utils {
   /**
    * Stores the actual metadata for an inode. Associates a raw data record with
    * a metadata record in the meta_data table
-   * <p>
+   * <p/>
    * @param metadatalist
    * @param tupleid
    * @throws ApplicationException
@@ -345,7 +345,7 @@ public class Utils {
    * Renames a given dir path. Used when attaching metadata to already
    * indexed inodes as a means to get those inodes again in the metadata log
    * table. Elastic rivers will pick them up again along with their metadata
-   * <p>
+   * <p/>
    * @param path
    * @param specialChar
    * @throws ApplicationException
@@ -396,7 +396,7 @@ public class Utils {
    * Copies a given dir to destination. Used when attaching metadata to already
    * indexed inodes as a means to get those inodes again in the metadata log
    * table. Elastic rivers will pick them up again along with their metadata
-   * <p>
+   * <p/>
    * @param path the source path
    * @param destination the destination path
    * @throws ApplicationException
@@ -421,7 +421,7 @@ public class Utils {
 
   /**
    * Removes a dir recursively from the file system.
-   * <p>
+   * <p/>
    * @param path. The path of the directory to be removed
    * @throws ApplicationException
    */
@@ -437,7 +437,7 @@ public class Utils {
 
   /**
    * Creates a fake inode operation in hdfs_metadata_log table.
-   * <p>
+   * <p/>
    * @param log
    * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */

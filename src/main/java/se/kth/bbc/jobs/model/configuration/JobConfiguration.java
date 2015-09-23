@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import java.util.EnumSet;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.fileoperations.ErasureCodeJobConfiguration;
 import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
@@ -130,6 +131,9 @@ public abstract class JobConfiguration implements JsonReduceable {
         case YARN:
           conf = new YarnJobConfiguration();
           break;
+        case ERASURE_CODE:
+          conf = new ErasureCodeJobConfiguration();
+          break;
         default:
           throw new UnsupportedOperationException(
                   "The given jobtype is not recognized by this factory.");
@@ -160,6 +164,9 @@ public abstract class JobConfiguration implements JsonReduceable {
         case YARN:
           conf = new YarnJobConfiguration();
           break;
+        case ERASURE_CODE:
+          conf = new ErasureCodeJobConfiguration();
+          break;
         default:
           throw new UnsupportedOperationException(
                   "The given jobtype is not recognized by this factory.");
@@ -169,7 +176,7 @@ public abstract class JobConfiguration implements JsonReduceable {
 
     public static Set<JobType> getSupportedTypes() {
       return EnumSet.of(JobType.ADAM, JobType.CUNEIFORM, JobType.SPARK,
-              JobType.YARN);
+              JobType.YARN, JobType.ERASURE_CODE);
     }
   }
 }

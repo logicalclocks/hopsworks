@@ -9,7 +9,7 @@ import se.kth.hopsworks.dataset.Dataset;
 /**
  * Simplified version of the Inode entity to allow for easier access through web
  * interface.
- * <p>
+ * <p/>
  * @author stig
  */
 @XmlRootElement
@@ -36,7 +36,7 @@ public final class InodeView {
 
   /**
    * Constructor for sub folders
-   * <p>
+   * <p/>
    * @param i
    * @param path
    */
@@ -61,7 +61,7 @@ public final class InodeView {
 
   /**
    * Constructor for top level datasets.
-   * <p>
+   * <p/>
    * @param parent
    * @param ds
    * @param path

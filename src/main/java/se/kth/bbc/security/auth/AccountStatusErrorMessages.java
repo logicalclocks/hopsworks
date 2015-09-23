@@ -3,7 +3,7 @@ package se.kth.bbc.security.auth;
 /**
  * This class contains the error messages that user get upon wrong
  * authentication.
- * <p>
+ * <p/>
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 public class AccountStatusErrorMessages {

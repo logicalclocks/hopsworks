@@ -55,7 +55,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
   /**
    * Find all the studies for which the given user is owner. This implies that
    * this user created all the returned studies.
-   * <p>
+   * <p/>
    * @param user The user for whom studies are sought.
    * @return List of all the studies that were created by this user.
    */
@@ -69,7 +69,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
   /**
    * Find all the studies for which the user with given email is owner. This
    * implies that this user created all the returned studies.
-   * <p>
+   * <p/>
    * @param email The email of the user for whom studies are sought.
    * @return List of all the studies that were created by this user.
    * @deprecated use findByUser(User user) instead.
@@ -84,7 +84,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Get the project with the given name created by the given User.
-   * <p>
+   * <p/>
    * @param projectname The name of the project.
    * @param user The owner of the project.
    * @return The project with given name created by given user, or null if such
@@ -105,7 +105,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Get the project with the given name created by the User with given email.
-   * <p>
+   * <p/>
    * @param projectname The name of the project.
    * @param email The email of the owner of the project.
    * @return The project with given name created by given user, or null if such
@@ -121,7 +121,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Count the number of studies for which the given user is owner.
-   * <p>
+   * <p/>
    * @param owner
    * @return
    */
@@ -134,7 +134,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Count the number of studies for which the owner has the given email.
-   * <p>
+   * <p/>
    * @param email
    * @return The number of studies.
    * @deprecated Use countOwnedStudies(User owner) instead.
@@ -149,7 +149,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Find all the studies owned by the given user.
-   * <p>
+   * <p/>
    * @param user
    * @return
    */
@@ -162,7 +162,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Get the owner of the given project.
-   * <p>
+   * <p/>
    * @param project The project for which to get the current owner.
    * @return The primary key of the owner of the project.
    * @deprecated Use project.getOwner().getEmail(); instead.
@@ -173,7 +173,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Find all the studies the given user is a member of.
-   * <p>
+   * <p/>
    * @param user
    * @return
    */
@@ -187,7 +187,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Find all studies created (and owned) by this user.
-   * <p>
+   * <p/>
    * @param user
    * @return
    */
@@ -200,7 +200,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Get all the studies this user has joined, but not created.
-   * <p>
+   * <p/>
    * @param user
    * @return
    */
@@ -222,7 +222,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Mark the project <i>project</i> as deleted.
-   * <p>
+   * <p/>
    * @param project
    */
   public void removeProject(Project project) {
@@ -232,7 +232,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Check if a project with this name already exists.
-   * <p>
+   * <p/>
    * @param name
    * @return
    */
@@ -245,7 +245,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Check if a project with this name already exists for a user.
-   * <p>
+   * <p/>
    * @param name
    * @param owner
    * @return
@@ -260,7 +260,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   /**
    * Merge the new project.
-   * <p>
+   * <p/>
    * @param newProject
    */
   public void mergeProject(Project newProject) {

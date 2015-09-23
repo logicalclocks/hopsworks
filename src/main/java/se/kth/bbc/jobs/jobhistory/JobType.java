@@ -10,7 +10,8 @@ public enum JobType {
   YARN("Yarn"),
   FLINK("Flink"),
   SPARK("Spark"),
-  ADAM("ADAM");
+  ADAM("ADAM"),
+  ERASURE_CODE("ERASURE_CODE");
 
   private final String readable;
 

@@ -4,7 +4,7 @@ package se.kth.hopsworks.meta.entity;
  * Represents a path in the file system. Whenever there is metadata associated
  * to an inode in this path, then this inode has to be reinserted in the
  * metadata logs table. The front end sends a message request with this path
- * <p>
+ * <p/>
  * @author vangelis
  */
 public class DirPath implements EntityIntf {
@@ -29,7 +29,7 @@ public class DirPath implements EntityIntf {
 
   /**
    * Extracts the last directory name from the current path
-   * <p>
+   * <p/>
    * @return
    */
   public String getParent() {
@@ -44,7 +44,7 @@ public class DirPath implements EntityIntf {
 
   /**
    * Extracts the last directory name from the given path
-   * <p>
+   * <p/>
    * @param path
    * @return
    */

@@ -184,7 +184,7 @@ public class ResetPassword implements Serializable {
 
   /**
    * Change password through profile.
-   * <p>
+   * <p/>
    * @return
    */
   public String changePassword() {

@@ -20,7 +20,7 @@ import se.kth.hopsworks.meta.exception.DatabaseException;
 
 /**
  * Contains business logic pertaining DataSet management.
- * <p>
+ * <p/>
  * @author stig
  */
 @Stateless
@@ -40,7 +40,7 @@ public class DatasetController {
   /**
    * Create a new DataSet. This is, a folder right under the project home
    * folder.
-   * <p>
+   * <p/>
    * @param user The creating User. Cannot be null.
    * @param project The project under which to create the DataSet. Cannot be
    * null.
@@ -125,7 +125,7 @@ public class DatasetController {
 
   /**
    * Create a directory under an existing DataSet.
-   * <p>
+   * <p/>
    * @param project The project under which the directory is being created.
    * Cannot be null.
    * @param datasetName The name of the DataSet under which the folder is being
@@ -201,7 +201,7 @@ public class DatasetController {
   /**
    * Creates a folder in HDFS at the given path, and associates a template with
    * that folder.
-   * <p>
+   * <p/>
    * @param path The full HDFS path to the folder to be created (e.g.
    * /Projects/projectA/datasetB/folder1/folder2).
    * @param template The id of the template to be associated with the created

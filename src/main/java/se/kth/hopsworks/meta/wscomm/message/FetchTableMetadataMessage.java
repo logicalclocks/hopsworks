@@ -10,7 +10,7 @@ import se.kth.hopsworks.meta.entity.MTable;
 
 /**
  * A message asking for a table's metadata
- * <p>
+ * <p/>
  * @author vangelis
  */
 public class FetchTableMetadataMessage extends FetchMetadataMessage {

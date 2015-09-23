@@ -69,7 +69,7 @@ public class ResumableInfo {
    * Add the chunk <i>rcn</i> to the uploaded chunks and check if upload
    * has finished. Upon upload, change file name. Synchronized method to enable
    * atomic checking.
-   * <p>
+   * <p/>
    * @return true if finished.
    */
   public synchronized boolean addChunkAndCheckIfFinished(
@@ -83,7 +83,7 @@ public class ResumableInfo {
 
   /**
    * Check if the resumable chunk has been uploaded.
-   * <p>
+   * <p/>
    * @param rcn
    * @return
    */

@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * A workflow input parameter. Has a name and value, and can be bound. Binding a
  * parameter means setting its value. If the value is null, the parameter is
  * unbound.
- * <p>
+ * <p/>
  * @author stig
  */
 @XmlRootElement
@@ -22,7 +22,7 @@ public class InputParameter implements Serializable {
 
   /**
    * Create a new InputParameter with given name and bound value.
-   * <p>
+   * <p/>
    * @param name
    * @param value
    */
@@ -33,7 +33,7 @@ public class InputParameter implements Serializable {
 
   /**
    * Create a new InputParameter with given name.
-   * <p>
+   * <p/>
    * @param name
    */
   public InputParameter(String name) {
@@ -42,7 +42,7 @@ public class InputParameter implements Serializable {
 
   /**
    * Get the name of the InputParameter.
-   * <p>
+   * <p/>
    * @return
    */
   public String getName() {
@@ -51,7 +51,7 @@ public class InputParameter implements Serializable {
 
   /**
    * Set the name of the InputParameter.
-   * <p>
+   * <p/>
    * @param name
    */
   public void setName(String name) {
@@ -61,7 +61,7 @@ public class InputParameter implements Serializable {
   /**
    * Get the bound value of the InputParameter. If the returned value is null,
    * this parameter is unbound.
-   * <p>
+   * <p/>
    * @return
    */
   public String getValue() {
@@ -71,7 +71,7 @@ public class InputParameter implements Serializable {
   /**
    * Set the bound value for the InputParameter. Passing a null argument will
    * unbind the parameter.
-   * <p>
+   * <p/>
    * @param value
    */
   public void setValue(String value) {
@@ -81,7 +81,7 @@ public class InputParameter implements Serializable {
   /**
    * Utility method for checking if the InputParameter is bound. Returns true if
    * the bound value is null.
-   * <p>
+   * <p/>
    * @return
    */
   public boolean isBound() {
@@ -98,7 +98,7 @@ public class InputParameter implements Serializable {
 
   /**
    * Bind the InputParameter to the given value. Alias for setValue().
-   * <p>
+   * <p/>
    * @param value
    */
   public void bind(String value) {
@@ -107,7 +107,7 @@ public class InputParameter implements Serializable {
 
   /**
    * Get a hashcode for the given InputParameter.
-   * <p>
+   * <p/>
    * @return
    */
   @Override
@@ -120,7 +120,7 @@ public class InputParameter implements Serializable {
   /**
    * Check if the InputParameter and the obj are identical. They are so if they
    * have the same name.
-   * <p>
+   * <p/>
    * @param obj
    * @return
    */

@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * Represents a composite entity holding a table id and an inode primary key.
  * It's necessary when asking for the metadata of a specific file
- * <p>
+ * <p/>
  * @author vangelis
  */
 public class InodeTableComposite implements Serializable, EntityIntf {

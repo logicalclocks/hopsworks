@@ -90,7 +90,7 @@ public class UserFacade extends AbstractFacade<Users> {
 
   /**
    * Get the user with the given email.
-   * <p>
+   * <p/>
    * @param email
    * @return The user with given email, or null if no such user exists.
    */

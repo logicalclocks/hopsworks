@@ -295,7 +295,7 @@ public class ProjectMB implements Serializable {
 
   /**
    * Get the current role of the logged in user in the current project.
-   * <p>
+   * <p/>
    * @return
    */
   public String currentRoleInProject() {
@@ -388,7 +388,7 @@ public class ProjectMB implements Serializable {
 
   /**
    * Add
-   * <p>
+   * <p/>
    * @return
    */
   public synchronized String addToTeam() {
@@ -485,7 +485,7 @@ public class ProjectMB implements Serializable {
 
   /**
    * Remove the currently active project.
-   * <p>
+   * <p/>
    * @return
    */
   public String removeCurrentProject() {
@@ -523,7 +523,7 @@ public class ProjectMB implements Serializable {
 
   /**
    * Get a lazy datamodel containing activity on the current project.
-   * <p>
+   * <p/>
    * @return
    */
   public LazyDataModel<Activity> getSpecificLazyModel() {
@@ -674,7 +674,7 @@ public class ProjectMB implements Serializable {
 
   /**
    * Get an array of the services selected for the current project.
-   * <p>
+   * <p/>
    * @return
    */
   public ProjectServiceEnum[] getSelectedServices() {
@@ -687,7 +687,7 @@ public class ProjectMB implements Serializable {
 
   /**
    * Check if the tab for the given project should be drawn.
-   * <p>
+   * <p/>
    * @param service
    * @return
    */
@@ -699,7 +699,7 @@ public class ProjectMB implements Serializable {
 
   /**
    * Set the extra services that have been selected for the current project.
-   * <p>
+   * <p/>
    * @param selectedServices
    */
   public void setSelectedServices(ProjectServiceEnum[] selectedServices) {
@@ -708,7 +708,7 @@ public class ProjectMB implements Serializable {
 
   /**
    * Persist the new selection of project services.
-   * <p>
+   * <p/>
    * @return
    */
   public String updateServices() {
@@ -743,7 +743,7 @@ public class ProjectMB implements Serializable {
   /**
    * Check if the current project has been archived, in which case its
    * functionality is not available.
-   * <p>
+   * <p/>
    * @return
    */
   public boolean isProjectArchived() {

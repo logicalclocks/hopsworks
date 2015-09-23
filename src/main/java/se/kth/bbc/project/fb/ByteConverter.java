@@ -6,7 +6,7 @@ import org.eclipse.persistence.sessions.Session;
 
 /**
  * Convert between MySQL bit(8) and Java byte.
- * <p>
+ * <p/>
  * @author stig
  */
 public class ByteConverter implements Converter {

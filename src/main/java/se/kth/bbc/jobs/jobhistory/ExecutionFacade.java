@@ -13,7 +13,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
  * Facade for management of persistent Execution objects.
- * <p>
+ * <p/>
  * @author stig
  */
 @Stateless
@@ -33,7 +33,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
 
   /**
    * Find all the Execution entries for the given project and type.
-   * <p>
+   * <p/>
    * @param project
    * @param type
    * @return List of JobHistory objects.
@@ -50,7 +50,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
 
   /**
    * Get all the executions for a given JobDescription.
-   * <p>
+   * <p/>
    * @param job
    * @return
    */
@@ -63,7 +63,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
 
   /**
    * Find the execution with given id.
-   * <p>
+   * <p/>
    * @param id
    * @return The found entity, or null if no such exists.
    */
@@ -122,7 +122,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   /**
    * Updates all given fields of <i>exec</i> to the given value, unless that
    * value is null for entities, or -1 for integers.
-   * <p>
+   * <p/>
    * @param history
    * @param name
    * @param state

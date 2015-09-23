@@ -411,7 +411,7 @@ public class ElasticService {
   /**
    * Gathers the query filters applied on projects and datasets and returns a
    * query combining all these
-   * <p>
+   * <p/>
    * @param searchTerm
    * @return
    */
@@ -434,7 +434,7 @@ public class ElasticService {
    * <p/>
    * @param projectName
    * @param searchTerm
-   * <p>
+   * <p/>
    * @return
    */
   private QueryBuilder getChildComboQuery(String parentName, String parentType,

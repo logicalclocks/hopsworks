@@ -13,7 +13,7 @@ import se.kth.hopsworks.meta.entity.MetadataPK;
 
 /**
  * A message request to update a specific raw data row.
- * <p>
+ * <p/>
  * @author vangelis
  */
 public class UpdateMetadataMessage extends MetadataMessage {
@@ -45,7 +45,7 @@ public class UpdateMetadataMessage extends MetadataMessage {
 
   /**
    * parses the incoming message and returns a RawData object wrapped in a list.
-   * <p>
+   * <p/>
    * @return
    */
   @Override

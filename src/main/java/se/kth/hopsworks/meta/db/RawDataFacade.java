@@ -51,7 +51,7 @@ public class RawDataFacade extends AbstractFacade<RawData> {
   /**
    * adds a new record into 'raw_data' table. RawData is the object that's
    * going to be persisted/updated in the database
-   * <p>
+   * <p/>
    * @param raw
    * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */
@@ -95,7 +95,7 @@ public class RawDataFacade extends AbstractFacade<RawData> {
 
   /**
    * Checks if a raw data instance is a managed entity
-   * <p>
+   * <p/>
    * @param rawdata
    * @return
    */

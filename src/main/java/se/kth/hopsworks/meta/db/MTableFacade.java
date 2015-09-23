@@ -37,7 +37,7 @@ public class MTableFacade extends AbstractFacade<MTable> {
 
   /**
    * adds a new record into 'tables' table. Represents a new metadata template
-   * <p>
+   * <p/>
    *
    * @param table
    * @return the id of the newly inserted table or -1 in case of error
@@ -83,7 +83,7 @@ public class MTableFacade extends AbstractFacade<MTable> {
    * Deletes a tables entity from meta_tables table. If the object is an
    * unmanaged entity it has to be merged to become managed so that delete
    * can cascade down its associations if necessary
-   * <p>
+   * <p/>
    *
    * @param table The table object that's going to be removed
    * @throws se.kth.hopsworks.meta.exception.DatabaseException
@@ -108,7 +108,7 @@ public class MTableFacade extends AbstractFacade<MTable> {
   
   /**
    * Checks if a table instance is a managed entity
-   * <p>
+   * <p/>
    * @param table
    * @return 
    */

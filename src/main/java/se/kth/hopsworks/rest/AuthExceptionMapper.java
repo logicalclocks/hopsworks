@@ -11,7 +11,7 @@ import javax.ws.rs.ext.Provider;
 /**
  * AuthExceptionMapper maps all Access exceptions to authorization exception and
  * sends unauthorized status code to the client.
- * <p>
+ * <p/>
  * @author André<amore@kth.se>
  * @author Ermias<ermiasg@kth.se>
  */

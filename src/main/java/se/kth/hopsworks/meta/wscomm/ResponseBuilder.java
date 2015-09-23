@@ -46,7 +46,7 @@ import se.kth.hopsworks.meta.wscomm.message.UploadedTemplateMessage;
 /**
  * Helper class to assist Protocol in constructing responses. Keeps Protocol
  * clean
- * <p>
+ * <p/>
  * @author vangelis
  */
 @Stateless
@@ -74,7 +74,7 @@ public class ResponseBuilder {
 
   /**
    * Persists a new template in the database
-   * <p>
+   * <p/>
    * @param message
    * @return
    * @throws ApplicationException
@@ -90,7 +90,7 @@ public class ResponseBuilder {
 
   /**
    * Removes a template from the database
-   * <p>
+   * <p/>
    * @param message
    * @return
    * @throws ApplicationException
@@ -106,7 +106,7 @@ public class ResponseBuilder {
 
   /**
    * Updates the name of a given template
-   * <p>
+   * <p/>
    * @param message
    * @return
    * @throws ApplicationException
@@ -126,7 +126,7 @@ public class ResponseBuilder {
   /**
    * Persists a whole metadata template (schema) in the database. The message
    * contains all the tables and fields this template contains
-   * <p>
+   * <p/>
    * @param message
    * @throws ApplicationException
    */
@@ -137,7 +137,7 @@ public class ResponseBuilder {
 
   /**
    * Retrieves all the templates (template names) from the database
-   * <p>
+   * <p/>
    * @param message
    * @return
    */
@@ -154,7 +154,7 @@ public class ResponseBuilder {
 
   /**
    * Retrieves all the field types from the database
-   * <p>
+   * <p/>
    * @param message
    * @return
    */
@@ -190,7 +190,7 @@ public class ResponseBuilder {
   /**
    * Fetches ALL the metadata a metadata table carries. It does not do any
    * filtering
-   * <p>
+   * <p/>
    * @param table
    * @return
    * @throws se.kth.hopsworks.meta.exception.ApplicationException
@@ -266,7 +266,7 @@ public class ResponseBuilder {
   /**
    * Deletes a table and its corresponding child entities (fields). First
    * removes any corresponding tuples from meta_tuple_to_file table
-   * <p>
+   * <p/>
    * @param table
    * @throws se.kth.hopsworks.meta.exception.ApplicationException
    */
@@ -289,7 +289,7 @@ public class ResponseBuilder {
   /**
    * Deletes a field and its corresponding child entities (rawData). First
    * removes any corresponding tuples from meta_tuple_to_file table
-   * <p>
+   * <p/>
    * @param field
    * @throws se.kth.hopsworks.meta.exception.ApplicationException
    */
@@ -319,7 +319,7 @@ public class ResponseBuilder {
    * A tuple consists of one or more instantiated raw data objects. If a raw
    * data object is partially deleted (i.e. delete only one instantiated field
    * out of many) the tuple should not be removed from the database.
-   * <p>
+   * <p/>
    * @param ttf
    * @throws ApplicationException
    */
@@ -344,7 +344,7 @@ public class ResponseBuilder {
   /**
    * Checks if a table contains fields. This is necessary when the user wants to
    * delete a table
-   * <p>
+   * <p/>
    * @param table
    * @return
    * @throws se.kth.hopsworks.meta.exception.ApplicationException
@@ -372,7 +372,7 @@ public class ResponseBuilder {
   /**
    * Checks if a fields is associated (contains) raw data (metadata) in the
    * database. This is necessary when the user wants to delete a field
-   * <p>
+   * <p/>
    * @param field
    * @return
    * @throws ApplicationException
@@ -399,7 +399,7 @@ public class ResponseBuilder {
   /**
    * Takes a list of raw data values and reduces it to a list of grouped tuple
    * ids. Equivalent to sql's GROUP BY operator
-   * <p>
+   * <p/>
    * @param list
    * @return
    */
@@ -418,7 +418,7 @@ public class ResponseBuilder {
    * uploaded file and contains the template name and all the template tables
    * and fields. First create a 'new template' command message and then a 'store
    * template content' command message
-   * <p>
+   * <p/>
    * @param message
    * @throws se.kth.hopsworks.meta.exception.ApplicationException
    */
@@ -439,7 +439,7 @@ public class ResponseBuilder {
 
   /**
    * Creates an inode mutation by writing directly to hdfs_metadata_log table.
-   * <p>
+   * <p/>
    * @param log
    * @return
    * @throws ApplicationException

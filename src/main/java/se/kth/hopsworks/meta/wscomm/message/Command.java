@@ -2,7 +2,7 @@ package se.kth.hopsworks.meta.wscomm.message;
 
 /**
  * Represents the command each incoming message is transformed to
- * <p>
+ * <p/>
  * @author vangelis
  */
 public enum Command {

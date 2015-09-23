@@ -78,7 +78,7 @@ public class MetadataService {
   /**
    * Uploads a template file (.json) to the file system (hopsfs) and persists it
    * to the database as well
-   * <p>
+   * <p/>
    * @param path
    * @return
    * @throws AppException
@@ -106,7 +106,7 @@ public class MetadataService {
 
   /**
    * Fetch metadata associated to an inode by table id
-   * <p>
+   * <p/>
    * @param inodePid
    * @param inodeName
    * @param tableid
@@ -189,7 +189,7 @@ public class MetadataService {
 
   /**
    * Fetches all templates attached to a specific inode
-   * <p>
+   * <p/>
    * @param inodeid
    * @param sc
    * @param req
@@ -228,7 +228,7 @@ public class MetadataService {
 
   /**
    * Fetches all templates not attached to a specific inode
-   * <p>
+   * <p/>
    * @param inodeid
    * @param sc
    * @param req
@@ -278,7 +278,7 @@ public class MetadataService {
 
   /**
    * Fetch all templates attached to a specific inode
-   * <p>
+   * <p/>
    * @param inodeid
    * @param templateid
    * @param sc
@@ -361,7 +361,7 @@ public class MetadataService {
 
   /**
    * Fetches the content of a given template
-   * <p>
+   * <p/>
    * @param templateid
    * @param sender
    * @param sc

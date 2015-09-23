@@ -351,7 +351,7 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
 
   /**
    * Fields have to be ordered according to their order, which is user defined
-   * <p>
+   * <p/>
    * @param field
    * @return
    */

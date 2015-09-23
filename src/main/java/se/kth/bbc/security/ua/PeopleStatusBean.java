@@ -66,7 +66,7 @@ public class PeopleStatusBean implements Serializable {
 
   /**
    * Return systemwide admin for user administration
-   * <p>
+   * <p/>
    * @return
    */
   public boolean isSYSAdmin() {
@@ -76,7 +76,7 @@ public class PeopleStatusBean implements Serializable {
 
   /**
    * Return both system wide and project wide roles
-   * <p>
+   * <p/>
    * @return
    */
   public boolean isResearcher() {
@@ -89,7 +89,7 @@ public class PeopleStatusBean implements Serializable {
 
   /**
    * Return project owner role
-   * <p>
+   * <p/>
    * @return
    */
   public boolean isBBCAdmin() {

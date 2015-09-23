@@ -65,7 +65,7 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
    * Deletes a tupleToFile entity. If the object is an
    * unmanaged entity it has to be merged to become managed so that delete
    * can cascade down its associations if necessary
-   * <p>
+   * <p/>
    *
    * @param ttf
    * @throws se.kth.hopsworks.meta.exception.DatabaseException
@@ -84,7 +84,7 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
 
   /**
    * Checks if a tupleToFile instance is a managed entity
-   * <p>
+   * <p/>
    * @param ttf
    * @return
    */

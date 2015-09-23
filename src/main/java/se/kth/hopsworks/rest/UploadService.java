@@ -72,7 +72,7 @@ public class UploadService {
 
   /**
    * Sets the upload path for the file to be uploaded.
-   * <p>
+   * <p/>
    * @param uploadPath starting with Projects/projectName/...
    * @throws AppException if there is a folder name that is not valid in
    * the given path, the path is empty, or project name was not found.
@@ -113,7 +113,7 @@ public class UploadService {
    * name since the file to be uploaded is a template schema, irrelevant to any
    * project or dataset. The only requirement is that the upload has to be
    * performed in the Uploads directory
-   * <p>
+   * <p/>
    * @param path
    * @throws se.kth.hopsworks.rest.AppException
    */
@@ -140,7 +140,7 @@ public class UploadService {
 
   /**
    * Sets the template id to be attached to the file that's being uploaded.
-   * <p>
+   * <p/>
    * @param templateId
    */
   public void setTemplateId(int templateId) {
@@ -308,7 +308,7 @@ public class UploadService {
 
   /**
    * Persist a template to the database after it has been uploaded to hopsfs
-   * <p>
+   * <p/>
    * @param filePath
    * @throws AppException
    */

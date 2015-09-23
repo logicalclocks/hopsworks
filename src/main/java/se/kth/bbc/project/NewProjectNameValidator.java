@@ -25,7 +25,7 @@ public class NewProjectNameValidator implements Validator, ClientValidator {
    * <li> It has a limited length (24 characters?) </li>
    * <li> It does not have a trailing period. </li>
    * </ul>
-   * <p>
+   * <p/>
    * @param value The name whose validity to test.
    */
   @Override

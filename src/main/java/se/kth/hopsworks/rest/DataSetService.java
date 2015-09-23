@@ -136,7 +136,7 @@ public class DataSetService {
 
   /**
    * Get the inodes in the given project-relative path.
-   * <p>
+   * <p/>
    * @param path
    * @param sc
    * @param req

@@ -8,7 +8,7 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 /**
  * A wrapper around a WorkflowDTO and a YarnJobConfiguration for easy
  * communication with the client.
- * <p>
+ * <p/>
  * @author stig
  */
 @XmlRootElement

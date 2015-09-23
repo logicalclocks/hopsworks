@@ -72,7 +72,7 @@ public class ProjectController {
    * This needs to be an atomic operation (all or nothing) REQUIRES_NEW will
    * make sure a new transaction is created even if this method is called from
    * within a transaction.
-   * <p>
+   * <p/>
    * @param newProject
    * @param email
    * @return
@@ -648,7 +648,7 @@ public class ProjectController {
   /**
    * Extracts the project name out of the given path. The project name is the
    * second part of this path.
-   * <p>
+   * <p/>
    * @param path
    * @return
    */

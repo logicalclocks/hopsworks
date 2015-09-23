@@ -10,14 +10,13 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
-import se.kth.bbc.project.fb.Inode;
 import se.kth.hopsworks.meta.entity.EntityIntf;
 import se.kth.hopsworks.meta.entity.Metadata;
 import se.kth.hopsworks.meta.entity.RawData;
 
 /**
  * A message requesting to store metadata
- * <p>
+ * <p/>
  * @author vangelis
  */
 public class StoreMetadataMessage extends MetadataMessage {

@@ -9,7 +9,7 @@ import se.kth.hopsworks.user.model.Users;
 
 /**
  * Takes care of booting the execution of a job.
- * <p>
+ * <p/>
  * @author stig
  */
 @Stateless

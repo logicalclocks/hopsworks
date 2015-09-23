@@ -8,7 +8,7 @@ import org.elasticsearch.search.SearchHit;
 
 /**
  * Represents a JSONifiable version of the elastic hit object
- * <p>
+ * <p/>
  * @author vangelis
  */
 @XmlRootElement

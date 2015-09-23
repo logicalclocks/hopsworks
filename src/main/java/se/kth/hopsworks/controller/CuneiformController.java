@@ -19,7 +19,7 @@ import se.kth.hopsworks.user.model.Users;
 /**
  * Interaction point between frontend and backend. Upload, inspect Cuneiform
  * workflows.
- * <p>
+ * <p/>
  * @author stig
  */
 @Stateless
@@ -38,7 +38,7 @@ public class CuneiformController {
    * Inspect the workflow at the given path under the projectname. The path
    * should be absolute. This method returns a WorkflowDTO with the contents
    * and input and output parameter.
-   * <p>
+   * <p/>
    * @param path The project-relative path to the workflow file.
    * @return WorkflowDTO with (a.o.) the workflow parameters.
    * @throws java.io.IOException on failure of reading the workflow.
@@ -70,7 +70,7 @@ public class CuneiformController {
   /**
    * Start the workflow *wf* with the given name, as the user with given
    * username.
-   * <p>
+   * <p/>
    * @param job
    * @param user
    * @return The execution object for the started execution.

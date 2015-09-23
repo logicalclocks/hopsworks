@@ -19,9 +19,9 @@ public class DecoderHelper {
   /**
    * Instantiates a message object on the runtime based on the 'type' parameter
    * of the message
-   * <p>
+   * <p/>
    * @return the initialized Message object
-   * <p>
+   * <p/>
    * @throws ApplicationException
    */
   public Message getMessage() throws ApplicationException {

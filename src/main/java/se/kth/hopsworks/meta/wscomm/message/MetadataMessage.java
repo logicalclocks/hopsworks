@@ -15,7 +15,7 @@ import se.kth.hopsworks.meta.entity.InodeTableComposite;
  * Represents a generic metadata message. It may be about fetching table
  * metadata or inode metadata, or about updating table metadata depending on its
  * subclasses
- * <p>
+ * <p/>
  * @author vangelis
  */
 public class MetadataMessage implements Message {
@@ -99,7 +99,7 @@ public class MetadataMessage implements Message {
    * A message that translates into an inode mutation (add row in
    * hdfs_metadata_log table). It is being used both by StoreMetadataMessage and
    * UpdateMetadataMessage.
-   * <p>
+   * <p/>
    * @param inode
    * @return
    */
