@@ -21,6 +21,8 @@ angular.module('hopsWorksApp')
             self.extendedTemplateName = "";
             self.currentTableId = -1;
             self.currentTemplateID = -1;
+            self.currentFileTemplates = [];
+            self.selectedTemplate = {};
             self.editedField;
             self.toExtend = -1;
             self.currentBoard = {};
@@ -29,6 +31,8 @@ angular.module('hopsWorksApp')
             self.templateContents = {};
             self.editingTemplate = false;
             self.projectInodeid = -1;
+            self.noTemplates = false;
+
             var dataSetService = DataSetService($routeParams.projectID);
 
             //fetch all the available templates
@@ -58,7 +62,7 @@ angular.module('hopsWorksApp')
               }
 
               //after the project inodeid is available proceed to store metadata
-              MetadataActionService.storeMetadata($cookies['email'], 
+              MetadataActionService.storeMetadata($cookies['email'],
                       parseInt(self.currentFile.parentId), self.currentFile.name, self.currentTableId, self.metaData)
                       .then(function (response) {
                         console.log("Metadata saved " + response.status);
@@ -296,17 +300,27 @@ angular.module('hopsWorksApp')
                                 });
                       });
             };
-            
-//            self.fetchAttachedTemplates = function(file){
-//                        dataSetService.fetchTemplatesForInode(self.fileId)
-//                            .then(function (response) {
-//                              self.templates = response.data;
-//                              
-//                              if(self.templates.length === 0){
-//                                self.noTemplates = true;
-//                              }
-//                            });
-//            }
+
+            /**
+             * Fetches all templates attached to a given inode
+             * 
+             * @param {type} file
+             * @returns {undefined}
+             */
+            self.fetchAttachedTemplates = function () {
+              //initialize the variable before fetching the templates.
+              //assume by default there are no templates
+              self.noTemplates = false;
+              
+              dataSetService.fetchTemplatesForInode(self.currentFile.id)
+                      .then(function (response) {
+                        self.currentFileTemplates = response.data;
+
+                        if (self.currentFileTemplates.length === 0) {
+                          self.noTemplates = true;
+                        }
+                      });
+            };
 
             /* -- TABLE AND FIELD HANDLING FUNCTIONS ADD/REMOVE -- */
             /**
@@ -572,7 +586,7 @@ angular.module('hopsWorksApp')
               MetadataActionService.updateMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
                       .then(function (response) {
                         growl.success(response.board, {title: 'Success', ttl: 5000});
-                
+
                       }, function (dialogResponse) {
                         growl.info("Could not update metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
                       });
@@ -580,6 +594,7 @@ angular.module('hopsWorksApp')
 
             /**
              * When the user clicks on a folder/file in the file browser the self.currentFile gets updated
+             * 
              * @param {type} file
              * @returns {undefined}
              */
@@ -600,6 +615,20 @@ angular.module('hopsWorksApp')
                         self.currentBoard = JSON.parse(board);
                         self.initializeMetadataTabs(JSON.parse(board));
                         self.fetchMetadataForTemplate();
+                        self.fetchAttachedTemplates();
+                      });
+            };
+
+            /**
+             * Updates the view according to the user template selection.
+             * @returns {undefined}
+             */
+            self.updateMetadataTabs = function () {
+              dataSetService.fetchTemplate(self.selectedTemplate.templateId, $cookies['email'])
+                      .then(function (response) {
+                        var board = response.data.successMessage;
+                        self.currentBoard = JSON.parse(board);
+                        self.initializeMetadataTabs(JSON.parse(board));
                       });
             };
 

@@ -532,7 +532,7 @@ public class DataSetService {
       JsonResponse response = new JsonResponse();
 
       //if it exists and it's not a dir, it must be a file
-      if (!exists || !isDir) {
+      if (exists && !isDir) {
         message = "FILE";
         response.setSuccessMessage(message);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
