@@ -51,6 +51,11 @@ public class TupleToFile implements Serializable, EntityIntf {
   @Column(name = "tupleid")
   private Integer tupleid;
 
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "inodeid")
+  private Integer inodeid;
+
   @JoinColumns({
     @JoinColumn(name = "inode_pid",
             referencedColumnName = "parent_id"),
@@ -72,6 +77,7 @@ public class TupleToFile implements Serializable, EntityIntf {
   public TupleToFile(int tupleid, Inode inode) {
     this.tupleid = tupleid;
     this.inode = inode;
+    this.inodeid = inode.getId();
   }
 
   public TupleToFile(Integer tupleid) {
@@ -97,6 +103,14 @@ public class TupleToFile implements Serializable, EntityIntf {
     this.tupleid = id;
   }
 
+  public void setInodeId(Integer inodeid){
+    this.inodeid = inodeid;
+  }
+  
+  public Integer getInodeId(){
+    return this.inodeid;
+  }
+  
   public Inode getInode() {
     return this.inode;
   }
