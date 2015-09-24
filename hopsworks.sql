@@ -17,7 +17,7 @@ CREATE TABLE `users` (
   `title` VARCHAR(10)  DEFAULT NULL,
   `orcid` VARCHAR(20)  DEFAULT NULL,
   `false_login` INT(11) NOT NULL DEFAULT '-1',
-  `isonline` tinyINT(1) NOT NULL DEFAULT '0',
+  `isonline` TINYINT(1) NOT NULL DEFAULT '0',
   `secret` VARCHAR(20)  DEFAULT NULL,
   `validation_key` VARCHAR(128)  DEFAULT NULL,
   `security_question` VARCHAR(20)  DEFAULT NULL,
@@ -360,7 +360,7 @@ CREATE TABLE `dataset` (
   KEY `fk_dataset_1_idx` (`inode_pid`,`inode_name`),
   CONSTRAINT `fk_dataset_2` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
   CONSTRAINT `fk_dataset_1` FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES `hops`.`hdfs_inodes` (`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
+) ENGINE=ndbcluster;
 
 CREATE TABLE `dataset_request` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
