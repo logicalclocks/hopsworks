@@ -223,8 +223,9 @@ angular.module('hopsWorksApp')
                                       //check the number of blocks in the file
                                       dataSetService.checkFileBlocks(filePath).then(
                                               function (successss) {
-                                                var noOfBlocks = parseInt(successss.data.successMessage);
-                                                if (noOfBlocks >= 10) {
+                                                var noOfBlocks = parseInt(successss.data);
+                                                console.log("NO OF BLOCKS " + noOfBlocks);
+                                                if (noOfBlocks >= 2) {
                                                   ModalService.alert('sm', 'Confirm', 'This operation is going to run in the background').then(
                                                           function (modalSuccess) {
                                                             console.log("FILE PATH IS " + filePath);

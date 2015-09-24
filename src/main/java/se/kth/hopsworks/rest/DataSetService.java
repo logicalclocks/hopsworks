@@ -29,8 +29,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.SecurityContext;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.ErasureCodeJob;
 import se.kth.bbc.fileoperations.ErasureCodeJobConfiguration;
@@ -636,15 +634,17 @@ public class DataSetService {
             = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
             getJobConfigurationTemplate(JobType.ERASURE_CODING);
     ecConfig.setFilePath(path);
+System.out.println("PREparing for erasure coding");
 
     //persist the job in the database
     JobDescription jobdesc = this.jobcontroller.createJob(user, project,
             ecConfig);
+    System.out.println("job persisted in the database");
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, user, this.async);
     //persist a job execution instance in the database and get its id
     Execution exec = encodeJob.requestExecutionId();
-
+System.out.println("\nSTarting the erasure coding job\n");
     if (exec != null) {
       //start the actual job execution i.e. compress the file in a different thread
       this.async.startExecution(encodeJob);

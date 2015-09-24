@@ -35,7 +35,6 @@ import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import static org.elasticsearch.index.query.QueryBuilders.hasParentQuery;
@@ -396,14 +395,19 @@ public class ElasticService {
     QueryBuilder metadataMatch = termsQuery(
             Constants.META_DATA_FIELD, searchTerm);
 
+    //add a phrase match query to enable results to popup while typing phrases
+    QueryBuilder metadataPhraseMatch = matchPhraseQuery(
+            Constants.META_DATA_FIELD, searchTerm);
+    
     //aggregate the results
     QueryBuilder datasetsQuery = boolQuery()
             .must(operationQuery)
             .must(searchable)
-            .must(namePrefixMatch)
+            .should(namePrefixMatch)
             .should(descriptionMatch)
             .should(descriptionPhraseMatch)
-            .should(metadataMatch);
+            .should(metadataMatch)
+            .should(metadataPhraseMatch);
 
     return datasetsQuery;
   }
@@ -477,7 +481,7 @@ public class ElasticService {
     //aggregate the results
     QueryBuilder childrenQuery = boolQuery()
             .must(operationQuery)
-            .must(namePrefixMatch)
+            .should(namePrefixMatch)
             .should(metadataPrefixQuery)
             .should(metadataPhraseQuery)
             .should(metadataTermsQuery)
