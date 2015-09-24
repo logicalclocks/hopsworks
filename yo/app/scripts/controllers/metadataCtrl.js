@@ -296,6 +296,17 @@ angular.module('hopsWorksApp')
                                 });
                       });
             };
+            
+//            self.fetchAttachedTemplates = function(file){
+//                        dataSetService.fetchTemplatesForInode(self.fileId)
+//                            .then(function (response) {
+//                              self.templates = response.data;
+//                              
+//                              if(self.templates.length === 0){
+//                                self.noTemplates = true;
+//                              }
+//                            });
+//            }
 
             /* -- TABLE AND FIELD HANDLING FUNCTIONS ADD/REMOVE -- */
             /**

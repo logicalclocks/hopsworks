@@ -191,9 +191,9 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Applies erasure coding in the file represented by the given path.
+             * Sends a request to erasure code a file represented by the given path.
              * It checks
-             * .. if the given path resolves to an actual file
+             * .. if the given path resolves to a file or a dir
              * .. if the given path is an existing file
              * .. if the given file is large enough (comprises more than 10 blocks)
              * 
@@ -214,7 +214,7 @@ angular.module('hopsWorksApp')
                         var object = success.data.successMessage;
                         switch (object) {
                           case "DIR":
-                            ModalService.alert('sm', 'Alert', 'You can only compress files').then();
+                            ModalService.alert('sm', 'Alert', 'You can only compress files');
                             break;
                           case "FILE":
                             //if the path is a file go on
@@ -226,11 +226,11 @@ angular.module('hopsWorksApp')
                                                 var noOfBlocks = parseInt(successss.data.successMessage);
                                                 if (noOfBlocks >= 10) {
                                                   ModalService.alert('sm', 'Confirm', 'This operation is going to run in the background').then(
-                                                          function (successss) {
+                                                          function (modalSuccess) {
                                                             console.log("FILE PATH IS " + filePath);
                                                             dataSetService.compressFile(filePath);
                                                           });
-                                                }else{
+                                                } else {
                                                   growl.error("The requested file is too small to be compressed", {title: 'Error', ttl: 5000});
                                                 }
                                               }, function (error) {
@@ -240,6 +240,7 @@ angular.module('hopsWorksApp')
                         }
 
                       }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
             };
 
