@@ -258,6 +258,7 @@ CREATE TABLE `meta_field_predefined_values` (
 
 CREATE TABLE `meta_tuple_to_file` (
   `tupleid` INT(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` INT(11) NOT NULL, -- pretty necessary for the rivers to work
   `inode_pid` INT(11) NOT NULL,
   `inode_name` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`tupleid`),
