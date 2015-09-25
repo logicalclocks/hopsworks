@@ -264,7 +264,7 @@ public class ElasticService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    
+
     final Settings settings = ImmutableSettings.settingsBuilder()
             .put("client.transport.sniff", true) //being able to retrieve other nodes 
             .put("cluster.name", "hopsworks").build();
@@ -391,6 +391,10 @@ public class ElasticService {
     QueryBuilder descriptionPhraseMatch = matchPhraseQuery(
             Constants.META_DESCRIPTION_FIELD, searchTerm);
 
+    //add a fuzzy search on description field
+    QueryBuilder descriptionFuzzyQuery = fuzzyQuery(
+            Constants.META_DESCRIPTION_FIELD, searchTerm);
+
     //apply phrase filter on user metadata
     QueryBuilder metadataMatch = termsQuery(
             Constants.META_DATA_FIELD, searchTerm);
@@ -398,7 +402,11 @@ public class ElasticService {
     //add a phrase match query to enable results to popup while typing phrases
     QueryBuilder metadataPhraseMatch = matchPhraseQuery(
             Constants.META_DATA_FIELD, searchTerm);
-    
+
+    //add a fuzzy search on metadata field
+    QueryBuilder metadataFuzzyQuery = fuzzyQuery(Constants.META_DATA_FIELD,
+            searchTerm);
+
     //aggregate the results
     QueryBuilder datasetsQuery = boolQuery()
             .must(operationQuery)
@@ -406,8 +414,10 @@ public class ElasticService {
             .should(namePrefixMatch)
             .should(descriptionMatch)
             .should(descriptionPhraseMatch)
+            .should(descriptionFuzzyQuery)
             .should(metadataMatch)
-            .should(metadataPhraseMatch);
+            .should(metadataPhraseMatch)
+            .should(metadataFuzzyQuery);
 
     return datasetsQuery;
   }

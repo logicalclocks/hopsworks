@@ -225,7 +225,7 @@ angular.module('hopsWorksApp')
                                               function (successss) {
                                                 var noOfBlocks = parseInt(successss.data);
                                                 console.log("NO OF BLOCKS " + noOfBlocks);
-                                                if (noOfBlocks >= 2) {
+                                                if (noOfBlocks >= 10) {
                                                   ModalService.alert('sm', 'Confirm', 'This operation is going to run in the background').then(
                                                           function (modalSuccess) {
                                                             console.log("FILE PATH IS " + filePath);

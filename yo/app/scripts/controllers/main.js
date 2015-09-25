@@ -51,7 +51,8 @@ angular.module('hopsWorksApp')
             };
 
             self.view = function (name, id, dataType) {
-              if (dataType === 'parent') {
+
+              if (dataType === 'project') {
                 ProjectService.getProjectInfo({projectName: name}).$promise.then(
                         function (success) {
 
@@ -64,7 +65,7 @@ angular.module('hopsWorksApp')
                         }, function (error) {
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                 });
-              } else if (dataType === 'child' || dataType === 'dataset') {
+              } else if (dataType === 'dataset') {
                 //fetch the dataset
                 ProjectService.getDatasetInfo({inodeId: id}).$promise.then(
                         function (response) {

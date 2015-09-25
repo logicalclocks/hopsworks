@@ -18,15 +18,18 @@
             <div class="r-arrow"></div>
             <div class="about-task">
               <div class="header">{{result.name}}
-                <small class="muted">
+                <small class="muted" ng-show="result.type === 'project' || result.type === 'dataset'">
                   <div ng-click="mainCtrl.view(result.name, result.id, result.type)" class="pull-right btn btn-default btn-sm" >View</div>
                 </small>
               </div>
-              <p ng-show="result.type === 'child' || result.type === 'dataset'" class="no-margin text-muted">
+              <p ng-show="result.type === 'dataset'" class="no-margin text-muted">
                 Description Dataset
               </p>
-              <p ng-show="result.type === 'parent'" class="no-margin text-muted">
+              <p ng-show="result.type === 'project'" class="no-margin text-muted">
                 Description Project
+              </p>
+              <p ng-show="result.type === 'child'" class="no-margin text-muted">
+                Common folder
               </p>
             </div>
           </div>

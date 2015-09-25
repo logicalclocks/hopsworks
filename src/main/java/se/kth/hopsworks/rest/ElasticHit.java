@@ -31,8 +31,31 @@ public class ElasticHit {
     this.id = hit.getId();
     //the source of the retrieved record (i.e. all the indexed information)
     this.map = hit.getSource();
-    //the data type of the retrieved record. It can be 'parent', 'child' or 'dataset'
-    this.type = hit.getType();
+    /*
+     * depending on the source index of the retrieved results the parent type
+     * may be either 'project' or 'dataset'
+     */
+    Index index = Index.valueOf(hit.getIndex().toUpperCase());
+    switch (index) {
+      case PROJECT:
+        if (hit.getType().equalsIgnoreCase("parent")) {
+          this.type = "project";
+        } else if (hit.getType().equalsIgnoreCase("child")) {
+          this.type = "child";
+        } else {
+          this.type = "unknown";
+        }
+        break;
+      case DATASET:
+        if (hit.getType().equalsIgnoreCase("parent")) {
+          this.type = "dataset";
+        } else if (hit.getType().equalsIgnoreCase("child")) {
+          this.type = "child";
+        } else {
+          this.type = "unknown";
+        }
+        break;
+    }
 
     //export the name of the retrieved record from the list
     for (Entry<String, Object> entry : map.entrySet()) {
@@ -40,7 +63,7 @@ public class ElasticHit {
       if (entry.getKey().equals("name")) {
         this.setName(entry.getValue().toString());
       }
-      
+
       //logger.log(Level.FINE, "KEY -- {0} VALUE --- {1}", new Object[]{entry.getKey(), entry.getValue()});
     }
   }
