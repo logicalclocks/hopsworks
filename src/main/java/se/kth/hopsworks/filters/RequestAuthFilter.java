@@ -67,6 +67,11 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       }
       
       Project project = projectBean.find(projectId);
+      if (project == null) {
+        requestContext.abortWith(Response.
+                status(Response.Status.NOT_FOUND).build());
+        return;
+      }
       log.log(Level.FINEST, "Filtering project request path: {0}", project.getName());
       
       if (!method.isAnnotationPresent(AllowedRoles.class)) {

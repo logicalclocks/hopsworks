@@ -73,6 +73,9 @@ public class Message implements Serializable {
   @Size(max = 128)
   @Column(name = "subject")
   private String subject;
+  @Size(max = 128)
+  @Column(name = "preview")
+  private String preview;
   @Basic(optional = false)
   @NotNull
   @Lob
@@ -88,7 +91,7 @@ public class Message implements Serializable {
   @NotNull
   @Column(name = "deleted")
   private boolean deleted;
-  @Size(max = 6500)
+  @Size(max = 600)
   @Column(name = "path")
   private String path;
   @JoinTable(name = "hopsworks.message_to_user",
@@ -161,6 +164,14 @@ public class Message implements Serializable {
 
   public void setSubject(String subject) {
     this.subject = subject;
+  }
+
+  public String getPreview() {
+    return preview;
+  }
+
+  public void setPreview(String preview) {
+    this.preview = preview;
   }
 
   public String getContent() {

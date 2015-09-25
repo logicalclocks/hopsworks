@@ -283,7 +283,7 @@ CREATE TABLE `meta_template_to_inode` (
   PRIMARY KEY (`id`),
   FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE CASCADE ON UPDATE NO ACTION,
   FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=ndbcluster CHARSET=latin1;
+) ENGINE=ndbcluster;
 
 -- elastic jdbc-importer buffer tables -------
 
@@ -303,7 +303,7 @@ CREATE TABLE `meta_inodes_ops_parents_deleted` (
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
----- Dataset table-------------------------------------------------
+-- Dataset table-------------
 CREATE TABLE `dataset` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `inode_pid` int(11) NOT NULL,
@@ -314,14 +314,10 @@ CREATE TABLE `dataset` (
   `status` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_dataset` (`inode_pid`,`projectId`,`inode_name`),
-  KEY `fk_dataset_2_idx` (`projectId`),
-  KEY `fk_dataset_1_idx` (`inode_pid`,`inode_name`),
-  CONSTRAINT `fk_dataset_2` 
 	FOREIGN KEY (`projectId`) 
 	REFERENCES `project` (`id`) 
 	ON DELETE CASCADE 
 	ON UPDATE NO ACTION,
-  CONSTRAINT `fk_dataset_1` 
 	FOREIGN KEY (`inode_pid`,`inode_name`) 
 	REFERENCES `hops`.`hdfs_inodes` (`parent_id`,`name`) 
 	ON DELETE CASCADE 
@@ -337,20 +333,18 @@ CREATE TABLE `dataset_request` (
   `message` varchar(3000) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `index2` (`dataset`,`projectId`),
-  KEY `fk_dataset_request_2_idx` (`projectId`,`user_email`),
-  CONSTRAINT `fk_dataset_request_2` 
   FOREIGN KEY (`projectId`,`user_email`) 
    REFERENCES `project_team` (`project_id`,`team_member`) 
    ON DELETE CASCADE 
    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_dataset_request_1` 
   FOREIGN KEY (`dataset`) 
    REFERENCES `dataset` (`id`) 
    ON DELETE CASCADE 
    ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
---- Message 
---------------------------
+
+-- Message 
+-- ------------------------
 CREATE TABLE `message` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_from` varchar(45),
@@ -363,10 +357,8 @@ CREATE TABLE `message` (
   `deleted` tinyint(1) NOT NULL,
   `path` varchar(600) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `fk_message_1_idx` (`user_from`),
-  KEY `fk_message_2_idx` (`user_to`),
-  CONSTRAINT `fk_message_1` FOREIGN KEY (`user_from`) REFERENCES `users` (`email`) ON DELETE SET NULL ON UPDATE NO ACTION,
-  CONSTRAINT `fk_message_2` FOREIGN KEY (`user_to`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION
+  FOREIGN KEY (`user_from`) REFERENCES `users` (`email`) ON DELETE SET NULL ON UPDATE NO ACTION,
+  FOREIGN KEY (`user_to`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 
@@ -374,10 +366,8 @@ CREATE TABLE `message_to_user` (
   `message` int(11) NOT NULL,
   `user_email` varchar(45) NOT NULL,
   PRIMARY KEY (`message`,`user_email`),
-  KEY `fk_new_table_1_idx` (`message`),
-  KEY `fk_new_table_2_idx` (`user_email`),
-  CONSTRAINT `fk_new_table_2` FOREIGN KEY (`user_email`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  CONSTRAINT `fk_new_table_1` FOREIGN KEY (`message`) REFERENCES `message` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  FOREIGN KEY (`user_email`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  FOREIGN KEY (`message`) REFERENCES `message` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 -- Glassfish timers
@@ -415,16 +405,14 @@ CREATE VIEW `users_groups` AS
 
 
 -- SSH Access -----------
--------------------------
+-- -----------------------
 
 CREATE TABLE `ssh_keys` (
   `uid` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   `public_key` varchar(2000) NOT NULL,
   PRIMARY KEY (`uid`, `name`),
-  KEY `name_idx` (`name`),
-  KEY `uid_idx` (`uid`),
-  CONSTRAINT `FK_248_381` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+  FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 

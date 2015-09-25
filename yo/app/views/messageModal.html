@@ -41,7 +41,7 @@
                                         <div class="text-muted">{{msg.dateSent | date:'medium'}}</div>
                                     </div>
                                   </div>
-                                  <div class="message-preview">{{msg.preview | limitTo:80}} {{msg.preview.length > 80 ? ' ...' : ''}}</div>
+                                  <div class="message-preview">{{msg.preview | limitTo:50}} {{msg.preview.length > 50 ? ' ...' : ''}}</div>
                                 </div>
                             </div>
                         </li>
