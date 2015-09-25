@@ -262,7 +262,6 @@ CREATE TABLE `meta_tuple_to_file` (
   `inode_pid` INT(11) NOT NULL,
   `inode_name` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`tupleid`),
-  UNIQUE KEY(`inode_pid`, `inode_name`),
   FOREIGN KEY (`inode_pid`, `inode_name`) REFERENCES `hops`.`hdfs_inodes` (`parent_id`, `name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
