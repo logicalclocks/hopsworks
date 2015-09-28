@@ -23,7 +23,7 @@ echo '
 		},
 
 		{
-		"statement": "SELECT composite.*, metadata.EXTENDED_METADATA FROM (SELECT DISTINCT hi.id as _id, op._parent, hi.name, op.operation, op.logical_time FROM hops.hdfs_inodes hi, (SELECT log.inodeid as child_id, log.parentid as _parent, log.operation, log.logical_time FROM hopsworks.meta_inodes_ops_children_ds_buffer log WHERE log.operation = 0) as op WHERE hi.id = op.child_id LIMIT 100) as composite LEFT JOIN (SELECT mtt.inodeid, GROUP_CONCAT( md.data SEPARATOR \"|\" ) AS EXTENDED_METADATA FROM hopsworks.meta_tuple_to_file mtt, hopsworks.meta_data md WHERE mtt.tupleid = md.tupleid GROUP BY (mtt.inodeid) LIMIT 0 , 30) as metadata ON metadata.inodeid = composite._id ORDER BY composite.logical_time ASC;"
+		"statement": "SELECT composite.*, metadata.EXTENDED_METADATA FROM (SELECT DISTINCT hi.id as _id, op._parent, hi.name, mib.description, op.operation, op.logical_time, mib.searchable FROM hops.hdfs_inodes hi, hopsworks.meta_inode_basic_metadata mib, (SELECT log.inodeid as child_id, log.parentid as _parent, log.operation, log.logical_time FROM hopsworks.meta_inodes_ops_children_ds_buffer log WHERE log.operation = 0) as op WHERE hi.id = op.child_id AND hi.parent_id = mib.inode_pid AND hi.name = mib.inode_name LIMIT 100)as composite LEFT JOIN (SELECT mtt.inodeid, GROUP_CONCAT( md.data SEPARATOR \"|\" ) AS EXTENDED_METADATA FROM hopsworks.meta_tuple_to_file mtt, hopsworks.meta_data md WHERE mtt.tupleid = md.tupleid GROUP BY (mtt.inodeid) LIMIT 0 , 30) as metadata ON metadata.inodeid = composite._id ORDER BY composite.logical_time ASC;"
 		},
 
 		{

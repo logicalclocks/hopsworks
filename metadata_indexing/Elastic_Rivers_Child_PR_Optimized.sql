@@ -61,15 +61,15 @@ WHERE log.dataset_id = dataset.datasetid LIMIT 100);
 
 SELECT composite.*, metadata.EXTENDED_METADATA
 FROM (
-	SELECT DISTINCT hi.id as _id, op._parent, hi.name, op.operation, op.logical_time
-	FROM hops.hdfs_inodes hi,  
+	SELECT DISTINCT hi.id as _id, op._parent, hi.name, mib.description, op.operation, op.logical_time, mib.searchable
+	FROM hops.hdfs_inodes hi, hopsworks.meta_inode_basic_metadata mib,
 
 		(SELECT log.inodeid as child_id, log.parentid as _parent, log.operation, log.logical_time
 		FROM hopsworks.meta_inodes_ops_children_pr_buffer log
 		WHERE log.operation = 0
 		) as op 
 
-	WHERE hi.id = op.child_id LIMIT 100
+	WHERE hi.id = op.child_id AND hi.parent_id = mib.inode_pid AND hi.name = mib.inode_name LIMIT 100
 )as composite
 
 LEFT JOIN (
