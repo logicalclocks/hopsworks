@@ -1,6 +1,5 @@
 package se.kth.hopsworks.meta.wscomm;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.websocket.EncodeException;
 import javax.websocket.Encoder;
@@ -21,7 +20,7 @@ public class MessageEncoder implements Encoder.Text<Message> {
 
     String value = msg.encode();
 
-    logger.log(Level.INFO, "RETURNED VALUE IS {0}", value);
+    //logger.log(Level.INFO, "RETURNED VALUE IS {0}", value);
     return value;
   }
 

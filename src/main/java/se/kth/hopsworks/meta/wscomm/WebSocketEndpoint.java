@@ -111,8 +111,8 @@ public class WebSocketEndpoint {
                 session.getUserProperties().get("projectID"))) {
           s.getBasicRemote().sendObject(msg);//RemoteEndpoint.Basic interface provides blocking methods to send
           //messages; the RemoteEndpoint.Async interface provides nonblocking methods.
-          logger.log(Level.INFO, "Sending >>> {0} to session: {1}",
-                  new Object[]{msg, s.getUserPrincipal()});
+          //logger.log(Level.INFO, "Sending >>> {0} to session: {1}",
+                  //new Object[]{msg, s.getUserPrincipal()});
         }
       } catch (IOException | EncodeException ex) {
         this.sendError(session, ex.getMessage());
