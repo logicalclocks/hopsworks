@@ -19,6 +19,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.lucene.search.PhraseQuery;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.cache.clear.ClearIndicesCacheRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
@@ -123,7 +124,7 @@ public class ElasticService {
                     Constants.META_DATASET_INDEX).
             setTypes(Constants.META_PROJECT_PARENT_TYPE,
                     Constants.META_DATASET_PARENT_TYPE)
-            .setQuery(this.getProjectDatasetQueryCombo(searchTerm))
+            .setQuery(this.matchProjectsDatasetsQuery(searchTerm))
             //.setQuery(this.getDatasetComboQuery(searchTerm))
             .addHighlightedField("name")
             .execute().actionGet();
@@ -207,7 +208,7 @@ public class ElasticService {
     SearchResponse response
             = client.prepareSearch(Constants.META_PROJECT_INDEX).
             setTypes(Constants.META_PROJECT_CHILD_TYPE)
-            .setQuery(this.getChildComboQuery(projectName,
+            .setQuery(this.matchChildrenQuery(projectName,
                             Constants.META_PROJECT_PARENT_TYPE, searchTerm))
             .addHighlightedField("name")
             .execute().actionGet();
@@ -290,7 +291,7 @@ public class ElasticService {
     SearchResponse response
             = client.prepareSearch(Constants.META_DATASET_INDEX).
             setTypes(Constants.META_DATASET_CHILD_TYPE)
-            .setQuery(this.getChildComboQuery(datasetName,
+            .setQuery(this.matchChildrenQuery(datasetName,
                             Constants.META_DATASET_PARENT_TYPE, searchTerm))
             .addHighlightedField("name")
             .execute().actionGet();
@@ -324,16 +325,39 @@ public class ElasticService {
   }
 
   /**
-   * Combines a prefix query with a filtered query (i.e. 'namePMatch'
-   * and 'projectFilter')
+   * Gathers the query filters applied on projects and datasets. Projects and
+   * datasets are parent documents
    * <p/>
    * @param searchTerm
    * @return
    */
-  private QueryBuilder getProjectComboQuery(String searchTerm) {
+  private QueryBuilder matchProjectsDatasetsQuery(String searchTerm) {
 
-    //build the project query predicates
-    //match operation
+    //first part is the base condition
+    QueryBuilder firstPart = this.getParentBasePart();
+    QueryBuilder secondPart = this.getDescMetaPart(searchTerm);
+
+    /*
+     * The following boolean query is being applied in the parent documents
+     * (operation && searchable) && (name || description || metadata)
+     */
+    QueryBuilder query = boolQuery()
+            .must(firstPart)
+            .must(secondPart);
+
+    return query;
+  }
+
+  /**
+   * Creates the base condition every matched document has to satisfy. It has to
+   * be an added document (operation = 0) and it has to be searchable
+   * (searchable = 1)
+   * <p/>
+   * @return
+   */
+  private QueryBuilder getParentBasePart() {
+
+    //build the project base condition queries
     QueryBuilder operationMatch = matchQuery(
             Constants.META_INODE_OPERATION_FIELD,
             Constants.META_INODE_OPERATION_ADD);
@@ -342,46 +366,69 @@ public class ElasticService {
     QueryBuilder searchableMatch = matchQuery(
             Constants.META_INODE_SEARCHABLE_FIELD, 1);
 
-    //match name
-    QueryBuilder nameMatch = prefixQuery(Constants.META_NAME_FIELD, searchTerm);
-
-    //match metadata
-    QueryBuilder metadataPrefixMatch = prefixQuery(Constants.META_DATA_FIELD,
-            searchTerm);
-    QueryBuilder metadataPhraseMatch = matchPhraseQuery(
-            Constants.META_DATA_FIELD, searchTerm);
-
-    QueryBuilder aggregateQuery = boolQuery()
+    QueryBuilder baseCondition = boolQuery()
             .must(operationMatch)
-            .must(searchableMatch)
-            .must(nameMatch)
-            .should(metadataPrefixMatch)
-            .should(metadataPhraseMatch);
+            .must(searchableMatch);
 
-    return aggregateQuery;
+    return baseCondition;
   }
 
   /**
-   * Applies several match filters on the description, name and
-   * extended_metadata
-   * fields of the dataset.
+   * Creates the main query condition. Applies filters on the texts describing a
+   * document i.e. on the description and metadata fields
    * <p/>
    * @param searchTerm
    * @return
    */
-  private QueryBuilder getDatasetComboQuery(String searchTerm) {
-    //Queries
-    //look for active records (operation = 0)
-    QueryBuilder operationQuery = matchQuery(
-            Constants.META_INODE_OPERATION_FIELD,
-            Constants.META_INODE_OPERATION_ADD);
+  private QueryBuilder getDescMetaPart(String searchTerm) {
 
-    QueryBuilder searchable = matchQuery(Constants.META_INODE_SEARCHABLE_FIELD,
-            1);
+    //apply a prefix filter on the name field
+    QueryBuilder namePart = this.getNameQuery(searchTerm);
+    //apply several text filters on the description and metadata fields
+    QueryBuilder descMetaPart = this.getDescMetaQuery(searchTerm);
+
+    QueryBuilder textCondition = boolQuery()
+            .should(namePart)
+            .should(descMetaPart);
+
+    return textCondition;
+  }
+
+  /**
+   * Creates the query that is applied on the name field.
+   * <p/>
+   * @param searchTerm
+   * @return
+   */
+  private QueryBuilder getNameQuery(String searchTerm) {
 
     //prefix name match
     QueryBuilder namePrefixMatch = prefixQuery(Constants.META_NAME_FIELD,
             searchTerm);
+
+    QueryBuilder namePhraseMatch = matchPhraseQuery(Constants.META_NAME_FIELD,
+            searchTerm);
+
+    QueryBuilder nameQuery = boolQuery()
+            .should(namePrefixMatch)
+            .should(namePhraseMatch);
+
+    return nameQuery;
+  }
+
+  /**
+   * Creates the query that is applied on the text fields of a document. Hits
+   * the description and metadata fields
+   * <p/>
+   * @param searchTerm
+   * @return
+   */
+  private QueryBuilder getDescMetaQuery(String searchTerm) {
+
+    //do a prefix query on the description field in case the user starts writing 
+    //a full sentence
+    QueryBuilder descriptionPrefixMatch = prefixQuery(
+            Constants.META_DESCRIPTION_FIELD, searchTerm);
 
     //a phrase query to match the dataset description
     QueryBuilder descriptionMatch = termsQuery(
@@ -392,8 +439,12 @@ public class ElasticService {
             Constants.META_DESCRIPTION_FIELD, searchTerm);
 
     //add a fuzzy search on description field
-    QueryBuilder descriptionFuzzyQuery = fuzzyQuery(
-            Constants.META_DESCRIPTION_FIELD, searchTerm);
+    //QueryBuilder descriptionFuzzyQuery = fuzzyQuery(
+    //        Constants.META_DESCRIPTION_FIELD, searchTerm);
+    //do a prefix query on the metadata first in case the user starts typing a 
+    //full sentence
+    QueryBuilder metadataPrefixMatch = prefixQuery(Constants.META_DATA_FIELD,
+            searchTerm);
 
     //apply phrase filter on user metadata
     QueryBuilder metadataMatch = termsQuery(
@@ -404,57 +455,92 @@ public class ElasticService {
             Constants.META_DATA_FIELD, searchTerm);
 
     //add a fuzzy search on metadata field
-    QueryBuilder metadataFuzzyQuery = fuzzyQuery(Constants.META_DATA_FIELD,
-            searchTerm);
-
-    //aggregate the results
+    //QueryBuilder metadataFuzzyQuery = fuzzyQuery(Constants.META_DATA_FIELD,
+    //        searchTerm);
     QueryBuilder datasetsQuery = boolQuery()
-            .must(operationQuery)
-            .must(searchable)
-            .should(namePrefixMatch)
+            .should(descriptionPrefixMatch)
             .should(descriptionMatch)
             .should(descriptionPhraseMatch)
-            .should(descriptionFuzzyQuery)
+            .should(metadataPrefixMatch)
             .should(metadataMatch)
-            .should(metadataPhraseMatch)
-            .should(metadataFuzzyQuery);
+            .should(metadataPhraseMatch);
 
     return datasetsQuery;
   }
 
   /**
-   * Gathers the query filters applied on projects and datasets and returns a
-   * query combining all these
+   * Gathers the query filters applied on common files and folders. Common files
+   * and folders are child documents
    * <p/>
    * @param searchTerm
    * @return
    */
-  private QueryBuilder getProjectDatasetQueryCombo(String searchTerm) {
+  private QueryBuilder matchChildrenQuery(String parentName,
+          String parentType, String searchTerm) {
 
-    //get project and dataset results
-    QueryBuilder projects = this.getProjectComboQuery(searchTerm);
-    QueryBuilder datasets = this.getDatasetComboQuery(searchTerm);
+    //get the base conditions query
+    QueryBuilder childBase = this.getChildBasePart(parentName, parentType);
+    //get the text conditions query
+    QueryBuilder childRest = this.getDescMetaPart(searchTerm);
 
-    //combine the results - take the union of the two sets
+    /*
+     * The following boolean query is being applied in the child documents
+     * (hasParent && operation && searchable) && (name || description ||
+     * metadata)
+     */
     QueryBuilder union = boolQuery()
-            .should(projects)
-            .should(datasets);
+            .must(childBase)
+            .must(childRest);
 
     return union;
   }
 
   /**
-   * Performs multiple match queries on the child fields.
-   * <p/>
-   * @param projectName
-   * @param searchTerm
+   * Creates the base condition every matched document has to satisfy. It has to
+   * have a specific parent type (hasParent), it must be an added document
+   * (operation = 0) and it has to be searchable (searchable = 1)
    * <p/>
    * @return
    */
-  private QueryBuilder getChildComboQuery(String parentName, String parentType,
-          String searchTerm) {
+  private QueryBuilder getChildBasePart(String parentType, String parentName) {
 
-    //Query
+    //TODO: ADD SEARCHABLE FIELD IN CHILD DOCUMENTS
+    //build the child base condition queries
+    QueryBuilder hasParentPart = hasParentQuery(
+            parentType,
+            matchQuery(Constants.META_NAME_FIELD, parentName));
+
+    QueryBuilder operationMatch = matchQuery(
+            Constants.META_INODE_OPERATION_FIELD,
+            Constants.META_INODE_OPERATION_ADD);
+
+    //match searchable
+    QueryBuilder searchableMatch = matchQuery(
+            Constants.META_INODE_SEARCHABLE_FIELD, 1);
+
+    QueryBuilder baseCondition = boolQuery()
+            .must(hasParentPart)
+            .must(operationMatch)
+            .must(searchableMatch);
+
+    return baseCondition;
+  }
+
+
+  /**
+   * Applies a prefix, phrase, terms and fuzzy filter on the description and
+   * metadata fields of a child document.
+   * <p/>
+   * @param parentName
+   * @param parentType
+   * @param searchTerm
+   * @return
+   */
+  private QueryBuilder getChildDescMetaComboQuery(String parentName,
+          String parentType, String searchTerm) {
+
+    //TODO: ADD SEARCHABLE FIELD IN CHILD DOCUMENTS
+    //Mandatory filters. Search under a specific parent for searchable and non deleted documents
     //filter results by parent
     QueryBuilder hasParentPart = hasParentQuery(
             parentType,
@@ -464,13 +550,7 @@ public class ElasticService {
     QueryBuilder operationQuery = matchQuery(
             Constants.META_INODE_OPERATION_FIELD,
             Constants.META_INODE_OPERATION_ADD);
-
-    //TODO: query the description field, as soon as there is one
-    //TODO: query the searchable field, as soon as there is one
-    //build the dataset query predicates
-    QueryBuilder namePrefixMatch = prefixQuery(Constants.META_NAME_FIELD,
-            searchTerm);
-
+    //---
     //apply prefix filter on user metadata
     QueryBuilder metadataPrefixQuery = prefixQuery(Constants.META_DATA_FIELD,
             searchTerm);
@@ -484,18 +564,15 @@ public class ElasticService {
             searchTerm);
 
     //apply fuzzy filter on user metadata
-    QueryBuilder metadataFuzzyQuery = fuzzyQuery(Constants.META_DATA_FIELD,
-            searchTerm);
-
-    //aggregate the results
+//    QueryBuilder metadataFuzzyQuery = fuzzyQuery(Constants.META_DATA_FIELD,
+//            searchTerm);
     //aggregate the results
     QueryBuilder childrenQuery = boolQuery()
             .must(operationQuery)
-            .should(namePrefixMatch)
             .should(metadataPrefixQuery)
             .should(metadataPhraseQuery)
-            .should(metadataTermsQuery)
-            .should(metadataFuzzyQuery);
+            .should(metadataTermsQuery);
+    //.should(metadataFuzzyQuery);
 
     QueryBuilder intersection = boolQuery()
             .must(hasParentPart)
