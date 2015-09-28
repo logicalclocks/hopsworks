@@ -31,9 +31,9 @@ import javax.validation.constraints.Size;
 @NamedQueries({
   @NamedQuery(name = "MTable.findAll",
           query = "SELECT t FROM MTable t"),
-  @NamedQuery(name = "Tables.findById",
+  @NamedQuery(name = "MTable.findById",
           query = "SELECT t FROM MTable t WHERE t.id = :id"),
-  @NamedQuery(name = "Tables.findByName",
+  @NamedQuery(name = "MTable.findByName",
           query = "SELECT t FROM MTable t WHERE t.name = :name"),
   @NamedQuery(name = "MTable.findByTemplateId",
           query

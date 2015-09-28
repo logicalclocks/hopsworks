@@ -417,9 +417,11 @@ public class DataSetService {
     for (String s : datasetRelativePathArray) {
       dsRelativePath.append(s).append("/");
     }
+
     try {
       datasetController.createSubDirectory(project, fullPathArray[2],
-              dsRelativePath.toString(), dataSetName.getTemplate());
+              dsRelativePath.toString(), dataSetName.getTemplate(), dataSetName.
+              getDescription(), dataSetName.isSearchable());
     } catch (IOException e) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error while creating directory: " + e.
@@ -567,7 +569,7 @@ public class DataSetService {
 
       String blocks = this.fileOps.getFileBlocks(path);
       String response = blocks;
-      
+
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(response).build();
 
@@ -634,7 +636,7 @@ public class DataSetService {
             = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
             getJobConfigurationTemplate(JobType.ERASURE_CODING);
     ecConfig.setFilePath(path);
-System.out.println("PREparing for erasure coding");
+    System.out.println("PREparing for erasure coding");
 
     //persist the job in the database
     JobDescription jobdesc = this.jobcontroller.createJob(user, project,
@@ -644,7 +646,7 @@ System.out.println("PREparing for erasure coding");
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, user, this.async);
     //persist a job execution instance in the database and get its id
     Execution exec = encodeJob.requestExecutionId();
-System.out.println("\nSTarting the erasure coding job\n");
+    System.out.println("\nSTarting the erasure coding job\n");
     if (exec != null) {
       //start the actual job execution i.e. compress the file in a different thread
       this.async.startExecution(encodeJob);

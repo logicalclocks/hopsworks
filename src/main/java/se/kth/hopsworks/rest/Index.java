@@ -13,5 +13,7 @@ public enum Index {
   //
   PARENT,
   //
-  CHILD
+  CHILD,
+  //
+  UNKNOWN
 }

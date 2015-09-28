@@ -7,7 +7,10 @@ import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.elasticsearch.search.SearchHit;
 import static se.kth.hopsworks.rest.Index.CHILD;
+import static se.kth.hopsworks.rest.Index.DATASET;
 import static se.kth.hopsworks.rest.Index.PARENT;
+import static se.kth.hopsworks.rest.Index.PROJECT;
+import static se.kth.hopsworks.rest.Index.UNKNOWN;
 
 /**
  * Represents a JSONifiable version of the elastic hit object
@@ -45,20 +48,20 @@ public class ElasticHit {
     switch (index) {
       case PROJECT:
         if (hit.getType().equalsIgnoreCase(PARENT.toString())) {
-          this.type = "project";
+          this.type = PROJECT.toString().toLowerCase();
         } else if (hit.getType().equalsIgnoreCase(CHILD.toString())) {
-          this.type = "child";
+          this.type = CHILD.toString().toLowerCase();
         } else {
-          this.type = "unknown";
+          this.type = UNKNOWN.toString().toLowerCase();
         }
         break;
       case DATASET:
         if (hit.getType().equalsIgnoreCase(PARENT.toString())) {
-          this.type = "dataset";
+          this.type = DATASET.toString().toLowerCase();
         } else if (hit.getType().equalsIgnoreCase(CHILD.toString())) {
-          this.type = "child";
+          this.type = CHILD.toString().toLowerCase();
         } else {
-          this.type = "unknown";
+          this.type = UNKNOWN.toString().toLowerCase();
         }
         break;
     }

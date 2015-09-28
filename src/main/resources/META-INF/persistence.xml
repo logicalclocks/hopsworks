@@ -44,6 +44,7 @@
     <class>se.kth.hopsworks.meta.entity.FieldPredefinedValue</class>
     <class>se.kth.hopsworks.meta.entity.Field</class>
     <class>se.kth.hopsworks.meta.entity.Template</class>
+    <class>se.kth.hopsworks.meta.entity.InodeBasicMetadata</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

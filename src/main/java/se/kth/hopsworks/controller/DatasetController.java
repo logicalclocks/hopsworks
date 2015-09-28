@@ -14,7 +14,9 @@ import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
+import se.kth.hopsworks.meta.db.InodeBasicMetadataFacade;
 import se.kth.hopsworks.meta.db.TemplateFacade;
+import se.kth.hopsworks.meta.entity.InodeBasicMetadata;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
 
@@ -36,6 +38,8 @@ public class DatasetController {
   private DatasetFacade datasetFacade;
   @EJB
   private ActivityFacade activityFacade;
+  @EJB
+  private InodeBasicMetadataFacade inodeBasicMetaFacade;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -95,13 +99,13 @@ public class DatasetController {
     if (success) {
       //set the dataset meta enabled. Support 3 level indexing
       this.fileOps.setMetaEnabled(dsPath);
-      
+
       try {
-        
+
         ds = inodes.findByParentAndName(parent, dataSetName);
         Dataset newDS = new Dataset(ds, project);
         newDS.setSearchable(searchable);
-        
+
         if (datasetDescription != null) {
           newDS.setDescription(datasetDescription);
         }
@@ -136,6 +140,8 @@ public class DatasetController {
    * the folder names on it must be valid and it cannot be null.
    * @param templateId The id of the template to be associated with the newly
    * created directory.
+   * @param description The description of the directory
+   * @param searchable Defines if the directory can be searched upon
    * @throws java.io.IOException If something goes wrong upon the creation of
    * the directory.
    * @throws IllegalArgumentException If:
@@ -150,7 +156,9 @@ public class DatasetController {
    * null.
    */
   public void createSubDirectory(Project project, String datasetName,
-          String dsRelativePath, int templateId) throws IOException {
+          String dsRelativePath, int templateId, String description,
+          boolean searchable) throws IOException {
+
     //Preliminary
     while (dsRelativePath.startsWith("/")) {
       dsRelativePath = dsRelativePath.substring(1);
@@ -183,19 +191,38 @@ public class DatasetController {
                   + s + "Reason: " + e.getLocalizedMessage());
         }
       }
-      //Check if the given dataset exists.
-      Inode projectRoot = inodes.getProjectRoot(project.getName());
-      if (inodes.findByParentAndName(projectRoot, datasetName) == null) {
-        throw new IllegalArgumentException("DataSet does not exist: "
-                + datasetName + " under " + project.getName());
-      }
-      //Check if the given folder already exists
-      if (inodes.existsPath(fullPath)) {
-        throw new IllegalArgumentException("The given path already exists.");
-      }
     }
+
+    //Check if the given dataset exists.
+    Inode projectRoot = inodes.getProjectRoot(project.getName());
+    Inode parentDataset = inodes.findByParentAndName(projectRoot, datasetName);
+
+    if (parentDataset == null) {
+      throw new IllegalArgumentException("DataSet does not exist: "
+              + datasetName + " under " + project.getName());
+    }
+
+    //Check if the given folder already exists
+    if (inodes.existsPath(fullPath)) {
+      throw new IllegalArgumentException("The given path already exists.");
+    }
+
     //Now actually create the folder
-    createFolder(fullPath, templateId);
+    boolean success = this.createFolder(fullPath, templateId);
+
+    //if the folder created successfully, persist basic metadata to it 
+    //(description and searchable attribute
+    if (success) {
+      //get the folder name. The last part of fullPath
+      String pathParts[] = fullPath.split("/");
+      String folderName = pathParts[pathParts.length - 1];
+
+      //find the corresponding inode
+      Inode folder = this.inodes.findByParentAndName(parentDataset, folderName);
+      InodeBasicMetadata basicMeta = new InodeBasicMetadata(folder, description,
+              searchable);
+      this.inodeBasicMetaFacade.addBasicMetadata(basicMeta);
+    }
   }
 
   /**
@@ -212,9 +239,10 @@ public class DatasetController {
   private boolean createFolder(String path, int template) throws IOException {
     boolean success = false;
     try {
-      
+
+      //create the folder in the file system
       success = fileOps.mkDir(path);
-      //The inode has been created in the file system
+
       if (success && template != 0 && template != -1) {
         //Get the newly created Inode.
         Inode created = inodes.getInodeAtPath(path);
