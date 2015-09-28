@@ -3,8 +3,11 @@ package se.kth.hopsworks.rest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.elasticsearch.search.SearchHit;
+import static se.kth.hopsworks.rest.Index.CHILD;
+import static se.kth.hopsworks.rest.Index.PARENT;
 
 /**
  * Represents a JSONifiable version of the elastic hit object
@@ -13,6 +16,9 @@ import org.elasticsearch.search.SearchHit;
  */
 @XmlRootElement
 public class ElasticHit {
+
+  private static final Logger logger = Logger.getLogger(ElasticHit.class.
+          getName());
 
   //the inode id
   private String id;
@@ -32,24 +38,24 @@ public class ElasticHit {
     //the source of the retrieved record (i.e. all the indexed information)
     this.map = hit.getSource();
     /*
-     * depending on the source index of the retrieved results the parent type
+     * depending on the source index results were retrieved from, the parent type
      * may be either 'project' or 'dataset'
      */
     Index index = Index.valueOf(hit.getIndex().toUpperCase());
     switch (index) {
       case PROJECT:
-        if (hit.getType().equalsIgnoreCase("parent")) {
+        if (hit.getType().equalsIgnoreCase(PARENT.toString())) {
           this.type = "project";
-        } else if (hit.getType().equalsIgnoreCase("child")) {
+        } else if (hit.getType().equalsIgnoreCase(CHILD.toString())) {
           this.type = "child";
         } else {
           this.type = "unknown";
         }
         break;
       case DATASET:
-        if (hit.getType().equalsIgnoreCase("parent")) {
+        if (hit.getType().equalsIgnoreCase(PARENT.toString())) {
           this.type = "dataset";
-        } else if (hit.getType().equalsIgnoreCase("child")) {
+        } else if (hit.getType().equalsIgnoreCase(CHILD.toString())) {
           this.type = "child";
         } else {
           this.type = "unknown";

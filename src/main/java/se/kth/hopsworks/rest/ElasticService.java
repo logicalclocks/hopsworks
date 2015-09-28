@@ -206,9 +206,9 @@ public class ElasticService {
 
     //hit the indices - execute the queries
     SearchResponse response
-            = client.prepareSearch(Constants.META_PROJECT_INDEX).
-            setTypes(Constants.META_PROJECT_CHILD_TYPE)
-            .setQuery(this.matchChildrenQuery(projectName,
+            = client.prepareSearch(Constants.META_PROJECT_INDEX)
+            .setTypes(Constants.META_PROJECT_CHILD_TYPE)
+            .setQuery(this.matchChildQuery(projectName,
                             Constants.META_PROJECT_PARENT_TYPE, searchTerm))
             .addHighlightedField("name")
             .execute().actionGet();
@@ -289,9 +289,9 @@ public class ElasticService {
 
     //hit the indices - execute the queries
     SearchResponse response
-            = client.prepareSearch(Constants.META_DATASET_INDEX).
-            setTypes(Constants.META_DATASET_CHILD_TYPE)
-            .setQuery(this.matchChildrenQuery(datasetName,
+            = client.prepareSearch(Constants.META_DATASET_INDEX)
+            .setTypes(Constants.META_DATASET_CHILD_TYPE)
+            .setQuery(this.matchChildQuery(datasetName,
                             Constants.META_DATASET_PARENT_TYPE, searchTerm))
             .addHighlightedField("name")
             .execute().actionGet();
@@ -475,7 +475,7 @@ public class ElasticService {
    * @param searchTerm
    * @return
    */
-  private QueryBuilder matchChildrenQuery(String parentName,
+  private QueryBuilder matchChildQuery(String parentName,
           String parentType, String searchTerm) {
 
     //get the base conditions query
@@ -502,14 +502,14 @@ public class ElasticService {
    * <p/>
    * @return
    */
-  private QueryBuilder getChildBasePart(String parentType, String parentName) {
+  private QueryBuilder getChildBasePart(String parentName, String parentType) {
 
-    //TODO: ADD SEARCHABLE FIELD IN CHILD DOCUMENTS
-    //build the child base condition queries
+    //TODO: ADD SEARCHABLE FIELD IN CHILD DOCUMENTS. 1 BY DEFAULT BY THE INDEXING SCRIPTS
     QueryBuilder hasParentPart = hasParentQuery(
             parentType,
             matchQuery(Constants.META_NAME_FIELD, parentName));
 
+    //build the base conditions query for the child documents
     QueryBuilder operationMatch = matchQuery(
             Constants.META_INODE_OPERATION_FIELD,
             Constants.META_INODE_OPERATION_ADD);
@@ -520,65 +520,10 @@ public class ElasticService {
 
     QueryBuilder baseCondition = boolQuery()
             .must(hasParentPart)
-            .must(operationMatch)
-            .must(searchableMatch);
+            .must(operationMatch);
+    //.must(searchableMatch);
 
     return baseCondition;
-  }
-
-
-  /**
-   * Applies a prefix, phrase, terms and fuzzy filter on the description and
-   * metadata fields of a child document.
-   * <p/>
-   * @param parentName
-   * @param parentType
-   * @param searchTerm
-   * @return
-   */
-  private QueryBuilder getChildDescMetaComboQuery(String parentName,
-          String parentType, String searchTerm) {
-
-    //TODO: ADD SEARCHABLE FIELD IN CHILD DOCUMENTS
-    //Mandatory filters. Search under a specific parent for searchable and non deleted documents
-    //filter results by parent
-    QueryBuilder hasParentPart = hasParentQuery(
-            parentType,
-            matchQuery(Constants.META_NAME_FIELD, parentName));
-
-    //look for active records (operation 0)
-    QueryBuilder operationQuery = matchQuery(
-            Constants.META_INODE_OPERATION_FIELD,
-            Constants.META_INODE_OPERATION_ADD);
-    //---
-    //apply prefix filter on user metadata
-    QueryBuilder metadataPrefixQuery = prefixQuery(Constants.META_DATA_FIELD,
-            searchTerm);
-
-    //apply phrase filter on user metadata
-    QueryBuilder metadataPhraseQuery = matchPhraseQuery(
-            Constants.META_DATA_FIELD, searchTerm);
-
-    //apply terms filter on user metadata
-    QueryBuilder metadataTermsQuery = termsQuery(Constants.META_DATA_FIELD,
-            searchTerm);
-
-    //apply fuzzy filter on user metadata
-//    QueryBuilder metadataFuzzyQuery = fuzzyQuery(Constants.META_DATA_FIELD,
-//            searchTerm);
-    //aggregate the results
-    QueryBuilder childrenQuery = boolQuery()
-            .must(operationQuery)
-            .should(metadataPrefixQuery)
-            .should(metadataPhraseQuery)
-            .should(metadataTermsQuery);
-    //.should(metadataFuzzyQuery);
-
-    QueryBuilder intersection = boolQuery()
-            .must(hasParentPart)
-            .must(childrenQuery);
-
-    return intersection;
   }
 
   /**
