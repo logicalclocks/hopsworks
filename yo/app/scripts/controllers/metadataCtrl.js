@@ -500,6 +500,7 @@ angular.module('hopsWorksApp')
              */
             self.makeSearchable = function (card) {
               card.find = !card.find;
+              self.storeTemplate(false);
               //console.log("Card " + card.title + " became searchable " + card.find);
             };
 
@@ -511,6 +512,7 @@ angular.module('hopsWorksApp')
              */
             self.makeRequired = function (card) {
               card.required = !card.required;
+              self.storeTemplate(false);
               //console.log("Card " + card.title + " became required " + card.required);
             };
 
