@@ -45,6 +45,12 @@
       <type>jar</type>
     </dependency>
     <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-server</artifactId>
+      <version>1.9-ea04</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
       <groupId>com.eclipsesource.jaxrs</groupId>
       <artifactId>jersey-all</artifactId>
       <version>2.17</version>
@@ -72,6 +78,7 @@
       <artifactId>primefaces</artifactId>
       <version>5.1</version>
     </dependency>
+    <!-- io.hops -->
     <dependency>
       <groupId>io.hops</groupId>
       <artifactId>hadoop-client</artifactId>
@@ -96,6 +103,7 @@
       <version>2.4.0</version>
       <type>jar</type>
     </dependency>
+    <!--end io.hops -->
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
