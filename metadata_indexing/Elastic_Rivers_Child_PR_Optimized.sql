@@ -74,8 +74,8 @@ FROM (
 
 LEFT JOIN (
 	SELECT mtt.inodeid, GROUP_CONCAT( md.data SEPARATOR '|' ) AS EXTENDED_METADATA
-	FROM hopsworks.meta_tuple_to_file mtt, hopsworks.meta_data md
-	WHERE mtt.tupleid = md.tupleid
+	FROM hopsworks.meta_tuple_to_file mtt, hopsworks.meta_data md, hopsworks.meta_fields mf
+	WHERE mtt.tupleid = md.tupleid AND md.fieldid = mf.fieldid AND mf.searchable = 1
 	GROUP BY (mtt.inodeid)
 	LIMIT 0 , 30
 
