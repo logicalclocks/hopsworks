@@ -347,7 +347,6 @@ CREATE TABLE `meta_inodes_ops_children_ds_buffer` (
 
 -- Dataset table-------------------------------------------------
 CREATE TABLE `dataset` (
-<<<<<<< HEAD:hopsworks.sql
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inode_pid` INT(11) NOT NULL,
   `inode_name` VARCHAR(255) NOT NULL,
@@ -356,15 +355,6 @@ CREATE TABLE `dataset` (
   `editable` TINYINT(1) NOT NULL DEFAULT '1',
   `status` TINYINT(1) NOT NULL DEFAULT '1',
   `searchable` TINYINT(1) NOT NULL DEFAULT '0',
-=======
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `inode_pid` int(11) NOT NULL,
-  `inode_name` varchar(255) NOT NULL,
-  `projectId` int(11) NOT NULL,
-  `description` varchar(3000) DEFAULT NULL,
-  `editable` tinyint(1) NOT NULL DEFAULT '1',
-  `status` tinyint(1) NOT NULL DEFAULT '1',
->>>>>>> af073c2a4b467328f89980e29e8cca2302a66f5d:sql/hopsworks.sql
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_dataset` (`inode_pid`,`projectId`,`inode_name`),
   KEY `fk_dataset_2_idx` (`projectId`),
