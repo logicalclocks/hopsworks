@@ -96,8 +96,9 @@ public class ElasticService {
     //initialize the client
     Client client
             = new TransportClient(settings)
-            .addTransportAddress(new InetSocketTransportAddress("193.10.66.125",
+            .addTransportAddress(new InetSocketTransportAddress("localhost",
                             9300));
+        
 
     //check if the indices are up and running
     if (!this.indexExists(client, Constants.META_PROJECT_INDEX) || !this.
@@ -108,7 +109,6 @@ public class ElasticService {
               getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
     }
 
-    //TODO. ADD SEARCHABLE FIELD IN PROJECTS (DB)
     /*
      * If projects contain a searchable field then the client can hit both
      * indices (projects, datasets) with a single query. Right now the single
@@ -187,7 +187,7 @@ public class ElasticService {
 
     Client client
             = new TransportClient(settings)
-            .addTransportAddress(new InetSocketTransportAddress("193.10.66.125",
+            .addTransportAddress(new InetSocketTransportAddress("localhost",
                             9300));
 
     //check if the indices are up and running

@@ -68,6 +68,7 @@ public final class InodeView {
    */
   public InodeView(Inode parent, Dataset ds, String path) {
     this.name = ds.getInode().getInodePK().getName();
+    this.parentId = parent.getId();
     this.dir = ds.getInode().isDir();
     this.id = ds.getInode().getId();
     this.size = ds.getInode().getSize();
