@@ -39,22 +39,19 @@
       <version>2.7.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-multipart</artifactId>
-      <version>1.9-ea04</version>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
+      <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-server</artifactId>
-      <version>1.9-ea04</version>
-      <type>jar</type>
+      <version>2.21</version>
     </dependency>
     <dependency>
-      <groupId>com.eclipsesource.jaxrs</groupId>
-      <artifactId>jersey-all</artifactId>
-      <version>2.17</version>
-      <type>jar</type>
+      <groupId>org.glassfish.jersey.media</groupId>
+      <artifactId>jersey-media-multipart</artifactId>
+      <version>2.21</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>19.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -82,24 +79,6 @@
     <dependency>
       <groupId>io.hops</groupId>
       <artifactId>hadoop-client</artifactId>
-      <version>2.4.0</version>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>io.hops</groupId>
-      <artifactId>hadoop-hdfs</artifactId>
-      <version>2.4.0</version>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>io.hops</groupId>
-      <artifactId>hadoop-project</artifactId>
-      <version>2.4.0</version>
-      <type>pom</type>
-    </dependency>
-    <dependency>
-      <groupId>io.hops</groupId>
-      <artifactId>hadoop-yarn-api</artifactId>
       <version>2.4.0</version>
       <type>jar</type>
     </dependency>
