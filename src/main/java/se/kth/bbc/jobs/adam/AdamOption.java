@@ -3,7 +3,7 @@ package se.kth.bbc.jobs.adam;
 /**
  * An optional argument to an ADAM command. I.e. an argument that is preceded by
  * a dash ('-') in the command.
- * <p>
+ * <p/>
  * @author stig
  */
 public final class AdamOption {

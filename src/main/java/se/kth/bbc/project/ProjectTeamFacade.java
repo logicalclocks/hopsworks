@@ -30,7 +30,7 @@ public class ProjectTeamFacade {
 
   /**
    * Count the number of members in this project with the given role.
-   * <p>
+   * <p/>
    * @param project
    * @param role
    * @return
@@ -45,7 +45,7 @@ public class ProjectTeamFacade {
 
   /**
    * Count the number of members in this project.
-   * <p>
+   * <p/>
    * @param project
    * @return
    */
@@ -58,7 +58,7 @@ public class ProjectTeamFacade {
 
   /**
    * Find all team members in project 'name' with role 'role'.
-   * <p>
+   * <p/>
    * @param project
    * @param role
    * @return A list of User entities that have the role <i>role</i> in Project
@@ -76,7 +76,7 @@ public class ProjectTeamFacade {
   /**
    * Get all the ProjectTeam entries for users in the role <i>role</i> in
    * Project <i>project</i>.
-   * <p>
+   * <p/>
    * @param project
    * @param role
    * @return
@@ -93,7 +93,7 @@ public class ProjectTeamFacade {
   /**
    * Find all the ProjectTeam entries for members in Project <i>project</i> that
    * have the role Researcher.
-   * <p>
+   * <p/>
    * @param project
    * @return
    */
@@ -104,7 +104,7 @@ public class ProjectTeamFacade {
   /**
    * Find all the ProjectTeam entries for members in Project <i>project</i> that
    * have the role Guest.
-   * <p>
+   * <p/>
    * @param project
    * @return
    */
@@ -114,7 +114,7 @@ public class ProjectTeamFacade {
 
   /**
    * Get all the ProjectTeam entries for the given project.
-   * <p>
+   * <p/>
    * @param project
    * @return
    */
@@ -128,7 +128,7 @@ public class ProjectTeamFacade {
 
   /**
    * Find all ProjectTeam entries containing the given User as member.
-   * <p>
+   * <p/>
    * @param member
    * @return
    */
@@ -140,7 +140,7 @@ public class ProjectTeamFacade {
 
   /**
    * Count the number of studies this user is a member of.
-   * <p>
+   * <p/>
    * @param user
    * @return
    */
@@ -154,7 +154,7 @@ public class ProjectTeamFacade {
   /**
    * Count the number of studies the user with this email address is a member
    * of.
-   * <p>
+   * <p/>
    * @param email
    * @return
    * @deprecated Use countByMember(User user) instead.
@@ -169,7 +169,7 @@ public class ProjectTeamFacade {
 
   /**
    * Get the current role of User <i>user</i> in Project <i>project</i>.
-   * <p>
+   * <p/>
    * @param project
    * @param user
    * @return The current role of the user in the project, or null if the user is
@@ -189,7 +189,7 @@ public class ProjectTeamFacade {
 
   /**
    * Get the current role of User <i>user</i> in Project <i>project</i>.
-   * <p>
+   * <p/>
    * @param project
    * @param user
    * @return The current role of the user in the project, or null if the user is
@@ -220,7 +220,7 @@ public class ProjectTeamFacade {
   /**
    * Remove the ProjectTeam entry for User <i>user</i> in Project
    * <i>project</i>.
-   * <p>
+   * <p/>
    * @param project
    * @param user
    */
@@ -234,7 +234,7 @@ public class ProjectTeamFacade {
   /**
    * Remove the ProjectTeam entry for the User with email <i>email</i> in
    * Project <i>project</i>.
-   * <p>
+   * <p/>
    * @param project
    * @param email
    * @deprecated Use removeProjectTeam(Project project, User user) instead.
@@ -247,7 +247,7 @@ public class ProjectTeamFacade {
 
   /**
    * Update the team role of User <i>user</i> in Project <i>project</i>.
-   * <p>
+   * <p/>
    * @param project
    * @param user
    * @param teamRole
@@ -264,7 +264,7 @@ public class ProjectTeamFacade {
   /**
    * Update the team role of the User with email <i>email</i> in Project
    * <i>project</i>.
-   * <p>
+   * <p/>
    * @param project
    * @param email
    * @param teamRole
@@ -277,7 +277,7 @@ public class ProjectTeamFacade {
 
   /**
    * Find the ProjectTeam entry for Project <i>project</i> and User <i>user</i>.
-   * <p>
+   * <p/>
    * @param project
    * @param user
    * @return
@@ -289,7 +289,7 @@ public class ProjectTeamFacade {
 
   /**
    * Check if the User <i>user</i> is a member of the Project <i>project</i>.
-   * <p>
+   * <p/>
    * @param project
    * @param user
    * @return
@@ -304,7 +304,7 @@ public class ProjectTeamFacade {
 
   /**
    * Check if the User <i>user</i> is a member of the Project <i>project</i>.
-   * <p>
+   * <p/>
    * @param project
    * @param user
    * @return
@@ -318,7 +318,7 @@ public class ProjectTeamFacade {
 
   /**
    * Find the ProjectTeam entry for the given project and user.
-   * <p>
+   * <p/>
    * @param project
    * @param user
    * @return The ProjectTeam entry, null if it does not exist.
@@ -329,6 +329,17 @@ public class ProjectTeamFacade {
             ProjectTeam.class);
     q.setParameter("user", user);
     q.setParameter("project", project);
+    try {
+      return q.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+
+  public User findUserByEmail(String userEmail) {
+    TypedQuery<User> q = em.createNamedQuery(
+            "User.findByEmail", User.class);
+    q.setParameter("email", userEmail);
     try {
       return q.getSingleResult();
     } catch (NoResultException e) {

@@ -3,7 +3,7 @@ package se.kth.bbc.security.auth;
 /**
  *
  * This class redirect the logged in user from the login pages.
- * <p>
+ * <p/>
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 import java.io.IOException;

@@ -24,7 +24,7 @@ import se.kth.hopsworks.user.model.Users;
 /**
  * Takes care of the execution of a Cuneiform job: run job, update history
  * object, copy logs and fetch output.
- * <p>
+ * <p/>
  * @author stig
  */
 public final class CuneiformJob extends YarnJob {
@@ -217,7 +217,7 @@ public final class CuneiformJob extends YarnJob {
    * Prepare the workflow file for running. Edits the workflow contents, but
    * does not alter anything else. Paths are assumed to be HDFS absolute paths.
    * It then writes the contents to a temporary workflow file in HDFS.
-   * <p>
+   * <p/>
    * @param wf
    * @throws IOException
    * @return The path at which the temporary file was created.

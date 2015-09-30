@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.hopsworks.dataset;
 
 import java.util.List;
@@ -43,7 +38,7 @@ public class DatasetRequestFacade extends AbstractFacade<DatasetRequest> {
 
   /**
    * Finds a dataset by id
-   * <p>
+   * <p/>
    * @param id
    * @return
    */
@@ -53,7 +48,7 @@ public class DatasetRequestFacade extends AbstractFacade<DatasetRequest> {
 
   /**
    * Finds all requests made on a dataset
-   * <p>
+   * <p/>
    * @param ds
    * @return
    */
@@ -67,7 +62,7 @@ public class DatasetRequestFacade extends AbstractFacade<DatasetRequest> {
 
   /**
    * Find by project member and dataset
-   * <p>
+   * <p/>
    * @param projectTeam
    * @param ds
    * @return
@@ -86,7 +81,7 @@ public class DatasetRequestFacade extends AbstractFacade<DatasetRequest> {
 
   /**
    * Find by project and dataset
-   * <p>
+   * <p/>
    * @param project
    * @param ds
    * @return
@@ -104,7 +99,7 @@ public class DatasetRequestFacade extends AbstractFacade<DatasetRequest> {
 
   /**
    * Finds all Requests by a project member.
-   * <p>
+   * <p/>
    * @param projectTeam
    * @return
    */

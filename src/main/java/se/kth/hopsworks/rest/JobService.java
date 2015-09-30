@@ -60,7 +60,7 @@ public class JobService {
 
   /**
    * Get all the jobs in this project.
-   * <p>
+   * <p/>
    * @param sc
    * @param req
    * @return A list of all defined Jobs in this project.
@@ -82,7 +82,7 @@ public class JobService {
 
   /**
    * Get the job with the given id in the current project.
-   * <p>
+   * <p/>
    * @param jobId
    * @param sc
    * @param req
@@ -117,7 +117,7 @@ public class JobService {
    * such, the jobConfig field is always empty when a JobDescription object is
    * returned. This method must therefore be called explicitly to get the job
    * configuration.
-   * <p>
+   * <p/>
    * @param jobId
    * @param sc
    * @param req
@@ -162,7 +162,7 @@ public class JobService {
    * Get all the jobs in this project that have a running execution. The return
    * value is a JSON object, where each job id is a key and the corresponding
    * boolean indicates whether the job is running or not.
-   * <p>
+   * <p/>
    * @param sc
    * @param req
    * @return
@@ -188,7 +188,7 @@ public class JobService {
 
   /**
    * Get the ExecutionService for the job with given id.
-   * <p>
+   * <p/>
    * @param jobId
    * @return
    */

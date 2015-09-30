@@ -19,6 +19,22 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              alert: function (size, title, msg) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/alertModal.html',
+                  controller: 'AlertCtrl as ctrl',
+                  size: size,
+                  resolve: {
+                    title: function () {
+                      return title;
+                    },
+                    msg: function () {
+                      return msg;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
               confirmShare: function (size, title, msg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/confirmShareModal.html',
@@ -107,13 +123,13 @@ angular.module('hopsWorksApp')
                     auth: ['$q', '$location', 'AuthService',
                       function ($q, $location, AuthService) {
                         return AuthService.session().then(
-                            function (success) {
-                            },
-                            function (err) {
-                              $location.path('/login');
-                              $location.replace();
-                              return $q.reject(err);
-                            });
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
                       }]
                   }
                 });
@@ -167,7 +183,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              viewSearchResult: function (size, result, projectOrDataset) {
+              viewSearchResult: function (size, result, datatype, projects) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/viewSearchResult.html',
                   controller: 'ViewSearchResultCtrl as viewSearchResultCtrl',
@@ -187,8 +203,11 @@ angular.module('hopsWorksApp')
                     result: function () {
                       return result;
                     },
-                    projectOrDataset: function () {
-                      return projectOrDataset;
+                    datatype: function () {
+                      return datatype;
+                    },
+                    projects: function () {
+                      return projects;
                     }
                   }
                 });

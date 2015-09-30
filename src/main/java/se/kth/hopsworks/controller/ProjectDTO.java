@@ -25,6 +25,7 @@ public class ProjectDTO {
   private List<String> services;
   private List<ProjectTeam> projectTeam;
   private List<InodeView> datasets;
+  private Integer inodeid;
 
   public ProjectDTO() {
   }
@@ -35,9 +36,10 @@ public class ProjectDTO {
     this.owner = owner;
   }
 
-  public ProjectDTO(Project project, List<String> services,
+  public ProjectDTO(Project project, Integer inodeid, List<String> services,
           List<ProjectTeam> projectTeam) {
     this.projectId = project.getId();
+    this.inodeid = inodeid;
     this.projectName = project.getName();
     this.owner = project.getOwner().getEmail();
     this.retentionPeriod = project.getRetentionPeriod();
@@ -49,9 +51,11 @@ public class ProjectDTO {
     this.projectTeam = projectTeam;
   }
 
-  public ProjectDTO(Project project, List<String> services,
+  public ProjectDTO(Project project, Integer inodeid, List<String> services,
           List<ProjectTeam> projectTeam, List<InodeView> datasets) {
     this.projectId = project.getId();
+    //the inodeid of the current project comes from hops database
+    this.inodeid = inodeid;
     this.projectName = project.getName();
     this.owner = project.getOwner().getEmail();
     this.retentionPeriod = project.getRetentionPeriod();
@@ -85,10 +89,18 @@ public class ProjectDTO {
     return projectId;
   }
 
+  public Integer getInodeid(){
+    return this.inodeid;
+  }
+  
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
 
+  public void setInodeid(Integer inodeid){
+    this.inodeid = inodeid;
+  }
+  
   public String getProjectName() {
     return projectName;
   }

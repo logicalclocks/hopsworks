@@ -28,7 +28,7 @@ import se.kth.hopsworks.user.model.Users;
 
 /**
  * An Execution is an instance of execution of a specific JobDescription.
- * <p>
+ * <p/>
  * @author stig
  */
 @Entity

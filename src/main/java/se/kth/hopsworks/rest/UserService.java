@@ -152,14 +152,9 @@ public class UserService {
     public Response addSshkey(SshKeyDTO sshkey,
                               @Context SecurityContext sc,
                               @Context HttpServletRequest req) throws AppException {
-//    public Response addSshkey(@FormParam("name") String name,
-//                              @FormParam("sshKey") String sshKey,
-//                              @Context SecurityContext sc,
-//                              @Context HttpServletRequest req) throws AppException {
         Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
         int id = user.getUid();
         SshKeyDTO dto = userController.addSshKey(id, sshkey.getName(), sshkey.getPublicKey());
-//        SshKeyDTO dto = userController.addSshKey(id, name, sshKey);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(dto).build();
     }
 

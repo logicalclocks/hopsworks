@@ -9,7 +9,7 @@ import se.kth.hopsworks.dataset.Dataset;
 /**
  * Simplified version of the Inode entity to allow for easier access through web
  * interface.
- * <p>
+ * <p/>
  * @author stig
  */
 @XmlRootElement
@@ -36,7 +36,7 @@ public final class InodeView {
 
   /**
    * Constructor for sub folders
-   * <p>
+   * <p/>
    * @param i
    * @param path
    */
@@ -61,13 +61,14 @@ public final class InodeView {
 
   /**
    * Constructor for top level datasets.
-   * <p>
+   * <p/>
    * @param parent
    * @param ds
    * @param path
    */
   public InodeView(Inode parent, Dataset ds, String path) {
     this.name = ds.getInode().getInodePK().getName();
+    this.parentId = parent.getId();
     this.dir = ds.getInode().isDir();
     this.id = ds.getInode().getId();
     this.size = ds.getInode().getSize();

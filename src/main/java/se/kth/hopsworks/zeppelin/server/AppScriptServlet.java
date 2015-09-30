@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * Simple servlet to dynamically set the Websocket and
  * the Rest api ports in the JavaScript sent to the client
- * <p>
+ * <p/>
  * @author ermiasg
  */
 public class AppScriptServlet extends HttpServlet {

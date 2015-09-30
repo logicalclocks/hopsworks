@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import java.util.EnumSet;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.fileoperations.ErasureCodeJobConfiguration;
 import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
@@ -15,7 +16,7 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 /**
  * Represents the persistable configuration of a runnable job. To be persisted
  * as JSON, the getReducedJsonObject() method is called.
- * <p>
+ * <p/>
  * @author stig
  */
 @XmlRootElement
@@ -36,7 +37,7 @@ public abstract class JobConfiguration implements JsonReduceable {
 
   /**
    * Return the JobType this JobConfiguration is meant for.
-   * <p>
+   * <p/>
    * @return
    */
   public abstract JobType getType();
@@ -61,7 +62,7 @@ public abstract class JobConfiguration implements JsonReduceable {
    * As found in Effective Java, the equals contract cannot be satisfied for
    * inheritance hierarchies that add fields in subclasses. Since this is the
    * main goal of extension of this class, these objects should not be compared.
-   * <p>
+   * <p/>
    * @param o
    * @return
    */
@@ -130,6 +131,9 @@ public abstract class JobConfiguration implements JsonReduceable {
         case YARN:
           conf = new YarnJobConfiguration();
           break;
+        case ERASURE_CODING:
+          conf = new ErasureCodeJobConfiguration();
+          break;
         default:
           throw new UnsupportedOperationException(
                   "The given jobtype is not recognized by this factory.");
@@ -141,7 +145,7 @@ public abstract class JobConfiguration implements JsonReduceable {
 
     /**
      * Get a new JobConfiguration object with the given type.
-     * <p>
+     * <p/>
      * @param type
      * @return
      */
@@ -160,6 +164,9 @@ public abstract class JobConfiguration implements JsonReduceable {
         case YARN:
           conf = new YarnJobConfiguration();
           break;
+        case ERASURE_CODING:
+          conf = new ErasureCodeJobConfiguration();
+          break;
         default:
           throw new UnsupportedOperationException(
                   "The given jobtype is not recognized by this factory.");
@@ -169,7 +176,7 @@ public abstract class JobConfiguration implements JsonReduceable {
 
     public static Set<JobType> getSupportedTypes() {
       return EnumSet.of(JobType.ADAM, JobType.CUNEIFORM, JobType.SPARK,
-              JobType.YARN);
+              JobType.YARN, JobType.ERASURE_CODING);
     }
   }
 }

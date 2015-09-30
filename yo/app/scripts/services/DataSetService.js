@@ -32,14 +32,23 @@ angular.module('hopsWorksApp')
                   return $http.get('/api/project/' + id + '/dataset/fileExists/' + fileName);
                 },
                 /**
-                 * Downloads a file using location.href. This will can replace the
-                 * page with error page if the download is unseccessful. So use checkFileExist
-                 * befor calling this to minimize the risk of an error page being showed. 
+                 * Downloads a file using location.href. This can replace the
+                 * page with error page if the download is unsuccessful. So use checkFileExist
+                 * before calling this to minimize the risk of an error page being showed. 
                  * @param {type} fileName is a path relative to the current ds to the file 
                  * @returns {undefined}
                  */
                 fileDownload: function (fileName) {
                   location.href='/hopsworks/api/project/' + id + '/dataset/fileDownload/' + fileName;
+                },
+                compressFile: function(fileName) {
+                  return $http.get('/api/project/' + id + '/dataset/compressFile/' + fileName);
+                },
+                checkFileBlocks: function(fileName){
+                  return $http.get('/api/project/' + id + '/dataset/countFileBlocks/' + fileName);
+                },
+                isDir: function(path){
+                  return $http.get('/api/project/' + id + '/dataset/isDir/' + path);
                 },
                 upload: function (dataSetPath) {
                   return $http.post('/api/project/' + id + '/dataset/upload/' + dataSetPath);
@@ -113,8 +122,8 @@ angular.module('hopsWorksApp')
                 detachTemplate: function(inodeid, templateid){
                   return $http.get('/api/metadata/detachtemplate/' + inodeid + '/' + templateid);
                 },
-                fetchMetadata: function (inodeId, tableId) {
-                  return $http.get('/api/metadata/fetchmetadata/' + inodeId + '/' + tableId);
+                fetchMetadata: function (inodePid, inodeName, tableId) {
+                  return $http.get('/api/metadata/fetchmetadata/' + inodePid + '/' + inodeName + '/' + tableId);
                 }
               };
               return services;

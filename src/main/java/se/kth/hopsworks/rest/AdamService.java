@@ -63,7 +63,7 @@ public class AdamService {
 
   /**
    * Get all the jobs in this project of type Adam.
-   * <p>
+   * <p/>
    * @param sc
    * @param req
    * @return A list of all JobDescription objects of type Adam in this
@@ -88,7 +88,7 @@ public class AdamService {
   /**
    * Get a list of the available Adam commands. This returns a list of command
    * names.
-   * <p>
+   * <p/>
    * @param sc
    * @param req
    * @return
@@ -112,7 +112,7 @@ public class AdamService {
 
   /**
    * Returns a AdamJobConfiguration for the selected command.
-   * <p>
+   * <p/>
    * @param commandName
    * @param sc
    * @param req
@@ -133,7 +133,7 @@ public class AdamService {
 
   /**
    * Create a new Job definition. If successful, the job is returned.
-   * <p>
+   * <p/>
    * @param config The configuration from which to create a Job.
    * @param sc
    * @param req

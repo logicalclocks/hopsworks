@@ -10,10 +10,15 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
+import io.hops.metadata.hdfs.entity.EncodingPolicy;
+import io.hops.metadata.hdfs.entity.EncodingStatus;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.ContentSummary;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import se.kth.bbc.lims.Constants;
 
@@ -30,11 +35,13 @@ public class FileSystemOperations {
           FileSystemOperations.class.getName());
   private DistributedFileSystem dfs;
   private Configuration conf;
+  private String CORE_CONF_DIR;
 
   @PostConstruct
   public void init() {
     try {
-      dfs = getFs();
+      CORE_CONF_DIR = System.getenv("HADOOP_CONF_DIR");
+      dfs = getDfs();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
     }
@@ -64,19 +71,19 @@ public class FileSystemOperations {
 
   /**
    * Create a new folder on the given path. Equivalent to mkdir -p.
-   * <p>
+   * <p/>
    * @param location The path to the new folder, its name included.
    * @return True if successful.
-   * <p>
+   * <p/>
    * @throws java.io.IOException
    */
-  public boolean mkdir(Path location) throws IOException {
+  public boolean mkdirs(Path location) throws IOException {
 
-    return dfs.mkdirs(location, null);
+    return dfs.mkdirs(location, FsPermission.getDefault());
   }
 
   /**
-   * Delete a file or directory form the file system.
+   * Delete a file or directory from the file system.
    *
    * @param location The location of file or directory to be removed.
    * @param recursive If true, a directory will be removed with all its
@@ -93,34 +100,35 @@ public class FileSystemOperations {
 
   /**
    * Get the HDFS file system with the Hadoop config files.
-   * <p>
+   * <p/>
    * @return
    * @throws IOException
    */
-  private DistributedFileSystem getFs() throws IOException {
+  private DistributedFileSystem getDfs() throws IOException {
 
-    String coreConfDir = System.getenv("HADOOP_CONF_DIR");
     //If still not found: throw exception
-    if (coreConfDir == null) {
+    if (CORE_CONF_DIR == null) {
       logger.log(Level.WARNING, "No configuration path set, using default: "
               + Constants.DEFAULT_HADOOP_CONF_DIR);
-      coreConfDir = Constants.DEFAULT_HADOOP_CONF_DIR;
+      CORE_CONF_DIR = Constants.DEFAULT_HADOOP_CONF_DIR;
     }
 
     //Get the configuration file at found path
-    File hadoopConfFile = new File(coreConfDir, "core-site.xml");
+    File hadoopConfFile = new File(CORE_CONF_DIR, "core-site.xml");
     if (!hadoopConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               hadoopConfFile);
       throw new IllegalStateException("No hadoop conf file: core-site.xml");
     }
-    File yarnConfFile = new File(coreConfDir, "yarn-site.xml");
+
+    File yarnConfFile = new File(CORE_CONF_DIR, "yarn-site.xml");
     if (!yarnConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               yarnConfFile);
       throw new IllegalStateException("No yarn conf file: yarn-site.xml");
     }
-    File hdfsConfFile = new File(coreConfDir, "hdfs-site.xml");
+
+    File hdfsConfFile = new File(CORE_CONF_DIR, "hdfs-site.xml");
     if (!hdfsConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               hdfsConfFile);
@@ -143,7 +151,7 @@ public class FileSystemOperations {
 
   /**
    * Get the contents of the file at the given path.
-   * <p>
+   * <p/>
    * @param file
    * @return
    * @throws IOException
@@ -164,7 +172,7 @@ public class FileSystemOperations {
 
   /**
    * Copy a file from one filesystem to the other.
-   * <p>
+   * <p/>
    * @param deleteSource If true, the file at the source path will be deleted
    * after copying.
    * @param source
@@ -178,7 +186,7 @@ public class FileSystemOperations {
 
   /**
    * Move a file in HDFS from one path to another.
-   * <p>
+   * <p/>
    * @param source
    * @param destination
    * @throws IOException
@@ -189,7 +197,7 @@ public class FileSystemOperations {
 
   /**
    * Copy a file within HDFS. Largely taken from Hadoop code.
-   * <p>
+   * <p/>
    * @param src
    * @param dst
    * @throws IOException
@@ -207,7 +215,7 @@ public class FileSystemOperations {
 
   /**
    * Copy the file at the HDFS source path to the local destination.
-   * <p>
+   * <p/>
    * @param src
    * @param dst
    * @throws IOException
@@ -216,4 +224,97 @@ public class FileSystemOperations {
     dfs.copyToLocalFile(src, dst);
   }
 
+  /**
+   * Marks a folder/file in location as metaEnabled. This means that all file
+   * operations from this path down the directory tree will be registered in
+   * hdfs_metadata_log table
+   * <p/>
+   * @param location
+   * @throws IOException
+   */
+  public void setMetaEnabled(Path location) throws IOException {
+    dfs.setMetaEnabled(location, true);
+  }
+
+  /**
+   * Create a new folder on the given path only if the parent folders exist
+   * <p/>
+   * @param location The path to the new folder, its name included.
+   * @return True if successful.
+   * <p/>
+   * @throws java.io.IOException
+   */
+  public boolean mkdir(Path location) throws IOException {
+
+    return dfs.mkdir(location, FsPermission.getDefault());
+  }
+
+  /**
+   * Compress a directory in the given path
+   * <p/>
+   * @param location
+   * @return
+   * @throws IOException
+   */
+  public boolean compress(Path location) throws IOException,
+          IllegalStateException {
+
+    //add the erasure coding configuration file
+    File erasureCodingConfFile
+            = new File(CORE_CONF_DIR, "erasure-coding-site.xml");
+    if (!erasureCodingConfFile.exists()) {
+      logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
+              erasureCodingConfFile);
+      throw new IllegalStateException(
+              "No erasure coding conf file: erasure-coding-site.xml");
+    }
+
+    this.conf.addResource(new Path(erasureCodingConfFile.getAbsolutePath()));
+
+    DistributedFileSystem localDfs = this.getDfs();
+    localDfs.setConf(this.conf);
+
+    EncodingPolicy policy = new EncodingPolicy("src", (short) 1);
+
+    String path = location.toUri().getPath();
+    localDfs.encodeFile(path, policy);
+
+    EncodingStatus encodingStatus;
+    while (!(encodingStatus = localDfs.getEncodingStatus(path)).isEncoded()) {
+      try {
+        Thread.sleep(1000);
+        logger.log(Level.INFO, "ongoing file compression of {0} ", path);
+      } catch (InterruptedException e) {
+        logger.log(Level.SEVERE, "Wait for encoding thread was interrupted.");
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Calculates the number of blocks a file holds. The given path has to resolve
+   * to a file
+   * <p/>
+   * @param path
+   * @return
+   * @throws IOException
+   */
+  public String getFileBlocks(Path path) throws IOException {
+
+    if (this.dfs.isFile(path)) {
+      FileStatus filestatus = this.dfs.getFileStatus(path);
+
+      //get the size of the file in bytes
+      long filesize = filestatus.getLen();
+      long noOfBlocks = (long) Math.ceil(filesize / filestatus.getBlockSize());
+
+      logger.log(Level.INFO, "File: {0}, No of blocks: {1}", new Object[]{path,
+        noOfBlocks});
+
+      return "" + noOfBlocks;
+    }
+
+    return "-1";
+  }
 }

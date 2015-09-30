@@ -14,7 +14,7 @@ import se.kth.bbc.lims.Utils;
 /**
  * Represents a (Cuneiform) workflow. It has a name, the contents of the
  * workflow file, a list of input parameters and a list of output parameters.
- * <p>
+ * <p/>
  * @author stig
  */
 @XmlRootElement
@@ -39,7 +39,7 @@ public class WorkflowDTO implements JsonReduceable {
 
   /**
    * Creates a new WorkflowDTO with the given name.
-   * <p>
+   * <p/>
    * @param path
    */
   public WorkflowDTO(String path) {
@@ -48,7 +48,7 @@ public class WorkflowDTO implements JsonReduceable {
 
   /**
    * Creates a new WorkflowDTO with the given name, contents.
-   * <p>
+   * <p/>
    * @param path
    * @param contents
    */
@@ -60,7 +60,7 @@ public class WorkflowDTO implements JsonReduceable {
 
   /**
    * Get the name of the workflow.
-   * <p>
+   * <p/>
    * @return
    */
   public String getName() {
@@ -69,7 +69,7 @@ public class WorkflowDTO implements JsonReduceable {
 
   /**
    * Set the name of the workflow.
-   * <p>
+   * <p/>
    * @param name
    */
   public void setName(String name) {
@@ -78,7 +78,7 @@ public class WorkflowDTO implements JsonReduceable {
 
   /**
    * Get the contents of the workflow file.
-   * <p>
+   * <p/>
    * @return
    */
   public String getContents() {
@@ -87,7 +87,7 @@ public class WorkflowDTO implements JsonReduceable {
 
   /**
    * Set the contents of the workflow file.
-   * <p>
+   * <p/>
    * @param contents
    */
   public void setContents(String contents) {
@@ -96,7 +96,7 @@ public class WorkflowDTO implements JsonReduceable {
 
   /**
    * Get the list of input parameters. This WorkflowDTO is backed by this list.
-   * <p>
+   * <p/>
    * @return
    */
   public List<InputParameter> getInputParams() {
@@ -106,7 +106,7 @@ public class WorkflowDTO implements JsonReduceable {
   /**
    * Set the list of input parameters. This workflowDTO is then backed by this
    * list.
-   * <p>
+   * <p/>
    * @param inputParams
    */
   public void setInputParams(List<InputParameter> inputParams) {
@@ -116,7 +116,7 @@ public class WorkflowDTO implements JsonReduceable {
   /**
    * Get the list of output parameters. This WorkflowDTO is backed by the
    * returned list.
-   * <p>
+   * <p/>
    * @return
    */
   public List<OutputParameter> getOutputParams() {
@@ -126,7 +126,7 @@ public class WorkflowDTO implements JsonReduceable {
   /**
    * Set the list of output parameters. This WorkflowDTO is then backed by this
    * list.
-   * <p>
+   * <p/>
    * @param outputParams
    */
   public void setOutputParams(List<OutputParameter> outputParams) {
@@ -135,7 +135,7 @@ public class WorkflowDTO implements JsonReduceable {
 
   /**
    * Get the input parameter with the given name. Returns null if not found.
-   * <p>
+   * <p/>
    * @param name
    * @return The requested input parameter or null if not found.
    */
@@ -150,7 +150,7 @@ public class WorkflowDTO implements JsonReduceable {
 
   /**
    * Get the output parameter with the given name. Returns null if not found.
-   * <p>
+   * <p/>
    * @param name
    * @return The requested output parameter or null if not found.
    */
@@ -166,7 +166,7 @@ public class WorkflowDTO implements JsonReduceable {
   /**
    * Set the value of the input parameter with the given name. Returns false if
    * no inputparameter with such name was found.
-   * <p>
+   * <p/>
    * @param name
    * @param value
    * @return
@@ -184,7 +184,7 @@ public class WorkflowDTO implements JsonReduceable {
   /**
    * Set the queried status of the output parameter with the given name. Returns
    * false if no outputparameter with such name was found.
-   * <p>
+   * <p/>
    * @param name
    * @param queried
    * @return
@@ -205,7 +205,7 @@ public class WorkflowDTO implements JsonReduceable {
 
   /**
    * Set the path where the base workflow, before content alterations, resides.
-   * <p>
+   * <p/>
    * @param path
    */
   public void setPath(String path) {
@@ -214,7 +214,7 @@ public class WorkflowDTO implements JsonReduceable {
 
   /**
    * Check if the current contents are empty.
-   * <p>
+   * <p/>
    * @return
    */
   public boolean areContentsEmpty() {
@@ -225,7 +225,7 @@ public class WorkflowDTO implements JsonReduceable {
    * Inspect the workflow. This method analyzes the contents of the workflow and
    * sets the inputParams and outputParams fields of the object. It overwrites
    * all previously set input and output parameters.
-   * <p>
+   * <p/>
    * @throws HasFailedException
    * @throws IllegalStateException If the contents had not yet been set.
    */
@@ -252,7 +252,7 @@ public class WorkflowDTO implements JsonReduceable {
    * Update the workflow contents from the parameter bindings and query status.
    * Parameter bindings are literally put into the file. Hence, paths should be
    * absolute.
-   * <p>
+   * <p/>
    * @throws IllegalStateException If the contents had not yet been set.
    */
   public void updateContentsFromVars() throws IllegalStateException {

@@ -35,7 +35,7 @@ public class QRCodeGenerator {
 
   /**
    * Generate the QRCode URL.
-   * <p>
+   * <p/>
    * @param qrURL
    * @return
    */
@@ -45,7 +45,7 @@ public class QRCodeGenerator {
 
   /**
    * Generate the QRCode stream to be shown to user.
-   * <p>
+   * <p/>
    * @return @throws IOException
    * @throws WriterException
    */

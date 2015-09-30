@@ -9,7 +9,7 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 /**
  * Contains Spark-specific run information for a Spark job, on top of Yarn
  * configuration.
- * <p>
+ * <p/>
  * @author stig
  */
 @XmlRootElement
@@ -40,7 +40,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   /**
    * Set the path to the main executable jar. No default value.
-   * <p>
+   * <p/>
    * @param jarPath
    */
   public void setJarPath(String jarPath) {
@@ -53,7 +53,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   /**
    * Set the name of the main class to be executed. No default value.
-   * <p>
+   * <p/>
    * @param mainClass
    */
   public void setMainClass(String mainClass) {
@@ -66,7 +66,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   /**
    * Set the arguments to be passed to the job. No default value.
-   * <p>
+   * <p/>
    * @param args
    */
   public void setArgs(String args) {
@@ -80,7 +80,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   /**
    * Set the number of executors to be requested for this job. This should be
    * greater than or equal to 1.
-   * <p>
+   * <p/>
    * @param numberOfExecutors
    * @throws IllegalArgumentException If the argument is smaller than 1.
    */
@@ -99,7 +99,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   /**
    * Set the number of cores to be requested for each executor.
-   * <p>
+   * <p/>
    * @param executorCores
    * @throws IllegalArgumentException If the number of cores is smaller than 1.
    */
@@ -118,7 +118,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   /**
    * Set the memory requested for each executor in MB.
-   * <p>
+   * <p/>
    * @param executorMemory
    * @throws IllegalArgumentException If the given value is not strictly positive.
    */

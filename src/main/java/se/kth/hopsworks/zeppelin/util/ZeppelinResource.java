@@ -38,7 +38,7 @@ public class ZeppelinResource {
   /**
    * Checks if an interpreter is running
    * can return false if pid file reading fails. 
-   * <p>
+   * <p/>
    * @param interpreter
    * @return
    */
@@ -99,7 +99,7 @@ public class ZeppelinResource {
 
   /**
    * sets up a notebook repo for the given project.
-   * <p>
+   * <p/>
    * @param project
    * @return
    */

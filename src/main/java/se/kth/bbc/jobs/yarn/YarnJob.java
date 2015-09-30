@@ -77,7 +77,7 @@ public abstract class YarnJob extends HopsJob {
 
   /**
    * Start the YARN application master.
-   * <p>
+   * <p/>
    * @return True if the AM was started, false otherwise.
    * @throws IllegalStateException If the YarnRunner has not been set yet.
    */
@@ -106,7 +106,7 @@ public abstract class YarnJob extends HopsJob {
 
   /**
    * Monitor the state of the job.
-   * <p>
+   * <p/>
    * @return True if monitoring succeeded all the way, false if failed in
    * between.
    */

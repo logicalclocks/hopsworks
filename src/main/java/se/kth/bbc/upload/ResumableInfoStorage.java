@@ -25,7 +25,7 @@ public class ResumableInfoStorage {
 
   /**
    * Get ResumableInfo from mMap or Create a new one.
-   * <p>
+   * <p/>
    * @param resumableChunkSize
    * @param resumableTotalSize
    * @param resumableIdentifier
@@ -60,8 +60,8 @@ public class ResumableInfoStorage {
   }
 
   /**
-   * ÉŸ³ýResumableInfo
-   * <p>
+   * ResumableInfo
+   * <p/>
    * @param info
    */
   public void remove(ResumableInfo info) {

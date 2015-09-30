@@ -149,7 +149,7 @@ public class AdamJob extends YarnJob {
 
   /**
    * Check if all required arguments have been filled in.
-   * <p>
+   * <p/>
    * @return A list of missing argument names. If the list is empty, all
    * required arguments are present.
    */
@@ -193,7 +193,7 @@ public class AdamJob extends YarnJob {
 
   /**
    * Add all the ADAM jar to the local resources and to the classpath.
-   * <p>
+   * <p/>
    * @param builder
    */
   private void addAllAdamJarsToLocalResourcesAndClasspath(

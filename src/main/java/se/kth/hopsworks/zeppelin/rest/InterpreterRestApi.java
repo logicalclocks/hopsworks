@@ -83,7 +83,7 @@ public class InterpreterRestApi {
 
   /**
    * List all interpreter settings
-   * <p>
+   * <p/>
    * @return
    */
   @GET
@@ -96,7 +96,7 @@ public class InterpreterRestApi {
 
   /**
    * Add new interpreter setting
-   * <p>
+   * <p/>
    * @param message
    * @return
    * @throws IOException
@@ -166,7 +166,7 @@ public class InterpreterRestApi {
 
   /**
    * List all available interpreters by group
-   * <p>
+   * <p/>
    * @return
    */
   @GET
@@ -177,7 +177,7 @@ public class InterpreterRestApi {
 
   /**
    * Start an interpreter
-   * <p>
+   * <p/>
    * @param id
    * @param settingId
    * @return
@@ -227,7 +227,7 @@ public class InterpreterRestApi {
 
   /**
    * stop an interpreter
-   * <p>
+   * <p/>
    * @param settingId
    * @return nothing if successful.
    * @throws se.kth.hopsworks.rest.AppException
@@ -254,7 +254,7 @@ public class InterpreterRestApi {
 
   /**
    * list interpreters with status(running or not).
-   * <p>
+   * <p/>
    * @return nothing if successful.
    * @throws se.kth.hopsworks.rest.AppException
    */

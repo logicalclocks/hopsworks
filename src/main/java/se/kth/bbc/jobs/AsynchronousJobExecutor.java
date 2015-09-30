@@ -14,7 +14,7 @@ import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
  * the method startExecution() will start the HopsJob asynchronously. The
  * HobsJob is supposed to take care of all aspects of execution, such as
  * creating a JobHistory object or processing output.
- * <p>
+ * <p/>
  * @author stig
  */
 @Stateless

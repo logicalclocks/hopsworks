@@ -12,7 +12,7 @@ import javax.ws.rs.ext.Provider;
  * TransactionExceptionMapper maps all transaction related exceptions and sends
  * the
  * cause of the exception to the client.
- * <p>
+ * <p/>
  * @author André & Ermias
  */
 @Provider

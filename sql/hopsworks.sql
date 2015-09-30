@@ -17,7 +17,7 @@ CREATE TABLE `users` (
   `title` VARCHAR(10)  DEFAULT NULL,
   `orcid` VARCHAR(20)  DEFAULT NULL,
   `false_login` INT(11) NOT NULL DEFAULT '-1',
-  `isonline` tinyINT(1) NOT NULL DEFAULT '0',
+  `isonline` TINYINT(1) NOT NULL DEFAULT '0',
   `secret` VARCHAR(20)  DEFAULT NULL,
   `validation_key` VARCHAR(128)  DEFAULT NULL,
   `security_question` VARCHAR(20)  DEFAULT NULL,
@@ -78,18 +78,22 @@ CREATE TABLE `people_group` (
 
 CREATE TABLE `project` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inode_pid` INT(11) NOT NULL,
+  `inode_name` VARCHAR(255) NOT NULL,
   `projectname` VARCHAR(128) NOT NULL,
   `username` VARCHAR(45) NOT NULL,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `retention_period` DATE DEFAULT NULL,
   `ethical_status` VARCHAR(30) DEFAULT NULL,
-  `archived` tinyINT(1) DEFAULT '0',
-  `deleted` tinyINT(1) DEFAULT '0',
+  `archived` TINYINT(1) DEFAULT '0',
+  `deleted` TINYINT(1) DEFAULT '0',
   `description` VARCHAR(3000) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE (`projectname`),
-  FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=ndbcluster;
+  UNIQUE KEY(`projectname`),
+  UNIQUE KEY(`inode_pid`, `inode_name`),
+  FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=ndbcluster CHARSET=latin1;
 
 CREATE TABLE `activity` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -99,7 +103,7 @@ CREATE TABLE `activity` (
   `flag` VARCHAR(128) DEFAULT NULL,
   `project_id` INT(11) NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
   FOREIGN KEY (`user_id`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
@@ -254,8 +258,11 @@ CREATE TABLE `meta_field_predefined_values` (
 
 CREATE TABLE `meta_tuple_to_file` (
   `tupleid` INT(11) NOT NULL AUTO_INCREMENT,
-  `inodeid` INT(11) DEFAULT NULL,
-  PRIMARY KEY (`tupleid`)
+  `inodeid` INT(11) NOT NULL, -- pretty necessary for the rivers to work
+  `inode_pid` INT(11) NOT NULL,
+  `inode_name` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`tupleid`),
+  FOREIGN KEY (`inode_pid`, `inode_name`) REFERENCES `hops`.`hdfs_inodes` (`parent_id`, `name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_raw_data` (
@@ -263,7 +270,7 @@ CREATE TABLE `meta_raw_data` (
   `tupleid` INT(11) NOT NULL,
   PRIMARY KEY (`fieldid`, `tupleid`),
   FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  FOREIGN KEY (`tupleid`) REFERENCES `meta_tuple_to_file` (`tupleid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`tupleid`) REFERENCES `meta_tuple_to_file` (`tupleid`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_data` (
@@ -282,72 +289,92 @@ CREATE TABLE `meta_template_to_inode` (
   `inode_name` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES hops.hdfs_inodes(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=ndbcluster CHARSET=latin1;
+  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
 
+CREATE TABLE `meta_inode_basic_metadata` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inode_pid` INT(11) NOT NULL,
+  `inode_name` VARCHAR(255) NOT NULL,
+  `description` VARCHAR(3000) DEFAULT NULL,
+  `searchable` TINYINT(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY(`id`),
+  UNIQUE KEY (`inode_pid`, `inode_name`),
+  FOREIGN KEY (`inode_pid`, `inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`, `name`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
+ 
 -- elastic jdbc-importer buffer tables -------
 
-CREATE TABLE `meta_inodes_ops_children_deleted` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `inodeid` int(11) NOT NULL,
-  `parentid` int(11) NOT NULL,
-  `processed` tinyint(4) DEFAULT '0',
+CREATE TABLE `meta_inodes_ops_parents_buffer` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` INT(11) NOT NULL,
+  `parentid` INT(11) NOT NULL,
+  `operation` SMALLINT(11) NOT NULL,
+  `logical_time` INT(11) NOT NULL,
+  `processed` TINYINT(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-CREATE TABLE `meta_inodes_ops_parents_deleted` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `inodeid` int(11) NOT NULL,
-  `parentid` int(11) NOT NULL,
-  `processed` tinyint(4) DEFAULT '0',
+CREATE TABLE `meta_inodes_ops_datasets_buffer` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` INT(11) NOT NULL,
+  `parentid` INT(11) NOT NULL,
+  `operation` SMALLINT(11) NOT NULL,
+  `logical_time` INT(11) NOT NULL,
+  `processed` TINYINT(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`,`inodeid`,`parentid`)
+) ENGINE=ndbcluster AUTO_INCREMENT=85 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `meta_inodes_ops_children_pr_buffer` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` INT(11) NOT NULL,
+  `parentid` INT(11) NOT NULL,
+  `operation` SMALLINT(11) NOT NULL,
+  `logical_time` INT(11) NOT NULL,
+  `processed` TINYINT(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`inodeid`,`parentid`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
----- Dataset table-------------------------------------------------
+CREATE TABLE `meta_inodes_ops_children_ds_buffer` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` INT(11) NOT NULL,
+  `parentid` INT(11) NOT NULL,
+  `operation` SMALLINT(11) NOT NULL,
+  `logical_time` INT(11) NOT NULL,
+  `processed` TINYINT(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`,`inodeid`,`parentid`)
+) ENGINE=ndbcluster AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+-- Dataset table-------------------------------------------------
 CREATE TABLE `dataset` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `inode_pid` int(11) NOT NULL,
-  `inode_name` varchar(255) NOT NULL,
-  `projectId` int(11) NOT NULL,
-  `description` varchar(3000) DEFAULT NULL,
-  `editable` tinyint(1) NOT NULL DEFAULT '1',
-  `status` tinyint(1) NOT NULL DEFAULT '1',
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inode_pid` INT(11) NOT NULL,
+  `inode_name` VARCHAR(255) NOT NULL,
+  `projectId` INT(11) NOT NULL,
+  `description` VARCHAR(3000) DEFAULT NULL,
+  `editable` TINYINT(1) NOT NULL DEFAULT '1',
+  `status` TINYINT(1) NOT NULL DEFAULT '1',
+  `searchable` TINYINT(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_dataset` (`inode_pid`,`projectId`,`inode_name`),
   KEY `fk_dataset_2_idx` (`projectId`),
   KEY `fk_dataset_1_idx` (`inode_pid`,`inode_name`),
-  CONSTRAINT `fk_dataset_2` 
-	FOREIGN KEY (`projectId`) 
-	REFERENCES `project` (`id`) 
-	ON DELETE CASCADE 
-	ON UPDATE NO ACTION,
-  CONSTRAINT `fk_dataset_1` 
-	FOREIGN KEY (`inode_pid`,`inode_name`) 
-	REFERENCES `hops`.`hdfs_inodes` (`parent_id`,`name`) 
-	ON DELETE CASCADE 
-	ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
+  CONSTRAINT `fk_dataset_2` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  CONSTRAINT `fk_dataset_1` FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES `hops`.`hdfs_inodes` (`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
 
 CREATE TABLE `dataset_request` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `dataset` int(11) NOT NULL,
-  `projectId` int(11) NOT NULL,
-  `user_email` varchar(45) NOT NULL,
-  `requested` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `message` varchar(3000) DEFAULT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `dataset` INT(11) NOT NULL,
+  `projectId` INT(11) NOT NULL,
+  `user_email` VARCHAR(45) NOT NULL,
+  `requested` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `message` VARCHAR(3000) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `index2` (`dataset`,`projectId`),
   KEY `fk_dataset_request_2_idx` (`projectId`,`user_email`),
-  CONSTRAINT `fk_dataset_request_2` 
-  FOREIGN KEY (`projectId`,`user_email`) 
-   REFERENCES `project_team` (`project_id`,`team_member`) 
-   ON DELETE CASCADE 
-   ON UPDATE NO ACTION,
-  CONSTRAINT `fk_dataset_request_1` 
-  FOREIGN KEY (`dataset`) 
-   REFERENCES `dataset` (`id`) 
-   ON DELETE CASCADE 
-   ON UPDATE NO ACTION
+  CONSTRAINT `fk_dataset_request_2` FOREIGN KEY (`projectId`,`user_email`) REFERENCES `project_team` (`project_id`,`team_member`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  CONSTRAINT `fk_dataset_request_1` FOREIGN KEY (`dataset`) REFERENCES `dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 
@@ -389,9 +416,9 @@ CREATE VIEW `users_groups` AS
 -- -----------------------
 
 CREATE TABLE `ssh_keys` (
-  `uid` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `public_key` varchar(2000) NOT NULL,
+  `uid` INT(11) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
+  `public_key` VARCHAR(2000) NOT NULL,
   PRIMARY KEY (`uid`, `name`),
   KEY `name_idx` (`name`),
   KEY `uid_idx` (`uid`),
@@ -401,7 +428,7 @@ CREATE TABLE `ssh_keys` (
 
 CREATE VIEW `hops_users` AS select concat(`pt`.`team_member`,'__',`p`.`projectname`) AS `project_user` from ((`project` `p` join `project_team` `pt`) join `ssh_keys` `sk`) where `pt`.`team_member` in (select `u`.`email` from (`users` `u` join `ssh_keys` `s`) where (`u`.`uid` = `s`.`uid`)); 
 
-CREATE TABLE authorized_sshkeys (project varchar(64) not null, user varchar(48) not null, sshkey_name varchar(64) not null, primary key (project, user, sshkey_name), key idx_user(user), key idx_project(project)) engine=ndbcluster;
+CREATE TABLE authorized_sshkeys (project VARCHAR(64) NOT NULL, user VARCHAR(48) NOT NULL, sshkey_name VARCHAR(64) NOT NULL, PRIMARY KEY (project, user, sshkey_name), KEY idx_user(user), KEY idx_project(project)) engine=ndbcluster;
 
 
 

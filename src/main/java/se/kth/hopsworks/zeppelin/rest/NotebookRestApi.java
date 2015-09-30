@@ -58,7 +58,7 @@ public class NotebookRestApi {
 
   /**
    * bind a setting to note
-   * <p>
+   * <p/>
    * @param noteId
    * @param req
    * @return
@@ -77,7 +77,7 @@ public class NotebookRestApi {
 
   /**
    * list binded setting
-   * <p>
+   * <p/>
    * @param noteId
    * @return
    */
@@ -125,7 +125,7 @@ public class NotebookRestApi {
 
   /**
    * List all Tutorial notes.
-   * <p>
+   * <p/>
    * @return note info if successful.
    * @throws se.kth.hopsworks.rest.AppException
    */
@@ -143,7 +143,7 @@ public class NotebookRestApi {
 
   /**
    * List all notes in a project
-   * <p>
+   * <p/>
    * @param id
    * @return note info if successful.
    * @throws se.kth.hopsworks.rest.AppException
@@ -170,7 +170,7 @@ public class NotebookRestApi {
 
   /**
    * Create new note in a project
-   * <p>
+   * <p/>
    * @param id
    * @return note info if successful.
    * @throws se.kth.hopsworks.rest.AppException

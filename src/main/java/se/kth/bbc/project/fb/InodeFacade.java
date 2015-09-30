@@ -32,7 +32,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
   
   /**
    * Find all the Inodes that have <i>parent</i> as parent.
-   * <p>
+   * <p/>
    * @param parent
    * @return
    */
@@ -45,7 +45,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   /**
    * Get all the children of <i>parent</i>. Alias of findByParent().
-   * <p>
+   * <p/>
    * @param parent
    * @return
    */
@@ -56,7 +56,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
   /**
    * Find the parent of the given Inode. If the Inode has no parent, null is
    * returned.
-   * <p>
+   * <p/>
    * @param i
    * @return The parent, or null if no parent.
    */
@@ -73,7 +73,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   /**
    * find inode by id
-   * <p>
+   * <p/>
    * @param id
    * @return
    */
@@ -135,7 +135,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   /**
    * Check whether the given path exists.
-   * <p>
+   * <p/>
    * @param path The path to search for.
    * @return True if the path exist (i.e. there is an Inode on this path), false
    * otherwise.
@@ -146,7 +146,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   /**
    * Get the Inode at the specified path.
-   * <p>
+   * <p/>
    * @param path
    * @return Null if path does not exist.
    */
@@ -157,7 +157,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
   /**
    * Get the Inode representing the project root directory of the project with
    * given name.
-   * <p>
+   * <p/>
    * @param name
    * @return The sought for Inode, or null if this Inode does not exist.
    */
@@ -167,7 +167,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   /**
    * Find an Inode by its parent Inode and its name (i.e. its primary key).
-   * <p>
+   * <p/>
    * @param parent
    * @param name
    * @return
@@ -186,7 +186,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   /**
    * Get the project base directory of which the given Inode is a descendant.
-   * <p>
+   * <p/>
    * @param i
    * @return The Inode representing the project root directory.
    * @throws IllegalStateException when the given Inode is not under a project
@@ -207,7 +207,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   /**
    * Find out if an Inode is a project root directory.
-   * <p>
+   * <p/>
    * @param i
    * @return
    */
@@ -224,7 +224,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   /**
    * Get the name of the project of which this Inode is a descendant.
-   * <p>
+   * <p/>
    * @param i
    * @return
    * @throws IllegalStateException When the given Inode is not a descendant of
@@ -239,7 +239,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * Get a list of NavigationPath objects representing the project-relative path
    * to the given Inode. The first element in the list is the project root
    * directory.
-   * <p>
+   * <p/>
    * @param i
    * @return
    */
@@ -266,7 +266,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   /**
    * Get the path to the given Inode.
-   * <p>
+   * <p/>
    * @param i
    * @return
    */
@@ -286,7 +286,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   /**
    * Get the inodes in the directory pointed to by the given absolute HDFS path.
-   * <p>
+   * <p/>
    * @param path
    * @return
    * @throws IllegalArgumentException If the path does not point to a directory.

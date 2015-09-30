@@ -77,5 +77,3 @@ DELETE FROM hopsworks.meta_inodes_ops_children_deleted WHERE processed = 1
 
 DELETE FROM hopsworks.hdfs_metadata_log WHERE inode_id NOT IN (SELECT inodeid FROM hopsworks.meta_inodes_ops_children_deleted)
 
-
-

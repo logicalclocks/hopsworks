@@ -29,10 +29,15 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.SecurityContext;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import se.kth.bbc.activity.ActivityFacade;
+import se.kth.bbc.fileoperations.ErasureCodeJob;
+import se.kth.bbc.fileoperations.ErasureCodeJobConfiguration;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
+import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration;
+import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
@@ -44,15 +49,18 @@ import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.DatasetController;
 import se.kth.hopsworks.controller.FileTemplateDTO;
+import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.dataset.DatasetRequest;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.meta.db.TemplateFacade;
-import se.kth.meta.entity.Template;
-import se.kth.meta.exception.DatabaseException;
+import se.kth.hopsworks.meta.db.TemplateFacade;
+import se.kth.hopsworks.meta.entity.Template;
+import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.UserFacade;
 
 /**
  * @author André<amore@kth.se>
@@ -87,6 +95,12 @@ public class DataSetService {
   private TemplateFacade template;
   @EJB
   private DatasetController datasetController;
+  @EJB
+  private AsynchronousJobExecutor async;
+  @EJB
+  private UserFacade userfacade;
+  @EJB
+  private JobController jobcontroller;
 
   private Integer projectId;
   private Project project;
@@ -98,7 +112,7 @@ public class DataSetService {
 
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
-    this.project = projectFacade.find(projectId);
+    this.project = this.projectFacade.find(projectId);
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator
             + this.project.getName();
@@ -136,7 +150,7 @@ public class DataSetService {
 
   /**
    * Get the inodes in the given project-relative path.
-   * <p>
+   * <p/>
    * @param path
    * @param sc
    * @param req
@@ -350,10 +364,12 @@ public class DataSetService {
           DataSetDTO dataSet,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
+
     User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+
     try {
       datasetController.createDataset(user, project, dataSet.getName(), dataSet.
-              getDescription(), dataSet.getTemplate());
+              getDescription(), dataSet.getTemplate(), dataSet.isSearchable());
     } catch (NullPointerException c) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), c.
               getLocalizedMessage());
@@ -401,9 +417,11 @@ public class DataSetService {
     for (String s : datasetRelativePathArray) {
       dsRelativePath.append(s).append("/");
     }
+
     try {
       datasetController.createSubDirectory(project, fullPathArray[2],
-              dsRelativePath.toString(), dataSetName.getTemplate());
+              dsRelativePath.toString(), dataSetName.getTemplate(), dataSetName.
+              getDescription(), dataSetName.isSearchable());
     } catch (IOException e) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error while creating directory: " + e.
@@ -477,13 +495,14 @@ public class DataSetService {
       path = "";
     }
     path = getFullPath(path);
-    Configuration conf = new Configuration();
-    conf.addResource(new org.apache.hadoop.fs.Path(
-            Constants.DEFAULT_HADOOP_CONF_DIR + "core-site.xml"));
-    FileSystem hdfs;
+
     try {
-      hdfs = FileSystem.get(conf);
-      hdfs.open(new org.apache.hadoop.fs.Path(path));
+      boolean exists = this.fileOps.exists(path);
+
+      //check if the path is a file only if it exists
+      if (!exists || this.fileOps.isDir(path)) {
+        throw new IOException("The file does not exist");
+      }
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -491,6 +510,74 @@ public class DataSetService {
     }
     Response.ResponseBuilder response = Response.ok();
     return response.build();
+  }
+
+  @GET
+  @Path("isDir/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response isDir(@PathParam("path") String path) throws
+          AppException {
+
+    if (path == null) {
+      path = "";
+    }
+    path = getFullPath(path);
+
+    try {
+      boolean exists = this.fileOps.exists(path);
+      boolean isDir = this.fileOps.isDir(path);
+
+      String message = "";
+      JsonResponse response = new JsonResponse();
+
+      //if it exists and it's not a dir, it must be a file
+      if (exists && !isDir) {
+        message = "FILE";
+        response.setSuccessMessage(message);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(response).build();
+      } else if (exists && isDir) {
+        message = "DIR";
+        response.setSuccessMessage(message);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(response).build();
+      }
+
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "File does not exist: " + path);
+    }
+    throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+            "The requested path does not resolve to a valid dir");
+  }
+
+  @GET
+  @Path("countFileBlocks/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response countFileBlocks(@PathParam("path") String path) throws
+          AppException {
+
+    if (path == null) {
+      path = "";
+    }
+    path = getFullPath(path);
+
+    try {
+
+      String blocks = this.fileOps.getFileBlocks(path);
+      String response = blocks;
+
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(response).build();
+
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "File does not exist: " + path);
+    }
   }
 
   @Path("fileDownload/{path: .+}")
@@ -515,6 +602,67 @@ public class DataSetService {
     DownloadService downloader = new DownloadService();
     downloader.setPath(path);
     return downloader;
+  }
+
+  @Path("compressFile/{path: .+}")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response compressFile(@PathParam("path") String path,
+          @Context SecurityContext context) throws
+          AppException {
+
+    if (path == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "File not found");
+    }
+
+    path = this.getFullPath(path);
+    String parts[] = path.split(File.separator);
+
+    if (!parts[2].equals(this.project.getName())) {
+      if (!this.dataset.isEditable()) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "You can not compress files in a shared dataset.");
+      }
+    }
+
+    if (!path.endsWith(File.separator)) {
+      path = path + File.separator;
+    }
+
+    Users user = this.userfacade.findByEmail(context.getUserPrincipal().
+            getName());
+
+    ErasureCodeJobConfiguration ecConfig
+            = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
+            getJobConfigurationTemplate(JobType.ERASURE_CODING);
+    ecConfig.setFilePath(path);
+    System.out.println("PREparing for erasure coding");
+
+    //persist the job in the database
+    JobDescription jobdesc = this.jobcontroller.createJob(user, project,
+            ecConfig);
+    System.out.println("job persisted in the database");
+    //instantiate the job
+    ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, user, this.async);
+    //persist a job execution instance in the database and get its id
+    Execution exec = encodeJob.requestExecutionId();
+    System.out.println("\nSTarting the erasure coding job\n");
+    if (exec != null) {
+      //start the actual job execution i.e. compress the file in a different thread
+      this.async.startExecution(encodeJob);
+    } else {
+      logger.log(Level.SEVERE,
+              "Failed to persist JobHistory. Aborting execution.");
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Failed to persist JobHistory. File compression aborted");
+    }
+
+    String response = "File compression runs in background";
+    JsonResponse json = new JsonResponse();
+    json.setSuccessMessage(response);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
   }
 
   @Path("upload/{path: .+}")

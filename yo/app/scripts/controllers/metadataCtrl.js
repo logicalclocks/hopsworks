@@ -7,9 +7,9 @@
 angular.module('hopsWorksApp')
         .controller('MetadataCtrl', ['$cookies', '$modal', '$scope', '$routeParams',
           '$filter', 'DataSetService', 'ModalService', 'growl', 'MetadataActionService',
-          'MetadataHelperService',
+          'MetadataHelperService', 'ProjectService',
           function ($cookies, $modal, $scope, $routeParams, $filter, DataSetService,
-                  ModalService, growl, MetadataActionService, MetadataHelperService) {
+                  ModalService, growl, MetadataActionService, MetadataHelperService, ProjectService) {
 
             var self = this;
             self.metaData = {};
@@ -21,13 +21,18 @@ angular.module('hopsWorksApp')
             self.extendedTemplateName = "";
             self.currentTableId = -1;
             self.currentTemplateID = -1;
+            self.currentFileTemplates = [];
+            self.selectedTemplate = {};
             self.editedField;
-            self.extendedFrom = {};
+            self.toExtend = -1;
             self.currentBoard = {};
             self.toDownload;
             self.blob;
             self.templateContents = {};
             self.editingTemplate = false;
+            self.projectInodeid = -1;
+            self.noTemplates = false;
+
             var dataSetService = DataSetService($routeParams.projectID);
 
             //fetch all the available templates
@@ -37,25 +42,31 @@ angular.module('hopsWorksApp')
                       angular.forEach(self.availableTemplates, function (template, key) {
                         template.showing = false;
                       });
-                      console.log("AVAILABLE TEMPLATES " + JSON.stringify(self.availableTemplates));
+                    });
+
+            //get the current project to get its inodeid
+            ProjectService.get({}, {'id': parseInt($routeParams.projectID)})
+                    .$promise.then(
+                            function (success) {
+                              self.projectInodeid = success.inodeid;
+
+                            }, function (error) {
                     });
 
             /**
-             * submit form data when the 'save' button is clicked
+             * submit form data when the 'save' button is clicked or when the enter key is hit
              */
             self.submitMetadata = function () {
               if (!self.metaData) {
                 return;
               }
 
-              var currentfile = MetadataHelperService.getCurrentFile();
-              self.metaData.inodeid = currentfile.id;
-              self.metaData.tableid = self.currentTableId;
-              console.log("saving " + JSON.stringify(self.metaData));
-
-              MetadataActionService.storeMetadata($cookies['email'], self.metaData)
+              //after the project inodeid is available proceed to store metadata
+              MetadataActionService.storeMetadata($cookies['email'],
+                      parseInt(self.currentFile.parentId), self.currentFile.name, self.currentTableId, self.metaData)
                       .then(function (response) {
                         console.log("Metadata saved " + response.status);
+                        MetadataHelperService.setCloseSlider("true");
                       });
 
               //truncate metaData object
@@ -108,7 +119,6 @@ angular.module('hopsWorksApp')
             self.updateTemplateName = function (template) {
               MetadataActionService.updateTemplateName($cookies['email'], template)
                       .then(function (response) {
-                        console.log(JSON.stringify(response));
                         self.editingTemplate = false;
                         self.currentTemplateID = -1;
                       });
@@ -120,6 +130,13 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.extendTemplate = function () {
+
+              //don't proceed if there is no selected template to extend
+              if (self.toExtend === -1) {
+                growl.info("Select a template first.", {title: 'Info', ttl: 5000});
+                return;
+              }
+
               //store the new template name
               MetadataActionService.addNewTemplate($cookies['email'], self.extendedTemplateName)
                       .then(function (data) {
@@ -129,10 +146,10 @@ angular.module('hopsWorksApp')
                         var newlyCreatedID = tempTemplates.templates[tempTemplates.numberOfTemplates - 1].id;
 
                         //get the contents of the template to extend
-                        MetadataActionService.fetchTemplate($cookies['email'], parseInt(self.extendedFrom))
+                        MetadataActionService.fetchTemplate($cookies['email'], parseInt(self.toExtend))
                                 .then(function (response) {
                                   var templateToExtend = JSON.parse(response.board);
-                                  //console.log(JSON.stringify(cleanBoard));
+
                                   //associate existing contents with the new template
                                   MetadataActionService.extendTemplate($cookies['email'], newlyCreatedID, templateToExtend)
                                           .then(function (data) {
@@ -145,8 +162,9 @@ angular.module('hopsWorksApp')
                                                       //console.log("AVAILABLE TEMPLATES " + JSON.stringify(self.availableTemplates));
                                                     });
 
-                                            console.log('Response from extending template: ');
-                                            console.log(data);
+                                            self.toExtend = -1;
+                                            //console.log('Response from extending template: ');
+                                            //console.log(data);
                                           });
                                 });
                       });
@@ -232,7 +250,6 @@ angular.module('hopsWorksApp')
                         //trigger a variable change (availableTemplates) in the service
                         MetadataHelperService.fetchAvailableTemplates();
                         self.availableTemplates = MetadataHelperService.getAvailableTemplates();
-                        console.log(JSON.stringify(data));
                       });
             };
 
@@ -245,7 +262,6 @@ angular.module('hopsWorksApp')
              */
             self.attachTemplate = function (file) {
               var templateId = -1;
-              console.log(JSON.stringify(file));
 
               var data = {inodePath: "", templateId: -1};
               data.inodePath = file.path;
@@ -253,7 +269,6 @@ angular.module('hopsWorksApp')
               ModalService.attachTemplate('sm', file, templateId)
                       .then(function (success) {
                         data.templateId = success.templateId;
-                        console.log("RETURNED TEMPLATE ID " + data.templateId);
 
                         dataSetService.attachTemplate(data).then(
                                 function (success) {
@@ -286,6 +301,27 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            /**
+             * Fetches all templates attached to a given inode
+             * 
+             * @param {type} file
+             * @returns {undefined}
+             */
+            self.fetchAttachedTemplates = function () {
+              //initialize the variable before fetching the templates.
+              //assume by default there are no templates
+              self.noTemplates = false;
+              
+              dataSetService.fetchTemplatesForInode(self.currentFile.id)
+                      .then(function (response) {
+                        self.currentFileTemplates = response.data;
+
+                        if (self.currentFileTemplates.length === 0) {
+                          self.noTemplates = true;
+                        }
+                      });
+            };
+
             /* -- TABLE AND FIELD HANDLING FUNCTIONS ADD/REMOVE -- */
             /**
              * Deletes a table. It is checking first if the table contains any fields
@@ -305,7 +341,7 @@ angular.module('hopsWorksApp')
                                   .then(function (success) {
                                     self.deleteTable(column);
                                   }, function (cancelled) {
-                                    console.log("CANCELED " + JSON.stringify(cancelled));
+                                    //console.log("CANCELED " + JSON.stringify(cancelled));
                                     growl.info("Delete aborted", {title: 'Info', ttl: 5000});
                                   });
 
@@ -325,7 +361,6 @@ angular.module('hopsWorksApp')
             self.deleteTable = function (column) {
               MetadataActionService.deleteList($cookies['email'], self.currentTemplateID, column)
                       .then(function (success) {
-                        console.log(success);
                         self.fetchTemplate(self.currentTemplateID);
                         growl.success("Table " + column.name + " deleted successfully.",
                                 {title: 'Success', ttl: 5000});
@@ -376,7 +411,7 @@ angular.module('hopsWorksApp')
             self.deleteField = function (column, card) {
               MetadataActionService.deleteCard($cookies['email'], self.currentTemplateID, column, card)
                       .then(function (success) {
-                        console.log(success);
+
                         self.fetchTemplate(self.currentTemplateID);
                         growl.success("Field " + card.title + " deleted successfully.",
                                 {title: 'Success', ttl: 5000});
@@ -411,7 +446,6 @@ angular.module('hopsWorksApp')
 
               ModalService.addNewField($scope)
                       .then(function (field) {
-                        console.log("NEW FIELD " + JSON.stringify(field));
 
                         MetadataActionService.storeCard($cookies['email'], self.currentTemplateID, column, field)
                                 .then(function (success) {
@@ -466,7 +500,8 @@ angular.module('hopsWorksApp')
              */
             self.makeSearchable = function (card) {
               card.find = !card.find;
-              console.log("Card " + card.title + " became searchable " + card.find);
+              self.storeTemplate(false);
+              //console.log("Card " + card.title + " became searchable " + card.find);
             };
 
             /**
@@ -477,7 +512,8 @@ angular.module('hopsWorksApp')
              */
             self.makeRequired = function (card) {
               card.required = !card.required;
-              console.log("Card " + card.title + " became required " + card.required);
+              self.storeTemplate(false);
+              //console.log("Card " + card.title + " became required " + card.required);
             };
 
 
@@ -497,7 +533,7 @@ angular.module('hopsWorksApp')
                 angular.forEach(event.dest.sortableScope.$parent.column.cards, function (value, key) {
                   value.position = (key + 1);
                 });
-                
+
                 self.storeTemplate(false);
               },
               /*
@@ -512,7 +548,7 @@ angular.module('hopsWorksApp')
                 angular.forEach(event.dest.sortableScope.$parent.column.cards, function (value, key) {
                   value.position = (key + 1);
                 });
-                
+
                 self.storeTemplate(false);
               },
               containment: '#board'
@@ -548,10 +584,11 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.updateMetadata = function (metadata) {
-              console.log("META " + JSON.stringify(metadata));
-              MetadataActionService.updateMetadata($cookies['email'], metadata)
+
+              MetadataActionService.updateMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
                       .then(function (response) {
                         growl.success(response.board, {title: 'Success', ttl: 5000});
+
                       }, function (dialogResponse) {
                         growl.info("Could not update metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
                       });
@@ -559,6 +596,7 @@ angular.module('hopsWorksApp')
 
             /**
              * When the user clicks on a folder/file in the file browser the self.currentFile gets updated
+             * 
              * @param {type} file
              * @returns {undefined}
              */
@@ -566,17 +604,33 @@ angular.module('hopsWorksApp')
 
               var templateId = file.template;
               self.currentTemplateID = templateId;
+              self.currentFile = file;
+              //update the current file reference
               MetadataHelperService.setCurrentFile(file);
               self.currentFile = MetadataHelperService.getCurrentFile();
 
               dataSetService.fetchTemplate(templateId, $cookies['email'])
                       .then(function (response) {
-                        
+
                         var board = response.data.successMessage;
-                
+
                         self.currentBoard = JSON.parse(board);
                         self.initializeMetadataTabs(JSON.parse(board));
                         self.fetchMetadataForTemplate();
+                        self.fetchAttachedTemplates();
+                      });
+            };
+
+            /**
+             * Updates the view according to the user template selection.
+             * @returns {undefined}
+             */
+            self.updateMetadataTabs = function () {
+              dataSetService.fetchTemplate(self.selectedTemplate.templateId, $cookies['email'])
+                      .then(function (response) {
+                        var board = response.data.successMessage;
+                        self.currentBoard = JSON.parse(board);
+                        self.initializeMetadataTabs(JSON.parse(board));
                       });
             };
 
@@ -590,10 +644,9 @@ angular.module('hopsWorksApp')
               self.meta = [];
 
               var tables = self.currentBoard.columns;
-              var currentfile = MetadataHelperService.getCurrentFile();
 
               angular.forEach(tables, function (table, key) {
-                dataSetService.fetchMetadata(currentfile.id, table.id)
+                dataSetService.fetchMetadata(self.currentFile.parentId, self.currentFile.name, table.id)
                         .then(function (response) {
                           var content = response.data[0];
                           self.reconstructMetadata(table.name, content.metadataView);
@@ -657,7 +710,7 @@ angular.module('hopsWorksApp')
             self.createDownloadURL = function (template) {
               var selectedTmptName = template.name;
 
-              console.log("SELECTED TEMPLATE " + JSON.stringify(template));
+              //console.log("SELECTED TEMPLATE " + JSON.stringify(template));
 
               //get the actual template
               MetadataActionService.fetchTemplate($cookies['email'], template.id)
@@ -675,7 +728,6 @@ angular.module('hopsWorksApp')
                         self.toDownload = JSON.stringify(self.templateContents);
                         self.blob = new Blob([self.toDownload], {type: 'text/plain'});
                         self.url = (window.URL || window.webkitURL).createObjectURL(self.blob);
-                        console.log("URL CREATED " + JSON.stringify(self.url));
                       });
             };
 

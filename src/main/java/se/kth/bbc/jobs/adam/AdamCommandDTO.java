@@ -7,7 +7,7 @@ import se.kth.bbc.jobs.model.JsonReduceable;
 
 /**
  * POJO representing an AdamCommand.
- * <p>
+ * <p/>
  * @author stig
  */
 @XmlRootElement

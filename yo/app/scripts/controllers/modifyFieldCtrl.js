@@ -25,6 +25,7 @@ var mainModule = angular.module('hopsWorksApp')
 
                     MetadataActionService.fetchFieldTypes($cookies['email'])
                             .then(function (response) {
+                              console.log(JSON.stringify(response));
                               var content = JSON.parse(response.board);
 
                               //construct the select component's contents
@@ -84,7 +85,7 @@ var mainModule = angular.module('hopsWorksApp')
                       $modalInstance.close({id: $scope.field.id, title: self.fieldName, details: $scope.field.details,
                         editing: $scope.field.editing, find: $scope.field.find, required: $scope.field.required,
                         sizefield: $scope.field.sizefield, description: self.fieldDescription,
-                        fieldtypeid: self.selectedItem.id, fieldtypeContent: fieldTypeContent});
+                        fieldtypeid: self.selectedItem.id, fieldtypeContent: fieldTypeContent, position: $scope.field.position});
                     };
 
                     self.hitEnter = function (evt) {

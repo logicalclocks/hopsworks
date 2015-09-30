@@ -211,7 +211,8 @@ public class ProjectService {
     }
 
     if (!projectServices.isEmpty()) {
-      boolean added = projectController.addServices(project, projectServices, userEmail);
+      boolean added = projectController.addServices(project, projectServices,
+              userEmail);
       if (added) {
         json.setSuccessMessage(ResponseMessages.PROJECT_SERVICE_ADDED);
         updated = true;
@@ -258,6 +259,9 @@ public class ProjectService {
     try {
       //save the project
       project = projectController.createProject(projectDTO, owner);
+      if (project != null) {
+        projectController.createProjectLogResources(owner, project);
+      }
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);
@@ -271,12 +275,21 @@ public class ProjectService {
               ResponseMessages.FOLDER_INODE_NOT_CREATED, ex);
       json.setErrorMsg(ResponseMessages.FOLDER_INODE_NOT_CREATED + "\n "
               + json.getErrorMsg());
+    } catch (ProjectInternalFoldersFailedException ee) {
+      try {
+        if (project != null) {
+          projectController.removeByID(project.getId(), owner, true);
+        }
+      } catch (IOException e) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(), e.getMessage());
+      }
     }
 
     if (project != null) {
-        //add members of the project
-        failedMembers = projectController.addMembers(project, owner, projectDTO.
-                getProjectTeam());
+      //add members of the project
+      failedMembers = projectController.addMembers(project, owner, projectDTO.
+              getProjectTeam());
       //add the services for the project
       projectController.addServices(project, projectServices, owner);
     }

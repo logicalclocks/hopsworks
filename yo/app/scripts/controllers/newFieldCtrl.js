@@ -74,7 +74,7 @@ angular.module('hopsWorksApp')
                 title: this.name,
                 details: this.details,
                 editing: this.editing,
-                find: this.find,
+                find: true,
                 required: this.required,
                 sizefield: this.sizefield,
                 description: this.description,

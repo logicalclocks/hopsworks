@@ -65,7 +65,7 @@ public class CuneiformService {
 
   /**
    * Get all the jobs in this project of type cuneiform.
-   * <p>
+   * <p/>
    * @param sc
    * @param req
    * @return A list of all JobDescription objects of type Cuneiform in this
@@ -91,7 +91,7 @@ public class CuneiformService {
    * Inspect the workflow stored at the given path. Returns a
    * CuneiformJobConfiguration containing a WorkflowDTO with the workflow
    * details and Yarn job config.
-   * <p>
+   * <p/>
    * @param path
    * @param sc
    * @param req
@@ -128,7 +128,7 @@ public class CuneiformService {
 
   /**
    * Create a new Job definition. If successful, the job is returned.
-   * <p>
+   * <p/>
    * @param config The configuration from which to create a Job.
    * @param sc
    * @param req

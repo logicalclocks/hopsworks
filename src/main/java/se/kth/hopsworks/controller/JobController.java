@@ -22,7 +22,7 @@ public class JobController {
   private JobScheduler scheduler;
   
   public JobDescription createJob(Users user, Project project, JobConfiguration config){
-    JobDescription created = jdFacade.create(user, project, config);
+    JobDescription created = this.jdFacade.create(user, project, config);
     if(config.getSchedule() != null){
       scheduler.scheduleJobPeriodic(created);
     }

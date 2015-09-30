@@ -8,7 +8,7 @@ import se.kth.bbc.security.ua.model.User;
 
 /**
  *
- * <p>
+ * <p/>
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @ManagedBean

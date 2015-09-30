@@ -14,7 +14,7 @@ import se.kth.hopsworks.user.model.Users;
 /**
  * Orchestrates the execution of a Spark job: run job, update history
  * object.
- * <p>
+ * <p/>
  * @author stig
  */
 public final class SparkJob extends YarnJob {

@@ -494,7 +494,7 @@ public class NotebookServer implements
 
   /**
    * When angular object updated from client
-   * <p>
+   * <p/>
    * @param conn
    * @param notebook
    * @param fromMessage

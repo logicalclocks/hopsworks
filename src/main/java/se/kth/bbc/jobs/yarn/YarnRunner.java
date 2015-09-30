@@ -83,7 +83,7 @@ public class YarnRunner {
   //---------------------------------------------------------------------------
   /**
    * Start the Yarn Application Master.
-   * <p>
+   * <p/>
    * @return The received ApplicationId identifying the application.
    * @throws YarnException
    * @throws IOException Can occur upon opening and moving execution and input
@@ -175,7 +175,7 @@ public class YarnRunner {
    * should only be called from registered Commands. Invoking it before the
    * ApplicationSubmissionContext is properly set up will result in an
    * IllegalStateException.
-   * <p>
+   * <p/>
    * @return
    */
   public ApplicationSubmissionContext getAppContext() {
@@ -513,7 +513,7 @@ public class YarnRunner {
     //Setters
     /**
      * Sets the arguments to be passed to the Application Master.
-     * <p>
+     * <p/>
      * @param amArgs
      * @return
      */
@@ -524,7 +524,7 @@ public class YarnRunner {
 
     /**
      * Set the amount of memory allocated to the Application Master (in MB).
-     * <p>
+     * <p/>
      * @param amMem Memory in MB.
      */
     public Builder amMemory(int amMem) {
@@ -534,7 +534,7 @@ public class YarnRunner {
 
     /**
      * Set the amount of cores allocated to the Application Master.
-     * <p>
+     * <p/>
      * @param amVCores
      */
     public Builder amVCores(int amVCores) {
@@ -572,7 +572,7 @@ public class YarnRunner {
      * Set the configuration of the Yarn Application to the values contained in
      * the YarnJobConfiguration object. This overrides any defaults or
      * previously set values contained in the config file.
-     * <p>
+     * <p/>
      * @param config
      * @return
      */
@@ -591,7 +591,7 @@ public class YarnRunner {
      * Set a file to be copied over to HDFS. It will be copied to
      * localresourcesBasePath/filename and the original will be removed.
      * Equivalent to addFileToBeCopied(path,true).
-     * <p>
+     * <p/>
      * @param path
      * @return
      */
@@ -603,7 +603,7 @@ public class YarnRunner {
      * Set a file to be copied over to HDFS. It will be copied to
      * localresourcesBasePath/filename. If removeAfterCopy is true, the file
      * will also be removed after copying.
-     * <p>
+     * <p/>
      * @param path
      * @param removeAfterCopy
      * @return
@@ -618,7 +618,7 @@ public class YarnRunner {
 
     /**
      * Sets the path to which to write the Application Master's stdout.
-     * <p>
+     * <p/>
      * @param path
      * @return
      */
@@ -629,7 +629,7 @@ public class YarnRunner {
 
     /**
      * Sets the path to which to write the Application Master's stderr.
-     * <p>
+     * <p/>
      * @param path
      * @return
      */
@@ -648,7 +648,7 @@ public class YarnRunner {
      * This is the path where the AM expects its local resources to be. Use
      * "$APPID" as a replacement for the appId, which will be replaced once
      * it is available.
-     * <p>
+     * <p/>
      * If this method is not invoked, a default path will be used.
      *
      * @param basePath
@@ -690,7 +690,7 @@ public class YarnRunner {
      * copied into HDFS under the path
      * <i>localResourcesBasePath</i>/<i>filename</i> and if removeAfterCopy is
      * true, the original will be removed after starting the AM.
-     * <p>
+     * <p/>
      * @param name
      * @param source
      * @param removeAfterCopy
@@ -723,7 +723,7 @@ public class YarnRunner {
      * Add a Command that should be executed before submission of the
      * application to the ResourceManager. The commands will be executed in
      * order of addition.
-     * <p>
+     * <p/>
      * @param c
      * @return
      */
@@ -736,7 +736,7 @@ public class YarnRunner {
      * Add a java option that will be added in the invocation of the java
      * command. Should be provided in a form that is accepted by the java
      * command, i.e. including a dash in the beginning etc.
-     * <p>
+     * <p/>
      * @param option
      * @return
      */
@@ -747,7 +747,7 @@ public class YarnRunner {
 
     /**
      * Build the YarnRunner instance
-     * <p>
+     * <p/>
      * @return
      * @throws IllegalStateException Thrown if (a) configuration is not found,
      * (b) invalid main class name
