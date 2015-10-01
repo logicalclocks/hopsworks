@@ -37,17 +37,25 @@ angular.module('hopsWorksApp')
           var processMessage = function (data) {
 
             try {
-              var board = data.message;
-              var status = data.status;
               var response = {status: data.status, board: data.message};
               //console.log('sender: ' + data.sender + ' message: ' + data.message);
 
-              //since the data arrived its time to resolve the defer
-              $rootScope.$apply(callbacks.shift().def.resolve(response));
+              /*
+               * Whenever a message arrives resolve the defer, so the client gets back their promise.
+               * If there is no defer to resolve, it means the message arrived as a consequence of the action of another user
+               * connected to the same project (template changing actions) so just emit the changed template
+               */
+              var defer = callbacks.shift();
+              if(!angular.isUndefined(defer)){
+                $rootScope.$apply(defer.def.resolve(response));
+              }
+              else{
+                console.log("received MESSAGE emitting");
+                $rootScope.$emit("template.change", response);
+              }
             } catch (e) {
               var res = {sender: 'anonymous', message: e};
 
-              //$rootScope.$apply(callbacks.shift().def.resolve(res));
               console.log('ErrorLocal:');
               console.log(res);
             }
@@ -59,6 +67,10 @@ angular.module('hopsWorksApp')
               return ws.readyState;
             },
             send: function (message) {
+              /*
+               * whenever users send a message they get back a promise object, 
+               * that means they are able to know when they get back their response
+               */
               var defer = $q.defer();
               callbacks.push({
                 def: defer,

@@ -5,10 +5,10 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('MetadataCtrl', ['$cookies', '$modal', '$scope', '$routeParams',
+        .controller('MetadataCtrl', ['$cookies', '$modal', '$scope', '$rootScope', '$routeParams',
           '$filter', 'DataSetService', 'ModalService', 'growl', 'MetadataActionService',
           'MetadataHelperService', 'ProjectService',
-          function ($cookies, $modal, $scope, $routeParams, $filter, DataSetService,
+          function ($cookies, $modal, $scope, $rootScope, $routeParams, $filter, DataSetService,
                   ModalService, growl, MetadataActionService, MetadataHelperService, ProjectService) {
 
             var self = this;
@@ -35,6 +35,17 @@ angular.module('hopsWorksApp')
 
             var dataSetService = DataSetService($routeParams.projectID);
 
+            //update the current template whenever other users make changes
+            $rootScope.$on("template.change", function(event, response){
+              console.log(response);
+              
+              var incomingTemplateId = JSON.parse(response.board).templateId;
+              
+              if(self.currentTemplateID === incomingTemplateId){
+                self.currentBoard = JSON.parse(response.board);
+              }
+            });
+            
             //fetch all the available templates
             MetadataHelperService.fetchAvailableTemplates()
                     .then(function (response) {

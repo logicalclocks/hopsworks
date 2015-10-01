@@ -127,6 +127,7 @@ public abstract class ContentMessage implements Message {
     builder.add("numberOfColumns", 3 /*
      * entities.size()
      */);
+    builder.add("templateId", this.templateId);
 
     JsonArrayBuilder columns = Json.createArrayBuilder();
 
