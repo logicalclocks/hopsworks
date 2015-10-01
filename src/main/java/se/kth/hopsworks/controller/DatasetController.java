@@ -210,8 +210,8 @@ public class DatasetController {
     //Now actually create the folder
     boolean success = this.createFolder(fullPath, templateId);
 
-    //if the folder created successfully, persist basic metadata to it 
-    //(description and searchable attribute
+    //if the folder was created successfully, persist basic metadata to it -
+    //description and searchable attribute
     if (success) {
       //get the folder name. The last part of fullPath
       String pathParts[] = fullPath.split("/");
