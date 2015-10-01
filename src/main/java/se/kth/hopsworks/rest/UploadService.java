@@ -1,6 +1,5 @@
 package se.kth.hopsworks.rest;
 
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -33,7 +32,9 @@ import se.kth.bbc.upload.ResumableInfoStorage;
 import se.kth.hopsworks.controller.FolderNameValidator;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.meta.db.InodeBasicMetadataFacade;
 import se.kth.hopsworks.meta.db.TemplateFacade;
+import se.kth.hopsworks.meta.entity.InodeBasicMetadata;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.meta.exception.DatabaseException;
@@ -63,6 +64,8 @@ public class UploadService {
   private TemplateFacade template;
   @EJB
   private ResponseBuilder responseBuilder;
+  @EJB
+  private InodeBasicMetadataFacade basicMetaFacade;
 
   private String path;
   private Inode fileParent;
@@ -261,7 +264,7 @@ public class UploadService {
           }
           fileContent = Utils.getFileContents(filePath);
         }
-        
+
         this.path = Utils.ensurePathEndsInSlash(this.path);
         fileOps.copyToHDFSFromLocal(true, stagingManager.getStagingPath()
                 + this.path + fileName, this.path
@@ -274,7 +277,18 @@ public class UploadService {
 
         //if it is about a template file persist it in the database as well
         if ((this.path + fileName).endsWith(".json")) {
+          //TODO. More checks needed to ensure the valid template format
           this.persistUploadedTemplate(fileContent);
+        } //this is a common file being uploaded so add basic metadata to it
+        //description and searchable
+        else if (!(this.path + fileName).endsWith(".json")) {
+          //find the corresponding inode
+          Inode parent = this.inodes.getInodeAtPath(this.path);
+          Inode file = this.inodes.findByParentAndName(parent, fileName);
+          
+          InodeBasicMetadata basicMeta = new InodeBasicMetadata(file, "", true);
+          
+          this.basicMetaFacade.addBasicMetadata(basicMeta);
         }
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
