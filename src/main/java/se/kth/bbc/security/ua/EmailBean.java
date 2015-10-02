@@ -38,4 +38,4 @@ public class EmailBean {
     message.setText(body);
     Transport.send(message);
   }
-}
+  }

@@ -62,10 +62,6 @@ import se.kth.hopsworks.meta.exception.DatabaseException;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class DataSetService {

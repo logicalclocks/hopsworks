@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MainCtrl', ['$cookies', '$location', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService', 'ProjectService', 'growl', '$routeParams',
-          function ($cookies, $location, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl, $routeParams) {
+        .controller('MainCtrl', ['$interval','$cookies', '$location','$scope', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService','ProjectService','growl','MessageService','$routeParams',
+          function ($interval, $cookies, $location, $scope, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl, MessageService, $routeParams) {
 
             var self = this;
             self.email = $cookies['email'];
@@ -91,6 +91,40 @@ angular.module('hopsWorksApp')
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                 });
               }
+            };
+            
+            var getUnreadCount = function () {
+                MessageService.getUnreadCount().then(
+                    function (success) {
+                      self.unreadMessages = success.data.data.value;
+                    }, function (error) {
+
+                    });
+            };
+            var getMessages = function () {//
+                MessageService.getMessages().then(
+                    function (success) {
+                        self.messages = success.data;
+                        console.log(success);
+                    }, function (error) {
+
+                    });
+            };
+            getUnreadCount();
+            getMessages();
+            //this might be a bit to frequent for refresh rate 
+            var getUnreadCountInterval = $interval(function () { getUnreadCount(); },1000);
+            self.getMessages = function () {
+                getMessages();
+            };
+            self.openMessageModal = function (selected) {
+                if (selected !== undefined) {
+                    MessageService.markAsRead(selected.id);
+                };
+                ModalService.messages('lg', selected)
+                    .then(function (success) {
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                    }, function (error) { });
             };
 
             self.searchTerm = "";
@@ -193,4 +227,5 @@ angular.module('hopsWorksApp')
                 $('#datetimepicker1').datetimepicker();
               });
             };
-          }]);
+            $scope.$on("$destroy", function (){$interval.cancel(getUnreadCountInterval); });
+        }]);

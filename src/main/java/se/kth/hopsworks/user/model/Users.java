@@ -25,10 +25,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.model.User;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
 @Entity
 @Table(name = "hopsworks.users")
 @XmlRootElement

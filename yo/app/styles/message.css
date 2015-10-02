@@ -1,0 +1,113 @@
+.messages .message-meta {
+    overflow: hidden;
+}
+.messages .message-avatar {
+    float: left;
+    margin-right: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 3px;
+}
+
+.messages > li:hover {
+    background-color: #f5f7fa;
+}
+
+.messages > li {
+    border-bottom: 1px solid #f5f7fa;
+    margin-right: -15px;
+    padding-left: 5px;
+    margin-bottom: 5px;
+}
+
+.messages > li.unread {
+    background-color: #d9edf7;
+}
+.messages > li.highlight {
+    background-color: #f5f7fa;
+    box-shadow: 0 2px 1px 1px rgba(0, 0, 0, 0.25);
+}
+.messages > li > div{
+    padding-top: 10px;
+    padding-bottom: 5px;
+}
+.message-box .my-avatar {
+    float: left;
+    margin-right: 10px;
+    width: 30px;
+    height: 30px;
+    border: 1px;
+}
+.message-preview {
+    clear: both;
+    color: #909fa7;
+    max-height: 400px;
+}
+.message-view {
+    clear: both;
+    max-height: 400px;
+}
+.message-list{
+    max-height: 500px;
+}
+.message-to-list {
+    margin-top: 6px;
+}
+
+.message-panel .scroll:hover {
+    overflow-y: auto;
+    height: auto;
+}
+
+.message-box {
+    margin-top: 25px;
+    border-top: 1px solid #e4eaec;
+}
+
+.message-box .message-box-body {
+    overflow: hidden;
+    zoom: 1;
+}
+.message-box .message-box-body > textarea {
+    width: 95%;
+    resize: vertical;
+}
+.message-panel .panel-body {
+    padding: 15px 5px 5px 5px;
+}
+.message-panel .scroll {
+    border: none;
+    box-shadow:none;
+    height: auto;
+    overflow: hidden;
+}
+.message-panel .scroll > ul {
+    padding: 0px;
+}
+ul.messages {
+    list-style: none;
+    padding: 0px;
+}
+.message-panel {
+    background-color: #fff;
+    margin: 2px 0px 0px 0px;
+    padding-right: 0px;
+    padding-left: 2px;
+
+}
+.message-preview-div{
+    padding-right: 20px;
+}
+
+.message-view{
+    padding-right: 15px;
+    padding-left: 15px;
+}
+.message-preview-div > button.close {
+    display:none;
+}
+
+.message-preview-div:hover > button.close {
+    display:block;
+}
+

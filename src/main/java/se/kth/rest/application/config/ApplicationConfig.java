@@ -1,13 +1,7 @@
 package se.kth.rest.application.config;
 
-
 import org.glassfish.jersey.server.ResourceConfig;
 
-
-/**
- *
- * @author Ermias
- */
 @javax.ws.rs.ApplicationPath("api")
 public class ApplicationConfig extends ResourceConfig {
 
@@ -37,8 +31,9 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.zeppelin.rest.NotebookRestApi.class);
     register(se.kth.hopsworks.zeppelin.rest.ZeppelinRestApi.class);
     register(se.kth.hopsworks.rest.MetadataService.class);
+    register(se.kth.hopsworks.rest.MessageService.class);
     register(se.kth.hopsworks.rest.ElasticService.class);
-    
+   
     // register resources and features
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     //register(org.glassfish.jersey.filter.LoggingFilter.class);

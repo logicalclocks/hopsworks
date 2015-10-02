@@ -19,9 +19,6 @@ import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.hopsworks.rest.JsonResponse;
 
 /**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- *
  * Request filter that can be used to restrict users accesses to projects based
  * on the role they have for the project and the annotation on the method being
  * called.
@@ -70,6 +67,11 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       }
       
       Project project = projectBean.find(projectId);
+      if (project == null) {
+        requestContext.abortWith(Response.
+                status(Response.Status.NOT_FOUND).build());
+        return;
+      }
       log.log(Level.FINEST, "Filtering project request path: {0}", project.getName());
       
       if (!method.isAnnotationPresent(AllowedRoles.class)) {

@@ -13,7 +13,7 @@ angular.module('hopsWorksApp')
                   ModalService, growl, $location, MetadataHelperService) {
 
             var self = this;
-
+            self.working = false;
             //Some variables to keep track of state.
             self.files = []; //A list of files currently displayed to the user.
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
@@ -83,6 +83,7 @@ angular.module('hopsWorksApp')
               }
               //Convert into a path
               var newPath = getPath(newPathArray);
+              self.working = true;
               //Get the contents and load them
               dataSetService.getContents(newPath).then(
                       function (success) {
@@ -92,8 +93,10 @@ angular.module('hopsWorksApp')
                         //Set the current files and path
                         self.files = success.data;
                         self.pathArray = newPathArray;
+                        self.working = false;
                         console.log(success);
                       }, function (error) {
+                        self.working = false;
                 console.log("Error getting the contents of the path " + getPath(newPathArray));
                 console.log(error);
               });

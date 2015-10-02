@@ -25,10 +25,6 @@ import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserDTO;
 import se.kth.hopsworks.users.UserFacade;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
 @Path("/auth")
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)

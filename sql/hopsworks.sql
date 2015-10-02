@@ -357,11 +357,16 @@ CREATE TABLE `dataset` (
   `searchable` TINYINT(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_dataset` (`inode_pid`,`projectId`,`inode_name`),
-  KEY `fk_dataset_2_idx` (`projectId`),
-  KEY `fk_dataset_1_idx` (`inode_pid`,`inode_name`),
-  CONSTRAINT `fk_dataset_2` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  CONSTRAINT `fk_dataset_1` FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES `hops`.`hdfs_inodes` (`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=ndbcluster;
+	FOREIGN KEY (`projectId`) 
+	REFERENCES `project` (`id`) 
+	ON DELETE CASCADE 
+	ON UPDATE NO ACTION,
+	FOREIGN KEY (`inode_pid`,`inode_name`) 
+	REFERENCES `hops`.`hdfs_inodes` (`parent_id`,`name`) 
+	ON DELETE CASCADE 
+	ON UPDATE NO ACTION
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
+
 
 CREATE TABLE `dataset_request` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -372,11 +377,44 @@ CREATE TABLE `dataset_request` (
   `message` VARCHAR(3000) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `index2` (`dataset`,`projectId`),
-  KEY `fk_dataset_request_2_idx` (`projectId`,`user_email`),
-  CONSTRAINT `fk_dataset_request_2` FOREIGN KEY (`projectId`,`user_email`) REFERENCES `project_team` (`project_id`,`team_member`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  CONSTRAINT `fk_dataset_request_1` FOREIGN KEY (`dataset`) REFERENCES `dataset` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+  FOREIGN KEY (`projectId`,`user_email`) 
+   REFERENCES `project_team` (`project_id`,`team_member`) 
+   ON DELETE CASCADE 
+   ON UPDATE NO ACTION,
+  FOREIGN KEY (`dataset`) 
+   REFERENCES `dataset` (`id`) 
+   ON DELETE CASCADE 
+   ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
+-- Message 
+-- ------------------------
+CREATE TABLE `message` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_from` varchar(45) DEFAULT NULL,
+  `user_to` varchar(45)  NOT NULL,
+  `date_sent` datetime NOT NULL,
+  `subject` varchar(128)  DEFAULT NULL,
+  `preview` varchar(128) DEFAULT NULL,
+  `content` text  NOT NULL,
+  `unread` tinyint(1) NOT NULL,
+  `deleted` tinyint(1) NOT NULL,
+  `path` varchar(600) DEFAULT NULL,
+  `reply_to_msg` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_from`) REFERENCES `users` (`email`) ON DELETE SET NULL ON UPDATE NO ACTION,
+  FOREIGN KEY (`user_to`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  FOREIGN KEY (`reply_to_msg`) REFERENCES `message` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
+
+
+CREATE TABLE `message_to_user` (
+  `message` int(11) NOT NULL,
+  `user_email` varchar(45) NOT NULL,
+  PRIMARY KEY (`message`,`user_email`),
+  FOREIGN KEY (`user_email`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  FOREIGN KEY (`message`) REFERENCES `message` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
 
 -- Glassfish timers
 -- ----------------------
@@ -420,9 +458,7 @@ CREATE TABLE `ssh_keys` (
   `name` VARCHAR(255) NOT NULL,
   `public_key` VARCHAR(2000) NOT NULL,
   PRIMARY KEY (`uid`, `name`),
-  KEY `name_idx` (`name`),
-  KEY `uid_idx` (`uid`),
-  CONSTRAINT `FK_248_381` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+  FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 
