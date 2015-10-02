@@ -37,7 +37,6 @@ angular.module('hopsWorksApp')
 
             //update the current template whenever other users make changes
             $rootScope.$on("template.change", function(event, response){
-              console.log(response);
               
               var incomingTemplateId = JSON.parse(response.board).templateId;
               
@@ -76,7 +75,7 @@ angular.module('hopsWorksApp')
               MetadataActionService.storeMetadata($cookies['email'],
                       parseInt(self.currentFile.parentId), self.currentFile.name, self.currentTableId, self.metaData)
                       .then(function (response) {
-                        console.log("Metadata saved " + response.status);
+                        //console.log("Metadata saved " + response.status);
                         MetadataHelperService.setCloseSlider("true");
                       });
 
