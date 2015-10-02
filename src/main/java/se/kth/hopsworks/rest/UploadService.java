@@ -287,7 +287,6 @@ public class UploadService {
           Inode file = this.inodes.findByParentAndName(parent, fileName);
           
           InodeBasicMetadata basicMeta = new InodeBasicMetadata(file, "", true);
-          
           this.basicMetaFacade.addBasicMetadata(basicMeta);
         }
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);

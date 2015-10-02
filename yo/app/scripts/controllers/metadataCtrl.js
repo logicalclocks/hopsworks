@@ -5,10 +5,10 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('MetadataCtrl', ['$cookies', '$modal', '$scope', '$routeParams',
+        .controller('MetadataCtrl', ['$cookies', '$modal', '$scope', '$rootScope', '$routeParams',
           '$filter', 'DataSetService', 'ModalService', 'growl', 'MetadataActionService',
           'MetadataHelperService', 'ProjectService',
-          function ($cookies, $modal, $scope, $routeParams, $filter, DataSetService,
+          function ($cookies, $modal, $scope, $rootScope, $routeParams, $filter, DataSetService,
                   ModalService, growl, MetadataActionService, MetadataHelperService, ProjectService) {
 
             var self = this;
@@ -34,6 +34,28 @@ angular.module('hopsWorksApp')
             self.noTemplates = false;
 
             var dataSetService = DataSetService($routeParams.projectID);
+
+            //update the current template whenever other users make changes
+            var listener = $rootScope.$on("template.change", function (event, response) {
+              try {
+                var incomingTemplateId = JSON.parse(response.board).templateId;
+
+                if (self.currentTemplateID === incomingTemplateId) {
+                  self.currentBoard = JSON.parse(response.board);
+                }
+              } catch (error) {
+                //console.log(error);
+              }
+            });
+
+            /*
+             * Rootscope events are not deregistered when the controller dies.
+             * So on the controller destroy event deregister the rootscope listener manually.
+             * @returns {undefined}
+             */
+            $scope.$on("$destroy", function () {
+              listener();
+            });
 
             //fetch all the available templates
             MetadataHelperService.fetchAvailableTemplates()
@@ -65,7 +87,7 @@ angular.module('hopsWorksApp')
               MetadataActionService.storeMetadata($cookies['email'],
                       parseInt(self.currentFile.parentId), self.currentFile.name, self.currentTableId, self.metaData)
                       .then(function (response) {
-                        console.log("Metadata saved " + response.status);
+                        //console.log("Metadata saved " + response.status);
                         MetadataHelperService.setCloseSlider("true");
                       });
 
@@ -311,7 +333,7 @@ angular.module('hopsWorksApp')
               //initialize the variable before fetching the templates.
               //assume by default there are no templates
               self.noTemplates = false;
-              
+
               dataSetService.fetchTemplatesForInode(self.currentFile.id)
                       .then(function (response) {
                         self.currentFileTemplates = response.data;
