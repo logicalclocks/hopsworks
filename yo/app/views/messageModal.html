@@ -112,7 +112,7 @@
                     <span ng-if="messageCtrl.selectedMsg.usersCollection.length > 0" class="message-list">To: <a title="e-mail: {{to.email}}" ng-repeat="to in messageCtrl.selectedMsg.usersCollection" style="text-decoration:none;">
                         {{ to.fname }} {{ to.lname }}; </a>
                     </span>
-                    <br><br>
+                    <br>
             </div>
 
             <div class="message-view scroll">
@@ -124,7 +124,7 @@
                 </div>
             </div>
 
-            <div ng-if="!messageCtrl.selectedMsg.deleted" class="message-box">
+            <div ng-if="!messageCtrl.selectedMsg.deleted && messageCtrl.selectedMsg.from" class="message-box">
                 <p></p>
                 <div >
                     <a class="pull-left">

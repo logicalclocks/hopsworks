@@ -1,7 +1,6 @@
 package se.kth.hopsworks.message;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
@@ -17,13 +16,15 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.hopsworks.user.model.Users;
 
 @Entity
@@ -107,12 +108,16 @@ public class Message implements Serializable {
   private Collection<Users> usersCollection;
   @JoinColumn(name = "user_from",
           referencedColumnName = "email")
-  @ManyToOne(optional = false)
+  @ManyToOne
   private Users from;
   @JoinColumn(name = "user_to",
           referencedColumnName = "email")
   @ManyToOne(optional = false)
   private Users to;
+  
+  @JoinColumn(name = "reply_to_msg")
+  @OneToOne
+  private Message replyToMsg;
 
   public Message() {
   }
@@ -129,6 +134,12 @@ public class Message implements Serializable {
     this.content = content;
     this.unread = unread;
     this.deleted = deleted;
+  }
+  
+  public Message(Users from, Users to, Date dateSent) {
+    this.from = from;
+    this.to = to;
+    this.dateSent = dateSent;
   }
   
   public Message(Users from, Users to, Collection<Users> recipients, Date dateSent, String content, boolean unread,
@@ -228,6 +239,16 @@ public class Message implements Serializable {
 
   public void setTo(Users to) {
     this.to = to;
+  }
+  
+  @XmlTransient
+  @JsonIgnore
+  public Message getReplyToMsg() {
+    return replyToMsg;
+  }
+
+  public void setReplyToMsg(Message replyToMsg) {
+    this.replyToMsg = replyToMsg;
   }
 
   

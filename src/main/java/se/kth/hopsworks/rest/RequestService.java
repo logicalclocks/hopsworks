@@ -31,13 +31,10 @@ import se.kth.hopsworks.dataset.DatasetRequest;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.dataset.RequestDTO;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.message.controller.MessageController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 
-/**
- *
- * @author ermiasg
- */
 @Path("/request")
 @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
 @Produces(MediaType.APPLICATION_JSON)
@@ -63,6 +60,8 @@ public class RequestService {
   private UserFacade userFacade;
   @EJB
   private UserManager userBean;
+  @EJB
+  private MessageController messageBean;
 
   private final static Logger logger = Logger.getLogger(RequestService.class.
           getName());
@@ -88,6 +87,7 @@ public class RequestService {
     }
 
     Inode parent = inodes.findParent(inode);
+    //requested project
     Project proj = projectFacade.findByName(parent.getInodePK().getName());
     Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
 
@@ -95,18 +95,33 @@ public class RequestService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NOT_FOUND);
     }
-
+    //requesting project
     Project project = projectFacade.find(requestDTO.getProjectId());
 
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
+    Dataset dsInRequesting = datasetFacade.findByProjectAndInode(project, inode);
+    
+    if (dsInRequesting != null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Project already contains dataset.");
+    }
+    
     ProjectTeam projectTeam = projectTeamFacade.findByPrimaryKey(project, user);
 
     if (projectTeam == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "You do not have any role in this project.");
+    }
+    ProjectTeam projTeam = projectTeamFacade.findByPrimaryKey(proj, user);
+    if (projTeam != null && projTeam.getTeamRole().equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "You already have full access to this dataset.");
+    } else if (projTeam != null && proj.equals(project)) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "This dataset is already in the requesting project.");
     }
     DatasetRequest dsRequest = datasetRequest.findByProjectAndDataset(
             project, ds);
@@ -136,14 +151,28 @@ public class RequestService {
             + user.getFname() + " " + user.getLname()
             + " wants access to a dataset in a project you own. \n\n"
             + "Dataset name: " + ds.getInode().getInodePK().getName() + "\n"
-            + "Project name: " + project.getName() + "\n"
+            + "Project name: " + proj.getName() + "\n"
             + "Atached messag: " + requestDTO.getMessage() + "\n"
-            + "After loging in to hopsworks go to : /project" + project.getId()
+            + "After loging in to hopsworks go to : /project/" + proj.getId()
             + "/datasets "
             + " if you want to share this dataset. \n";
 
+    Users from = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    Users to = userFacade.findByEmail(proj.getOwner().getEmail());
+    String message = "Hi " + to.getFname() + "<br>"
+            + "I would like to request access to a dataset in a project you own. <br>"
+            + "Project name: " + proj.getName() + "<br>"
+            + "Dataset name: " + ds.getInode().getInodePK().getName() + "<br>"
+            + "To be shared with my project: " + project.getName() + ".<br>"
+            + "Thank you in advance."
+            + requestDTO.getMessage();
+    String preview = from.getFname() + " would like to have access to a dataset in a project you own.";
+    String subject = "Dataset access request.";
+    String path = "project/" + proj.getId() + "/datasets";
+    // to, from, msg, requested path
+    messageBean.send(to, from, subject, preview, message, path);
     try {
-      emailBean.sendEmail(project.getOwner().getEmail(),
+      emailBean.sendEmail(proj.getOwner().getEmail(),
               "Access request for dataset "
               + ds.getInode().getInodePK().getName(), msg);
     } catch (MessagingException ex) {
@@ -170,8 +199,8 @@ public class RequestService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-
+    //should be removed when users and user merg.
+    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     Project project = projectFacade.find(requestDTO.getProjectId());
 
     if (project == null) {
@@ -179,6 +208,12 @@ public class RequestService {
               ResponseMessages.PROJECT_NOT_FOUND);
     }
 
+    ProjectTeam projectTeam = projectTeamFacade.findByPrimaryKey(project, user);
+
+    if (projectTeam != null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "You are already a member of this project.");
+    }
     //email body
     String msg = "Hi " + project.getOwner().getFname() + " " + project.
             getOwner().getLname() + ", \n\n"
@@ -190,6 +225,17 @@ public class RequestService {
             + " and go to members tab "
             + "if you want to add this person as a member in your project. \n";
 
+    Users from = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    Users to = userFacade.findByEmail(project.getOwner().getEmail());
+    String message = "Hi " + to.getFname() + "<br>"
+            + "I would like to join a project you own. <br>"
+            + "Project name: " + project.getName() + "<br>"
+            + requestDTO.getMessage();
+    String preview = from.getFname() + " would like to join a project you own.";
+    String subject = "Project join request.";
+    String path = "project/" + project.getId();
+    // to, from, msg, requested path
+    messageBean.send(to, from, subject, preview, message, path);
     try {
       emailBean.sendEmail(project.getOwner().getEmail(),
               "Join request for project "

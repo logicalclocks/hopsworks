@@ -391,7 +391,7 @@ CREATE TABLE `dataset_request` (
 -- ------------------------
 CREATE TABLE `message` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_from` varchar(45),
+  `user_from` varchar(45) DEFAULT NULL,
   `user_to` varchar(45)  NOT NULL,
   `date_sent` datetime NOT NULL,
   `subject` varchar(128)  DEFAULT NULL,
@@ -400,9 +400,11 @@ CREATE TABLE `message` (
   `unread` tinyint(1) NOT NULL,
   `deleted` tinyint(1) NOT NULL,
   `path` varchar(600) DEFAULT NULL,
+  `reply_to_msg` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`user_from`) REFERENCES `users` (`email`) ON DELETE SET NULL ON UPDATE NO ACTION,
-  FOREIGN KEY (`user_to`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION
+  FOREIGN KEY (`user_to`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  FOREIGN KEY (`reply_to_msg`) REFERENCES `message` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 

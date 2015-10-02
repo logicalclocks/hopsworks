@@ -74,7 +74,7 @@
             </a>
             <ul class=" dropdown-menu dropdown-messages" >
               <h3 ng-if="mainCtrl.messages.length" class="text-muted"> Latest messages</h3>
-              <h3 ng-if="!mainCtrl.messages.length" class="text-muted"> No messages to show</h3>
+              <h3 ng-if="!mainCtrl.messages.length" class="text-muted"> Inbox empty.</h3>
               <li ng-repeat="msg in mainCtrl.messages | limitTo:5">
                 <div>
                   <i ng-if="msg.unread" class="fa fa-circle pull-left" style="color:#f89406" title="Unread message"></i>
@@ -88,7 +88,7 @@
                   <a ng-if="msg.path" href="#/{{msg.path}}"> go to requested path.</a>
                 </div>
               </li>
-              <a ng-if="mainCtrl.messages.length" ng-click="mainCtrl.openMessageModal()" style="text-decoration:none;"> See all messages</a>
+              <a ng-click="mainCtrl.openMessageModal()" style="text-decoration:none;"> See all messages</a>
             </ul>
           </li>
           <li class="dropdown">

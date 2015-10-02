@@ -19,7 +19,7 @@ public class MessageController {
   private final static Logger logger = Logger.getLogger(MessageController.class.
           getName());
   public final String REPLY_SEPARATOR
-          = "<br> ------------------------------------------------------------ <br>";
+          = "<hr>";
   public final int MAX_MESSAGE_SIZE = 65000;
   public final String MORE_MESSAGES = "Too many messages to show...";
   @EJB
@@ -35,22 +35,51 @@ public class MessageController {
    */
   public void reply(Users user, Message msg, String reply) {
     Date now = new Date();
+    if (msg.getFrom() == null) {
+      throw new IllegalArgumentException("Message does not contain a sender.");
+    }
     if (reply == null || reply.isEmpty()) {
       throw new IllegalArgumentException("Message is empty.");
     }
     if (reply.length() > MAX_MESSAGE_SIZE) {
       throw new IllegalArgumentException("Message too long.");
     }
-    String date = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(msg.getDateSent());
-    String dateAndWriter = "On " + date + ", " + user.getFname() + " " + user.getLname() + " wrote: <br><br>";
+    String date = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(msg.
+            getDateSent());
+    String dateAndWriter = "On " + date + ", " + user.getFname() + " " + user.
+            getLname() + " wrote: <br><br>";
     String replyMsg = REPLY_SEPARATOR + dateAndWriter + reply + msg.getContent();
     if (replyMsg.length() > MAX_MESSAGE_SIZE) {//size of text in db is 65535
       replyMsg = REPLY_SEPARATOR + dateAndWriter + reply + MORE_MESSAGES;
     }
-    Message newMsg
-            = new Message(user, msg.getFrom(), now, replyMsg, true, false);
-    messageFacade.create(newMsg);
+    boolean newMessage = false;
+    Message newMsg = msg.getReplyToMsg();
+    if (newMsg != null) {
+      newMsg = messageFacade.findMessageById(newMsg.getId());
+    } else {
+      newMessage = true;
+      newMsg = new Message(user, msg.getFrom(), now);
+      newMsg.setReplyToMsg(msg);
+    }
+
+    newMsg.setUnread(true);
+    newMsg.setDeleted(false);
+    newMsg.setContent(replyMsg);
+    String preview = user.getFname() + " replied ";
+    if (msg.getSubject() != null) {
+      preview = preview + "to  your " + msg.getSubject().toLowerCase();
+    }
+    newMsg.setPreview(preview);
+    if (newMessage) {
+      messageFacade.save(newMsg);
+    } else {
+      messageFacade.edit(newMsg);
+    }
+
     msg.setContent(replyMsg);
+    if (msg.getReplyToMsg() == null) {
+      msg.setReplyToMsg(newMsg);
+    }
     messageFacade.edit(msg);
   }
 
@@ -59,15 +88,15 @@ public class MessageController {
    * <p>
    * @param to
    * @param from
+   * @param subject
+   * @param preview
    * @param msg
    * @param requestPath if the message is a request this will contain the path
-   * to the requested dataset or project. 
+   * to the requested dataset or project.
    */
-  public void send(Users to, Users from, String msg, String requestPath) {
+  public void send(Users to, Users from, String subject, String preview,
+          String msg, String requestPath) {
     Date now = new Date();
-    if (from == null) {
-      throw new IllegalArgumentException("No sender specified.");
-    }
     if (to == null) {
       throw new IllegalArgumentException("No recipient specified.");
     }
@@ -78,12 +107,15 @@ public class MessageController {
       throw new IllegalArgumentException("Message too long.");
     }
     String date = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(now);
-    String dateAndWriter = "On " + date + ", " + from.getFname() + " " + from.getLname() + " wrote: <br><br>";
+    String dateAndWriter = "On " + date + ", " + from.getFname() + " " + from.
+            getLname() + " wrote: <br><br>";
     String message = REPLY_SEPARATOR + dateAndWriter + msg;
     Message newMsg
             = new Message(from, to, now, message, true, false);
     newMsg.setPath(requestPath);
-    messageFacade.create(newMsg);
+    newMsg.setSubject(subject);
+    newMsg.setPreview(preview);
+    messageFacade.save(newMsg);
   }
 
   /**
@@ -92,14 +124,13 @@ public class MessageController {
    * @param recipients list of the receivers
    * @param from the sender
    * @param msg the message text
-   * @param requestPath requestPath if the message is a request this will contain the path
-   * to the requested dataset or project. 
+   * @param requestPath requestPath if the message is a request this will
+   * contain the path
+   * to the requested dataset or project.
    */
-  public void sendToMany(List<Users> recipients, Users from, String msg, String requestPath) {
+  public void sendToMany(List<Users> recipients, Users from, String msg,
+          String requestPath) {
     Date now = new Date();
-    if (from == null) {
-      throw new IllegalArgumentException("No sender specified.");
-    }
     if (recipients == null || recipients.isEmpty()) {
       throw new IllegalArgumentException("No recipient specified.");
     }
@@ -111,11 +142,11 @@ public class MessageController {
     }
     for (Users u : recipients) {
       Message newMsg
-            = new Message(from, u, recipients, now, msg, true, false);
+              = new Message(from, u, recipients, now, msg, true, false);
       newMsg.setPath(requestPath);
-      messageFacade.create(newMsg);
+      messageFacade.save(newMsg);
     }
-    
+
   }
 
 }

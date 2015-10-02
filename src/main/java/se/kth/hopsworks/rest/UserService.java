@@ -14,8 +14,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-
-import se.kth.bbc.project.fb.InodeView;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UsersController;
 import se.kth.hopsworks.filters.AllowedRoles;
@@ -25,10 +23,6 @@ import se.kth.hopsworks.users.UserCardDTO;
 import se.kth.hopsworks.users.UserDTO;
 import se.kth.hopsworks.users.UserFacade;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
 @Path("/user")
 @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
 @Stateless

@@ -19,7 +19,7 @@ angular.module('hopsWorksApp')
                         function (success) {
                           $modalInstance.close(success);
                         }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 21});
                 });
               };
             } else if (datatype === 'child' || datatype === 'dataset') {
@@ -36,7 +36,7 @@ angular.module('hopsWorksApp')
                         function (success) {
                           $modalInstance.close(success);
                         }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 21});
                 });
               };
             }

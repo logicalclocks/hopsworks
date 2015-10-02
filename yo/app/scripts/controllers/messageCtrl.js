@@ -70,6 +70,7 @@ angular.module('hopsWorksApp')
                     function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 2000, referenceId: 13});
                         getTrash();
+                        self.selectedMsg = undefined;
                     }, function (error) {
 
                     });

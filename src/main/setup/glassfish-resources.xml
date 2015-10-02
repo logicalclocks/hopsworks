@@ -20,4 +20,5 @@
     </jdbc-connection-pool>
     <jdbc-resource enabled="true" jndi-name="hopsworks" object-type="user" pool-name="mysql_hopsworks_kthfsPool"/>
     <jdbc-resource enabled="true" jndi-name="jdbc/hw" object-type="user" pool-name="mysql_hopsworks_kthfsPool"/>
+    <jdbc-resource enabled="true" jndi-name="jdbc/new" object-type="user" pool-name="mysql_hopsworks_kthfsPool"/>
 </resources>
