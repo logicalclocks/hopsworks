@@ -18,7 +18,7 @@ import se.kth.hopsworks.user.model.Users;
 
 /**
  * Acts as the interaction point between the Adam frontend and backend.
- * <p>
+ * <p/>
  * @author stig
  */
 @Stateless
@@ -36,7 +36,7 @@ public class AdamController {
 
   /**
    * Start an execution of the given job, ordered by the given User.
-   * <p>
+   * <p/>
    * @param job
    * @param user
    * @return
@@ -80,7 +80,7 @@ public class AdamController {
   /**
    * Check if the Spark jar is in HDFS. If it's not, try and copy it there from
    * the local filesystem. If it's still not there, then return false.
-   * <p>
+   * <p/>
    * @return
    */
   private boolean areJarsAvailable() {

@@ -443,7 +443,7 @@ public class UserManager {
 
   /**
    * Get the last login attempt by the user identified by uid.
-   * <p>
+   * <p/>
    * @param uid
    * @return The last login attempt, or null if none is found.
    */

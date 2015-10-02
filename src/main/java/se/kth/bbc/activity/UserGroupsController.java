@@ -42,7 +42,7 @@ public class UserGroupsController {
 
   /**
    * Deletes only GUEST role of a project from USERS_GROUPS table
-   * <p>
+   * <p/>
    * @param email
    */
   public void clearGroups(String email) {
@@ -52,7 +52,7 @@ public class UserGroupsController {
 
   /**
    * Check if an entry exists in the UserGroups table for the given email.
-   * <p>
+   * <p/>
    * @param email
    * @return True if one or more entries exists, false otherwise.
    */

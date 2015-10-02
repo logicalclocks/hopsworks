@@ -183,3 +183,9 @@ div.story h3, div.task h3 {
   padding-left: 0em;
 }
 
+.meta-table-header {
+  color: #333;
+  background-color: #e6e6e6;
+  height: 43px;
+}
+

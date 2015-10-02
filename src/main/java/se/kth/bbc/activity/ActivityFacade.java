@@ -124,7 +124,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
 
   /**
    * Gets all activity information.
-   * <p>
+   * <p/>
    * @return
    */
   public List<Activity> getAllActivities() {
@@ -135,7 +135,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
 
   /**
    * Get all the activities performed on project <i>project</i>.
-   * <p>
+   * <p/>
    * @param project
    * @return
    */
@@ -148,7 +148,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
 
   /**
    * Get all the activities performed on by user <i>user</i>.
-   * <p>
+   * <p/>
    * @param user
    * @return
    */
@@ -164,7 +164,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * from
    * <i>first</i> till
    * <i>first+pageSize</i> are returned.
-   * <p>
+   * <p/>
    * @param first
    * @param pageSize
    * @param user
@@ -183,7 +183,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   /**
    * Returns all activity, but paginated. Items from <i>first</i> till
    * <i>first+pageSize</i> are returned.
-   * <p>
+   * <p/>
    * @param first
    * @param pageSize
    * @return
@@ -201,7 +201,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * from
    * <i>first</i> till
    * <i>first+pageSize</i> are returned.
-   * <p>
+   * <p/>
    * @param first
    * @param pageSize
    * @param project

@@ -11,7 +11,7 @@ public class HttpUtils {
 
   /**
    * Convert String to long
-   * <p>
+   * <p/>
    * @param value
    * @param def default value
    * @return
@@ -31,7 +31,7 @@ public class HttpUtils {
 
   /**
    * Convert String to int
-   * <p>
+   * <p/>
    * @param value
    * @param def default value
    * @return

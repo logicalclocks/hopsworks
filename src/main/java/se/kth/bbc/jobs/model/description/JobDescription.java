@@ -39,7 +39,7 @@ import se.kth.hopsworks.user.model.Users;
  * Description of work to be executed. If the work is executed, this
  * results in an Execution. Every type of Job needs to subclass this Entity and
  * declare the @DiscriminatorValue annotation.
- * <p>
+ * <p/>
  * @author stig
  */
 @Entity
@@ -153,7 +153,7 @@ public class JobDescription implements Serializable {
 
   /**
    * Set the name of the application. Default value: "Hopsworks job".
-   * <p>
+   * <p/>
    * @param name
    */
   public void setName(String name) {

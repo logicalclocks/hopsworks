@@ -6,7 +6,7 @@ import se.kth.hopsworks.user.model.Users;
 
 /**
  * Holds only Name and email of the user
- * <p>
+ * <p/>
  * @author André<amore@kth.se>
  * @author Ermias<ermiasg@kth.se>
  */

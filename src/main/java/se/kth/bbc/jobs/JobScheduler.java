@@ -21,7 +21,7 @@ import se.kth.hopsworks.controller.ExecutionController;
 
 /**
  * Allow jobs to be scheduled and take care of their execution.
- * <p>
+ * <p/>
  * @author stig
  */
 @Stateless
@@ -39,7 +39,7 @@ public class JobScheduler {
 
   /**
    * Execute the job given as extra info to the timer object.
-   * <p>
+   * <p/>
    * @param timer
    */
   @Timeout
@@ -69,7 +69,7 @@ public class JobScheduler {
   /**
    * Schedule a job for periodic execution. The first execution will occur after
    * the specified interval.
-   * <p>
+   * <p/>
    * @param job
    * @param numberOfUnits
    * @param timeUnit
@@ -83,7 +83,7 @@ public class JobScheduler {
 
   /**
    * Schedule a job for a single execution, at the given date.
-   * <p>
+   * <p/>
    * @param job
    * @param when
    */
@@ -95,7 +95,7 @@ public class JobScheduler {
 
   /**
    * Schedule a job for regular execution.
-   * <p>
+   * <p/>
    * @param job
    * @param when The ScheduleExpression dictating when the job should be run.
    */
@@ -108,7 +108,7 @@ public class JobScheduler {
   /**
    * Schedule the given job according to the JobSchedule contained in its
    * configuration.
-   * <p>
+   * <p/>
    * @param job
    * @throws NullPointerException If the job or its contained schedule are null.
    */

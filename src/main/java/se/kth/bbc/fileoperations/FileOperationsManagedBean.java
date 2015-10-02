@@ -37,7 +37,6 @@ public class FileOperationsManagedBean implements Serializable {
   /**
    * Download the file at the specified inode.
    *
-   * @param inode The file to download.
    * @return StreamedContent of the file to be downloaded.
    */
   public StreamedContent downloadFile(String path) {

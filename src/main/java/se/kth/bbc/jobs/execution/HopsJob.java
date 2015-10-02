@@ -17,7 +17,7 @@ import se.kth.hopsworks.user.model.Users;
  * this class. HopsJob then sets up and runs the actual job and finally
  * allows for some cleanup. This class takes care of execution time tracking as
  * well.
- * <p>
+ * <p/>
  * Three abstract methods are provided for overriding:
  * <ul>
  * <li>setupJob() - This method is called after an Execution id has been
@@ -25,9 +25,9 @@ import se.kth.hopsworks.user.model.Users;
  * <li>runJob() - This method is called after setupJob() finishes. </li>
  * <li>cleanup() - This method is called after runJob() finishes. </li>
  * </ul>
- * <p>
+ * <p/>
  * The calls to each of these methods are blocking.
- * <p>
+ * <p/>
  * @author stig
  */
 public abstract class HopsJob {
@@ -42,7 +42,7 @@ public abstract class HopsJob {
 
   /**
    * Create a HopsJob instance.
-   * <p>
+   * <p/>
    * @param jobDescription The JobDescription to be executed.
    * @param services A service provider giving access to several execution
    * services.
@@ -69,7 +69,7 @@ public abstract class HopsJob {
   /**
    * Returns a copy of the current execution object. The copy is not persisted
    * and should not be used for updating the database.
-   * <p>
+   * <p/>
    * @return
    */
   public final Execution getExecution() {
@@ -78,7 +78,7 @@ public abstract class HopsJob {
 
   /**
    * Update the current state of the Execution entity to the given state.
-   * <p>
+   * <p/>
    * @param newState
    */
   protected final void updateState(JobState newState) {
@@ -87,7 +87,7 @@ public abstract class HopsJob {
 
   /**
    * Update the current Execution entity with the given values.
-   * <p>
+   * <p/>
    * @param state
    * @param executionDuration
    * @param stdoutPath
@@ -115,7 +115,7 @@ public abstract class HopsJob {
    * outlined in the class documentation. Internally, this method calls
    * setupJob(), runJob() and cleanup() in that order.
    * This method is blocking.
-   * <p>
+   * <p/>
    * @throws IllegalStateException If no Execution id has been requested yet.
    */
   public final void execute() throws IllegalStateException {
@@ -143,7 +143,7 @@ public abstract class HopsJob {
   /**
    * Called before runJob, should setup the job environment to allow it to be
    * run.
-   * <p>
+   * <p/>
    * @return False if execution should be aborted. Cleanup() is still executed
    * in that case.
    */
@@ -169,7 +169,7 @@ public abstract class HopsJob {
    * and persists an Execution object. The object is in the state INITIALIZING.
    * Upon success, returns the created Execution object to allow tracking.
    * This method must be called before attempting to run the actual execution.
-   * <p>
+   * <p/>
    * @return Unique Execution object associated with this job.
    */
   public final Execution requestExecutionId() {
@@ -182,7 +182,7 @@ public abstract class HopsJob {
   /**
    * Check whether the HopsJob was initialized correctly, {@literal i.e.} if an
    * Execution id has been acquired.
-   * <p>
+   * <p/>
    * @return
    */
   public final boolean isInitialized() {
@@ -191,7 +191,7 @@ public abstract class HopsJob {
 
   /**
    * Write a message to the application logs.
-   * <p>
+   * <p/>
    * @param message
    */
   protected final void writeToLogs(String message) {
@@ -200,7 +200,7 @@ public abstract class HopsJob {
 
   /**
    * Write an Exception message to the application logs.
-   * <p>
+   * <p/>
    * @param e
    */
   protected final void writeToLogs(Exception e) {

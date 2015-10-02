@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * A workflow output parameter: can be queried or not. The value of queried
  * parameters will be included in the workflow output.
- * <p>
+ * <p/>
  * @author stig
  */
 @XmlRootElement
@@ -20,7 +20,7 @@ public class OutputParameter {
 
   /**
    * Creates a new non-queried OutputParameter with the given name.
-   * <p>
+   * <p/>
    * @param name
    */
   public OutputParameter(String name) {
@@ -29,7 +29,7 @@ public class OutputParameter {
 
   /**
    * Creates a new OutputParameter with the given name and query status.
-   * <p>
+   * <p/>
    * @param name
    * @param queried
    */
@@ -40,7 +40,7 @@ public class OutputParameter {
 
   /**
    * Get the name of the OutputParameter.
-   * <p>
+   * <p/>
    * @return
    */
   public String getName() {
@@ -49,7 +49,7 @@ public class OutputParameter {
 
   /**
    * Set the name of the OutputParameter
-   * <p>
+   * <p/>
    * @param name
    */
   public void setName(String name) {
@@ -59,7 +59,7 @@ public class OutputParameter {
   /**
    * Check if the OutputParameter is queried. If it is queried, its value will
    * be included in the output of the workflow.
-   * <p>
+   * <p/>
    * @return
    */
   public boolean isQueried() {
@@ -69,7 +69,7 @@ public class OutputParameter {
   /**
    * Set the query status of the OutputParameter. If it is queried, its value
    * will be included in the output of the workflow.
-   * <p>
+   * <p/>
    * @param queried
    */
   public void setQueried(boolean queried) {
@@ -78,7 +78,7 @@ public class OutputParameter {
 
   /**
    * Get a hashcode for the OutputParameter.
-   * <p>
+   * <p/>
    * @return
    */
   @Override
@@ -91,7 +91,7 @@ public class OutputParameter {
   /**
    * Check if the OutputParameter and obj are identical. They are so if they
    * have the same name.
-   * <p>
+   * <p/>
    * @param obj
    * @return
    */

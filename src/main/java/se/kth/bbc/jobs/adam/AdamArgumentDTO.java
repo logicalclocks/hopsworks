@@ -2,7 +2,7 @@ package se.kth.bbc.jobs.adam;
 
 /**
  * POJO representing an AdamArgument, for REST. It also contains a bound value.
- * <p>
+ * <p/>
  * @author stig
  */
 public class AdamArgumentDTO {

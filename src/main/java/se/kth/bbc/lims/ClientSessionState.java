@@ -56,7 +56,7 @@ public class ClientSessionState implements Serializable {
 
   /**
    * Get the username of the user currently logged in.
-   * <p>
+   * <p/>
    * @return Email address of the user currently logged in. (Serves as
    * username.)
    */

@@ -4,7 +4,7 @@
             type="button">&times;</button>
     <h2 class="modal-title">{{viewSearchResultCtrl.type}} Information</h2>
 </div>
-<div class="modal-body">
+<div class="modal-body" ng-init="viewSearchResultCtrl.initProjectsList()">
 
     <form role="form" name="dataSetForm" ng-submit="viewSearchResultCtrl.sendRequest()" novalidate
           class="form-validate">
@@ -39,12 +39,12 @@
             <div class="panel panel-default" id="panel1">
                 <div class="panel-heading" style="background: #f5f5f5">
                     <h4 class="panel-title" style="color: black">
-                        <a data-toggle="collapse" data-target="#moreInfo" class="collapsed">
+                        <a data-toggle="collapse" data-target="#moreInfo">
                             More Information
                         </a>
                     </h4>
                 </div>
-                <div id="moreInfo" class="panel-collapse collapse"><br>
+                <div id="moreInfo" class="panel-collapse"><br>
                 <div class="row">
                   <div class="col-md-6">
                       <label class="control-label">Members:</label>

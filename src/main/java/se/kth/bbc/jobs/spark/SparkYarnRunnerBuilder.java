@@ -14,7 +14,7 @@ import se.kth.bbc.lims.Utils;
 /**
  * Builder class for a Spark YarnRunner. Implements the common logic needed
  * for any Spark job to be started and builds a YarnRunner instance.
- * <p>
+ * <p/>
  * @author stig
  */
 public class SparkYarnRunnerBuilder {
@@ -52,7 +52,7 @@ public class SparkYarnRunnerBuilder {
 
   /**
    * Get a YarnRunner instance that will launch a Spark job.
-   * <p>
+   * <p/>
    * @return The YarnRunner instance to launch the Spark job on Yarn.
    * @throws IOException If creation failed.
    */
@@ -207,7 +207,7 @@ public class SparkYarnRunnerBuilder {
   /**
    * Set the memory requested for each executor. The given string should have
    * the form of a number followed by a 'm' or 'g' signifying the metric.
-   * <p>
+   * <p/>
    * @param memory
    * @return
    */
@@ -281,7 +281,7 @@ public class SparkYarnRunnerBuilder {
    * using `bash -c "command arg1 arg2"` and that means plain quoting doesn't
    * really work. The
    * argument is enclosed in single quotes and some key characters are escaped.
-   * <p>
+   * <p/>
    * @param s A single argument.
    * @return Argument quoted for execution via Yarn's generated shell script.
    */

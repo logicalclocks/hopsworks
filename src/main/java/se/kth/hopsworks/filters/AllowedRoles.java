@@ -6,7 +6,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * <p>
  * Annotations that can be used to restrict users from accessing project methods
  * based on the role they have for that project.
  * For this annotation to work the method annotated should be a web service with
@@ -36,7 +35,7 @@ public @interface AllowedRoles {
 
   /**
    * Used to annotate methods that work with project resources
-   * <p>
+   * <p/>
    * @return allowed roles
    */
   public String[] roles() default {AllowedRoles.DATA_OWNER};

@@ -142,7 +142,7 @@ public class InodesMB implements Serializable {
   /**
    * Change directory to the global path path. I.e. the path starts with
    * /Projects/... If path does not exist, nothing happens.
-   * <p>
+   * <p/>
    * @param path
    */
   public void cdGlobal(String path) {

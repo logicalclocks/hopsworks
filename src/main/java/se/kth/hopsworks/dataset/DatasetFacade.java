@@ -33,7 +33,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
 
   /**
    * Finds a dataset by id
-   * <p>
+   * <p/>
    * @param id
    * @return
    */
@@ -44,7 +44,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
   /**
    * Finds all instances of a dataset. i.e if a dataset is shared it is going
    * to be present in the parent project and in the project it is shard with.
-   * <p>
+   * <p/>
    * @param inode
    * @return
    */
@@ -57,7 +57,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
 
   /**
    * Find by project and dataset name
-   * <p>
+   * <p/>
    * @param project
    * @param inode
    * @return
@@ -74,7 +74,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
 
   /**
    * Finds all data sets in a project.
-   * <p>
+   * <p/>
    * @param project
    * @return
    */

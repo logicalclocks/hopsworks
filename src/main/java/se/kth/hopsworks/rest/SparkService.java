@@ -35,7 +35,7 @@ import se.kth.hopsworks.users.UserFacade;
 
 /**
  * Service offering functionality to run a Spark fatjar job.
- * <p>
+ * <p/>
  * @author stig
  */
 @RequestScoped
@@ -67,7 +67,7 @@ public class SparkService {
 
   /**
    * Get all the jobs in this project of type Spark.
-   * <p>
+   * <p/>
    * @param sc
    * @param req
    * @return A list of all JobDescription objects of type Spark in this
@@ -92,7 +92,7 @@ public class SparkService {
   /**
    * Inspect a jar in HDFS prior to running a job. Returns a
    * SparkJobConfiguration object.
-   * <p>
+   * <p/>
    * @param path
    * @param sc
    * @param req
@@ -125,7 +125,7 @@ public class SparkService {
 
   /**
    * Create a new Job definition. If successful, the job is returned.
-   * <p>
+   * <p/>
    * @param config The configuration from which to create a Job.
    * @param sc
    * @param req

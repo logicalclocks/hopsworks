@@ -3,7 +3,7 @@ package se.kth.bbc.jobs.adam;
 /**
  * A non-optional argument to an ADAM command. I.e. an input parameter that is
  * not preceded by a '-x' in the command.
- * <p>
+ * <p/>
  * @author stig
  */
 public final class AdamArgument {

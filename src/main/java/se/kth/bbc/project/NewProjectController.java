@@ -20,8 +20,6 @@ import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
-import se.kth.bbc.project.services.ProjectServices;
-import se.kth.hopsworks.util.LocalhostServices;
 
 /**
  *

@@ -25,24 +25,25 @@ import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.bbc.project.fb.InodePK;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.meta.db.MTableFacade;
-import se.kth.meta.db.TemplateFacade;
-import se.kth.meta.db.TupleToFileFacade;
-import se.kth.meta.entity.Field;
-import se.kth.meta.entity.MTable;
-import se.kth.meta.entity.Metadata;
-import se.kth.meta.entity.MetadataView;
-import se.kth.meta.entity.RawData;
-import se.kth.meta.entity.Template;
-import se.kth.meta.entity.TemplateView;
-import se.kth.meta.entity.TupleToFile;
-import se.kth.meta.exception.DatabaseException;
-import se.kth.meta.wscomm.Protocol;
-import se.kth.meta.wscomm.message.ContentMessage;
-import se.kth.meta.wscomm.message.Message;
-import se.kth.meta.wscomm.message.TemplateMessage;
+import se.kth.hopsworks.meta.db.MTableFacade;
+import se.kth.hopsworks.meta.db.TemplateFacade;
+import se.kth.hopsworks.meta.db.TupleToFileFacade;
+import se.kth.hopsworks.meta.entity.Field;
+import se.kth.hopsworks.meta.entity.MTable;
+import se.kth.hopsworks.meta.entity.Metadata;
+import se.kth.hopsworks.meta.entity.MetadataView;
+import se.kth.hopsworks.meta.entity.RawData;
+import se.kth.hopsworks.meta.entity.Template;
+import se.kth.hopsworks.meta.entity.TemplateView;
+import se.kth.hopsworks.meta.entity.TupleToFile;
+import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.meta.wscomm.Protocol;
+import se.kth.hopsworks.meta.wscomm.message.ContentMessage;
+import se.kth.hopsworks.meta.wscomm.message.Message;
+import se.kth.hopsworks.meta.wscomm.message.TemplateMessage;
 
 /**
  *
@@ -77,7 +78,7 @@ public class MetadataService {
   /**
    * Uploads a template file (.json) to the file system (hopsfs) and persists it
    * to the database as well
-   * <p>
+   * <p/>
    * @param path
    * @return
    * @throws AppException
@@ -105,8 +106,9 @@ public class MetadataService {
 
   /**
    * Fetch metadata associated to an inode by table id
-   * <p>
-   * @param inodeid
+   * <p/>
+   * @param inodePid
+   * @param inodeName
    * @param tableid
    * @param sc
    * @param req
@@ -114,16 +116,17 @@ public class MetadataService {
    * @throws AppException
    */
   @GET
-  @Path("fetchmetadata/{inodeid}/{tableid}")
+  @Path("fetchmetadata/{inodepid}/{inodename}/{tableid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response fetchMetadata(
-          @PathParam("inodeid") Integer inodeid,
+          @PathParam("inodepid") Integer inodePid,
+          @PathParam("inodename") String inodeName,
           @PathParam("tableid") Integer tableid,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    if (inodeid == null || tableid == null) {
+    if (inodePid == null || inodeName == null || tableid == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
@@ -132,7 +135,8 @@ public class MetadataService {
     List<MetadataView> metadata = new LinkedList<>();
 
     try {
-      List<TupleToFile> tuples = ttf.getTuplesByInode(inodeid);
+
+      List<TupleToFile> tuples = ttf.getTuplesByInodeId(inodePid, inodeName);
       MTable table = mtf.getTable(tableid);
 
       List<Field> fields = table.getFields();
@@ -179,13 +183,13 @@ public class MetadataService {
     } catch (DatabaseException ex) {
       logger.log(Level.WARNING, "Trying to fetch metadata.", ex);
       throw new AppException(Response.Status.NO_CONTENT.getStatusCode(),
-              "Could not fetch the metadata for the file " + inodeid + ".");
+              "Could not fetch the metadata for the file " + inodeName + ".");
     }
   }
 
   /**
    * Fetches all templates attached to a specific inode
-   * <p>
+   * <p/>
    * @param inodeid
    * @param sc
    * @param req
@@ -224,7 +228,7 @@ public class MetadataService {
 
   /**
    * Fetches all templates not attached to a specific inode
-   * <p>
+   * <p/>
    * @param inodeid
    * @param sc
    * @param req
@@ -274,7 +278,7 @@ public class MetadataService {
 
   /**
    * Fetch all templates attached to a specific inode
-   * <p>
+   * <p/>
    * @param inodeid
    * @param templateid
    * @param sc
@@ -308,6 +312,7 @@ public class MetadataService {
 
     Template toremove = null;
 
+    //keep only the selected template to remove
     for (Template template : templates) {
       if (Objects.equals(template.getId(), templateid)) {
         template.getInodes().remove(inode);
@@ -316,7 +321,31 @@ public class MetadataService {
     }
 
     try {
+
+      //remove the inode-template association
       this.templatefacade.updateTemplatesInodesMxN(toremove);
+
+      //remove any associated metadata
+      List<TupleToFile> tuples = ttf.getTuplesByInodeId(inode.getInodePK().
+              getParentId(), inode.getInodePK().getName());
+
+      if (toremove != null) {
+        //scan all tables and fields this template carries
+        for (MTable table : toremove.getMTables()) {
+          for (Field field : table.getFields()) {
+
+            //apply the filter
+            for (RawData raw : field.getRawData()) {
+              for (TupleToFile tuple : tuples) {
+                if (raw.getRawdataPK().getTupleid() == tuple.getId()) {
+                  this.ttf.deleteTTF(tuple);
+                }
+              }
+            }
+          }
+        }
+      }
+
     } catch (DatabaseException e) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
@@ -332,7 +361,7 @@ public class MetadataService {
 
   /**
    * Fetches the content of a given template
-   * <p>
+   * <p/>
    * @param templateid
    * @param sender
    * @param sc
@@ -354,7 +383,7 @@ public class MetadataService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    
+
     String json = "{\"message\": \"{\"tempid\": " + templateid + "}\"}";
 
     //create a request message
@@ -362,10 +391,10 @@ public class MetadataService {
     templateMessage.setSender(sender);
     templateMessage.setAction("fetch_template");
     templateMessage.setMessage(json);
-    ((ContentMessage)templateMessage).setTemplateid(templateid);
-    
+    ((ContentMessage) templateMessage).setTemplateid(templateid);
+
     Message message = this.protocol.GFR(templateMessage);
-    
+
     JsonResponse response = new JsonResponse();
     //message contains all template content
     response.setSuccessMessage(message.getMessage());

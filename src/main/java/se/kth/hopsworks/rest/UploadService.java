@@ -32,12 +32,14 @@ import se.kth.bbc.upload.ResumableInfoStorage;
 import se.kth.hopsworks.controller.FolderNameValidator;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.meta.db.TemplateFacade;
-import se.kth.meta.entity.Template;
-import se.kth.meta.exception.ApplicationException;
-import se.kth.meta.exception.DatabaseException;
-import se.kth.meta.wscomm.ResponseBuilder;
-import se.kth.meta.wscomm.message.UploadedTemplateMessage;
+import se.kth.hopsworks.meta.db.InodeBasicMetadataFacade;
+import se.kth.hopsworks.meta.db.TemplateFacade;
+import se.kth.hopsworks.meta.entity.InodeBasicMetadata;
+import se.kth.hopsworks.meta.entity.Template;
+import se.kth.hopsworks.meta.exception.ApplicationException;
+import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.meta.wscomm.ResponseBuilder;
+import se.kth.hopsworks.meta.wscomm.message.UploadedTemplateMessage;
 
 /**
  *
@@ -62,6 +64,8 @@ public class UploadService {
   private TemplateFacade template;
   @EJB
   private ResponseBuilder responseBuilder;
+  @EJB
+  private InodeBasicMetadataFacade basicMetaFacade;
 
   private String path;
   private Inode fileParent;
@@ -72,7 +76,7 @@ public class UploadService {
 
   /**
    * Sets the upload path for the file to be uploaded.
-   * <p>
+   * <p/>
    * @param uploadPath starting with Projects/projectName/...
    * @throws AppException if there is a folder name that is not valid in
    * the given path, the path is empty, or project name was not found.
@@ -113,7 +117,7 @@ public class UploadService {
    * name since the file to be uploaded is a template schema, irrelevant to any
    * project or dataset. The only requirement is that the upload has to be
    * performed in the Uploads directory
-   * <p>
+   * <p/>
    * @param path
    * @throws se.kth.hopsworks.rest.AppException
    */
@@ -140,7 +144,7 @@ public class UploadService {
 
   /**
    * Sets the template id to be attached to the file that's being uploaded.
-   * <p>
+   * <p/>
    * @param templateId
    */
   public void setTemplateId(int templateId) {
@@ -260,7 +264,7 @@ public class UploadService {
           }
           fileContent = Utils.getFileContents(filePath);
         }
-        
+
         this.path = Utils.ensurePathEndsInSlash(this.path);
         fileOps.copyToHDFSFromLocal(true, stagingManager.getStagingPath()
                 + this.path + fileName, this.path
@@ -273,7 +277,17 @@ public class UploadService {
 
         //if it is about a template file persist it in the database as well
         if ((this.path + fileName).endsWith(".json")) {
+          //TODO. More checks needed to ensure the valid template format
           this.persistUploadedTemplate(fileContent);
+        } //this is a common file being uploaded so add basic metadata to it
+        //description and searchable
+        else if (!(this.path + fileName).endsWith(".json")) {
+          //find the corresponding inode
+          Inode parent = this.inodes.getInodeAtPath(this.path);
+          Inode file = this.inodes.findByParentAndName(parent, fileName);
+          
+          InodeBasicMetadata basicMeta = new InodeBasicMetadata(file, "", true);
+          this.basicMetaFacade.addBasicMetadata(basicMeta);
         }
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
@@ -308,7 +322,7 @@ public class UploadService {
 
   /**
    * Persist a template to the database after it has been uploaded to hopsfs
-   * <p>
+   * <p/>
    * @param filePath
    * @throws AppException
    */

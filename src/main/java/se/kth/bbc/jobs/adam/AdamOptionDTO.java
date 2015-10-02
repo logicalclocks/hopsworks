@@ -2,7 +2,7 @@ package se.kth.bbc.jobs.adam;
 
 /**
  * POJO representing an AdamOption, for REST. Also includes a value binding.
- * <p>
+ * <p/>
  * @author stig
  */
 public class AdamOptionDTO {

@@ -8,8 +8,6 @@ angular.module('hopsWorksApp')
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies','DataSetService',
           function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies, DataSetService) {
 
-            UtilsService.setIndex("child");
-
             var self = this;
             self.working = false;
             self.currentProject = [];
@@ -175,7 +173,9 @@ angular.module('hopsWorksApp')
              * @param dataset
              */
             self.browseDataset = function (dataset) {
+              
               if (dataset.status === true) {
+                UtilsService.setDatasetName(dataset.name);
                 $location.path($location.path() + '/' + dataset.name);
               } else {
                 ModalService.confirmShare('sm', 'Confirm', 'Do you want to accept this dataset, and add it to this project?')

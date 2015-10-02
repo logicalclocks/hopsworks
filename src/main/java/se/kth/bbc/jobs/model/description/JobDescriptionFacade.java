@@ -16,7 +16,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
  * Facade for management of persistent JobDescription objects.
- * <p>
+ * <p/>
  * @author stig
  */
 @Stateless
@@ -36,7 +36,7 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
 
   /**
    * Find all the jobs in this project with the given type.
-   * <p>
+   * <p/>
    * @param project
    * @param type
    * @return
@@ -53,7 +53,7 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
 
   /**
    * Find all the jobs defined in the given project.
-   * <p>
+   * <p/>
    * @param project
    * @return
    */
@@ -66,7 +66,7 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
 
   /**
    * Create a new JobDescription instance.
-   * <p>
+   * <p/>
    * @param creator The creator of the job.
    * @param project The project in which this job is defined.
    * @param config The job configuration file.
@@ -96,7 +96,7 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
 
   /**
    * Find the JobDescription with given id.
-   * <p>
+   * <p/>
    * @param id
    * @return The found entity or null if no such exists.
    */

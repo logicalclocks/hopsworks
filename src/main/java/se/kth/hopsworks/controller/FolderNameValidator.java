@@ -12,14 +12,14 @@ import se.kth.bbc.lims.Constants;
  * <li> It does not contain any of the disallowed characters space, /, \, ?, *,
  * :, |, ', \", &lt;, &gt; >, %, (, ), &, ;, #</li>
  * </ul>
- * <p>
+ * <p/>
  * @author Ermias
  */
 public class FolderNameValidator {
 
   /**
    * Check if the given String is a valid folder name.
-   * <p>
+   * <p/>
    * @param name
    * @return
    * @throws ValidationException If the given String is not a valid folder name.

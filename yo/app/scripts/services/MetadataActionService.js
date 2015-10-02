@@ -129,12 +129,16 @@ angular.module('hopsWorksApp')
                 message: 'null'
               });
             },
-            fetchMetadata: function (user, tableId, inodeId) {
+            fetchMetadata: function (user, tableId, inodePid, inodeName) {
               return WSComm.send({
                 sender: user,
                 type: 'FetchMetadataMessage',
                 action: 'fetch_metadata',
-                message: JSON.stringify({tableid: tableId, inodeid: inodeId})
+                message: JSON.stringify({
+                  tableid: tableId, 
+                  inodepid: inodePid,
+                  inodename: inodeName
+                })
               });
             },
             fetchTableMetadata: function (user, tableId) {
@@ -145,12 +149,18 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({tableid: tableId})
               });
             },
-            storeMetadata: function (user, data) {
+            //contains an inode mutation message as well (projectid, inodeid)
+            storeMetadata: function (user, parentid, inodename, tableid, data) {
               return WSComm.send({
                 sender: user,
                 type: 'StoreMetadataMessage',
                 action: 'store_metadata',
-                message: JSON.stringify(data)
+                message: JSON.stringify({
+                  inodepid: parentid,
+                  inodename: inodename,
+                  tableid: tableid,
+                  metadata: data
+                })
               });
             },
             isTableEmpty: function (user, tableId) {
@@ -169,12 +179,17 @@ angular.module('hopsWorksApp')
                 message: JSON.stringify({fieldid: fieldId})
               });
             },
-            updateMetadata: function (user, metaObj) {
+            updateMetadata: function (user, metaObj, inodepid, inodename) {
               return WSComm.send({
                 sender: user,
                 type: 'UpdateMetadataMessage',
                 action: 'update_metadata',
-                message: JSON.stringify({metaid: metaObj.id, metadata: metaObj.data})
+                message: JSON.stringify({
+                  metaid: metaObj.id, 
+                  inodepid: inodepid,
+                  inodename: inodename,
+                  tableid: -1, //table id is not necessary when updating metadata
+                  metadata: metaObj.data})
               });
             }
           };

@@ -194,6 +194,61 @@ angular.module('hopsWorksApp')
             };
 
             /**
+             * Sends a request to erasure code a file represented by the given path.
+             * It checks
+             * .. if the given path resolves to a file or a dir
+             * .. if the given path is an existing file
+             * .. if the given file is large enough (comprises more than 10 blocks)
+             * 
+             * If all of the above are met, the compression takes place in an asynchronous operation
+             * and the user gets notified when it finishes via a message
+             * 
+             * @param {type} file
+             * @returns {undefined}
+             */
+            self.compress = function (file) {
+              var pathArray = self.pathArray.slice(0);
+              pathArray.push(file.name);
+              var filePath = getPath(pathArray);
+
+              //check if the path is a dir
+              dataSetService.isDir(filePath).then(
+                      function (success) {
+                        var object = success.data.successMessage;
+                        switch (object) {
+                          case "DIR":
+                            ModalService.alert('sm', 'Alert', 'You can only compress files');
+                            break;
+                          case "FILE":
+                            //if the path is a file go on
+                            dataSetService.checkFileExist(filePath).then(
+                                    function (successs) {
+                                      //check the number of blocks in the file
+                                      dataSetService.checkFileBlocks(filePath).then(
+                                              function (successss) {
+                                                var noOfBlocks = parseInt(successss.data);
+                                                console.log("NO OF BLOCKS " + noOfBlocks);
+                                                if (noOfBlocks >= 10) {
+                                                  ModalService.alert('sm', 'Confirm', 'This operation is going to run in the background').then(
+                                                          function (modalSuccess) {
+                                                            console.log("FILE PATH IS " + filePath);
+                                                            dataSetService.compressFile(filePath);
+                                                          });
+                                                } else {
+                                                  growl.error("The requested file is too small to be compressed", {title: 'Error', ttl: 5000});
+                                                }
+                                              }, function (error) {
+                                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                      });
+                                    });
+                        }
+
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+              });
+            };
+
+            /**
              * Opens a modal dialog for sharing.
              * @returns {undefined}
              */

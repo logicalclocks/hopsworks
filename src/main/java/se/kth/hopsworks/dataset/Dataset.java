@@ -35,7 +35,6 @@ import se.kth.bbc.project.fb.Inode;
   @NamedQuery(name = "Dataset.findByInode",
           query
           = "SELECT d FROM Dataset d WHERE d.inode = :inode"),
-
   @NamedQuery(name = "Dataset.findByProjectAndInode",
           query
           = "SELECT d FROM Dataset d WHERE d.projectId = :projectId AND d.inode = :inode"),
@@ -51,7 +50,7 @@ public class Dataset implements Serializable {
   public static final boolean PENDING = false;
   public static final boolean ACCEPTED = true;
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @GeneratedValue(strategy = GenerationType.SEQUENCE)
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
@@ -76,6 +75,10 @@ public class Dataset implements Serializable {
   private boolean editable = true;
   @Basic(optional = false)
   @NotNull
+  @Column(name = "searchable")
+  private boolean searchable = true;
+  @Basic(optional = false)
+  @NotNull
   @Column(name = "status")
   private boolean status = ACCEPTED;
   @OneToMany(cascade = CascadeType.ALL,
@@ -98,7 +101,7 @@ public class Dataset implements Serializable {
     this.inode = inode;
     this.projectId = project;
   }
-
+  
   public Integer getId() {
     return id;
   }
@@ -139,6 +142,14 @@ public class Dataset implements Serializable {
     this.editable = editable;
   }
 
+  public boolean isSearchable(){
+    return this.searchable;
+  }
+  
+  public void setSearchable(boolean searchable){
+    this.searchable = searchable;
+  }
+  
   public boolean getStatus() {
     return status;
   }

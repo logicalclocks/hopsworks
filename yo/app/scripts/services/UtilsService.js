@@ -10,23 +10,22 @@
 angular.module('hopsWorksApp')
         .service('UtilsService', function () {
 
-          var index = "";
           var projectName = "";
+          var datasetName;
 
           return {
-            getIndex: function () {
-              return index;
-            },
-            setIndex: function (value) {
-              //console.log("setting the index " + value);
-              index = value;
-            },
             getProjectName: function () {
               return projectName;
             },
             setProjectName: function (value) {
               //console.log("setting the parent " + value);
               projectName = value;
+            },
+            getDatasetName: function () {
+              return datasetName;
+            },
+            setDatasetName: function (datasetname) {
+              datasetName = datasetname;
             }
           };
         });

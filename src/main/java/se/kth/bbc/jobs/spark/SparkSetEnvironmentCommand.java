@@ -21,7 +21,7 @@ import se.kth.bbc.jobs.yarn.YarnSetupCommand;
  * executors can access them. It may actually be possible to do this by setting
  * just environment variables (in SparkController.java). However, moving it here
  * keeps that code a bit cleaner.
- * <p>
+ * <p/>
  * @author stig
  */
 public final class SparkSetEnvironmentCommand extends YarnSetupCommand {

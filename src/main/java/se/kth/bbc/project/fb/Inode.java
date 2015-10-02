@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.eclipse.persistence.annotations.Convert;
 import org.eclipse.persistence.annotations.Converter;
-import se.kth.meta.entity.Template;
+import se.kth.hopsworks.meta.entity.Template;
 
 /**
  *
@@ -320,7 +320,7 @@ public class Inode implements Serializable {
    * for the time being we treat the many to many relationship between inodes
    * and templates as a many to one, where an inode may be associated only to
    * one template, while the same template may be associated to many inodes
-   * <p>
+   * <p/>
    * @return the template id
    */
   public int getTemplate() {

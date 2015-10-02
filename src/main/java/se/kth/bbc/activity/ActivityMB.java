@@ -44,7 +44,7 @@ public class ActivityMB implements Serializable {
 
   /**
    * Get a Lazy data model containing all activities.
-   * <p>
+   * <p/>
    * @return
    */
   public LazyDataModel<Activity> getAllLazyModel() {

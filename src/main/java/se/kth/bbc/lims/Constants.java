@@ -91,6 +91,21 @@ public class Constants {
   public static final String HOPS_USERNAME_SEPARATOR = "__";
   public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
   public static final int MAX_USERNME_LEN = 16;
+  public static final int MAX_RETRIES = 50;
+  public static final String META_NAME_FIELD = "name";
+  public static final String META_DESCRIPTION_FIELD = "description";
+  public static final String META_DATA_FIELD = "EXTENDED_METADATA";
+  public static final String META_PROJECT_INDEX = "project";
+  public static final String META_DATASET_INDEX = "dataset";
+  public static final String META_PROJECT_PARENT_TYPE = "parent";
+  public static final String META_PROJECT_CHILD_TYPE = "child";
+  public static final String META_DATASET_PARENT_TYPE = "parent";
+  public static final String META_DATASET_CHILD_TYPE = "child";
+  public static final String META_INODE_SEARCHABLE_FIELD = "searchable";
+  public static final String META_INODE_OPERATION_FIELD = "operation";
+  public static final int META_INODE_OPERATION_ADD = 0;
+  public static final int META_INODE_OPERATION_DELETE = 1;
+  
 
 
   //Filename conventions

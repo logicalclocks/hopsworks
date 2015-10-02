@@ -11,7 +11,7 @@ import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 
 /**
  * Contains user-setable configuration parameters for a Yarn job.
- * <p>
+ * <p/>
  * @author stig
  */
 @XmlRootElement
@@ -42,7 +42,7 @@ public class YarnJobConfiguration extends JobConfiguration {
   /**
    * Set the queue to which the application should be submitted to the
    * ResourceManager. Default value: "".
-   * <p>
+   * <p/>
    * @param amQueue
    */
   public final void setAmQueue(String amQueue) {
@@ -56,7 +56,7 @@ public class YarnJobConfiguration extends JobConfiguration {
   /**
    * Set the amount of memory in MB to be allocated for the Application Master
    * container. Default value: 1024.
-   * <p>
+   * <p/>
    * @param amMemory
    */
   public final void setAmMemory(int amMemory) {
@@ -70,7 +70,7 @@ public class YarnJobConfiguration extends JobConfiguration {
   /**
    * Set the number of virtual cores to be allocated for the Application Master
    * container. Default value: 1.
-   * <p>
+   * <p/>
    * @param amVCores
    */
   public final void setAmVCores(int amVCores) {
@@ -79,7 +79,7 @@ public class YarnJobConfiguration extends JobConfiguration {
 
   /**
    * Add a file to the local resources.
-   * <p>
+   * <p/>
    * @param name
    * @param path
    */
@@ -92,7 +92,7 @@ public class YarnJobConfiguration extends JobConfiguration {
 
   /**
    * Set the local resources.
-   * <p>
+   * <p/>
    * @param localResources
    */
   public final void setLocalResources(Map<String, String> localResources) {
@@ -102,7 +102,7 @@ public class YarnJobConfiguration extends JobConfiguration {
   /**
    * Return a view on the current local resources. The Map returned is not
    * backed by this object.
-   * <p>
+   * <p/>
    * @return
    */
   public final Map<String, String> getLocalResources() {
