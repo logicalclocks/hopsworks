@@ -50,7 +50,6 @@ angular.module('hopsWorksApp')
                 $rootScope.$apply(defer.def.resolve(response));
               }
               else{
-                console.log("received MESSAGE emitting");
                 $rootScope.$emit("template.change", response);
               }
             } catch (e) {
