@@ -1,5 +1,7 @@
 package se.kth.hopsworks.rest;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -45,6 +47,9 @@ import org.elasticsearch.search.SearchHit;
 import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.util.Ip;
+import se.kth.rest.application.config.Variables;
+import se.kth.rest.application.config.VariablesFacade;
 
 /**
  *
@@ -63,6 +68,10 @@ public class ElasticService {
   @EJB
   private NoCacheResponse noCacheResponse;
 
+  @EJB
+  private VariablesFacade variables;
+  
+  
   /**
    * Searches for content composed of projects and datasets. Hits two elastic
    * indices: 'project' and 'dataset'
@@ -90,15 +99,27 @@ public class ElasticService {
     //some necessary client settings
     final Settings settings = ImmutableSettings.settingsBuilder()
             .put("client.transport.sniff", true) //being able to inspect other nodes 
-            .put("cluster.name", "hopsworks")
+            .put("cluster.name", "hops")
             .build();
-
+    
+    Variables elasticIp = variables.findById(Constants.VARIABLE_ELASTIC_ADDR);
+    String addr = elasticIp.getValue();
+    
     //initialize the client
-    Client client
-            = new TransportClient(settings)
-            .addTransportAddress(new InetSocketTransportAddress("localhost",
-                            9300));
-        
+    Client client = new TransportClient(settings)
+            .addTransportAddress(new InetSocketTransportAddress(addr, 9300));
+
+    // Validate the ip address pulled from the variables
+    if (Ip.validIp(addr) == false) {
+      try {
+        InetAddress.getByName(addr);
+      } catch (UnknownHostException ex) {
+      logger.log(Level.SEVERE, ResponseMessages.ELASTIC_SERVER_NOT_AVAILABLE);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_AVAILABLE);
+      
+      }
+    }
 
     //check if the indices are up and running
     if (!this.indexExists(client, Constants.META_PROJECT_INDEX) || !this.

@@ -416,6 +416,13 @@ CREATE TABLE `message_to_user` (
   FOREIGN KEY (`message`) REFERENCES `message` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
+
+ CREATE TABLE `variables` (
+  `id` varchar(255) NOT NULL,
+  `value` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=ndbcluster;
+
 -- Glassfish timers
 -- ----------------------
 
