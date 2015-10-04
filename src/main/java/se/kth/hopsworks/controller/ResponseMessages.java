@@ -144,4 +144,6 @@ public class ResponseMessages {
           = "Elastic indices do not exist";
   public final static String ELASTIC_TYPE_NOT_FOUND
           = "Elastic type does not exist";
+  public final static String ELASTIC_SERVER_NOT_AVAILABLE
+          = "Elasticsearch Server is either down or misconfigured.";
 }

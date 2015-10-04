@@ -103,6 +103,7 @@ public class Constants {
   public static final String META_DATASET_CHILD_TYPE = "child";
   public static final String META_INODE_SEARCHABLE_FIELD = "searchable";
   public static final String META_INODE_OPERATION_FIELD = "operation";
+  public static final String VARIABLE_ELASTIC_ADDR = "elastic_addr";
   public static final int META_INODE_OPERATION_ADD = 0;
   public static final int META_INODE_OPERATION_DELETE = 1;
   
