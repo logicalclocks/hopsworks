@@ -204,12 +204,15 @@ public class ElasticService {
 
     final Settings settings = ImmutableSettings.settingsBuilder()
             .put("client.transport.sniff", true) //being able to retrieve other nodes 
-            .put("cluster.name", "hopsworks").build();
+            .put("cluster.name", "hops").build();
 
-    Client client
-            = new TransportClient(settings)
-            .addTransportAddress(new InetSocketTransportAddress("localhost",
-                            9300));
+    Variables elasticIp = variables.findById(Constants.VARIABLE_ELASTIC_ADDR);
+    String addr = elasticIp.getValue();
+    
+    //initialize the client
+    Client client = new TransportClient(settings)
+            .addTransportAddress(new InetSocketTransportAddress(addr, 9300));
+
 
     //check if the indices are up and running
     if (!this.indexExists(client, Constants.META_PROJECT_INDEX)) {
@@ -287,12 +290,14 @@ public class ElasticService {
 
     final Settings settings = ImmutableSettings.settingsBuilder()
             .put("client.transport.sniff", true) //being able to retrieve other nodes 
-            .put("cluster.name", "hopsworks").build();
+            .put("cluster.name", "hops").build();
 
-    Client client
-            = new TransportClient(settings)
-            .addTransportAddress(new InetSocketTransportAddress("193.10.66.125",
-                            9300));
+    Variables elasticIp = variables.findById(Constants.VARIABLE_ELASTIC_ADDR);
+    String addr = elasticIp.getValue();
+    
+    //initialize the client
+    Client client = new TransportClient(settings)
+            .addTransportAddress(new InetSocketTransportAddress(addr, 9300));
 
     //check if the indices are up and running
     if (!this.indexExists(client, Constants.META_DATASET_INDEX)) {
