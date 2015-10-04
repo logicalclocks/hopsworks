@@ -46,6 +46,7 @@
     <class>se.kth.hopsworks.meta.entity.Field</class>
     <class>se.kth.hopsworks.meta.entity.Template</class>
     <class>se.kth.hopsworks.meta.entity.InodeBasicMetadata</class>
+    <class>se.kth.rest.application.configse.kth.rest.application.config.Variables</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
