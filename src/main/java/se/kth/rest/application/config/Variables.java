@@ -20,14 +20,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 
 @Entity
-@Table(name = "hopsworks.variables", catalog = "hopsworks", schema = "")
+@Table(name = "hopsworks.variables")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "Variables.findAll", query = "SELECT v FROM Variables v"),
-  @NamedQuery(name
-      = "Variables.findById", query = "SELECT v FROM Variables v WHERE v.id = :id"),
-  @NamedQuery(name
-      = "Variables.findByValue", query = "SELECT v FROM Variables v WHERE v.value = :value")})
+  @NamedQuery(name = "Variables.findById", query = "SELECT v FROM Variables v WHERE v.id = :id")
+})
 public class Variables implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id

@@ -11,7 +11,6 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
@@ -32,12 +31,6 @@ public class VariablesFacade extends AbstractFacade<Users> {
     super(Users.class);
   }
 
-  public List<Variables> findAllById() {
-    TypedQuery<Variables> query = em.createNamedQuery("Variables.findAll",
-            Variables.class);
-    return query.getResultList();
-  }
-
   /**
    * Get the variable value with the given name.
    * <p/>
@@ -46,9 +39,7 @@ public class VariablesFacade extends AbstractFacade<Users> {
    */
   public Variables findById(String id) {
     try {
-      return em.createNamedQuery("Variables.findById", Variables.class).setParameter(
-              "id", id)
-              .getSingleResult();
+      return em.createNamedQuery("Variables.findById", Variables.class).setParameter("id", id).getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
