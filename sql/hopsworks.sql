@@ -1,35 +1,35 @@
-
 CREATE TABLE `bbc_group` (
-  `group_name` VARCHAR(20) NOT NULL,
-  `group_desc` VARCHAR(200) DEFAULT NULL,
-  `gid` INT(11) NOT NULL,
-  PRIMARY KEY (`gid`)
+    `group_name` VARCHAR(20) NOT NULL,
+    `group_desc` VARCHAR(200) DEFAULT NULL,
+    `gid` INT(11) NOT NULL,
+     PRIMARY KEY (`gid`)
 ) ENGINE=ndbcluster;
 
+
 CREATE TABLE `users` (
-  `uid` INT(16) NOT NULL DEFAULT '1000',
-  `username` VARCHAR(16) NOT NULL,
-  `password` VARCHAR(128) NOT NULL,
-  `email` VARCHAR(45) DEFAULT NULL,
-  `fname` VARCHAR(30) DEFAULT NULL,
-  `lname` VARCHAR(30) DEFAULT NULL,
-  `activated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `title` VARCHAR(10)  DEFAULT NULL,
-  `orcid` VARCHAR(20)  DEFAULT NULL,
-  `false_login` INT(11) NOT NULL DEFAULT '-1',
-  `isonline` TINYINT(1) NOT NULL DEFAULT '0',
-  `secret` VARCHAR(20)  DEFAULT NULL,
-  `validation_key` VARCHAR(128)  DEFAULT NULL,
-  `security_question` VARCHAR(20)  DEFAULT NULL,
-  `security_answer` VARCHAR(128)  DEFAULT NULL,
-  `yubikey_user` INT(11) NOT NULL DEFAULT '0',
-  `password_changed` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `notes` VARCHAR(500)  DEFAULT NULL,
-  `mobile` VARCHAR(20)  DEFAULT NULL,
-  `status` INT(11) NOT NULL DEFAULT '-1',
-  PRIMARY KEY (`uid`),
-  UNIQUE (`username`),
-  UNIQUE (`email`)
+    `uid` INT(11) NOT NULL AUTO_INCREMENT,
+    `username` VARCHAR(10)  NOT NULL,
+    `password` VARCHAR(128)  NOT NULL,
+    `email` VARCHAR(254)  DEFAULT NULL,
+    `fname` VARCHAR(30)  DEFAULT NULL,
+    `lname` VARCHAR(30)  DEFAULT NULL,
+    `activated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `title` VARCHAR(10)  DEFAULT NULL,
+    `orcid` VARCHAR(20)  DEFAULT NULL,
+    `false_login` INT(11) NOT NULL DEFAULT '-1',
+    `status` INT(11) NOT NULL DEFAULT '-1',
+    `isonline` INT(11) NOT NULL DEFAULT '-1',
+    `secret` VARCHAR(20)  DEFAULT NULL,
+    `validation_key` VARCHAR(128)  DEFAULT NULL,
+    `security_question` VARCHAR(20)  DEFAULT NULL,
+    `security_answer` VARCHAR(128)  DEFAULT NULL,
+    `yubikey_user` INT(11) NOT NULL DEFAULT '0',
+    `password_changed` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
+    `notes` VARCHAR(500)  DEFAULT NULL,
+    `mobile` VARCHAR(15)  DEFAULT NULL,
+    PRIMARY KEY (`uid`),
+    UNIQUE KEY `username` (`username`),
+    UNIQUE KEY `email` (`email`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=10000;
 
 CREATE TABLE `yubikey` (
@@ -55,26 +55,27 @@ CREATE TABLE `yubikey` (
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `address` (
-  `address1` VARCHAR(50) DEFAULT NULL,
-  `address2` VARCHAR(50) DEFAULT NULL,
-  `address3` VARCHAR(50) DEFAULT NULL,
-  `city` VARCHAR(30) DEFAULT NULL,
-  `state` VARCHAR(100) DEFAULT NULL,
-  `country` VARCHAR(40) DEFAULT NULL,
-  `postalcode` VARCHAR(10) DEFAULT NULL,
-  `address_id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `uid` INT(10) NOT NULL,
-  PRIMARY KEY (`address_id`),
-  FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+    `address_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `uid` INT(11) NOT NULL,
+    `address1` VARCHAR(100) DEFAULT NULL,
+    `address2` VARCHAR(100) DEFAULT NULL,
+    `address3` VARCHAR(100) DEFAULT NULL,
+    `city` VARCHAR(40) DEFAULT NULL,
+    `state` VARCHAR(50) DEFAULT NULL,
+    `country` VARCHAR(40) DEFAULT NULL,
+    `postalcode` VARCHAR(10) DEFAULT NULL,
+    PRIMARY KEY (`address_id`),
+    FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `people_group` (
-  `uid` INT(10) NOT NULL,
-  `gid` INT(11) NOT NULL,
-  PRIMARY KEY (`uid`,`gid`),
-  FOREIGN KEY (`gid`) REFERENCES `bbc_group` (`gid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+    `uid` INT(11) NOT NULL,
+    `gid` INT(11) NOT NULL,
+    PRIMARY KEY (`uid`,`gid`),
+    FOREIGN KEY (`gid`) REFERENCES `bbc_group` (`gid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
+
 
 CREATE TABLE `project` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -199,16 +200,15 @@ CREATE TABLE `organization` (
     `id` INT(11) NOT NULL AUTO_INCREMENT,
     `uid` INT(11) DEFAULT NULL,
     `org_name` VARCHAR(100) DEFAULT NULL,
-    `website` VARCHAR(200) DEFAULT NULL,
+    `website` VARCHAR(2083) DEFAULT NULL,
     `contact_person` VARCHAR(100) DEFAULT NULL,
-    `contact_email` VARCHAR(100) DEFAULT NULL,
+    `contact_email` VARCHAR(254) DEFAULT NULL,
     `department` VARCHAR(100) DEFAULT NULL,
     `phone` VARCHAR(20) DEFAULT NULL,
     `fax` VARCHAR(20) DEFAULT NULL,
     PRIMARY KEY (`id`),
     FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE
 ) ENGINE=ndbcluster;
-
 -- Metadata --------------
 -- ------------------------
 
@@ -445,16 +445,14 @@ CREATE TABLE `EJB__TIMER__TBL` (
 -- VIEWS --------------
 -- ---------------------
 
-CREATE VIEW `users_groups` AS 
-  select `u`.`username` AS `username`,
-  `u`.`password` AS `password`,
-  `u`.`secret` AS `secret`,
-  `u`.`email` AS `email`,
-  `g`.`group_name` AS `group_name` 
-  from 
+CREATE VIEW `users_groups` AS
+    select `u`.`username` AS `username`,
+    `u`.`password` AS `password`,
+    `u`.`secret` AS `secret`,
+    `u`.`email` AS `email`,
+    `g`.`group_name` AS `group_name`
+    from
     ((`people_group` `ug` join `users` `u` on((`u`.`uid` = `ug`.`uid`))) join `bbc_group` `g` on((`g`.`gid` = `ug`.`gid`)));
-
-
 
 
 -- SSH Access -----------
