@@ -244,7 +244,7 @@
     
   <login-config>
     <auth-method>BASIC</auth-method>
-    <realm-name>kthfsrealm</realm-name>
+    <realm-name>cauthRealm</realm-name>
     <form-login-config>
       <form-login-page>/index.xhtml</form-login-page>
       <form-error-page>/error.xhtml</form-error-page>

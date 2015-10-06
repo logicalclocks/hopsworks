@@ -6,7 +6,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.working = false;
-            self.user = {email: '', password: ''};
+            self.user = {email: '', password: '', otp:''};
 
             self.login = function () {
               self.working = true;

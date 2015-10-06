@@ -39,6 +39,17 @@ public class AuthService {
   @EJB
   private NoCacheResponse noCacheResponse;
 
+  
+  // To distinguish Yubikey users
+  private final String YUBIKEY_USER_MARKER = "YUBIKEY_USER_MARKER";
+
+  // For disabled OTP auth mode
+  private final String YUBIKEY_OTP_PADDING
+          = "EaS5ksRVErn2jiOmSQy5LM2X7LgWAZWfWYKQoPavbrhN";
+  
+  // For padding when password field is empty
+  private final String MOBILE_OTP_PADDING = "123456";
+  
   @GET
   @Path("session")
   @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
@@ -62,7 +73,7 @@ public class AuthService {
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
   public Response login(@FormParam("email") String email,
-          @FormParam("password") String password, @Context SecurityContext sc,
+          @FormParam("password") String password,  @FormParam("otp") String otp, @Context SecurityContext sc,
           @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
           throws AppException {
 
@@ -76,7 +87,20 @@ public class AuthService {
 
     req.getServletContext().log("USER: " + user);
     req.getServletContext().log("1 step: " + email);
-
+    
+    // Add padding if custom realm is disabled
+    if (otp == null || otp.isEmpty()) {
+      otp = MOBILE_OTP_PADDING;
+    }
+    
+    if(otp.length() == 6){
+      password = password + otp;
+    } else if(otp.length() == 44){
+      password = password + otp + YUBIKEY_USER_MARKER;
+    }
+    
+      
+    
     //only login if not already logged in...
     if (sc.getUserPrincipal() == null) {
       if (user != null && statusValidator.checkStatus(user.getStatus())) {
