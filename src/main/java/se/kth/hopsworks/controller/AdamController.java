@@ -33,6 +33,8 @@ public class AdamController {
   private AsynchronousJobExecutor submitter;
   @EJB
   private ActivityFacade activityFacade;
+  @EJB
+  private SparkController sparkController;
 
   /**
    * Start an execution of the given job, ordered by the given User.
@@ -57,10 +59,10 @@ public class AdamController {
     } else if (job.getJobType() != JobType.ADAM) {
       throw new IllegalArgumentException(
               "The given job does not represent an Adam job.");
-    } else if (!areJarsAvailable()) {
+    } else if (!sparkController.isSparkJarAvailable()) {
       //Check if all the jars are available
       throw new IllegalStateException(
-              "Some ADAM jars are not in HDFS and could not be copied over.");
+              "Some ADAM jars are not in HDFS and could not be copied in from this host.");
     }
     //Get to starting the job
     AdamJob adamjob = new AdamJob(job, submitter, user);
@@ -77,35 +79,5 @@ public class AdamController {
     return jh;
   }
 
-  /**
-   * Check if the Spark jar is in HDFS. If it's not, try and copy it there from
-   * the local filesystem. If it's still not there, then return false.
-   * <p/>
-   * @return
-   */
-  private boolean areJarsAvailable() {
-    boolean isInHdfs;
-    try {
-      isInHdfs = fops.exists(Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
-    } catch (IOException e) {
-      //Can't connect to HDFS: return false
-      return false;
-    }
-    if (isInHdfs) {
-      return true;
-    }
 
-    File localSparkJar = new File(Constants.DEFAULT_SPARK_JAR_PATH);
-    if (localSparkJar.exists()) {
-      try {
-        fops.copyToHDFSFromLocal(false, Constants.DEFAULT_SPARK_JAR_PATH,
-                Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
-      } catch (IOException e) {
-        return false;
-      }
-    } else {
-      return false;
-    }
-    return true;
-  }
 }

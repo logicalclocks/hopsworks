@@ -225,6 +225,16 @@ angular.module('hopsWorksApp')
               return false;
             };
 
+            self.showSsh = function () {
+              var len = self.alreadyChoosenServices.length;
+              for (var i = 0; i < len; i++) {
+                if (self.alreadyChoosenServices[i] === 'Ssh') {
+                  return true;
+                }
+              }
+              return false;
+            };
+
             self.saveAllowed = function () {
               if (self.currentProject.projectName.length === 0) {
                 return true;

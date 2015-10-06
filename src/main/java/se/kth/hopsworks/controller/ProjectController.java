@@ -185,28 +185,28 @@ public class ProjectController {
       User user = userBean.getUserByEmail(userEmail);
       logActivity(ActivityFacade.ADDED_SERVICES, ActivityFacade.FLAG_PROJECT,
               user, project);
-      if (sshAdded == true) {
-        try {
-
-          // For all members of the project, create an account for them and copy their public keys to ~/.ssh/authorized_keys
-          List<ProjectTeam> members = projectTeamFacade.findMembersByProject(
-                  project);
-          for (ProjectTeam pt : members) {
-            User myUser = pt.getUser();
-            List<SshKeys> keys = sshKeysBean.findAllById(myUser.getUid());
-            List<String> publicKeys = new ArrayList<>();
-            for (SshKeys k : keys) {
-              publicKeys.add(k.getPublicKey());
-            }
-            LocalhostServices.createUserAccount(myUser.getUsername(), project.
-                    getName(), publicKeys);
-          }
-
-        } catch (IOException e) {
-          // TODO - propagate exception?
-          logger.warning("Could not create user account: " + e.getMessage());
-        }
-      }
+//      if (sshAdded == true) {
+//        try {
+//
+//          // For all members of the project, create an account for them and copy their public keys to ~/.ssh/authorized_keys
+//          List<ProjectTeam> members = projectTeamFacade.findMembersByProject(
+//                  project);
+//          for (ProjectTeam pt : members) {
+//            User myUser = pt.getUser();
+//            List<SshKeys> keys = sshKeysBean.findAllById(myUser.getUid());
+//            List<String> publicKeys = new ArrayList<>();
+//            for (SshKeys k : keys) {
+//              publicKeys.add(k.getPublicKey());
+//            }
+//            LocalhostServices.createUserAccount(myUser.getUsername(), project.
+//                    getName(), publicKeys);
+//          }
+//
+//        } catch (IOException e) {
+//          // TODO - propagate exception?
+//          logger.warning("Could not create user account: " + e.getMessage());
+//        }
+//      }
 
     }
     return addedService;
@@ -410,7 +410,7 @@ public class ProjectController {
             logActivity(ActivityFacade.NEW_MEMBER + projectTeam.
                     getProjectTeamPK().getTeamMember(),
                     ActivityFacade.FLAG_PROJECT, user, project);
-            createUserAccount(project, projectTeam, publicKeys, failedList);
+//            createUserAccount(project, projectTeam, publicKeys, failedList);
           } else if (newMember == null) {
             failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
                     + " was not found in the system.");
@@ -431,26 +431,26 @@ public class ProjectController {
   }
 
   // Create Account for user on localhost if the SSH service is enabled
-  private void createUserAccount(Project project, ProjectTeam projectTeam,
-          List<String> publicKeys, List<String> failedList) {
-    for (ProjectServices ps : project.getProjectServicesCollection()) {
-      if (ps.getProjectServicesPK().getService().compareTo(
-              ProjectServiceEnum.SSH) == 0) {
-        try {
-          String email = projectTeam.getProjectTeamPK().getTeamMember();
-          User user = userBean.getUserByEmail(email);
-          LocalhostServices.createUserAccount(user.getUsername(), project.
-                  getName(), publicKeys);
-        } catch (IOException e) {
-          failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
-                  + "could not create the account on localhost. Try again later.");
-          logger.log(Level.SEVERE,
-                  "Create account on localhost for team member {0} failed",
-                  projectTeam.getProjectTeamPK().getTeamMember());
-        }
-      }
-    }
-  }
+//  private void createUserAccount(Project project, ProjectTeam projectTeam,
+//          List<String> publicKeys, List<String> failedList) {
+//    for (ProjectServices ps : project.getProjectServicesCollection()) {
+//      if (ps.getProjectServicesPK().getService().compareTo(
+//              ProjectServiceEnum.SSH) == 0) {
+//        try {
+//          String email = projectTeam.getProjectTeamPK().getTeamMember();
+//          User user = userBean.getUserByEmail(email);
+//          LocalhostServices.createUserAccount(user.getUsername(), project.
+//                  getName(), publicKeys);
+//        } catch (IOException e) {
+//          failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
+//                  + "could not create the account on localhost. Try again later.");
+//          logger.log(Level.SEVERE,
+//                  "Create account on localhost for team member {0} failed",
+//                  projectTeam.getProjectTeamPK().getTeamMember());
+//        }
+//      }
+//    }
+//  }
 
   /**
    * Project info as data transfer object that can be sent to the user.
