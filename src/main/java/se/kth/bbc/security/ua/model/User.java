@@ -12,6 +12,9 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -24,13 +27,9 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
-import se.kth.bbc.project.Project;
 import se.kth.bbc.security.ua.SecurityQuestion;
+import se.kth.hopsworks.user.model.BbcGroup;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
 @Entity
 @Table(name = "hopsworks.users")
 @XmlRootElement
@@ -53,14 +52,10 @@ import se.kth.bbc.security.ua.SecurityQuestion;
           query = "SELECT u FROM User u WHERE u.activated = :activated"),
   @NamedQuery(name = "User.findByTitle",
           query = "SELECT u FROM User u WHERE u.title = :title"),
-  @NamedQuery(name = "User.findByMobile",
-          query = "SELECT u FROM User u WHERE u.mobile = :mobile"),
   @NamedQuery(name = "User.findByOrcid",
           query = "SELECT u FROM User u WHERE u.orcid = :orcid"),
   @NamedQuery(name = "User.findByFalseLogin",
           query = "SELECT u FROM User u WHERE u.falseLogin = :falseLogin"),
-  @NamedQuery(name = "User.findByStatus",
-          query = "SELECT u FROM User u WHERE u.status = :status"),
   @NamedQuery(name = "User.findByIsonline",
           query = "SELECT u FROM User u WHERE u.isonline = :isonline"),
   @NamedQuery(name = "User.findBySecret",
@@ -80,9 +75,22 @@ import se.kth.bbc.security.ua.SecurityQuestion;
           = "SELECT u FROM User u WHERE u.passwordChanged = :passwordChanged"),
   @NamedQuery(name = "User.findByNotes",
           query = "SELECT u FROM User u WHERE u.notes = :notes"),
-  @NamedQuery(name = "User.findMaxUid",
-          query = "SELECT MAX(u.uid) FROM User u")})
+  @NamedQuery(name = "User.findByMobile",
+          query = "SELECT u FROM User u WHERE u.mobile = :mobile"),
+  @NamedQuery(name = "User.findByStatus",
+          query = "SELECT u FROM User u WHERE u.status = :status")})
 public class User implements Serializable {
+  /*
+   * offline: -1
+   * online: 1
+   */
+
+  public static final int IS_ONLINE = 1;
+  public static final int IS_OFFLINE = -1;
+
+  public static final int ALLOWED_FALSE_LOGINS = 5;
+  //hopsworks user prefix username prefix
+//  public static final String USERNAME_PREFIX = "meb";
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -103,7 +111,7 @@ public class User implements Serializable {
   @Column(name = "password")
   private String password;
   // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
-  @Size(max = 45)
+  @Size(max = 254)
   @Column(name = "email")
   private String email;
   @Size(max = 30)
@@ -120,9 +128,6 @@ public class User implements Serializable {
   @Size(max = 10)
   @Column(name = "title")
   private String title;
-  @Size(max = 20)
-  @Column(name = "mobile")
-  private String mobile;
   @Size(max = 20)
   @Column(name = "orcid")
   private String orcid;
@@ -151,16 +156,31 @@ public class User implements Serializable {
   @Size(max = 128)
   @Column(name = "security_answer")
   private String securityAnswer;
+  @Basic(optional = false)
+  @NotNull
   @Column(name = "yubikey_user")
   private int yubikeyUser;
+  @Basic(optional = false)
+  @NotNull
   @Column(name = "password_changed")
   @Temporal(TemporalType.TIMESTAMP)
   private Date passwordChanged;
   @Size(max = 500)
   @Column(name = "notes")
   private String notes;
-  @OneToOne(cascade = CascadeType.ALL,
-          mappedBy = "uid")
+  @Size(max = 15)
+  @Column(name = "mobile")
+  private String mobile;
+  @JoinTable(name = "hopsworks.people_group",
+          joinColumns = {
+            @JoinColumn(name = "uid",
+                    referencedColumnName = "uid")},
+          inverseJoinColumns = {
+            @JoinColumn(name = "gid",
+                    referencedColumnName = "gid")})
+  @ManyToMany
+  private Collection<BbcGroup> bbcGroupCollection;
+
   private Yubikey yubikey;
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "uid")
@@ -171,10 +191,7 @@ public class User implements Serializable {
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "uid")
   private Organization organization;
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "owner")
-  private Collection<Project> projectCollection;
-
+  
   public User() {
   }
 
@@ -183,26 +200,30 @@ public class User implements Serializable {
   }
 
   public User(Integer uid, String username, String password, Date activated,
-          int falseLogin, int status, int isonline) {
+          int falseLogin, int isonline, int yubikeyUser,
+          Date passwordChanged, int status) {
     this.uid = uid;
     this.username = username;
     this.password = password;
     this.activated = activated;
     this.falseLogin = falseLogin;
-    this.status = status;
     this.isonline = isonline;
+    this.yubikeyUser = yubikeyUser;
+    this.passwordChanged = passwordChanged;
+    this.status = status;
   }
-
-  @XmlTransient
-  @JsonIgnore
-  public String getValidationKey() {
-    return validationKey;
+  public User(Integer uid, String username, String password, Date activated,
+          int falseLogin, int status, int isonline ) {
+    this.uid = uid;
+    this.username = username;
+    this.password = password;
+    this.activated = activated;
+    this.falseLogin = falseLogin;
+    this.isonline = isonline;
+    this.status = status;
   }
-
-  public void setValidationKey(String validationKey) {
-    this.validationKey = validationKey;
-  }
-
+   
+   
   public Integer getUid() {
     return uid;
   }
@@ -271,14 +292,6 @@ public class User implements Serializable {
     this.title = title;
   }
 
-  public String getMobile() {
-    return mobile;
-  }
-
-  public void setMobile(String mobile) {
-    this.mobile = mobile;
-  }
-
   @XmlTransient
   @JsonIgnore
   public String getOrcid() {
@@ -299,16 +312,6 @@ public class User implements Serializable {
     this.falseLogin = falseLogin;
   }
 
-  @XmlTransient
-  @JsonIgnore
-  public int getStatus() {
-    return status;
-  }
-
-  public void setStatus(int status) {
-    this.status = status;
-  }
-
   public int getIsonline() {
     return isonline;
   }
@@ -325,6 +328,16 @@ public class User implements Serializable {
 
   public void setSecret(String secret) {
     this.secret = secret;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public String getValidationKey() {
+    return validationKey;
+  }
+
+  public void setValidationKey(String validationKey) {
+    this.validationKey = validationKey;
   }
 
   @XmlTransient
@@ -373,6 +386,34 @@ public class User implements Serializable {
     this.notes = notes;
   }
 
+  public String getMobile() {
+    return mobile;
+  }
+
+  public void setMobile(String mobile) {
+    this.mobile = mobile;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public int getStatus() {
+    return status;
+  }
+
+  public void setStatus(int status) {
+    this.status = status;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<BbcGroup> getBbcGroupCollection() {
+    return bbcGroupCollection;
+  }
+
+  public void setBbcGroupCollection(Collection<BbcGroup> bbcGroupCollection) {
+    this.bbcGroupCollection = bbcGroupCollection;
+  }
+
   @XmlTransient
   @JsonIgnore
   public Yubikey getYubikey() {
@@ -383,8 +424,6 @@ public class User implements Serializable {
     this.yubikey = yubikey;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public Address getAddress() {
     return address;
   }
@@ -393,25 +432,12 @@ public class User implements Serializable {
     this.address = address;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public Organization getOrganization() {
     return organization;
   }
 
   public void setOrganization(Organization organization) {
     this.organization = organization;
-  }
-
-  @XmlTransient
-  @JsonIgnore
-  public Collection<PeopleGroup> getPeopleGroupCollection() {
-    return peopleGroupCollection;
-  }
-
-  public void setPeopleGroupCollection(
-          Collection<PeopleGroup> peopleGroupCollection) {
-    this.peopleGroupCollection = peopleGroupCollection;
   }
 
   @Override
@@ -437,16 +463,12 @@ public class User implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.security.ua.model.User[ uid=" + uid + " ]";
+    return "se.kth.hopsworks.model.User[ uid=" + uid + " ]";
   }
 
-  @XmlTransient
-  @JsonIgnore
-  public Collection<Project> getProjectCollection() {
-    return projectCollection;
+  /*
+  public User asUser() {
+    return new User(uid, username, password, activated, falseLogin, status,isonline);
   }
-
-  public void setProjectCollection(Collection<Project> projectCollection) {
-    this.projectCollection = projectCollection;
-  }
+  * */
 }

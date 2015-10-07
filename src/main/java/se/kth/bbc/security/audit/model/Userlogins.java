@@ -1,4 +1,9 @@
-package se.kth.bbc.security.ua.model;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package se.kth.bbc.security.audit.model;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -21,7 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "hopsworks.userlogins")
+@Table(name = "userlogins")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Userlogins.findAll",
@@ -39,8 +44,11 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "Userlogins.findByOutcome",
           query = "SELECT u FROM Userlogins u WHERE u.outcome = :outcome"),
   @NamedQuery(name = "Userlogins.findByUid",
-          query
-          = "SELECT u FROM Userlogins u WHERE u.uid = :uid ORDER BY u.loginDate DESC"),
+          query = "SELECT u FROM Userlogins u WHERE u.uid = :uid"),
+  @NamedQuery(name = "Userlogins.findByEmail",
+          query = "SELECT u FROM Userlogins u WHERE u.email = :email"),
+  @NamedQuery(name = "Userlogins.findByMac",
+          query = "SELECT u FROM Userlogins u WHERE u.mac = :mac"),
   @NamedQuery(name = "Userlogins.findByLoginDate",
           query = "SELECT u FROM Userlogins u WHERE u.loginDate = :loginDate")})
 public class Userlogins implements Serializable {
@@ -60,6 +68,12 @@ public class Userlogins implements Serializable {
   @Size(max = 40)
   @Column(name = "browser")
   private String browser;
+  @Size(max = 45)
+  @Column(name = "mac")
+  private String mac;
+  @Size(max = 254)
+  @Column(name = "email")
+  private String email;
   @Size(max = 80)
   @Column(name = "action")
   private String action;
@@ -127,7 +141,7 @@ public class Userlogins implements Serializable {
     this.outcome = outcome;
   }
 
-  public Integer getUid() {
+  public Integer getLastUserLoginUid() {
     return uid;
   }
 
@@ -141,6 +155,26 @@ public class Userlogins implements Serializable {
 
   public void setLoginDate(Date loginDate) {
     this.loginDate = loginDate;
+  }
+
+  public Integer getUid() {
+    return uid;
+  }
+
+  public String getMac() {
+    return mac;
+  }
+
+  public void setMac(String mac) {
+    this.mac = mac;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
   }
 
   @Override

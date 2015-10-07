@@ -1,3 +1,8 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package se.kth.bbc.security.ua.model;
 
 import java.io.Serializable;
@@ -29,10 +34,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
   @NamedQuery(name = "Yubikey.findAll",
           query = "SELECT y FROM Yubikey y"),
-  @NamedQuery(name = "Yubikey.findBySerial",
-          query = "SELECT y FROM Yubikey y WHERE y.serial = :serial"),
-  @NamedQuery(name = "Yubikey.findByVersion",
-          query = "SELECT y FROM Yubikey y WHERE y.version = :version"),
   @NamedQuery(name = "Yubikey.findByNotes",
           query = "SELECT y FROM Yubikey y WHERE y.notes = :notes"),
   @NamedQuery(name = "Yubikey.findByCounter",
@@ -58,12 +59,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class Yubikey implements Serializable {
 
   private static final long serialVersionUID = 1L;
-  @Size(max = 10)
-  @Column(name = "serial")
-  private String serial;
-  @Size(max = 15)
-  @Column(name = "version")
-  private String version;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Basic(optional = false)
+  @Column(name = "yubidnum")
+  private Integer yubidnum;
   @Size(max = 100)
   @Column(name = "notes")
   private String notes;
@@ -91,11 +91,6 @@ public class Yubikey implements Serializable {
   private Date accessed;
   @Column(name = "status")
   private Integer status;
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Basic(optional = false)
-  @Column(name = "yubidnum")
-  private Integer yubidnum;
   @JoinColumn(name = "uid",
           referencedColumnName = "uid")
   @OneToOne(optional = false)
@@ -111,22 +106,6 @@ public class Yubikey implements Serializable {
   public Yubikey(Integer yubidnum, Date created) {
     this.yubidnum = yubidnum;
     this.created = created;
-  }
-
-  public String getSerial() {
-    return serial;
-  }
-
-  public void setSerial(String serial) {
-    this.serial = serial;
-  }
-
-  public String getVersion() {
-    return version;
-  }
-
-  public void setVersion(String version) {
-    this.version = version;
   }
 
   public String getNotes() {

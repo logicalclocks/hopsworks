@@ -8,6 +8,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -89,8 +91,8 @@ public class Users implements Serializable {
 
   private static final long serialVersionUID = 1L;
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
-  @NotNull
   @Column(name = "uid")
   private Integer uid;
   @Basic(optional = false)
@@ -106,7 +108,7 @@ public class Users implements Serializable {
   @Column(name = "password")
   private String password;
   // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
-  @Size(max = 45)
+  @Size(max = 254)
   @Column(name = "email")
   private String email;
   @Size(max = 30)
@@ -132,8 +134,12 @@ public class Users implements Serializable {
   private int falseLogin;
   @Basic(optional = false)
   @NotNull
+  @Column(name = "status")
+  private int status;
+  @Basic(optional = false)
+  @NotNull
   @Column(name = "isonline")
-  private boolean isonline;
+  private int isonline;
   @Size(max = 20)
   @Column(name = "secret")
   private String secret;
@@ -159,13 +165,9 @@ public class Users implements Serializable {
   @Size(max = 500)
   @Column(name = "notes")
   private String notes;
-  @Size(max = 20)
+  @Size(max = 15)
   @Column(name = "mobile")
   private String mobile;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "status")
-  private int status;
   @JoinTable(name = "hopsworks.people_group",
           joinColumns = {
             @JoinColumn(name = "uid",
@@ -184,7 +186,7 @@ public class Users implements Serializable {
   }
 
   public Users(Integer uid, String username, String password, Date activated,
-          int falseLogin, boolean isonline, int yubikeyUser,
+          int falseLogin, int isonline, int yubikeyUser,
           Date passwordChanged, int status) {
     this.uid = uid;
     this.username = username;
@@ -285,11 +287,11 @@ public class Users implements Serializable {
     this.falseLogin = falseLogin;
   }
 
-  public boolean getIsonline() {
+  public int getIsonline() {
     return isonline;
   }
 
-  public void setIsonline(boolean isonline) {
+  public void setIsonline(int isonline) {
     this.isonline = isonline;
   }
 
@@ -414,7 +416,6 @@ public class Users implements Serializable {
   }
 
   public User asUser() {
-    return new User(uid, username, password, activated, falseLogin, status,
-            isonline ? 1 : 0);
+    return new User(uid, username, password, activated, falseLogin, status,isonline);
   }
 }

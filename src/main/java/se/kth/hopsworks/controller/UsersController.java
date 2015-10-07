@@ -15,7 +15,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
-import se.kth.bbc.security.ua.model.Userlogins;
+import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;

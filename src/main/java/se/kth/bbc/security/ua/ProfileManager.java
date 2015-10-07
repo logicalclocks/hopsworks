@@ -17,7 +17,7 @@ import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.User;
-import se.kth.bbc.security.ua.model.Userlogins;
+import se.kth.bbc.security.audit.model.Userlogins;
 
 /**
  *

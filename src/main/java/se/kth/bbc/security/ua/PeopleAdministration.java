@@ -1,3 +1,8 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package se.kth.bbc.security.ua;
 
 import java.io.IOException;
@@ -29,10 +34,12 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
+//import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.User;
-import se.kth.bbc.security.ua.model.Userlogins;
+import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.ua.model.Yubikey;
 
 /**
@@ -47,6 +54,9 @@ public class PeopleAdministration implements Serializable {
 
   @EJB
   private UserManager userManager;
+
+  @EJB
+  private AuditManager auditManager;
 
   @EJB
   private EmailBean emailBean;
@@ -65,7 +75,12 @@ public class PeopleAdministration implements Serializable {
 
   private List<User> filteredUsers;
   private List<User> selectedUsers;
+
+  // All verified users
   private List<User> allUsers;
+
+  // Accounts waiting to be validated by the email owner
+  private List<User> spamUsers;
 
   // for modifying user roles and status
   private User editingUser;
@@ -241,13 +256,12 @@ public class PeopleAdministration implements Serializable {
   public void initGroups() {
     groups = new ArrayList<>();
     status = new ArrayList<>();
-    // dont include BBCADMIN and BBCUSER roles for approving accounts as they are perproject
+// dont include BBCADMIN and BBCUSER roles for approving accounts as they are perstudy
     for (BBCGroup value : BBCGroup.values()) {
-      if (value != BBCGroup.BBC_ADMIN && value != BBCGroup.BBC_USER) {
+      if (value != BBCGroup.BBC_ADMIN) {
         groups.add(value.name());
       }
     }
-
   }
 
   public List<String> getStatus() {
@@ -312,7 +326,7 @@ public class PeopleAdministration implements Serializable {
   public void rejectUser(User user1) {
 
     if (user1 == null) {
-      MessagesController.addErrorMessage("Error", "Null user!");
+      MessagesController.addErrorMessage("Error", "No user found!");
       return;
     }
     try {
@@ -320,11 +334,15 @@ public class PeopleAdministration implements Serializable {
 
       // update the user request table
       if (removeByEmail) {
-        allUsers.remove(user1);
-        if (user1.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.
+
+        if (user1.getStatus() == PeopleAccountStatus.ACCOUNT_VERIFICATION.
+                getValue()) {
+          spamUsers.remove(user1);
+        } else if (user1.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.
                 getValue()) {
           yRequests.remove(user1);
-        } else {
+        } else if (user1.getYubikeyUser() == PeopleAccountStatus.MOBILE_USER.
+                getValue()) {
           requests.remove(user1);
         }
       } else {
@@ -437,7 +455,6 @@ public class PeopleAdministration implements Serializable {
       return;
     }
     requests.remove(user1);
-    allUsers.add(user1);
   }
 
   public void blockUser(User user1) {
@@ -466,12 +483,24 @@ public class PeopleAdministration implements Serializable {
     FacesContext.getCurrentInstance().getExternalContext()
             .getSessionMap().put("editinguser", newStatus);
 
-    Userlogins login = userManager.getLastUserLogin(user1.getUid());
+    Userlogins login = auditManager.getLastUserLogin(user1.getUid());
 
     FacesContext.getCurrentInstance().getExternalContext()
             .getSessionMap().put("editinguser_logins", login);
 
     return "admin_profile";
+  }
+
+  public List<User> getSpamUsers() {
+
+    if (spamUsers == null) {
+      //spamUsers = userManager.findAllSPAMAccounts();
+    }
+    return spamUsers;
+  }
+
+  public void setSpamUsers(List<User> spamUsers) {
+    this.spamUsers = spamUsers;
   }
 
   public String getSecAnswer() {
@@ -514,7 +543,6 @@ public class PeopleAdministration implements Serializable {
       Yubikey yubi = this.selectedYubikyUser.getYubikey();
 
       // Trim the input
-      yubi.setSerial(serial.replaceAll("\\s", ""));
       yubi.setPublicId(pubid.replaceAll("\\s", ""));
       yubi.setAesSecret(secret.replaceAll("\\s", ""));
 
@@ -547,7 +575,6 @@ public class PeopleAdministration implements Serializable {
 
       // Update the user management GUI
       yRequests.remove(this.selectedYubikyUser);
-      allUsers.add(this.selectedYubikyUser);
 
     } catch (NotSupportedException | SystemException | RollbackException |
             HeuristicMixedException | HeuristicRollbackException |

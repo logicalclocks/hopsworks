@@ -14,7 +14,7 @@ import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.PeopleGroup;
 import se.kth.bbc.security.ua.model.PeopleGroupPK;
 import se.kth.bbc.security.ua.model.User;
-import se.kth.bbc.security.ua.model.Userlogins;
+import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.ua.model.Yubikey;
 import se.kth.hopsworks.util.LocalhostServices;
 

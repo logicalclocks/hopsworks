@@ -77,12 +77,47 @@ CREATE TABLE `people_group` (
 ) ENGINE=ndbcluster;
 
 
+CREATE TABLE `account_audit` (
+    `log_id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+    `initiator` INT(11) NOT NULL,
+    `action` VARCHAR(45) DEFAULT NULL,
+    `time` DATE DEFAULT NULL,
+    `message` VARCHAR(100) DEFAULT NULL,
+    `outcome` VARCHAR(45) DEFAULT NULL,
+    `ip` VARCHAR(45) DEFAULT NULL,
+    `browser` VARCHAR(45) DEFAULT NULL,
+    `os` VARCHAR(45) DEFAULT NULL,
+    `mac` VARCHAR(45) DEFAULT NULL,
+    `email` VARCHAR(254) DEFAULT NULL,
+    PRIMARY KEY (`log_id`),
+    KEY `initiator` (`initiator`),
+    FOREIGN KEY (`initiator`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
+
+CREATE TABLE `roles_audit` (
+    `log_id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+    `target` INT(11) NOT NULL,
+    `initiator` INT(11) NOT NULL,
+    `email` VARCHAR(254)  DEFAULT NULL,
+    `action` VARCHAR(45) DEFAULT NULL,
+    `time` DATE DEFAULT NULL,
+    `message` VARCHAR(45) DEFAULT NULL,
+    `ip` VARCHAR(45) DEFAULT NULL,
+    `os` VARCHAR(45) DEFAULT NULL,
+    `outcome` VARCHAR(45) DEFAULT NULL,
+    `browser` VARCHAR(45) DEFAULT NULL,
+    `mac` VARCHAR(45) DEFAULT NULL,
+    PRIMARY KEY (`log_id`),
+    KEY `target` (`target`),
+    FOREIGN KEY (`target`) REFERENCES `users` (`uid`)
+)ENGINE=ndbcluster;
+
 CREATE TABLE `project` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inode_pid` INT(11) NOT NULL,
   `inode_name` VARCHAR(255) NOT NULL,
   `projectname` VARCHAR(128) NOT NULL,
-  `username` VARCHAR(45) NOT NULL,
+  `username` VARCHAR(254) NOT NULL,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `retention_period` DATE DEFAULT NULL,
   `ethical_status` VARCHAR(30) DEFAULT NULL,
@@ -117,7 +152,7 @@ CREATE TABLE `project_services` (
 
 CREATE TABLE `project_team` (
   `project_id` INT(11) NOT NULL,
-  `team_member` VARCHAR(45) NOT NULL,
+  `team_member` VARCHAR(254) NOT NULL,
   `team_role` VARCHAR(32) NOT NULL,
   `added` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`,`team_member`),
@@ -144,7 +179,7 @@ CREATE TABLE `jobs` (
   `name` VARCHAR(128) DEFAULT NULL,
   `creation_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `project_id` INT(11) NOT NULL,
-  `creator` VARCHAR(45) NOT NULL,
+  `creator` VARCHAR(254) NOT NULL,
   `type` VARCHAR(128) NOT NULL,
   `json_config` TEXT NOT NULL,
   PRIMARY KEY (`id`),
@@ -155,7 +190,7 @@ CREATE TABLE `jobs` (
 CREATE TABLE `executions` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `submission_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `user` VARCHAR(45) NOT NULL,
+  `user` VARCHAR(254) NOT NULL,
   `state` VARCHAR(128) NOT NULL,
   `execution_duration` BIGINT(20) DEFAULT NULL,
   `stdout_path` VARCHAR(255) DEFAULT NULL,
@@ -372,7 +407,7 @@ CREATE TABLE `dataset_request` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `dataset` INT(11) NOT NULL,
   `projectId` INT(11) NOT NULL,
-  `user_email` VARCHAR(45) NOT NULL,
+  `user_email` VARCHAR(254) NOT NULL,
   `requested` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `message` VARCHAR(3000) DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -391,8 +426,8 @@ CREATE TABLE `dataset_request` (
 -- ------------------------
 CREATE TABLE `message` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_from` varchar(45) DEFAULT NULL,
-  `user_to` varchar(45)  NOT NULL,
+  `user_from` varchar(254) DEFAULT NULL,
+  `user_to` varchar(254)  NOT NULL,
   `date_sent` datetime NOT NULL,
   `subject` varchar(128)  DEFAULT NULL,
   `preview` varchar(128) DEFAULT NULL,
@@ -410,7 +445,7 @@ CREATE TABLE `message` (
 
 CREATE TABLE `message_to_user` (
   `message` int(11) NOT NULL,
-  `user_email` varchar(45) NOT NULL,
+  `user_email` varchar(254) NOT NULL,
   PRIMARY KEY (`message`,`user_email`),
   FOREIGN KEY (`user_email`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
   FOREIGN KEY (`message`) REFERENCES `message` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
