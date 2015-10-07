@@ -13,14 +13,18 @@ public enum JobType {
   ADAM("ADAM"),
   ERASURE_CODING("ERASURE_CODING");
 
-  private final String readable;
+  private final String name;
+  
+  private JobType(String name) {
+    this.name = name;
+  }
 
-  private JobType(String readable) {
-    this.readable = readable;
+  public String getName() {
+    return name;
   }
 
   @Override
   public String toString() {
-    return readable;
+    return name;
   }
 }

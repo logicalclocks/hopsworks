@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "hopsworks.variables")
 @XmlRootElement
 @NamedQueries({
+  @NamedQuery(name = "Variables.findAll", query = "SELECT v FROM Variables v"),
   @NamedQuery(name = "Variables.findById", query = "SELECT v FROM Variables v WHERE v.id = :id")
 })
 public class Variables implements Serializable {

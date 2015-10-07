@@ -11,8 +11,7 @@ import java.nio.charset.StandardCharsets;
 public class Constants {
 
   //Local path to the hiway jar
-  public static final String HIWAY_JAR_PATH
-      = "/srv/hiway-1.0.1-SNAPSHOT/hiway-core-1.0.1-SNAPSHOT.jar";
+  public static final String HIWAY_JAR_PATH = "/srv/hiway-1.0.1-SNAPSHOT/hiway-core-1.0.1-SNAPSHOT.jar";
 
   //User under which yarn is run
   public static final String DEFAULT_YARN_USER = "glassfish";
@@ -49,19 +48,15 @@ public class Constants {
   public static final String SPARK_STAGING_DIR = ".sparkStaging";
   public static final String SPARK_LOCRSC_SPARK_JAR = "__spark__.jar";
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
-  public static final String SPARK_AM_MAIN
-      = "org.apache.spark.deploy.yarn.ApplicationMaster";
+  public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String DEFAULT_SPARK_JAR_PATH = "/srv/spark/spark.jar";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
-  public static String DEFAULT_SPARK_JAR_HDFS_PATH
-          = "hdfs:///user/" + DEFAULT_SPARK_USER + "/spark.jar";
-  public static final String SPARK_DEFAULT_CLASSPATH
-      = "/srv/spark/conf:/srv/spark/lib/*";
+  public static String DEFAULT_SPARK_JAR_HDFS_PATH = "hdfs:///user/" + DEFAULT_SPARK_USER + "/spark.jar";
+  public static final String SPARK_DEFAULT_CLASSPATH = "/srv/spark/conf:/srv/spark/lib/*";
 
   //ADAM constants
   public static final String ADAM_MAINCLASS = "org.bdgenomics.adam.cli.ADAMMain";
-  public static final String ADAM_DEFAULT_JAR_HDFS_PATH
-      = "hdfs:///user/adam/repo/adam-cli.jar";
+  public static final String ADAM_DEFAULT_JAR_HDFS_PATH = "hdfs:///user/adam/repo/adam-cli.jar";
   //Or: "adam-cli/target/appassembler/repo/org/bdgenomics/adam/adam-cli/0.15.1-SNAPSHOT/adam-cli-0.15.1-SNAPSHOT.jar"
   public static final String ADAM_DEFAULT_OUTPUT_PATH = "Logs/Adam/";
   public static final String ADAM_DEFAULT_HDFS_REPO = "/user/adam/repo/";
@@ -78,6 +73,11 @@ public class Constants {
   public static final String DIR_VCF = "vcf";
   public static final String DIR_TEMPLATES = "Templates";
 
+  // Elasticsearch
+  
+  public static final String DEFAULT_ELASTIC_IP = "localhost";
+  public static final int  ELASTIC_PORT = 9300;
+  
   // Hopsworks
   public final static Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERNAME_SEPARATOR = "__";
@@ -95,7 +95,7 @@ public class Constants {
   public static final String META_DATASET_CHILD_TYPE = "child";
   public static final String META_INODE_SEARCHABLE_FIELD = "searchable";
   public static final String META_INODE_OPERATION_FIELD = "operation";
-  public static final String VARIABLE_ELASTIC_ADDR = "elastic_addr";
+  public static final String VARIABLE_ELASTIC_ADDR = "elastic_ip";
   public static final String VARIABLE_SPARK_USER = "spark_user";
   public static final int META_INODE_OPERATION_ADD = 0;
   public static final int META_INODE_OPERATION_DELETE = 1;
