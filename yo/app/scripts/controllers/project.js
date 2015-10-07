@@ -19,7 +19,8 @@ angular.module('hopsWorksApp')
             self.projectMembers = [];
 
             // We could instead implement a service to get all the available types but this will do it for now
-            self.projectTypes = ['JOBS', 'ZEPPELIN', 'SSH'];
+//            self.projectTypes = ['JOBS', 'ZEPPELIN', 'SSH'];
+            self.projectTypes = ['JOBS', 'ZEPPELIN'];
             self.alreadyChoosenServices = [];
             self.selectionProjectTypes = [];
             self.pId = $routeParams.projectID;
