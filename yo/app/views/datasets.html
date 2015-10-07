@@ -270,27 +270,22 @@
                            name="x" placeholder="Find a template...">
                   </div>
                   <ul style="padding:0px;">
-                    <li class="datasetList" ng-repeat="template in metadataCtrl.availableTemplates| filter: searchTemplate: false"
+                    <li class="datasetList" ng-repeat="template in metadataCtrl.availableTemplates| filter: searchTemplate: false" 
                         ng-click="metadataCtrl.toggleTemplate(template);
-                                          metadataCtrl.fetchTemplate(template.id)"
+                                          metadataCtrl.fetchTemplate(template.id)"                        
                         context-menu
-                        data-target="templateMenu-{{$index}}">
+                        data-target="templateMenu-{{$index}}" tooltip="{{template.name}}">
                       <div class="btn-lg">
                         <!--when the user clicks on a template name a check appears-->
                         <i class="fa fa-check pull-left"
                            style="color: lightgreen; margin-top:3px;"
                            ng-if="template.showing"></i>
 
-                        <!--onaftersave="metadataCtrl.updateTemplateName(template)"-->
-                        <a href="#" editable-text="template.name" buttons="no"
-                           style="font-size: 14px;"
-                           ng-mousedown="metadataCtrl.editingTemplate = 'true';"
-                           ng-click="$event.stopPropagation()"
-                           onaftersave="metadataCtrl.updateTemplateName(template)"
-                           blur="submit">
-                          {{template.name| cut:true:10:' ...'}}
-                        </a>
+                        <!--onaftersave="metadataCtrl.updateTemplateName(template)"-->   
                         
+                        <span editable-text="template.name" e-form="editForm" style="font-size: 14px;" onaftersave="metadataCtrl.updateTemplateName(template)">
+                            {{template.name| cut:true:10:' ...'}}
+                        </span>
                         <div class="btn-group" style="float: right">
                             <button class="btn btn-danger pull-right"
                                     ng-click="metadataCtrl.removeTemplate(template.id)"
@@ -313,8 +308,8 @@
                                 <span><i class="fa fa-download"></i></span>
                               </a>
                             </button>
-                            <button class="btn btn-info pull-right"
-                                    tooltip="Add/Edit template tables"
+                            <button class="btn btn-info pull-right" 
+                                    ng-click="editForm.$show()"
                                     style="margin-top: 1px;  height: 20px;padding:2px;">
                               <i class="fa fa-edit"></i>
                             </button>
