@@ -15,7 +15,7 @@ angular.module('hopsWorksApp')
                         self.working = false;
                         $cookies.email = self.user.email;
                         $location.path('/');
-						location.reload();
+			location.reload();
                       }, function (error) {
                         self.working = false;
                         self.errorMessage = error.data.errorMsg;
