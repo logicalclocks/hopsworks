@@ -276,15 +276,16 @@
                         context-menu
                         data-target="templateMenu-{{$index}}" tooltip="{{template.name}}">
                       <div class="btn-lg">
-                        <!--when the user clicks on a template name a check appears-->
+                        <!--when the user clicks on a template name a check appears
                         <i class="fa fa-check pull-left"
                            style="color: lightgreen; margin-top:3px;"
-                           ng-if="template.showing"></i>
+                           ng-if="template.showing"></i>-->
 
                         <!--onaftersave="metadataCtrl.updateTemplateName(template)"-->   
                         
                         <span editable-text="template.name" e-form="editForm" style="font-size: 14px;" onaftersave="metadataCtrl.updateTemplateName(template)">
-                            {{template.name| cut:true:10:' ...'}}
+                            <span class="glyphicon glyphicon-hand-right" ng-show="template.showing"></span><label style="font-weight: bold;margin-left: 10px" ng-show="template.showing" >{{template.name| cut:true:16:' ...'}}</label> 
+                            <label style="font-weight: normal" ng-hide="template.showing">{{template.name| cut:true:16:' ...'}}</label>                    
                         </span>
                         <div class="btn-group" style="float: right">
                             <button class="btn btn-danger pull-right"
