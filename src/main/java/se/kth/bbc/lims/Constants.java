@@ -15,7 +15,7 @@ public class Constants {
 
   //User under which yarn is run
   public static final String DEFAULT_YARN_USER = "glassfish";
-  public static final String DEFAULT_SPARK_USER = "spark";
+  public static final String DEFAULT_SPARK_USER = "glassfish";
 
   //Relative output path (within hdfs project folder) which to write cuneiform in-/output to
   public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Logs/Cuneiform/";
