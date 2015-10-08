@@ -86,8 +86,6 @@ public class Execution implements Serializable {
 
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 128)
   @Column(name = "state")
   @Enumerated(EnumType.STRING)
   private JobState state;
