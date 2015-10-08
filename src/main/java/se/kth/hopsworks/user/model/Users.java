@@ -140,7 +140,6 @@ public class Users implements Serializable {
   @Size(max = 128)
   @Column(name = "validation_key")
   private String validationKey;
-  @Size(max = 20)
   @Enumerated(EnumType.STRING)
   @Column(name = "security_question")
   private SecurityQuestion securityQuestion;
