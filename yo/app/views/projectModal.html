@@ -15,7 +15,7 @@
             <label for="projectname" style="color: black;">Name</label>
             <md-input-container>            
               <input name="project_name" type="text" id="projectname"
-                     ng-model="projectCreatorCtrl.projectName"
+                     ng-model="projectCreatorCtrl.projectName" tabindex="1"
                      required
                      >
             </md-input-container>
@@ -31,7 +31,7 @@
 
             <div class="controls">
               <textarea class="form-control" style="resize:none;" ng-model="projectCreatorCtrl.projectDesc"
-                        rows="3"></textarea>
+                        rows="3" tabindex="2"></textarea>
             </div>
 
 
@@ -40,7 +40,7 @@
             <div class="controls">
 
               <ui-select ng-model="projectCreatorCtrl.card.selected" theme="select2"
-                         style="min-width: 300px;">
+                         style="min-width: 300px;" tabindex="3">
 
                 <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
                 <ui-select-choices
@@ -80,7 +80,7 @@
           <div class="control-group col-md-offset-2">
             <md-checkbox class="md-primary"
                          ng-repeat="projectType in projectCreatorCtrl.projectTypes"
-                         ng-click="projectCreatorCtrl.exists(projectType)">
+                         ng-click="projectCreatorCtrl.exists(projectType)" tabindex="4">
               {{ projectType}}
 
             </md-checkbox>
@@ -93,9 +93,9 @@
 
     <div class="modal-footer">
 
-      <button class="btn btn-default" type="button" ng-click="projectCreatorCtrl.close()">Cancel</button>
+      <button class="btn btn-default" type="button" ng-click="projectCreatorCtrl.close()" tabindex="5">Cancel</button>
       <button class="btn btn-primary" type="submit" 
-              ng-disabled="projectForm.project_name.$error.required || projectCreatorCtrl.working">
+              ng-disabled="projectForm.project_name.$error.required || projectCreatorCtrl.working" tabindex="6">
         <i ng-if="projectCreatorCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
         Create
       </button>
