@@ -5,12 +5,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.io.StringReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -263,6 +266,16 @@ public class UploadService {
                     Response.Status.NOT_ACCEPTABLE).entity(json).build();
           }
           fileContent = Utils.getFileContents(filePath);
+          JsonObject obj = Json.createReader(new StringReader(fileContent)).
+            readObject();
+          String templateName= obj.getString("templateName");
+          if(template.isTemplateAvailable(templateName)){
+            logger.log(Level.INFO, templateName+" already exists.");
+            json.setErrorMsg("Already exists.");
+            return noCacheResponse.getNoCacheResponseBuilder(
+                    Response.Status.NOT_ACCEPTABLE).entity(json).build();
+          }
+         
         }
 
         this.path = Utils.ensurePathEndsInSlash(this.path);

@@ -2,6 +2,7 @@ package se.kth.hopsworks.meta.db;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -130,6 +131,38 @@ public class TemplateFacade extends AbstractFacade<Template> {
       return null;
     }
   }
+  
+   /**
+   * Find the Template that has <i>templateName</i> as input.
+   * <p/>
+   * @param templateName
+   * @return Null if no such template was found.
+   */
+  public List<Template> findByTemplateName(String templateName) {
+    TypedQuery<Template> query = em.
+            createNamedQuery("Template.findByName",
+                    Template.class);
+
+    query.setParameter("name", templateName);
+    try {
+      return query.getResultList();
+    } catch (NoResultException e) {
+      //There is no such name.
+      return null;
+    }
+  }
+  
+   /**
+   * Check whether template already exists by  <i>templateName</i> as input.
+   * <p/>
+   * @param templateName
+   * @return true if exists, false otherwise.
+   */
+  public boolean  isTemplateAvailable(String templateName){      
+      List<Template> t=findByTemplateName(templateName);
+      return (t!=null) && (t.size()>0);
+  }
+  
 
   /**
    * Update the relationship table <i>meta_template_to_inode</i>
