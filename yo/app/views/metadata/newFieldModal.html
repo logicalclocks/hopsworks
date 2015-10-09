@@ -20,7 +20,7 @@
           <strong>A field name</strong> is required.
         </span>-->
           
-        <div class="alert alert-danger fade in" ng-show="newFieldForm.$submitted &amp;&amp; newFieldForm.newFieldName.$error.required">
+        <div class="alert alert-danger fade in" ng-if="newFieldForm.$submitted &amp;&amp; newFieldForm.newFieldName.$error.required">
           <a class="close" data-dismiss="alert">&times;</a>
           <strong>A field name</strong> is required.
         </div>
@@ -32,7 +32,7 @@
                required
                focus-me class="cardInputs form-control" ng-keyup="newFieldCtrl.hitEnter($event)"/>
 
-        <div class="alert alert-danger fade in" ng-show="newFieldForm.$submitted &amp;&amp; newFieldForm.newfield_description.$error.required">
+        <div class="alert alert-danger fade in" ng-if="newFieldForm.$submitted &amp;&amp; newFieldForm.newfield_description.$error.required">
           <a class="close" data-dismiss="alert">&times;</a>
           <strong>A field description</strong> is required.
         </div>
@@ -55,16 +55,20 @@
     </div>
 
     <div class="">
-      <fieldset  data-ng-repeat="choice in newFieldCtrl.fieldSelectItems">
-        <input type="text" ng-model="choice.value" name="" placeholder="Enter a single-select value">
-        <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="newFieldCtrl.addNewSelectChoice(1)"></button>
-        <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="newFieldCtrl.removeSelectChoice(1)"></button>
+      <fieldset  data-ng-repeat="choice in newFieldCtrl.fieldSelectItems" >
+          <ng-form name="innerForm">
+            <input type="text" ng-model="choice.value" name="choice"  placeholder="Enter a single-select value" required>
+            <button type="button" class="glyphicon glyphicon-plus"  ng-show="$last" ng-click="newFieldCtrl.addNewSelectChoice(1)" ng-disabled='innerForm.choice.$error.required'></button>
+            <button type="button" class="glyphicon glyphicon-minus"  ng-show="$last" ng-click="newFieldCtrl.removeSelectChoice(1)"></button>
+          </ng-form>
       </fieldset>
 
       <fieldset  data-ng-repeat="choice in newFieldCtrl.multiSelectItems">
-        <input type="text" ng-model="choice.value" name="" placeholder="Enter a multi-select value">
-        <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="newFieldCtrl.addNewSelectChoice(2)"></button>
-        <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="newFieldCtrl.removeSelectChoice(2)"></button>
+        <ng-form name="innerForm">
+            <input type="text" ng-model="choice.value" name="choice" placeholder="Enter a multi-select value" required>
+            <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="newFieldCtrl.addNewSelectChoice(2)" ng-disabled='innerForm.choice.$error.required'></button>
+            <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="newFieldCtrl.removeSelectChoice(2)"></button>
+        </ng-form>
       </fieldset>
     </div>
   </div>

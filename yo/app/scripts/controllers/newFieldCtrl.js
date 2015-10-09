@@ -53,6 +53,7 @@ angular.module('hopsWorksApp')
             };
 
             self.saveField = function () {
+              $scope.newFieldForm.$submitted=true
               if (!$scope.newFieldForm.$valid) {
                 return false;
               }
