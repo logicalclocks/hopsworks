@@ -152,44 +152,46 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.extendTemplate = function () {
+                         
+            if(self.checkTemplateAvailability(self.extendedTemplateName)){
+                //don't proceed if there is no selected template to extend
+                if (self.toExtend === -1) {
+                  growl.info("Select a template first.", {title: 'Info', ttl: 5000});
+                  return;
+                }
 
-              //don't proceed if there is no selected template to extend
-              if (self.toExtend === -1) {
-                growl.info("Select a template first.", {title: 'Info', ttl: 5000});
-                return;
-              }
+                //store the new template name
+                MetadataActionService.addNewTemplate($cookies['email'], self.extendedTemplateName)
+                        .then(function (data) {
+                          var tempTemplates = JSON.parse(data.board);
 
-              //store the new template name
-              MetadataActionService.addNewTemplate($cookies['email'], self.extendedTemplateName)
-                      .then(function (data) {
-                        var tempTemplates = JSON.parse(data.board);
+                          //get the id of the new template
+                          var newlyCreatedID = tempTemplates.templates[tempTemplates.numberOfTemplates - 1].id;
 
-                        //get the id of the new template
-                        var newlyCreatedID = tempTemplates.templates[tempTemplates.numberOfTemplates - 1].id;
+                          //get the contents of the template to extend
+                          MetadataActionService.fetchTemplate($cookies['email'], parseInt(self.toExtend))
+                                  .then(function (response) {
+                                    var templateToExtend = JSON.parse(response.board);
 
-                        //get the contents of the template to extend
-                        MetadataActionService.fetchTemplate($cookies['email'], parseInt(self.toExtend))
-                                .then(function (response) {
-                                  var templateToExtend = JSON.parse(response.board);
+                                    //associate existing contents with the new template
+                                    MetadataActionService.extendTemplate($cookies['email'], newlyCreatedID, templateToExtend)
+                                            .then(function (data) {
+                                              self.extendedTemplateName = "";
 
-                                  //associate existing contents with the new template
-                                  MetadataActionService.extendTemplate($cookies['email'], newlyCreatedID, templateToExtend)
-                                          .then(function (data) {
-                                            self.extendedTemplateName = "";
+                                              //trigger the necessary variable change in the service
+                                              MetadataHelperService.fetchAvailableTemplates()
+                                                      .then(function (response) {
+                                                        self.availableTemplates = JSON.parse(response.board).templates;
+                                                        //console.log("AVAILABLE TEMPLATES " + JSON.stringify(self.availableTemplates));
+                                                      });
 
-                                            //trigger the necessary variable change in the service
-                                            MetadataHelperService.fetchAvailableTemplates()
-                                                    .then(function (response) {
-                                                      self.availableTemplates = JSON.parse(response.board).templates;
-                                                      //console.log("AVAILABLE TEMPLATES " + JSON.stringify(self.availableTemplates));
-                                                    });
-
-                                            self.toExtend = -1;
-                                            //console.log('Response from extending template: ');
-                                            //console.log(data);
-                                          });
-                                });
-                      });
+                                              self.toExtend = -1;
+                                              //console.log('Response from extending template: ');
+                                              //console.log(data);
+                                            });
+                                  });
+                        });
+                    }
             };
 
             /**
@@ -251,14 +253,36 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.addNewTemplate = function () {
-              MetadataActionService.addNewTemplate($cookies['email'], self.newTemplateName)
-                      .then(function (data) {
-                        self.newTemplateName = "";
-                        //trigger a variable change (availableTemplates) in the service
-                        MetadataHelperService.fetchAvailableTemplates();
-                        self.availableTemplates = MetadataHelperService.getAvailableTemplates();
-                      });
-            };
+                
+              if(self.checkTemplateAvailability(self.newTemplateName)){
+                  
+                MetadataActionService.addNewTemplate($cookies['email'], self.newTemplateName)
+                        .then(function (data) {
+                          self.newTemplateName = "";
+                          //trigger a variable change (availableTemplates) in the service
+                          MetadataHelperService.fetchAvailableTemplates();
+                          self.availableTemplates = MetadataHelperService.getAvailableTemplates();
+                        });
+                  }
+              };
+            
+            
+            
+            self.checkTemplateAvailability=function(templateName){
+              
+              var isTemplateAvailable=false;
+              angular.forEach(self.availableTemplates, function (template, key) {
+                        if(template.name.trim().toLowerCase() === templateName.trim().toLowerCase()){                            
+                            isTemplateAvailable=true;
+                        }                           
+                }); 
+                
+               if(isTemplateAvailable){
+                   growl.error("Template name "+templateName.trim()+" already exisits", {title: 'Info', ttl: 5000});
+                   return false;
+               }
+               return true;                
+            }
 
             /**
              * Deletes a template from the database
