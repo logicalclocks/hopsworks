@@ -269,8 +269,8 @@ public class UploadService {
           JsonObject obj = Json.createReader(new StringReader(fileContent)).
             readObject();
           String templateName= obj.getString("templateName");
-          if(template.isTemplateAvailable(templateName)){
-            logger.log(Level.INFO, templateName+" already exists.");
+          if(template.isTemplateAvailable(templateName.toLowerCase())){
+            logger.log(Level.INFO, templateName.toLowerCase()+" already exists.");
             json.setErrorMsg("Already exists.");
             return noCacheResponse.getNoCacheResponseBuilder(
                     Response.Status.NOT_ACCEPTABLE).entity(json).build();
