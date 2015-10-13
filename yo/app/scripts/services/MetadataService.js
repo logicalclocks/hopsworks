@@ -9,30 +9,34 @@ angular.module('hopsWorksApp')
           // Keep all pending requests here until they get responses
           var callbacks = [];
           var projectID = $cookies.projectID;
-
+          var isopen=false;
           //generic
-          var ws = $websocket("ws://" + $location.host() + ":" + $location.port() + "/hopsworks/wspoint/" + projectID);
+          var ws;
 
-          var collection = [];
+          function init(){              
+             if(!isopen) {
+                ws = $websocket("ws://" + $location.host() + ":" + $location.port() + "/hopsworks/wspoint/" + projectID);
+                ws.onMessage(function (event) {
+                  processMessage(JSON.parse(event.data));
+                });
 
-          ws.onMessage(function (event) {
-            processMessage(JSON.parse(event.data));
-          });
+                ws.onError(function (event) {
+                  console.log('connection Error', event);
+                  isopen=false;
+                });
 
-          ws.onError(function (event) {
-            console.log('connection Error', event);
-          });
+                ws.onClose(function (event) {
+                  console.log('connection closed', event);
+                  isopen=false;
+                });
 
-          ws.onClose(function (event) {
-            console.log('connection closed', event);
-          });
-
-          ws.onOpen(function () {
-            console.log('connection open');
-          });
-          // setTimeout(function() {
-          //   ws.close();
-          // }, 500)
+                ws.onOpen(function () {
+                  console.log('connection open');
+                  isopen=true;
+                }); 
+            }
+          };
+          
 
           var processMessage = function (data) {
 
@@ -63,13 +67,16 @@ angular.module('hopsWorksApp')
           return {
             ws: ws,
             status: function () {
+              init();
               return ws.readyState;
             },
             send: function (message) {
+             
               /*
                * whenever users send a message they get back a promise object, 
                * that means they are able to know when they get back their response
                */
+              init();
               var defer = $q.defer();
               callbacks.push({
                 def: defer,
