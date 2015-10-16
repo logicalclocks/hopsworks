@@ -15,7 +15,8 @@ angular.module('hopsWorksApp')
               repeatedPassword: '',
               securityQuestion: '',
               securityAnswer: '',
-              ToS: ''
+              ToS: '',
+              authType: '' 
             };
             var empty = angular.copy(self.user);
             self.register = function () {
@@ -29,6 +30,9 @@ angular.module('hopsWorksApp')
                           $scope.registerForm.$setPristine();
                           self.successMessage = success.data.successMessage;
                           self.working = false;
+                          if (newUser.authType === 'Mobile') {
+                            $location.path('/qrCode');
+                          };
                           //$location.path('/login');
                         }, function (error) {
                           self.working = false;

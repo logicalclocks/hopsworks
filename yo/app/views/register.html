@@ -36,49 +36,35 @@
                 </div>
               </div>
             </div>
-            <div class="form-group has-feedback">
-              <label class="text-muted">Phone Number</label>
-              <input name="phone_number" placeholder="Phone" autocomplete="on"
-                     ng-model="regCtrl.newUser.telephoneNum"
-                     ng-pattern="/^[+ 0]?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
-                     class="form-control "
-                     type="text">
-              <span ng-show="registerForm.phone_number.$dirty &amp;&amp; registerForm.phone_number.$error.pattern"
-                    class="text-danger ng-hide">Phone number should be in (000-000-000000) format.</span>
+            <div class="row"> 
+              <div class="col-xs-12 col-sm-6 col-md-6">
+                <div class="form-group has-feedback">
+                  <label class="text-muted">Email address</label>
+                  <input name="user_email" placeholder="Email" autocomplete="off"
+                         ng-model="regCtrl.newUser.email" required
+                         class="form-control"
+                         type="email">
+                  <span class="fa fa-envelope form-control-feedback text-muted"></span>
+                  <span ng-show="(registerForm.$submitted || registerForm.user_email.$dirty) &amp;&amp; registerForm.user_email.$error.required"
+                        class="text-danger ng-hide">This field is required</span>
+                  <span ng-show="registerForm.user_email.$dirty &amp;&amp; registerForm.user_email.$error.email"
+                        class="text-danger ng-hide">This field must be a valid email address</span>
+                </div>
+                </div>
+                <div class="col-xs-12 col-sm-6 col-md-6">
+                <div class="form-group has-feedback">
+                  <label class="text-muted">Phone Number</label>
+                  <input name="phone_number" placeholder="Phone" autocomplete="on"
+                         ng-model="regCtrl.newUser.telephoneNum"
+                         ng-pattern="/^[+ 0]?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
+                         class="form-control "
+                         type="text">
+                  <span ng-show="registerForm.phone_number.$dirty &amp;&amp; registerForm.phone_number.$error.pattern"
+                        class="text-danger ng-hide">Phone number should be in (000-000-000000) format.</span>
+                </div>
+                  </div>
             </div>
-            <div class="form-group has-feedback">
-              <label class="text-muted">Security question</label>
-              <select name="sec_question" placeholder="Security question"
-                      ng-model="regCtrl.newUser.securityQuestion" required
-                      class="form-control ">
-                <option value="">Select security question</option>
-                <option ng-repeat="question in regCtrl.securityQuestions" value="{{question}}">{{question}}</option>
-              </select>
-              <span ng-show="(registerForm.$submitted || registerForm.sec_question.$dirty) &amp;&amp; registerForm.sec_question.$error.required"
-                    class="text-danger ng-hide">This field is required</span>
-            </div>
-            <div class="form-group has-feedback">
-              <label class="text-muted">Security answer</label>
-              <input name="sec_answer" placeholder="Security answer"
-                     autocomplete="off"
-                     ng-model="regCtrl.newUser.securityAnswer" required
-                     class="form-control"
-                     type="text">
-              <span ng-show="(registerForm.$submitted || registerForm.sec_answer.$dirty) &amp;&amp; registerForm.sec_answer.$error.required"
-                    class="text-danger ng-hide">This field is required</span>
-            </div>
-            <div class="form-group has-feedback">
-              <label class="text-muted">Email address</label>
-              <input name="user_email" placeholder="Email" autocomplete="off"
-                     ng-model="regCtrl.newUser.email" required
-                     class="form-control"
-                     type="email">
-              <span class="fa fa-envelope form-control-feedback text-muted"></span>
-              <span ng-show="(registerForm.$submitted || registerForm.user_email.$dirty) &amp;&amp; registerForm.user_email.$error.required"
-                    class="text-danger ng-hide">This field is required</span>
-              <span ng-show="registerForm.user_email.$dirty &amp;&amp; registerForm.user_email.$error.email"
-                    class="text-danger ng-hide">This field must be a valid email address</span>
-            </div>
+            
             <div class="row">
               <div class="col-xs-12 col-sm-6 col-md-6">
                 <div class="form-group has-feedback">
@@ -103,6 +89,53 @@
                 </div>
               </div>
             </div>
+             <div class="row">
+              <div class="col-xs-12 col-sm-6 col-md-6">
+                <div class="form-group has-feedback">
+                    <label class="text-muted">Security question</label>
+                    <select name="sec_question" placeholder="Security question"
+                          ng-model="regCtrl.newUser.securityQuestion" required
+                          class="form-control ">
+                    <option value="">Select security question</option>
+                    <option ng-repeat="question in regCtrl.securityQuestions" value="{{question}}">{{question}}</option>
+                    </select>
+                    <span ng-show="(registerForm.$submitted || registerForm.sec_question.$dirty) &amp;&amp; registerForm.sec_question.$error.required"
+                        class="text-danger ng-hide">This field is required</span>
+                </div>
+              </div>
+               <div class="col-xs-12 col-sm-6 col-md-6">
+                <div class="form-group has-feedback">
+                  <label class="text-muted">Security answer</label>
+                  <input name="sec_answer" placeholder="Security answer"
+                         autocomplete="off"
+                         ng-model="regCtrl.newUser.securityAnswer" required
+                         class="form-control"
+                         type="text">
+                  <span ng-show="(registerForm.$submitted || registerForm.sec_answer.$dirty) &amp;&amp; registerForm.sec_answer.$error.required"
+                        class="text-danger ng-hide">This field is required</span>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-12 col-sm-6 col-md-6">
+                <fieldset>
+                  <legend>Authentication Choice</legend>
+                    <div class="form-group has-feedback">
+                      <label class="col-xs-6 col-sm-6 col-md-6 text-muted">
+                        <input name="sec_type" type="radio" ng-model="regCtrl.newUser.authType"  value="Mobile">
+                        Mobile 
+                      </label>
+                      <label class="col-xs-6 col-sm-6 col-md-6 text-muted">
+                        <input name="sec_type" type="radio" ng-model="regCtrl.newUser.authType" value="Yubikey">
+                        Yubikey 
+                      </label>                  
+                      <span ng-show="(registerForm.$submitted) &amp;&amp; registerForm.sec_type.$error.required"
+                            class="text-danger ng-hide">This field is required</span>
+                    </div>
+                  </fieldset>
+              </div>           
+            </div>
+
             <div class="row">
                   <div class="col-xs-12 col-sm-12 col-md-12">
                     <span ng-show="(registerForm.$submitted || registerForm.user_password.$dirty) &amp;&amp; registerForm.user_password.$error.required"
