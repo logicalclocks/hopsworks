@@ -20,11 +20,16 @@ angular.module('hopsWorksApp')
               "jobType":"",
               "name":""
             };
+            
+            this.hasSelectJob=false;
 
             var getAllJobs = function () {
               JobService.getAllJobsInProject(self.projectId).then(
                       function (success) {
                         self.jobs = success.data;
+                        angular.forEach(self.jobs, function (job, key) {
+                        job.showing = false;
+                      });
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
@@ -61,6 +66,33 @@ angular.module('hopsWorksApp')
 
             self.showDetails = function (job) {
               ModalService.jobDetails('lg', job, self.projectId);
+            };
+            
+            
+            self.showLogs = function (jobId) {
+              JobService.showLog(self.projectId,jobId).then(
+                      function (success) {                          
+                          self.logset=success.data.logset;                         
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Failed to run job', ttl: 15000});
+              });              
+            };
+            
+            self.toggleJobs = function (job) {
+              //reset all jobs showing flag
+              angular.forEach(self.jobs, function (temp, key) {
+                if (job.id !== temp.id) {
+                  temp.showing = false;
+                }
+              });
+
+              //handle the clicked job accordingly
+              job.showing = !job.showing;
+              self.hasSelectJob=true;
+              //if all jobs are deselected hide log information
+              if (!job.showing) {
+                 self.hasSelectJob=false;
+              }
             };
             
             /**

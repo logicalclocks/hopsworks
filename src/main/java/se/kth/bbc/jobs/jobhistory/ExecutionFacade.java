@@ -60,6 +60,14 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     q.setParameter("job", job);
     return q.getResultList();
   }
+  
+  public List<Execution> findbyProjectAndJobId(Project project, int jobId) {
+    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByProjectAndJobId",
+            Execution.class);
+    q.setParameter("jobid", jobId);
+    q.setParameter("project", project);
+    return q.getResultList();
+  }
 
   /**
    * Find the execution with given id.

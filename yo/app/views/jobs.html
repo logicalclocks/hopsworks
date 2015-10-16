@@ -18,7 +18,7 @@
         <!-- Page Content -->
         <div>
           <div class="row">
-            <div class="col-lg-2" style="max-width: 250px">
+            <div class="col-lg-2" style="max-width: 250px;">
               <div class="ibox float-e-margins">
                 <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
                   <div class="file-manager">
@@ -41,7 +41,7 @@
               </div>
             </div>
 
-            <div class="col-lg-10">
+              <div class="col-lg-10" style="max-height: 50%;overflow-y: auto">
               <table class="table table-hover">
                 <thead>
                 <th>
@@ -62,8 +62,9 @@
                 </th>
                 </thead>
                 <tbody>
-                  <tr ng-repeat="job in jobsCtrl.jobs| filter:jobsCtrl.jobFilter:false | orderBy : 'creationTime'" ng-click="jobsCtrl.showDetails(job)">
-                    <td>
+                    <tr ng-repeat="job in jobsCtrl.jobs| filter:jobsCtrl.jobFilter:false | orderBy : 'creationTime'" ng-click="jobsCtrl.toggleJobs(job);jobsCtrl.showLogs(job.id)">
+                    <td>   
+                      <span class="glyphicon glyphicon-hand-right" ng-show="job.showing"></span>
                       {{job.name}}
                     </td>
                     <td>
@@ -76,7 +77,7 @@
                       {{job.creationTime| date:'mediumDate'}}
                     </td>
                     <td>
-                      <button ng-click="jobsCtrl.runJob(job.id); $event.stopPropagation();" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-play" aria-hidden="true"/>Run</button>
+                      <button ng-click="jobsCtrl.showDetails(job);" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-play" aria-hidden="true"/>Run</button>
                     </td>
                     <td>
                       <span class="text-info" ng-show="jobsCtrl.running['' + job.id]">Running...</span>
@@ -88,6 +89,50 @@
           </div>
 
           <!-- /#page-content-wrapper -->
+          <div class="row">
+              <div class="col-lg-2"  style="max-width: 250px"></div>
+              <div class="col-lg-10" style="max-height: 50%;padding-top: 10px" ng-show="jobsCtrl.hasSelectJob">
+                  
+                <ul class="nav nav-tabs">
+                  <li class="active"><button class="btn btn-default"
+                        data-toggle="tab"
+                        data-target="#logs">
+                        Execution Logs</button></li>
+                  <li><button class="btn btn-default"                        
+                        data-toggle="tab"
+                        data-target="#errs"
+                        >Error Logs</button></li>
+                  
+                </ul>
+
+                <div class="tab-content">
+                  <div id="logs" class="tab-pane fade in active">
+                        <accordion close-others="true">
+                            <accordion-group data-ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                              <div style="overflow-y: auto">
+                                  <textarea class="form-control" rows="30" placeholer="No log information available" readonly>
+                                      {{item.log}}
+                                  </textarea>
+                              </div>
+                            </accordion-group>
+                        </accordion>
+                  </div>
+                  <div id="errs" class="tab-pane fade">
+                        <accordion close-others="true">
+                            <accordion-group data-ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                              <div style="overflow-y: auto">
+                                  <textarea class="form-control" rows="30" placeholer="No log information available" readonly>
+                                      {{item.err}}
+                                  </textarea>
+                              </div>
+                            </accordion-group>
+                        </accordion>
+                  </div>
+                </div>                
+
+              </div>
+          </div>
+          
         </div>
     </section>
   </div>

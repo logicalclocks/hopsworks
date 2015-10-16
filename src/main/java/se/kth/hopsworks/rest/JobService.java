@@ -1,5 +1,7 @@
 package se.kth.hopsworks.rest;
 
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -9,6 +11,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -20,6 +23,10 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.commons.io.IOUtils;
+import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.description.JobDescription;
@@ -42,6 +49,8 @@ public class JobService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private JobDescriptionFacade jobFacade;
+  @EJB
+  private ExecutionFacade exeFacade;
   @Inject
   private ExecutionService executions;
   @Inject
@@ -50,6 +59,8 @@ public class JobService {
   private SparkService spark;
   @Inject
   private AdamService adam;
+  @EJB
+  private FileOperations fops;
 
   private Project project;
 
@@ -185,7 +196,74 @@ public class JobService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(builder.build()).build();
   }
+  
+   /**
+   * Get the log information related to a job. The return
+   * value is a JSON object, where each job id is a key and the corresponding
+   * boolean indicates whether the job is running or not.
+   * <p/>
+   * @param sc
+   * @param req
+   * @return
+   */
+  @GET
+  @Path("/{jobId}/showlog")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getLogInformation(@PathParam("jobId") int jobId, @Context SecurityContext sc,
+          @Context HttpServletRequest req) {
+      
+      JsonObjectBuilder builder = Json.createObjectBuilder();
+      JsonArrayBuilder arrayBuilder=Json.createArrayBuilder();       
+      try
+      {
+          List<Execution> executionHistory=exeFacade.findbyProjectAndJobId(project, jobId);
+          JsonObjectBuilder arrayObjectBuilder;
+          if(executionHistory!=null && !executionHistory.isEmpty()){
+            String message;            
+            for(Execution e :executionHistory){
+                arrayObjectBuilder=Json.createObjectBuilder();
+                arrayObjectBuilder.add("time", e.getSubmissionTime().toString()); 
+                if(e.getStdoutPath() !=null && !e.getStdoutPath().isEmpty()){
+                    String hdfsLogPath="hdfs://"+e.getStdoutPath();                
+                    message = IOUtils.toString(fops.getInputStream(hdfsLogPath), "UTF-8");           
+                    arrayObjectBuilder.add("log", message.isEmpty()?"No information.":message); 
+                }
+                else{
+                    arrayObjectBuilder.add("log", "No log available"); 
+                }
+                
+                if(e.getStderrPath() !=null && !e.getStderrPath().isEmpty()){
+                    
+                    String hdfsErrPath="hdfs://"+e.getStderrPath();
+                    message = IOUtils.toString(fops.getInputStream(hdfsErrPath), "UTF-8"); 
+                    arrayObjectBuilder.add("err",  message.isEmpty()?"No error.":message); 
+                }
+                else{
+                    arrayObjectBuilder.add("err", "No error log available"); 
+                }
+                arrayBuilder.add(arrayObjectBuilder);                
+            }            
+          }
+          else{
+              arrayObjectBuilder=Json.createObjectBuilder();
+              arrayObjectBuilder.add("time", "Job is not executed yet");
+              arrayObjectBuilder.add("log", "Job is not executed yet");
+              arrayObjectBuilder.add("err", "Job is not executed yet");
+              arrayBuilder.add(arrayObjectBuilder);
+          }
+          builder.add("logset", arrayBuilder);
+      }
+      catch(IOException ex){
+          logger.log(Level.WARNING, "Error when reading hdfs logs: "+ex.getMessage());
+      }
 
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(builder.build()).build();
+  }
+  
+  
+  
   /**
    * Get the ExecutionService for the job with given id.
    * <p/>

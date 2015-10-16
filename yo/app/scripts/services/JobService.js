@@ -94,6 +94,15 @@ angular.module('hopsWorksApp')
                */
               getRunStatus: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/jobs/running');
+              },
+              /**
+               * Run the given job, creating a new Execution instance.
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {undefined} The new Execution instance
+               */
+              showLog: function (projectId, jobId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/showlog');
               }
             };
             return service;
