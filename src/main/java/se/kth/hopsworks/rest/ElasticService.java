@@ -63,18 +63,16 @@ import se.kth.rest.application.config.VariablesFacade;
 public class ElasticService {
 
   private final static Logger logger = Logger.getLogger(ElasticService.class.
-          getName());
+      getName());
 
   @EJB
   private NoCacheResponse noCacheResponse;
 
   @EJB
   private VariablesFacade variables;
-  
-  
+
   /**
-   * Searches for content composed of projects and datasets. Hits two elastic
-   * indices: 'project' and 'dataset'
+   * Searches for content composed of projects and datasets. Hits two elastic indices: 'project' and 'dataset'
    * <p/>
    * @param searchTerm
    * @param sc
@@ -87,47 +85,34 @@ public class ElasticService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response globalSearch(
-          @PathParam("searchTerm") String searchTerm,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      @PathParam("searchTerm") String searchTerm,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
 
     if (searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+          "Incomplete request!");
     }
 
     //some necessary client settings
     final Settings settings = ImmutableSettings.settingsBuilder()
-            .put("client.transport.sniff", true) //being able to inspect other nodes 
-            .put("cluster.name", "hops")
-            .build();
-    
-    Variables elasticIp = variables.findById(Constants.VARIABLE_ELASTIC_ADDR);
-    String addr = elasticIp.getValue();
-    
+        .put("client.transport.sniff", true) //being able to inspect other nodes 
+        .put("cluster.name", "hops")
+        .build();
+
+    String addr = getElasticIpAsString();
     //initialize the client
     Client client = new TransportClient(settings)
-            .addTransportAddress(new InetSocketTransportAddress(addr, 9300));
+        .addTransportAddress(new InetSocketTransportAddress(addr, Constants.ELASTIC_PORT));
 
-    // Validate the ip address pulled from the variables
-    if (Ip.validIp(addr) == false) {
-      try {
-        InetAddress.getByName(addr);
-      } catch (UnknownHostException ex) {
-      logger.log(Level.SEVERE, ResponseMessages.ELASTIC_SERVER_NOT_AVAILABLE);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_AVAILABLE);
-      
-      }
-    }
 
     //check if the indices are up and running
     if (!this.indexExists(client, Constants.META_PROJECT_INDEX) || !this.
-            indexExists(client, Constants.META_DATASET_INDEX)) {
+        indexExists(client, Constants.META_DATASET_INDEX)) {
 
       logger.log(Level.FINE, ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
+          getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
     }
 
     /*
@@ -139,14 +124,14 @@ public class ElasticService {
      */
     //hit the indices - execute the queries
     SearchResponse response
-            = client.prepareSearch(Constants.META_PROJECT_INDEX,
-                    Constants.META_DATASET_INDEX).
-            setTypes(Constants.META_PROJECT_PARENT_TYPE,
-                    Constants.META_DATASET_PARENT_TYPE)
-            .setQuery(this.matchProjectsDatasetsQuery(searchTerm))
-            //.setQuery(this.getDatasetComboQuery(searchTerm))
-            .addHighlightedField("name")
-            .execute().actionGet();
+        = client.prepareSearch(Constants.META_PROJECT_INDEX,
+            Constants.META_DATASET_INDEX).
+        setTypes(Constants.META_PROJECT_PARENT_TYPE,
+            Constants.META_DATASET_PARENT_TYPE)
+        .setQuery(this.matchProjectsDatasetsQuery(searchTerm))
+        //.setQuery(this.getDatasetComboQuery(searchTerm))
+        .addHighlightedField("name")
+        .execute().actionGet();
 
     if (response.status().getStatus() == 200) {
       //logger.log(Level.INFO, "Matched number of documents: {0}", response.
@@ -165,16 +150,16 @@ public class ElasticService {
 
       this.clientShutdown(client);
       GenericEntity<List<ElasticHit>> searchResults
-              = new GenericEntity<List<ElasticHit>>(elasticHits) {
-              };
+          = new GenericEntity<List<ElasticHit>>(elasticHits) {
+          };
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(searchResults).build();
+          entity(searchResults).build();
     }
 
     //something went wrong so throw an exception
     this.clientShutdown(client);
     throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
+        getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
   }
 
   /**
@@ -192,48 +177,45 @@ public class ElasticService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response projectSearch(
-          @PathParam("projectName") String projectName,
-          @PathParam("searchTerm") String searchTerm,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      @PathParam("projectName") String projectName,
+      @PathParam("searchTerm") String searchTerm,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
 
     if (projectName == null || searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+          "Incomplete request!");
     }
 
     final Settings settings = ImmutableSettings.settingsBuilder()
-            .put("client.transport.sniff", true) //being able to retrieve other nodes 
-            .put("cluster.name", "hops").build();
+        .put("client.transport.sniff", true) //being able to retrieve other nodes 
+        .put("cluster.name", "hops").build();
 
-    Variables elasticIp = variables.findById(Constants.VARIABLE_ELASTIC_ADDR);
-    String addr = elasticIp.getValue();
-    
+
     //initialize the client
     Client client = new TransportClient(settings)
-            .addTransportAddress(new InetSocketTransportAddress(addr, 9300));
-
+        .addTransportAddress(new InetSocketTransportAddress(getElasticIpAsString(), Constants.ELASTIC_PORT));
 
     //check if the indices are up and running
     if (!this.indexExists(client, Constants.META_PROJECT_INDEX)) {
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
+          getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
     } else if (!this.typeExists(client, Constants.META_PROJECT_INDEX,
-            Constants.META_PROJECT_CHILD_TYPE)) {
+        Constants.META_PROJECT_CHILD_TYPE)) {
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
+          getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
     }
 
     //hit the indices - execute the queries
     SearchResponse response
-            = client.prepareSearch(Constants.META_PROJECT_INDEX)
-            .setTypes(Constants.META_PROJECT_CHILD_TYPE)
-            .setQuery(this.matchChildQuery(projectName,
-                            Constants.META_PROJECT_PARENT_TYPE, searchTerm))
-            .addHighlightedField("name")
-            .execute().actionGet();
+        = client.prepareSearch(Constants.META_PROJECT_INDEX)
+        .setTypes(Constants.META_PROJECT_CHILD_TYPE)
+        .setQuery(this.matchChildQuery(projectName,
+                Constants.META_PROJECT_PARENT_TYPE, searchTerm))
+        .addHighlightedField("name")
+        .execute().actionGet();
 
     if (response.status().getStatus() == 200) {
       //logger.log(Level.INFO, "Matched number of documents: {0}", response.
@@ -252,15 +234,15 @@ public class ElasticService {
 
       this.clientShutdown(client);
       GenericEntity<List<ElasticHit>> searchResults
-              = new GenericEntity<List<ElasticHit>>(elasticHits) {
-              };
+          = new GenericEntity<List<ElasticHit>>(elasticHits) {
+          };
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(searchResults).build();
+          entity(searchResults).build();
     }
 
     this.clientShutdown(client);
     throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
+        getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
   }
 
   /**
@@ -278,47 +260,44 @@ public class ElasticService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response datasetSearch(
-          @PathParam("datasetName") String datasetName,
-          @PathParam("searchTerm") String searchTerm,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      @PathParam("datasetName") String datasetName,
+      @PathParam("searchTerm") String searchTerm,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
 
     if (datasetName == null || searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+          "Incomplete request!");
     }
 
     final Settings settings = ImmutableSettings.settingsBuilder()
-            .put("client.transport.sniff", true) //being able to retrieve other nodes 
-            .put("cluster.name", "hops").build();
+        .put("client.transport.sniff", true) //being able to retrieve other nodes 
+        .put("cluster.name", "hops").build();
 
-    Variables elasticIp = variables.findById(Constants.VARIABLE_ELASTIC_ADDR);
-    String addr = elasticIp.getValue();
-    
     //initialize the client
     Client client = new TransportClient(settings)
-            .addTransportAddress(new InetSocketTransportAddress(addr, 9300));
+        .addTransportAddress(new InetSocketTransportAddress(getElasticIpAsString(), Constants.ELASTIC_PORT));
 
     //check if the indices are up and running
     if (!this.indexExists(client, Constants.META_DATASET_INDEX)) {
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
+          getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
     } else if (!this.typeExists(client, Constants.META_DATASET_INDEX,
-            Constants.META_DATASET_CHILD_TYPE)) {
+        Constants.META_DATASET_CHILD_TYPE)) {
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
+          getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
     }
 
     //hit the indices - execute the queries
     SearchResponse response
-            = client.prepareSearch(Constants.META_DATASET_INDEX)
-            .setTypes(Constants.META_DATASET_CHILD_TYPE)
-            .setQuery(this.matchChildQuery(datasetName,
-                            Constants.META_DATASET_PARENT_TYPE, searchTerm))
-            .addHighlightedField("name")
-            .execute().actionGet();
+        = client.prepareSearch(Constants.META_DATASET_INDEX)
+        .setTypes(Constants.META_DATASET_CHILD_TYPE)
+        .setQuery(this.matchChildQuery(datasetName,
+                Constants.META_DATASET_PARENT_TYPE, searchTerm))
+        .addHighlightedField("name")
+        .execute().actionGet();
 
     if (response.status().getStatus() == 200) {
       //logger.log(Level.INFO, "Matched number of documents: {0}", response.
@@ -337,20 +316,19 @@ public class ElasticService {
 
       this.clientShutdown(client);
       GenericEntity<List<ElasticHit>> searchResults
-              = new GenericEntity<List<ElasticHit>>(elasticHits) {
-              };
+          = new GenericEntity<List<ElasticHit>>(elasticHits) {
+          };
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(searchResults).build();
+          entity(searchResults).build();
     }
 
     this.clientShutdown(client);
     throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
+        getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
   }
 
   /**
-   * Gathers the query filters applied on projects and datasets. Projects and
-   * datasets are parent documents
+   * Gathers the query filters applied on projects and datasets. Projects and datasets are parent documents
    * <p/>
    * @param searchTerm
    * @return
@@ -366,16 +344,15 @@ public class ElasticService {
      * (operation && searchable) && (name || description || metadata)
      */
     QueryBuilder query = boolQuery()
-            .must(firstPart)
-            .must(secondPart);
+        .must(firstPart)
+        .must(secondPart);
 
     return query;
   }
 
   /**
-   * Creates the base condition every matched document has to satisfy. It has to
-   * be an added document (operation = 0) and it has to be searchable
-   * (searchable = 1)
+   * Creates the base condition every matched document has to satisfy. It has to be an added document (operation = 0)
+   * and it has to be searchable (searchable = 1)
    * <p/>
    * @return
    */
@@ -383,23 +360,23 @@ public class ElasticService {
 
     //build the project base condition queries
     QueryBuilder operationMatch = matchQuery(
-            Constants.META_INODE_OPERATION_FIELD,
-            Constants.META_INODE_OPERATION_ADD);
+        Constants.META_INODE_OPERATION_FIELD,
+        Constants.META_INODE_OPERATION_ADD);
 
     //match searchable
     QueryBuilder searchableMatch = matchQuery(
-            Constants.META_INODE_SEARCHABLE_FIELD, 1);
+        Constants.META_INODE_SEARCHABLE_FIELD, 1);
 
     QueryBuilder baseCondition = boolQuery()
-            .must(operationMatch)
-            .must(searchableMatch);
+        .must(operationMatch)
+        .must(searchableMatch);
 
     return baseCondition;
   }
 
   /**
-   * Creates the main query condition. Applies filters on the texts describing a
-   * document i.e. on the description and metadata fields
+   * Creates the main query condition. Applies filters on the texts describing a document i.e. on the description and
+   * metadata fields
    * <p/>
    * @param searchTerm
    * @return
@@ -412,8 +389,8 @@ public class ElasticService {
     QueryBuilder descMetaPart = this.getDescMetaQuery(searchTerm);
 
     QueryBuilder textCondition = boolQuery()
-            .should(namePart)
-            .should(descMetaPart);
+        .should(namePart)
+        .should(descMetaPart);
 
     return textCondition;
   }
@@ -428,21 +405,20 @@ public class ElasticService {
 
     //prefix name match
     QueryBuilder namePrefixMatch = prefixQuery(Constants.META_NAME_FIELD,
-            searchTerm);
+        searchTerm);
 
     QueryBuilder namePhraseMatch = matchPhraseQuery(Constants.META_NAME_FIELD,
-            searchTerm);
+        searchTerm);
 
     QueryBuilder nameQuery = boolQuery()
-            .should(namePrefixMatch)
-            .should(namePhraseMatch);
+        .should(namePrefixMatch)
+        .should(namePhraseMatch);
 
     return nameQuery;
   }
 
   /**
-   * Creates the query that is applied on the text fields of a document. Hits
-   * the description and metadata fields
+   * Creates the query that is applied on the text fields of a document. Hits the description and metadata fields
    * <p/>
    * @param searchTerm
    * @return
@@ -452,15 +428,15 @@ public class ElasticService {
     //do a prefix query on the description field in case the user starts writing 
     //a full sentence
     QueryBuilder descriptionPrefixMatch = prefixQuery(
-            Constants.META_DESCRIPTION_FIELD, searchTerm);
+        Constants.META_DESCRIPTION_FIELD, searchTerm);
 
     //a phrase query to match the dataset description
     QueryBuilder descriptionMatch = termsQuery(
-            Constants.META_DESCRIPTION_FIELD, searchTerm);
+        Constants.META_DESCRIPTION_FIELD, searchTerm);
 
     //add a phrase match query to enable results to popup while typing phrases
     QueryBuilder descriptionPhraseMatch = matchPhraseQuery(
-            Constants.META_DESCRIPTION_FIELD, searchTerm);
+        Constants.META_DESCRIPTION_FIELD, searchTerm);
 
     //add a fuzzy search on description field
     //QueryBuilder descriptionFuzzyQuery = fuzzyQuery(
@@ -468,39 +444,38 @@ public class ElasticService {
     //do a prefix query on the metadata first in case the user starts typing a 
     //full sentence
     QueryBuilder metadataPrefixMatch = prefixQuery(Constants.META_DATA_FIELD,
-            searchTerm);
+        searchTerm);
 
     //apply phrase filter on user metadata
     QueryBuilder metadataMatch = termsQuery(
-            Constants.META_DATA_FIELD, searchTerm);
+        Constants.META_DATA_FIELD, searchTerm);
 
     //add a phrase match query to enable results to popup while typing phrases
     QueryBuilder metadataPhraseMatch = matchPhraseQuery(
-            Constants.META_DATA_FIELD, searchTerm);
+        Constants.META_DATA_FIELD, searchTerm);
 
     //add a fuzzy search on metadata field
     //QueryBuilder metadataFuzzyQuery = fuzzyQuery(Constants.META_DATA_FIELD,
     //        searchTerm);
     QueryBuilder datasetsQuery = boolQuery()
-            .should(descriptionPrefixMatch)
-            .should(descriptionMatch)
-            .should(descriptionPhraseMatch)
-            .should(metadataPrefixMatch)
-            .should(metadataMatch)
-            .should(metadataPhraseMatch);
+        .should(descriptionPrefixMatch)
+        .should(descriptionMatch)
+        .should(descriptionPhraseMatch)
+        .should(metadataPrefixMatch)
+        .should(metadataMatch)
+        .should(metadataPhraseMatch);
 
     return datasetsQuery;
   }
 
   /**
-   * Gathers the query filters applied on common files and folders. Common files
-   * and folders are child documents
+   * Gathers the query filters applied on common files and folders. Common files and folders are child documents
    * <p/>
    * @param searchTerm
    * @return
    */
   private QueryBuilder matchChildQuery(String parentName,
-          String parentType, String searchTerm) {
+      String parentType, String searchTerm) {
 
     //get the base conditions query
     QueryBuilder childBase = this.getChildBasePart(parentName, parentType);
@@ -513,16 +488,15 @@ public class ElasticService {
      * metadata)
      */
     QueryBuilder union = boolQuery()
-            .must(childBase)
-            .must(childRest);
+        .must(childBase)
+        .must(childRest);
 
     return union;
   }
 
   /**
-   * Creates the base condition every matched document has to satisfy. It has to
-   * have a specific parent type (hasParent), it must be an added document
-   * (operation = 0) and it has to be searchable (searchable = 1)
+   * Creates the base condition every matched document has to satisfy. It has to have a specific parent type
+   * (hasParent), it must be an added document (operation = 0) and it has to be searchable (searchable = 1)
    * <p/>
    * @return
    */
@@ -530,21 +504,21 @@ public class ElasticService {
 
     //TODO: ADD SEARCHABLE FIELD IN CHILD DOCUMENTS. 1 BY DEFAULT BY THE INDEXING SCRIPTS
     QueryBuilder hasParentPart = hasParentQuery(
-            parentType,
-            matchQuery(Constants.META_NAME_FIELD, parentName));
+        parentType,
+        matchQuery(Constants.META_NAME_FIELD, parentName));
 
     //build the base conditions query for the child documents
     QueryBuilder operationMatch = matchQuery(
-            Constants.META_INODE_OPERATION_FIELD,
-            Constants.META_INODE_OPERATION_ADD);
+        Constants.META_INODE_OPERATION_FIELD,
+        Constants.META_INODE_OPERATION_ADD);
 
     //match searchable
     QueryBuilder searchableMatch = matchQuery(
-            Constants.META_INODE_SEARCHABLE_FIELD, 1);
+        Constants.META_INODE_SEARCHABLE_FIELD, 1);
 
     QueryBuilder baseCondition = boolQuery()
-            .must(hasParentPart)
-            .must(operationMatch);
+        .must(hasParentPart)
+        .must(operationMatch);
     //.must(searchableMatch);
 
     return baseCondition;
@@ -562,11 +536,11 @@ public class ElasticService {
     IndicesAdminClient indices = admin.indices();
 
     IndicesExistsRequestBuilder indicesExistsRequestBuilder = indices.
-            prepareExists(indexName);
+        prepareExists(indexName);
 
     IndicesExistsResponse response = indicesExistsRequestBuilder
-            .execute()
-            .actionGet();
+        .execute()
+        .actionGet();
 
     return response.isExists();
   }
@@ -583,8 +557,8 @@ public class ElasticService {
     IndicesAdminClient indices = admin.indices();
 
     ActionFuture<TypesExistsResponse> action = indices.typesExists(
-            new TypesExistsRequest(
-                    new String[]{indexName}, typeName));
+        new TypesExistsRequest(
+            new String[]{indexName}, typeName));
 
     TypesExistsResponse response = action.actionGet();
 
@@ -599,7 +573,7 @@ public class ElasticService {
   private void clientShutdown(Client client) {
 
     client.admin().indices().clearCache(new ClearIndicesCacheRequest(
-            Constants.META_PROJECT_INDEX, Constants.META_DATASET_INDEX));
+        Constants.META_PROJECT_INDEX, Constants.META_DATASET_INDEX));
 
     client.close();
   }
@@ -610,6 +584,29 @@ public class ElasticService {
   private void bootIndices(Client client) {
 
     client.admin().indices().open(new OpenIndexRequest(
-            Constants.META_PROJECT_INDEX, Constants.META_DATASET_INDEX));
+        Constants.META_PROJECT_INDEX, Constants.META_DATASET_INDEX));
   }
+
+  private String getElasticIpAsString() throws AppException {
+    String addr = Constants.DEFAULT_ELASTIC_IP;
+    Variables elasticIp = variables.findById(Constants.VARIABLE_ELASTIC_ADDR);
+    if (elasticIp != null && elasticIp.getValue().isEmpty() == false) {
+      addr = elasticIp.getValue();
+    }
+
+    // Validate the ip address pulled from the variables
+    if (Ip.validIp(addr) == false) {
+      try {
+        InetAddress.getByName(addr);
+      } catch (UnknownHostException ex) {
+        logger.log(Level.SEVERE, ResponseMessages.ELASTIC_SERVER_NOT_AVAILABLE);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_AVAILABLE);
+
+      }
+    }
+    
+    return addr;
+  }
+
 }

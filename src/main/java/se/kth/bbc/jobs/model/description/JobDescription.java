@@ -87,7 +87,6 @@ public class JobDescription implements Serializable {
   @Convert(converter = JsonReduceableConverter.class)
   private JobConfiguration jobConfig;
 
-  @Size(max = 128)
   @Column(name = "type")
   @Enumerated(EnumType.STRING)
   private JobType type;

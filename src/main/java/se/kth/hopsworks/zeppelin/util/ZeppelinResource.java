@@ -27,7 +27,7 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
 @Stateless
 public class ZeppelinResource {
 
-  private static final Logger LOG
+  private static final Logger logger
           = Logger.getLogger(ZeppelinResource.class.getName());
 
   private final ZeppelinSingleton zeppelin = ZeppelinSingleton.SINGLETON;
@@ -49,7 +49,7 @@ public class ZeppelinResource {
     try {
       pidFiles = getPidFiles();
     } catch (URISyntaxException | FileSystemException ex) {
-      LOG.log(Level.SEVERE, "Could not read pid files ", ex);
+      logger.log(Level.SEVERE, "Could not read pid files ", ex);
       return false;
     }
     boolean running = false;
@@ -117,7 +117,7 @@ public class ZeppelinResource {
     } catch (ClassNotFoundException | NoSuchMethodException | SecurityException |
             InstantiationException | IllegalAccessException |
             IllegalArgumentException | InvocationTargetException ex) {
-      LOG.log(Level.SEVERE, "Could not instantiate notebook repo", ex);
+      logger.log(Level.SEVERE, "Could not instantiate notebook repo", ex);
       return null;
     }
 
@@ -125,6 +125,9 @@ public class ZeppelinResource {
   }
 
   private boolean isProccessAlive(String bashPath, String pid) {
+    
+    logger.log(Level.INFO, "Checking if Zeppelin Interpreter alive at: " + bashPath + "   with PID: " +  pid);
+    
     ProcessBuilder pb = new ProcessBuilder(bashPath, pid);
     if (pid == null) {
       return false;
@@ -135,6 +138,8 @@ public class ZeppelinResource {
       p.waitFor();
       exitValue = p.exitValue();
     } catch (IOException | InterruptedException ex) {
+
+      logger.warning("Problem starting Zeppelin Interpreter: " + ex.toString());
       //if the pid file exists but we can not test if it is alive then
       //we answer true, b/c pid files are deleted when a process is killed.
       return true;
