@@ -32,6 +32,10 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error fetching execution history.', ttl: 15000});
               });
             };
+            
+           this.updateNumberOfScheduleUnits = function () {
+              self.schedule.addition = self.schedule.number == 1 ? "" : "s";
+            };
 
             this.setupInfo = function () {
               if (self.job.runConfig.type == "cuneiformJobConfiguration") {
