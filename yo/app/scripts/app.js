@@ -109,7 +109,10 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/recover.html',
                       controller: 'RecoverCtrl as recoverCtrl'
                     })
-
+                    .when('/qrCode/:QR', {
+                      templateUrl: 'views/qrCode.html',
+                      controller: 'RecoverCtrl as recoverCtrl'
+                    })
 
                     .when('/project/:projectID', {
                       templateUrl: 'views/project.html',

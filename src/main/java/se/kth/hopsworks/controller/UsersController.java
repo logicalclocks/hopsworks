@@ -1,5 +1,9 @@
 package se.kth.hopsworks.controller;
 
+import com.google.zxing.WriterException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,10 +16,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.primefaces.model.StreamedContent;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
 import se.kth.bbc.security.audit.model.Userlogins;
+import se.kth.bbc.security.auth.CustomAuthentication;
+import se.kth.bbc.security.auth.QRCodeGenerator;
+import se.kth.bbc.security.ua.SecurityUtils;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
@@ -42,7 +50,19 @@ public class UsersController {
   @EJB
   private UserLoginsFacade userLoginsBean;
 
-  public void registerUser(UserDTO newUser) throws AppException {
+    // To send the user the QR code image
+  private StreamedContent qrCode;
+
+  public StreamedContent getQrCode() {
+    return qrCode;
+  }
+
+  public void setQrCode(StreamedContent qrCode) {
+    this.qrCode = qrCode;
+  }
+  
+  
+  public StreamedContent registerUser(UserDTO newUser) throws AppException, IOException, UnsupportedEncodingException, WriterException {
     if (userValidator.isValidEmail(newUser.getEmail())
         && userValidator.isValidPassword(newUser.getChosenPassword(),
             newUser.getRepeatedPassword())
@@ -57,6 +77,10 @@ public class UsersController {
             ResponseMessages.USER_EXIST);
       }
 
+      
+      String otpSecret = SecurityUtils.calculateSecretKey();
+      String activationKey = SecurityUtils.getRandomString(64);
+      
       int uid = userBean.lastUserID() + 1;
       String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
 
@@ -71,6 +95,10 @@ public class UsersController {
       user.setLname(newUser.getLastName());
       user.setMobile(newUser.getTelephoneNum());
       user.setStatus(UserAccountStatus.ACCOUNT_INACTIVE.getValue());
+      user.setSecret(otpSecret);
+      user.setValidationKey(activationKey);
+      user.setActivated(new Timestamp(new Date().getTime()));
+      user.setPasswordChanged(new Timestamp(new Date().getTime()));
       user.setSecurityQuestion(SecurityQuestion.getQuestion(newUser.
           getSecurityQuestion()));
       user.setPassword(DigestUtils.sha256Hex(newUser.getChosenPassword()));
@@ -79,7 +107,14 @@ public class UsersController {
       user.setBbcGroupCollection(groups);
 
       userBean.persist(user);
+      
+      qrCode = QRCodeGenerator.getQRCode(newUser.getEmail(), CustomAuthentication.ISSUER,
+              otpSecret);
+      
+      return qrCode;
     }
+    
+    return null;
   }
 
   public void recoverPassword(String email, String securityQuestion,

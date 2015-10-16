@@ -1,5 +1,9 @@
 package se.kth.hopsworks.rest;
 
+import com.google.zxing.WriterException;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -18,6 +22,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.primefaces.model.StreamedContent;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
@@ -163,23 +168,31 @@ public class AuthService {
 
   @POST
   @Path("register")
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_OCTET_STREAM)
   @Consumes(MediaType.APPLICATION_JSON)
   public Response register(UserDTO newUser, @Context HttpServletRequest req)
           throws AppException {
-
+ StreamedContent qrCode = null ;
     req.getServletContext().log("Registering..." + newUser.getEmail() + ", "
             + newUser.getFirstName());
 
     JsonResponse json = new JsonResponse();
 
-    userController.registerUser(newUser);
+    try {
+      qrCode = userController.registerUser(newUser);
+      
+    } catch (IOException ex) {
+      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (WriterException ex) {
+      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
+    }
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
 
-    json.setSuccessMessage(ResponseMessages.CREATED_ACCOUNT);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+    
+    Response.ResponseBuilder response = Response.ok((Object)qrCode);
+    response.header("Content-disposition", "inline;");
+    return response.build();
   }
 
   @POST

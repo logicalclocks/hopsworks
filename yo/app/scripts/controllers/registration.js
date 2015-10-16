@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('RegCtrl', ['AuthService', '$location', '$scope', 'SecurityQuestions', function (AuthService, $location, $scope, SecurityQuestions) {
+        .controller('RegCtrl', ['AuthService', '$location', '$scope', 'SecurityQuestions', '$routeParams', function (AuthService, $location, $scope, SecurityQuestions, $routeParams) {
 
             var self = this;
             self.securityQuestions = SecurityQuestions.getQuestions();
@@ -18,6 +18,7 @@ angular.module('hopsWorksApp')
               ToS: '',
               authType: '' 
             };
+            self.QR = $routeParams.QR;
             var empty = angular.copy(self.user);
             self.register = function () {
               self.successMessage = null;
@@ -31,7 +32,7 @@ angular.module('hopsWorksApp')
                           self.successMessage = success.data.successMessage;
                           self.working = false;
                           if (newUser.authType === 'Mobile') {
-                            $location.path('/qrCode');
+                            $location.path('/qrCode/' + success.data);
                           };
                           //$location.path('/login');
                         }, function (error) {
