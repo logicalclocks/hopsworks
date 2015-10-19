@@ -11,6 +11,7 @@ import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.project.Project;
+import se.kth.hopsworks.meta.exception.DatabaseException;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
@@ -102,6 +103,16 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
    */
   public JobDescription findById(Integer id) {
     return em.find(JobDescription.class, id);
+  }
+  
+  public void removeJob(JobDescription job) throws DatabaseException{
+      try{
+          JobDescription managedJob = em.find(JobDescription.class, job.getId());
+          this.em.remove(managedJob);          
+      }catch(SecurityException | IllegalStateException ex){
+          throw new DatabaseException("Could not delete job " + job.getName(), ex);
+      }
+          
   }
 
   public List<JobDescription> getRunningJobs(Project project) {

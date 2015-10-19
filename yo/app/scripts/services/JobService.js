@@ -96,14 +96,24 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/jobs/running');
               },
               /**
-               * Run the given job, creating a new Execution instance.
+               * Retrieve the logs associated to a certain job.
                * @param {type} projectId
                * @param {type} jobId
-               * @returns {undefined} The new Execution instance
+               * @returns {undefined} Log infrormation json.
                */
               showLog: function (projectId, jobId) {
                 return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/showlog');
+              },
+              /**
+               * Delete a job 
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {undefined} true if success, false otheriwse
+               */
+              deleteJob: function (projectId, jobId) {
+                return $http.delete('/api/project/' + projectId + '/jobs/' + jobId + '/deleteJob');
               }
+              
             };
             return service;
           }]);

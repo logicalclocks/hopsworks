@@ -14,6 +14,7 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -32,7 +33,10 @@ import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.project.Project;
+import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.meta.exception.ApplicationException;
+import se.kth.hopsworks.meta.exception.DatabaseException;
 
 /**
  *
@@ -199,8 +203,10 @@ public class JobService {
   
    /**
    * Get the log information related to a job. The return
-   * value is a JSON object, where each job id is a key and the corresponding
-   * boolean indicates whether the job is running or not.
+   * value is a JSON object, with format 
+   * logset=[{"time":"JOB EXECUTION TIME"}, 
+   *        {"log":"INFORMATION LOG"},
+   *        {"err":"ERROR LOG"}] 
    * <p/>
    * @param sc
    * @param req
@@ -261,6 +267,47 @@ public class JobService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(builder.build()).build();
   }
+  
+   /**
+   * Delete the job associated to the project and jobid. The return
+   * value is a JSON object stating operation successful or not.
+   * <p/>
+   * @param sc
+   * @param req
+   * @return
+   */
+  @DELETE
+  @Path("/{jobId}/deleteJob")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response deleteJob(@PathParam("jobId") int jobId, @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws ApplicationException {
+        logger.log(Level.INFO, "Request to delete job");
+    
+    JobDescription job = jobFacade.findById(jobId);
+    if (job == null) {
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } else if (!job.getProject().equals(project)) {
+      //In this case, a user is trying to access a job outside its project!!!
+      logger.log(Level.SEVERE,
+              "A user is trying to access a job outside their project!");
+       return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
+    } else {
+        try{
+            logger.log(Level.INFO, "Request to delete job name ="+job.getName()+" job id ="+job.getId());
+            jobFacade.removeJob(job);
+            logger.log(Level.INFO, "Deleted job name ="+job.getName()+" job id ="+job.getId());
+            JsonResponse json = new JsonResponse();
+            json.setSuccessMessage("Deleted job "+job.getName()+" successfully");
+            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+        }catch(DatabaseException ex){
+            logger.log(Level.WARNING, "Job cannot be deleted  job name ="+job.getName()+" job id ="+job.getId());
+            throw new ApplicationException("Server", ex.getMessage());
+        }
+    }
+   }  
   
   
   
