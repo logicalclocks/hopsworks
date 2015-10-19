@@ -98,5 +98,37 @@ public class QRCodeGenerator {
             toByteArray()), "image/png");
 
   }
+  
+  /**
+   * Generates the QRcode image to be scanned by the user.
+   *
+   * @param user
+   * @param host
+   * @param secret
+   * @return
+   * @throws UnsupportedEncodingException
+   * @throws IOException
+   * @throws com.google.zxing.WriterException
+   */
+  public static byte[] getQRCodeBytes(String user, String host,
+          String secret) throws UnsupportedEncodingException, IOException,
+          WriterException {
+
+    // Format the qr code
+    String chl = "otpauth://totp/" + user + "?secret=" + secret + "&issuer="
+            + host;
+
+    // Build a stream content to be loaded by user mobile    
+    ByteArrayOutputStream stream = QRCodeGenerator.qrCodeURLFormat(chl).
+            qrcodeStream();
+    BufferedImage bufferedImg = new BufferedImage(100, 25,
+            BufferedImage.TYPE_INT_RGB);
+    // Build an image to be sent to user
+    Graphics2D g2 = bufferedImg.createGraphics();
+    ImageIO.write(bufferedImg, "png", stream);
+
+    return stream.toByteArray();
+
+  }
 
 }

@@ -31,8 +31,9 @@ angular.module('hopsWorksApp')
                           $scope.registerForm.$setPristine();
                           self.successMessage = success.data.successMessage;
                           self.working = false;
-                          if (newUser.authType === 'Mobile') {
-                            $location.path('/qrCode/' + success.data);
+                          if (self.newUser.authType === 'Mobile') {
+                              $location.path("/qrCode/"+ success.data.QRCode);
+                              $location.replace();
                           };
                           //$location.path('/login');
                         }, function (error) {
@@ -41,5 +42,5 @@ angular.module('hopsWorksApp')
                 });
               }
             };
-
+            self.countries = getAllCountries();
           }]);
