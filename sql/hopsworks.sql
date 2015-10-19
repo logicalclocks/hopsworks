@@ -32,27 +32,23 @@ CREATE TABLE `users` (
     UNIQUE KEY `email` (`email`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=10000;
 
-CREATE TABLE `yubikey` (
-  `serial` VARCHAR(10)  DEFAULT NULL,
-  `version` VARCHAR(15)  DEFAULT NULL,
-  `notes` VARCHAR(100)  DEFAULT NULL,
-  `counter` INT(11) DEFAULT NULL,
-  `low` INT(11) DEFAULT NULL,
-  `high` INT(11) DEFAULT NULL,
-  `session_use` INT(11) DEFAULT NULL,
-  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `aes_secret` VARCHAR(100)  DEFAULT NULL,
-  `public_id` VARCHAR(40)  DEFAULT NULL,
-  `accessed` TIMESTAMP NULL DEFAULT NULL,
-  `status` INT(11) DEFAULT '-1',
-  `yubidnum` INT(11) NOT NULL AUTO_INCREMENT,
-  `uid` INT(11) NOT NULL,
-  PRIMARY KEY (`yubidnum`),
-  UNIQUE (`uid`),
-  UNIQUE (`serial`),
-  UNIQUE (`public_id`),
-  FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=ndbcluster;
+  CREATE TABLE `yubikey` (
+    `yubidnum` INT(11) NOT NULL AUTO_INCREMENT,
+    `uid` INT(11) NOT NULL,
+    `public_id` VARCHAR(40)  DEFAULT NULL,
+    `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `aes_secret` VARCHAR(100)  DEFAULT NULL,
+    `accessed` TIMESTAMP NULL DEFAULT NULL,
+    `status` INT(11) DEFAULT '-1',
+    `counter` INT(11) DEFAULT NULL,
+    `low` INT(11) DEFAULT NULL,
+    `high` INT(11) DEFAULT NULL,
+    `session_use` INT(11) DEFAULT NULL,
+    `notes` VARCHAR(100)  DEFAULT NULL,
+    PRIMARY KEY (`yubidnum`),
+    FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+    )ENGINE=ndbcluster;
+
 
 CREATE TABLE `address` (
     `address_id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -161,19 +157,21 @@ CREATE TABLE `project_team` (
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `userlogins` (
-  `login_id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `email` VARCHAR(254)  DEFAULT NULL,
-  `ip` VARCHAR(16) DEFAULT NULL,
-  `os` VARCHAR(30) DEFAULT NULL,
-  `browser` VARCHAR(40) DEFAULT NULL,
-  `action` VARCHAR(80) DEFAULT NULL,
-  `outcome` VARCHAR(20) DEFAULT NULL,
-  `uid` INT(10) NOT NULL,
-  `login_date` TIMESTAMP NULL DEFAULT NULL,
-  PRIMARY KEY (`login_id`),
-  KEY (`login_date`),
-  FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+    `login_id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+    `ip` VARCHAR(45) DEFAULT NULL,
+    `os` VARCHAR(30) DEFAULT NULL,
+    `browser` VARCHAR(40) DEFAULT NULL,
+    `action` VARCHAR(80) DEFAULT NULL,
+    `outcome` VARCHAR(20) DEFAULT NULL,
+    `mac` VARCHAR(45) DEFAULT NULL,
+    `uid` INT(11) NOT NULL,
+    `email` VARCHAR(254)  DEFAULT NULL,
+    `login_date` TIMESTAMP NULL DEFAULT NULL,
+    PRIMARY KEY (`login_id`),
+    KEY (`login_date`),
+    FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
+
 
 CREATE TABLE `jobs` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -220,16 +218,18 @@ CREATE TABLE `job_input_files` (
   FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
+
 CREATE TABLE `consent` (
-  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `date` DATE DEFAULT NULL,
-  `project_id` INT(11) NOT NULL,
-  `status` VARCHAR(30) DEFAULT NULL,
-  `name` VARCHAR(80) DEFAULT NULL,
-  `type` VARCHAR(30) DEFAULT NULL,
-  `consent_form` longblob DEFAULT NULL,
-   PRIMARY KEY (`id`),
-  FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+    `id` INT(11) NOT NULL AUTO_INCREMENT,
+    `date` DATE DEFAULT NULL,
+    `study_name` VARCHAR(128) DEFAULT NULL,
+    `study_owner` VARCHAR(245) DEFAULT NULL,
+    `status` VARCHAR(30) DEFAULT NULL,
+    `name` VARCHAR(128) DEFAULT NULL,
+    `type` VARCHAR(30) DEFAULT NULL,
+    `consent_form` LONGBLOB DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`study_name`) REFERENCES `study` (`name`)
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `organization` (
