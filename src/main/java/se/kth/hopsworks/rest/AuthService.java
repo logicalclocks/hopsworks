@@ -172,7 +172,7 @@ public class AuthService {
   @Consumes(MediaType.APPLICATION_JSON)
   public Response register(UserDTO newUser, @Context HttpServletRequest req)
           throws AppException {
- StreamedContent qrCode = null ;
+    StreamedContent qrCode = null;
     req.getServletContext().log("Registering..." + newUser.getEmail() + ", "
             + newUser.getFirstName());
 
@@ -181,17 +181,15 @@ public class AuthService {
     try {
       qrCode = userController.registerUser(newUser);
       
-    } catch (IOException ex) {
-      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (WriterException ex) {
+    } catch (IOException | WriterException ex) {
       Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
     }
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
-
     
     Response.ResponseBuilder response = Response.ok((Object)qrCode);
     response.header("Content-disposition", "inline;");
+
     return response.build();
   }
 

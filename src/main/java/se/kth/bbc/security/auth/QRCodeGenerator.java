@@ -93,10 +93,9 @@ public class QRCodeGenerator {
     // Build an image to be sent to user
     Graphics2D g2 = bufferedImg.createGraphics();
     ImageIO.write(bufferedImg, "png", stream);
-
+    
     return new DefaultStreamedContent(new ByteArrayInputStream(stream.
-            toByteArray()), "image/png");
-
+           toByteArray()), "image/png");
   }
 
 }
