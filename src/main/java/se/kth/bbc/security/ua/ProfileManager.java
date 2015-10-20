@@ -1,19 +1,24 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package se.kth.bbc.security.ua;
 
-import java.io.IOException;
 import java.io.Serializable;
-import java.security.Principal;
+import java.net.SocketException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpServletRequest;
+import se.kth.bbc.lims.ClientSessionState;
+import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.audit.AccountsAuditActions;
+import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.User;
@@ -34,6 +39,12 @@ public class ProfileManager implements Serializable {
   @EJB
   private UserManager userManager;
 
+  @EJB
+  private AuditManager auditManager;
+
+  @ManagedProperty(value = "#{clientSessionState}")
+  private ClientSessionState sessionState;
+
   private User user;
   private Address address;
   private Userlogins login;
@@ -49,24 +60,25 @@ public class ProfileManager implements Serializable {
     this.editable = editable;
   }
 
-  public User getUser() {
-    if (user == null) {
-      try {
-        user = userManager.findByEmail(getLoginName());
-        address = user.getAddress();
-        organization = user.getOrganization();
-        login = userManager.getLastUserLogin(user.getUid());
-      } catch (IOException ex) {
-        Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null,
-                ex);
-
-        return null;
-      }
-    }
-
-    return user;
-  }
-
+  /*
+   * public User getUser() {
+   * if (user == null) {
+   * try {
+   * user = userManager.findByEmail(getLoginName());
+   * address = user.getAddress();
+   * organization = user.getOrganization();
+   * login = auditManager.getLastUserLogin(user.getUid());
+   * } catch (IOException ex) {
+   * Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null,
+   * ex);
+   *
+   * return null;
+   * }
+   * }
+   *
+   * return user;
+   * }
+   */
   public Organization getOrganization() {
     return organization;
   }
@@ -95,21 +107,19 @@ public class ProfileManager implements Serializable {
     return this.address;
   }
 
-  public String getLoginName() throws IOException {
-    FacesContext context = FacesContext.getCurrentInstance();
-    HttpServletRequest request = (HttpServletRequest) context.
-            getExternalContext().getRequest();
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
+  }
 
-    Principal principal = request.getUserPrincipal();
-
-    try {
-      return principal.getName();
-    } catch (Exception ex) {
-      ExternalContext extContext = FacesContext.getCurrentInstance().
-              getExternalContext();
-      extContext.redirect(extContext.getRequestContextPath());
-      return null;
+  public User getUser() {
+    if (user == null) {
+      user = userManager.findByEmail(sessionState.getLoggedInUsername());
+      address = user.getAddress();
+      organization = user.getOrganization();
+      login = auditManager.getLastUserLogin(user.getUid());
     }
+
+    return user;
   }
 
   public List<String> getCurrentGroups() {
@@ -117,41 +127,79 @@ public class ProfileManager implements Serializable {
     return list;
   }
 
-  public void updateUserInfo() {
+  public void updateUserInfo() throws SocketException {
 
     if (userManager.updatePeople(user)) {
       MessagesController.addInfoMessage("Success",
               "Profile updated successfully.");
+      auditManager.registerAccountChange(getUser(),
+              AccountsAuditActions.PROFILEUPDATE.getValue(),
+              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
+              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
+              "SUCCESS", "UPDATE INFO");
     } else {
       FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
               "Failed to update", null);
       FacesContext.getCurrentInstance().addMessage(null, msg);
-
+      auditManager.registerAccountChange(getUser(),
+              AccountsAuditActions.PROFILEUPDATE.getValue(),
+              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
+              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
+              "FAIL", "UPDATE INFO");
       return;
     }
   }
 
-  public void updateUserOrg() {
+  /**
+   *
+   */
+  public void updateUserOrg() throws SocketException {
 
     if (userManager.updateOrganization(organization)) {
       MessagesController.addInfoMessage("Success",
               "Profile updated successfully.");
+      auditManager.registerAccountChange(getUser(),
+              AccountsAuditActions.PROFILEUPDATE.getValue(),
+              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
+              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
+              "SUCCESS", "UPDATE ORGANIZATION");
     } else {
       FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
               "Failed to update", null);
       FacesContext.getCurrentInstance().addMessage(null, msg);
 
+      auditManager.registerAccountChange(getUser(),
+              AccountsAuditActions.PROFILEUPDATE.getValue(),
+              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
+              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
+              "FAIL", "UPDATE ORGANIZATION");
       return;
     }
   }
 
-  public void updateAddress() {
+  /**
+   * Update the user address in the profile and register the audit logs.
+   * <p>
+   * @throws SocketException
+   */
+  public void updateAddress() throws SocketException {
 
     if (userManager.updateAddress(address)) {
       MessagesController.addInfoMessage("Success",
               "Address updated successfully.");
+      auditManager.registerAccountChange(getUser(),
+              AccountsAuditActions.PROFILEUPDATE.getValue(),
+              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
+              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
+              "SUCCESS", "UPDATE ADDRESS");
     } else {
       MessagesController.addSecurityErrorMessage("Update failed.");
+      auditManager.registerAccountChange(getUser(),
+              AccountsAuditActions.PROFILEUPDATE.getValue(),
+              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
+              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
+              "FAIL", "UPDATE ADDRESS");
+
       return;
     }
   }

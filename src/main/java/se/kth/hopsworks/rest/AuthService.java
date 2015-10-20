@@ -2,6 +2,7 @@ package se.kth.hopsworks.rest;
 
 import com.google.zxing.WriterException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
@@ -9,6 +10,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.mail.MessagingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -183,6 +185,8 @@ public class AuthService {
       qrCode = userController.registerUser(newUser);
       
     } catch (IOException | WriterException ex) {
+      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (MessagingException ex) {
       Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
     }
     req.getServletContext().log("successfully registered new user: '" + newUser.

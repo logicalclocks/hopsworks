@@ -3,6 +3,8 @@ package se.kth.hopsworks.controller;
 import com.google.zxing.WriterException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Level;
@@ -11,6 +13,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.faces.FacesException;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
@@ -51,8 +56,11 @@ public class UsersController {
 
     // To send the user the QR code image
   private byte[] qrCode;
-    
-  public byte[] registerUser(UserDTO newUser) throws AppException, IOException, UnsupportedEncodingException, WriterException {
+  
+    // BiobankCloud prefix username prefix
+  private final String USERNAME_PREFIX = "meb";
+  
+  public byte[] registerUser(UserDTO newUser) throws AppException, IOException, UnsupportedEncodingException, WriterException, MessagingException {
     if (userValidator.isValidEmail(newUser.getEmail())
         && userValidator.isValidPassword(newUser.getChosenPassword(),
             newUser.getRepeatedPassword())
@@ -72,10 +80,10 @@ public class UsersController {
       String activationKey = SecurityUtils.getRandomString(64);
       
       int uid = userBean.lastUserID() + 1;
-      System.out.println("U id:" + uid);
-      String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
 
-//      String uname = Users.USERNAME_PREFIX + uid;
+     // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
+
+      String uname =  USERNAME_PREFIX + uid;
       List<BbcGroup> groups = new ArrayList<>();
       groups.add(groupBean.findByGroupName(BbcGroup.USER));
 
@@ -101,11 +109,29 @@ public class UsersController {
       
       qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), CustomAuthentication.ISSUER,
               otpSecret);
-      
+      // Notify user about the request
+      emailBean.sendEmail(newUser.getEmail(),
+              UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
+              UserAccountsEmailMessages.buildMobileRequestMessage(
+                      getApplicationUri(), user.getUsername() + activationKey));
       return qrCode;
     }
     
     return null;
+  }
+  
+  // fix this
+    public String getApplicationUri() {
+    try {
+      FacesContext ctxt = FacesContext.getCurrentInstance();
+      ExternalContext ext = ctxt.getExternalContext();
+      URI uri = new URI(ext.getRequestScheme(),
+              null, ext.getRequestServerName(), ext.getRequestServerPort(),
+              ext.getRequestContextPath(), null, null);
+      return uri.toASCIIString();
+    } catch (URISyntaxException e) {
+      throw new FacesException(e);
+    }
   }
 
   public void recoverPassword(String email, String securityQuestion,

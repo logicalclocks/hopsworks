@@ -5,18 +5,16 @@ import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.ua.model.PeopleGroup;
 import se.kth.bbc.security.ua.model.PeopleGroupPK;
-import se.kth.bbc.security.ua.model.User;
-import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.ua.model.Yubikey;
-import se.kth.hopsworks.util.LocalhostServices;
 
 /**
  *
@@ -28,12 +26,11 @@ public class UserManager {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  // Starting user id from 1000 to create a POSIX compliant username: meb1000
-  // http://askubuntu.com/questions/405638/what-are-the-disadvantages-of-having-a-dot-in-a-user-name
+  // Strating user id from 1000 to create a POSIX compliant username: meb1000
   private final int STARTING_USER = 1000;
 
   // BiobankCloud prefix username prefix
-//  private final String USERNAME_PREFIX = "meb";
+  private final String USERNAME_PREFIX = "meb";
 
   /**
    * Register a new group for user.
@@ -147,6 +144,13 @@ public class UserManager {
     return true;
   }
 
+  public List<User> findInactivateUsers() {
+    Query query = em.createNativeQuery("SELECT * FROM users p WHERE p.active = "
+            + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
+    List<User> people = query.getResultList();
+    return people;
+  }
+
   public boolean registerYubikey(User uid) {
     Yubikey yk = new Yubikey();
     yk.setUid(uid);
@@ -158,12 +162,12 @@ public class UserManager {
   /**
    * Find a user through email.
    *
-   * @param email
+   * @param username
    * @return
    */
-  public User getUserByEmail(String email) {
+  public User getUserByEmail(String username) {
     TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
-    query.setParameter("email", email);
+    query.setParameter("email", username);
     List<User> list = query.getResultList();
 
     if (list == null || list.isEmpty()) {
@@ -173,7 +177,7 @@ public class UserManager {
     return list.get(0);
   }
 
-  public User getUserByUsername(String username) {
+  public User getUserByUsernmae(String username) {
     TypedQuery<User> query = em.createNamedQuery("User.findByUsername",
             User.class);
     query.setParameter("username", username);
@@ -200,6 +204,14 @@ public class UserManager {
     return (existing.size() > 0);
   }
 
+  public Yubikey findYubikey(int uid) {
+    TypedQuery<Yubikey> query = em.createNamedQuery("Yubikey.findByUid",
+            Yubikey.class);
+    query.setParameter("uid", uid);
+    return query.getSingleResult();
+
+  }
+
   public List<User> findAllUsers() {
     List<User> query = em.createQuery(
             "SELECT p FROM User p WHERE p.status !='"
@@ -224,16 +236,34 @@ public class UserManager {
     return query.getResultList();
   }
 
+  public List<User> findAllSPAMAccounts() {
+    List<User> query = em.createQuery(
+            "SELECT p FROM User p WHERE (p.status ='"
+            + PeopleAccountStatus.SPAM_ACCOUNT.getValue()
+            + "' OR p.status ='" + PeopleAccountStatus.ACCOUNT_VERIFICATION.
+            getValue()
+            + "')")
+            .getResultList();
+
+    return query;
+  }
+
   public User findByEmail(String email) {
     TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
     query.setParameter("email", email);
     return query.getSingleResult();
   }
 
-  //TODO: remove native query. Use JPA
+  public Address findAddress(int uid) {
+    TypedQuery<Address> query = em.createNamedQuery("Address.findByUid",
+            Address.class);
+    query.setParameter("uid", uid);
+    return query.getSingleResult();
+  }
+
   public List<String> findGroups(int uid) {
     String sql
-            = "SELECT group_name FROM hopsworks.bbc_group INNER JOIN hopsworks.people_group ON (hopsworks.people_group.gid = hopsworks.bbc_group.gid AND hopsworks.people_group.uid = "
+            = "SELECT group_name FROM bbc_group INNER JOIN people_group ON (people_group.gid = bbc_group.gid AND people_group.uid = "
             + uid + " )";
     List existing = em.createNativeQuery(sql).getResultList();
     return existing;
@@ -242,7 +272,7 @@ public class UserManager {
   /**
    * Remove user's group based on uid/gid.
    *
-   * @param uid
+   * @param user
    * @param gid
    */
   public void removeGroup(User user, int gid) {
@@ -252,16 +282,16 @@ public class UserManager {
   }
 
   /**
-   * Get all the users that are not in the given project.
+   * Study authorization methods
    *
-   * @param project The project on which to search.
-   * @return List of User objects that are not in the project.
+   * @param name of the study
+   * @return List of User objects for the study, if found
    */
-  public List<User> filterUsersBasedOnProject(Project project) {
-    TypedQuery<User> query = em.createQuery(
-            "SELECT u FROM User u WHERE u NOT IN (SELECT DISTINCT st.user FROM ProjectTeam st WHERE st.project = :project)",
-            User.class);
-    query.setParameter("project", project);
+  public List<User> filterUsersBasedOnStudy(String name) {
+
+    Query query = em.createNativeQuery(
+            "SELECT * FROM users WHERE email NOT IN (SELECT team_member FROM study_team WHERE name=?)",
+            User.class).setParameter(1, name);
     return query.getResultList();
   }
 
@@ -329,16 +359,12 @@ public class UserManager {
    * @return
    */
   public User register(String fname, String lname, String email, String title,
-          String tel, String orcid, String password, String otpSecret,
+          String tel, String orcid, int uid, String password, String otpSecret,
           SecurityQuestion question, String answer, int status, int yubikey,
           String validationKey) {
 
     // assigne a username
-//    String uname = USERNAME_PREFIX + uid;
-
-    // http://paulgorman.org/technical/presentations/linux_username_conventions.pdf
-    // http://serverfault.com/questions/73084/what-characters-should-i-use-or-not-use-in-usernames-on-linux
-    String uname = LocalhostServices.getUsernameFromEmail(email);
+    String uname = USERNAME_PREFIX + uid;
 
     User user = new User();
     user.setUsername(uname);
@@ -373,8 +399,13 @@ public class UserManager {
    * @return
    */
   public int lastUserID() {
-    TypedQuery<Long> query = em.createNamedQuery("User.findMaxUid", Long.class);
-    return query.getSingleResult().intValue();
+    Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM users p");
+    Object obj = query.getSingleResult();
+
+    if (obj == null) {
+      return STARTING_USER;
+    }
+    return (Integer) obj;
   }
 
   public void persist(User user) {
@@ -426,40 +457,6 @@ public class UserManager {
     return success;
   }
 
-  public void registerLoginInfo(User uid, String action, String ip,
-          String browser) {
-
-    Userlogins l = new Userlogins();
-    l.setUid(uid.getUid());
-    l.setBrowser(browser);
-    l.setIp(ip);
-
-    l.setAction(action);
-    l.setLoginDate(new Timestamp(new Date().getTime()));
-
-    em.persist(l);
-
-  }
-
-  /**
-   * Get the last login attempt by the user identified by uid.
-   * <p/>
-   * @param uid
-   * @return The last login attempt, or null if none is found.
-   */
-  public Userlogins getLastUserLogin(int uid) {
-    TypedQuery<Userlogins> query = em.createNamedQuery("Userlogins.findByUid",
-            Userlogins.class);
-    query.setParameter("uid", uid);
-    query.setFirstResult(2);
-    query.setMaxResults(1);
-    try {
-      return query.getSingleResult();
-    } catch (NoResultException e) {
-      return null;
-    }
-  }
-
   public boolean registerOrg(User uid, String org, String department) {
 
     Organization organization = new Organization();
@@ -480,4 +477,21 @@ public class UserManager {
     em.merge(org);
     return true;
   }
+
+    /**
+   * Get all the users that are not in the given project.
+   *
+   * @param project The project on which to search.
+   * @return List of User objects that are not in the project.
+   */
+  public List<User> filterUsersBasedOnProject(Project project) {
+    TypedQuery<User> query = em.createQuery(
+            "SELECT u FROM User u WHERE u NOT IN (SELECT DISTINCT st.user FROM ProjectTeam st WHERE st.project = :project)",
+            User.class);
+    query.setParameter("project", project);
+    return query.getResultList();
+  }
+
+
+  
 }

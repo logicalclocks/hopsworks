@@ -4,8 +4,10 @@ import com.google.zxing.WriterException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
@@ -15,7 +17,6 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.NotSupportedException;
@@ -24,6 +25,9 @@ import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.audit.AuditManager;
+import se.kth.bbc.security.audit.AuditUtil;
+import se.kth.bbc.security.audit.LoginsAuditActions;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.bbc.security.ua.model.User;
@@ -40,6 +44,9 @@ public class UserRegistration implements Serializable {
 
   @EJB
   private UserManager mgr;
+
+  @EJB
+  private AuditManager am;
 
   @EJB
   private EmailBean emailBean;
@@ -283,52 +290,34 @@ public class UserRegistration implements Serializable {
    * Register new mobile users.
    *
    * @return
+   * @throws java.net.UnknownHostException
+   * @throws java.net.SocketException
    */
-  public String registerMobileUser() {
-
-    HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.
-            getCurrentInstance().getExternalContext().getRequest();
-    String ip = httpServletRequest.getRemoteAddr();
-
-    ExternalContext externalContext = FacesContext.getCurrentInstance().
-            getExternalContext();
-    String userAgent = externalContext.getRequestHeaderMap().get("User-Agent");
-
-    String browser = null;
-    if (userAgent.contains("MSIE")) {
-      browser = "Internet Explorer";
-    }
-    if (userAgent.contains("Firefox")) {
-      browser = "Firefox";
-    }
-    if (userAgent.contains("Chrome")) {
-      browser = "Chrome";
-    }
-    if (userAgent.contains("Opera")) {
-      browser = "Opera";
-    }
-    if (userAgent.contains("Safari")) {
-      browser = "Safari";
-    }
-
+  public String registerMobileUser() throws UnknownHostException,
+          SocketException {
+    String ip = AuditUtil.getIPAddress();
+    String browser = AuditUtil.getBrowserInfo();
+    String os = AuditUtil.getOSInfo();
+    String macAddress = AuditUtil.getMacAddress(ip);
+    User user = null;
     try {
 
       String otpSecret = SecurityUtils.calculateSecretKey();
       String activationKey = SecurityUtils.getRandomString(64);
 
       // Generates a UNIX compliant account
-//      int uid = mgr.lastUserID() + 1;
+      int uid = mgr.lastUserID() + 1;
 
       // Register the new request in the platform
       userTransaction.begin();
 
-      User user = mgr.register(fname,
+      user = mgr.register(fname,
               lname,
               mail,
               title,
               tel,
               orcid,
-//              uid,
+              uid,
               SecurityUtils.converToSHA256(password),
               otpSecret,
               security_question,
@@ -347,27 +336,12 @@ public class UserRegistration implements Serializable {
 
       mgr.registerOrg(user, org, department);
 
-      if (userAgent.contains("MSIE")) {
-        browser = "Internet Explorer";
-      }
-      if (userAgent.contains("Firefox")) {
-        browser = "Firefox";
-      }
-      if (userAgent.contains("Chrome")) {
-        browser = "Chrome";
-      }
-      if (userAgent.contains("Opera")) {
-        browser = "Opera";
-      }
-      if (userAgent.contains("Safari")) {
-        browser = "Safari";
-      }
-
       // Generate qr code to be displayed to user
       qrCode = QRCodeGenerator.getQRCode(mail, CustomAuthentication.ISSUER,
               otpSecret);
 
-      mgr.registerLoginInfo(user, "REGISTRATION", ip, browser);
+      am.registerLoginInfo(user, LoginsAuditActions.REGISTRATION.getValue(), ip,
+              browser, os, macAddress, "SUCCESS");
 
       userTransaction.commit();
 
@@ -398,6 +372,10 @@ public class UserRegistration implements Serializable {
             HeuristicRollbackException | SecurityException |
             IllegalStateException e) {
       MessagesController.addSecurityErrorMessage("Technical Error");
+
+      am.registerLoginInfo(user, LoginsAuditActions.REGISTRATION.getValue(), ip,
+              browser, os, macAddress, "FAIL");
+
       return ("");
 
     }
@@ -408,50 +386,33 @@ public class UserRegistration implements Serializable {
    * Register new Yubikey users.
    *
    * @return
+   * @throws java.net.UnknownHostException
+   * @throws java.net.SocketException
    */
-  public String registerYubikey() {
+  public String registerYubikey() throws UnknownHostException, SocketException {
 
-    HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.
-            getCurrentInstance().getExternalContext().getRequest();
-    String ip = httpServletRequest.getRemoteAddr();
-
-    ExternalContext externalContext = FacesContext.getCurrentInstance().
-            getExternalContext();
-    String userAgent = externalContext.getRequestHeaderMap().get("User-Agent");
-
-    String browser = null;
-    if (userAgent.contains("MSIE")) {
-      browser = "Internet Explorer";
-    }
-    if (userAgent.contains("Firefox")) {
-      browser = "Firefox";
-    }
-    if (userAgent.contains("Chrome")) {
-      browser = "Chrome";
-    }
-    if (userAgent.contains("Opera")) {
-      browser = "Opera";
-    }
-    if (userAgent.contains("Safari")) {
-      browser = "Safari";
-    }
-
+    String ip = AuditUtil.getIPAddress();
+    String browser = AuditUtil.getBrowserInfo();
+    String os = AuditUtil.getOSInfo();
+    String macAddress = AuditUtil.getMacAddress(ip);
+    User user = null;
     try {
+
       // Generates a UNIX compliant account
-//      int uid = mgr.lastUserID() + 1;
+      int uid = mgr.lastUserID() + 1;
 
       String activationKey = SecurityUtils.getRandomString(64);
 
       // Register the request in the platform
       userTransaction.begin();
 
-      User user = mgr.register(fname,
+      user = mgr.register(fname,
               lname,
               mail,
               title,
               tel,
               orcid,
-//              uid,
+              uid,
               SecurityUtils.converToSHA256(password),
               "-1",
               security_question, SecurityUtils.converToSHA256(security_answer),
@@ -473,7 +434,8 @@ public class UserRegistration implements Serializable {
 
       mgr.registerYubikey(user);
 
-      mgr.registerLoginInfo(user, "REGISTRATION", ip, browser);
+      am.registerLoginInfo(user, LoginsAuditActions.REGISTRATION.getValue(), ip,
+              browser, os, macAddress, "SUCCESS");
 
       userTransaction.commit();
 
@@ -510,6 +472,10 @@ public class UserRegistration implements Serializable {
             RollbackException | HeuristicMixedException |
             HeuristicRollbackException | SecurityException |
             IllegalStateException e) {
+
+      am.registerLoginInfo(user, LoginsAuditActions.REGISTRATION.getValue(), ip,
+              browser, os, macAddress, "FAIL");
+
       MessagesController.addSecurityErrorMessage("Technical Error");
       return ("");
     }
