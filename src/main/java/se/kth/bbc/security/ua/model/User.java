@@ -179,7 +179,8 @@ public class User implements Serializable {
                     referencedColumnName = "gid")})
   @ManyToMany
   private Collection<BbcGroup> bbcGroupCollection;
-
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "uid")
   private Yubikey yubikey;
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "uid")
