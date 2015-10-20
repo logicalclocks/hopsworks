@@ -19,6 +19,7 @@ import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.InodeBasicMetadata;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  * Contains business logic pertaining DataSet management.
@@ -62,7 +63,7 @@ public class DatasetController {
    * @throws IOException if the creation of the dataset failed.
    * @see FolderNameValidator.java
    */
-  public void createDataset(User user, Project project, String dataSetName,
+  public void createDataset(Users user, Project project, String dataSetName,
           String datasetDescription, int templateId, boolean searchable)
           throws IOException {
     //Parameter checking.

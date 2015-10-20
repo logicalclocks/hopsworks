@@ -25,6 +25,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.codec.binary.Base64;
+import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
@@ -36,6 +37,7 @@ import se.kth.hopsworks.users.UserFacade;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AuthService {
+
 
   @EJB
   private UserFacade userBean;
@@ -184,9 +186,7 @@ public class AuthService {
     try {
       qrCode = userController.registerUser(newUser);
       
-    } catch (IOException | WriterException ex) {
-      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (MessagingException ex) {
+    } catch (IOException | WriterException | MessagingException ex) {
       Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
     }
     req.getServletContext().log("successfully registered new user: '" + newUser.

@@ -79,7 +79,7 @@ public class RequestService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     Inode inode = inodes.findById(requestDTO.getInodeId());
     if (inode == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -200,7 +200,7 @@ public class RequestService {
               "Incomplete request!");
     }
     //should be removed when users and user merg.
-    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     Project project = projectFacade.find(requestDTO.getProjectId());
 
     if (project == null) {

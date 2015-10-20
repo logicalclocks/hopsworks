@@ -28,6 +28,7 @@ import se.kth.bbc.security.audit.RolesAuditActions;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.audit.model.Userlogins;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -48,9 +49,9 @@ public class AdminProfileAministration implements Serializable {
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
 
-  private User user;
+  private Users user;
   // for modifying user roles and status
-  private User editingUser;
+  private Users editingUser;
 
   // to remove an existing group
   private String selectedGroup;
@@ -107,29 +108,29 @@ public class AdminProfileAministration implements Serializable {
     this.newGroup = new_group;
   }
 
-  public User getEditingUser() {
+  public Users getEditingUser() {
     return editingUser;
   }
 
-  public void setEditingUser(User editingUser) {
+  public void setEditingUser(Users editingUser) {
     this.editingUser = editingUser;
   }
 
-  public List<String> getUserRole(User p) {
+  public List<String> getUserRole(Users p) {
     List<String> list = userManager.findGroups(p.getUid());
     return list;
   }
 
-  public String getChangedStatus(User p) {
+  public String getChangedStatus(Users p) {
     return PeopleAccountStatus.values()[userManager.findByEmail(p.getEmail()).
             getStatus() - 1].name();
   }
 
-  public User getUser() {
+  public Users getUser() {
     return user;
   }
 
-  public void setUser(User user) {
+  public void setUser(Users user) {
     this.user = user;
   }
 
@@ -202,7 +203,7 @@ public class AdminProfileAministration implements Serializable {
       groups.add(value.name());
     }
 
-    editingUser = (User) FacesContext.getCurrentInstance().getExternalContext()
+    editingUser = (Users) FacesContext.getCurrentInstance().getExternalContext()
             .getSessionMap().get("editinguser");
     address = editingUser.getAddress();
 
@@ -230,7 +231,7 @@ public class AdminProfileAministration implements Serializable {
     this.status = status;
   }
 
-  public List<User> getUsersNameList() {
+  public List<Users> getUsersNameList() {
     return userManager.findAllUsers();
   }
 
@@ -238,11 +239,11 @@ public class AdminProfileAministration implements Serializable {
     return groups;
   }
 
-  public User getSelectedUser() {
+  public Users getSelectedUser() {
     return user;
   }
 
-  public void setSelectedUser(User user) {
+  public void setSelectedUser(Users user) {
     this.user = user;
   }
 
@@ -254,7 +255,7 @@ public class AdminProfileAministration implements Serializable {
     Principal principal = request.getUserPrincipal();
 
     try {
-      User p = userManager.findByEmail(principal.getName());
+      Users p = userManager.findByEmail(principal.getName());
 
       if (p != null) {
         return p.getFname() + " " + p.getLname();
@@ -276,7 +277,7 @@ public class AdminProfileAministration implements Serializable {
    */
   public void updateStatusByAdmin() throws SocketException {
 
-    User init = userManager.findByEmail(sessionState.getLoggedInUsername());
+    Users init = userManager.findByEmail(sessionState.getLoggedInUsername());
 
     String ip = AuditUtil.getIPAddress();
     String brower = AuditUtil.getBrowserInfo();
@@ -312,7 +313,7 @@ public class AdminProfileAministration implements Serializable {
 
   public void addRoleByAdmin() throws SocketException {
 
-    User init = userManager.findByEmail(sessionState.getLoggedInUsername());
+    Users init = userManager.findByEmail(sessionState.getLoggedInUsername());
 
     String ip = AuditUtil.getIPAddress();
     String brower = AuditUtil.getBrowserInfo();
@@ -345,7 +346,7 @@ public class AdminProfileAministration implements Serializable {
 
   public void removeRoleByAdmin() throws SocketException {
 
-    User init = userManager.findByEmail(sessionState.getLoggedInUsername());
+    Users init = userManager.findByEmail(sessionState.getLoggedInUsername());
 
     String ip = AuditUtil.getIPAddress();
     String brower = AuditUtil.getBrowserInfo();

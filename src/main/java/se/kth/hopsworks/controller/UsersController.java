@@ -28,11 +28,11 @@ import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.bbc.security.ua.SecurityUtils;
+import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
 import se.kth.hopsworks.users.*;
-import se.kth.hopsworks.util.LocalhostServices;
 
 
 @Stateless
@@ -54,6 +54,8 @@ public class UsersController {
   @EJB
   private UserLoginsFacade userLoginsBean;
 
+  @EJB
+  private UserManager mgr;
     // To send the user the QR code image
   private byte[] qrCode;
   
@@ -104,7 +106,6 @@ public class UsersController {
       user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer().
           toLowerCase()));
       user.setBbcGroupCollection(groups);
-
       userBean.persist(user);
       
       qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), CustomAuthentication.ISSUER,

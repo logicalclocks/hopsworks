@@ -33,6 +33,7 @@ import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.audit.LoginsAuditActions;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -52,7 +53,7 @@ public class ResetPassword implements Serializable {
   private String passwd2;
   private String current;
   private SecurityQuestion question;
-  private User people;
+  private Users people;
 
   private String answer;
 
@@ -107,11 +108,11 @@ public class ResetPassword implements Serializable {
     this.current = current;
   }
 
-  public User getPeople() {
+  public Users getPeople() {
     return people;
   }
 
-  public void setPeople(User people) {
+  public void setPeople(Users people) {
     this.people = people;
   }
 
@@ -147,7 +148,7 @@ public class ResetPassword implements Serializable {
     this.passwd2 = passwd2;
   }
 
-  public String sendTmpPassword() {
+  public String sendTmpPassword() throws MessagingException {
 
     people = mgr.getUserByEmail(this.username);
 
@@ -189,8 +190,7 @@ public class ResetPassword implements Serializable {
       emailBean.sendEmail(people.getEmail(),
               UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
 
-    } catch (UnsupportedEncodingException | NoSuchAlgorithmException |
-            MessagingException ex) {
+    } catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");
     } catch (RollbackException | HeuristicMixedException |

@@ -10,6 +10,7 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -27,7 +28,7 @@ public class ClientSessionState implements Serializable {
 
   private Project activeProject;
 
-  private User user;
+  private Users user;
 
   public void setActiveProject(Project project) {
     this.activeProject = project;
@@ -64,7 +65,7 @@ public class ClientSessionState implements Serializable {
     return getRequest().getUserPrincipal().getName();
   }
 
-  public User getLoggedInUser() {
+  public Users getLoggedInUser() {
     if (user == null) {
       String email = getRequest().getUserPrincipal().getName();
       user = userFacade.findByEmail(email);

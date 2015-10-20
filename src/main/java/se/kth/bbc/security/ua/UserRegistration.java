@@ -31,6 +31,7 @@ import se.kth.bbc.security.audit.LoginsAuditActions;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  * This class provides user registration functions to get the input through the
@@ -299,7 +300,7 @@ public class UserRegistration implements Serializable {
     String browser = AuditUtil.getBrowserInfo();
     String os = AuditUtil.getOSInfo();
     String macAddress = AuditUtil.getMacAddress(ip);
-    User user = null;
+    Users user = null;
     try {
 
       String otpSecret = SecurityUtils.calculateSecretKey();
@@ -395,7 +396,7 @@ public class UserRegistration implements Serializable {
     String browser = AuditUtil.getBrowserInfo();
     String os = AuditUtil.getOSInfo();
     String macAddress = AuditUtil.getMacAddress(ip);
-    User user = null;
+    Users user = null;
     try {
 
       // Generates a UNIX compliant account

@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -16,6 +17,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -25,7 +27,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.security.ua.SecurityQuestion;
+import se.kth.bbc.security.ua.model.Address;
+import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.security.ua.model.Yubikey;
 
 @Entity
 @Table(name = "hopsworks.users")
@@ -177,8 +182,31 @@ public class Users implements Serializable {
   @ManyToMany
   private Collection<BbcGroup> bbcGroupCollection;
 
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "uid")
+  private Address address;
+
+    @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "uid")
+  private Organization organization;
+    
+      @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "uid")
+  private Yubikey yubikey;
   public Users() {
   }
+  
+   public Users(Integer uid, String username, String password, Date activated,
+          int falseLogin, int status, int isonline ) {
+    this.uid = uid;
+    this.username = username;
+    this.password = password;
+    this.activated = activated;
+    this.falseLogin = falseLogin;
+    this.isonline = isonline;
+    this.status = status;
+  }
+   
 
   public Users(Integer uid) {
     this.uid = uid;
@@ -198,12 +226,36 @@ public class Users implements Serializable {
     this.status = status;
   }
 
+  public Yubikey getYubikey() {
+    return yubikey;
+  }
+
+  public void setYubikey(Yubikey yubikey) {
+    this.yubikey = yubikey;
+  }
+
   public Integer getUid() {
     return uid;
   }
 
   public void setUid(Integer uid) {
     this.uid = uid;
+  }
+
+  public Address getAddress() {
+    return address;
+  }
+
+  public void setAddress(Address address) {
+    this.address = address;
+  }
+
+  public Organization getOrganization() {
+    return organization;
+  }
+
+  public void setOrganization(Organization organization) {
+    this.organization = organization;
   }
 
   public String getUsername() {
@@ -414,7 +466,7 @@ public class Users implements Serializable {
     return "se.kth.hopsworks.model.Users[ uid=" + uid + " ]";
   }
 
-  public User asUser() {
-    return new User(uid, username, password, activated, falseLogin, status,isonline);
+  public Users asUser() {
+    return new Users(uid, username, password, activated, falseLogin, status,isonline);
   }
 }

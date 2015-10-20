@@ -16,6 +16,7 @@ import se.kth.bbc.security.audit.model.AccountAudit;
 import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -193,7 +194,7 @@ public class AuditManager {
    * @param outcome
    * @return
    */
-  public boolean registerLoginInfo(User u, String action, String ip,
+  public boolean registerLoginInfo(Users u, String action, String ip,
           String browser, String os, String mac, String outcome) {
 
     Userlogins l = new Userlogins();
@@ -225,9 +226,9 @@ public class AuditManager {
    * @param tar
    * @return
    */
-  public boolean registerRoleChange(User u, String action, String ip,
+  public boolean registerRoleChange(Users u, String action, String ip,
           String browser, String os, String mac, String outcome, String message,
-          User tar) {
+          Users tar) {
 
     RolesAudit ra = new RolesAudit();
     ra.setInitiator(u.getUid());
@@ -260,7 +261,7 @@ public class AuditManager {
    * @param message
    * @return
    */
-  public boolean registerAccountChange(User u, String action, String ip,
+  public boolean registerAccountChange(Users u, String action, String ip,
           String browser, String os, String mac, String outcome, String message
   ) {
 

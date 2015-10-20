@@ -21,8 +21,8 @@ import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.audit.model.Userlogins;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -45,7 +45,7 @@ public class ProfileManager implements Serializable {
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
 
-  private User user;
+  private Users user;
   private Address address;
   private Userlogins login;
   private Organization organization;
@@ -95,7 +95,7 @@ public class ProfileManager implements Serializable {
     this.login = login;
   }
 
-  public void setUser(User user) {
+  public void setUser(Users user) {
     this.user = user;
   }
 
@@ -111,7 +111,7 @@ public class ProfileManager implements Serializable {
     this.sessionState = sessionState;
   }
 
-  public User getUser() {
+  public Users getUser() {
     if (user == null) {
       user = userManager.findByEmail(sessionState.getLoggedInUsername());
       address = user.getAddress();

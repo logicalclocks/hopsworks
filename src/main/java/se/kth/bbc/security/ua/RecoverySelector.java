@@ -21,6 +21,7 @@ import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -41,7 +42,7 @@ public class RecoverySelector implements Serializable {
   @EJB
   private AuditManager am;
 
-  private User people;
+  private Users people;
 
   private String console;
 

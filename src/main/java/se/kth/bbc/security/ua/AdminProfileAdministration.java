@@ -16,6 +16,7 @@ import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.audit.model.Userlogins;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -30,9 +31,9 @@ public class AdminProfileAdministration implements Serializable {
   @EJB
   private UserManager userManager;
 
-  private User user;
+  private Users user;
   // for modifying user roles and status
-  private User editingUser;
+  private Users editingUser;
 
   // to remove an existing group
   private String selectedGroup;
@@ -89,11 +90,11 @@ public class AdminProfileAdministration implements Serializable {
     this.newGroup = new_group;
   }
 
-  public User getEditingUser() {
+  public Users getEditingUser() {
     return editingUser;
   }
 
-  public void setEditingUser(User editingUser) {
+  public void setEditingUser(Users editingUser) {
     this.editingUser = editingUser;
   }
 
@@ -107,11 +108,11 @@ public class AdminProfileAdministration implements Serializable {
             getStatus() - 1].name();
   }
 
-  public User getUser() {
+  public Users getUser() {
     return user;
   }
 
-  public void setUser(User user) {
+  public void setUser(Users user) {
     this.user = user;
   }
 
@@ -180,7 +181,7 @@ public class AdminProfileAdministration implements Serializable {
       groups.add(value.name());
     }
 
-    editingUser = (User) FacesContext.getCurrentInstance().getExternalContext()
+    editingUser = (Users) FacesContext.getCurrentInstance().getExternalContext()
             .getSessionMap().get("editinguser");
     address = editingUser.getAddress();
 
@@ -208,7 +209,7 @@ public class AdminProfileAdministration implements Serializable {
     this.status = status;
   }
 
-  public List<User> getUsersNameList() {
+  public List<Users> getUsersNameList() {
     return userManager.findAllUsers();
   }
 
@@ -216,11 +217,11 @@ public class AdminProfileAdministration implements Serializable {
     return groups;
   }
 
-  public User getSelectedUser() {
+  public Users getSelectedUser() {
     return user;
   }
 
-  public void setSelectedUser(User user) {
+  public void setSelectedUser(Users user) {
     this.user = user;
   }
 
@@ -232,7 +233,7 @@ public class AdminProfileAdministration implements Serializable {
     Principal principal = request.getUserPrincipal();
 
     try {
-      User p = userManager.findByEmail(principal.getName());
+      Users p = userManager.findByEmail(principal.getName());
 
       if (p != null) {
         return p.getFname() + " " + p.getLname();

@@ -14,6 +14,7 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -62,7 +63,7 @@ public class AccountVerification {
       }
     }
 
-    User user = mgr.getUserByUsernmae(username);
+    Users user = mgr.getUserByUsernmae(username);
 
     if (user.getStatus() != PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()) {
       return false;

@@ -19,6 +19,7 @@ import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -185,7 +186,7 @@ public class AuditTrails implements Serializable {
    */
   public List<AccountAudit> getAccoutnAudit(String username, Date from, Date to,
           String action) {
-    User u = userManager.getUserByEmail(username);
+    Users u = userManager.getUserByEmail(username);
 
     if (u == null) {
       return auditManager.getAccountAudit(convertTosqlDate(from),
@@ -219,7 +220,7 @@ public class AuditTrails implements Serializable {
    */
   public List<RolesAudit> getRoleAudit(String username, Date from, Date to,
           String action) {
-    User u = userManager.getUserByEmail(username);
+    Users u = userManager.getUserByEmail(username);
 
     if (u == null) {
       return auditManager.getRoletAudit(convertTosqlDate(from),
@@ -240,7 +241,7 @@ public class AuditTrails implements Serializable {
    */
   public List<Userlogins> getUserLogins(String username, Date from, Date to,
           String action) {
-    User u = userManager.getUserByEmail(username);
+    Users u = userManager.getUserByEmail(username);
     if (u == null) {
       return auditManager.getUsersLoginsFromTo(convertTosqlDate(from),
               convertTosqlDate(to), action);

@@ -23,6 +23,7 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -94,7 +95,7 @@ public class RolesAudit implements Serializable {
   @JoinColumn(name = "target",
           referencedColumnName = "uid")
   @ManyToOne
-  private User target;
+  private Users target;
 
   public RolesAudit() {
   }
@@ -175,11 +176,11 @@ public class RolesAudit implements Serializable {
     this.mac = mac;
   }
 
-  public User getTarget() {
+  public Users getTarget() {
     return target;
   }
 
-  public void setTarget(User target) {
+  public void setTarget(Users target) {
     this.target = target;
   }
 

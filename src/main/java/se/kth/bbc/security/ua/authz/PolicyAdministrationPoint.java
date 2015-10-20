@@ -9,6 +9,7 @@ import javax.ejb.EJB;
 import se.kth.bbc.security.ua.BBCGroup;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -45,31 +46,31 @@ public class PolicyAdministrationPoint {
   }
 
   public boolean isInAdminRole(String username) {
-    User user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsernmae(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.SYS_ADMIN.
             name());
   }
 
   public boolean isInResearcherRole(String username) {
-    User user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsernmae(username);
     return userPolicMgr.findGroups(user.getUid()).contains(
             BBCGroup.BBC_RESEARCHER.name());
   }
 
   public boolean isInDataProviderRole(String username) {
-    User user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsernmae(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.BBC_ADMIN.
             name());
   }
 
   public boolean isInAuditorRole(String username) {
-    User user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsernmae(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.AUDITOR.
             name());
   }
 
   public boolean isInGuestRole(String username) {
-    User user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsernmae(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.BBC_GUEST.
             name());
   }

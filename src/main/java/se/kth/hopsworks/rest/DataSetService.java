@@ -231,7 +231,7 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     JsonResponse json = new JsonResponse();
     Inode parent = inodes.getProjectRoot(this.project.getName());
     if (dataSet == null || dataSet.getName() == null || dataSet.getName().
@@ -361,7 +361,7 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
 
     try {
       datasetController.createDataset(user, project, dataSet.getName(), dataSet.

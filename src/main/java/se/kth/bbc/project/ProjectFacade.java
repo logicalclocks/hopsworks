@@ -8,6 +8,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -59,7 +60,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @param user The user for whom studies are sought.
    * @return List of all the studies that were created by this user.
    */
-  public List<Project> findByUser(User user) {
+  public List<Project> findByUser(Users user) {
     TypedQuery<Project> query = em.createNamedQuery(
             "Project.findByOwner", Project.class).setParameter(
                     "owner", user);
@@ -75,10 +76,10 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @deprecated use findByUser(User user) instead.
    */
   public List<Project> findByUser(String email) {
-    TypedQuery<User> query = em.createNamedQuery(
-            "User.findByEmail", User.class).setParameter(
+    TypedQuery<Users> query = em.createNamedQuery(
+            "User.findByEmail", Users.class).setParameter(
                     "email", email);
-    User user = query.getSingleResult();
+    Users user = query.getSingleResult();
     return findByUser(user);
   }
 
@@ -177,7 +178,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @param user
    * @return
    */
-  public List<Project> findAllMemberStudies(User user) {
+  public List<Project> findAllMemberStudies(Users user) {
     TypedQuery<Project> query = em.createNamedQuery(
             "ProjectTeam.findAllMemberStudiesForUser",
             Project.class);
@@ -191,7 +192,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @param user
    * @return
    */
-  public List<Project> findAllPersonalStudies(User user) {
+  public List<Project> findAllPersonalStudies(Users user) {
     TypedQuery<Project> query = em.createNamedQuery("Project.findByOwner",
             Project.class);
     query.setParameter("owner", user);
@@ -204,7 +205,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @param user
    * @return
    */
-  public List<Project> findAllJoinedStudies(User user) {
+  public List<Project> findAllJoinedStudies(Users user) {
     TypedQuery<Project> query = em.createNamedQuery(
             "ProjectTeam.findAllJoinedStudiesForUser",
             Project.class);
@@ -250,7 +251,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @param owner
    * @return
    */
-  public boolean projectExistsForOwner(String name, User owner) {
+  public boolean projectExistsForOwner(String name, Users owner) {
     TypedQuery<Project> query = em.
             createNamedQuery("Project.findByOwnerAndName",
                     Project.class);

@@ -12,6 +12,7 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -98,7 +99,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     }
   }
 
-  public void persistActivity(String activity, Project project, User user) {
+  public void persistActivity(String activity, Project project, Users user) {
     Activity a = new Activity();
     a.setActivity(activity);
     a.setProject(project);
@@ -109,10 +110,10 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   public void persistActivity(String activity, Project project, String email) {
-    TypedQuery<User> userQuery = em.createNamedQuery("User.findByEmail",
-            User.class);
+    TypedQuery<Users> userQuery = em.createNamedQuery("Users.findByEmail",
+            Users.class);
     userQuery.setParameter("email", email);
-    User user;
+    Users user;
     try {
       user = userQuery.getSingleResult();
     } catch (NoResultException e) {
@@ -152,7 +153,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @param user
    * @return
    */
-  public List<Activity> getAllActivityByUser(User user) {
+  public List<Activity> getAllActivityByUser(Users user) {
     TypedQuery<Activity> q = em.createNamedQuery(
             "Activity.findByUser", Activity.class);
     q.setParameter("user", user);
@@ -171,7 +172,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @return
    */
   public List<Activity> getPaginatedActivityByUser(int first,
-          int pageSize, User user) {
+          int pageSize, Users user) {
     TypedQuery<Activity> q = em.createNamedQuery(
             "Activity.findByUser", Activity.class);
     q.setParameter("user", user);

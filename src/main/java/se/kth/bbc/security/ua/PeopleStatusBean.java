@@ -19,6 +19,7 @@ import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.audit.LoginsAuditActions;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -37,7 +38,7 @@ public class PeopleStatusBean implements Serializable {
   private boolean open_reauests = false;
   private boolean open_consents = false;
   private int tabIndex;
-  private User user;
+  private Users user;
 
   public boolean isOpen_reauests() {
     return checkForRequests();
@@ -47,7 +48,7 @@ public class PeopleStatusBean implements Serializable {
     this.open_reauests = open_reauests;
   }
 
-  public User getUser() {
+  public Users getUser() {
     if (user == null) {
       ExternalContext context = FacesContext.getCurrentInstance().
               getExternalContext();
@@ -78,7 +79,7 @@ public class PeopleStatusBean implements Serializable {
    * @return
    */
   public boolean isSYSAdmin() {
-    User p = userManager.findByEmail(getRequest().getRemoteUser());
+    Users p = userManager.findByEmail(getRequest().getRemoteUser());
     return userManager.findGroups(p.getUid()).contains("SYS_ADMIN");
   }
 
@@ -88,7 +89,7 @@ public class PeopleStatusBean implements Serializable {
    * @return
    */
   public boolean isResearcher() {
-    User p = userManager.findByEmail(getRequest().getRemoteUser());
+    Users p = userManager.findByEmail(getRequest().getRemoteUser());
     List<String> roles = userManager.findGroups(p.getUid());
     return (roles.contains("BBC_RESEARCHER") || roles.contains("BBC_ADMIN")
             || roles.contains("BBC_USER"));
@@ -100,13 +101,13 @@ public class PeopleStatusBean implements Serializable {
    * @return
    */
   public boolean isBBCAdmin() {
-    User p = userManager.findByEmail(getRequest().getRemoteUser());
+    Users p = userManager.findByEmail(getRequest().getRemoteUser());
     return userManager.findGroups(p.getUid()).contains("BBC_ADMIN");
   }
 
   public boolean isAnyAuthorizedResearcherRole() {
 
-    User p = userManager.findByEmail(getRequest().getRemoteUser());
+    Users p = userManager.findByEmail(getRequest().getRemoteUser());
     List<String> roles = userManager.findGroups(p.getUid());
     return (roles.contains("BBC_ADMIN") || roles.
             contains("BBC_RESEARCHER") || roles.contains("BBC_USER") || roles.
@@ -115,7 +116,7 @@ public class PeopleStatusBean implements Serializable {
 
   public boolean isAuditorRole() {
 
-    User p = userManager.findByEmail(getRequest().getRemoteUser());
+    Users p = userManager.findByEmail(getRequest().getRemoteUser());
     List<String> roles = userManager.findGroups(p.getUid());
     return (roles.contains("AUDITOR") || roles.contains("SYS_ADMIN"));
   }
@@ -123,7 +124,7 @@ public class PeopleStatusBean implements Serializable {
    
   public boolean isOnlyAuditorRole() {
 
-    User p = userManager.findByEmail(getRequest().getRemoteUser());
+    Users p = userManager.findByEmail(getRequest().getRemoteUser());
     List<String> roles = userManager.findGroups(p.getUid());
     return (roles.contains("AUDITOR") && ! roles.contains("SYS_ADMIN"));
   }

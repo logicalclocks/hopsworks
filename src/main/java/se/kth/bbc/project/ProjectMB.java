@@ -43,6 +43,7 @@ import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -222,11 +223,11 @@ public class ProjectMB implements Serializable {
   }
 
   public List<Theme> addThemes() {
-    List<User> list = userMgr.filterUsersBasedOnProject(sessionState.
+    List<Users> list = userMgr.filterUsersBasedOnProject(sessionState.
             getActiveProject());
     themes = new ArrayList<>();
     int i = 0;
-    for (User user : list) {
+    for (Users user : list) {
       themes.add(new Theme(i, user.getFname() + " " + user.getLname(), user.
               getEmail()));
       i++;
@@ -566,13 +567,13 @@ public class ProjectMB implements Serializable {
     List<UserGroup> groupedUsers = new ArrayList<>();
     ProjectRoleTypes[] roles = ProjectRoleTypes.values();
     for (ProjectRoleTypes role : roles) {
-      List<User> mems = projectTeamController.findTeamMembersByProject(
+      List<Users> mems = projectTeamController.findTeamMembersByProject(
               sessionState.
               getActiveProject(),
               role.getTeam());
       if (!mems.isEmpty()) {
         List<RoledUser> roleMems = new ArrayList<>();
-        for (User u : mems) {
+        for (Users u : mems) {
           roleMems.add(new RoledUser(u.getEmail(), u.getFname() + " " + u.
                   getLname(), role));
         }

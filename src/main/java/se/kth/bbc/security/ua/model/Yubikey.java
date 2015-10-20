@@ -23,6 +23,7 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -94,7 +95,7 @@ public class Yubikey implements Serializable {
   @JoinColumn(name = "uid",
           referencedColumnName = "uid")
   @OneToOne(optional = false)
-  private User uid;
+  private Users uid;
 
   public Yubikey() {
   }
@@ -196,11 +197,11 @@ public class Yubikey implements Serializable {
     this.yubidnum = yubidnum;
   }
 
-  public User getUid() {
+  public Users getUid() {
     return uid;
   }
 
-  public void setUid(User uid) {
+  public void setUid(Users uid) {
     this.uid = uid;
   }
 
