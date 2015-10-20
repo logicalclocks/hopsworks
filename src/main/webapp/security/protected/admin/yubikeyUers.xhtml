@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+  <h:head>
+    <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+    <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+  </h:head>
+
+  <h:body>
+    <ui:insert name="titleBar" >
+      <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+    </ui:insert>
+
+    <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.SYSAdmin}">  
+
+      <p:growl autoUpdate="true" showDetail="true"/>
+      <p:layoutUnit id="centerLayout" position="center">
+
+        <div class="container">
+          <div align="left">
+            <h2>Yubikey User Administration</h2>
+          </div>
+
+          <div class="content">
+            <h:form id="yubikeyReqdataForm">
+              <p:dataTable id="yubikeyUserReqTable"
+                           var="yreq" 
+                           value="#{peopleAministration.allYubikeyRequests}" 
+                           widgetVar="reqsTable" 
+                           emptyMessage="No open user requests"
+                           rowKey="#{yreq.email}" 
+                           selection="#{peopleAministration.selectedUsers}"
+                           editable="true" editMode="cell">
+
+                <p:column id="ynameColumn" headerText="First Name" 
+                          filterBy="#{yreq.fname}">
+                  <h:outputText value="#{yreq.fname}" />
+                </p:column>
+                <p:column id="ylnameCol" headerText="Last Name"
+                          filterBy="#{yreq.lname}">
+                  <h:outputText value="#{yreq.lname}" />
+                </p:column>
+
+                <p:column id="yemailColumn" headerText="Email" 
+                          filterBy="#{yreq.email}">
+                  <h:outputText value="#{yreq.email}" />
+                </p:column>
+
+                <p:column id="yorgColumn" headerText="Organization" 
+                          filterBy="#{yreq.organization.orgName}">
+                  <h:outputText value="#{yreq.organization.orgName}" />
+                </p:column>
+
+                <p:column id="yroleColumn" headerText="Role" >
+
+                  <p:selectOneMenu id="yroleChoose" 
+                                   rendered="#{yreq.yubikey.status==1}"
+                                   value="#{peopleAministration.sgroup}"
+                                   editable="false"
+                                   >
+                    <f:selectItem itemLabel="Select Role" 
+                                  itemValue="#"
+                                  />
+                    <f:selectItems value="#{peopleAministration.groups}"/>
+                  </p:selectOneMenu>
+                </p:column>
+
+                <p:column id="yactionColumn" headerText="Action">
+                  <h:panelGrid columns="2" style="width: auto">                                                    
+                    <p:commandLink styleClass="ui-button-remove fa fa-ban" 
+                                   action="#{peopleAministration.rejectUser(yreq)}" 
+                                   update="@form">
+                      <p:confirm header="Reject user" 
+                                 message="Are you sure you want to reject this user?"
+                                 icon="ui-icon-alert"/>
+                    </p:commandLink>
+                    <p:commandLink styleClass="ui-button-allow fa fa-check" 
+                                   action="#{peopleAministration.activateYubikeyUser(yreq)}" 
+                                   update="@form">
+                      <p:confirm header="Allow user" 
+                                 message="Activate selected user?"
+                                 icon="ui-icon-alert"/>
+                    </p:commandLink>
+                  </h:panelGrid>
+                </p:column>
+              </p:dataTable>
+
+              <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+              </p:confirmDialog>
+            </h:form>
+
+            <script>
+              userMgmtTabview.select(#{peopleStatusBean.tabIndex});
+            </script>
+          </div>
+        </div> 
+      </p:layoutUnit>
+    </p:layout>
+  </h:body>
+</html>

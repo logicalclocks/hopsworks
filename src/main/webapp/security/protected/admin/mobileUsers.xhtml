@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+  <h:head>
+    <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+    <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+  </h:head>
+
+  <h:body>
+    <ui:insert name="titleBar" >
+      <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+    </ui:insert>
+
+    <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.SYSAdmin}">  
+
+      <p:growl autoUpdate="true" showDetail="true"/>
+      <p:layoutUnit id="centerLayout" position="center">
+
+        <div class="container">
+          <div align="left">
+            <h2>Mobile User Administration</h2>
+          </div>
+
+          <div class="content">
+            <h:form id="reqdataForm">
+              <p:dataTable id="userReqTable" var="req"
+                           value="#{peopleAministration.allRequests}" 
+                           widgetVar="reqsTable"
+                           emptyMessage="No open user requests"
+                           rowKey="#{req.email}" 
+                           selection="#{peopleAministration.selectedUsers}" 
+                           editable="true" editMode="cell">
+
+                <p:column id="nameColumn" headerText="First Name"  
+                          filterBy="#{req.fname}">
+                  <h:outputText value="#{req.fname}"  />
+                </p:column>
+                <p:column id="lnameCol" headerText="Last Name" 
+                          filterBy="#{req.lname}">
+                  <h:outputText value="#{req.lname}" />
+                </p:column>
+
+                <p:column id="emailColumn" headerText="Email" 
+                          filterBy="#{req.email}">
+                  <h:outputText value="#{req.email}" />
+                </p:column>
+
+                <p:column id="orgColumn" headerText="Organization"  
+                          filterBy="#{req.organization.orgName}">
+                  <h:outputText value="#{req.organization.orgName}" />
+                </p:column>
+
+                <p:column id="roleColumn" headerText="Role">
+                  <p:selectOneMenu id="roleChoose" 
+                                   value="#{peopleAministration.sgroup}" 
+                                   editable="false">
+                    <f:selectItem itemLabel="Select Role"
+                                  itemValue="#"
+                                  noSelectionOption="true" />
+                    <f:selectItems value="#{peopleAministration.groups}"/>
+                  </p:selectOneMenu>
+                </p:column>
+
+                <p:column id="actionColumn" headerText="Action">
+                  <h:panelGrid columns="2" style="width: auto">                                                    
+                    <p:commandLink styleClass="ui-button-remove fa fa-ban" 
+                                   action="#{peopleAministration.rejectUser(req)}"
+                                   update="@form">
+                      <p:confirm header="Reject user" 
+                                 message="Are you sure you want to reject this user?" 
+                                 icon="ui-icon-alert"/>
+                    </p:commandLink>
+                    <p:commandLink styleClass="ui-button-allow fa fa-check" 
+                                   actionListener="#{peopleAministration.activateUser(req)}" 
+                                   update="@form">
+                      <p:confirm header="Activate user" 
+                                 message="Activate selected user?" 
+                                 icon="ui-icon-alert"/>
+                    </p:commandLink>
+                  </h:panelGrid>
+                </p:column>
+              </p:dataTable>
+
+              <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+              </p:confirmDialog>
+
+            </h:form>
+
+            <script>
+              userMgmtTabview.select(#{peopleStatusBean.tabIndex});
+            </script>
+          </div>
+        </div> 
+      </p:layoutUnit>
+    </p:layout>
+  </h:body>
+</html>

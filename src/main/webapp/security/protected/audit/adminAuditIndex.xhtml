@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+        
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+
+
+  <f:view contentType="text/html">
+
+    <h:head>
+      <title><ui:insert name="title">Admin Panel</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/audit.css']}" />
+      <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+    </h:head>
+
+    <h:body>
+
+        <c:if test="#{peopleStatusBean.SYSAdmin}">
+        <ui:insert name="adminTitleBar">
+          <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+        </ui:insert>
+      </c:if>
+      
+
+      <c:if test="#{peopleStatusBean.onlyAuditorRole}">
+          <ui:include src="/security/protected/audit/auditTitleBar.xhtml" />
+      </c:if>
+
+
+      <div style="margin: 10% 10% 10% 10%" align="center">
+        <h:form>
+
+          <h:panelGrid columns="3" cellpadding="50">
+
+            <p:column >
+              <h:commandLink  action="rolesAudit">
+                <p:graphicImage id="mgmt" 
+                                value="/resources/images/users/rolesaudit.png" 
+                                width="100"
+                                height="100"
+                                title="Roles Audit"
+                                >
+                </p:graphicImage>
+              </h:commandLink>   
+              <br></br>  
+              <p:outputLabel style="text-align: left" value="Roles Audit"></p:outputLabel>
+
+            </p:column>
+
+            <p:column>
+              <h:commandLink  action="loginsAudit">
+                <p:graphicImage id="audit" 
+                                value="/resources/images/users/loginaudit.jpg" 
+                                width="100"
+                                height="100"
+                                title="Login Audit"
+                                >
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Logins Audit"></p:outputLabel>
+            </p:column>
+
+            <p:column>
+              <h:commandLink  action="accountAudit">
+                <p:graphicImage id="accountAudit" 
+                                value="/resources/images/users/accountaudit.jpeg" 
+                                width="100"
+                                height="100"
+                                title="Account Audit"
+                                >
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Account Audit"></p:outputLabel>
+
+            </p:column>
+
+            <p:column>
+              <h:commandLink  action="studyAudit">
+                <p:graphicImage id="studyAudit" 
+                                value="/resources/images/users/studyaudit.png" 
+                                width="100"
+                                height="100"
+                                title="Study Audit"
+                                >
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Study Audit"></p:outputLabel>
+
+            </p:column>
+
+          </h:panelGrid>
+        </h:form>
+      </div>
+    </h:body>
+  </f:view>
+</html>
