@@ -16,7 +16,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.primefaces.model.StreamedContent;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
@@ -51,18 +50,9 @@ public class UsersController {
   private UserLoginsFacade userLoginsBean;
 
     // To send the user the QR code image
-  private StreamedContent qrCode;
-
-  public StreamedContent getQrCode() {
-    return qrCode;
-  }
-
-  public void setQrCode(StreamedContent qrCode) {
-    this.qrCode = qrCode;
-  }
-  
-  
-  public StreamedContent registerUser(UserDTO newUser) throws AppException, IOException, UnsupportedEncodingException, WriterException {
+  private byte[] qrCode;
+    
+  public byte[] registerUser(UserDTO newUser) throws AppException, IOException, UnsupportedEncodingException, WriterException {
     if (userValidator.isValidEmail(newUser.getEmail())
         && userValidator.isValidPassword(newUser.getChosenPassword(),
             newUser.getRepeatedPassword())
@@ -82,6 +72,7 @@ public class UsersController {
       String activationKey = SecurityUtils.getRandomString(64);
       
       int uid = userBean.lastUserID() + 1;
+      System.out.println("U id:" + uid);
       String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
 
 //      String uname = Users.USERNAME_PREFIX + uid;
@@ -108,7 +99,7 @@ public class UsersController {
 
       userBean.persist(user);
       
-      qrCode = QRCodeGenerator.getQRCode(newUser.getEmail(), CustomAuthentication.ISSUER,
+      qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), CustomAuthentication.ISSUER,
               otpSecret);
       
       return qrCode;

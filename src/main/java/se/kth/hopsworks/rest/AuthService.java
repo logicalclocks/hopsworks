@@ -22,7 +22,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import org.primefaces.model.StreamedContent;
+import org.apache.commons.codec.binary.Base64;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
@@ -168,11 +168,12 @@ public class AuthService {
 
   @POST
   @Path("register")
-  @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   public Response register(UserDTO newUser, @Context HttpServletRequest req)
           throws AppException {
-    StreamedContent qrCode = null;
+
+    byte[]  qrCode = null ;
     req.getServletContext().log("Registering..." + newUser.getEmail() + ", "
             + newUser.getFirstName());
 
@@ -186,11 +187,10 @@ public class AuthService {
     }
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
-    
-    Response.ResponseBuilder response = Response.ok((Object)qrCode);
-    response.header("Content-disposition", "inline;");
 
-    return response.build();
+    json.setQRCode(new String (Base64.encodeBase64(qrCode)));
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
   }
 
   @POST

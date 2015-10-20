@@ -89,6 +89,20 @@
                 </div>
               </div>
             </div>
+            <div class="row">
+                  <div class="col-xs-12 col-sm-12 col-md-12">
+                    <span ng-show="(registerForm.$submitted || registerForm.user_password.$dirty) &amp;&amp; registerForm.user_password.$error.required"
+                          class="text-danger ng-hide">This field is required</span>
+                    <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.minlength"
+                          class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
+                        one special character and/or alphanumeric characters. </span>                 
+                    <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.pattern"
+                          class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
+                        one special character and/or alphanumeric characters. </span>
+                    <span ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) &amp;&amp; registerForm.user_password_confirm.$invalid"
+                          class="text-danger ng-hide">The two passwords you entered do not match</span>
+                  </div>
+            </div>
              <div class="row">
               <div class="col-xs-12 col-sm-6 col-md-6">
                 <div class="form-group has-feedback">
@@ -116,40 +130,107 @@
                 </div>
               </div>
             </div>
+            <label class="text-muted">Authentication Choice</label>
+            <hr style="margin-top: 0px">
             <div class="row">
-              <div class="col-xs-12 col-sm-6 col-md-6">
-                <fieldset>
-                  <legend>Authentication Choice</legend>
+              <div class="col-xs-12 col-sm-12 col-md-12">
+                <div class=" col-xs-6 col-sm-6 col-md-6 text-center">
+
                     <div class="form-group has-feedback">
-                      <label class="col-xs-6 col-sm-6 col-md-6 text-muted">
-                        <input name="sec_type" type="radio" ng-model="regCtrl.newUser.authType"  value="Mobile">
+                      <label class="col-xs-6 col-sm-6 col-md-6 text-muted" tooltip="This will allow you to use your mobile QR scanner for two-factor authentication.">
+                        <input name="sec_type" type="radio" ng-model="regCtrl.newUser.authType"  value="Mobile" >
                         Mobile 
                       </label>
-                      <label class="col-xs-6 col-sm-6 col-md-6 text-muted">
+                      <label class="col-xs-6 col-sm-6 col-md-6 text-muted"
+                             tooltip="A YubiKey is a small device that you can use for two-factor authentication.
+                             This means the service will request proof that you have your YubiKey
+                             in addition to your regular username and password.">
                         <input name="sec_type" type="radio" ng-model="regCtrl.newUser.authType" value="Yubikey">
                         Yubikey 
                       </label>                  
                       <span ng-show="(registerForm.$submitted) &amp;&amp; registerForm.sec_type.$error.required"
                             class="text-danger ng-hide">This field is required</span>
                     </div>
-                  </fieldset>
+                  </div>
               </div>           
             </div>
-
-            <div class="row">
-                  <div class="col-xs-12 col-sm-12 col-md-12">
-                    <span ng-show="(registerForm.$submitted || registerForm.user_password.$dirty) &amp;&amp; registerForm.user_password.$error.required"
-                          class="text-danger ng-hide">This field is required</span>
-                    <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.minlength"
-                          class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
-                        one special character and/or alphanumeric characters. </span>                 
-                    <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.pattern"
-                          class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
-                        one special character and/or alphanumeric characters. </span>
-                    <span ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) &amp;&amp; registerForm.user_password_confirm.$invalid"
-                          class="text-danger ng-hide">The two passwords you entered do not match</span>
+          <!--Yubikey fields -->
+          <div ng-if="regCtrl.newUser.authType === 'Yubikey'">
+              <hr>
+              <div class="row">
+                  <div class="col-xs-12 col-sm-6 col-md-6">
+                      <div class="form-group has-feedback">
+                          <label class="text-muted">Organization*</label>
+                          <input name="organization" placeholder="Organization" autocomplete="off"
+                                 ng-model="regCtrl.newUser.organization" required class="form-control "
+                                 type="text">
+                  <span ng-show="(registerForm.$submitted || registerForm.organization.$dirty) &amp;&amp; registerForm.organization.$error.required"
+                        class="text-danger ng-hide">This field is required</span>
+                      </div>
                   </div>
-            </div>
+                  <div class="col-xs-12 col-sm-6 col-md-6">
+                      <div class="form-group has-feedback">
+                          <label class="text-muted">Department*</label>
+                          <input name="department" placeholder="Department" autocomplete="off"
+                                 ng-model="regCtrl.newUser.department" required class="form-control "
+                                 type="text">
+                  <span ng-show="(registerForm.$submitted || registerForm.department.$dirty) &amp;&amp; registerForm.department.$error.required"
+                        class="text-danger ng-hide">This field is required</span>
+                      </div>
+                  </div>
+              </div>
+              <div class="row">
+                  <div class="col-xs-12 col-sm-6 col-md-6">
+                      <div class="form-group has-feedback">
+                          <label class="text-muted">Street and number*</label>
+                          <input name="street_number" placeholder="Street and number" autocomplete="off"
+                                 ng-model="regCtrl.newUser.street_number" required class="form-control "
+                                 type="text">
+                  <span ng-show="(registerForm.$submitted || registerForm.street_number.$dirty) &amp;&amp; registerForm.street_number.$error.required"
+                        class="text-danger ng-hide">This field is required</span>
+                      </div>
+                  </div>
+                  <div class="col-xs-12 col-sm-6 col-md-6">
+                      <div class="form-group has-feedback">
+                          <label class="text-muted">City*</label>
+                          <input name="city" placeholder="City" autocomplete="off"
+                                 ng-model="regCtrl.newUser.city" required class="form-control "
+                                 type="text">
+                  <span ng-show="(registerForm.$submitted || registerForm.city.$dirty) &amp;&amp; registerForm.city.$error.required"
+                        class="text-danger ng-hide">This field is required</span>
+                      </div>
+                  </div>
+              </div>
+              <div class="row">
+                  <div class="col-xs-12 col-sm-6 col-md-6">
+                      <div class="form-group has-feedback">
+                          <label class="text-muted">Postal Code*</label>
+                          <input name="postal_code" placeholder="Postal Code" autocomplete="off"
+                                 ng-model="regCtrl.newUser.postal_code" required class="form-control "
+                                 type="text">
+                  <span ng-show="(registerForm.$submitted || registerForm.postal_code.$dirty) &amp;&amp; registerForm.postal_code.$error.required"
+                        class="text-danger ng-hide">This field is required</span>
+                      </div>
+                  </div>
+                  <div class="col-xs-12 col-sm-6 col-md-6">
+                      <div class="form-group has-feedback">
+                          <label class="text-muted">Country*</label>
+                          <select id="country"
+                                  name="country"
+                                  placeholder="Select your country"
+                                  class="form-control"
+                                  ng-model="regCtrl.newUser.country"
+                                  required>
+                            <option value="">Select your country</option>
+                            <option ng-repeat="country in regCtrl.countries" value="{{country.name}}">{{country.name}}</option>
+                          </select>
+                  <span ng-show="(registerForm.$submitted || registerForm.country.$dirty) &amp;&amp; registerForm.country.$error.required"
+                        class="text-danger ng-hide">This field is required</span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+            <hr>
             <div class="row">
               <div class="checkbox c-checkbox pull-left col-md-6">
                 <label>
