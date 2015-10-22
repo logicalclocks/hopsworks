@@ -352,7 +352,6 @@ public class JobService {
   public Response updateSchedule(ScheduleDTO schedule,@PathParam("jobId") int jobId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-      logger.log(Level.INFO, "At Spark Update Start="+schedule.getStart()+" Number="+schedule.getNumber()+" JobID="+jobId);
       JobDescription job = jobFacade.findById(jobId);
       if (job == null) {
         return noCacheResponse.
@@ -398,7 +397,6 @@ public class JobService {
   @Path("/spark")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public SparkService spark() {
-      logger.log(Level.INFO, "At sparkjjj");
     return this.spark.setProject(project);
   }
 
