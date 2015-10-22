@@ -14,8 +14,10 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -25,14 +27,17 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.io.IOUtils;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
+import se.kth.bbc.jobs.model.configuration.ScheduleDTO;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.project.Project;
+import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.meta.exception.ApplicationException;
@@ -65,6 +70,11 @@ public class JobService {
   private AdamService adam;
   @EJB
   private FileOperations fops;
+  @EJB
+  private JobController jobController;
+  @EJB
+  private ActivityFacade activityFacade;
+  
 
   private Project project;
 
@@ -281,7 +291,7 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response deleteJob(@PathParam("jobId") int jobId, @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws ApplicationException {
+          @Context HttpServletRequest req) throws AppException {
         logger.log(Level.INFO, "Request to delete job");
     
     JobDescription job = jobFacade.findById(jobId);
@@ -301,10 +311,11 @@ public class JobService {
             logger.log(Level.INFO, "Deleted job name ="+job.getName()+" job id ="+job.getId());
             JsonResponse json = new JsonResponse();
             json.setSuccessMessage("Deleted job "+job.getName()+" successfully");
+            activityFacade.persistActivity(ActivityFacade.DELETED_JOB, project, sc.getUserPrincipal().getName());
             return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
         }catch(DatabaseException ex){
             logger.log(Level.WARNING, "Job cannot be deleted  job name ="+job.getName()+" job id ="+job.getId());
-            throw new ApplicationException("Server", ex.getMessage());
+            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.getMessage());
         }
     }
    }  
@@ -332,6 +343,51 @@ public class JobService {
       return this.executions.setJob(job);
     }
   }
+  
+  @POST
+  @Path("/updateschedule/{jobId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response updateSchedule(ScheduleDTO schedule,@PathParam("jobId") int jobId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+      logger.log(Level.INFO, "At Spark Update Start="+schedule.getStart()+" Number="+schedule.getNumber()+" JobID="+jobId);
+      JobDescription job = jobFacade.findById(jobId);
+      if (job == null) {
+        return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      } else if (!job.getProject().equals(project)) {
+        //In this case, a user is trying to access a job outside its project!!!
+        logger.log(Level.SEVERE,
+              "A user is trying to access a job outside their project!");
+        return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
+      } else {
+         try{
+            boolean isScheduleUpdated = jobFacade.updateJobSchedule(jobId,schedule);
+            if(isScheduleUpdated){
+                boolean status = jobController.scheduleJob(jobId);
+                if(status){
+                    JsonResponse json = new JsonResponse();
+                    json.setSuccessMessage("Scheduled job "+job.getName()+" successfully");
+                    activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB, project, sc.getUserPrincipal().getName());
+                    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+                }else{
+                    logger.log(Level.WARNING, "Schedule is not created in the scheduler for the jobid "+jobId);
+                }
+            }else{
+                logger.log(Level.WARNING, "Schedule is not updated in DB for the jobid "+jobId);
+            }
+            
+         }catch(DatabaseException ex){
+              logger.log(Level.WARNING, "Cannot update schedule "+ex.getMessage());
+              throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode() ,ex.getMessage());
+         }
+      }    
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();    
+  }
+  
 
   @Path("/cuneiform")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
@@ -342,6 +398,7 @@ public class JobService {
   @Path("/spark")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public SparkService spark() {
+      logger.log(Level.INFO, "At sparkjjj");
     return this.spark.setProject(project);
   }
 

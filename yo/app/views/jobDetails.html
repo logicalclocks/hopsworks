@@ -22,34 +22,41 @@
   <accordion close-others="false">
     <accordion-group heading="Schedule">
     
+    <div>
+        <div ng-show="jobDetailCtrl.hasJobScheduled">
+            <label>Job runs in every {{jobDetailCtrl.availableschedule.number}} {{jobDetailCtrl.availableschedule.unit}}</label><br>
+            <label>Starting from {{jobDetailCtrl.availableschedule.start}}</label>
+        </div>
+        <div ng-hide="jobDetailCtrl.hasJobScheduled">
             <div>
-            <div>
-              <div>
-                Every 
-                <input type="number" ng-model="jobDetailCtrl.schedule.number" min="1" max="999" ng-change="jobDetailCtrl.updateNumberOfScheduleUnits()"  style="width: 50px" value="1"> 
-                <select class="dropdown" ng-model="jobDetailCtrl.schedule.unit">
-                  <option value="minute">minute{{jobDetailCtrl.schedule.addition}}</option>
-                  <option value="hour">hour{{jobDetailCtrl.schedule.addition}}</option>
-                  <option value="day" ng-selected=>day{{jobDetailCtrl.schedule.addition}}</option>
-                  <option value="week">week{{jobDetailCtrl.schedule.addition}}</option>
-                  <option value="month">month{{jobDetailCtrl.schedule.addition}}</option>
-                </select>
+              Every 
+              <input type="number" ng-model="jobDetailCtrl.schedule.number" min="1" max="999" ng-change="jobDetailCtrl.updateNumberOfScheduleUnits()"  style="width: 50px" value="1"> 
+              <select class="dropdown" ng-model="jobDetailCtrl.schedule.unit">
+                <option value="minute">minute{{jobDetailCtrl.schedule.addition}}</option>
+                <option value="hour">hour{{jobDetailCtrl.schedule.addition}}</option>
+                <option value="day" ng-selected=>day{{jobDetailCtrl.schedule.addition}}</option>
+                <option value="week">week{{jobDetailCtrl.schedule.addition}}</option>
+                <option value="month">month{{jobDetailCtrl.schedule.addition}}</option>
+              </select>
 
-                <div class="form-group">
-                  Starting on 
-                  <div class='input-group date col-md-6' id='scheduleDatePicker1'>
-                    <input type='text' class="form-control">
-                    <span class="input-group-addon">
-                      <span class="glyphicon glyphicon-calendar"></span>
-                    </span>
-                  </div>
+              <div class="form-group">
+                Starting on 
+                <div class='input-group date col-md-6' id='schedulePicker'>
+                  <input type='text' class="form-control">
+                  <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                  </span>
                 </div>
-                <script type="text/javascript">
-                                  $(function () {
-                                  $('#scheduleDatePicker1').datetimepicker();
-                                  });</script>
               </div>
+              <script type="text/javascript">
+                                $(function () {
+                                $('#schedulePicker').datetimepicker();
+                                });</script>
             </div>
+              <button ng-click="jobDetailCtrl.updateSchedule()" class="btn btn-info">
+                Set Time
+              </button>
+        </div>
     </div>
     </accordion-group>
     <accordion-group heading="Configuration">    

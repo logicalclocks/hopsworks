@@ -51,6 +51,25 @@ angular.module('hopsWorksApp')
                 return $http(req);
               },
               /**
+               * Update the schedule of a job. 
+               * @param {type} projectId 
+               * @param {type} type
+               * @param {type} schedule
+               * @param {type} jobid.
+               * @returns {undefined}.
+               */
+              updateSchedule: function (projectId, type, schedule,jobId) {
+                var req = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/jobs/updateschedule/'+jobId,
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: schedule
+                };
+                return $http(req);
+              },
+              /**
                * Get all the registered executions for the given job.
                * @param {type} projectId
                * @param {type} jobId

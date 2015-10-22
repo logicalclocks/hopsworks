@@ -41,6 +41,8 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String PROJECT_DESC_CHANGED
           = " changed project description.";
   public static final String CREATED_JOB = " created a new job ";
+  public static final String DELETED_JOB = " deleted a job ";
+  public static final String SCHEDULED_JOB = " scheduled a job ";
   // Flag constants
   public static final String FLAG_PROJECT = "PROJECT";
   public static final String FLAG_DATASET = "DATASET";

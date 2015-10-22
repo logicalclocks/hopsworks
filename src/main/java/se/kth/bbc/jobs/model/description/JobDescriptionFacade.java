@@ -1,17 +1,24 @@
 package se.kth.bbc.jobs.model.description;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
+import se.kth.bbc.jobs.model.configuration.JobConfiguration.JobConfigurationFactory;
+import se.kth.bbc.jobs.model.configuration.ScheduleDTO;
+import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.rest.JobService;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
@@ -25,6 +32,9 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
+  
+    private static final Logger logger = Logger.getLogger(JobDescriptionFacade.class.
+          getName());
 
   public JobDescriptionFacade() {
     super(JobDescription.class);
@@ -113,6 +123,27 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
           throw new DatabaseException("Could not delete job " + job.getName(), ex);
       }
           
+  }
+  
+  public boolean updateJobSchedule(int jobId, ScheduleDTO schedule) throws DatabaseException{
+      boolean status=false;
+      try{
+          JobDescription managedJob = em.find(JobDescription.class, jobId);
+          JobConfiguration config=managedJob.getJobConfig();
+          config.setSchedule(schedule);
+          TypedQuery<JobDescription> q = em.createNamedQuery(
+            "JobDescription.updateConfig", JobDescription.class);
+          q.setParameter("id", jobId);
+          q.setParameter("jobconfig", config);
+          int result=q.executeUpdate();
+          logger.log(Level.INFO, "Updated entity count ="+result);
+          if(result==1){
+              status=true;
+          }
+      }catch(SecurityException | IllegalArgumentException ex){
+          throw new DatabaseException("Could not update job  ", ex);
+      }
+      return status;
   }
 
   public List<JobDescription> getRunningJobs(Project project) {
