@@ -6,8 +6,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval',
-          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval) {
+        .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval','StorageService','$mdSidenav',
+          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval,StorageService,$mdSidenav) {
 
             var self = this;
             this.projectId = $routeParams.projectID;
@@ -22,6 +22,95 @@ angular.module('hopsWorksApp')
             };
             
             this.hasSelectJob=false;
+            
+            self.currentjob=null;
+            self.currentToggledIndex=-1;
+            
+            this. editAsNew = function (job) {   
+              JobService.getConfiguration(self.projectId, job.id).then(
+                      function (success) {
+                        self.currentjob=job;
+                        self.currentjob.runConfig = success.data;
+                        self.copy();
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error fetching job configuration.', ttl: 15000});
+              });
+            };
+            
+            self.copy = function () {
+              var jobType;
+              switch (self.currentjob.jobType.toUpperCase()) {
+                case "CUNEIFORM":
+                  jobType = 0;
+                  break;
+                case "SPARK":
+                  jobType = 1;
+                  break;
+                case "ADAM":
+                  jobType = 2;
+                  break;
+              }
+              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState;
+              if (jobType == 0) {
+                mainFileTxt = "Workflow file";
+                mainFileVal = self.currentjob.runConfig.wf.name;
+                jobDetailsTxt = "Input variables";
+              } else if (jobType == 1) {
+                sparkState = {
+                  "selectedJar": getFileName(self.currentjob.runConfig.jarPath)
+                };
+                mainFileTxt = "JAR file";
+                mainFileVal = sparkState.selectedJar;
+                jobDetailsTxt = "Job details";
+              } else if (jobType == 2) {
+                adamState = {
+                  "processparameter": null,
+                  "commandList": null,
+                  "selectedCommand": self.currentjob.runConfig.selectedCommand.command
+                };
+                mainFileTxt = "ADAM command";
+                mainFileVal = adamState.selectedCommand;
+                jobDetailsTxt = "Job arguments";
+              }
+              var state = {
+                "jobtype": jobType,
+                "jobname": self.currentjob.name,
+                "localResources": self.currentjob.runConfig.localResources,
+                "phase": 4,
+                "runConfig": self.currentjob.runConfig,
+                "sparkState": sparkState,
+                "adamState": adamState,
+                "accordion1": {//Contains the job name
+                  "isOpen": false,
+                  "visible": true,
+                  "value": " - " + self.currentjob.name,
+                  "title": "Job name"},
+                "accordion2": {//Contains the job type
+                  "isOpen": false,
+                  "visible": true,
+                  "value": " - " + self.currentjob.jobType,
+                  "title": "Job type"},
+                "accordion3": {// Contains the main execution file (jar, workflow,...)
+                  "isOpen": false,
+                  "visible": true,
+                  "value": " - " + mainFileVal,
+                  "title": mainFileTxt},
+                "accordion4": {// Contains the job setup (main class, input variables,...)
+                  "isOpen": false,
+                  "visible": true,
+                  "value": "",
+                  "title": jobDetailsTxt},
+                "accordion5": {//Contains the configuration and creation
+                  "isOpen": false,
+                  "visible": true,
+                  "value": "",
+                  "title": "Configure and create"}
+              };
+              StorageService.store(self.projectId + "newjob", state);              
+              $location.path('project/' + self.projectId + '/newjob');
+            };
+            
+            
 
             var getAllJobs = function () {
               JobService.getAllJobsInProject(self.projectId).then(
@@ -97,7 +186,8 @@ angular.module('hopsWorksApp')
  
             };
             
-            self.toggleJobs = function (job,index) {
+           
+            self.toggle = function (job,index) {
               //reset all jobs showing flag
               angular.forEach(self.jobs, function (temp, key) {
                 if (job.id !== temp.id) {
@@ -106,13 +196,24 @@ angular.module('hopsWorksApp')
               });
 
               //handle the clicked job accordingly
-              job.showing = !job.showing;
+              job.showing = true;
               self.hasSelectJob=true;
               $scope.selectedIndex=index;
-              //if all jobs are deselected hide log information
-              if (!job.showing) {
-                 self.hasSelectJob=false;
-                 $scope.selectedIndex=-1;
+              self.currentToggledIndex=index;
+
+            };
+            self.untoggle = function (job,index) {
+              //reset all jobs showing flag
+              angular.forEach(self.jobs, function (temp, key) {
+                   temp.showing = false;
+              });
+              
+              if(self.currentToggledIndex !== index){
+                  self.hasSelectJob=false;
+                  $scope.selectedIndex=-1;
+                  self.currentToggledIndex=-1;
+              }else{
+                  job.showing = true;
               }
             };
             

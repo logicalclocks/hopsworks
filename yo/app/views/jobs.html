@@ -41,28 +41,29 @@
               </div>
             </div>
 
-              <div class="col-lg-10" style="max-height: 50%;overflow-y: auto">
+              <div class="col-lg-10" style="max-height: 50%;overflow-y: auto;padding-bottom: 200px">
               <table class="table table-hover">
                 <thead>
-                <th>
+                <th style="width: 12%">
                   Name
                 </th>
-                <th>
+                <th style="width: 13%">
                   Owner
                 </th>
-                <th>
+                <th style="width: 10%">
                   Type
                 </th>
-                <th>
+                <th style="width: 15%">
                   Created on
                 </th>
-                <th>
+                <th style="width: 30%">
                 </th>
-                <th>
+                <th style="width: 10%">
                 </th>
+                <th style="width: 10%"></th>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="job in jobsCtrl.jobs| filter:jobsCtrl.jobFilter:false | orderBy : 'creationTime'" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.toggleJobs(job,$index);jobsCtrl.showLogs(job.id)">
+                    <tr ng-repeat="job in jobsCtrl.jobs| filter:jobsCtrl.jobFilter:false | orderBy : 'creationTime'" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.untoggle(job,$index);">
                     <td>   
                       {{job.name}}
                     </td>
@@ -76,12 +77,24 @@
                       {{job.creationTime| date:'mediumDate'}}
                     </td>
                     <td>
-                      <button ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-play" aria-hidden="true"/>Run</button>
-                      <button ng-click="jobsCtrl.deleteJob(job.id,job.name);$event.stopPropagation();" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-trash" aria-hidden="true"/>Delete</button>
+                      <button ng-click="jobsCtrl.runJob(job.id);$event.stopPropagation();" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-play" aria-hidden="true"/>Run</button>
+                      <div class="dropdown" style="display:inline-block;">
+                            <button class="btn btn-default btn-sm dropdown-toggle"  type="button" data-toggle="dropdown">More Actions
+                            <span class="fa fa-caret-right"></span></button>
+                          <ul class="dropdown-menu" style="left: 100px;top:0%">
+                              <li><a ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"><span class="glyphicon glyphicon-time" style="padding-right: 10px"></span>Schedule</a></li>
+                                <li><a ng-click="jobsCtrl.editAsNew(job);$event.stopPropagation();"><span class="glyphicon glyphicon-edit" style="padding-right: 10px"></span>Edit as New</a></li>
+                                <li><a ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"><span class="glyphicon glyphicon-list-alt" style="padding-right: 10px"></span>Job Details</a></li>
+                                <li><a ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showLogs(job.id);$event.stopPropagation();"><span class="glyphicon glyphicon-hdd" style="padding-right: 10px"></span>Log Files</a></li>
+                                <li role="presentation" class="divider"></li>
+                                <li><a ng-click="jobsCtrl.deleteJob(job.id,job.name);$event.stopPropagation();"><span class="glyphicon glyphicon-trash" style="padding-right: 10px"></span>Delete</a></li>
+                            </ul>
+                      </div>
                     </td>
                     <td>
                       <span class="text-info" ng-show="jobsCtrl.running['' + job.id]">Running...</span>
                     </td>
+                    <td></td>
                   </tr>
                 </tbody>
               </table>
@@ -134,6 +147,7 @@
           </div>
           
         </div>
+               
     </section>
   </div>
   <!-- /#wrapper -->

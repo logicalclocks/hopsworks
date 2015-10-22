@@ -10,9 +10,6 @@
   <div ng-controller="JobsCtrl as jobsCtrl" style="margin-bottom: 10px">
       <div>
     <span class="h3">{{jobDetailCtrl.jobtype}} job running {{jobDetailCtrl.execFile}}</span>
-    <button ng-click="jobDetailCtrl.copy()" class="btn btn-primary pull-right">
-      <span class="glyphicon glyphicon-pencil" aria-hidden="true"/>Edit as new
-    </button>
     <button ng-click="jobsCtrl.runJob(jobDetailCtrl.job.id)" class="btn btn-warning pull-right">
       <span class="glyphicon glyphicon-play" aria-hidden="true"/>Run now
     </button>
