@@ -274,27 +274,27 @@
                            style="width: 100%; border-radius: 0;"
                            name="x" placeholder="Find a template...">
                   </div>
-                  <ul style="padding:0px;">
-                    <li class="datasetList" ng-repeat="template in metadataCtrl.availableTemplates| filter: searchTemplate: false" 
+                  <ul style="list-style-type: none; padding-left: 0px">
+                    <li ng-repeat="template in metadataCtrl.availableTemplates| filter: searchTemplate: false" 
                         ng-click="metadataCtrl.toggleTemplate(template);
                                           metadataCtrl.fetchTemplate(template.id)"                        
                         context-menu
-                        data-target="templateMenu-{{$index}}" tooltip="{{template.name}}">
-                      <div class="btn-lg">
-                        <!--when the user clicks on a template name a check appears
-                        <i class="fa fa-check pull-left"
-                           style="color: lightgreen; margin-top:3px;"
-                           ng-if="template.showing"></i>-->
+                        data-target="templateMenu-{{$index}}" tooltip="{{template.name}}" style="background-color: #f5f5f5;margin-top: 3px">
+                        <div class="btn-lg">
+                            <!--when the user clicks on a template name a check appears
+                            <i class="fa fa-check pull-left"
+                               style="color: lightgreen; margin-top:3px;"
+                               ng-if="template.showing"></i>-->
 
-                        <!--onaftersave="metadataCtrl.updateTemplateName(template)"-->   
-                        
-                        <span editable-text="template.name" e-form="editForm" style="font-size: 14px;" onaftersave="metadataCtrl.updateTemplateName(template)">
-                            <span class="glyphicon glyphicon-hand-right" ng-show="template.showing"></span><label style="font-weight: bold;margin-left: 10px" ng-show="template.showing" >{{template.name| cut:true:16:' ...'}}</label> 
-                            <label style="font-weight: normal" ng-hide="template.showing">{{template.name| cut:true:16:' ...'}}</label>                    
-                        </span>
-                        <div class="btn-group" style="float: right">
+                            <!--onaftersave="metadataCtrl.updateTemplateName(template)"-->   
+                         
+                            <span editable-text="template.name" e-form="editForm" style="font-size: 14px;" onaftersave="metadataCtrl.updateTemplateName(template)">
+                                <span class="glyphicon glyphicon-hand-right" ng-show="template.showing"></span><label style="font-weight: bold;margin-left: 10px" ng-show="template.showing" >{{template.name| cut:true:16:' ...'}}</label> 
+                                <label style="font-weight: normal" ng-hide="template.showing">{{template.name| cut:true:16:' ...'}}</label>                    
+                            </span>
+                            <div class="pull-right">
                             <button class="btn btn-danger pull-right"
-                                    ng-click="metadataCtrl.removeTemplate(template.id)"
+                                    ng-click="metadataCtrl.removeTemplate(template.id);$event.stopPropagation();"
 
                                     tooltip="Delete the template"
                                     style="margin-top: 1px;  height: 20px;padding:2px;">
@@ -315,17 +315,17 @@
                               </a>
                             </button>
                             <button class="btn btn-info pull-right" 
-                                    ng-click="editForm.$show()"
+                                    ng-click="editForm.$show();$event.stopPropagation();"
                                     style="margin-top: 1px;  height: 20px;padding:2px;">
                               <i class="fa fa-edit"></i>
                             </button>
                             </div>
-                            
-                      </div>
+                        </div>  
+                      
                     </li>
                   </ul>
 
-                  <div class="datasetList" 
+                  <div style="background-color: #f5f5f5"
                        ng-if="metadataCtrl.currentTemplateID !== - 1 && !metadataCtrl.editingTemplate">
                     <div style="width: 100%;border-radius: 0px; padding:10px; margin-top:10px;"
                          ng-click="metadataCtrl.addNewList()">
