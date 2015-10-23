@@ -150,6 +150,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.newJob = function () {
+              StorageService.clear();
               $location.path('project/' + self.projectId + '/newjob');
             };
 
