@@ -7,15 +7,6 @@
 </div>
 <div class="modal-body">
 
-  <div ng-controller="JobsCtrl as jobsCtrl" style="margin-bottom: 10px">
-      <div>
-    <span class="h3">{{jobDetailCtrl.jobtype}} job running {{jobDetailCtrl.execFile}}</span>
-    <button ng-click="jobsCtrl.runJob(jobDetailCtrl.job.id)" class="btn btn-warning pull-right">
-      <span class="glyphicon glyphicon-play" aria-hidden="true"/>Run now
-    </button>
-    </div>
-  </div>
-
   <accordion close-others="false">
     <accordion-group heading="Schedule">
     
