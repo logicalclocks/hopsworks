@@ -22,7 +22,7 @@
         </div>
         <accordion close-others="false">
           <accordion-group heading="{{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" is-open="newJobCtrl.accordion1.isOpen">
-            <md-input-container>
+            <md-input-container style="height: 50px">
               <label for="jobname" style="color: black;">Job name</label>
               <input name="jobname" type="text" id="jobname"
                      ng-model="newJobCtrl.jobname" ng-change="newJobCtrl.nameFilledIn()">
