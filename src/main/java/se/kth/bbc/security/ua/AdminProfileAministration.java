@@ -26,7 +26,6 @@ import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.audit.RolesAuditActions;
 import se.kth.bbc.security.ua.model.Address;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.hopsworks.user.model.Users;
 

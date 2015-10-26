@@ -36,6 +36,24 @@ INSERT INTO `organization` (`id`, `uid`, `org_name`, `website`, `contact_person`
 (1, 10000, 'KI', 'www.ki.se', 'Admin Admin', 'admin@kth.se', 'MEB', '+4670080010', '+4670080015');
 
 
+
+
+-- --------------------------------------------------------
+--
+--   Adding a new address entry for admin user
+--
+
+insert into address (uid, address1,address2,address3,city,state,country,postalcode) values (10000, 'Admin Office','Teknikringen 14', 'Vallhalevägen', 'Stockholm län', 'Stockholm', 'Svergie', '10044');
+
+
+
+-- --------------------------------------------------------
+--
+-- Upadte the User Logins table
+--
+
+insert into userlogins (ip, browser, action, uid, login_date, os, outcome, email, mac) values ('127.0.0.1', 'Firefox', 'REGISTRATION', 10000, CURRENT_TIMESTAMP, 'Linux', 'SUCCESS', 'admin', '56:84:7a:fe:97:49');
+
 -- --------------------------------------------------------
 --
 -- Dumping data for table `people_group`
