@@ -17,6 +17,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -59,7 +60,7 @@ public class BBCGroup implements Serializable {
             @JoinColumn(name = "uid",
                     referencedColumnName = "uid")})
   @ManyToMany
-  private Collection<User> userCollection;
+  private Collection<Users> userCollection;
 
   public BBCGroup() {
   }
@@ -99,11 +100,11 @@ public class BBCGroup implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public Collection<User> getUserCollection() {
+  public Collection<Users> getUserCollection() {
     return userCollection;
   }
 
-  public void setUserCollection(Collection<User> userCollection) {
+  public void setUserCollection(Collection<Users> userCollection) {
     this.userCollection = userCollection;
   }
 
