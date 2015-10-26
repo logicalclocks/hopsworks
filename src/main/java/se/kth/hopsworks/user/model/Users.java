@@ -29,7 +29,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.ua.model.Yubikey;
 
 @Entity
@@ -186,13 +185,15 @@ public class Users implements Serializable {
           mappedBy = "uid")
   private Address address;
 
-    @OneToOne(cascade = CascadeType.ALL,
+  @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "uid")
   private Organization organization;
     
-      @OneToOne(cascade = CascadeType.ALL,
+  @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "uid")
   private Yubikey yubikey;
+      
+      
   public Users() {
   }
   
@@ -460,6 +461,7 @@ public class Users implements Serializable {
     }
     return true;
   }
+  
 
   @Override
   public String toString() {

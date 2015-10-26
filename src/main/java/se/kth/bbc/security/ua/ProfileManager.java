@@ -129,6 +129,7 @@ public class ProfileManager implements Serializable {
 
   public void updateUserInfo() throws SocketException {
 
+
     if (userManager.updatePeople(user)) {
       MessagesController.addInfoMessage("Success",
               "Profile updated successfully.");
@@ -152,6 +153,7 @@ public class ProfileManager implements Serializable {
 
   /**
    *
+   * @throws java.net.SocketException
    */
   public void updateUserOrg() throws SocketException {
 
