@@ -14,8 +14,8 @@ CREATE TABLE `users` (
     `fname` VARCHAR(30)  DEFAULT NULL,
     `lname` VARCHAR(30)  DEFAULT NULL,
     `activated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `title` VARCHAR(10)  DEFAULT NULL,
-    `orcid` VARCHAR(20)  DEFAULT NULL,
+    `title` VARCHAR(10)  DEFAULT '-',
+    `orcid` VARCHAR(20)  DEFAULT '-',
     `false_login` INT(11) NOT NULL DEFAULT '-1',
     `status` INT(11) NOT NULL DEFAULT '-1',
     `isonline` INT(11) NOT NULL DEFAULT '-1',
@@ -25,8 +25,8 @@ CREATE TABLE `users` (
     `security_answer` VARCHAR(128)  DEFAULT NULL,
     `yubikey_user` INT(11) NOT NULL DEFAULT '0',
     `password_changed` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
-    `notes` VARCHAR(500)  DEFAULT NULL,
-    `mobile` VARCHAR(15)  DEFAULT NULL,
+    `notes` VARCHAR(500)  DEFAULT '-',
+    `mobile` VARCHAR(15)  DEFAULT '-',
     PRIMARY KEY (`uid`),
     UNIQUE KEY `username` (`username`),
     UNIQUE KEY `email` (`email`)
@@ -53,13 +53,13 @@ CREATE TABLE `users` (
 CREATE TABLE `address` (
     `address_id` INT(11) NOT NULL AUTO_INCREMENT,
     `uid` INT(11) NOT NULL,
-    `address1` VARCHAR(100) DEFAULT NULL,
-    `address2` VARCHAR(100) DEFAULT NULL,
-    `address3` VARCHAR(100) DEFAULT NULL,
-    `city` VARCHAR(40) DEFAULT NULL,
-    `state` VARCHAR(50) DEFAULT NULL,
-    `country` VARCHAR(40) DEFAULT NULL,
-    `postalcode` VARCHAR(10) DEFAULT NULL,
+    `address1` VARCHAR(100) DEFAULT '-',
+    `address2` VARCHAR(100) DEFAULT '-',
+    `address3` VARCHAR(100) DEFAULT '-',
+    `city` VARCHAR(40) DEFAULT '-',
+    `state` VARCHAR(50) DEFAULT '-',
+    `country` VARCHAR(40) DEFAULT '-',
+    `postalcode` VARCHAR(10) DEFAULT '-',
     PRIMARY KEY (`address_id`),
     FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
@@ -235,16 +235,17 @@ CREATE TABLE `consent` (
 CREATE TABLE `organization` (
     `id` INT(11) NOT NULL AUTO_INCREMENT,
     `uid` INT(11) DEFAULT NULL,
-    `org_name` VARCHAR(100) DEFAULT NULL,
-    `website` VARCHAR(2083) DEFAULT NULL,
-    `contact_person` VARCHAR(100) DEFAULT NULL,
-    `contact_email` VARCHAR(254) DEFAULT NULL,
-    `department` VARCHAR(100) DEFAULT NULL,
-    `phone` VARCHAR(20) DEFAULT NULL,
-    `fax` VARCHAR(20) DEFAULT NULL,
+    `org_name` VARCHAR(100) DEFAULT '-',
+    `website` VARCHAR(2083) DEFAULT '-',
+    `contact_person` VARCHAR(100) DEFAULT '-',
+    `contact_email` VARCHAR(254) DEFAULT '-',
+    `department` VARCHAR(100) DEFAULT '-',
+    `phone` VARCHAR(20) DEFAULT '-',
+    `fax` VARCHAR(20) DEFAULT '-',
     PRIMARY KEY (`id`),
     FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE
 ) ENGINE=ndbcluster;
+
 -- Metadata --------------
 -- ------------------------
 

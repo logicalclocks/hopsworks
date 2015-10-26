@@ -13,7 +13,6 @@ import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.user.model.Users;
 
 /**

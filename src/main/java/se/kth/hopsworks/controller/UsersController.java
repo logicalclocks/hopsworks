@@ -19,7 +19,6 @@ import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.SecurityQuestion;
@@ -27,8 +26,11 @@ import se.kth.bbc.security.ua.UserAccountsEmailMessages;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
+import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.bbc.security.ua.SecurityUtils;
 import se.kth.bbc.security.ua.UserManager;
+import se.kth.bbc.security.ua.model.Address;
+import se.kth.bbc.security.ua.model.Organization;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
@@ -62,7 +64,7 @@ public class UsersController {
     // BiobankCloud prefix username prefix
   private final String USERNAME_PREFIX = "meb";
   
-  public byte[] registerUser(UserDTO newUser) throws AppException, IOException, UnsupportedEncodingException, WriterException, MessagingException {
+  public byte[] registerUser(UserDTO newUser, String url, String ip, String os, String browser, String mac) throws AppException, IOException, UnsupportedEncodingException, WriterException, MessagingException {
     if (userValidator.isValidEmail(newUser.getEmail())
         && userValidator.isValidPassword(newUser.getChosenPassword(),
             newUser.getRepeatedPassword())
@@ -95,8 +97,12 @@ public class UsersController {
       user.setFname(newUser.getFirstName());
       user.setLname(newUser.getLastName());
       user.setMobile(newUser.getTelephoneNum());
-      user.setStatus(UserAccountStatus.ACCOUNT_INACTIVE.getValue());
+      user.setStatus(PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue());
       user.setSecret(otpSecret);
+      user.setOrcid("-");
+      user.setMobile("-");
+      user.setTitle("-");
+      user.setYubikeyUser(PeopleAccountStatus.MOBILE_USER.getValue());
       user.setValidationKey(activationKey);
       user.setActivated(new Timestamp(new Date().getTime()));
       user.setPasswordChanged(new Timestamp(new Date().getTime()));
@@ -106,6 +112,29 @@ public class UsersController {
       user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer().
           toLowerCase()));
       user.setBbcGroupCollection(groups);
+      Address a = new Address();
+      a.setUid(user);
+      // default '-' in sql file did not add these values!
+      a.setAddress1("-");
+      a.setAddress2("-");
+      a.setAddress3("-");
+      a.setCity("-");
+      a.setCountry("-");
+      a.setPostalcode("-");
+      a.setState("-");
+      user.setAddress(a);
+      
+      Organization org  = new Organization();
+      org.setUid(user);
+      org.setContactEmail("-");
+      org.setContactPerson("-");
+      org.setDepartment("-");
+      org.setFax("-");
+      org.setOrgName("-");
+      org.setWebsite("-");
+      org.setPhone("-");
+      
+      user.setOrganization(org);
       userBean.persist(user);
       
       qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), CustomAuthentication.ISSUER,
@@ -114,7 +143,9 @@ public class UsersController {
       emailBean.sendEmail(newUser.getEmail(),
               UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
               UserAccountsEmailMessages.buildMobileRequestMessage(
-                      getApplicationUri(), user.getUsername() + activationKey));
+                      //getApplicationUri()
+                      url
+                      , user.getUsername() + activationKey));
       return qrCode;
     }
     
@@ -150,7 +181,7 @@ public class UsersController {
           || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(
                   securityAnswer.toLowerCase()))) {
         registerFalseLogin(user);
-        registerLoginInfo(user, "False recovery", req);
+        registerLoginInfo(user, "Recovery", "Failure",req);
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             ResponseMessages.SEC_QA_INCORRECT);
       }
@@ -165,7 +196,7 @@ public class UsersController {
         user.setPassword(DigestUtils.sha256Hex(randomPassword));
         userBean.update(user);
         resetFalseLogin(user);
-        registerLoginInfo(user, "Successful recovery", req);
+        registerLoginInfo(user, "Recovery", "SUCCESS", req);
       } catch (MessagingException ex) {
         Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE,
             "Could not send email: ", ex);
@@ -243,7 +274,7 @@ public class UsersController {
     return randomStr.substring(0, length);
   }
 
-  public void registerLoginInfo(Users user, String action,
+  public void registerLoginInfo(Users user, String action, String outcome,
       HttpServletRequest req) {
     String ip = req.getRemoteAddr();
     String userAgent = req.getHeader("User-Agent");
@@ -266,6 +297,7 @@ public class UsersController {
     login.setBrowser(browser);
     login.setIp(ip);
     login.setAction(action);
+    login.setOutcome(outcome);
     login.setLoginDate(new Date());
     userLoginsBean.persist(login);
   }
@@ -308,5 +340,9 @@ public class UsersController {
     }
     return dtos;
   }
-
+  
+  
+  
+  
+   
 }

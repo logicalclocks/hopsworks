@@ -120,7 +120,7 @@ public class AuthService {
           req.login(email, password);
           req.getServletContext().log("3 step: " + email);
           userController.resetFalseLogin(user);
-          userController.registerLoginInfo(user, "Successful login", req);
+          userController.registerLoginInfo(user, "LOGIN", "SUCCESS", req);
           //if the logedin user has no supported role logout
           if (!sc.isUserInRole("BBC_USER") && !sc.isUserInRole("SYS_ADMIN")) {
             req.logout();
@@ -130,7 +130,7 @@ public class AuthService {
 
         } catch (ServletException e) {
           userController.registerFalseLogin(user);
-          userController.registerLoginInfo(user, "False login", req);
+          userController.registerLoginInfo(user, "LOGIN", "FAILED", req);
           throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                   ResponseMessages.AUTHENTICATION_FAILURE);
         }
@@ -184,7 +184,19 @@ public class AuthService {
     JsonResponse json = new JsonResponse();
 
     try {
-      qrCode = userController.registerUser(newUser);
+    
+      String domain = req.getRequestURL().toString();
+      String cpath = req.getContextPath().toString();
+
+      String url = domain.substring(0, domain.indexOf(cpath));
+
+      url = url + cpath;
+
+      String ip = req.getRemoteAddr();
+      String browser ="Fix this";
+      String mac= "Fix this";
+      String os = "Fix this";
+      qrCode = userController.registerUser(newUser, url, ip, browser, os, mac);
       
     } catch (IOException | WriterException | MessagingException ex) {
       Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
