@@ -39,7 +39,7 @@ import se.kth.bbc.project.fb.Inode;
   @NamedQuery(name = "Template.findById",
           query = "SELECT t FROM Template t WHERE t.id = :templateid"),
   @NamedQuery(name = "Template.findByName",
-          query = "SELECT t FROM Template t WHERE t.name = :name")})
+          query = "SELECT t FROM Template t WHERE lower(t.name) = :name")})
 public class Template implements Serializable, EntityIntf, Comparable<Template> {
 
   private static final long serialVersionUID = 1L;

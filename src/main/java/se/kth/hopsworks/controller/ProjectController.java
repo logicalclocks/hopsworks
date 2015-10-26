@@ -116,7 +116,6 @@ public class ProjectController {
     } else {
       logger.log(Level.SEVERE, "Project with name {0} already exists!",
               newProject.getProjectName());
-      throw new IllegalArgumentException(ResponseMessages.PROJECT_NAME_EXIST);
     }
     return null;
   }

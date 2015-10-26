@@ -7,18 +7,47 @@
 </div>
 <div class="modal-body">
 
-  <div ng-controller="JobsCtrl as jobsCtrl" style="margin-bottom: 10px">
-    <span class="h3">{{jobDetailCtrl.jobtype}} job running {{jobDetailCtrl.execFile}}</span>
-    <button ng-click="jobDetailCtrl.copy()" class="btn btn-primary pull-right">
-      <span class="glyphicon glyphicon-pencil" aria-hidden="true"/>Edit as new
-    </button>
-    <button ng-click="jobsCtrl.runJob(jobDetailCtrl.job.id)" class="btn btn-warning pull-right">
-      <span class="glyphicon glyphicon-play" aria-hidden="true"/>Run now
-    </button>
-  </div>
-
   <accordion close-others="false">
-    <accordion-group heading="Configuration">
+    <accordion-group heading="Schedule">
+    
+    <div>
+        <div ng-show="jobDetailCtrl.hasJobScheduled">
+            <label>Job runs in every {{jobDetailCtrl.availableschedule.number}} {{jobDetailCtrl.availableschedule.unit}}</label><br>
+            <label>Starting from {{jobDetailCtrl.availableschedule.start}}</label>
+        </div>
+        <div ng-hide="jobDetailCtrl.hasJobScheduled">
+            <div>
+              Every 
+              <input type="number" ng-model="jobDetailCtrl.schedule.number" min="1" max="999" ng-change="jobDetailCtrl.updateNumberOfScheduleUnits()"  style="width: 50px" value="1"> 
+              <select class="dropdown" ng-model="jobDetailCtrl.schedule.unit">
+                <option value="minute">minute{{jobDetailCtrl.schedule.addition}}</option>
+                <option value="hour">hour{{jobDetailCtrl.schedule.addition}}</option>
+                <option value="day" ng-selected=>day{{jobDetailCtrl.schedule.addition}}</option>
+                <option value="week">week{{jobDetailCtrl.schedule.addition}}</option>
+                <option value="month">month{{jobDetailCtrl.schedule.addition}}</option>
+              </select>
+
+              <div class="form-group">
+                Starting on 
+                <div class='input-group date col-md-6' id='schedulePicker'>
+                  <input type='text' class="form-control">
+                  <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                  </span>
+                </div>
+              </div>
+              <script type="text/javascript">
+                                $(function () {
+                                $('#schedulePicker').datetimepicker();
+                                });</script>
+            </div>
+              <button ng-click="jobDetailCtrl.updateSchedule()" class="btn btn-info">
+                Set Time
+              </button>
+        </div>
+    </div>
+    </accordion-group>
+    <accordion-group heading="Configuration">    
       <!-- Cuneiform configuration -->
       <div ng-show="jobDetailCtrl.job.runConfig.type == 'cuneiformJobConfiguration'">
         <div>
@@ -159,7 +188,6 @@
         </div>
       </div>
     </accordion-group>
-
     <accordion-group heading="Execution history">
       <span ng-show="!jobDetailCtrl.showExecutions">
         There are no registered executions for this job.

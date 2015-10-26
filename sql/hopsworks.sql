@@ -163,7 +163,7 @@ CREATE TABLE `executions` (
   `job_id` INT(11) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE (`app_id`),
-  FOREIGN KEY (`job_id`) REFERENCES `jobs` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`job_id`) REFERENCES `jobs` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
   FOREIGN KEY (`user`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 

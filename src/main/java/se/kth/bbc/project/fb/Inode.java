@@ -10,7 +10,6 @@ import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -98,9 +97,12 @@ public class Inode implements Serializable {
   private BigInteger modificationTime;
   @Column(name = "access_time")
   private BigInteger accessTime;
-  @Lob
+  @Column(name = "user_id")
+  private byte[] userId;
+  @Column(name = "group_id")
+  private byte[] groupId;
   @Column(name = "permission")
-  private byte[] permission;
+  private int permission;
   @Size(max = 100)
   @Column(name = "client_name")
   private String clientName;
@@ -205,11 +207,11 @@ public class Inode implements Serializable {
     this.accessTime = accessTime;
   }
 
-  public byte[] getPermission() {
+  public int getPermission() {
     return permission;
   }
 
-  public void setPermission(byte[] permission) {
+  public void setPermission(int permission) {
     this.permission = permission;
   }
 
@@ -366,4 +368,21 @@ public class Inode implements Serializable {
     return header.equals(BigInteger.ZERO);
   }
 
+  public byte[] getGroupId() {
+    return groupId;
+  }
+
+  public void setGroupId(byte[] groupId) {
+    this.groupId = groupId;
+  }
+
+  public byte[] getUserId() {
+    return userId;
+  }
+
+  public void setUserId(byte[] userId) {
+    this.userId = userId;
+  }
+
+  
 }

@@ -51,12 +51,6 @@ angular.module('hopsWorksApp')
               "commandList": null, //The ADAM command list.
               "selectedCommand": null //The selected ADAM command
             };
-            this.schedule = {
-              "unit": "hour",
-              "number": 1,
-              "addition": "",
-              "startDate": ""
-            };
 
             //Variables for front-end magic
             this.accordion1 = {//Contains the job name
@@ -100,7 +94,6 @@ angular.module('hopsWorksApp')
                 "runConfig": self.runConfig,
                 "sparkState": self.sparkState,
                 "adamState": self.adamState,
-                "schedule": self.schedule,
                 "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5],
               };
               self.undoneState = state;
@@ -117,12 +110,6 @@ angular.module('hopsWorksApp')
                 "processparameter": null, //The parameter currently being processed
                 "commandList": null, //The ADAM command list.
                 "selectedCommand": null //The selected ADAM command
-              };
-              self.schedule = {
-                "unit": "hour",
-                "number": 1,
-                "addition": "",
-                "startDate": ""
               };
               //Variables for front-end magic
               self.accordion1 = {//Contains the job name
@@ -161,7 +148,6 @@ angular.module('hopsWorksApp')
                 self.runConfig = self.undoneState.runConfig;
                 self.sparkState = self.undoneState.sparkState;
                 self.adamState = self.undoneState.adamState;
-                self.schedule = self.undoneState.schedule
                 self.accordion1 = self.undoneState.accordions[0];
                 self.accordion2 = self.undoneState.accordions[1];
                 self.accordion3 = self.undoneState.accordions[2];
@@ -181,14 +167,6 @@ angular.module('hopsWorksApp')
             this.createJob = function () {
               self.runConfig.appName = self.jobname;
               self.runConfig.localResources = self.localResources;
-              if ($('#scheduleDatePicker').data("DateTimePicker").date()) {
-                self.runConfig.schedule = {
-                  "start": $('#scheduleDatePicker').data("DateTimePicker").date().valueOf(),
-                  "unit": self.schedule.unit.toUpperCase(),
-                  "number": self.schedule.number};
-              } else {
-                self.runConfig.schedule = null;
-              }
               JobService.createNewJob(self.projectId, self.getJobType(), self.runConfig).then(
                       function (success) {
                         $location.path('project/' + self.projectId + '/jobs');
@@ -292,10 +270,6 @@ angular.module('hopsWorksApp')
               self.phase = 4;
             };
 
-            // Methods for schedule updating
-            this.updateNumberOfScheduleUnits = function () {
-              self.schedule.addition = self.schedule.number == 1 ? "" : "s";
-            };
 
             /**
              * Open a dialog for file selection.
@@ -394,14 +368,12 @@ angular.module('hopsWorksApp')
                 self.localResources = stored.localResources;
                 self.phase = stored.phase;
                 self.runConfig = stored.runConfig;
-                self.schedule = stored.schedule;
-                self.schedule.unit = self.schedule.unit.toLowerCase();
+                self.runConfig.schedule = null;
                 if (self.jobtype == 1) {
                   self.sparkState = stored.sparkState;
                 } else if (self.jobtype == 2) {
                   self.adamState = stored.adamState;
                 }
-                self.schedule = stored.schedule;
                 //GUI state
                 self.accordion1 = stored.accordion1;
                 self.accordion2 = stored.accordion2;
@@ -449,7 +421,6 @@ angular.module('hopsWorksApp')
                 "runConfig": self.runConfig,
                 "sparkState": self.sparkState,
                 "adamState": self.adamState,
-                "schedule": self.schedule,
                 "accordion1": self.accordion1,
                 "accordion2": self.accordion2,
                 "accordion3": self.accordion3,

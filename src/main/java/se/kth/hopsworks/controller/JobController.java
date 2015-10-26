@@ -28,4 +28,14 @@ public class JobController {
     }
     return created;
   }
+  
+  public boolean scheduleJob(int jobId){
+      boolean status=false;
+      JobDescription job=this.jdFacade.findById(jobId);
+      if(job != null){
+        scheduler.scheduleJobPeriodic(job);
+        status=true;
+      }
+      return status;
+  }
 }
