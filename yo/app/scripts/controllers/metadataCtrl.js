@@ -32,6 +32,8 @@ angular.module('hopsWorksApp')
             self.editingTemplate = false;
             self.projectInodeid = -1;
             self.noTemplates = false;
+            
+            self.attachedDetailedTemplateList=[];
 
             var dataSetService = DataSetService($routeParams.projectID);
 
@@ -647,7 +649,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.setMetadataTemplate = function (file) {
-
+              self.meta = [];
               var templateId = file.template;
               self.currentTemplateID = templateId;
               self.currentFile = file;
@@ -655,16 +657,27 @@ angular.module('hopsWorksApp')
               MetadataHelperService.setCurrentFile(file);
               self.currentFile = MetadataHelperService.getCurrentFile();
 
-              dataSetService.fetchTemplate(templateId, $cookies['email'])
+              dataSetService.fetchTemplatesForInode(self.currentFile.id)
                       .then(function (response) {
+                        self.currentFileTemplates = response.data;
+                        self.attachedDetailedTemplateList=[];
+                        var index=0;
+                        angular.forEach(self.currentFileTemplates, function (template, key) {
+                                dataSetService.fetchTemplate(template.templateId, $cookies['email'])
+                                .then(function (response) {  
+                                    index++;
+                                    self.attachedDetailedTemplateList.push({templateid: template.templateId, content: response.data.successMessage});  
+                                    if(self.currentFileTemplates.length === index){                                       
+                                        self.fetchMetadataForTemplate();
+                                    }
+                                });                             
+                        });
+                        if (self.currentFileTemplates.length === 0) {
+                          self.noTemplates = true;
+                        }
 
-                        var board = response.data.successMessage;
-
-                        self.currentBoard = JSON.parse(board);
-                        self.initializeMetadataTabs(JSON.parse(board));
-                        self.fetchMetadataForTemplate();
-                        self.fetchAttachedTemplates();
-                      });
+               });
+              
             };
 
             /**
@@ -688,16 +701,17 @@ angular.module('hopsWorksApp')
             self.fetchMetadataForTemplate = function () {
               //columns are the tables in the template
               self.meta = [];
-
-              var tables = self.currentBoard.columns;
-
-              angular.forEach(tables, function (table, key) {
-                dataSetService.fetchMetadata(self.currentFile.parentId, self.currentFile.name, table.id)
-                        .then(function (response) {
-                          var content = response.data[0];
-                          self.reconstructMetadata(table.name, content.metadataView);
-                        });
-              });
+                angular.forEach(self.attachedDetailedTemplateList, function (template, key) {     
+                    var templatecontent=JSON.parse(template.content);
+                    var tables = templatecontent.columns;
+                    angular.forEach(tables, function (table, key) {
+                      dataSetService.fetchMetadata(self.currentFile.parentId, self.currentFile.name, table.id)
+                              .then(function (response) {
+                                var content = response.data[0];
+                                self.reconstructMetadata(table.name, content.metadataView);
+                              });
+                    });
+                });
             };
 
             /**

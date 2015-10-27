@@ -235,24 +235,29 @@
                               <!--METADATA PRESENTATION SECTION-->
                               <div id="board">
                                 <div class="modal-header">
-                                  <h4 class="modal-title" ng-model="columnName">Metadata in file <font size="5" color="green">
-                                    <b>{{metaSliderCtrl.currentFile.name}}</b></font></h4>
+                                    <span class="modal-title" ng-model="columnName">Metadata of file :  <font style="font-size:16px;font-style: italic" color="green">
+                                    <b>{{datasetsCtrl.fileDetail.name}}</b></font></span>
                                 </div>
 
-                                <div class="" height="80%">
-                                  <div class="input-group-lg" align="center">
-                                    <div ng-repeat="table in metadataCtrl.meta"><h2>{{table.name}}</h2>
-                                      <div>
-                                        <div ng-repeat="field in table.rest"><b><i>{{field.tagName}}</i></b>
-                                          <div ng-repeat="value in field.metadataView">
+                                  <div class="" height="80%">
+                                  <div class="input-group-lg" align="left" style="overflow: auto;height: 80%">
+                                    <div ng-repeat="table in metadataCtrl.meta | orderBy:'name'" 
+                                         style="background-color:#FAFAFA;padding-bottom:10px;padding-left:5px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
+                                        <label style="font-size: 16px; font-weight: bold">{{table.name}}</label>
+                                        <div>
+                                          <div ng-repeat="field in table.rest" style="padding-left: 15px;padding-top:15px;font-size: 15px;">
+                                              <label><b>{{field.tagName}}</b></label>
+                                              <div ng-repeat="value in field.metadataView" style="padding-left: 15px;padding-top: 0px">
                                             <a href="#" editable-text="value.data" buttons="no"
                                                onaftersave="metadataCtrl.updateMetadata(value)"
                                                blur="submit"
-                                               style="font-size: 16px;"
+                                               style="font-size: 14px;"
                                                class="column-title ng-binding"
-                                               >
+                                               ><i class="fa fa-square"></i>
                                               {{value.data}}
                                             </a>
+                                                  <button class="btn btn-info btn-sm" ng-click=""><span class="glyphicon glyphicon-edit"></span></button>
+                                                  <button class="btn btn-danger btn-sm" ng-click=""><span class="glyphicon glyphicon-trash"></span></button>
                                           </div>
                                         </div>
                                       </div>
