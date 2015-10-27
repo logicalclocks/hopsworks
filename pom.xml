@@ -17,7 +17,12 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <dependencies>       
+  <dependencies>
+    <dependency>
+      <groupId>org.omnifaces</groupId>
+      <artifactId>omnifaces</artifactId>
+      <version>2.1</version>
+    </dependency>           
     <dependency>
       <groupId>de.hu-berlin.wbi.cuneiform</groupId>
       <artifactId>cuneiform-core</artifactId>
