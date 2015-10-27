@@ -16,7 +16,13 @@ angular.module('hopsWorksApp')
               securityQuestion: '',
               securityAnswer: '',
               ToS: '',
-              authType: '' 
+              authType: '',
+              orgName : '',
+              dep: '',
+              street:'',
+              city:'',
+              postCode:'',
+              country:''
             };
             self.QR = $routeParams.QR;
             var empty = angular.copy(self.user);
@@ -25,22 +31,39 @@ angular.module('hopsWorksApp')
               self.errorMessage = null;
               if ($scope.registerForm.$valid) {
                 self.working = true;
+                if (self.newUser.authType === 'Mobile') {
                 AuthService.register(self.newUser).then(
                         function (success) {
                           self.user = angular.copy(empty);
                           $scope.registerForm.$setPristine();
                           self.successMessage = success.data.successMessage;
                           self.working = false;
-                          if (self.newUser.authType === 'Mobile') {
-                              $location.path("/qrCode/"+ success.data.QRCode);
-                              $location.replace();
-                          };
-                          //$location.path('/login');
+                          $location.path("/qrCode/"+ success.data.QRCode);
+                          $location.replace();
+                          
+                        //$location.path('/login');
                         }, function (error) {
                           self.working = false;
                           self.errorMessage = error.data.errorMsg;
                 });
-              }
+              };
+              if (self.newUser.authType === 'Yubikey') {
+                    AuthService.registerYubikey(self.newUser).then(
+                        function (success) {
+                          self.user = angular.copy(empty);
+                          $scope.registerForm.$setPristine();
+                          self.successMessage = success.data.successMessage;
+                          self.working = false;
+                          $location.path("/yubikey/");
+                          $location.replace();
+                        //$location.path('/login');
+                        }, function (error) {
+                          self.working = false;
+                          self.errorMessage = error.data.errorMsg;
+                });
+              };
+              };
+                
             };
             self.countries = getAllCountries();
           }]);

@@ -210,6 +210,45 @@ public class AuthService {
   }
 
   @POST
+  @Path("registerYubikey")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response registerYubikey(UserDTO newUser, @Context HttpServletRequest req)
+          throws AppException {
+
+    
+    req.getServletContext().log("Registering..." + newUser.getEmail() + ", "
+            + newUser.getFirstName());
+
+    JsonResponse json = new JsonResponse();
+
+    try {
+    
+      String domain = req.getRequestURL().toString();
+      String cpath = req.getContextPath().toString();
+
+      String url = domain.substring(0, domain.indexOf(cpath));
+
+      url = url + cpath;
+
+      String ip = req.getRemoteAddr();
+      String browser ="Fix this";
+      String mac= "Fix this";
+      String os = "Fix this";
+      userController.registerYubikeyUser(newUser, url, ip, browser, os, mac);
+      
+    } catch (IOException | WriterException | MessagingException ex) {
+      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    req.getServletContext().log("successfully registered new user: '" + newUser.
+            getEmail() + "'");
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
+
+  
+  @POST
   @Path("recoverPassword")
   @Produces(MediaType.APPLICATION_JSON)
   public Response recoverPassword(@FormParam("email") String email,

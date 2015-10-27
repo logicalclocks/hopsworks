@@ -31,6 +31,7 @@ import se.kth.bbc.security.ua.SecurityUtils;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
+import se.kth.bbc.security.ua.model.Yubikey;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
@@ -151,6 +152,100 @@ public class UsersController {
     
     return null;
   }
+  
+  
+  public boolean registerYubikeyUser(UserDTO newUser, String url, String ip, String os, String browser, String mac) throws AppException, IOException, UnsupportedEncodingException, WriterException, MessagingException {
+    if (userValidator.isValidEmail(newUser.getEmail())
+        && userValidator.isValidPassword(newUser.getChosenPassword(),
+            newUser.getRepeatedPassword())
+        && userValidator.isValidsecurityQA(newUser.getSecurityQuestion(),
+            newUser.getSecurityAnswer())) {
+      if (newUser.getToS()) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+            ResponseMessages.TOS_NOT_AGREED);
+      }
+      if (userBean.findByEmail(newUser.getEmail()) != null) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+            ResponseMessages.USER_EXIST);
+      }
+
+      
+      String otpSecret = SecurityUtils.calculateSecretKey();
+      String activationKey = SecurityUtils.getRandomString(64);
+      
+      int uid = userBean.lastUserID() + 1;
+
+     // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
+
+      String uname =  USERNAME_PREFIX + uid;
+      List<BbcGroup> groups = new ArrayList<>();
+      groups.add(groupBean.findByGroupName(BbcGroup.USER));
+
+      Users user = new Users(uid);
+      user.setUsername(uname);
+      user.setEmail(newUser.getEmail());
+      user.setFname(newUser.getFirstName());
+      user.setLname(newUser.getLastName());
+      user.setMobile(newUser.getTelephoneNum());
+      user.setStatus(PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue());
+      user.setSecret(otpSecret);
+      user.setOrcid("-");
+      user.setMobile("-");
+      user.setTitle("-");
+      user.setYubikeyUser(PeopleAccountStatus.YUBIKEY_USER.getValue());
+      user.setValidationKey(activationKey);
+      user.setActivated(new Timestamp(new Date().getTime()));
+      user.setPasswordChanged(new Timestamp(new Date().getTime()));
+      user.setSecurityQuestion(SecurityQuestion.getQuestion(newUser.
+          getSecurityQuestion()));
+      user.setPassword(DigestUtils.sha256Hex(newUser.getChosenPassword()));
+      user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer().
+          toLowerCase()));
+      user.setBbcGroupCollection(groups);
+
+      Address a = new Address();
+      a.setUid(user);
+      // default '-' in sql file did not add these values!
+      a.setAddress1(newUser.getStreet());
+      a.setAddress2("-");
+      a.setAddress3(newUser.getDep());
+      a.setCity(newUser.getCity());
+      a.setCountry(newUser.getCountry());
+      a.setPostalcode(newUser.getPostCode());
+      a.setState("-");
+      user.setAddress(a);
+      
+      Organization org  = new Organization();
+      org.setUid(user);
+      org.setContactEmail("-");
+      org.setContactPerson("-");
+      org.setDepartment(newUser.getDep());
+      org.setFax("-");
+      org.setOrgName(newUser.getOrgName());
+      org.setWebsite("-");
+      org.setPhone("-");
+      
+    
+      Yubikey yk = new Yubikey();
+      yk.setUid(user);
+      yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+      user.setYubikey(yk);
+      userBean.persist(user);
+      
+    
+      // Notify user about the request
+      emailBean.sendEmail(newUser.getEmail(),
+              UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
+              UserAccountsEmailMessages.buildYubikeyRequestMessage(
+                      //getApplicationUri()
+                      url
+                      , user.getUsername() + activationKey));
+      return true;
+    }
+    
+    return false;
+  }
+  
   
   // fix this
     public String getApplicationUri() {
