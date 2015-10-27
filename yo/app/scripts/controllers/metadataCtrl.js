@@ -16,6 +16,8 @@ angular.module('hopsWorksApp')
             self.currentFile = MetadataHelperService.getCurrentFile();
             self.tabs = [];
             self.meta = [];
+            self.metainfo=[];
+            self.visibilityInfo=[];
             self.availableTemplates = [];
             self.newTemplateName = "";
             self.extendedTemplateName = "";
@@ -84,7 +86,6 @@ angular.module('hopsWorksApp')
               if (!self.metaData) {
                 return;
               }
-
               //after the project inodeid is available proceed to store metadata
               MetadataActionService.storeMetadata($cookies['email'],
                       parseInt(self.currentFile.parentId), self.currentFile.name, self.currentTableId, self.metaData)
@@ -102,6 +103,24 @@ angular.module('hopsWorksApp')
                 }
               });
               //self.metaData = {};
+            };
+            
+            
+            self.createMetadata = function(tableId,metadataId){
+                if (!self.metaData) {
+                return;
+                }
+                var value= self.metaData[metadataId];
+                
+                var tempInput={};
+                tempInput[metadataId]=value;
+                MetadataActionService.storeMetadata($cookies['email'],
+                      parseInt(self.currentFile.parentId), self.currentFile.name, tableId, tempInput)
+                      .then(function (response) {
+                       self.metaData[metadataId]='';
+                       growl.info("Created new metadata", {title: 'Info', ttl: 3000});
+                       self.fetchMetadataForTemplate();
+                      });
             };
 
             /* -- TEMPLATE HANDLING FUNCTIONS -- */
@@ -650,6 +669,8 @@ angular.module('hopsWorksApp')
              */
             self.setMetadataTemplate = function (file) {
               self.meta = [];
+              self.metainfo=[];
+              self.visibilityInfo=[];
               var templateId = file.template;
               self.currentTemplateID = templateId;
               self.currentFile = file;
@@ -701,6 +722,8 @@ angular.module('hopsWorksApp')
             self.fetchMetadataForTemplate = function () {
               //columns are the tables in the template
               self.meta = [];
+              self.metainfo=[];
+              self.visibilityInfo=[];
                 angular.forEach(self.attachedDetailedTemplateList, function (template, key) {     
                     var templatecontent=JSON.parse(template.content);
                     var tables = templatecontent.columns;
@@ -708,7 +731,7 @@ angular.module('hopsWorksApp')
                       dataSetService.fetchMetadata(self.currentFile.parentId, self.currentFile.name, table.id)
                               .then(function (response) {
                                 var content = response.data[0];
-                                self.reconstructMetadata(table.name, content.metadataView);
+                                self.reconstructMetadata(table.name, table.id, content.metadataView,table.cards);
                               });
                     });
                 });
@@ -722,14 +745,24 @@ angular.module('hopsWorksApp')
              * @param {type} rawdata
              * @returns {undefined}
              */
-            self.reconstructMetadata = function (tableName, rawdata) {
+            self.reconstructMetadata = function (tableName, tableId, rawdata, cards) {
 
               $scope.tableName = rawdata.table;
-
-              self.meta.push({name: tableName, rest: rawdata});
+              self.meta.push({name: tableName, rest: rawdata});              
+              self.metainfo.push({name: tableName, id: tableId, rest: rawdata, inputcontent: cards});
+              
+              angular.forEach(rawdata, function (data, key) {
+                   var key=tableId+'-'+data.tagName;
+                   self.visibilityInfo[key]=false;
+              });
+              
               self.metadataView = {};
 
               //console.log("RECONSTRUCTED METADATA " + JSON.stringify(self.meta));
+            };
+            
+            self.setVisibilityAddMetadata = function (key,value){
+                self.visibilityInfo[key]=value;
             };
 
             /**
