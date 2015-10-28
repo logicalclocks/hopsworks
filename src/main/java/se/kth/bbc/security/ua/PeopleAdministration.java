@@ -339,10 +339,10 @@ public class PeopleAdministration implements Serializable {
         if (user1.getStatus() == PeopleAccountStatus.ACCOUNT_VERIFICATION.
                 getValue()) {
           spamUsers.remove(user1);
-        } else if (user1.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.
+        } else if (user1.getMode() == PeopleAccountStatus.YUBIKEY_USER.
                 getValue()) {
           yRequests.remove(user1);
-        } else if (user1.getYubikeyUser() == PeopleAccountStatus.MOBILE_USER.
+        } else if (user1.getMode() == PeopleAccountStatus.MOBILE_USER.
                 getValue()) {
           requests.remove(user1);
         }
@@ -534,7 +534,7 @@ public class PeopleAdministration implements Serializable {
     try {
       // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
 
-      if (this.selectedYubikyUser.getYubikeyUser()
+      if (this.selectedYubikyUser.getMode()
               != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
         MessagesController.addSecurityErrorMessage(user.getEmail()
                 + " is not a Yubikey user");

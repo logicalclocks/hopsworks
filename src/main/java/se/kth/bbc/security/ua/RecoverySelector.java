@@ -163,7 +163,7 @@ public class RecoverySelector implements Serializable {
       return "";
     }
 
-    if (people.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+    if (people.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.USER_NOT_FOUND);
       am.registerAccountChange(people,
@@ -313,7 +313,7 @@ public class RecoverySelector implements Serializable {
       return "";
     }
 
-    if (people.getYubikeyUser() != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+    if (people.getMode() != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.USER_NOT_FOUND);
 

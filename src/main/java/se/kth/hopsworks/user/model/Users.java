@@ -69,8 +69,8 @@ import se.kth.bbc.security.ua.model.Yubikey;
   @NamedQuery(name = "Users.findBySecurityAnswer",
           query
           = "SELECT u FROM Users u WHERE u.securityAnswer = :securityAnswer"),
-  @NamedQuery(name = "Users.findByYubikeyUser",
-          query = "SELECT u FROM Users u WHERE u.yubikeyUser = :yubikeyUser"),
+  @NamedQuery(name = "Users.findByMode",
+          query = "SELECT u FROM Users u WHERE u.mode = :mode"),
   @NamedQuery(name = "Users.findByPasswordChanged",
           query
           = "SELECT u FROM Users u WHERE u.passwordChanged = :passwordChanged"),
@@ -158,8 +158,8 @@ public class Users implements Serializable {
   private String securityAnswer;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "yubikey_user")
-  private int yubikeyUser;
+  @Column(name = "mode")
+  private int mode;
   @Basic(optional = false)
   @NotNull
   @Column(name = "password_changed")
@@ -214,7 +214,7 @@ public class Users implements Serializable {
   }
 
   public Users(Integer uid, String username, String password, Date activated,
-          int falseLogin, int isonline, int yubikeyUser,
+          int falseLogin, int isonline, int mode,
           Date passwordChanged, int status) {
     this.uid = uid;
     this.username = username;
@@ -222,7 +222,7 @@ public class Users implements Serializable {
     this.activated = activated;
     this.falseLogin = falseLogin;
     this.isonline = isonline;
-    this.yubikeyUser = yubikeyUser;
+    this.mode = mode;
     this.passwordChanged = passwordChanged;
     this.status = status;
   }
@@ -389,12 +389,12 @@ public class Users implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public int getYubikeyUser() {
-    return yubikeyUser;
+  public int getMode() {
+    return mode;
   }
 
-  public void setYubikeyUser(int yubikeyUser) {
-    this.yubikeyUser = yubikeyUser;
+  public void setMode(int mode) {
+    this.mode = mode;
   }
 
   public Date getPasswordChanged() {

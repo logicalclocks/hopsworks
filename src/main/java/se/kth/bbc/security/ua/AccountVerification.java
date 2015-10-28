@@ -69,12 +69,12 @@ public class AccountVerification {
     }
 
     if (key.equals(user.getValidationKey())) {
-      if (user.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+      if (user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
 
         mgr.changeAccountStatus(user.getUid(), "",
                 PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
 
-      } else if (user.getYubikeyUser() == PeopleAccountStatus.MOBILE_USER.
+      } else if (user.getMode() == PeopleAccountStatus.MOBILE_USER.
               getValue()) {
 
         mgr.changeAccountStatus(user.getUid(), "",

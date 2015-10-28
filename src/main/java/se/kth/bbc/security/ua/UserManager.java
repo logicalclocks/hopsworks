@@ -387,7 +387,7 @@ public class UserManager {
     user.setSecurityQuestion(question);
     user.setSecurityAnswer(answer);
     user.setPasswordChanged(new Timestamp(new Date().getTime()));
-    user.setYubikeyUser(yubikey);
+    user.setMode(yubikey);
     em.persist(user);
     em.flush();
     return user;
@@ -446,8 +446,8 @@ public class UserManager {
       em.remove(a);
       em.remove(p);
 
-      if (u.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
-        em.remove(u.getYubikeyUser());
+      if (u.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+        em.remove(u.getMode());
       }
 
       em.remove(u);

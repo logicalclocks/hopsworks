@@ -32,7 +32,7 @@ angular.module('hopsWorksApp')
               if ($scope.registerForm.$valid) {
                 self.working = true;
                 if (self.newUser.authType === 'Mobile') {
-                AuthService.register(self.newUser).then(
+                      AuthService.register(self.newUser).then(
                         function (success) {
                           self.user = angular.copy(empty);
                           $scope.registerForm.$setPristine();
@@ -54,7 +54,7 @@ angular.module('hopsWorksApp')
                           $scope.registerForm.$setPristine();
                           self.successMessage = success.data.successMessage;
                           self.working = false;
-                          $location.path("/yubikey/");
+                          $location.path("/yubikey");
                           $location.replace();
                         //$location.path('/login');
                         }, function (error) {

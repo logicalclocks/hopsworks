@@ -103,7 +103,7 @@ public class UsersController {
       user.setOrcid("-");
       user.setMobile("-");
       user.setTitle("-");
-      user.setYubikeyUser(PeopleAccountStatus.MOBILE_USER.getValue());
+      user.setMode(PeopleAccountStatus.MOBILE_USER.getValue());
       user.setValidationKey(activationKey);
       user.setActivated(new Timestamp(new Date().getTime()));
       user.setPasswordChanged(new Timestamp(new Date().getTime()));
@@ -192,7 +192,7 @@ public class UsersController {
       user.setOrcid("-");
       user.setMobile("-");
       user.setTitle("-");
-      user.setYubikeyUser(PeopleAccountStatus.YUBIKEY_USER.getValue());
+      user.setMode(PeopleAccountStatus.YUBIKEY_USER.getValue());
       user.setValidationKey(activationKey);
       user.setActivated(new Timestamp(new Date().getTime()));
       user.setPasswordChanged(new Timestamp(new Date().getTime()));

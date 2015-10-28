@@ -68,8 +68,8 @@ import se.kth.hopsworks.user.model.BbcGroup;
   @NamedQuery(name = "User.findBySecurityAnswer",
           query
           = "SELECT u FROM User u WHERE u.securityAnswer = :securityAnswer"),
-  @NamedQuery(name = "User.findByYubikeyUser",
-          query = "SELECT u FROM User u WHERE u.yubikeyUser = :yubikeyUser"),
+  @NamedQuery(name = "User.findByMode",
+          query = "SELECT u FROM User u WHERE u.mode = :mode"),
   @NamedQuery(name = "User.findByPasswordChanged",
           query
           = "SELECT u FROM User u WHERE u.passwordChanged = :passwordChanged"),
@@ -157,8 +157,8 @@ public class User implements Serializable {
   private String securityAnswer;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "yubikey_user")
-  private int yubikeyUser;
+  @Column(name = "mode")
+  private int mode;
   @Basic(optional = false)
   @NotNull
   @Column(name = "password_changed")
@@ -200,7 +200,7 @@ public class User implements Serializable {
   }
 
   public User(Integer uid, String username, String password, Date activated,
-          int falseLogin, int isonline, int yubikeyUser,
+          int falseLogin, int isonline, int mode,
           Date passwordChanged, int status) {
     this.uid = uid;
     this.username = username;
@@ -208,7 +208,7 @@ public class User implements Serializable {
     this.activated = activated;
     this.falseLogin = falseLogin;
     this.isonline = isonline;
-    this.yubikeyUser = yubikeyUser;
+    this.mode = mode;
     this.passwordChanged = passwordChanged;
     this.status = status;
   }
@@ -362,12 +362,12 @@ public class User implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public int getYubikeyUser() {
-    return yubikeyUser;
+  public int getMode() {
+    return mode;
   }
 
-  public void setYubikeyUser(int yubikeyUser) {
-    this.yubikeyUser = yubikeyUser;
+  public void setMode(int mode) {
+    this.mode = mode;
   }
 
   public Date getPasswordChanged() {

@@ -23,7 +23,7 @@ CREATE TABLE `users` (
     `validation_key` VARCHAR(128)  DEFAULT NULL,
     `security_question` VARCHAR(20)  DEFAULT NULL,
     `security_answer` VARCHAR(128)  DEFAULT NULL,
-    `yubikey_user` INT(11) NOT NULL DEFAULT '0',
+    `mode` INT(11) NOT NULL DEFAULT '0',
     `password_changed` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
     `notes` VARCHAR(500)  DEFAULT '-',
     `mobile` VARCHAR(15)  DEFAULT '-',

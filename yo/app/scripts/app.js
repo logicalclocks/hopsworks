@@ -105,6 +105,25 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
+                    .when('/registerYubikey', {
+                      templateUrl: 'views/register.html',
+                      controller: 'RegCtrl as regCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService', '$cookies',
+                          function ($q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                      $cookies.email = success.data.data.value;
+                                      $location.path('/');
+                                      $location.replace();
+                                      return $q.when(success);
+                                    },
+                                    function (err) {
+
+                                    });
+                          }]
+                      }
+                    })
                     .when('/recover', {
                       templateUrl: 'views/recover.html',
                       controller: 'RecoverCtrl as recoverCtrl'

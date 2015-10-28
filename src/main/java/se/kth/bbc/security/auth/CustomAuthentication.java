@@ -126,7 +126,7 @@ public class CustomAuthentication implements Serializable {
     }
 
     // Retrun if user is not Mobile user     
-    if (user.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+    if (user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
       MessagesController.addMessageToGrowl(
               AccountStatusErrorMessages.USER_NOT_FOUND);
       return ("");
@@ -229,7 +229,7 @@ public class CustomAuthentication implements Serializable {
     }
 
     // Retrun if user is not Yubikey user     
-    if (user.getYubikeyUser() != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+    if (user.getMode() != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
       MessagesController.addMessageToGrowl(
               AccountStatusErrorMessages.USER_NOT_FOUND);
       return ("");
