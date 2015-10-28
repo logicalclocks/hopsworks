@@ -34,7 +34,6 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
-//import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.ua.model.Address;
@@ -530,7 +529,7 @@ public class PeopleAdministration implements Serializable {
     return "activate_yubikey";
   }
 
-  public String activateYubikey() {
+  public String activateYubikey() throws MessagingException {
     try {
       // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
 
