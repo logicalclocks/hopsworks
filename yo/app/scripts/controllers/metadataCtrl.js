@@ -13,6 +13,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.metaData = {};
+            self.metaDataDetail = {};
             self.currentFile = MetadataHelperService.getCurrentFile();
             self.tabs = [];
             self.meta = [];
@@ -118,7 +119,7 @@ angular.module('hopsWorksApp')
                       parseInt(self.currentFile.parentId), self.currentFile.name, tableId, tempInput)
                       .then(function (response) {
                        self.metaData[metadataId]='';
-                       growl.info("Created new metadata", {title: 'Info', ttl: 3000});
+                       growl.success("Created new metadata", {title: 'Success', ttl: 3000});
                        self.fetchMetadataForTemplate();
                       });
             };
@@ -339,9 +340,8 @@ angular.module('hopsWorksApp')
 
                         dataSetService.attachTemplate(data).then(
                                 function (success) {
-                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
-                                  //refresh the file browser to get the updated objects
-                                  MetadataHelperService.setDirContents("true");
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
+                                  self.setMetadataTemplate(file);
                                 }, function (error) {
                           growl.info("Could not attach template to file " + file.name + ".",
                                   {title: 'Info', ttl: 5000});
@@ -363,7 +363,8 @@ angular.module('hopsWorksApp')
 
                         dataSetService.detachTemplate(success.fileId, success.templateId)
                                 .then(function (success) {
-                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
+                                  self.setMetadataTemplate(file);
                                 });
                       });
             };
@@ -650,6 +651,7 @@ angular.module('hopsWorksApp')
              * @param {type} raw
              * @returns {undefined}
              */
+            /*
             self.updateMetadata = function (metadata) {
 
               MetadataActionService.updateMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
@@ -659,7 +661,25 @@ angular.module('hopsWorksApp')
                       }, function (dialogResponse) {
                         growl.info("Could not update metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
                       });
+            };*/
+            
+            self.updateMetadata = function (metadata){
+                
+                if (!self.metaDataDetail) {
+                return;
+                }
+                var value= self.metaDataDetail[metadata.id];
+                metadata.data=value;
+                
+                MetadataActionService.updateMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
+                      .then(function (response) {
+                        growl.success(response.board, {title: 'Success', ttl: 2000});
+                        self.setMetadataTemplate(self.currentFile);
+                      }, function (dialogResponse) {
+                        growl.info("Could not update metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
+                      });
             };
+            
 
             /**
              * When the user clicks on a folder/file in the file browser the self.currentFile gets updated
@@ -677,7 +697,7 @@ angular.module('hopsWorksApp')
               //update the current file reference
               MetadataHelperService.setCurrentFile(file);
               self.currentFile = MetadataHelperService.getCurrentFile();
-
+              self.noTemplates=false;
               dataSetService.fetchTemplatesForInode(self.currentFile.id)
                       .then(function (response) {
                         self.currentFileTemplates = response.data;
@@ -713,6 +733,8 @@ angular.module('hopsWorksApp')
                         self.initializeMetadataTabs(JSON.parse(board));
                       });
             };
+            
+            
 
             /**
              * Fetches all the metadata a template holds, for a selected inode
@@ -753,6 +775,11 @@ angular.module('hopsWorksApp')
               
               angular.forEach(rawdata, function (data, key) {
                    var key=tableId+'-'+data.tagName;
+                   self.visibilityInfo[key]=false;
+              });
+              
+              angular.forEach(rawdata.metadataView, function (item, key) {
+                   var key=item.id;
                    self.visibilityInfo[key]=false;
               });
               
