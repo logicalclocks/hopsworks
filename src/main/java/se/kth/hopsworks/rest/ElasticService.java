@@ -48,8 +48,6 @@ import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.util.Ip;
-import se.kth.hopsworks.util.Variables;
-import se.kth.hopsworks.util.VariablesFacade;
 
 /**
  *

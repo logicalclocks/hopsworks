@@ -6,12 +6,10 @@
 
 package se.kth.hopsworks.util;
 
-import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
@@ -44,6 +42,14 @@ public class VariablesFacade extends AbstractFacade<Users> {
       return null;
     }
   }
+  
+//  public void setIdValue(String id, String value) {
+//    Variables v = new Variables(id, value);
+//    try {
+//      em.persist(v)
+//    } catch (EntityExistsException ex) {
+//    }
+//  }
 
   public void detach(Variables variable) {
     em.detach(variable);

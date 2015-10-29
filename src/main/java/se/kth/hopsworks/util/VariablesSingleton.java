@@ -16,6 +16,8 @@ import se.kth.bbc.lims.Constants;
 
 @Startup
 @Singleton
+// By default it can only be accessed by 1 thread at a time, uncomment to make it multi-threaded.
+//@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class VariablesSingleton {
 
   @EJB
@@ -31,6 +33,7 @@ public class VariablesSingleton {
    * This method sets global variables from values stored in the database.
    */
   public void initializeVariablesFromDB() {
+    // TODO - this is not thread-safe code, ok if only called on startup
     Constants.DEFAULT_HDFS_SUPERUSER = setUserVar(Constants.VARIABLE_HDFS_SUPERUSER, Constants.DEFAULT_HDFS_SUPERUSER);
     Constants.DEFAULT_YARN_SUPERUSER = setUserVar(Constants.VARIABLE_YARN_SUPERUSER, Constants.DEFAULT_YARN_SUPERUSER);
     Constants.DEFAULT_SPARK_USER = setUserVar(Constants.VARIABLE_SPARK_USER, Constants.DEFAULT_SPARK_USER);
