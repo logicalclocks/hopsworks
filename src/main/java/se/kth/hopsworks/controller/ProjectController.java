@@ -10,10 +10,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.*;
 import javax.ws.rs.core.Response;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 
 import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
@@ -51,6 +55,8 @@ public class ProjectController {
   private ActivityFacade activityFacade;
   @EJB
   private FileOperations fileOps;
+  @EJB
+  private FileSystemOperations fsOps;
   @EJB
   private ProjectServiceFacade projectServicesFacade;
   @EJB
@@ -288,6 +294,10 @@ public class ProjectController {
        * are getting registered in hdfs_metadata_log table
        */
       rootDirCreated = fileOps.mkDir(File.separator + rootDir);
+      Path location = new Path(File.separator + rootDir);
+      FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
+              FsAction.ALL); // permission 777 so any one can creat a project.
+      fsOps.setPermission(location, fsPermission);
       fileOps.setMetaEnabled(File.separator + rootDir);
     } else {
       rootDirCreated = true;

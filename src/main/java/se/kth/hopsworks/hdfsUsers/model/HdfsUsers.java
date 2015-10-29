@@ -1,5 +1,5 @@
 
-package se.kth.hopsworks.hdfsUsers;
+package se.kth.hopsworks.hdfsUsers.model;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -7,6 +7,8 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
@@ -18,18 +20,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
-
 @Entity
-@Table(name = "hops.hdfs_groups")
+@Table(name = "hops.hdfs_users")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "HdfsGroups.findAll",
+  @NamedQuery(name = "HdfsUsers.findAll",
           query
-          = "SELECT h FROM HdfsGroups h"),
-  @NamedQuery(name = "HdfsGroups.findByName",
+          = "SELECT h FROM HdfsUsers h"),
+  @NamedQuery(name = "HdfsUsers.findByName",
           query
-          = "SELECT h FROM HdfsGroups h WHERE h.name = :name")})
-public class HdfsGroups implements Serializable {
+          = "SELECT h FROM HdfsUsers h WHERE h.name = :name")})
+public class HdfsUsers implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
   @Basic(optional = false)
@@ -43,18 +44,26 @@ public class HdfsGroups implements Serializable {
           max = 1000)
   @Column(name = "name")
   private String name;
+    @JoinTable(name = "hops.hdfs_users_groups",
+          joinColumns
+          = {
+            @JoinColumn(name = "group_id",
+                    referencedColumnName = "id")},
+          inverseJoinColumns
+          = {
+            @JoinColumn(name = "user_id",
+                    referencedColumnName = "id")})
+  @ManyToMany
+  private Collection<HdfsGroups> hdfsGroupsCollection;
 
-  @ManyToMany(mappedBy = "hdfsGroupsCollection")
-  private Collection<HdfsUsers> hdfsUsersCollection;
-
-  public HdfsGroups() {
+  public HdfsUsers() {
   }
 
-  public HdfsGroups(byte[] id) {
+  public HdfsUsers(byte[] id) {
     this.id = id;
   }
 
-  public HdfsGroups(byte[] id, String name) {
+  public HdfsUsers(byte[] id, String name) {
     this.id = id;
     this.name = name;
   }
@@ -77,12 +86,13 @@ public class HdfsGroups implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public Collection<HdfsUsers> getHdfsUsersCollection() {
-    return hdfsUsersCollection;
+  public Collection<HdfsGroups> getHdfsGroupsCollection() {
+    return hdfsGroupsCollection;
   }
 
-  public void setHdfsUsersCollection(Collection<HdfsUsers> hdfsUsersCollection) {
-    this.hdfsUsersCollection = hdfsUsersCollection;
+  public void setHdfsGroupsCollection(
+          Collection<HdfsGroups> hdfsGroupsCollection) {
+    this.hdfsGroupsCollection = hdfsGroupsCollection;
   }
 
   @Override
@@ -95,10 +105,10 @@ public class HdfsGroups implements Serializable {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof HdfsGroups)) {
+    if (!(object instanceof HdfsUsers)) {
       return false;
     }
-    HdfsGroups other = (HdfsGroups) object;
+    HdfsUsers other = (HdfsUsers) object;
     if ((this.id == null && other.id != null) ||
             (this.id != null && !this.id.equals(other.id))) {
       return false;
@@ -108,7 +118,7 @@ public class HdfsGroups implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.hopsworks.hdfsUsers.HdfsGroups[ id=" + id + " ]";
+    return "se.kth.hopsworks.hdfsUsers.HdfsUsers[ id=" + id + " ]";
   }
   
 }

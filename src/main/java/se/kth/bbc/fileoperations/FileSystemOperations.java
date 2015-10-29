@@ -77,7 +77,6 @@ public class FileSystemOperations {
    * @throws java.io.IOException
    */
   public boolean mkdirs(Path location) throws IOException {
-
     return dfs.mkdirs(location, FsPermission.getDefault());
   }
 
@@ -248,6 +247,25 @@ public class FileSystemOperations {
     return dfs.mkdir(location, FsPermission.getDefault());
   }
 
+  /**
+   * Set permission for path.
+   * @param path
+   * @param permission
+   * @throws IOException 
+   */
+  public void setPermission(Path path, FsPermission permission) throws IOException {
+    dfs.setPermission(path, permission);
+  }
+  /**
+   * Set owner for path.
+   * @param path
+   * @param username
+   * @param groupname
+   * @throws IOException 
+   */
+  public void setOwner(Path path, String username, String groupname) throws IOException {
+    dfs.setOwner(path, username, groupname);
+  }
   /**
    * Compress a directory in the given path
    * <p/>
