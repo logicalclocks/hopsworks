@@ -30,6 +30,7 @@ import se.kth.hopsworks.controller.UsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserDTO;
 import se.kth.hopsworks.users.UserFacade;
+import se.kth.rest.application.config.VariablesFacade;
 
 @Path("/auth")
 @Stateless
@@ -45,7 +46,8 @@ public class AuthService {
   private UserStatusValidator statusValidator;
   @EJB
   private NoCacheResponse noCacheResponse;
-
+  @EJB
+  VariablesFacade vf;
   
   // To distinguish Yubikey users
   private final String YUBIKEY_USER_MARKER = "YUBIKEY_USER_MARKER";
@@ -194,6 +196,7 @@ public class AuthService {
       String browser ="Fix this";
       String mac= "Fix this";
       String os = "Fix this";
+      
       qrCode = userController.registerUser(newUser, url, ip, browser, os, mac);
       
     } catch (IOException | WriterException | MessagingException ex) {
@@ -202,7 +205,13 @@ public class AuthService {
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
 
-    json.setQRCode(new String (Base64.encodeBase64(qrCode)));
+    if(vf.findById("twofactor_auth").getValue().equals("true")){
+        json.setQRCode(new String (Base64.encodeBase64(qrCode)));
+    } else{
+         json.setSuccessMessage("We registered your account request. Please validate you email and we will review your account within 48 hours.");
+    }
+      
+   
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
@@ -263,5 +272,7 @@ public class AuthService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
+  
+  
 
 }

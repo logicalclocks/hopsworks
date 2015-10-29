@@ -86,9 +86,6 @@ public class CustomAuthentication implements Serializable {
     this.otpCode = otpCode;
   }
 
-  public boolean isOTPEnabled() {
-    return true;
-  }
 
   /**
    * Authenticate the users using two factor mobile authentication.

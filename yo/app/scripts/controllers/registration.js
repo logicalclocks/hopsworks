@@ -1,11 +1,13 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('RegCtrl', ['AuthService', '$location', '$scope', 'SecurityQuestions', '$routeParams', function (AuthService, $location, $scope, SecurityQuestions, $routeParams) {
+        .controller('RegCtrl', ['AuthService', '$location', '$scope', 'SecurityQuestions', '$routeParams', '$cookies',
+          function (AuthService, $location, $scope, SecurityQuestions, $routeParams, $cookies) {
 
             var self = this;
             self.securityQuestions = SecurityQuestions.getQuestions();
             self.working = false;
+            self.otp = $cookies['otp'];
             self.newUser = {
               firstName: '',
               lastName: '',
@@ -17,12 +19,12 @@ angular.module('hopsWorksApp')
               securityAnswer: '',
               ToS: '',
               authType: '',
-              orgName : '',
+              orgName: '',
               dep: '',
-              street:'',
-              city:'',
-              postCode:'',
-              country:''
+              street: '',
+              city: '',
+              postCode: '',
+              country: ''
             };
             self.QR = $routeParams.QR;
             var empty = angular.copy(self.user);
@@ -31,39 +33,56 @@ angular.module('hopsWorksApp')
               self.errorMessage = null;
               if ($scope.registerForm.$valid) {
                 self.working = true;
+                console.log(self.otp);
+                if (self.otp === 'false') {
+                  AuthService.register(self.newUser).then(
+                          function (success) {
+                            self.user = angular.copy(empty);
+                            $scope.registerForm.$setPristine();
+                            self.successMessage = success.data.successMessage;
+                            self.working = false;
+                            //$location.path('/login');
+                          }, function (error) {
+                             self.working = false;
+                             self.errorMessage = error.data.errorMsg;
+                  });
+                }
                 if (self.newUser.authType === 'Mobile') {
-                      AuthService.register(self.newUser).then(
-                        function (success) {
-                          self.user = angular.copy(empty);
-                          $scope.registerForm.$setPristine();
-                          self.successMessage = success.data.successMessage;
-                          self.working = false;
-                          $location.path("/qrCode/"+ success.data.QRCode);
-                          $location.replace();
-                          
-                        //$location.path('/login');
-                        }, function (error) {
-                          self.working = false;
-                          self.errorMessage = error.data.errorMsg;
-                });
-              };
-              if (self.newUser.authType === 'Yubikey') {
-                    AuthService.registerYubikey(self.newUser).then(
-                        function (success) {
-                          self.user = angular.copy(empty);
-                          $scope.registerForm.$setPristine();
-                          self.successMessage = success.data.successMessage;
-                          self.working = false;
-                          $location.path("/yubikey");
-                          $location.replace();
-                        //$location.path('/login');
-                        }, function (error) {
-                          self.working = false;
-                          self.errorMessage = error.data.errorMsg;
-                });
-              };
-              };
-                
+                  AuthService.register(self.newUser).then(
+                          function (success) {
+                            self.user = angular.copy(empty);
+                            $scope.registerForm.$setPristine();
+                            self.successMessage = success.data.successMessage;
+                            self.working = false;
+                            $location.path("/qrCode/" + success.data.QRCode);
+                            $location.replace();
+
+                            //$location.path('/login');
+                          }, function (error) {
+                    self.working = false;
+                    self.errorMessage = error.data.errorMsg;
+                  });
+                }
+                ;
+                if (self.newUser.authType === 'Yubikey') {
+                  AuthService.registerYubikey(self.newUser).then(
+                          function (success) {
+                            self.user = angular.copy(empty);
+                            $scope.registerForm.$setPristine();
+                            self.successMessage = success.data.successMessage;
+                            self.working = false;
+                            $location.path("/yubikey");
+                            $location.replace();
+                            //$location.path('/login');
+                          }, function (error) {
+                    self.working = false;
+                    self.errorMessage = error.data.errorMsg;
+                  });
+                }
+                ;
+              }
+              ;
+
             };
             self.countries = getAllCountries();
           }]);

@@ -6,6 +6,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.working = false;
+            self.otp = $cookies['otp'];
             self.user = {email: '', password: '', otp:''};
 
             self.login = function () {
