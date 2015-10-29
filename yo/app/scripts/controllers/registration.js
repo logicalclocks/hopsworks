@@ -46,8 +46,7 @@ angular.module('hopsWorksApp')
                              self.working = false;
                              self.errorMessage = error.data.errorMsg;
                   });
-                }
-                if (self.newUser.authType === 'Mobile') {
+                }else  if (self.newUser.authType === 'Mobile') {
                   AuthService.register(self.newUser).then(
                           function (success) {
                             self.user = angular.copy(empty);
@@ -62,9 +61,7 @@ angular.module('hopsWorksApp')
                     self.working = false;
                     self.errorMessage = error.data.errorMsg;
                   });
-                }
-                ;
-                if (self.newUser.authType === 'Yubikey') {
+                }else if (self.newUser.authType === 'Yubikey') {
                   AuthService.registerYubikey(self.newUser).then(
                           function (success) {
                             self.user = angular.copy(empty);
