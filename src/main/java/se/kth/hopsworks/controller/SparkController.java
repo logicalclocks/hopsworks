@@ -20,8 +20,6 @@ import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.user.model.Users;
-import se.kth.hopsworks.util.Variables;
-import se.kth.hopsworks.util.VariablesFacade;
 
 /**
  * Interaction point between the Spark front- and backend.
@@ -90,9 +88,9 @@ public class SparkController {
   public boolean isSparkJarAvailable() {
     boolean isInHdfs;
     try {
-      isInHdfs = fops.exists(Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
+      isInHdfs = fops.exists(Constants.SPARK_JAR_HDFS_PATH);
     } catch (IOException e) {
-      logger.warning("Cannot get Spark jar file from HDFS: " + Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
+      logger.warning("Cannot get Spark jar file from HDFS: " + Constants.SPARK_JAR_HDFS_PATH);
       //Can't connect to HDFS: return false
       return false;
     }
@@ -100,16 +98,17 @@ public class SparkController {
       return true;
     }
 
-    File localSparkJar = new File(Constants.DEFAULT_SPARK_JAR_PATH);
+    File localSparkJar = new File(Constants.LOCAL_SPARK_JAR_PATH);
     if (localSparkJar.exists()) {
       try {
-        String hdfsJarPath = Constants.DEFAULT_SPARK_JAR_HDFS_PATH;
-        fops.copyToHDFSFromLocal(false, Constants.DEFAULT_SPARK_JAR_PATH, hdfsJarPath
+        String hdfsJarPath = Constants.SPARK_JAR_HDFS_PATH;
+        fops.copyToHDFSFromLocal(false, Constants.LOCAL_SPARK_JAR_PATH, hdfsJarPath
         );
       } catch (IOException e) {
         return false;
       }
     } else {
+      logger.warning("Cannot finid Spark jar file locally: " + Constants.LOCAL_SPARK_JAR_PATH);
       return false;
     }
     return true;

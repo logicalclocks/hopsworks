@@ -108,8 +108,8 @@ public class FileSystemOperations {
     //If still not found: throw exception
     if (CORE_CONF_DIR == null) {
       logger.log(Level.WARNING, "No configuration path set, using default: "
-              + Constants.DEFAULT_HADOOP_CONF_DIR);
-      CORE_CONF_DIR = Constants.DEFAULT_HADOOP_CONF_DIR;
+              + Constants.HADOOP_CONF_DIR);
+      CORE_CONF_DIR = Constants.HADOOP_CONF_DIR;
     }
 
     //Get the configuration file at found path

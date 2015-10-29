@@ -41,7 +41,7 @@ public class DownloadService {
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response downloadFromHDFS() throws AppException {
     Configuration conf = new Configuration();
-    conf.addResource(new Path(Constants.DEFAULT_HADOOP_CONF_DIR + "core-site.xml"));
+    conf.addResource(new Path(Constants.HADOOP_CONF_DIR + "core-site.xml"));
     FileSystem hdfs;
     FSDataInputStream stream;
     try {

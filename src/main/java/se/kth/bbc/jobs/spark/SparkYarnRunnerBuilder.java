@@ -73,7 +73,7 @@ public class SparkYarnRunnerBuilder {
 
     //Add Spark jar
     builder.addLocalResource(Constants.SPARK_LOCRSC_SPARK_JAR,
-            Constants.DEFAULT_SPARK_JAR_HDFS_PATH, false);
+            Constants.SPARK_JAR_HDFS_PATH, false);
     //Add app jar
     builder.addLocalResource(Constants.SPARK_LOCRSC_APP_JAR, appJarPath,
             !appJarPath.startsWith("hdfs:"));

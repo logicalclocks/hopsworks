@@ -34,11 +34,11 @@ public class VariablesSingleton {
     Constants.DEFAULT_HDFS_SUPERUSER = setUserVar(Constants.VARIABLE_HDFS_SUPERUSER, Constants.DEFAULT_HDFS_SUPERUSER);
     Constants.DEFAULT_YARN_SUPERUSER = setUserVar(Constants.VARIABLE_YARN_SUPERUSER, Constants.DEFAULT_YARN_SUPERUSER);
     Constants.DEFAULT_SPARK_USER = setUserVar(Constants.VARIABLE_SPARK_USER, Constants.DEFAULT_SPARK_USER);
-    Constants.DEFAULT_SPARK_DIR = setDirVar(Constants.VARIABLE_SPARK_DIR, Constants.DEFAULT_SPARK_DIR);
-    Constants.DEFAULT_ZEPPELIN_DIR = setDirVar(Constants.VARIABLE_ZEPPELIN_DIR, Constants.DEFAULT_ZEPPELIN_DIR);
-    Constants.DEFAULT_FLINK_DIR = setDirVar(Constants.VARIABLE_FLINK_DIR, Constants.DEFAULT_FLINK_DIR);
-    Constants.DEFAULT_MYSQL_DIR = setDirVar(Constants.VARIABLE_MYSQL_DIR, Constants.DEFAULT_MYSQL_DIR);
-    Constants.DEFAULT_NDB_DIR = setDirVar(Constants.VARIABLE_NDB_DIR, Constants.DEFAULT_NDB_DIR);
+    Constants.SPARK_DIR = setDirVar(Constants.VARIABLE_SPARK_DIR, Constants.SPARK_DIR);
+    Constants.ZEPPELIN_DIR = setDirVar(Constants.VARIABLE_ZEPPELIN_DIR, Constants.ZEPPELIN_DIR);
+    Constants.FLINK_DIR = setDirVar(Constants.VARIABLE_FLINK_DIR, Constants.FLINK_DIR);
+    Constants.MYSQL_DIR = setDirVar(Constants.VARIABLE_MYSQL_DIR, Constants.MYSQL_DIR);
+    Constants.NDB_DIR = setDirVar(Constants.VARIABLE_NDB_DIR, Constants.NDB_DIR);
     Constants.DEFAULT_ELASTIC_IP = setIpVar(Constants.VARIABLE_ELASTIC_IP, Constants.DEFAULT_ELASTIC_IP);
   }
 

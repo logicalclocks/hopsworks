@@ -13,6 +13,7 @@ import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import org.apache.commons.io.FileUtils;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.ClientSessionState;
@@ -20,6 +21,7 @@ import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
+import se.kth.hopsworks.util.ConfigFileGenerator;
 
 /**
  *
@@ -43,7 +45,7 @@ public class NewProjectController implements Serializable {
   private Project project = null; //The project ultimately created
 
   private static final Logger logger = Logger.getLogger(
-          NewProjectController.class.getName());
+      NewProjectController.class.getName());
 
   @EJB
   private ProjectServiceFacade projectServices;
@@ -115,9 +117,8 @@ public class NewProjectController implements Serializable {
   }
 
   /**
-   * Get the current username from session and sets it as the creator of the
-   * project, and also adding a record to the ProjectTeam table for setting the
-   * role as master for within project.
+   * Get the current username from session and sets it as the creator of the project, and also adding a record to the
+   * ProjectTeam table for setting the role as master for within project.
    *
    * @return
    */
@@ -128,12 +129,13 @@ public class NewProjectController implements Serializable {
         //Create a new project object
         Date now = new Date();
         project = new Project(newProjectName, sessionState.getLoggedInUser(),
-                now);
+            now);
         //create folder structure
         mkProjectDIR(project.getName());
+
         logger.log(Level.FINE, "{0} - project directory created successfully.",
-                project.
-                getName());
+            project.
+            getName());
 
         //Persist project object
         projectFacade.persistProject(project);
@@ -141,30 +143,30 @@ public class NewProjectController implements Serializable {
         persistServices();
         //Add the activity information
         activityFacade.
-                persistActivity(ActivityFacade.NEW_PROJECT, project,
-                        sessionState.getLoggedInUsername());
+            persistActivity(ActivityFacade.NEW_PROJECT, project,
+                sessionState.getLoggedInUsername());
         //update role information in project
         addProjectMaster(project.getId());
         logger.log(Level.FINE, "{0} - project created successfully.", project.
-                getName());
+            getName());
 
         return loadNewProject(project);
       } else {
         MessagesController.addErrorMessage(
-                "A project with this name already exists!");
+            "A project with this name already exists!");
         logger.log(Level.SEVERE, "Project with name {0} already exists!",
-                newProjectName);
+            newProjectName);
         return null;
       }
 
     } catch (IOException e) {
       MessagesController.addErrorMessage(
-              "Project folder could not be created in HDFS.");
+          "Project folder could not be created in HDFS.");
       logger.log(Level.SEVERE, "Error creating project folder in HDFS.", e);
       return null;
     } catch (EJBException ex) {
       MessagesController.addErrorMessage(
-              "Project could not be created in DB.");
+          "Project could not be created in DB.");
       logger.log(Level.SEVERE, "Error creating project in DB.", ex);
       return null;
     }
@@ -174,7 +176,7 @@ public class NewProjectController implements Serializable {
   //Set the project owner as project master in ProjectTeam table
   private void addProjectMaster(Integer projectId) {
     ProjectTeamPK stp = new ProjectTeamPK(projectId, sessionState.
-            getLoggedInUsername());
+        getLoggedInUsername());
     ProjectTeam st = new ProjectTeam(stp);
     st.setTeamRole("Master");
     st.setTimestamp(new Date());
@@ -182,11 +184,11 @@ public class NewProjectController implements Serializable {
     try {
       projectTeamFacade.persistProjectTeam(st);
       logger.log(Level.FINE, "{0} - added the project owner as a master.",
-              newProjectName);
+          newProjectName);
     } catch (EJBException ejb) {
       logger.log(Level.SEVERE,
-              "{0} - adding the project owner as a master failed.", ejb.
-              getMessage());
+          "{0} - adding the project owner as a master failed.", ejb.
+          getMessage());
     }
   }
 
@@ -196,18 +198,19 @@ public class NewProjectController implements Serializable {
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator + projectName;
     String resultsPath = projectPath + File.separator
-            + Constants.DIR_RESULTS;
+        + Constants.DIR_RESULTS;
     String cuneiformPath = projectPath + File.separator
-            + Constants.DIR_CUNEIFORM;
+        + Constants.DIR_CUNEIFORM;
     String samplesPath = projectPath + File.separator
-            + Constants.DIR_SAMPLES;
+        + Constants.DIR_SAMPLES;
+
+    mkProjectLocalZeppelin(project.getName());
 
     fileOps.mkDir(projectPath);
     fileOps.mkDir(resultsPath);
     fileOps.mkDir(cuneiformPath);
     fileOps.mkDir(samplesPath);
   }
-
 
   //load the necessary information for displaying the project page
   private String loadNewProject(Project project) {
@@ -226,6 +229,54 @@ public class NewProjectController implements Serializable {
         projectServices.persistServicesForProject(project, customServices);
         break;
     }
+  }
+
+  private void mkProjectLocalZeppelin(String projectName) throws IOException {
+
+    String projectPath
+        = Constants.ZEPPELIN_DIR + File.separator + "projects" + File.separator + projectName;
+    try {
+      FileUtils.deleteDirectory(new File(projectPath));
+      logger.log(Level.INFO, "Removed existing zeppelin directory at: {0}", projectPath);
+    } catch (IOException ex) {
+      // do nothing - directory didnt exist, as expected.
+    }
+    String notebooksPath = projectPath + File.separator + "notebooks";
+    String configPath = projectPath + File.separator + "conf";
+    String interpretersPath = projectPath + File.separator + "interpreters";
+    String zeppelinSitePath = configPath + File.separator + "zeppelin_site.xml";
+    String zeppelinEnvPath = configPath + File.separator + "zeppelin_env.sh";
+    String interpreterPath = interpretersPath + File.separator + "interpreter.json";
+    String runPath = projectPath + File.separator + "run";
+
+    if (ConfigFileGenerator.mkdirs(projectPath) == false) {
+      throw new IOException("Could not create project-specific local directory for Zeppelin at; " + projectPath);
+    }
+    if (ConfigFileGenerator.mkdirs(notebooksPath) == false) {
+      throw new IOException("Could not create project-specific local directory for Zeppelin at; " + notebooksPath);
+    }
+    if (ConfigFileGenerator.mkdirs(configPath) == false) {
+      throw new IOException("Could not create project-specific local directory for Zeppelin at; " + configPath);
+    }
+    if (ConfigFileGenerator.mkdirs(runPath) == false) {
+      throw new IOException("Could not create project-specific local directory for Zeppelin at; " + runPath);
+    }
+
+    StringBuilder zeppelinConfig = ConfigFileGenerator.instantiateFromTemplate(
+        ConfigFileGenerator.ZEPPELIN_CONFIG_TEMPLATE,
+        "", "");
+    ConfigFileGenerator.createConfigFile(new File(zeppelinSitePath), zeppelinConfig.toString());
+
+    StringBuilder zeppelinEnv = ConfigFileGenerator.instantiateFromTemplate(
+        ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE,
+        "", "");
+    ConfigFileGenerator.createConfigFile(new File(zeppelinEnvPath), zeppelinEnv.toString());
+
+    StringBuilder interpreter = ConfigFileGenerator.instantiateFromTemplate(
+        ConfigFileGenerator.INTERPRETER_TEMPLATE,
+        "", "");
+    ConfigFileGenerator.createConfigFile(new File(interpreterPath), interpreter.toString());
+
   }
 
 }

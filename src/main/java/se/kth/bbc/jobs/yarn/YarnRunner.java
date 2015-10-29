@@ -804,8 +804,8 @@ public class YarnRunner {
         logger.log(Level.WARNING,
                 "Environment variable " + Constants.ENV_KEY_YARN_CONF_DIR
                 + " not found, using default "
-                + Constants.DEFAULT_YARN_CONF_DIR);
-        yarnConfDir = Constants.DEFAULT_YARN_CONF_DIR;
+                + Constants.YARN_CONF_DIR);
+        yarnConfDir = Constants.YARN_CONF_DIR;
       }
 
       //Get the configuration file at found path
@@ -826,8 +826,8 @@ public class YarnRunner {
         logger.log(Level.WARNING,
                 "Environment variable " + Constants.ENV_KEY_HADOOP_CONF_DIR
                 + " not found, using default "
-                + Constants.DEFAULT_HADOOP_CONF_DIR);
-        hadoopConfDir = Constants.DEFAULT_HADOOP_CONF_DIR;
+                + Constants.HADOOP_CONF_DIR);
+        hadoopConfDir = Constants.HADOOP_CONF_DIR;
       }
       confPath = new Path(hadoopConfDir);
       File hadoopConf = new File(confPath + File.separator
