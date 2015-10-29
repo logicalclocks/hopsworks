@@ -111,7 +111,11 @@ angular.module('hopsWorksApp')
                 if (!self.metaData) {
                 return;
                 }
-                var value= self.metaData[metadataId];
+                var value= self.metaData[metadataId];                
+                if(!value || value.length === 0){
+                    growl.info("Metadata field cannot be empty", {title: 'Info', ttl: 3000});
+                    return;
+                }
                 
                 var tempInput={};
                 tempInput[metadataId]=value;
@@ -668,15 +672,37 @@ angular.module('hopsWorksApp')
                 if (!self.metaDataDetail) {
                 return;
                 }
+                
                 var value= self.metaDataDetail[metadata.id];
+                if(!value){
+                    growl.info("Metadata field cannot be empty", {title: 'Info', ttl: 3000});
+                    return;
+                }
+                
                 metadata.data=value;
                 
                 MetadataActionService.updateMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
                       .then(function (response) {
-                        growl.success(response.board, {title: 'Success', ttl: 2000});
+                        growl.success("Metadata updated successfully", {title: 'Success', ttl: 2000});
                         self.setMetadataTemplate(self.currentFile);
                       }, function (dialogResponse) {
                         growl.info("Could not update metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
+                      });
+            };
+            
+            self.removeMetadata = function (metadata){
+                
+                if (!self.metaDataDetail) {
+                return;
+                }                
+                metadata.data='';
+                
+                MetadataActionService.updateMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
+                      .then(function (response) {
+                        growl.success("Metadata deleted successfully", {title: 'Success', ttl: 2000});
+                        self.setMetadataTemplate(self.currentFile);
+                      }, function (dialogResponse) {
+                        growl.info("Could not delete metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
                       });
             };
             
@@ -770,13 +796,23 @@ angular.module('hopsWorksApp')
             self.reconstructMetadata = function (tableName, tableId, rawdata, cards) {
 
               $scope.tableName = rawdata.table;
-              self.meta.push({name: tableName, rest: rawdata});              
-              self.metainfo.push({name: tableName, id: tableId, rest: rawdata, inputcontent: cards});
+              self.meta.push({name: tableName, rest: rawdata}); 
               
+              var cardDescription={};
               angular.forEach(rawdata, function (data, key) {
                    var key=tableId+'-'+data.tagName;
                    self.visibilityInfo[key]=false;
+                   angular.forEach(cards, function (card, keycard) {
+                        if(data.tagName === card.title){
+                            cardDescription[data.tagName]=card.description;
+                        }                        
+                   });
+                   
               });
+              
+              self.metainfo.push({name: tableName, id: tableId, rest: rawdata, inputcontent: cards, desc:cardDescription});
+              
+
               
               angular.forEach(rawdata.metadataView, function (item, key) {
                    var key=item.id;
