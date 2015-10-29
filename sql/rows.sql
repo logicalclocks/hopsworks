@@ -74,3 +74,10 @@ INSERT INTO `people_group` (`uid`, `gid`) VALUES (10000, 1005);
 --
 
 INSERT INTO variables VALUES ("elastic_addr", "<%= @elastic_addr %>");
+
+-- --------------------------------------------------------
+--
+-- For enabling two facto authentication
+--
+
+INSERT INTO variables VALUES ("twofactor_auth", "false");
