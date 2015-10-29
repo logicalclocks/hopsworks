@@ -14,7 +14,6 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.hopsworks.user.model.Users;
 
@@ -98,12 +97,12 @@ public class AdminProfileAdministration implements Serializable {
     this.editingUser = editingUser;
   }
 
-  public List<String> getUserRole(User p) {
+  public List<String> getUserRole(Users p) {
     List<String> list = userManager.findGroups(p.getUid());
     return list;
   }
 
-  public String getChangedStatus(User p) {
+  public String getChangedStatus(Users p) {
     return PeopleAccountStatus.values()[userManager.findByEmail(p.getEmail()).
             getStatus() - 1].name();
   }

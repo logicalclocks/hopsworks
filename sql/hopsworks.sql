@@ -222,14 +222,14 @@ CREATE TABLE `job_input_files` (
 CREATE TABLE `consent` (
     `id` INT(11) NOT NULL AUTO_INCREMENT,
     `date` DATE DEFAULT NULL,
-    `study_name` VARCHAR(128) DEFAULT NULL,
-    `study_owner` VARCHAR(245) DEFAULT NULL,
+    `project_name` VARCHAR(128) DEFAULT NULL,
+    `project_owner` VARCHAR(245) DEFAULT NULL,
     `status` VARCHAR(30) DEFAULT NULL,
     `name` VARCHAR(128) DEFAULT NULL,
     `type` VARCHAR(30) DEFAULT NULL,
     `consent_form` LONGBLOB DEFAULT NULL,
     PRIMARY KEY (`id`),
-    FOREIGN KEY (`study_name`) REFERENCES `study` (`name`)
+    FOREIGN KEY (`project_name`) REFERENCES `project` (`projectname`)
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `organization` (

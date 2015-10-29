@@ -9,7 +9,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -62,7 +61,7 @@ public class ProjectTeamFacade {
    * <p/>
    * @param project
    * @param role
-   * @return A list of User entities that have the role <i>role</i> in Project
+   * @return A list of Users entities that have the role <i>role</i> in Project
    * <i>project</i>.
    */
   public List<Users> findTeamMembersByProject(Project project, String role) {
@@ -128,12 +127,12 @@ public class ProjectTeamFacade {
   }
 
   /**
-   * Find all ProjectTeam entries containing the given User as member.
+   * Find all ProjectTeam entries containing the given Users as member.
    * <p/>
    * @param member
    * @return
    */
-  public List<ProjectTeam> findByMember(User member) {
+  public List<ProjectTeam> findByMember(Users member) {
     Query query = em.createNamedQuery("ProjectTeam.findByTeamMember",
             ProjectTeam.class).setParameter("user", member);
     return query.getResultList();
@@ -169,7 +168,7 @@ public class ProjectTeamFacade {
   }
 
   /**
-   * Get the current role of User <i>user</i> in Project <i>project</i>.
+   * Get the current role of Users <i>user</i> in Project <i>project</i>.
    * <p/>
    * @param project
    * @param user
@@ -189,7 +188,7 @@ public class ProjectTeamFacade {
   }
 
   /**
-   * Get the current role of User <i>user</i> in Project <i>project</i>.
+   * Get the current role of Users <i>user</i> in Project <i>project</i>.
    * <p/>
    * @param project
    * @param user
@@ -219,7 +218,7 @@ public class ProjectTeamFacade {
   }
 
   /**
-   * Remove the ProjectTeam entry for User <i>user</i> in Project
+   * Remove the ProjectTeam entry for Users <i>user</i> in Project
    * <i>project</i>.
    * <p/>
    * @param project
@@ -233,7 +232,7 @@ public class ProjectTeamFacade {
   }
 
   /**
-   * Remove the ProjectTeam entry for the User with email <i>email</i> in
+   * Remove the ProjectTeam entry for the Users with email <i>email</i> in
    * Project <i>project</i>.
    * <p/>
    * @param project
@@ -247,7 +246,7 @@ public class ProjectTeamFacade {
   }
 
   /**
-   * Update the team role of User <i>user</i> in Project <i>project</i>.
+   * Update the team role of Users <i>user</i> in Project <i>project</i>.
    * <p/>
    * @param project
    * @param user
@@ -263,7 +262,7 @@ public class ProjectTeamFacade {
   }
 
   /**
-   * Update the team role of the User with email <i>email</i> in Project
+   * Update the team role of the Users with email <i>email</i> in Project
    * <i>project</i>.
    * <p/>
    * @param project
@@ -277,7 +276,7 @@ public class ProjectTeamFacade {
   }
 
   /**
-   * Find the ProjectTeam entry for Project <i>project</i> and User <i>user</i>.
+   * Find the ProjectTeam entry for Project <i>project</i> and Users <i>user</i>.
    * <p/>
    * @param project
    * @param user
@@ -289,7 +288,7 @@ public class ProjectTeamFacade {
   }
 
   /**
-   * Check if the User <i>user</i> is a member of the Project <i>project</i>.
+   * Check if the Users <i>user</i> is a member of the Project <i>project</i>.
    * <p/>
    * @param project
    * @param user
@@ -304,7 +303,7 @@ public class ProjectTeamFacade {
   }
 
   /**
-   * Check if the User <i>user</i> is a member of the Project <i>project</i>.
+   * Check if the Users <i>user</i> is a member of the Project <i>project</i>.
    * <p/>
    * @param project
    * @param user
@@ -348,8 +347,5 @@ public class ProjectTeamFacade {
     }
   }
 
-  public List<ProjectTeam> findByMember(Users u) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
 
 }

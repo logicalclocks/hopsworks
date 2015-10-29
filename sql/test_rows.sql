@@ -15,10 +15,9 @@ INSERT INTO `users` (`uid`, `username`, `password`, `email`, `fname`, `lname`, `
 --
 
 INSERT INTO `organization` (`id`, `uid`, `org_name`, `website`, `contact_person`, `contact_email`, `department`, `phone`, `fax`) VALUES
-(2, 10000, 'KI', 'www.ki.se', 'Admin Admin', 'admin@kth.se', 'MEB', '+4670080010', '+4670080015');
+(2, 10001, 'KI', 'www.ki.se', 'Admin Admin', 'admin@kth.se', 'MEB', '+4670080010', '+4670080015'),
 (3, 10002, 'KI', 'www.ki.se', 'Admin Admin', 'admin@kth.se', 'MEB', '+4670080010', '+4670080015'),
-(4, 10003, 'KI', 'www.ki.se', 'Admin Admin', 'admin@kth.se', 'MEB', '+4670080010', '+4670080015'),
-(8, 10000, 'KI', 'www.ki.se', 'Admin Admin', 'admin@kth.se', 'MEB', '+4670080010', '+4670080015');
+(4, 10003, 'KI', 'www.ki.se', 'Admin Admin', 'admin@kth.se', 'MEB', '+4670080010', '+4670080015');
 
 -- --------------------------------------------------------
 --

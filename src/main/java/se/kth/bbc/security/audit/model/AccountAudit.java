@@ -29,7 +29,7 @@ import se.kth.hopsworks.user.model.Users;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "account_audit")
+@Table(name = "hopsworks.account_audit")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "AccountAudit.findAll",

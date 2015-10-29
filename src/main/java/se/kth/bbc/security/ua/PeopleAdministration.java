@@ -37,7 +37,6 @@ import javax.transaction.UserTransaction;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.ua.model.Address;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.ua.model.Yubikey;
 import se.kth.hopsworks.user.model.Users;
@@ -190,12 +189,12 @@ public class PeopleAdministration implements Serializable {
     this.yRequests = yRequests;
   }
 
-  public List<String> getUserRole(User p) {
+  public List<String> getUserRole(Users p) {
     List<String> list = userManager.findGroups(p.getUid());
     return list;
   }
 
-  public String getChanged_Status(User p) {
+  public String getChanged_Status(Users p) {
     return PeopleAccountStatus.values()[userManager.findByEmail(p.getEmail()).
             getStatus() - 1].name();
   }
@@ -323,7 +322,7 @@ public class PeopleAdministration implements Serializable {
    *
    * @param user1
    */
-  public void rejectUser(User user1) {
+  public void rejectUser(Users user1) {
 
     if (user1 == null) {
       MessagesController.addErrorMessage("Error", "No user found!");

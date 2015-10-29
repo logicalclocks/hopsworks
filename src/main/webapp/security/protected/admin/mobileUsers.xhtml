@@ -35,11 +35,11 @@
           <div class="content">
             <h:form id="reqdataForm">
               <p:dataTable id="userReqTable" var="req"
-                           value="#{peopleAministration.allRequests}" 
+                           value="#{peopleAdministration.allRequests}" 
                            widgetVar="reqsTable"
                            emptyMessage="No open user requests"
                            rowKey="#{req.email}" 
-                           selection="#{peopleAministration.selectedUsers}" 
+                           selection="#{peopleAdministration.selectedUsers}" 
                            editable="true" editMode="cell">
 
                 <p:column id="nameColumn" headerText="First Name"  
@@ -63,26 +63,26 @@
 
                 <p:column id="roleColumn" headerText="Role">
                   <p:selectOneMenu id="roleChoose" 
-                                   value="#{peopleAministration.sgroup}" 
+                                   value="#{peopleAdministration.sgroup}" 
                                    editable="false">
                     <f:selectItem itemLabel="Select Role"
                                   itemValue="#"
                                   noSelectionOption="true" />
-                    <f:selectItems value="#{peopleAministration.groups}"/>
+                    <f:selectItems value="#{peopleAdministration.groups}"/>
                   </p:selectOneMenu>
                 </p:column>
 
                 <p:column id="actionColumn" headerText="Action">
                   <h:panelGrid columns="2" style="width: auto">                                                    
                     <p:commandLink styleClass="ui-button-remove fa fa-ban" 
-                                   action="#{peopleAministration.rejectUser(req)}"
+                                   action="#{peopleAdministration.rejectUser(req)}"
                                    update="@form">
                       <p:confirm header="Reject user" 
                                  message="Are you sure you want to reject this user?" 
                                  icon="ui-icon-alert"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-check" 
-                                   actionListener="#{peopleAministration.activateUser(req)}" 
+                                   actionListener="#{peopleAdministration.activateUser(req)}" 
                                    update="@form">
                       <p:confirm header="Activate user" 
                                  message="Activate selected user?" 

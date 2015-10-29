@@ -30,7 +30,7 @@ import se.kth.hopsworks.user.model.Users;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "yubikey")
+@Table(name = "hopsworks.yubikey")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Yubikey.findAll",

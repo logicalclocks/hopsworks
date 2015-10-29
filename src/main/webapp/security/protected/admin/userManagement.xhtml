@@ -39,8 +39,8 @@
                 <p:growl id="growl" life="2000"/>
 
                 <p:dataTable id="userdataTable" var="muser" 
-                             value="#{peopleAministration.allUsers}" 
-                             filteredValue="#{peopleAministration.filteredUsers}" 
+                             value="#{peopleAdministration.allUsers}" 
+                             filteredValue="#{peopleAdministration.filteredUsers}" 
                              widgetVar="usersTable"
                              emptyMessage="No users found with given criteria"
                              rowKey="#{muser.email}"
@@ -65,16 +65,16 @@
 
                   <p:column id="statCol"  filterBy="#{muser.status}" 
                             headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{peopleAministration.getChanged_Status(muser)}"/>
+                    <h:outputText value="#{peopleAdministration.getChanged_Status(muser)}"/>
                   </p:column>
 
                   <p:column id="roleNCol" headerText="Role" style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{peopleAministration.getUserRole(muser)}" />
+                    <h:outputText value="#{peopleAdministration.getUserRole(muser)}" />
                   </p:column>
 
 
                   <p:column id="actionUserColumn" headerText="Modify" style="width:20%;font-size: 12px;">                                                 
-                    <p:commandLink  action="#{peopleAministration.modifyUser(muser)}" update="@form" styleClass="fa fa-pencil-square-o" value=""/>
+                    <p:commandLink  action="#{peopleAdministration.modifyUser(muser)}" update="@form" styleClass="fa fa-pencil-square-o" value=""/>
                   </p:column>
                 </p:dataTable>                                            
               </h:form>   

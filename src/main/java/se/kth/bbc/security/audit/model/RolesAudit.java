@@ -22,7 +22,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -30,7 +29,7 @@ import se.kth.hopsworks.user.model.Users;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "roles_audit")
+@Table(name = "hopsworks.roles_audit")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "RolesAudit.findAll",

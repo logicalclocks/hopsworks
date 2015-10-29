@@ -8,7 +8,6 @@ package se.kth.bbc.security.ua.authz;
 import javax.ejb.EJB;
 import se.kth.bbc.security.ua.BBCGroup;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -20,27 +19,27 @@ public class PolicyAdministrationPoint {
   @EJB
   private UserManager userPolicMgr;
 
-  public boolean isInAdminRole(User user) {
+  public boolean isInAdminRole(Users user) {
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.SYS_ADMIN.
             name());
   }
 
-  public boolean isInDataProviderRole(User user) {
+  public boolean isInDataProviderRole(Users user) {
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.BBC_ADMIN.
             name());
   }
 
-  public boolean isInAuditorRole(User user) {
+  public boolean isInAuditorRole(Users user) {
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.AUDITOR.
             name());
   }
 
-  public boolean isInResearcherRole(User user) {
+  public boolean isInResearcherRole(Users user) {
     return userPolicMgr.findGroups(user.getUid()).contains(
             BBCGroup.BBC_RESEARCHER.name());
   }
 
-  public boolean isInGuestRole(User user) {
+  public boolean isInGuestRole(Users user) {
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.BBC_GUEST.
             name());
   }
@@ -75,7 +74,7 @@ public class PolicyAdministrationPoint {
             name());
   }
 
-  public String redirectUser(User user) {
+  public String redirectUser(Users user) {
 
     if (isInAdminRole(user)) {
       return "adminIndex";

@@ -35,11 +35,11 @@
             <h:form id="yubikeyReqdataForm">
               <p:dataTable id="yubikeyUserReqTable"
                            var="yreq" 
-                           value="#{peopleAministration.allYubikeyRequests}" 
+                           value="#{peopleAdministration.allYubikeyRequests}" 
                            widgetVar="reqsTable" 
                            emptyMessage="No open user requests"
                            rowKey="#{yreq.email}" 
-                           selection="#{peopleAministration.selectedUsers}"
+                           selection="#{peopleAdministration.selectedUsers}"
                            editable="true" editMode="cell">
 
                 <p:column id="ynameColumn" headerText="First Name" 
@@ -65,27 +65,27 @@
 
                   <p:selectOneMenu id="yroleChoose" 
                                    rendered="#{yreq.yubikey.status==1}"
-                                   value="#{peopleAministration.sgroup}"
+                                   value="#{peopleAdministration.sgroup}"
                                    editable="false"
                                    >
                     <f:selectItem itemLabel="Select Role" 
                                   itemValue="#"
                                   />
-                    <f:selectItems value="#{peopleAministration.groups}"/>
+                    <f:selectItems value="#{peopleAdministration.groups}"/>
                   </p:selectOneMenu>
                 </p:column>
 
                 <p:column id="yactionColumn" headerText="Action">
                   <h:panelGrid columns="2" style="width: auto">                                                    
                     <p:commandLink styleClass="ui-button-remove fa fa-ban" 
-                                   action="#{peopleAministration.rejectUser(yreq)}" 
+                                   action="#{peopleAdministration.rejectUser(yreq)}" 
                                    update="@form">
                       <p:confirm header="Reject user" 
                                  message="Are you sure you want to reject this user?"
                                  icon="ui-icon-alert"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-check" 
-                                   action="#{peopleAministration.activateYubikeyUser(yreq)}" 
+                                   action="#{peopleAdministration.activateYubikeyUser(yreq)}" 
                                    update="@form">
                       <p:confirm header="Allow user" 
                                  message="Activate selected user?"

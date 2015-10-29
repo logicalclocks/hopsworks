@@ -42,7 +42,6 @@ import se.kth.bbc.project.privacy.model.Consent;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -91,7 +90,7 @@ public class ProjectMB implements Serializable {
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
 
-  private List<User> usernames;
+  private List<Users> usernames;
   private ProjectTeam projectTeamEntry;
   private List<Theme> selectedUsernames;
   private List<Theme> themes;
@@ -158,7 +157,7 @@ public class ProjectMB implements Serializable {
     this.sessionState = sessionState;
   }
 
-  public List<User> getUsersname() {
+  public List<Users> getUsersname() {
     return usernames;
   }
 
@@ -797,7 +796,7 @@ public class ProjectMB implements Serializable {
       Logger.getLogger(ProjectMB.class.getName()).log(Level.SEVERE, null, ex);
     }
     consent.setDate(new Date());
-    consent.setProject(sessionState.getActiveProject());
+    consent.setProjectName(sessionState.getActiveProject());
     consent.setStatus("PENDING");
     consent.setName(event.getFile().getFileName());
 
@@ -831,7 +830,7 @@ public class ProjectMB implements Serializable {
       Logger.getLogger(ProjectMB.class.getName()).log(Level.SEVERE, null, ex);
     }
     consent.setDate(new Date());
-    consent.setProject(sessionState.getActiveProject());
+    consent.setProjectName(sessionState.getActiveProject());
     consent.setStatus("PENDING");
     consent.setName(event.getFile().getFileName());
 
@@ -865,7 +864,7 @@ public class ProjectMB implements Serializable {
       Logger.getLogger(ProjectMB.class.getName()).log(Level.SEVERE, null, ex);
     }
     consent.setDate(new Date());
-    consent.setProject(sessionState.getActiveProject());
+    consent.setProjectName(sessionState.getActiveProject());
     consent.setStatus("PENDING");
     consent.setName(event.getFile().getFileName());
 

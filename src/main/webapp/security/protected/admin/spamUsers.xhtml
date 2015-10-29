@@ -35,11 +35,11 @@
           <div class="content">
             <h:form id="spamReuests">
               <p:dataTable id="spamUserReqTable" var="req" 
-                           value="#{peopleAministration.spamUsers}" 
+                           value="#{peopleAdministration.spamUsers}" 
                            widgetVar="spamReqsTable" 
                            emptyMessage="No open user requests"
                            rowKey="#{req.email}" 
-                           selection="#{peopleAministration.selectedUsers}"
+                           selection="#{peopleAdministration.selectedUsers}"
                            editable="true" 
                            editMode="cell">
 
@@ -72,7 +72,7 @@
                 <p:column id="sactionColumn" headerText="Action">
                   <h:panelGrid columns="2" style="width: auto">                                                    
                     <p:commandLink styleClass="ui-button-remove fa fa-ban" 
-                                   action="#{peopleAministration.rejectUser(req)}" 
+                                   action="#{peopleAdministration.rejectUser(req)}" 
                                    update="@form">
                       <p:confirm header="Reject user" 
                                  message="Are you sure you want to reject this user?" 

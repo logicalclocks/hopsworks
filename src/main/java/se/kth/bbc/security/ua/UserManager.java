@@ -199,7 +199,7 @@ public class UserManager {
     List existing = em.createQuery(
             "SELECT p FROM Users p WHERE p.status ='"
             + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()
-            + "' AND p.yubikey_user = " + status)
+            + "' AND p.mode = " + status)
             .getResultList();
     return (existing.size() > 0);
   }
@@ -216,8 +216,6 @@ public class UserManager {
     List<Users> query = em.createQuery(
             "SELECT p FROM Users p WHERE p.status !='"
             + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()
-            + "' AND p.status!='" + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.
-            getValue()
             + "' AND p.status!='"
             + PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()
             + "' AND p.status!='" + PeopleAccountStatus.SPAM_ACCOUNT.getValue()

@@ -1,3 +1,8 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package se.kth.bbc.project.privacy.model;
 
 import java.io.Serializable;
@@ -25,63 +30,72 @@ import se.kth.bbc.project.Project;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "hopsworks.consent")
+@Table(name = "consent")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Consent.findAll",
-          query = "SELECT c FROM Consent c"),
+          query
+          = "SELECT c FROM Consent c"),
   @NamedQuery(name = "Consent.findById",
-          query = "SELECT c FROM Consent c WHERE c.id = :id"),
+          query
+          = "SELECT c FROM Consent c WHERE c.id = :id"),
   @NamedQuery(name = "Consent.findByDate",
-          query = "SELECT c FROM Consent c WHERE c.date = :date"),
+          query
+          = "SELECT c FROM Consent c WHERE c.date = :date"),
+  @NamedQuery(name = "Consent.findByProjectOwner",
+          query
+          = "SELECT c FROM Consent c WHERE c.projectOwner = :projectOwner"),
   @NamedQuery(name = "Consent.findByStatus",
-          query = "SELECT c FROM Consent c WHERE c.status = :status"),
+          query
+          = "SELECT c FROM Consent c WHERE c.status = :status"),
   @NamedQuery(name = "Consent.findByName",
-          query = "SELECT c FROM Consent c WHERE c.name = :name"),
-  @NamedQuery(name = "Consent.findByProject",
-          query = "SELECT c FROM Consent c WHERE c.project = :project"),
+          query
+          = "SELECT c FROM Consent c WHERE c.name = :name"),
   @NamedQuery(name = "Consent.findByType",
-          query = "SELECT c FROM Consent c WHERE c.type = :type")})
+          query
+          = "SELECT c FROM Consent c WHERE c.type = :type")})
 public class Consent implements Serializable {
-
-  @JoinColumn(name = "project_id",
-          referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private Project project;
   private static final long serialVersionUID = 1L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
   @Column(name = "id")
-  private Long id;
+  private Integer id;
   @Column(name = "date")
   @Temporal(TemporalType.DATE)
   private Date date;
-  @Lob
-  @Column(name = "consent_form")
-  private byte[] consentForm;
+  @Size(max = 245)
+  @Column(name = "project_owner")
+  private String projectOwner;
   @Size(max = 30)
   @Column(name = "status")
   private String status;
-  @Size(max = 80)
+  @Size(max = 128)
   @Column(name = "name")
   private String name;
-  @Size(max = 20)
+  @Size(max = 30)
   @Column(name = "type")
   private String type;
+  @Lob
+  @Column(name = "consent_form")
+  private byte[] consentForm;
+  @JoinColumn(name = "project_name",
+          referencedColumnName = "projectname")
+  @ManyToOne
+  private Project projectName;
 
   public Consent() {
   }
 
-  public Consent(Long id) {
+  public Consent(Integer id) {
     this.id = id;
   }
 
-  public Long getId() {
+  public Integer getId() {
     return id;
   }
 
-  public void setId(Long id) {
+  public void setId(Integer id) {
     this.id = id;
   }
 
@@ -91,6 +105,14 @@ public class Consent implements Serializable {
 
   public void setDate(Date date) {
     this.date = date;
+  }
+
+  public String getProjectOwner() {
+    return projectOwner;
+  }
+
+  public void setProjectOwner(String projectOwner) {
+    this.projectOwner = projectOwner;
   }
 
   public String getStatus() {
@@ -109,6 +131,14 @@ public class Consent implements Serializable {
     this.name = name;
   }
 
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
   public byte[] getConsentForm() {
     return consentForm;
   }
@@ -117,12 +147,12 @@ public class Consent implements Serializable {
     this.consentForm = consentForm;
   }
 
-  public String getType() {
-    return type;
+  public Project getProjectName() {
+    return projectName;
   }
 
-  public void setType(String type) {
-    this.type = type;
+  public void setProjectName(Project projectName) {
+    this.projectName = projectName;
   }
 
   @Override
@@ -139,8 +169,8 @@ public class Consent implements Serializable {
       return false;
     }
     Consent other = (Consent) object;
-    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
-            equals(other.id))) {
+    if ((this.id == null && other.id != null) ||
+            (this.id != null && !this.id.equals(other.id))) {
       return false;
     }
     return true;
@@ -150,12 +180,5 @@ public class Consent implements Serializable {
   public String toString() {
     return "se.kth.bbc.project.privacy.model.Consent[ id=" + id + " ]";
   }
-
-  public Project getProject() {
-    return project;
-  }
-
-  public void setProject(Project project) {
-    this.project = project;
-  }
+ 
 }

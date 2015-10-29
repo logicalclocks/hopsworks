@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -46,7 +45,7 @@ public class ClientSessionState implements Serializable {
     }
   }
 
-  public void setActiveProjectByUserAndName(User user, String projectname) {
+  public void setActiveProjectByUserAndName(Users user, String projectname) {
     activeProject = projectFacade.findByNameAndOwner(projectname, user);
   }
 

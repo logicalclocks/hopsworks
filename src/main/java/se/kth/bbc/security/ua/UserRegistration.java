@@ -30,7 +30,6 @@ import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.audit.LoginsAuditActions;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.user.model.Users;
 
 /**

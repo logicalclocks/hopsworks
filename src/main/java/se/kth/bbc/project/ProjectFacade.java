@@ -7,7 +7,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
@@ -77,7 +76,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
    */
   public List<Project> findByUser(String email) {
     TypedQuery<Users> query = em.createNamedQuery(
-            "User.findByEmail", Users.class).setParameter(
+            "Users.findByEmail", Users.class).setParameter(
                     "email", email);
     Users user = query.getSingleResult();
     return findByUser(user);
@@ -91,7 +90,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @return The project with given name created by given user, or null if such
    * does not exist.
    */
-  public Project findByNameAndOwner(String projectname, User user) {
+  public Project findByNameAndOwner(String projectname, Users user) {
     TypedQuery<Project> query = em.
             createNamedQuery("Project.findByOwnerAndName",
                     Project.class).setParameter("name", projectname).
@@ -114,9 +113,9 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @deprecated use findByNameAndOwner(String projectname, User user) instead.
    */
   public Project findByNameAndOwnerEmail(String projectname, String email) {
-    TypedQuery<User> query = em.createNamedQuery("User.findByEmail",
-            User.class).setParameter("email", email);
-    User user = query.getSingleResult();
+    TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
+            Users.class).setParameter("email", email);
+    Users user = query.getSingleResult();
     return findByNameAndOwner(projectname, user);
   }
 
@@ -126,7 +125,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @param owner
    * @return
    */
-  public int countOwnedStudies(User owner) {
+  public int countOwnedStudies(Users owner) {
     TypedQuery<Long> query = em.createNamedQuery("Project.countProjectByOwner",
             Long.class);
     query.setParameter("owner", owner);
@@ -141,10 +140,10 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @deprecated Use countOwnedStudies(User owner) instead.
    */
   public int countOwnedStudies(String email) {
-    TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
+    TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail", Users.class);
     query.setParameter("email", email);
     //TODO: may throw an exception
-    User user = query.getSingleResult();
+    Users user = query.getSingleResult();
     return countOwnedStudies(user);
   }
 
@@ -154,7 +153,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @param user
    * @return
    */
-  public List<Project> findOwnedStudies(User user) {
+  public List<Project> findOwnedStudies(Users user) {
     TypedQuery<Project> query = em.createNamedQuery("Project.findByOwner",
             Project.class);
     query.setParameter("owner", user);

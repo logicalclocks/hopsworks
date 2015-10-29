@@ -22,7 +22,6 @@ import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.user.model.Users;
 
 /**

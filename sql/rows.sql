@@ -7,7 +7,7 @@ INSERT INTO `bbc_group` (`group_name`, `group_desc`, `gid`) VALUES
 ('BBC_ADMIN','Data Owner', 1001),
 ('BBC_RESEARCHER','Users to run experiment', 1002),
 ('BBC_GUEST','New users', 1003),
-('AUDITOR','To audit the platform',1004)
+('AUDITOR','To audit the platform',1004),
 ('SYS_ADMIN', 'Platform administrator', 1005),
 ('BBC_USER', 'Registered users in the system', 1006);
 

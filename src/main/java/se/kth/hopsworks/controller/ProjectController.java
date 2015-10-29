@@ -10,7 +10,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.*;
 import javax.ws.rs.core.Response;
-
 import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
@@ -26,9 +25,7 @@ import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
-import se.kth.bbc.project.services.ProjectServices;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
@@ -192,7 +189,7 @@ public class ProjectController {
 //          List<ProjectTeam> members = projectTeamFacade.findMembersByProject(
 //                  project);
 //          for (ProjectTeam pt : members) {
-//            User myUser = pt.getUser();
+//            Users myUser = pt.getUser();
 //            List<SshKeys> keys = sshKeysBean.findAllById(myUser.getUid());
 //            List<String> publicKeys = new ArrayList<>();
 //            for (SshKeys k : keys) {
@@ -438,7 +435,7 @@ public class ProjectController {
 //              ProjectServiceEnum.SSH) == 0) {
 //        try {
 //          String email = projectTeam.getProjectTeamPK().getTeamMember();
-//          User user = userBean.getUserByEmail(email);
+//          Users user = userBean.getUserByEmail(email);
 //          LocalhostServices.createUserAccount(user.getUsername(), project.
 //                  getName(), publicKeys);
 //        } catch (IOException e) {
