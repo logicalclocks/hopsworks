@@ -163,7 +163,7 @@ public class SparkController {
   }
 
   public String getJarPathInHDFS() {
-    String path = "hdfs:///user/" + getSparkUser() + "/spark.jar";
+    String path = "/srv/spark/spark.jar";
     Constants.DEFAULT_SPARK_JAR_HDFS_PATH = path;
     return path;
   }

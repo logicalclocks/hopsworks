@@ -262,6 +262,10 @@ public class ProjectService {
       if (project != null) {
         projectController.createProjectLogResources(owner, project);
       }
+      else {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), 
+              ResponseMessages.PROJECT_NAME_EXIST);    
+    }
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);
@@ -291,11 +295,12 @@ public class ProjectService {
       failedMembers = projectController.addMembers(project, owner, projectDTO.
               getProjectTeam());
       //add the services for the project
-      projectController.addServices(project, projectServices, owner);
+      projectController.addServices(project, projectServices, owner); 
     }
 
-    json.setStatus("201");// Created  
+    json.setStatus("201");// Created 
     json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
+    
 
     if (failedMembers != null) {
       json.setFieldErrors(failedMembers);

@@ -78,8 +78,15 @@ public class Utils {
    */
   public int addNewTemplate(Template template) throws ApplicationException {
 
-    try {
-      return this.templateFacade.addTemplate(template);
+    try {        
+        if(!this.templateFacade.isTemplateAvailable(template.getName().toLowerCase())){
+            return this.templateFacade.addTemplate(template);
+        }
+        else{
+            throw new DatabaseException("Template name "+template.getName()+ " already available");
+        }
+            
+      
     } catch (DatabaseException e) {
       throw new ApplicationException("Utils.java: Could not add new template "
               + template.getName(), e);
