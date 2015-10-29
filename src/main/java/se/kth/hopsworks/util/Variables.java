@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package se.kth.rest.application.config;
+package se.kth.hopsworks.util;
 
 import java.io.Serializable;
 import javax.persistence.Basic;

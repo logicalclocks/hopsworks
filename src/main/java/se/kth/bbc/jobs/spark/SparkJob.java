@@ -63,7 +63,7 @@ public final class SparkJob extends YarnJob {
 
     //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
     try {
-      runner = runnerbuilder.getYarnRunner();
+      runner = runnerbuilder.getYarnRunner(jobDescription.getProject().getName());
     } catch (IOException e) {
       logger.log(Level.SEVERE,
               "Failed to create YarnRunner.", e);

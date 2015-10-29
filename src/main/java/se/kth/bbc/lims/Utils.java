@@ -67,10 +67,10 @@ public final class Utils {
   public static String getYarnUser() {
     String machineUser = System.getProperty("user.name");
     if (machineUser == null) {
-      machineUser = Constants.DEFAULT_YARN_USER;
+      machineUser = Constants.DEFAULT_YARN_SUPERUSER;
       logger.log(Level.WARNING,
               "Username not found in system properties, using default \""
-              + Constants.DEFAULT_YARN_USER + "\"");
+              + Constants.DEFAULT_YARN_SUPERUSER + "\"");
     }
     return machineUser;
   }

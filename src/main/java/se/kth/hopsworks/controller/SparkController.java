@@ -20,8 +20,8 @@ import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.user.model.Users;
-import se.kth.rest.application.config.Variables;
-import se.kth.rest.application.config.VariablesFacade;
+import se.kth.hopsworks.util.Variables;
+import se.kth.hopsworks.util.VariablesFacade;
 
 /**
  * Interaction point between the Spark front- and backend.
@@ -34,17 +34,12 @@ public class SparkController {
   private static final Logger logger = Logger.getLogger(SparkController.class.
       getName());
 
-  private static String SPARK_USER;
-
   @EJB
   private FileOperations fops;
   @EJB
   private AsynchronousJobExecutor submitter;
   @EJB
   private ActivityFacade activityFacade;
-
-  @EJB
-  private VariablesFacade variables;
 
   /**
    * Start the Spark job as the given user.
@@ -95,8 +90,9 @@ public class SparkController {
   public boolean isSparkJarAvailable() {
     boolean isInHdfs;
     try {
-      isInHdfs = fops.exists(getJarPathInHDFS());
+      isInHdfs = fops.exists(Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
     } catch (IOException e) {
+      logger.warning("Cannot get Spark jar file from HDFS: " + Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
       //Can't connect to HDFS: return false
       return false;
     }
@@ -107,9 +103,8 @@ public class SparkController {
     File localSparkJar = new File(Constants.DEFAULT_SPARK_JAR_PATH);
     if (localSparkJar.exists()) {
       try {
-        String hdfsJarPath = getJarPathInHDFS();
+        String hdfsJarPath = Constants.DEFAULT_SPARK_JAR_HDFS_PATH;
         fops.copyToHDFSFromLocal(false, Constants.DEFAULT_SPARK_JAR_PATH, hdfsJarPath
-        //            Constants.DEFAULT_SPARK_JAR_HDFS_PATH
         );
       } catch (IOException e) {
         return false;
@@ -144,27 +139,4 @@ public class SparkController {
     return config;
   }
 
-  public String getSparkUser() {
-    if (SPARK_USER != null) {
-      return SPARK_USER;
-    }
-    Variables sparkUser = variables.findById(Constants.VARIABLE_SPARK_USER);
-    if (sparkUser == null) {
-      SPARK_USER = Constants.DEFAULT_SPARK_USER;
-    } else {
-      String user = sparkUser.getValue();
-      if (user.isEmpty()) {
-        SPARK_USER = Constants.DEFAULT_SPARK_USER;
-      } else {
-        SPARK_USER = user;
-      }
-    }
-    return SPARK_USER;
-  }
-
-  public String getJarPathInHDFS() {
-    String path = "/srv/spark/spark.jar";
-    Constants.DEFAULT_SPARK_JAR_HDFS_PATH = path;
-    return path;
-  }
 }

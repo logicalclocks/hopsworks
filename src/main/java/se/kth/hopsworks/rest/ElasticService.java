@@ -48,8 +48,8 @@ import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.util.Ip;
-import se.kth.rest.application.config.Variables;
-import se.kth.rest.application.config.VariablesFacade;
+import se.kth.hopsworks.util.Variables;
+import se.kth.hopsworks.util.VariablesFacade;
 
 /**
  *
@@ -67,9 +67,6 @@ public class ElasticService {
 
   @EJB
   private NoCacheResponse noCacheResponse;
-
-  @EJB
-  private VariablesFacade variables;
 
   /**
    * Searches for content composed of projects and datasets. Hits two elastic indices: 'project' and 'dataset'
@@ -589,10 +586,7 @@ public class ElasticService {
 
   private String getElasticIpAsString() throws AppException {
     String addr = Constants.DEFAULT_ELASTIC_IP;
-    Variables elasticIp = variables.findById(Constants.VARIABLE_ELASTIC_ADDR);
-    if (elasticIp != null && elasticIp.getValue().isEmpty() == false) {
-      addr = elasticIp.getValue();
-    }
+
 
     // Validate the ip address pulled from the variables
     if (Ip.validIp(addr) == false) {

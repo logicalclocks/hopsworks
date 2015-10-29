@@ -124,7 +124,7 @@ public class AdamJob extends YarnJob {
     builder.setJobName(jobconfig.getAppName());
 
     try {
-      runner = builder.getYarnRunner();
+      runner = builder.getYarnRunner(jobDescription.getProject().getName());
     } catch (IOException e) {
       logger.log(Level.SEVERE,
               "Failed to create YarnRunner.", e);

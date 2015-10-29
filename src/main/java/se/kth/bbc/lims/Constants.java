@@ -14,8 +14,9 @@ public class Constants {
   public static final String HIWAY_JAR_PATH = "/srv/hiway-1.0.1-SNAPSHOT/hiway-core-1.0.1-SNAPSHOT.jar";
 
   //User under which yarn is run
-  public static final String DEFAULT_YARN_USER = "glassfish";
-  public static final String DEFAULT_SPARK_USER = "glassfish";
+  public static String DEFAULT_YARN_SUPERUSER = "glassfish";
+  public static String DEFAULT_HDFS_SUPERUSER = "glassfish";
+  public static String DEFAULT_SPARK_USER = "glassfish";
 
   //Relative output path (within hdfs project folder) which to write cuneiform in-/output to
   public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Logs/Cuneiform/";
@@ -45,14 +46,15 @@ public class Constants {
   public static final String HADOOP_CONF_DIR_VALUE = "/srv/hadoop/etc/hadoop";
 
   //Spark constants
+  public static String DEFAULT_SPARK_DIR = "/srv/spark";
   public static final String SPARK_STAGING_DIR = ".sparkStaging";
   public static final String SPARK_LOCRSC_SPARK_JAR = "__spark__.jar";
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
   public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
-  public static final String DEFAULT_SPARK_JAR_PATH = "/srv/spark/spark.jar";
+  public static String DEFAULT_SPARK_JAR_PATH = DEFAULT_SPARK_DIR + "/spark.jar";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
   public static String DEFAULT_SPARK_JAR_HDFS_PATH = "hdfs:///user/" + DEFAULT_SPARK_USER + "/spark.jar";
-  public static final String SPARK_DEFAULT_CLASSPATH = "/srv/spark/conf:/srv/spark/lib/*";
+  public static String SPARK_DEFAULT_CLASSPATH = DEFAULT_SPARK_DIR + "/conf:" + DEFAULT_SPARK_DIR + "/lib/*";
 
   //ADAM constants
   public static final String ADAM_MAINCLASS = "org.bdgenomics.adam.cli.ADAMMain";
@@ -72,10 +74,10 @@ public class Constants {
   public static final String DIR_FASTA = "fasta";
   public static final String DIR_VCF = "vcf";
   public static final String DIR_TEMPLATES = "Templates";
-
-  // Elasticsearch
+  public static final String PROJECT_STAGING_DIR = "resources";
   
-  public static final String DEFAULT_ELASTIC_IP = "localhost";
+  // Elasticsearch
+  public static String DEFAULT_ELASTIC_IP = "127.0.0.1";
   public static final int  ELASTIC_PORT = 9300;
   
   // Hopsworks
@@ -95,8 +97,30 @@ public class Constants {
   public static final String META_DATASET_CHILD_TYPE = "child";
   public static final String META_INODE_SEARCHABLE_FIELD = "searchable";
   public static final String META_INODE_OPERATION_FIELD = "operation";
-  public static final String VARIABLE_ELASTIC_ADDR = "elastic_ip";
+  
+  /**
+   * Global Variables taken from the DB
+   */
+  public static final String VARIABLE_ELASTIC_IP = "elastic_ip";
   public static final String VARIABLE_SPARK_USER = "spark_user";
+  public static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
+  public static final String VARIABLE_HDFS_SUPERUSER = "yarn_user";
+  public static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
+  public static final String VARIABLE_SPARK_DIR = "spark_dir";
+  public static final String VARIABLE_FLINK_DIR = "flink_dir";
+  public static final String VARIABLE_NDB_DIR = "ndb_dir";
+  public static final String VARIABLE_MYSQL_DIR = "mysql_dir";
+  
+
+  /**
+   * Default Directory locations
+   */
+  public static String DEFAULT_FLINK_DIR = "/usr/local/flink";
+  public static String DEFAULT_MYSQL_DIR = "/usr/local/mysql";
+  public static String DEFAULT_NDB_DIR = "/var/lib/mysql-cluster";
+  public static String DEFAULT_ZEPPELIN_DIR = "/srv/zeppelin";
+  
+  
   public static final int META_INODE_OPERATION_ADD = 0;
   public static final int META_INODE_OPERATION_DELETE = 1;
 

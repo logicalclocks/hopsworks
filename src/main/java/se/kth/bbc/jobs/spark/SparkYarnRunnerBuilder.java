@@ -53,19 +53,22 @@ public class SparkYarnRunnerBuilder {
   /**
    * Get a YarnRunner instance that will launch a Spark job.
    * <p/>
+   * @param project name of the project
    * @return The YarnRunner instance to launch the Spark job on Yarn.
    * @throws IOException If creation failed.
    */
-  public YarnRunner getYarnRunner() throws IOException {
+  public YarnRunner getYarnRunner(String project) throws IOException {
 
     //TODO: inlclude driver memory as am memory
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Constants.SPARK_AM_MAIN);
 
     //Set Spark staging directory
-    String stagingPath = File.separator + "user" + File.separator + Utils.
-            getYarnUser() + File.separator + Constants.SPARK_STAGING_DIR
-            + File.separator + YarnRunner.APPID_PLACEHOLDER;
+//    String stagingPath = File.separator + "user" + File.separator + Utils.
+//            getYarnUser() + File.separator + Constants.SPARK_STAGING_DIR
+//            + File.separator + YarnRunner.APPID_PLACEHOLDER;
+    String stagingPath = File.separator + "Projects" + File.separator + project + File.separator 
+        + Constants.PROJECT_STAGING_DIR + File.separator + YarnRunner.APPID_PLACEHOLDER;
     builder.localResourcesBasePath(stagingPath);
 
     //Add Spark jar
@@ -85,6 +88,8 @@ public class SparkYarnRunnerBuilder {
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
     builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
+    // TODO - Change spark user here
+//    builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
     if (classPath == null || classPath.isEmpty()) {
       builder.addToAppMasterEnvironment("CLASSPATH",
               Constants.SPARK_DEFAULT_CLASSPATH);
