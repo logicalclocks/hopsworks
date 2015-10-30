@@ -7,6 +7,9 @@ angular.module('hopsWorksApp')
               getAllVariables: function () {
                 return $http.get('/api/variables/all');
               },
+              getTwofactor: function () {
+                return $http.get('/api/variables/twofactor');
+              },
               getVariable: function (id) {
                 return $http.get('/api/variables/' + id);
               }

@@ -23,7 +23,6 @@ import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
@@ -79,7 +78,7 @@ public class RequestService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     Inode inode = inodes.findById(requestDTO.getInodeId());
     if (inode == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -200,7 +199,7 @@ public class RequestService {
               "Incomplete request!");
     }
     //should be removed when users and user merg.
-    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     Project project = projectFacade.find(requestDTO.getProjectId());
 
     if (project == null) {

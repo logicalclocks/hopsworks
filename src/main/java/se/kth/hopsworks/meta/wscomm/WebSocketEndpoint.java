@@ -18,9 +18,9 @@ import javax.websocket.server.ServerEndpoint;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeamFacade;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.meta.wscomm.message.Message;
 import se.kth.hopsworks.meta.wscomm.message.TextMessage;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -66,7 +66,7 @@ public class WebSocketEndpoint {
       }
     }
 
-    User user = this.projectTeamFacade.findUserByEmail(this.sender);
+    Users user = this.projectTeamFacade.findUserByEmail(this.sender);
     //returns the user role in project. Null if the user has no role in project
     this.userRole = this.projectTeamFacade.findCurrentRole(this.project, user);
     logger.log(Level.INFO, "User role in this project {0}", this.userRole);

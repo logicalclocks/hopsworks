@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+
+
+  <f:view contentType="text/html">
+
+    <h:head>
+      <title><ui:insert name="title">Admin Panel</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
+      <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+    </h:head>
+
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+      </ui:insert>
+
+      <div style="margin: 10% 10% 10% 10%" align="center">
+        <h:form>
+
+          <h:panelGrid columns="3" cellpadding="50">
+
+            <p:column >
+              <h:commandLink  action="userMgmt">
+                <p:graphicImage id="mgmt" 
+                                value="/resources/images/users/admin.png" 
+                                width="100"
+                                height="100"
+                                title="User Administration"
+                                >
+                </p:graphicImage>
+              </h:commandLink>   
+              <br></br>  
+              <p:outputLabel style="text-align: left" value="User Administration"></p:outputLabel>
+
+            </p:column>
+
+            <p:column>
+              <h:commandLink  action="adminAuditIndex">
+                <p:graphicImage id="audit" 
+                                value="/resources/images/users/audit.png" 
+                                width="100"
+                                height="100"
+                                title="Audit Management"
+                                >
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Audit Management"></p:outputLabel>
+
+            </p:column>
+
+            <p:column>
+              <h:commandLink  action="consentMgmt">
+                <p:graphicImage id="consent" 
+                                value="/resources/images/users/consent.jpg" 
+                                width="100"
+                                height="100"
+                                title="Consent and Ethical Approval"
+                                >
+                </p:graphicImage>
+
+              </h:commandLink>            
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Consent Management"></p:outputLabel>
+            </p:column>
+
+            <p:column>
+              <h:commandLink  action="mobUsers">
+                <p:graphicImage id="mobile" 
+                                value="/resources/images/users/mobile.png" 
+                                width="100"
+                                height="100"
+                                title="New Mobile Requests"
+                                >
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Mobile Users"></p:outputLabel>
+
+            </p:column>
+
+
+            <p:column>
+
+              <h:commandLink  action="yubikeyUsers">
+                <p:graphicImage id="yubikey" 
+                                value="/resources/images/users/yubikey.png" 
+                                width="100"
+                                height="100"
+                                title="New Yubikey Requests"
+                                >
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Yubikey Users"></p:outputLabel>
+
+            </p:column>
+
+
+            <p:column>
+              <h:commandLink  action="spamUsers">
+
+                <p:graphicImage id="spam" 
+                                value="/resources/images/users/spam.png" 
+                                width="100"
+                                height="100"
+                                title="Spam Requests"
+                                >
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Spam Requests"></p:outputLabel>
+            </p:column>
+
+          </h:panelGrid>
+        </h:form>
+      </div>
+      <p:dialog draggable="false" resizable="false" styleClass="requestPopup" 
+                position="right bottom" header="Open user requests"
+                visible="#{peopleStatusBean.checkForRequests()}">
+        <div align="center">
+          There are open user requests!<br/>
+          <p:commandButton action="#{peopleStatusBean.openRequests()}" 
+                           value="View requests"
+                           styleClass="viewReqButton">
+          </p:commandButton>
+        </div>
+      </p:dialog>
+
+    </h:body>
+  </f:view>
+</html>
