@@ -16,7 +16,8 @@
             <md-input-container style="height: 50px">            
               <input name="project_name" type="text" id="projectname"
                      ng-model="projectCreatorCtrl.projectName" tabindex="1"
-                     ng-pattern="/^(?!.*?__).*$/"
+                     ng-pattern="projectCreatorCtrl.regex"
+                                                                                                                                                                                                           ng-maxlength="24"
                      required
                      >
             </md-input-container>
@@ -28,6 +29,10 @@
             <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.pattern"
                     class="text-danger ng-hide">Invalid project name</span>
+
+            <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
+                  projectForm.project_name.$error.maxlength"
+                  class="text-danger ng-hide">Project name shouldn't be longer than 24 characters</span>
 
             <p></p>
 
@@ -99,7 +104,10 @@
 
       <button class="btn btn-default" type="button" ng-click="projectCreatorCtrl.close()" tabindex="5">Cancel</button>
       <button class="btn btn-primary" type="submit" 
-              ng-disabled="projectForm.project_name.$error.required || projectCreatorCtrl.working || projectForm.project_name.$error.pattern" tabindex="6">
+              ng-disabled="projectForm.project_name.$error.required
+              || projectCreatorCtrl.working
+              || projectForm.project_name.$error.pattern
+              || projectForm.project_name.$error.maxlength" tabindex="6">
         <i ng-if="projectCreatorCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
         Create
       </button>
