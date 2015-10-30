@@ -13,8 +13,12 @@ angular.module('hopsWorksApp')
           //generic
           var ws;
 
-          function init(){              
-             if(!isopen) {
+          function init(){ 
+             if(projectID !== $cookies.projectID){
+                 projectID = $cookies.projectID;
+                 isopen=false;
+             }
+             if(!isopen) {                 
                 ws = $websocket("ws://" + $location.host() + ":" + $location.port() + "/hopsworks/wspoint/" + projectID);
                 ws.onMessage(function (event) {
                   processMessage(JSON.parse(event.data));

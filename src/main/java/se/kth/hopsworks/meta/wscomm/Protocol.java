@@ -19,6 +19,7 @@ import se.kth.hopsworks.meta.wscomm.message.Command;
 import se.kth.hopsworks.meta.wscomm.message.Message;
 import se.kth.hopsworks.meta.wscomm.message.MetadataLogMessage;
 import se.kth.hopsworks.meta.wscomm.message.MetadataMessage;
+import se.kth.hopsworks.meta.wscomm.message.RemoveMetadataMessage;
 import se.kth.hopsworks.meta.wscomm.message.StoreMetadataMessage;
 import se.kth.hopsworks.meta.wscomm.message.TextMessage;
 import se.kth.hopsworks.meta.wscomm.message.UpdateMetadataMessage;
@@ -84,6 +85,8 @@ public class Protocol {
         return this.processStoreMetadataMessageCm(message);
       case UPDATE_METADATA:
         return this.processUpdateMetadataMessageCm(message);
+      case REMOVE_METADATA:
+        return this.processRemoveMetadataMessageCm(message);
       default:
         return processMessageNm(message);
     }
@@ -144,6 +147,35 @@ public class Protocol {
     return this.InodeMutation(inode, message);
 
   }
+  
+  
+    /**
+   * Handles the case of deleting existing inode metadata. 
+   * This will delete the metadata from the table only.
+   * This will not remove the elastic index of this record.
+   * <p/>
+   * @param message
+   * @return
+   */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  private Message processRemoveMetadataMessageCm(Message message) throws
+          ApplicationException {
+
+    List<EntityIntf> composite = ((RemoveMetadataMessage) message).
+            superParseSchema();
+
+    if(composite == null){
+      throw new ApplicationException("Incorrect json message/Missing values");
+    }
+    //delete metadata
+    Metadata metadata = (Metadata) message.parseSchema().get(0);
+    Inode inode = this.utils.removeMetadata(composite, metadata);
+
+    return this.InodeMutation(inode, message);
+
+  }
+  
+  
 
   /**
    * Processes incoming messages according to the command they carry, and
