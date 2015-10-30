@@ -145,7 +145,7 @@ public class UserManager {
   }
 
   public List<Users> findInactivateUsers() {
-    Query query = em.createNativeQuery("SELECT * FROM users p WHERE p.active = "
+    Query query = em.createNativeQuery("SELECT * FROM hopsworks.users p WHERE p.active = "
             + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
     List<Users> people = query.getResultList();
     return people;
@@ -261,7 +261,7 @@ public class UserManager {
 
   public List<String> findGroups(int uid) {
     String sql
-            = "SELECT group_name FROM bbc_group INNER JOIN people_group ON (people_group.gid = bbc_group.gid AND people_group.uid = "
+            = "SELECT group_name FROM hopsworks.bbc_group INNER JOIN hopsworks.people_group ON (hopsworks.people_group.gid = hopsworks.bbc_group.gid AND hopsworks.people_group.uid = "
             + uid + " )";
     List existing = em.createNativeQuery(sql).getResultList();
     return existing;
@@ -288,7 +288,7 @@ public class UserManager {
   public List<Users> filterUsersBasedOnStudy(String name) {
 
     Query query = em.createNativeQuery(
-            "SELECT * FROM users WHERE email NOT IN (SELECT team_member FROM study_team WHERE name=?)",
+            "SELECT * FROM hopsworks.users WHERE email NOT IN (SELECT team_member FROM hopsworks.project_team WHERE name=?)",
             Users.class).setParameter(1, name);
     return query.getResultList();
   }
@@ -397,7 +397,7 @@ public class UserManager {
    * @return
    */
   public int lastUserID() {
-    Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM users p");
+    Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM hopsworks.users p");
     Object obj = query.getSingleResult();
 
     if (obj == null) {

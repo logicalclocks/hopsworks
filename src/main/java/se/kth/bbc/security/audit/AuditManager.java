@@ -28,7 +28,7 @@ public class AuditManager {
   private EntityManager em;
 
   public Userlogins getLastUserLogin(int uid) {
-    String sql = "SELECT * FROM userlogins  WHERE uid=" + uid
+    String sql = "SELECT * FROM hopsworks.userlogins  WHERE uid=" + uid
             + " ORDER BY login_date DESC LIMIT 1 OFFSET 2";
     Query query = em.createNativeQuery(sql, Userlogins.class);
     query.setMaxResults(2);
@@ -49,7 +49,7 @@ public class AuditManager {
 
   public List<Userlogins> getUsersLoginsFromTo(Date from, Date to, String action) {
 
-    String sql = "SELECT * FROM userlogins  WHERE  (login_date >= '" + from
+    String sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '" + from
             + "' AND login_date <='" + to + "' AND action ='" + action + "')";
 
     Query query = em.createNativeQuery(sql, Userlogins.class);
@@ -66,7 +66,7 @@ public class AuditManager {
   public List<Userlogins> getUserLoginsFromTo(int uid, Date from, Date to,
           String action) {
 
-    String sql = "SELECT * FROM userlogins  WHERE (uid=" + uid
+    String sql = "SELECT * FROM hopsworks.userlogins  WHERE (uid=" + uid
             + " AND login_date >= '" + from + "' AND login_date <='" + to
             + "' AND action ='" + action + "')";
 
@@ -84,7 +84,7 @@ public class AuditManager {
   public List<AccountAudit> getAccountAudit(Date from, Date to,
           String action) {
 
-    String sql = "SELECT * FROM account_audit WHERE ( time >='" + from
+    String sql = "SELECT * FROM hopsworks.account_audit WHERE ( time >='" + from
             + "' AND time <='" + to + "' AND action ='"
             + action + "')";
     Query query = em.createNativeQuery(sql, AccountAudit.class);
@@ -100,7 +100,7 @@ public class AuditManager {
   public List<AccountAudit> getAccountAudit(int uid, Date from, Date to,
           String action) {
 
-    String sql = "SELECT * FROM account_audit WHERE (initiator=" + uid
+    String sql = "SELECT * FROM hopsworks.account_audit WHERE (initiator=" + uid
             + " AND time >='" + from + "' AND time <='" + to + "' AND action ='"
             + action + "')";
     Query query = em.createNativeQuery(sql, AccountAudit.class);
@@ -119,12 +119,12 @@ public class AuditManager {
     String sql = null;
 
     if (action.isEmpty() || action == null || action.equals("ALL")) {
-      sql = "SELECT * FROM roles_audit WHERE (target=" + uid
+      sql = "SELECT * FROM hopsworks.roles_audit WHERE (target=" + uid
               + " AND time >= '" + from + "' AND time <= '" + to
               + "')";
     } else {
 
-      sql = "SELECT * FROM roles_audit WHERE (target=" + uid
+      sql = "SELECT * FROM hopsworks.roles_audit WHERE (target=" + uid
               + " AND time >= '" + from + "' AND time <= '" + to
               + "' AND action = '"
               + action + "')";
@@ -146,10 +146,10 @@ public class AuditManager {
     String sql = null;
 
     if (action.isEmpty() || action == null || action.equals("ALL")) {
-      sql = "SELECT * FROM roles_audit WHERE ( time >= '" + from
+      sql = "SELECT * FROM hopsworks.roles_audit WHERE ( time >= '" + from
               + "' AND time <= '" + to + "')";
     } else {
-      sql = "SELECT * FROM roles_audit WHERE ( time >= '" + from
+      sql = "SELECT * FROM hopsworks.roles_audit WHERE ( time >= '" + from
               + "' AND time <= '" + to + "' AND action = '"
               + action + "')";
     }
@@ -167,7 +167,7 @@ public class AuditManager {
   public List<RolesAudit> getInitiatorRoletAudit(int uid, Date from, Date to,
           String action) {
 
-    String sql = "SELECT * FROM rolse_audit WHERE (initiator=" + uid
+    String sql = "SELECT * FROM hopsworks.rolse_audit WHERE (initiator=" + uid
             + " AND time >= '" + from + "' AND time <= '" + to
             + "' AND action ='"
             + action + "')";
