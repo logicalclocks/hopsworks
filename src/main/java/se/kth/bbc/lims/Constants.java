@@ -105,6 +105,7 @@ public class Constants {
   public static final String PRINT_FILENAME_DISALLOWED_CHARS
       = "__, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #";
   public static final String SHARED_FILE_SEPARATOR = "::";
+  public static final String DOUBLE_UNDERSCORE = "__";
 
   //Project creation: default datasets
   public static enum DefaultDataset {
