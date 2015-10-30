@@ -695,9 +695,8 @@ angular.module('hopsWorksApp')
                 if (!self.metaDataDetail) {
                 return;
                 }                
-                metadata.data='';
                 
-                MetadataActionService.updateMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
+                MetadataActionService.removeMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
                       .then(function (response) {
                         growl.success("Metadata deleted successfully", {title: 'Success', ttl: 2000});
                         self.setMetadataTemplate(self.currentFile);
