@@ -36,7 +36,11 @@ public class FolderNameValidator {
     } else if (name.endsWith(".")) {
       valid = false;
       reason = ResponseMessages.FOLDER_NAME_ENDS_WITH_DOT;
-    } else {
+    } else if (name.contains("" + "__")) {
+      valid = false;
+       reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
+               + Constants.FILENAME_DISALLOWED_CHARS;
+    }  else {
       for (char c : Constants.FILENAME_DISALLOWED_CHARS.toCharArray()) {
         if (name.contains("" + c)) {
           valid = false;
