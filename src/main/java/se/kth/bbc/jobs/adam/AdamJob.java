@@ -10,9 +10,9 @@ import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.jobs.yarn.YarnJob;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -23,16 +23,18 @@ public class AdamJob extends YarnJob {
   private static final Logger logger = Logger.getLogger(AdamJob.class.getName());
 
   private final AdamJobConfiguration jobconfig;
+  private final String sparkDir;
 
   public AdamJob(JobDescription job,
-          AsynchronousJobExecutor services, Users user) {
-    super(job, user, services);
+          AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir) {
+    super(job, services, user, hadoopDir);
     if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain a AdamJobConfiguration object. Received: "
               + job.getJobConfig().getClass());
     }
     this.jobconfig = (AdamJobConfiguration) job.getJobConfig();
+    this.sparkDir = sparkDir;
   }
 
   @Override
@@ -105,7 +107,7 @@ public class AdamJob extends YarnJob {
       jobconfig.setAppName("Untitled ADAM Job");
     }
     SparkYarnRunnerBuilder builder = new SparkYarnRunnerBuilder(
-            Constants.ADAM_DEFAULT_JAR_HDFS_PATH, Constants.ADAM_MAINCLASS);
+            Settings.ADAM_DEFAULT_JAR_HDFS_PATH, Settings.ADAM_MAINCLASS);
     //Set some ADAM-specific property values   
     builder.addSystemProperty("spark.serializer",
             "org.apache.spark.serializer.KryoSerializer");
@@ -124,7 +126,8 @@ public class AdamJob extends YarnJob {
     builder.setJobName(jobconfig.getAppName());
 
     try {
-      runner = builder.getYarnRunner(jobDescription.getProject().getName());
+      runner = builder.getYarnRunner(jobDescription.getProject().getName(), user.getUsername(),
+          hadoopDir, sparkDir);
     } catch (IOException e) {
       logger.log(Level.SEVERE,
               "Failed to create YarnRunner.", e);
@@ -132,16 +135,13 @@ public class AdamJob extends YarnJob {
       return false;
     }
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.
+    String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir, jobDescription.
             getProject().
             getName())
-            + Constants.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
+            + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.
-            getProject().
-            getName())
-            + Constants.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
-            + File.separator + "stderr.log";
+    String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir, jobDescription.getProject().getName())
+            + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()+ File.separator + "stderr.log";
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
     return true;
@@ -200,9 +200,9 @@ public class AdamJob extends YarnJob {
           SparkYarnRunnerBuilder builder) {
     //Add all to local resources and to classpath
     List<String> jars = services.getFileOperations().getChildNames(
-            Constants.ADAM_DEFAULT_HDFS_REPO);
+            Settings.ADAM_DEFAULT_HDFS_REPO);
     for (String jarname : jars) {
-      String sourcePath = "hdfs://" + Constants.ADAM_DEFAULT_HDFS_REPO + jarname;
+      String sourcePath = "hdfs://" + Settings.ADAM_DEFAULT_HDFS_REPO + jarname;
       builder.addExtraFile(jarname, sourcePath);
     }
   }

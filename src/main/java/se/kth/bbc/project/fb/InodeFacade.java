@@ -8,7 +8,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.lims.Constants;
+import se.kth.hopsworks.util.Settings;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -162,7 +162,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @return The sought for Inode, or null if this Inode does not exist.
    */
   public Inode getProjectRoot(String name) {
-    return getInode("/" + Constants.DIR_ROOT + "/" + name);
+    return getInode("/" + Settings.DIR_ROOT + "/" + name);
   }
 
   /**
@@ -214,7 +214,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
   public boolean isProjectRoot(Inode i) {
     Inode parent = findParent(i);
     if (!parent.getInodePK().getName().equals(
-            Constants.DIR_ROOT)) {
+            Settings.DIR_ROOT)) {
       return false;
     } else {
       //A node is the project root if its parent has the name $DIR_ROOT and its grandparent is the root node

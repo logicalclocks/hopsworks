@@ -60,20 +60,21 @@ public final class Utils {
     }
   }
 
-  public static String getHdfsRootPath(String projectname) {
-    return "/" + Constants.DIR_ROOT + "/" + projectname + "/";
+  public static String getHdfsRootPath(String hadoopDir, String projectname) {
+    return hadoopDir + "/" + projectname + "/";
   }
-
-  public static String getYarnUser() {
-    String machineUser = System.getProperty("user.name");
-    if (machineUser == null) {
-      machineUser = Constants.DEFAULT_YARN_SUPERUSER;
-      logger.log(Level.WARNING,
-              "Username not found in system properties, using default \""
-              + Constants.DEFAULT_YARN_SUPERUSER + "\"");
-    }
-    return machineUser;
-  }
+  
+//
+//  public static String getYarnUser() {
+//    String machineUser = System.getProperty("user.name");
+//    if (machineUser == null) {
+//      machineUser = Constants.DEFAULT_YARN_SUPERUSER;
+//      logger.log(Level.WARNING,
+//              "Username not found in system properties, using default \""
+//              + Constants.DEFAULT_YARN_SUPERUSER + "\"");
+//    }
+//    return machineUser;
+//  }
 
   public static String ensurePathEndsInSlash(String path) {
     if (!path.endsWith(File.separator)) {
@@ -121,4 +122,10 @@ public final class Utils {
     //fetch the whole file content at once
     return scanner.useDelimiter("\\Z").next();
   }
+  
+  
+  public static String getProjectUsername(String project, String username) {
+    return project + "__" + username;
+  }
+  
 }

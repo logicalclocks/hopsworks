@@ -7,9 +7,9 @@ import java.util.logging.Logger;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Orchestrates the execution of a Spark job: run job, update history
@@ -23,22 +23,27 @@ public final class SparkJob extends YarnJob {
           getLogger(SparkJob.class.getName());
 
   private final SparkJobConfiguration jobconfig; //Just for convenience
+  private final String sparkDir;
+  private final String sparkUser;
 
   /**
    *
    * @param job
    * @param user
    * @param services
+   * @param hadoopDir
    */
-  public SparkJob(JobDescription job,
-          Users user, AsynchronousJobExecutor services) {
-    super(job, user, services);
+  public SparkJob(JobDescription job, AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir,
+          String sparkUser) {
+    super(job, services, user, hadoopDir);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain a SparkJobConfiguration object. Received: "
               + job.getJobConfig().getClass());
     }
     this.jobconfig = (SparkJobConfiguration) job.getJobConfig();
+    this.sparkDir = sparkDir;
+    this.sparkUser = sparkUser;
   }
 
   @Override
@@ -63,7 +68,11 @@ public final class SparkJob extends YarnJob {
 
     //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
     try {
-      runner = runnerbuilder.getYarnRunner(jobDescription.getProject().getName());
+      runner = runnerbuilder.getYarnRunner(jobDescription.getProject().getName(), 
+          Utils.getProjectUsername(jobDescription.getProject().getName(), user.getUsername()),
+          Settings.getSparkDefaultClasspath(sparkDir), Settings.getHdfsSparkJarPath(sparkUser));
+      
+      
     } catch (IOException e) {
       logger.log(Level.SEVERE,
               "Failed to create YarnRunner.", e);
@@ -71,15 +80,15 @@ public final class SparkJob extends YarnJob {
       return false;
     }
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.
+    String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir, jobDescription.
             getProject().
             getName())
-            + Constants.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
+            + Settings.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.
+    String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir, jobDescription.
             getProject().
             getName())
-            + Constants.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
+            + Settings.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator + "stderr.log";
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);

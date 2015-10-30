@@ -17,11 +17,11 @@ import org.apache.commons.io.FileUtils;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.ClientSessionState;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.hopsworks.util.ConfigFileGenerator;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -62,6 +62,10 @@ public class NewProjectController implements Serializable {
   @EJB
   private ActivityFacade activityFacade;
 
+  @EJB
+  private Settings settings;
+  
+  
   @ManagedProperty(value = "#{projectManagedBean}")
   private transient ProjectMB studies;
 
@@ -195,14 +199,14 @@ public class NewProjectController implements Serializable {
   //create project on HDFS
   private void mkProjectDIR(String projectName) throws IOException {
 
-    String rootDir = Constants.DIR_ROOT;
+    String rootDir = Settings.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator + projectName;
     String resultsPath = projectPath + File.separator
-        + Constants.DIR_RESULTS;
+        + Settings.DIR_RESULTS;
     String cuneiformPath = projectPath + File.separator
-        + Constants.DIR_CUNEIFORM;
+        + Settings.DIR_CUNEIFORM;
     String samplesPath = projectPath + File.separator
-        + Constants.DIR_SAMPLES;
+        + Settings.DIR_SAMPLES;
 
     mkProjectLocalZeppelin(project.getName());
 
@@ -234,7 +238,7 @@ public class NewProjectController implements Serializable {
   private void mkProjectLocalZeppelin(String projectName) throws IOException {
 
     String projectPath
-        = Constants.ZEPPELIN_DIR + File.separator + "projects" + File.separator + projectName;
+        = settings.getZeppelinDir() + File.separator + "projects" + File.separator + projectName;
     try {
       FileUtils.deleteDirectory(new File(projectPath));
       logger.log(Level.INFO, "Removed existing zeppelin directory at: {0}", projectPath);

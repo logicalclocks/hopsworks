@@ -1,6 +1,5 @@
 package se.kth.hopsworks.util;
 
-import se.kth.bbc.lims.Constants;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +11,7 @@ public class LocalhostServices {
   public static String createUserAccount(String username, String projectName, List<String> sshKeys) throws IOException {
 
     String user = getUsernameInProject(username, projectName);
-    String home = Constants.HOPS_USERS_HOMEDIR + user;
+    String home = Settings.HOPS_USERS_HOMEDIR + user;
     if (new File(home).exists()) {
       throw new IOException("Home directory already exists: " + home);
     }
@@ -51,7 +50,7 @@ public class LocalhostServices {
     // Run using a bash script the following with sudo '/usr/sbin/deluser johnny'
 
     String user = getUsernameInProject(username, projectName);
-    String home = Constants.HOPS_USERS_HOMEDIR + user;
+    String home = Settings.HOPS_USERS_HOMEDIR + user;
 
     if (new File(home).exists() == false) {
       throw new IOException("Home directory does not exist: " + home);
@@ -84,7 +83,7 @@ public class LocalhostServices {
       throw new IllegalArgumentException("Email sent in - should be username");
     }
 
-    return username + Constants.HOPS_USERNAME_SEPARATOR + projectName;
+    return username + Settings.HOPS_USERNAME_SEPARATOR + projectName;
   }
 
   public static String getUsernameFromEmail(String email) {
@@ -95,8 +94,8 @@ public class LocalhostServices {
     if (username.contains("__")) {
       username.replace("__", "_");
     }
-    if (username.length() > Constants.MAX_USERNME_LEN) {
-      username = username.substring(0,Constants.MAX_USERNME_LEN-1);
+    if (username.length() > Settings.MAX_USERNME_LEN) {
+      username = username.substring(0,Settings.MAX_USERNME_LEN-1);
     }
     return username;
   }

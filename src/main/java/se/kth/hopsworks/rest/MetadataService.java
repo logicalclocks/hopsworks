@@ -22,10 +22,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
-import se.kth.bbc.project.fb.InodePK;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.meta.db.MTableFacade;
@@ -44,6 +42,7 @@ import se.kth.hopsworks.meta.wscomm.Protocol;
 import se.kth.hopsworks.meta.wscomm.message.ContentMessage;
 import se.kth.hopsworks.meta.wscomm.message.Message;
 import se.kth.hopsworks.meta.wscomm.message.TemplateMessage;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -92,7 +91,7 @@ public class MetadataService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.UPLOAD_PATH_NOT_SPECIFIED);
     }
-    this.path = File.separator + Constants.DIR_ROOT + File.separator + path;
+    this.path = File.separator + Settings.DIR_ROOT + File.separator + path;
 
     //sanitize the path
     if (!path.endsWith(File.separator)) {

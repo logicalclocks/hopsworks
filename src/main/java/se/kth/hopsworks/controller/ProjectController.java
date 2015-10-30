@@ -14,7 +14,6 @@ import javax.ws.rs.core.Response;
 import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectRoleTypes;
@@ -26,7 +25,6 @@ import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
-import se.kth.bbc.project.services.ProjectServices;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.dataset.Dataset;
@@ -35,6 +33,7 @@ import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
 import se.kth.hopsworks.user.model.SshKeys;
 import se.kth.hopsworks.users.SshkeysFacade;
 import se.kth.hopsworks.util.LocalhostServices;
+import se.kth.hopsworks.util.Settings;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -61,6 +60,9 @@ public class ProjectController {
   @EJB
   private SshkeysFacade sshKeysBean;
 
+  @EJB
+  private Settings settings;
+  
   /**
    * Creates a new project(project), the related DIR, the different services
    * in the project, and the master of the project.
@@ -134,7 +136,7 @@ public class ProjectController {
     User user = userBean.getUserByEmail(username);
 
     try {
-      for (Constants.DefaultDataset ds : Constants.DefaultDataset.values()) {
+      for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
         datasetController.createDataset(user, project, ds.getName(), ds.
                 getDescription(), -1, false);
       }
@@ -276,13 +278,13 @@ public class ProjectController {
   //create project in HDFS
   private boolean mkProjectDIR(String projectName) throws IOException {
 
-    String rootDir = Constants.DIR_ROOT;
+    String rootDir = settings.DIR_ROOT;
 
     boolean rootDirCreated = false;
     boolean projectDirCreated = false;
     boolean childDirCreated = false;
 
-    if (!fileOps.isDir(Constants.DIR_ROOT)) {
+    if (!fileOps.isDir(settings.DIR_ROOT)) {
       /*
        * if the base path does not exist in the file system, create it first
        * and set it metaEnabled so that other folders down the dir tree
@@ -345,7 +347,7 @@ public class ProjectController {
     //logActivity(ActivityFacade.REMOVED_PROJECT,
     //ActivityFacade.FLAG_PROJECT, user, project);
     if (deleteFilesOnRemove) {
-      String path = File.separator + Constants.DIR_ROOT + File.separator
+      String path = File.separator + settings.DIR_ROOT + File.separator
               + project.getName();
       success = fileOps.rmRecursive(path);
     } else {
@@ -463,7 +465,7 @@ public class ProjectController {
     Project project = projectFacade.find(projectID);
 
     //find the project as an inode from hops database
-    Inode inode = inodes.getInodeAtPath(File.separator + Constants.DIR_ROOT
+    Inode inode = inodes.getInodeAtPath(File.separator + settings.DIR_ROOT
             + File.separator + project.getName());
 
     if (project == null) {
@@ -494,7 +496,7 @@ public class ProjectController {
     Project project = projectFacade.findByName(name);
 
     //find the project as an inode from hops database
-    Inode inode = inodes.getInodeAtPath(File.separator + Constants.DIR_ROOT
+    Inode inode = inodes.getInodeAtPath(File.separator + settings.DIR_ROOT
             + File.separator + project.getName());
 
     if (project == null) {

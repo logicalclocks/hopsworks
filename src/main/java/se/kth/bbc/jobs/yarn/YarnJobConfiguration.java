@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
-import se.kth.bbc.lims.Constants;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Contains user-setable configuration parameters for a Yarn job.
@@ -20,7 +20,7 @@ public class YarnJobConfiguration extends JobConfiguration {
 
   private String amQueue = "default";
   // Memory for App master (in MB)
-  private int amMemory = Constants.YARN_DEFAULT_APP_MASTER_MEMORY;
+  private int amMemory = Settings.YARN_DEFAULT_APP_MASTER_MEMORY;
   //Number of cores for appMaster
   private int amVCores = 1;
   //List of paths to be added to local resources

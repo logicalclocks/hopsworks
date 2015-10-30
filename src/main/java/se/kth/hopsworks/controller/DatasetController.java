@@ -7,7 +7,6 @@ import javax.ejb.Stateless;
 import javax.validation.ValidationException;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
@@ -19,6 +18,7 @@ import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.InodeBasicMetadata;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Contains business logic pertaining DataSet management.
@@ -83,7 +83,7 @@ public class DatasetController {
     }
     //Logic
     boolean success;
-    String dsPath = File.separator + Constants.DIR_ROOT + File.separator
+    String dsPath = File.separator + Settings.DIR_ROOT + File.separator
             + project.getName();
     dsPath = dsPath + File.separator + dataSetName;
     Inode parent = inodes.getProjectRoot(project.getName());
@@ -164,7 +164,7 @@ public class DatasetController {
       dsRelativePath = dsRelativePath.substring(1);
     }
     String[] relativePathArray = dsRelativePath.split(File.separator); //The array representing the DataSet-relative path
-    String fullPath = "/" + Constants.DIR_ROOT + "/" + project.getName() + "/"
+    String fullPath = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
             + datasetName + "/" + dsRelativePath;
     //Parameter checking
     if (project == null) {

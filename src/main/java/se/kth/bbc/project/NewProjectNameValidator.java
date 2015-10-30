@@ -8,7 +8,7 @@ import javax.faces.validator.FacesValidator;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
 import org.primefaces.validate.ClientValidator;
-import se.kth.bbc.lims.Constants;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -42,12 +42,12 @@ public class NewProjectNameValidator implements Validator, ClientValidator {
               "The project name cannot be longer than 24 characters."));
     }
     String title = "Illegal character";
-    for (char c : Constants.FILENAME_DISALLOWED_CHARS.toCharArray()) {
+    for (char c : Settings.FILENAME_DISALLOWED_CHARS.toCharArray()) {
       if (val.contains("" + c)) {
         throw new ValidatorException(new FacesMessage(
                 FacesMessage.SEVERITY_ERROR, title,
                 "The project name cannot contain any of the characters "
-                + Constants.PRINT_FILENAME_DISALLOWED_CHARS + ". You used "
+                + Settings.PRINT_FILENAME_DISALLOWED_CHARS + ". You used "
                 + (c == ' ' ? "space" : c) + "."));
       }
     }

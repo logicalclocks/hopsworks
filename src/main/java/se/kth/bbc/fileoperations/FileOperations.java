@@ -10,11 +10,11 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.validation.ValidationException;
 import org.apache.hadoop.fs.Path;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.controller.FolderNameValidator;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Session bean for file operations. Translates high-level operations into
@@ -249,7 +249,7 @@ public class FileOperations {
     while (relativePath.startsWith("/")) {
       relativePath = relativePath.substring(1);
     }
-    return "hdfs:///" + Constants.DIR_ROOT + "/" + projectname + "/"
+    return "hdfs:///" + Settings.DIR_ROOT + "/" + projectname + "/"
             + relativePath;
   }
 

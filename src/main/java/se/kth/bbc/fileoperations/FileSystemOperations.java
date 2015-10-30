@@ -12,6 +12,7 @@ import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
 import io.hops.metadata.hdfs.entity.EncodingPolicy;
 import io.hops.metadata.hdfs.entity.EncodingStatus;
+import javax.ejb.EJB;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -19,7 +20,7 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import se.kth.bbc.lims.Constants;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Provides an interface for interaction with HDFS. Only interacts with HDFS.
@@ -29,6 +30,9 @@ import se.kth.bbc.lims.Constants;
 @Stateless
 public class FileSystemOperations {
 
+   @EJB
+  private Settings settings;
+  
   //TODO: use fs.copyFromLocalFile
   private static final Logger logger = Logger.getLogger(
           FileSystemOperations.class.getName());
@@ -108,8 +112,8 @@ public class FileSystemOperations {
     //If still not found: throw exception
     if (CORE_CONF_DIR == null) {
       logger.log(Level.WARNING, "No configuration path set, using default: "
-              + Constants.HADOOP_CONF_DIR);
-      CORE_CONF_DIR = Constants.HADOOP_CONF_DIR;
+              + settings.getHadoopConfDir());
+      CORE_CONF_DIR = settings.getHadoopConfDir();
     }
 
     //Get the configuration file at found path

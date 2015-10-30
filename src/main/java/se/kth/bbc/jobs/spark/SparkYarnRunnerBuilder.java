@@ -8,8 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import se.kth.bbc.jobs.yarn.YarnRunner;
-import se.kth.bbc.lims.Constants;
-import se.kth.bbc.lims.Utils;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Builder class for a Spark YarnRunner. Implements the common logic needed
@@ -54,28 +53,34 @@ public class SparkYarnRunnerBuilder {
    * Get a YarnRunner instance that will launch a Spark job.
    * <p/>
    * @param project name of the project
+   * @param sparkUser
    * @return The YarnRunner instance to launch the Spark job on Yarn.
    * @throws IOException If creation failed.
    */
-  public YarnRunner getYarnRunner(String project) throws IOException {
+  public YarnRunner getYarnRunner(String project, String sparkUser, String hadoopDir,
+      String sparkDir) 
+//      String sparkClasspath, String hdfsSparkJarPath) 
+      throws IOException {
 
-    //TODO: inlclude driver memory as am memory
+    String sparkClasspath = Settings.getSparkDefaultClasspath(sparkDir);
+    String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
+    
+    //TODO: include driver memory as am memory
     //Create a builder
-    YarnRunner.Builder builder = new YarnRunner.Builder(Constants.SPARK_AM_MAIN);
+    YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
 
     //Set Spark staging directory
 //    String stagingPath = File.separator + "user" + File.separator + Utils.
-//            getYarnUser() + File.separator + Constants.SPARK_STAGING_DIR
+//            getYarnUser() + File.separator + Settings.SPARK_STAGING_DIR
 //            + File.separator + YarnRunner.APPID_PLACEHOLDER;
     String stagingPath = File.separator + "Projects" + File.separator + project + File.separator 
-        + Constants.PROJECT_STAGING_DIR + File.separator + YarnRunner.APPID_PLACEHOLDER;
+        + Settings.PROJECT_STAGING_DIR + File.separator + YarnRunner.APPID_PLACEHOLDER;
     builder.localResourcesBasePath(stagingPath);
 
     //Add Spark jar
-    builder.addLocalResource(Constants.SPARK_LOCRSC_SPARK_JAR,
-            Constants.SPARK_JAR_HDFS_PATH, false);
+    builder.addLocalResource(Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath, false);
     //Add app jar
-    builder.addLocalResource(Constants.SPARK_LOCRSC_APP_JAR, appJarPath,
+    builder.addLocalResource(Settings.SPARK_LOCRSC_APP_JAR, appJarPath,
             !appJarPath.startsWith("hdfs:"));
 
     //Add extra files to local resources, use filename as key
@@ -87,15 +92,13 @@ public class SparkYarnRunnerBuilder {
     //Set Spark specific environment variables
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
-    builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
+    builder.addToAppMasterEnvironment("SPARK_USER", sparkUser);
     // TODO - Change spark user here
 //    builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
     if (classPath == null || classPath.isEmpty()) {
-      builder.addToAppMasterEnvironment("CLASSPATH",
-              Constants.SPARK_DEFAULT_CLASSPATH);
+      builder.addToAppMasterEnvironment("CLASSPATH", sparkClasspath);
     } else {
-      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
-              + Constants.SPARK_DEFAULT_CLASSPATH);
+      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":" + sparkClasspath);
     }
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
@@ -128,7 +131,7 @@ public class SparkYarnRunnerBuilder {
     //Set app name
     builder.appName(jobName);
 
-    return builder.build();
+    return builder.build(hadoopDir, sparkDir);
   }
 
   public SparkYarnRunnerBuilder setJobName(String jobName) {

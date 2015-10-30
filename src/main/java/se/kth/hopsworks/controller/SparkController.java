@@ -18,8 +18,8 @@ import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
-import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Interaction point between the Spark front- and backend.
@@ -38,6 +38,8 @@ public class SparkController {
   private AsynchronousJobExecutor submitter;
   @EJB
   private ActivityFacade activityFacade;
+  @EJB
+  private Settings settings;
 
   /**
    * Start the Spark job as the given user.
@@ -65,7 +67,8 @@ public class SparkController {
       throw new IllegalStateException("Spark is not installed on this system.");
     }
 
-    SparkJob sparkjob = new SparkJob(job, user, submitter);
+    SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
+        settings.getSparkUser());
     Execution jh = sparkjob.requestExecutionId();
     if (jh != null) {
       submitter.startExecution(sparkjob);
@@ -88,9 +91,9 @@ public class SparkController {
   public boolean isSparkJarAvailable() {
     boolean isInHdfs;
     try {
-      isInHdfs = fops.exists(Constants.SPARK_JAR_HDFS_PATH);
+      isInHdfs = fops.exists(settings.getHdfsSparkJarPath());
     } catch (IOException e) {
-      logger.warning("Cannot get Spark jar file from HDFS: " + Constants.SPARK_JAR_HDFS_PATH);
+      logger.log(Level.WARNING, "Cannot get Spark jar file from HDFS: {0}", settings.getHdfsSparkJarPath());
       //Can't connect to HDFS: return false
       return false;
     }
@@ -98,17 +101,17 @@ public class SparkController {
       return true;
     }
 
-    File localSparkJar = new File(Constants.LOCAL_SPARK_JAR_PATH);
+    File localSparkJar = new File(settings.getLocalSparkJarPath());
     if (localSparkJar.exists()) {
       try {
-        String hdfsJarPath = Constants.SPARK_JAR_HDFS_PATH;
-        fops.copyToHDFSFromLocal(false, Constants.LOCAL_SPARK_JAR_PATH, hdfsJarPath
+        String hdfsJarPath = settings.getHdfsSparkJarPath();
+        fops.copyToHDFSFromLocal(false, settings.getLocalSparkJarPath(), hdfsJarPath
         );
       } catch (IOException e) {
         return false;
       }
     } else {
-      logger.warning("Cannot finid Spark jar file locally: " + Constants.LOCAL_SPARK_JAR_PATH);
+      logger.log(Level.WARNING, "Cannot finid Spark jar file locally: {0}", settings.getLocalSparkJarPath());
       return false;
     }
     return true;
