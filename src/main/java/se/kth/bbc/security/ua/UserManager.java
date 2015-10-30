@@ -197,7 +197,7 @@ public class UserManager {
 
   public boolean findYubikeyUsersByStatus(int status) {
     List existing = em.createQuery(
-            "SELECT p FROM Users p WHERE p.status ='"
+            "SELECT p FROM hopsworks.users p WHERE p.status ='"
             + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()
             + "' AND p.mode = " + status)
             .getResultList();
@@ -484,7 +484,7 @@ public class UserManager {
    */
   public List<Users> filterUsersBasedOnProject(Project project) {
     TypedQuery<Users> query = em.createQuery(
-            "SELECT u FROM User u WHERE u NOT IN (SELECT DISTINCT st.user FROM ProjectTeam st WHERE st.project = :project)",
+            "SELECT u FROM hopsworks.users u WHERE u NOT IN (SELECT DISTINCT st.user FROM hopsworks.project_team st WHERE st.project = :project)",
             Users.class);
     query.setParameter("project", project);
     return query.getResultList();

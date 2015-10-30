@@ -31,7 +31,7 @@ public class AuditManager {
     String sql = "SELECT * FROM hopsworks.userlogins  WHERE uid=" + uid
             + " ORDER BY login_date DESC LIMIT 1 OFFSET 2";
     Query query = em.createNativeQuery(sql, Userlogins.class);
-    query.setMaxResults(2);
+  
 
     List<Userlogins> ul = query.getResultList();
 

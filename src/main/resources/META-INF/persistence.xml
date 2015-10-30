@@ -10,7 +10,6 @@
     <class>se.kth.bbc.security.ua.model.Address</class>
     <class>se.kth.bbc.security.ua.model.PeopleGroup</class>
     <class>se.kth.bbc.security.ua.model.Yubikey</class>
-    <class>se.kth.bbc.security.ua.model.BBCGroup</class>
     <class>se.kth.bbc.security.ua.model.Organization</class>
     <class>se.kth.bbc.security.audit.model.AccountAudit</class>
     <class>se.kth.bbc.security.audit.model.RolesAudit</class>

@@ -78,8 +78,10 @@ public class PeopleStatusBean implements Serializable {
    * @return
    */
   public boolean isSYSAdmin() {
-    Users p = userManager.findByEmail(getRequest().getRemoteUser());
-    return userManager.findGroups(p.getUid()).contains("SYS_ADMIN");
+    if (getRequest().getRemoteUser()!= null) {
+      Users p = userManager.findByEmail(getRequest().getRemoteUser());
+        return userManager.findGroups(p.getUid()).contains("SYS_ADMIN");
+    } return false;
   }
 
   /**
