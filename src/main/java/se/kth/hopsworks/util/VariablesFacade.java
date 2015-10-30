@@ -15,7 +15,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 
 
 @Stateless
-public class VariablesFacade extends AbstractFacade<Users> {
+public class VariablesFacade extends AbstractFacade<Variables> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -26,7 +26,7 @@ public class VariablesFacade extends AbstractFacade<Users> {
   }
 
   public VariablesFacade() {
-    super(Users.class);
+    super(Variables.class);
   }
 
   /**
