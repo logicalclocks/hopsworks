@@ -10,7 +10,7 @@ import se.kth.hopsworks.util.Settings;
  * <li> It is not longer than 24 characters.</li>
  * <li> It does not end with a dot.</li>
  * <li> It does not contain any of the disallowed characters space, /, \, ?, *,
- * :, |, ', \", &lt;, &gt; >, %, (, ), &, ;, #</li>
+ * :, |, ', \", &lt;, &gt; >, %, (, ), &, ;, #, __</li>
  * </ul>
  * <p/>
  * @author Ermias
@@ -36,11 +36,24 @@ public class FolderNameValidator {
     } else if (name.endsWith(".")) {
       valid = false;
       reason = ResponseMessages.FOLDER_NAME_ENDS_WITH_DOT;
+<<<<<<< HEAD
     } else {
       for (char c : Settings.FILENAME_DISALLOWED_CHARS.toCharArray()) {
         if (name.contains("" + c)) {
           valid = false;
           reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS + Settings.FILENAME_DISALLOWED_CHARS;
+=======
+    } else if (name.contains("" + Constants.DOUBLE_UNDERSCORE)) {
+      valid = false;
+       reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
+               + Constants.FILENAME_DISALLOWED_CHARS + Constants.DOUBLE_UNDERSCORE;
+    }  else {
+      for (char c : Constants.FILENAME_DISALLOWED_CHARS.toCharArray()) {
+        if (name.contains("" + c)) {
+          valid = false;
+          reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
+                  + Constants.FILENAME_DISALLOWED_CHARS + Constants.DOUBLE_UNDERSCORE;
+>>>>>>> 0ec3772b790777acdf1ace75c132fa9b3eceb2b3
         }
       }
     }
