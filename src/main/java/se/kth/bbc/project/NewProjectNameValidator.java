@@ -42,18 +42,14 @@ public class NewProjectNameValidator implements Validator, ClientValidator {
               "The project name cannot be longer than 24 characters."));
     }
     String title = "Illegal character";
-<<<<<<< HEAD
-    for (char c : Settings.FILENAME_DISALLOWED_CHARS.toCharArray()) {
-=======
     if (val.contains("" + "__")) {
         throw new ValidatorException(new FacesMessage(
                 FacesMessage.SEVERITY_ERROR, title,
                 "The project name cannot contain any of the characters "
-                        + Constants.PRINT_FILENAME_DISALLOWED_CHARS + ". You used "
+                        + Settings.PRINT_FILENAME_DISALLOWED_CHARS + ". You used "
                         + "__."));
     }
-    for (char c : Constants.FILENAME_DISALLOWED_CHARS.toCharArray()) {
->>>>>>> 0ec3772b790777acdf1ace75c132fa9b3eceb2b3
+    for (char c : Settings.FILENAME_DISALLOWED_CHARS.toCharArray()) {
       if (val.contains("" + c)) {
         throw new ValidatorException(new FacesMessage(
                 FacesMessage.SEVERITY_ERROR, title,
