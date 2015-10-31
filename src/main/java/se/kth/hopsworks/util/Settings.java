@@ -211,7 +211,7 @@ public class Settings {
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
 
   public synchronized String getLocalSparkJarPath() {
-    return getSparkDir() + File.separator + "spark.jar";
+    return getSparkDir() + "/spark.jar";
   }
 
   public synchronized String getHdfsSparkJarPath() {

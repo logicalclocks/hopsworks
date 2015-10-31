@@ -84,8 +84,7 @@ public class ProjectController {
     User user = userBean.getUserByEmail(email);
     //if there is no project by the same name for this user and project name is valid
     if (FolderNameValidator.isValidName(newProject.getProjectName())
-            && !projectFacade.
-            projectExists(newProject.getProjectName())) {
+            && !projectFacade.projectExists(newProject.getProjectName())) {
 
       /*
        * first create the folder structure in hdfs. If it is successful move on

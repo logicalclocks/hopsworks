@@ -105,13 +105,12 @@ public class SparkController {
     if (localSparkJar.exists()) {
       try {
         String hdfsJarPath = settings.getHdfsSparkJarPath();
-        fops.copyToHDFSFromLocal(false, settings.getLocalSparkJarPath(), hdfsJarPath
-        );
+        fops.copyToHDFSFromLocal(false, settings.getLocalSparkJarPath(), hdfsJarPath);
       } catch (IOException e) {
         return false;
       }
     } else {
-      logger.log(Level.WARNING, "Cannot finid Spark jar file locally: {0}", settings.getLocalSparkJarPath());
+      logger.log(Level.WARNING, "Cannot find Spark jar file locally: {0}", settings.getLocalSparkJarPath());
       return false;
     }
     return true;
