@@ -20,6 +20,8 @@ angular.module('hopsWorksApp')
             self.projectName = '';
             self.projectDesc = '';
 
+            self.regex = /^(?!.*?__|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#).*$/;
+
             UserService.allcards().then(
                     function (success) {
                       self.cards = success.data;

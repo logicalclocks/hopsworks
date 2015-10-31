@@ -103,8 +103,9 @@ public class Constants {
   //Filename conventions
   public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#";
   public static final String PRINT_FILENAME_DISALLOWED_CHARS
-      = "space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #";
+      = "__, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #";
   public static final String SHARED_FILE_SEPARATOR = "::";
+  public static final String DOUBLE_UNDERSCORE = "__";
 
   //Project creation: default datasets
   public static enum DefaultDataset {
