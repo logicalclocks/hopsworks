@@ -113,7 +113,7 @@ CREATE TABLE `project` (
   `inode_pid` INT(11) NOT NULL,
   `inode_name` VARCHAR(255) NOT NULL,
   `projectname` VARCHAR(100) NOT NULL,
-  `username` VARCHAR(254) NOT NULL,
+  `username` VARCHAR(150) NOT NULL,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `retention_period` DATE DEFAULT NULL,
   `ethical_status` VARCHAR(30) DEFAULT NULL,
@@ -123,7 +123,7 @@ CREATE TABLE `project` (
   PRIMARY KEY (`id`),
   UNIQUE KEY(`projectname`),
   UNIQUE KEY(`inode_pid`, `inode_name`),
-  FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+#  FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster CHARSET=latin1;
 
@@ -148,7 +148,7 @@ CREATE TABLE `project_services` (
 
 CREATE TABLE `project_team` (
   `project_id` INT(11) NOT NULL,
-  `team_member` VARCHAR(254) NOT NULL,
+  `team_member` VARCHAR(150) NOT NULL,
   `team_role` VARCHAR(32) NOT NULL,
   `added` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`,`team_member`),
@@ -165,7 +165,7 @@ CREATE TABLE `userlogins` (
     `outcome` VARCHAR(20) DEFAULT NULL,
     `mac` VARCHAR(45) DEFAULT NULL,
     `uid` INT(11) NOT NULL,
-    `email` VARCHAR(254)  DEFAULT NULL,
+    `email` VARCHAR(150)  DEFAULT NULL,
     `login_date` TIMESTAMP NULL DEFAULT NULL,
     PRIMARY KEY (`login_id`),
     KEY (`login_date`),
@@ -178,7 +178,7 @@ CREATE TABLE `jobs` (
   `name` VARCHAR(128) DEFAULT NULL,
   `creation_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `project_id` INT(11) NOT NULL,
-  `creator` VARCHAR(254) NOT NULL,
+  `creator` VARCHAR(150) NOT NULL,
   `type` VARCHAR(128) NOT NULL,
   `json_config` TEXT NOT NULL,
   PRIMARY KEY (`id`),
@@ -189,7 +189,7 @@ CREATE TABLE `jobs` (
 CREATE TABLE `executions` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `submission_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `user` VARCHAR(254) NOT NULL,
+  `user` VARCHAR(150) NOT NULL,
   `state` VARCHAR(128) NOT NULL,
   `execution_duration` BIGINT(20) DEFAULT NULL,
   `stdout_path` VARCHAR(255) DEFAULT NULL,
@@ -228,8 +228,9 @@ CREATE TABLE `consent` (
     `name` VARCHAR(128) DEFAULT NULL,
     `type` VARCHAR(30) DEFAULT NULL,
     `consent_form` LONGBLOB DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    FOREIGN KEY (`project_name`) REFERENCES `project` (`projectname`)
+    PRIMARY KEY (`id`)
+#,
+#    FOREIGN KEY (`project_name`) REFERENCES `project` (`projectname`)
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `organization` (
@@ -238,7 +239,7 @@ CREATE TABLE `organization` (
     `org_name` VARCHAR(100) DEFAULT '-',
     `website` VARCHAR(2083) DEFAULT '-',
     `contact_person` VARCHAR(100) DEFAULT '-',
-    `contact_email` VARCHAR(254) DEFAULT '-',
+    `contact_email` VARCHAR(150) DEFAULT '-',
     `department` VARCHAR(100) DEFAULT '-',
     `phone` VARCHAR(20) DEFAULT '-',
     `fax` VARCHAR(20) DEFAULT '-',
@@ -298,8 +299,9 @@ CREATE TABLE `meta_tuple_to_file` (
   `inodeid` INT(11) NOT NULL, -- pretty necessary for the rivers to work
   `inode_pid` INT(11) NOT NULL,
   `inode_name` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`tupleid`),
-  FOREIGN KEY (`inode_pid`, `inode_name`) REFERENCES `hops`.`hdfs_inodes` (`parent_id`, `name`) ON DELETE CASCADE ON UPDATE NO ACTION
+  PRIMARY KEY (`tupleid`)
+#,
+#  FOREIGN KEY (`inode_pid`, `inode_name`) REFERENCES `hops`.`hdfs_inodes` (`parent_id`, `name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_raw_data` (
@@ -325,8 +327,9 @@ CREATE TABLE `meta_template_to_inode` (
   `inode_pid` INT(11) NOT NULL,
   `inode_name` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
+  FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE CASCADE ON UPDATE NO ACTION
+# ,
+#  FOREIGN KEY (`inode_pid`,`inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`,`name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `meta_inode_basic_metadata` (
@@ -336,8 +339,9 @@ CREATE TABLE `meta_inode_basic_metadata` (
   `description` VARCHAR(3000) DEFAULT NULL,
   `searchable` TINYINT(1) NOT NULL DEFAULT '0',
   PRIMARY KEY(`id`),
-  UNIQUE KEY (`inode_pid`, `inode_name`),
-  FOREIGN KEY (`inode_pid`, `inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`, `name`) ON DELETE CASCADE ON UPDATE NO ACTION
+  UNIQUE KEY (`inode_pid`, `inode_name`)
+#,
+#  FOREIGN KEY (`inode_pid`, `inode_name`) REFERENCES `hops`.`hdfs_inodes`(`parent_id`, `name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
  
 -- elastic jdbc-importer buffer tables -------
@@ -409,7 +413,7 @@ CREATE TABLE `dataset_request` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `dataset` INT(11) NOT NULL,
   `projectId` INT(11) NOT NULL,
-  `user_email` VARCHAR(254) NOT NULL,
+  `user_email` VARCHAR(150) NOT NULL,
   `requested` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `message` VARCHAR(3000) DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -428,8 +432,8 @@ CREATE TABLE `dataset_request` (
 -- ------------------------
 CREATE TABLE `message` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_from` varchar(254) DEFAULT NULL,
-  `user_to` varchar(254)  NOT NULL,
+  `user_from` varchar(150) DEFAULT NULL,
+  `user_to` varchar(150)  NOT NULL,
   `date_sent` datetime NOT NULL,
   `subject` varchar(128)  DEFAULT NULL,
   `preview` varchar(128) DEFAULT NULL,
@@ -447,7 +451,7 @@ CREATE TABLE `message` (
 
 CREATE TABLE `message_to_user` (
   `message` int(11) NOT NULL,
-  `user_email` varchar(254) NOT NULL,
+  `user_email` varchar(150) NOT NULL,
   PRIMARY KEY (`message`,`user_email`),
   FOREIGN KEY (`user_email`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
   FOREIGN KEY (`message`) REFERENCES `message` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION

@@ -73,7 +73,7 @@ INSERT INTO `people_group` (`uid`, `gid`) VALUES (10000, 1005);
 -- elastic search configuration data
 --
 
-INSERT INTO variables VALUES ("elastic_addr", "<%= @elastic_addr %>");
+INSERT INTO variables VALUES ("elastic_ip", "<%= @elastic_ip %>"), ("spark_dir", "<%= @spark_dir %>"),  ("flink_dir", "<%= @flink_dir %>"), ("zeppelin_dir", "<%= @zeppelin_dir %>"), ("elastic_dir", "<%= @elastic_dir %>"),  ("mysql_dir", "<%= @mysql_dir %>"), ("ndb_dir", "<%= @ndb_dir %>");
 
 -- --------------------------------------------------------
 --
