@@ -191,6 +191,19 @@ angular.module('hopsWorksApp')
                   tableid: -1, //table id is not necessary when updating metadata
                   metadata: metaObj.data})
               });
+            },
+            removeMetadata: function (user, metaObj, inodepid, inodename) {
+              return WSComm.send({
+                sender: user,
+                type: 'RemoveMetadataMessage',
+                action: 'remove_metadata',
+                message: JSON.stringify({
+                  metaid: metaObj.id, 
+                  inodepid: inodepid,
+                  inodename: inodename,
+                  tableid: -1, //table id is not necessary when updating metadata
+                  metadata: metaObj.data})
+              });
             }
           };
         });
