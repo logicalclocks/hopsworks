@@ -323,6 +323,43 @@ public class Utils {
       throw new ApplicationException("Utils.java: could not update metadata ", e);
     }
   }
+  
+  
+    /**
+   * Remove a single raw metadata record.
+   * <p/>
+   * @param composite
+   * @param meta
+   * @return 
+   * @throws ApplicationException
+   */
+  public Inode removeMetadata(List<EntityIntf> composite, Metadata meta) throws
+          ApplicationException {
+    try {
+
+      /*
+       * get the inodeid from the entity in the list. It is the
+       * same for all the entities, since they constitute a single tuple
+       */
+      InodeTableComposite itc = (InodeTableComposite) composite.get(0);
+
+      //get the inode
+      Inode parent = this.inodeFacade.findById(itc.getInodePid());
+      Inode inode = this.inodeFacade.findByParentAndName(parent, itc.
+              getInodeName());
+
+      Metadata metadata = this.metadataFacade.getMetadataById(meta.
+              getMetadataPK().getId());
+      metadata.setData(meta.getData());
+      this.metadataFacade.removeMetadata(metadata);
+      
+      return inode;
+    } catch (DatabaseException e) {
+      throw new ApplicationException("Utils.java: could not delete metadata ", e);
+    }
+  }
+  
+  
 
   /**
    * Stores the actual metadata for an inode. Associates a raw data record with

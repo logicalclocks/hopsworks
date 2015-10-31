@@ -96,6 +96,36 @@ public class MetadataFacade extends AbstractFacade<Metadata> {
       throw new DatabaseException(e.getMessage(), e);
     }
   }
+  
+   /**
+   * Delete a record from 'meta_data' table. 
+   * <p/>
+   *
+   * @param metadata
+   * @throws se.kth.hopsworks.meta.exception.DatabaseException
+   */
+  public void removeMetadata(Metadata metadata) throws DatabaseException {
+    try {
+      Metadata m = this.contains(metadata) ? metadata : this.getMetadata(
+              metadata.getMetadataPK());
+
+      if (m != null && m.getMetadataPK().getTupleid() != -1
+              && m.getMetadataPK().getFieldid() != -1) {
+        /*
+         * if the row exists just delete it.
+         */
+        m.copy(metadata);
+        this.em.remove(m);
+      }
+
+      this.em.flush();
+      this.em.clear();
+    } catch (IllegalStateException | SecurityException e) {
+
+      throw new DatabaseException(e.getMessage(), e);
+    }
+  }
+  
 
   /**
    * Checks if a raw data instance is a managed entity
