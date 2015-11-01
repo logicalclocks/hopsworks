@@ -37,12 +37,15 @@ public class Settings {
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
-  private static final String VARIABLE_HDFS_SUPERUSER = "yarn_user";
+  private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
   private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
+  private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
+  private static final String VARIABLE_FLINK_USER = "flink_user";
   private static final String VARIABLE_NDB_DIR = "ndb_dir";
   private static final String VARIABLE_MYSQL_DIR = "mysql_dir";
+  private static final String VARIABLE_HADOOP_DIR = "hadoop_dir";
 
   private String setUserVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -75,10 +78,13 @@ public class Settings {
       HDFS_SUPERUSER = setUserVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setUserVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setUserVar(VARIABLE_SPARK_USER, SPARK_USER);
+      FLINK_USER = setUserVar(VARIABLE_FLINK_USER, FLINK_USER);
+      ZEPPELIN_USER = setUserVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
       ZEPPELIN_DIR = setDirVar(VARIABLE_ZEPPELIN_DIR, ZEPPELIN_DIR);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
+      HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       cached = true;
@@ -153,6 +159,18 @@ public class Settings {
     return SPARK_USER;
   }
 
+  private String FLINK_USER = "flink";
+  public synchronized String getFlinkUser() {
+    checkCache();
+    return FLINK_USER;
+  }  
+  
+  private String ZEPPELIN_USER = "glassfish";
+  public synchronized String getZeppelinUser() {
+    checkCache();
+    return ZEPPELIN_USER;
+  }  
+  
   //Local path to the hiway jar
   public static final String HIWAY_JAR_PATH = "/srv/hiway-1.0.1-SNAPSHOT/hiway-core-1.0.1-SNAPSHOT.jar";
 

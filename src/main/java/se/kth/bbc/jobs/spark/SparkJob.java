@@ -12,15 +12,14 @@ import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.Settings;
 
 /**
- * Orchestrates the execution of a Spark job: run job, update history
- * object.
+ * Orchestrates the execution of a Spark job: run job, update history object.
  * <p/>
  * @author stig
  */
 public final class SparkJob extends YarnJob {
 
   private static final Logger logger = Logger.
-          getLogger(SparkJob.class.getName());
+      getLogger(SparkJob.class.getName());
 
   private final SparkJobConfiguration jobconfig; //Just for convenience
   private final String sparkDir;
@@ -32,14 +31,16 @@ public final class SparkJob extends YarnJob {
    * @param user
    * @param services
    * @param hadoopDir
+   * @param sparkDir
+   * @param sparkUser
    */
-  public SparkJob(JobDescription job, AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir,
-          String sparkUser) {
+  public SparkJob(JobDescription job, AsynchronousJobExecutor services, Users user, final String hadoopDir,
+      final String sparkDir, String sparkUser) {
     super(job, services, user, hadoopDir);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
-              "JobDescription must contain a SparkJobConfiguration object. Received: "
-              + job.getJobConfig().getClass());
+          "JobDescription must contain a SparkJobConfiguration object. Received: "
+          + job.getJobConfig().getClass());
     }
     this.jobconfig = (SparkJobConfiguration) job.getJobConfig();
     this.sparkDir = sparkDir;
@@ -53,13 +54,13 @@ public final class SparkJob extends YarnJob {
       jobconfig.setAppName("Untitled Spark Job");
     }
     SparkYarnRunnerBuilder runnerbuilder = new SparkYarnRunnerBuilder(
-            jobconfig.getJarPath(), jobconfig.getMainClass());
+        jobconfig.getJarPath(), jobconfig.getMainClass());
     runnerbuilder.setJobName(jobconfig.getAppName());
     String[] jobArgs = jobconfig.getArgs().trim().split(" ");
     runnerbuilder.addAllJobArgs(jobArgs);
     //Set spark runner options
     runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
-    runnerbuilder.setExecutorMemory(""+jobconfig.getExecutorMemory()+"m");
+    runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
     runnerbuilder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
     //Set Yarn running options
     runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
@@ -68,28 +69,28 @@ public final class SparkJob extends YarnJob {
 
     //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
     try {
-      runner = runnerbuilder.getYarnRunner(jobDescription.getProject().getName(), 
-          Utils.getProjectUsername(jobDescription.getProject().getName(), user.getUsername()),
-          Settings.getSparkDefaultClasspath(sparkDir), Settings.getHdfsSparkJarPath(sparkUser));
-      
-      
+      runner = runnerbuilder.getYarnRunner(jobDescription.getProject().getName(),
+          sparkUser,
+//          Utils.getProjectUsername(jobDescription.getProject().getName(), user.getUsername()),
+          hadoopDir, sparkDir);
+
     } catch (IOException e) {
       logger.log(Level.SEVERE,
-              "Failed to create YarnRunner.", e);
+          "Failed to create YarnRunner.", e);
       writeToLogs(new IOException("Failed to start Yarn client.", e));
       return false;
     }
 
     String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir, jobDescription.
-            getProject().
-            getName())
-            + Settings.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
-            + File.separator + "stdout.log";
+        getProject().
+        getName())
+        + Settings.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
+        + File.separator + "stdout.log";
     String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir, jobDescription.
-            getProject().
-            getName())
-            + Settings.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
-            + File.separator + "stderr.log";
+        getProject().
+        getName())
+        + Settings.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
+        + File.separator + "stderr.log";
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
     return true;

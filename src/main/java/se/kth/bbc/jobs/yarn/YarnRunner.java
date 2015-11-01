@@ -811,21 +811,21 @@ public class YarnRunner {
 
     private void setConfiguration(String hadoopDir, String sparkDir) throws IllegalStateException {
       //Get the path to the Yarn configuration file from environment variables
-//      String yarnConfDir = System.getenv(Settings.ENV_KEY_YARN_CONF_DIR);
-      //If not found in environment variables: warn and use default,
-//      if (yarnConfDir == null) {
-//        logger.log(Level.WARNING,
-//                "Environment variable " + Settings.ENV_KEY_YARN_CONF_DIR
-//                + " not found, using default "
-//                + Settings.YARN_CONF_DIR);
-//        yarnConfDir = Settings.YARN_CONF_DIR;
-//      }
+      String yarnConfDir = System.getenv(Settings.ENV_KEY_YARN_CONF_DIR);
+//      If not found in environment variables: warn and use default,
+      if (yarnConfDir == null) {
+        logger.log(Level.WARNING,
+            "Environment variable "
+                + Settings.ENV_KEY_YARN_CONF_DIR +
+                " not found, using settings: {0}", Settings.getYarnConfDir(hadoopDir));
+        yarnConfDir = Settings.getYarnConfDir(hadoopDir);
+
+      }
 
       //Get the configuration file at found path
       this.hadoopDir = hadoopDir;
       this.sparkDir = sparkDir;
       
-      String yarnConfDir = Settings.getYarnConfDir(hadoopDir);
       Path confPath = new Path(yarnConfDir);
       File confFile = new File(confPath + File.separator
               + Settings.DEFAULT_YARN_CONFFILE_NAME);
@@ -843,12 +843,11 @@ public class YarnRunner {
         logger.log(Level.WARNING,
                 "Environment variable " + Settings.ENV_KEY_HADOOP_CONF_DIR
                 + " not found, using default "
-                + (hadoopDir + Settings.HADOOP_CONF_RELATIVE_DIR));
-        hadoopConfDir = Settings.HADOOP_CONF_RELATIVE_DIR;
+                + (hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR));
+        hadoopConfDir = hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR;
       }
       confPath = new Path(hadoopConfDir);
-      File hadoopConf = new File(confPath + File.separator
-              + Settings.DEFAULT_HADOOP_CONFFILE_NAME);
+      File hadoopConf = new File(confPath + "/" + Settings.DEFAULT_HADOOP_CONFFILE_NAME);
       if (!hadoopConf.exists()) {
         logger.log(Level.SEVERE,
                 "Unable to locate Hadoop configuration file in {0}. Aborting exectution.",
@@ -857,8 +856,7 @@ public class YarnRunner {
       }
 
       //And the hdfs config
-      File hdfsConf = new File(confPath + File.separator
-              + Settings.DEFAULT_HDFS_CONFFILE_NAME);
+      File hdfsConf = new File(confPath + "/" + Settings.DEFAULT_HDFS_CONFFILE_NAME);
       if (!hdfsConf.exists()) {
         logger.log(Level.SEVERE,
                 "Unable to locate HDFS configuration file in {0}. Aborting exectution.",

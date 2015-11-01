@@ -54,12 +54,13 @@ public class SparkYarnRunnerBuilder {
    * <p/>
    * @param project name of the project
    * @param sparkUser
+   * @param hadoopDir
+   * @param sparkDir
    * @return The YarnRunner instance to launch the Spark job on Yarn.
    * @throws IOException If creation failed.
    */
-  public YarnRunner getYarnRunner(String project, String sparkUser, String hadoopDir,
-      String sparkDir) 
-//      String sparkClasspath, String hdfsSparkJarPath) 
+  public YarnRunner getYarnRunner(String project, String sparkUser, final String hadoopDir,
+      final String sparkDir) 
       throws IOException {
 
     String sparkClasspath = Settings.getSparkDefaultClasspath(sparkDir);

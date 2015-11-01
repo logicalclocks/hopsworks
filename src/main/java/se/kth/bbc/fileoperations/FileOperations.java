@@ -56,18 +56,20 @@ public class FileOperations {
    * folder name.
    */
   public boolean mkDir(String path) throws IOException {
-    if (!path.startsWith("/")) {
-      path = "/" + path;
-    }
-    String[] pathParts = path.substring(1).split("/");
-    for (String s : pathParts) {
-      try {
-        FolderNameValidator.isValidName(s);
-      } catch (ValidationException e) {
-        throw new IllegalArgumentException("Illegal folder name: " + s
-                + ". Reason: " + e.getLocalizedMessage(), e);
-      }
-    }
+    logger.info(("Creating HDFS directory: " + path));
+
+//    if (!path.startsWith("/")) {
+//      path = "/" + path;
+//    }
+//    String[] pathParts = path.substring(1).split("/");
+//    for (String s : pathParts) {
+//      try {
+//        FolderNameValidator.isValidName(s);
+//      } catch (ValidationException e) {
+//        throw new IllegalArgumentException("Illegal folder name: " + s
+//                + ". Reason: " + e.getLocalizedMessage(), e);
+//      }
+//    }
 
     Path location = new Path(path);
     return fsOps.mkdirs(location);
