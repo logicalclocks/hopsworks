@@ -64,8 +64,7 @@ public class NewProjectController implements Serializable {
 
   @EJB
   private Settings settings;
-  
-  
+
   @ManagedProperty(value = "#{projectManagedBean}")
   private transient ProjectMB studies;
 
@@ -268,12 +267,18 @@ public class NewProjectController implements Serializable {
 
     StringBuilder zeppelinConfig = ConfigFileGenerator.instantiateFromTemplate(
         ConfigFileGenerator.ZEPPELIN_CONFIG_TEMPLATE,
-        "", "");
+        "hadoop_dir", settings.getHadoopDir(),
+        "spark_dir", settings.getSparkDir()
+    );
     ConfigFileGenerator.createConfigFile(new File(zeppelinSitePath), zeppelinConfig.toString());
 
     StringBuilder zeppelinEnv = ConfigFileGenerator.instantiateFromTemplate(
         ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE,
-        "", "");
+        "hadoop_dir", settings.getHadoopDir(),
+        "extra_jars", "",
+        "zeppelin_dir", settings.getZeppelinDir(),
+        "spark_dir", settings.getSparkDir()
+    );
     ConfigFileGenerator.createConfigFile(new File(zeppelinEnvPath), zeppelinEnv.toString());
 
     StringBuilder interpreter = ConfigFileGenerator.instantiateFromTemplate(

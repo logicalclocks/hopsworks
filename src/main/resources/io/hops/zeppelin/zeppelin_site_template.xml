@@ -21,19 +21,19 @@
 
 <property>
   <name>zeppelin.server.addr</name>
-  <value>%%server_addr%%</value>
+  <value>localhost</value>
   <description>Server address</description>
 </property>
 
 <property>
   <name>zeppelin.server.port</name>
-  <value>%%server_port%%</value>
+  <value>8080</value>
   <description>Server port. port+1 is used for web socket.</description>
 </property>
 
 <property>
   <name>zeppelin.websocket.addr</name>
-  <value>%%websocket_addr%%</value>
+  <value>localhost</value>
   <description>Testing websocket address</description>
 </property>
 
@@ -42,26 +42,26 @@
   -->
 <property>
   <name>zeppelin.websocket.port</name>
-  <value>%%websocket_port%%</value>
+  <value>8081</value>
   <description>Testing websocket port</description>
 </property>
 
 <property>
   <name>zeppelin.home</name>
-  <value>%%zeppelin_project_home%%</value>
+  <value>%%zeppelin_dir%%</value>
   <description>path for zeppelin home</description>
 </property>
 
 <property>
   <name>zeppelin.conf.dir</name>
-  <value>%%zeppelin_project_home%%/conf</value>
+  <value>%%zeppelin_dir%%/conf</value>
   <description>path for config directory</description>
 </property>
 
 
 <property>
   <name>zeppelin.notebook.dir</name>
-  <value>%%zeppelin_project_home%%/notebooks</value>
+  <value>%%zeppelin_dir%%/notebooks</value>
   <description>path or URI for notebook persist</description>
 </property>
 
@@ -75,7 +75,7 @@
 
 <property>
   <name>zeppelin.interpreter.dir</name>
-  <value>%%zeppelin_project_home%%/zeppelin-interpreter</value>
+  <value>%%zeppelin_dir%%/zeppelin-interpreter</value>
   <description>Interpreter implementation base directory</description>
 </property>
 
