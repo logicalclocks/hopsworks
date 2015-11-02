@@ -13,8 +13,8 @@
 
           <div class="control-group col-md-offset-1">
             <label for="projectname" style="color: black;">Name</label>
-            <md-input-container style="height: 50px">            
-              <input name="project_name" type="text" id="projectname"
+            <md-input-container style="height: 50px">
+              <input class="md-input form-control" name="project_name" type="text" id="projectname"
                      ng-model="projectCreatorCtrl.projectName" tabindex="1"
                      ng-pattern="projectCreatorCtrl.regex"
                      autofocus="autofocus"                                                                                                                                                                                      ng-maxlength="24"
@@ -28,11 +28,11 @@
 
             <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.pattern"
-                    class="text-danger ng-hide">Invalid project name</span>
+                    class="text-danger ng-hide">Invalid project name.</span>
 
             <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.maxlength"
-                  class="text-danger ng-hide">Project name shouldn't be longer than 24 characters</span>
+                  class="text-danger ng-hide">Project name shouldn't be longer than 24 characters.</span>
 
             <p></p>
 
