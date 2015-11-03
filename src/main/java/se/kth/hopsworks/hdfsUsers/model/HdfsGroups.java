@@ -1,7 +1,6 @@
 
 package se.kth.hopsworks.hdfsUsers.model;
 
-import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
 import java.io.Serializable;
 import java.util.Collection;
 import javax.persistence.Basic;

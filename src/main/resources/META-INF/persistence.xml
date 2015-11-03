@@ -47,6 +47,8 @@
     <class>se.kth.hopsworks.meta.entity.Template</class>
     <class>se.kth.hopsworks.meta.entity.InodeBasicMetadata</class>
     <class>se.kth.rest.application.config.Variables</class>
+    <class>se.kth.hopsworks.hdfsUsers.model.HdfsGroups</class>
+    <class>se.kth.hopsworks.hdfsUsers.model.HdfsUsers</class>
     
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>

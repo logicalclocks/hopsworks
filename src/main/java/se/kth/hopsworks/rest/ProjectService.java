@@ -39,11 +39,8 @@ import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
 @Path("/project")
 @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
 @Produces(MediaType.APPLICATION_JSON)
@@ -67,6 +64,8 @@ public class ProjectService {
   private DatasetFacade datasetFacade;
   @EJB
   private InodeFacade inodes;
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
           getName());
@@ -297,7 +296,12 @@ public class ProjectService {
       //add the services for the project
       projectController.addServices(project, projectServices, owner); 
     }
-
+    try {
+      hdfsUsersBean.addProjectFolderOwner(project);
+      hdfsUsersBean.addAllProjectMembers(project);
+    } catch (IOException ex) {
+      //should probably delete the project here
+    }
     json.setStatus("201");// Created 
     json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
     

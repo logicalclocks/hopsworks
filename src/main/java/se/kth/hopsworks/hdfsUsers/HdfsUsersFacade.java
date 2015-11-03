@@ -1,11 +1,12 @@
 package se.kth.hopsworks.hdfsUsers;
 
+import javax.ejb.Stateless;
 import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import se.kth.kthfsdashboard.user.AbstractFacade;
-
+@Stateless
 public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
 
   @PersistenceContext(unitName = "kthfsPU")

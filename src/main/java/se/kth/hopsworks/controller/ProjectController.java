@@ -31,6 +31,7 @@ import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.dataset.Dataset;
+import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
 import se.kth.hopsworks.user.model.SshKeys;
@@ -64,6 +65,8 @@ public class ProjectController {
   private DatasetController datasetController;
   @EJB
   private SshkeysFacade sshKeysBean;
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
 
   /**
    * Creates a new project(project), the related DIR, the different services
@@ -141,6 +144,8 @@ public class ProjectController {
       for (Constants.DefaultDataset ds : Constants.DefaultDataset.values()) {
         datasetController.createDataset(user, project, ds.getName(), ds.
                 getDescription(), -1, false);
+        // creates a stickbit dataset and adds user as owner.
+        hdfsUsersBean.addDatasetUsersGroups(user, project, ds.getName(), true);
       }
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
