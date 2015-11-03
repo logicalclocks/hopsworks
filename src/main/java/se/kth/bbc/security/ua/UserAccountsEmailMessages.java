@@ -1,4 +1,13 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package se.kth.bbc.security.ua;
+
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.swing.text.AbstractDocument;
 
 /**
  * This class contain the email messages that are sent to the users for account
@@ -119,6 +128,7 @@ public class UserAccountsEmailMessages {
             + BIOBANKCLOUD_SUPPORT_EMAIL;
 
     message = l1 + l2 + l3 + l4;
+
     return message;
   }
 
@@ -234,7 +244,9 @@ public class UserAccountsEmailMessages {
             + BIOBANKCLOUD_SUPPORT_EMAIL;
 
     message = l1 + tmp_pass + l2;
+
     return message;
+
   }
 
   public static String buildYubikeyResetMessage() {
@@ -251,4 +263,5 @@ public class UserAccountsEmailMessages {
 
     return message;
   }
+
 }

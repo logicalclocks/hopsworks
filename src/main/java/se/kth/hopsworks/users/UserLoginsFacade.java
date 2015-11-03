@@ -5,7 +5,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.security.ua.model.Userlogins;
+import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**

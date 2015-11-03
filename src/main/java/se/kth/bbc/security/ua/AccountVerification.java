@@ -1,14 +1,19 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package se.kth.bbc.security.ua;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.enterprise.context.RequestScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -57,19 +62,19 @@ public class AccountVerification {
       }
     }
 
-    User user = mgr.getUserByUsername(username);
+    Users user = mgr.getUserByUsernmae(username);
 
     if (user.getStatus() != PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()) {
       return false;
     }
 
     if (key.equals(user.getValidationKey())) {
-      if (user.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+      if (user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
 
         mgr.changeAccountStatus(user.getUid(), "",
                 PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
 
-      } else if (user.getYubikeyUser() == PeopleAccountStatus.MOBILE_USER.
+      } else if (user.getMode() == PeopleAccountStatus.MOBILE_USER.
               getValue()) {
 
         mgr.changeAccountStatus(user.getUid(), "",

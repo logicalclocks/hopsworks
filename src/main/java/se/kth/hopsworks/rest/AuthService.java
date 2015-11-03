@@ -1,10 +1,15 @@
 package se.kth.hopsworks.rest;
 
+import com.google.zxing.WriterException;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.mail.MessagingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -18,17 +23,20 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.commons.codec.binary.Base64;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserDTO;
 import se.kth.hopsworks.users.UserFacade;
+import se.kth.rest.application.config.VariablesFacade;
 
 @Path("/auth")
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AuthService {
+
 
   @EJB
   private UserFacade userBean;
@@ -38,7 +46,19 @@ public class AuthService {
   private UserStatusValidator statusValidator;
   @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  VariablesFacade vf;
+  
+  // To distinguish Yubikey users
+  private final String YUBIKEY_USER_MARKER = "YUBIKEY_USER_MARKER";
 
+  // For disabled OTP auth mode
+  private final String YUBIKEY_OTP_PADDING
+          = "EaS5ksRVErn2jiOmSQy5LM2X7LgWAZWfWYKQoPavbrhN";
+  
+  // For padding when password field is empty
+  private final String MOBILE_OTP_PADDING = "123456";
+  
   @GET
   @Path("session")
   @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
@@ -62,7 +82,7 @@ public class AuthService {
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
   public Response login(@FormParam("email") String email,
-          @FormParam("password") String password, @Context SecurityContext sc,
+          @FormParam("password") String password,  @FormParam("otp") String otp, @Context SecurityContext sc,
           @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
           throws AppException {
 
@@ -76,7 +96,20 @@ public class AuthService {
 
     req.getServletContext().log("USER: " + user);
     req.getServletContext().log("1 step: " + email);
-
+    
+    // Add padding if custom realm is disabled
+    if (otp == null || otp.isEmpty()) {
+      otp = MOBILE_OTP_PADDING;
+    }
+    
+    if(otp.length() == 6){
+      password = password + otp;
+    } else if(otp.length() == 44){
+      password = password + otp + YUBIKEY_USER_MARKER;
+    }
+    
+      
+    
     //only login if not already logged in...
     if (sc.getUserPrincipal() == null) {
       if (user != null && statusValidator.checkStatus(user.getStatus())) {
@@ -87,7 +120,7 @@ public class AuthService {
           req.login(email, password);
           req.getServletContext().log("3 step: " + email);
           userController.resetFalseLogin(user);
-          userController.registerLoginInfo(user, "Successful login", req);
+          userController.registerLoginInfo(user, "LOGIN", "SUCCESS", req);
           //if the logedin user has no supported role logout
           if (!sc.isUserInRole("BBC_USER") && !sc.isUserInRole("SYS_ADMIN")) {
             req.logout();
@@ -97,7 +130,7 @@ public class AuthService {
 
         } catch (ServletException e) {
           userController.registerFalseLogin(user);
-          userController.registerLoginInfo(user, "False login", req);
+          userController.registerLoginInfo(user, "LOGIN", "FAILED", req);
           throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                   ResponseMessages.AUTHENTICATION_FAILURE);
         }
@@ -144,20 +177,84 @@ public class AuthService {
   public Response register(UserDTO newUser, @Context HttpServletRequest req)
           throws AppException {
 
+    byte[]  qrCode = null ;
     req.getServletContext().log("Registering..." + newUser.getEmail() + ", "
             + newUser.getFirstName());
 
     JsonResponse json = new JsonResponse();
 
-    userController.registerUser(newUser);
+    try {
+    
+      String domain = req.getRequestURL().toString();
+      String cpath = req.getContextPath().toString();
+
+      String url = domain.substring(0, domain.indexOf(cpath));
+
+      url = url + cpath;
+
+      String ip = req.getRemoteAddr();
+      String browser ="Fix this";
+      String mac= "Fix this";
+      String os = "Fix this";
+      
+      qrCode = userController.registerUser(newUser, url, ip, browser, os, mac);
+      
+    } catch (IOException | WriterException | MessagingException ex) {
+      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
+    }
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
 
-    json.setSuccessMessage(ResponseMessages.CREATED_ACCOUNT);
+    if(vf.findById("twofactor_auth").getValue().equals("true")){
+        json.setQRCode(new String (Base64.encodeBase64(qrCode)));
+    } else{
+         json.setSuccessMessage("We registered your account request. Please validate you email and we will review your account within 48 hours.");
+    }
+      
+   
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
 
+  @POST
+  @Path("registerYubikey")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response registerYubikey(UserDTO newUser, @Context HttpServletRequest req)
+          throws AppException {
+
+    
+    req.getServletContext().log("Registering..." + newUser.getEmail() + ", "
+            + newUser.getFirstName());
+
+    JsonResponse json = new JsonResponse();
+
+    try {
+    
+      String domain = req.getRequestURL().toString();
+      String cpath = req.getContextPath().toString();
+
+      String url = domain.substring(0, domain.indexOf(cpath));
+
+      url = url + cpath;
+
+      String ip = req.getRemoteAddr();
+      String browser ="Fix this";
+      String mac= "Fix this";
+      String os = "Fix this";
+      userController.registerYubikeyUser(newUser, url, ip, browser, os, mac);
+      
+    } catch (IOException | WriterException | MessagingException ex) {
+      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    req.getServletContext().log("successfully registered new user: '" + newUser.
+            getEmail() + "'");
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
+
+  
   @POST
   @Path("recoverPassword")
   @Produces(MediaType.APPLICATION_JSON)
@@ -175,5 +272,7 @@ public class AuthService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
+  
+  
 
 }

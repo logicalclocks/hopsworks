@@ -22,8 +22,8 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.user.model.Users;
 
 @Path("/activity")
 @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
@@ -45,7 +45,7 @@ public class ActivityService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response findAllByUser(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities
             = new GenericEntity<List<Activity>>(activityDetails) {
@@ -62,7 +62,7 @@ public class ActivityService {
           @QueryParam("to") int to,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     List<Activity> activityDetails = activityFacade.
             getPaginatedActivityByUser(from, to, user);
     GenericEntity<List<Activity>> projectActivities

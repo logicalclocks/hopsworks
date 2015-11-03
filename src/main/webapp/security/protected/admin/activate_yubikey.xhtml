@@ -7,17 +7,15 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui">
   <f:view contentType="text/html">
-
     <h:head>
       <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
       <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/profile.css']}" />
-
     </h:head>
 
     <h:body>
       <ui:insert name="titleBar" >
-        <ui:include src="/bbc/lims/titleBar.xhtml" />       
+        <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
       </ui:insert>
 
       <div align="center" class="UserProfile">
@@ -149,19 +147,6 @@
 
         <h:form>
           <h:panelGrid columns="3">  
-            <p:outputLabel for="seri" 
-                           style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"
-                           value="Yubikey Serial"/>
-            <p:inputText id="seri" 
-                         value="#{peopleAdministration.serial}"  
-                         required="true"
-                         requiredMessage="Enter the Yubikey Serial Number" 
-                         size="40">
-            </p:inputText>
-
-            <p:tooltip   for="seri" 
-                         value="Yubikey Device Serial Number" 
-                         trackMouse="true" />
 
             <p:outputLabel for="pid" 
                            style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"

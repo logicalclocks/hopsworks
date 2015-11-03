@@ -123,25 +123,25 @@ label {
 //.ui-tabs-panel:hover{background:#d9edf7;border-bottom:1px solid #adf;}
 
 
-.BbcMainLayoutProject {
+.BbcMainLayoutStudy {
   //text-align: center;
   min-height: 1500px;
   width: 100%;
 }
 
-.BbcMainLayoutProject .ui-widget-content {
+.BbcMainLayoutStudy .ui-widget-content {
   border-width: 0px;  
   overflow-y: hidden;
   overflow-x: hidden;
   width: 100% !important;
 }
 
-.BbcMainLayoutProject .ui-layout-unit-content{
+.BbcMainLayoutStudy .ui-layout-unit-content{
   min-height: 1500px;
   height: auto !important;
 
 }
-/*.BbcMainLayoutProject::-webkit-scrollbar {
+/*.BbcMainLayoutStudy::-webkit-scrollbar {
      display: none;
 }*/
 
@@ -440,9 +440,4 @@ h1 {
   padding-bottom: 4px;
   padding-left: 0px;
   padding-right: 20px;
-}
-
-.archivedWarning {
-  clear: both;
-  font-size: 20px;
 }

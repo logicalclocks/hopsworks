@@ -151,14 +151,12 @@
                              requiredMessage="Answer security question" />
                 <p:watermark for="answer" value="Security answer*" />
 
-                <!--
-                                                <p:captcha id ="captcha" 
-                                                           label="Captcha"
-                                                           required="true" 
-                                                           requiredMessage="Enter Captcha"/>
-                
-                                                <p:spacer></p:spacer>
-                -->
+                <p:captcha id ="captcha" 
+                           label="Captcha"
+                           required="true" 
+                           requiredMessage="Enter Captcha"/>
+
+                <p:spacer></p:spacer>
                 <h:panelGroup style="padding: 10">
                   <p:selectBooleanCheckbox 
                     value="#{userRegistration.tos}"> 
