@@ -9,17 +9,17 @@
     <class>se.kth.bbc.jobs.jobhistory.JobOutputFile</class>
     <class>se.kth.bbc.security.ua.model.Address</class>
     <class>se.kth.bbc.security.ua.model.PeopleGroup</class>
-    <class>se.kth.bbc.security.ua.model.User</class>
-    <class>se.kth.bbc.security.ua.model.Userlogins</class>
     <class>se.kth.bbc.security.ua.model.Yubikey</class>
-    <class>se.kth.bbc.security.ua.model.BBCGroup</class>
     <class>se.kth.bbc.security.ua.model.Organization</class>
+    <class>se.kth.bbc.security.audit.model.AccountAudit</class>
+    <class>se.kth.bbc.security.audit.model.RolesAudit</class>
+    <class>se.kth.bbc.security.audit.model.Userlogins</class>
     <class>se.kth.bbc.activity.Activity</class>
     <class>se.kth.hopsworks.user.model.BbcGroup</class>
     <class>se.kth.hopsworks.user.model.Users</class>
     <class>se.kth.hopsworks.dataset.Dataset</class>
-    <class>se.kth.hopsworks.message.Message</class>
     <class>se.kth.hopsworks.dataset.DatasetRequest</class>
+    <class>se.kth.hopsworks.message.Message</class>
     <class>se.kth.bbc.project.metadata.ProjectMeta</class>
     <class>se.kth.bbc.project.privacy.model.Consent</class>
     <class>se.kth.bbc.project.ProjectTeam</class>
@@ -47,6 +47,7 @@
     <class>se.kth.hopsworks.meta.entity.Template</class>
     <class>se.kth.hopsworks.meta.entity.InodeBasicMetadata</class>
     <class>se.kth.rest.application.config.Variables</class>
+    
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

@@ -29,8 +29,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.activity.Activity;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.services.ProjectServices;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.dataset.Dataset;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -98,7 +98,7 @@ public class Project implements Serializable {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "username",
           referencedColumnName = "email")
-  private User owner;
+  private Users owner;
 
   @Basic(optional = false)
   @NotNull
@@ -145,12 +145,14 @@ public class Project implements Serializable {
     this.inode = inode;
   }
 
-  public Project(String name, User owner, Date timestamp) {
+  public Project(String name, Users owner, Date timestamp) {
     this.name = name;
     this.owner = owner;
     this.created = timestamp;
     this.archived = false;
   }
+
+
 
   public Date getCreated() {
     return created;
@@ -184,11 +186,11 @@ public class Project implements Serializable {
     return this.inode;
   }
 
-  public User getOwner() {
+  public Users getOwner() {
     return owner;
   }
 
-  public void setOwner(User owner) {
+  public void setOwner(Users owner) {
     this.owner = owner;
   }
 

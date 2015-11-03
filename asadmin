@@ -1,2 +1,16 @@
 // to create email
-asadmin create-javamail-resource --mailhost smtp.gmail.com --mailuser suppor.biobankcloud@gmail.com --fromaddress suppor.biobankcloud@gmail.com --storeprotocol imap --storeprotocolclass com.sun.mail.imap.IMAPStore --transprotocol=smtp --transprotocolclass=com.sun.mail.smtp.SMTPTransport --debug=false --enabled=true --property "mail-smtp.starttls.enable=true:mail-smtp.socketFactory.fallback=false:mail-smtp.socketFactory.port=465:mail-smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory:mail-smtp.password=XX:mail-smtp.port=465:mail-smtp.user=suppor.biobankcloud@gmail.com:mail-smtp.auth=true" mail/BBCMail
+
+1. cd [GLASSFISH_HOME_DIRECTORY]/bin
+
+2. Replace the "mybbcemail@gmail.com" with your email address service
+
+3. Run
+
+./asadmin create-javamail-resource --mailhost smtp.gmail.com --mailuser hopsworks@gmail.com --fromaddress hopsworks@gmail.com --storeprotocol imap --storeprotocolclass com.sun.mail.imap.IMAPStore --transprotocol=smtp --transprotocolclass=com.sun.mail.smtp.SMTPTransport --debug=false --enabled=true --property "mail-smtp.starttls.enable=true:mail-smtp.socketFactory.fallback=false:mail-smtp.socketFactory.port=465:mail-smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory:mail-smtp.password=XX:mail-smtp.port=465:mail-smtp.user=hopsworks@gmail.com:mail-smtp.auth=true" mail/BBCMail
+
+
+// to create custom realm
+
+1. Run
+
+./asadmin  create-auth-realm --classname se.kth.bbc.crealm.CustomAuthRealm --property "jaas-context=cauthRealm:encoding=Hex:password-column=password:datasource-jndi=jdbc/hopsworks:group-table=hopsworks.users_groups:user-table=hopsworks.users:charset=UTF-8:group-name-column=group_name:user-name-column=email:otp-secret-column=secret:user-status-column=status:group-table-user-name-column=email:yubikey-table=hopsworks.yubikey:variables-table=hopsworks.variables" cauthRealm

@@ -14,25 +14,275 @@
       <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
       <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
     </h:head>
 
     <h:body>
       <ui:insert name="titleBar" >
-        <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
+        <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
       </ui:insert>
 
-      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.SYSAdmin}">  
-
+      <p:layout id="consentMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.SYSAdmin}">  
         <p:layoutUnit id="centerLayout" position="center">
 
           <div class="container">
             <div align="left">
-              <h2>Consent Management</h2>
+              <h2>Study and Consent Management</h2>
             </div>
 
             <div class="content">
-            </div> 
+              <p:tabView dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="ethicalMgmtTabview">
+                <p:tab title="Study Management">
+
+                  <h:form id="studyForm">
+
+                    <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
+
+                    <p:dataTable id="studyTable" var="req"
+                                 value="#{studyEthicalManager.allStudies}" 
+                                 widgetVar="studyTable"
+                                 emptyMessage="No open requests"
+                                 rowKey="#{req.name}" 
+                                 editable="true" editMode="cell">
+
+                      <p:column id="onameColumn" headerText="Study Owner"  
+                                filterBy="#{req.username}">
+                        <h:outputText value="#{req.username}"  />
+                      </p:column>
+
+                      <p:column id="snameCol" headerText="StudyName" 
+                                filterBy="#{req.name}">
+                        <h:outputText value="#{req.name}" />
+                      </p:column>
+
+                      <p:column id="statColumn" headerText="Study Status" 
+                                filterBy="#{req.ethicalStatus}">
+                        <h:outputText value="#{req.ethicalStatus}" />
+                      </p:column>
+
+                      <p:column id="retColumn" headerText="Rentenion Period" > 
+                        <h:outputText value="#{req.retentionPeriod}" />
+                      </p:column>
+
+                      <p:column id="actionColumn" headerText="Action">
+                        <h:panelGrid columns="2" style="width: auto">                                                    
+                          <p:commandLink styleClass="ui-button-remove fa fa-ban" 
+                                         action="#{studyEthicalManager.rejectStudy(req)}" 
+                                         update="@form">
+                            <p:confirm header="Approve" 
+                                       message="Are you sure you want to reject this study?" 
+                                       icon="ui-icon-alert"/>
+                          </p:commandLink>
+                          <p:commandLink styleClass="ui-button-allow fa fa-check" 
+                                         action="#{studyEthicalManager.approveStudy(req)}" 
+                                         update="@form">
+                            <p:confirm header="Aprove Study" 
+                                       message="Are you sure you want to approve this study?" 
+                                       icon="ui-icon-alert"/>
+                          </p:commandLink>
+                        </h:panelGrid>
+                      </p:column>
+                    </p:dataTable>
+
+                    <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                      <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                      <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+                    </p:confirmDialog>
+                  </h:form>
+                </p:tab>
+
+                <p:tab title="Consent Info">
+                  <h:form id="consentForm">
+                    <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
+                    <p:dataTable id="consentTable" var="creq"
+                                 value="#{studyEthicalManager.allConsents}" 
+                                 widgetVar="consTable"
+                                 emptyMessage="No open requests"
+                                 rowKey="#{creq.id}" 
+                                 editable="true" editMode="cell">
+
+                      <p:column id="sOwnerColumn" headerText="Study Owner"  
+                                filterBy="#{creq.studyOwner}">
+                        <h:outputText value="#{creq.studyOwner}"  />
+                      </p:column>
+
+                      <p:column id="sNameCol" headerText="StudyName" 
+                                filterBy="#{creq.studyName}">
+                        <h:outputText value="#{creq.studyName}" />
+                      </p:column>
+
+                      <p:column id="cStatusColumn" headerText="Consent Status" 
+                                filterBy="#{creq.status}">
+                        <h:outputText value="#{creq.status}" />
+                      </p:column>
+
+                      <p:column id="cTypeColumn" headerText="Consent Type" 
+                                filterBy="#{creq.type}">
+                        <h:outputText value="#{creq.type}" />
+                      </p:column>
+
+                      <p:column id="cDateColumn" headerText="Date" > 
+                        <h:outputText value="#{creq.date}" />
+                      </p:column>
+
+
+                      <p:column id="cformColumn" headerText="Document" > 
+
+                        <h:commandLink  action="#{studyEthicalManager.showConsent(creq.name)}" 
+                                        target="_blank"
+                                        style="float:left;margin-right:10px">
+
+                          <h:outputText value="#{creq.name}" />
+                        </h:commandLink>
+                      </p:column>
+
+                      <p:column id="actionColumn" headerText="Action">
+                        <h:panelGrid columns="2" style="width: auto">                                                    
+                          <p:commandLink styleClass="ui-button-remove fa fa-ban" 
+                                         action="#{studyEthicalManager.rejectConsent(creq)}" 
+                                         update="@form">
+                            <p:confirm header="Approve" 
+                                       message="Are you sure you want to reject this document?" 
+                                       icon="ui-icon-alert"/>
+                          </p:commandLink>
+                          <p:commandLink styleClass="ui-button-allow fa fa-check" 
+                                         action="#{studyEthicalManager.approveConsent(creq)}" 
+                                         update="@form">
+                            <p:confirm header="Aprove Study" 
+                                       message="Are you sure you want to approve this document?" 
+                                       icon="ui-icon-alert"/>
+                          </p:commandLink>
+                        </h:panelGrid>
+                      </p:column>
+                    </p:dataTable>
+
+                    <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                      <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                      <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+                    </p:confirmDialog>
+                  </h:form>
+                </p:tab>
+
+                <p:tab title="New Consents">
+                  <h:form id="nConsentForm">
+                    <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
+                    <p:dataTable id="newConsentTable" var="nreq"
+                                 value="#{studyEthicalManager.allNewConsents}" 
+                                 widgetVar="newConsentsTable"
+                                 emptyMessage="No open requests"
+                                 rowKey="#{nreq.id}" 
+                                 editable="true" editMode="cell">
+
+                      <p:column id="nOwnerColumn" headerText="Study Owner"  
+                                filterBy="#{nreq.studyOwner}">
+                        <h:outputText value="#{nreq.studyOwner}"  />
+                      </p:column>
+
+                      <p:column id="nNameCol" headerText="StudyName" 
+                                filterBy="#{nreq.studyName}">
+                        <h:outputText value="#{nreq.studyName}" />
+                      </p:column>
+
+                      <p:column id="ntypeColumn" headerText="Consent Type" 
+                                filterBy="#{nreq.type}">
+                        <h:outputText value="#{nreq.type}" />
+                      </p:column>
+
+                      <p:column id="nDateColumn" headerText="Date" > 
+                        <h:outputText value="#{nreq.date}" />
+                      </p:column>
+
+                      <p:column id="nformColumn" headerText="Document" > 
+
+                        <h:commandLink  action="#{studyEthicalManager.showConsent(nreq.name)}" 
+                                        target="_blank"
+                                        style="float:left;margin-right:10px">
+
+                          <h:outputText value="#{nreq.name}" />
+                        </h:commandLink>
+                      </p:column>
+
+                      <p:column id="nactionColumn" headerText="Action">
+                        <h:panelGrid columns="2" style="width: auto">                                                    
+                          <p:commandLink styleClass="ui-button-remove fa fa-ban" 
+                                         action="#{studyEthicalManager.rejectConsent(nreq)}" 
+                                         update="@form">
+                            <p:confirm header="Approve" 
+                                       message="Are you sure you want to reject this document?" 
+                                       icon="ui-icon-alert"/>
+                          </p:commandLink>
+                          <p:commandLink styleClass="ui-button-allow fa fa-check" 
+                                         action="#{studyEthicalManager.approveConsent(nreq)}" 
+                                         update="@form">
+                            <p:confirm header="Aprove Study" 
+                                       message="Are you sure you want to approve this document?" 
+                                       icon="ui-icon-alert"/>
+                          </p:commandLink>
+                        </h:panelGrid>
+                      </p:column>
+                    </p:dataTable>
+
+                    <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                      <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                      <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+                    </p:confirmDialog>
+                  </h:form>                   
+                </p:tab>
+
+                <p:tab title="Expired Studies">
+
+                  <h:form id="expiredStudyForm">
+
+                    <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
+
+                    <p:dataTable id="expiredStudyTable" var="ereq"
+                                 value="#{studyEthicalManager.allExpiredStudies}" 
+                                 widgetVar="studyTable"
+                                 emptyMessage="No open requests"
+                                 rowKey="#{ereq.name}" 
+                                 editable="true" editMode="cell">
+
+                      <p:column id="esnameColumn" headerText="Study Owner"  
+                                filterBy="#{ereq.username}">
+                        <h:outputText value="#{ereq.username}"  />
+                      </p:column>
+
+                      <p:column id="esnameCol" headerText="StudyName" 
+                                filterBy="#{ereq.name}">
+                        <h:outputText value="#{ereq.name}" />
+                      </p:column>
+
+                      <p:column id="eStatusColumn" headerText="Study Status" 
+                                filterBy="#{ereq.ethicalStatus}">
+                        <h:outputText value="#{ereq.ethicalStatus}" />
+                      </p:column>
+
+                      <p:column id="eReteColumn" headerText="Rentenion Period" > 
+                        <h:outputText value="#{ereq.retentionPeriod}" />
+                      </p:column>
+
+                      <p:column id="eactionColumn" headerText="Action">
+                        <h:panelGrid columns="2" style="width: auto">                                                    
+                          <p:commandLink styleClass="ui-button-remove fa fa-ban" 
+                                         action="#{studyManagedBean.removeStudy(ereq)}" 
+                                         update="@form">
+                            <p:confirm header="Approve" 
+                                       message="Are you sure you want to delete this study?" 
+                                       icon="ui-icon-alert"/>
+                          </p:commandLink>
+                        </h:panelGrid>
+                      </p:column>
+                    </p:dataTable>
+
+                    <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                      <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                      <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+                    </p:confirmDialog>
+                  </h:form>
+                </p:tab>
+              </p:tabView>
+            </div>
           </div> 
         </p:layoutUnit>
       </p:layout>

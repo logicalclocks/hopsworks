@@ -45,7 +45,6 @@ import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.DatasetController;
 import se.kth.hopsworks.controller.FileTemplateDTO;
@@ -231,7 +230,7 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     JsonResponse json = new JsonResponse();
     Inode parent = inodes.getProjectRoot(this.project.getName());
     if (dataSet == null || dataSet.getName() == null || dataSet.getName().
@@ -361,7 +360,7 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
 
     try {
       datasetController.createDataset(user, project, dataSet.getName(), dataSet.

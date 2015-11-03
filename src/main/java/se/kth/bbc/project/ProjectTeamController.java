@@ -11,7 +11,7 @@ import javax.faces.bean.ViewScoped;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
-import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -56,7 +56,7 @@ public class ProjectTeamController implements Serializable {
 
   public synchronized void deleteMemberFromTeam() {
     try {
-      User user = this.teamFacade.findUserByEmail(toRemoveEmail);
+      Users user = this.teamFacade.findUserByEmail(toRemoveEmail);
       teamFacade.removeProjectTeam(sessionState.getActiveProject(),
               user);
       activityFacade.persistActivity(ActivityFacade.REMOVED_MEMBER
