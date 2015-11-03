@@ -55,6 +55,7 @@ import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.dataset.DatasetRequest;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
@@ -96,6 +97,8 @@ public class DataSetService {
   private UserFacade userfacade;
   @EJB
   private JobController jobcontroller;
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
 
   private Integer projectId;
   private Project project;
@@ -307,6 +310,7 @@ public class DataSetService {
     }
 
     Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
+    hdfsUsersBean.shareDataset(project, dataset);
 
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -364,7 +368,8 @@ public class DataSetService {
 
     try {
       datasetController.createDataset(user, project, dataSet.getName(), dataSet.
-              getDescription(), dataSet.getTemplate(), dataSet.isSearchable());
+              getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
+              false);
     } catch (NullPointerException c) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), c.
               getLocalizedMessage());
@@ -456,6 +461,7 @@ public class DataSetService {
       if (!this.dataset.isEditable()) {
         //remove the entry in the table that represents shared ds
         //but leave the dataset in hdfs b/c the user does not have the right to delete it.
+        hdfsUsersBean.unShareDataset(project, dataset);
         datasetFacade.remove(this.dataset);
         json.setSuccessMessage(ResponseMessages.SHARED_DATASET_REMOVED);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
@@ -474,6 +480,8 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + filePath);
     }
+    //remove the group associated with this dataset
+    hdfsUsersBean.deletDatasetGroup(dataset);
     json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();

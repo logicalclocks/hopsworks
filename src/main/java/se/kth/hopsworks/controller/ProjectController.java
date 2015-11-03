@@ -31,6 +31,7 @@ import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.dataset.Dataset;
+import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
@@ -87,7 +88,7 @@ public class ProjectController {
   public Project createProject(ProjectDTO newProject, String email) throws
           IOException {
     Users user = userBean.getUserByEmail(email);
-    //if there is no project by the same name for this user and project name is valid
+    //if there is no project by the same name in the system and project name is valid
     if (FolderNameValidator.isValidName(newProject.getProjectName())
             && !projectFacade.
             projectExists(newProject.getProjectName())) {
@@ -109,6 +110,8 @@ public class ProjectController {
         //Persist project object
         this.projectFacade.persistProject(project);
         this.projectFacade.flushEm();
+        //add owner and project group in HDFS
+        hdfsUsersBean.addProjectFolderOwner(project);
         //Add the activity information
         logActivity(ActivityFacade.NEW_PROJECT,
                 ActivityFacade.FLAG_PROJECT, user, project);
@@ -143,9 +146,7 @@ public class ProjectController {
     try {
       for (Constants.DefaultDataset ds : Constants.DefaultDataset.values()) {
         datasetController.createDataset(user, project, ds.getName(), ds.
-                getDescription(), -1, false);
-        // creates a stickbit dataset and adds user as owner.
-        hdfsUsersBean.addDatasetUsersGroups(user, project, ds.getName(), true);
+                getDescription(), -1, false, true);
       }
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
@@ -353,7 +354,6 @@ public class ProjectController {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
-
     //if we remove the project we cant store activity that has a reference to it!!
     //logActivity(ActivityFacade.REMOVED_PROJECT,
     //ActivityFacade.FLAG_PROJECT, user, project);
@@ -361,6 +361,8 @@ public class ProjectController {
       String path = File.separator + Constants.DIR_ROOT + File.separator
               + project.getName();
       success = fileOps.rmRecursive(path);
+      //if the files are removed the group should also go.
+      hdfsUsersBean.deleteProjectGroup(project);
     } else {
       projectFacade.remove(project);
     }
@@ -409,6 +411,12 @@ public class ProjectController {
             //first param b/c the securty check was made on the parameter sent as path.
             projectTeam.getProjectTeamPK().setProjectId(project.getId());
             projectTeamFacade.persistProjectTeam(projectTeam);
+            try {
+              hdfsUsersBean.addAProjectMember(project, projectTeam);
+            } catch (IOException ex) {
+              projectTeamFacade.removeProjectTeam(project, newMember);
+              throw new EJBException("Could not add member to HDFS.");
+            }
             logger.log(Level.FINE, "{0} - member added to project : {1}.",
                     new Object[]{newMember.getEmail(),
                       project.getName()});
@@ -463,7 +471,6 @@ public class ProjectController {
 //      }
 //    }
 //  }
-
   /**
    * Project info as data transfer object that can be sent to the user.
    * <p/>
@@ -559,6 +566,8 @@ public class ProjectController {
     }
     projectTeamFacade.removeProjectTeam(project, userToBeRemoved);
     Users user = userBean.getUserByEmail(email);
+    //remove the user name from HDFS
+    hdfsUsersBean.removeProjectMember(projectTeam.getUser(), project);
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
             ActivityFacade.FLAG_PROJECT, user, project);
 
@@ -582,6 +591,7 @@ public class ProjectController {
    * @param newRole
    * @throws AppException
    */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, String owner,
           String toUpdateEmail, String newRole) throws AppException {
     Users projOwner = userBean.getUserByEmail(owner);
@@ -601,6 +611,18 @@ public class ProjectController {
       projectTeam.setTeamRole(newRole);
       projectTeam.setTimestamp(new Date());
       projectTeamFacade.update(projectTeam);
+
+      try {
+        if (newRole.equals(AllowedRoles.DATA_OWNER)) {
+          hdfsUsersBean.addAProjectMember(project, projectTeam);
+        } else {
+          hdfsUsersBean.modifyProjectMembership(projectTeam.getUser(), project);
+        }
+      } catch (IOException ex) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "Could not update role in HDFS.");
+      }
+
       logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail,
               ActivityFacade.FLAG_PROJECT, projOwner, project);
     }

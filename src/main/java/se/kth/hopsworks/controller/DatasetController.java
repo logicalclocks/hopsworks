@@ -13,6 +13,7 @@ import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
+import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.db.InodeBasicMetadataFacade;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.InodeBasicMetadata;
@@ -40,6 +41,8 @@ public class DatasetController {
   private ActivityFacade activityFacade;
   @EJB
   private InodeBasicMetadataFacade inodeBasicMetaFacade;
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -56,6 +59,7 @@ public class DatasetController {
    * this DataSet.
    * @param searchable Defines whether the dataset can be indexed or not (i.e.
    * whether it can be visible in the search results or not)
+   * @param stickbit dataset type
    * @throws NullPointerException If any of the given parameters is null.
    * @throws IllegalArgumentException If the given DataSetDTO contains invalid
    * folder names, or the folder already exists.
@@ -63,7 +67,7 @@ public class DatasetController {
    * @see FolderNameValidator.java
    */
   public void createDataset(Users user, Project project, String dataSetName,
-          String datasetDescription, int templateId, boolean searchable)
+          String datasetDescription, int templateId, boolean searchable, boolean stickbit)
           throws IOException {
     //Parameter checking.
     if (user == null) {
@@ -99,7 +103,7 @@ public class DatasetController {
     if (success) {
       //set the dataset meta enabled. Support 3 level indexing
       this.fileOps.setMetaEnabled(dsPath);
-
+      
       try {
 
         ds = inodes.findByParentAndName(parent, dataSetName);
@@ -111,6 +115,8 @@ public class DatasetController {
         }
         datasetFacade.persistDataset(newDS);
         activityFacade.persistActivity(ActivityFacade.NEW_DATA, project, user);
+        // creates a stickbit dataset and adds user as owner.
+        hdfsUsersBean.addDatasetUsersGroups(user, project, ds.getInodePK().getName(), stickbit);
       } catch (Exception e) {
         IOException failed = new IOException("Failed to create dataset at path "
                 + dsPath + ".", e);

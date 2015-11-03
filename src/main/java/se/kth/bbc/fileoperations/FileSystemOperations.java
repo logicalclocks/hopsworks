@@ -142,8 +142,11 @@ public class FileSystemOperations {
     conf.addResource(yarnPath);
     conf.addResource(hdfsPath);
     //Need a different type of instantiation to get statistics object initialized
-    //TODO: here we could use .get(Configuration conf, String user). FileSystem then will have to be instantiated, opened and closed on every method call. Now it's just done on EJB instance creation.
+    //TODO: here we could use .get(Configuration conf, String user). 
+    //FileSystem then will have to be instantiated, opened and closed on every 
+    //method call. Now it's just done on EJB instance creation.
     FileSystem fs = FileSystem.get(conf);
+    // FileSystem.get(FileSystem.getDefaultUri(conf), conf, )
     return (DistributedFileSystem) fs;
   }
 
@@ -249,23 +252,29 @@ public class FileSystemOperations {
 
   /**
    * Set permission for path.
+   * <p>
    * @param path
    * @param permission
-   * @throws IOException 
+   * @throws IOException
    */
-  public void setPermission(Path path, FsPermission permission) throws IOException {
+  public void setPermission(Path path, FsPermission permission) throws
+          IOException {
     dfs.setPermission(path, permission);
   }
+
   /**
    * Set owner for path.
+   * <p>
    * @param path
    * @param username
    * @param groupname
-   * @throws IOException 
+   * @throws IOException
    */
-  public void setOwner(Path path, String username, String groupname) throws IOException {
+  public void setOwner(Path path, String username, String groupname) throws
+          IOException {
     dfs.setOwner(path, username, groupname);
   }
+
   /**
    * Compress a directory in the given path
    * <p/>
