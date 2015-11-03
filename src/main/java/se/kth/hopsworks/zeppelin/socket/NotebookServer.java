@@ -95,14 +95,14 @@ public class NotebookServer implements
   @OnOpen
   public void open(Session conn, EndpointConfig config) {
     logger.log(Level.INFO, "Create zeppelin websocket on port {0}:{1}",
-            new Object[]{conn.getRequestURI().getHost(), conn.
-              getRequestURI().getPort()});
+            new Object[]{conn.getRequestURI().getHost(), conn.getRequestURI().getPort()});
     this.session = conn;
     this.sender = (String) config.getUserProperties().get("user");
     this.project = getProject((String) config.getUserProperties().get(
             "projectID"));
     authenticateUser(conn, this.project, this.sender);
     if (this.userRole == null) {
+      logger.log(Level.INFO, "User not authorized for Zeepelin Access: {0}", this.sender);
       return;
     }
     this.notebook = setupNotebook(this.project);
