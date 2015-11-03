@@ -41,12 +41,9 @@ import se.kth.bbc.project.privacy.model.Consent;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.bbc.security.ua.UserManager;
-<<<<<<< HEAD
 import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.util.Settings;
-=======
 import se.kth.hopsworks.user.model.Users;
->>>>>>> 2f0886b8aac73cb942a19a07153552d81257a8b8
 
 /**
  *
