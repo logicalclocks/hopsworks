@@ -17,7 +17,7 @@
 
     <h:body>
       <ui:insert name="titleBar" >
-        <ui:include src="/bbc/lims/titleBar.xhtml" />       
+        <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
       </ui:insert>
 
       <div class="GenericMenue" align="left">
@@ -45,7 +45,7 @@
       </div>
       <p:separator></p:separator>
       <div align="center">
-        <p:commandButton  type="submit" value="Finish" action="userMgmt" process="@this" />
+        <p:commandButton  type="submit" value="Finish" action="adminIndex" process="@this" />
       </div>
     </h:body>
   </f:view>

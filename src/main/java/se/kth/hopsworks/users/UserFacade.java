@@ -7,6 +7,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.security.ua.model.Address;
+import se.kth.bbc.security.ua.model.Organization;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 

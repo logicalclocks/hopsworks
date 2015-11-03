@@ -19,7 +19,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.project.Project;
-import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -85,7 +85,7 @@ public class Activity implements Serializable {
   @JoinColumn(name = "user_id",
           referencedColumnName = "uid")
   @ManyToOne(optional = false)
-  private User user;
+  private Users user;
 
   public Activity() {
   }
@@ -164,11 +164,11 @@ public class Activity implements Serializable {
     this.project = project;
   }
 
-  public User getUser() {
+  public Users getUser() {
     return user;
   }
 
-  public void setUser(User user) {
+  public void setUser(Users user) {
     this.user = user;
   }
 

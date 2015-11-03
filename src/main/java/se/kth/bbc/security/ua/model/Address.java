@@ -16,6 +16,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -75,7 +76,7 @@ public class Address implements Serializable {
   @JoinColumn(name = "uid",
           referencedColumnName = "uid")
   @OneToOne(optional = false)
-  private User uid;
+  private Users uid;
 
   public Address() {
   }
@@ -150,11 +151,11 @@ public class Address implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public User getUid() {
+  public Users getUid() {
     return uid;
   }
 
-  public void setUid(User uid) {
+  public void setUid(Users uid) {
     this.uid = uid;
   }
 

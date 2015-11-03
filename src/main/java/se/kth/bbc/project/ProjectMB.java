@@ -41,8 +41,12 @@ import se.kth.bbc.project.privacy.model.Consent;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.bbc.security.ua.UserManager;
+<<<<<<< HEAD
 import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.util.Settings;
+=======
+import se.kth.hopsworks.user.model.Users;
+>>>>>>> 2f0886b8aac73cb942a19a07153552d81257a8b8
 
 /**
  *
@@ -90,7 +94,7 @@ public class ProjectMB implements Serializable {
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
 
-  private List<User> usernames;
+  private List<Users> usernames;
   private ProjectTeam projectTeamEntry;
   private List<Theme> selectedUsernames;
   private List<Theme> themes;
@@ -157,7 +161,7 @@ public class ProjectMB implements Serializable {
     this.sessionState = sessionState;
   }
 
-  public List<User> getUsersname() {
+  public List<Users> getUsersname() {
     return usernames;
   }
 
@@ -222,11 +226,11 @@ public class ProjectMB implements Serializable {
   }
 
   public List<Theme> addThemes() {
-    List<User> list = userMgr.filterUsersBasedOnProject(sessionState.
+    List<Users> list = userMgr.filterUsersBasedOnProject(sessionState.
             getActiveProject());
     themes = new ArrayList<>();
     int i = 0;
-    for (User user : list) {
+    for (Users user : list) {
       themes.add(new Theme(i, user.getFname() + " " + user.getLname(), user.
               getEmail()));
       i++;
@@ -566,13 +570,13 @@ public class ProjectMB implements Serializable {
     List<UserGroup> groupedUsers = new ArrayList<>();
     ProjectRoleTypes[] roles = ProjectRoleTypes.values();
     for (ProjectRoleTypes role : roles) {
-      List<User> mems = projectTeamController.findTeamMembersByProject(
+      List<Users> mems = projectTeamController.findTeamMembersByProject(
               sessionState.
               getActiveProject(),
               role.getTeam());
       if (!mems.isEmpty()) {
         List<RoledUser> roleMems = new ArrayList<>();
-        for (User u : mems) {
+        for (Users u : mems) {
           roleMems.add(new RoledUser(u.getEmail(), u.getFname() + " " + u.
                   getLname(), role));
         }
@@ -796,7 +800,7 @@ public class ProjectMB implements Serializable {
       Logger.getLogger(ProjectMB.class.getName()).log(Level.SEVERE, null, ex);
     }
     consent.setDate(new Date());
-    consent.setProject(sessionState.getActiveProject());
+    consent.setProjectName(sessionState.getActiveProject());
     consent.setStatus("PENDING");
     consent.setName(event.getFile().getFileName());
 
@@ -830,7 +834,7 @@ public class ProjectMB implements Serializable {
       Logger.getLogger(ProjectMB.class.getName()).log(Level.SEVERE, null, ex);
     }
     consent.setDate(new Date());
-    consent.setProject(sessionState.getActiveProject());
+    consent.setProjectName(sessionState.getActiveProject());
     consent.setStatus("PENDING");
     consent.setName(event.getFile().getFileName());
 
@@ -864,7 +868,7 @@ public class ProjectMB implements Serializable {
       Logger.getLogger(ProjectMB.class.getName()).log(Level.SEVERE, null, ex);
     }
     consent.setDate(new Date());
-    consent.setProject(sessionState.getActiveProject());
+    consent.setProjectName(sessionState.getActiveProject());
     consent.setStatus("PENDING");
     consent.setName(event.getFile().getFileName());
 

@@ -5,20 +5,30 @@
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui">
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
   <f:view contentType="text/html">
 
     <h:head>
-      <title><ui:insert name="title">BioBankCloud LIMS Profile</ui:insert></title>
       <link rel="stylesheet" type="text/css" href="#{resource['/css/profile.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
       <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
     </h:head>
 
     <h:body>
-      <ui:insert name="titleBar" >
-        <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
-      </ui:insert>
+
+      <c:if test="#{peopleStatusBean.SYSAdmin}">
+        <ui:insert name="adminTitleBar">
+          <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+        </ui:insert>
+      </c:if>
+
+      <c:if test="#{peopleStatusBean.anyAuthorizedResearcherRole and not peopleStatusBean.SYSAdmin}">
+        <ui:insert id="titleBar">
+          <ui:include src="/bbc/lims/titleBar.xhtml"/>     
+        </ui:insert>
+      </c:if>
+
       <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
 
       <div align="center" class="UserProfile">
@@ -63,6 +73,7 @@
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{profileManager.user.mobile}  </h3>
             </p:column>
+
           </p:panelGrid>
 
         </div>
@@ -393,7 +404,10 @@
         </h:form>
 
         <div align="left" style="padding-top: 20px;">
-          <p:commandLink type="submit" value="Back to main page" action="indexPage"  />
+          <p:commandLink type="submit" value="Back to main page" action='adminIndex' rendered="#{peopleStatusBean.SYSAdmin}" />
+          <p:commandLink type="submit" value="Back to main page" action='indexPage' rendered="#{peopleStatusBean.anyAuthorizedResearcherRole and not peopleStatusBean.SYSAdmin}"/>
+          <p:commandLink type="submit" value="Back to main page" action='adminAuditIndex' rendered="#{peopleStatusBean.onlyAuditorRole}" />
+
         </div>
 
       </div>

@@ -304,7 +304,7 @@
 }        
 
 
-.ProjectBlock {
+.StudyBlock {
   font-size: 14px;
   width: 450px;
   height: 450px;
@@ -428,7 +428,7 @@
   overflow: hidden;
 }
 
-.project_new_holder{
+.study_new_holder{
 
   display: inline-block;
   width: 90%;
@@ -710,7 +710,7 @@ h6{
      border-bottom: 1px solid #ccc;
      margin: 0 0 0 0;
 }
-.project_name_holder{
+.study_name_holder{
     
     display: block;
     width: 1170px;
@@ -780,7 +780,7 @@ h6{
   border-bottom: 1px solid #ccc;
   margin: 0 0 0 0;
 }
-.project_name_holder{
+.study_name_holder{
 
   display: block;
   width: 90%;
@@ -835,7 +835,7 @@ label{
 }
 
 
-.new_project {
+.new_study {
   width: 90%;
   height: 141px;
   margin-top: 0px;
@@ -893,7 +893,7 @@ label{
   text-align: left;
 }
 
-.input .createProject{
+.input .createStudy{
 
   height: 10px;
 }
@@ -930,7 +930,7 @@ label{
   padding-left: 20px;
 
 }
-.project_name{
+.study_name{
 
   font-size: 16px;
   line-height: 20px;   
@@ -963,7 +963,7 @@ label{
 }
 
 
-.project_content_list .event-item {
+.study_content_list .event-item {
   border-bottom-width: 1px;
   border-bottom-style: solid;
   border-bottom-color: rgb(238, 238, 238);
@@ -979,7 +979,7 @@ label{
   color: #333;
   font-weight: bold;
   display: block;
-  width: 75%;
+  width: 75%px;
   height: 18px;
 
 }
@@ -1275,7 +1275,7 @@ img .browser .s16 {
 
 
 
-.nav-project-tabs{
+.nav-study-tabs{
 
   margin: 0 0 0 0;
   display: inline-block;
@@ -1287,7 +1287,7 @@ img .browser .s16 {
 
 }
 
-.nav-project-tab:before, nav-project-tab:after {
+.nav-study-tab:before, nav-study-tab:after {
   display: table;
   content: "";
   line-height: 0;
@@ -1345,7 +1345,7 @@ img .browser .s16 {
   margin-left: 0px;
 }
 
-.container .content_project{
+.container .content_study{
   display: block;
   margin-top: 0px;
   margin-right: 0px;
@@ -1367,7 +1367,7 @@ img .browser .s16 {
   margin-left: 0px;
 }
 
-.project_content_list{
+.study_content_list{
   display: block;
   //height: 2802px;
   min-height: 100%;
@@ -1450,7 +1450,7 @@ img .browser .s16 {
   padding: 4px 6px 4px 6px;
 }
 
-.left .project_role_assign{
+.left .study_role_assign{
 
   width: 170px;
   height: 28px;
@@ -1471,7 +1471,7 @@ img .browser .s16 {
   text-overflow: ellipsis;
 }
 
-.input .project_role_assign{
+.input .study_role_assign{
 
   width: 220px;
   height: 28px;
@@ -1499,7 +1499,7 @@ img .browser .s16 {
 
 
 
-.project_role_assign label{
+.study_role_assign label{
 
   float: left;
   width: 160px;
@@ -1545,11 +1545,11 @@ img .browser .s16 {
   float: top;
 }
 
-.project {
+.study {
   margin-left: 0px;
   width:100%;
 }
-.project:before, .row:after, .project:after {
+.study:before, .row:after, .study:after {
   display: table;
   content: "";
   line-height: 0;
@@ -1592,7 +1592,7 @@ img .browser .s16 {
 }
 
 
-.project_box {
+.study_box {
   display: inline-block;
   background: #F9F9F9;
   width:100%;
@@ -1628,7 +1628,7 @@ img .browser .s16 {
 
 }
 
-.project_panelGrid {
+.study_panelGrid {
   display: block;
   //background: #F9F9F9;
   width:470px;
@@ -1639,7 +1639,7 @@ img .browser .s16 {
 
 
 
-.ui-tabs .project_box{
+.ui-tabs .study_box{
 
   display: inline-block;
   background: #F9F9F9;
@@ -1706,7 +1706,7 @@ form {
 }*/
 
 
-.project_box > .title {
+.study_box > .title {
 
   padding-top: 1%;
   padding-right: 7%;
@@ -1721,7 +1721,7 @@ form {
   font-size: 12px;
 }
 
-.project_box > .title_panelGrid{
+.study_box > .title_panelGrid{
 
   width: 338px;
   height: 36px;
@@ -1732,7 +1732,7 @@ form {
 
 
 
-/*.project_box > ul{
+/*.study_box > ul{
     
     width: 368px;
     height: 54px;
@@ -1768,7 +1768,7 @@ a {
 }*/
 
 
-.title, .project_box .title {
+.title, .study_box .title {
   background: #eee;
   background-image: -webkit-gradient(linear, 0 0, 0 30, color-stop(0.066, #eee), to(#dfdfdf));
   background-image: -webkit-linear-gradient(#eee 6.6%, #dfdfdf);
@@ -2029,7 +2029,7 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
 
-.project_operation_panel{
+.study_operation_panel{
   width: 90%;
   height: 26px;
   display: block;
@@ -2163,7 +2163,7 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
 
 }
 
-.project_download_holder{
+.study_download_holder{
 
   width: 659px;
   height: 26px;
@@ -2349,15 +2349,15 @@ ui-wizard {
   height: auto !important;
 }
 
-.projectInfo .secondColumn {
+.studyInfo .secondColumn {
   padding-left: 60px;
 }
 
-.projectInfo .secondColumn ul {
+.studyInfo .secondColumn ul {
   padding-left: 0px;
 }
 
-.projectInfo input,textarea,.ui-datalist-data {
+.studyInfo input,textarea,.ui-datalist-data {
   width: 185px;
 }
 
@@ -2539,19 +2539,19 @@ ui-wizard {
   margin-bottom: 5px;
 }
 
-.projectDialog .ui-datatable-scrollable-header {
+.studyDialog .ui-datatable-scrollable-header {
   height: 0px;
 }
 
-.projectDialog .ui-datatable {
+.studyDialog .ui-datatable {
   width: 300px;
 }
 
-.projectDialog .ui-datatable tr{  
+.studyDialog .ui-datatable tr{  
   background: none repeat scroll 0% 0% #FAFAFA;
 }
 
-.projectDialog table td {
+.studyDialog table td {
   vertical-align: middle;
 }
 

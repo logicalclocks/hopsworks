@@ -6,8 +6,10 @@ import java.io.Serializable;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import se.kth.rest.application.config.VariablesFacade;
 
 /**
  * This class is used to switch on/off the two factor authentication.
@@ -19,8 +21,17 @@ import javax.faces.bean.RequestScoped;
 public class CustomAuthenticationSwitch implements Serializable {
 
   private static final long serialVersionUID = 1L;
-
+  
+  @EJB 
+  private VariablesFacade vf;
+  
   public boolean isOtpEnabled() {
+    return vf.findById("twofactor_auth").getValue().equals("true");
+  }
+
+  
+  
+  public boolean isOtpEnabledFromPropFile() {
 
     Properties prop = new Properties();
     try {

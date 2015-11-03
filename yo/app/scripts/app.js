@@ -72,8 +72,8 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/login.html',
                       controller: 'LoginCtrl as loginCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
+                        auth: ['$q', '$location', 'AuthService', '$cookies','VariablesService',
+                          function ($q, $location, AuthService, $cookies, VariablesService) {
                             return AuthService.session().then(
                                     function (success) {
                                       $cookies.email = success.data.data.value;
@@ -82,6 +82,12 @@ angular.module('hopsWorksApp', [
                                       return $q.when(success);
                                     },
                                     function (err) {
+                                      VariablesService.getTwofactor().then(
+                                          function(success){
+                                             $cookies.otp = success.data.successMessage;
+                                      }, function(error){
+                                        
+                                      });
                                     });
                           }]
                       }
@@ -90,8 +96,8 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/register.html',
                       controller: 'RegCtrl as regCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
+                        auth: ['$q', '$location', 'AuthService', '$cookies','VariablesService',
+                          function ($q, $location, AuthService, $cookies, VariablesService  ) {
                             return AuthService.session().then(
                                     function (success) {
                                       $cookies.email = success.data.data.value;
@@ -100,7 +106,12 @@ angular.module('hopsWorksApp', [
                                       return $q.when(success);
                                     },
                                     function (err) {
-
+                                      VariablesService.getTwofactor().then(
+                                          function(success){
+                                             $cookies.otp = success.data.successMessage;
+                                      }, function(error){
+                                        
+                                      });
                                     });
                           }]
                       }
@@ -109,8 +120,13 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/recover.html',
                       controller: 'RecoverCtrl as recoverCtrl'
                     })
-
-
+                    .when('/qrCode/:QR*', {
+                      templateUrl: 'views/qrCode.html',
+                      controller: 'RegCtrl as regCtrl'
+                    })
+                    .when('/yubikey', {
+                      templateUrl: 'views/yubikey.html',
+                    })
                     .when('/project/:projectID', {
                       templateUrl: 'views/project.html',
                       controller: 'ProjectCtrl as projectCtrl',

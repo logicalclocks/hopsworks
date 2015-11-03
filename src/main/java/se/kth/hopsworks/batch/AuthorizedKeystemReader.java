@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.LocalhostServices;
 
 /**
@@ -36,8 +36,8 @@ public class AuthorizedKeystemReader extends AbstractItemReader {
 //  @Inject
 //  private JobContext jobContext;
 
-  private List<User> users;
-  private Iterator<User> usersIter;
+  private List<Users> users;
+  private Iterator<Users> usersIter;
 
   public AuthorizedKeystemReader() {
   }
@@ -52,7 +52,7 @@ public class AuthorizedKeystemReader extends AbstractItemReader {
   public List<String> readItem() throws Exception {
     List<String> projectUsers = new ArrayList<>();
     if (usersIter.hasNext()) {
-      User u = usersIter.next();
+      Users u = usersIter.next();
       List<ProjectTeam> teams = projectTeamFacade.findByMember(u);
       for (ProjectTeam pt : teams) {
         projectUsers.add(LocalhostServices.getUsernameInProject(u.getUsername(), pt.getProject().getName()));
