@@ -49,7 +49,7 @@
     <class>se.kth.rest.application.config.Variables</class>
     <class>se.kth.hopsworks.hdfsUsers.model.HdfsGroups</class>
     <class>se.kth.hopsworks.hdfsUsers.model.HdfsUsers</class>
-    
+    <class>se.kth.hopsworks.util.Variables</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

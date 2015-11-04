@@ -15,6 +15,7 @@ import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Interaction point between frontend and backend. Upload, inspect Cuneiform
@@ -33,6 +34,8 @@ public class CuneiformController {
   private AsynchronousJobExecutor submitter;
   @EJB
   private ActivityFacade activities;
+  @EJB
+  private Settings settings;
 
   /**
    * Inspect the workflow at the given path under the projectname. The path
@@ -93,7 +96,7 @@ public class CuneiformController {
     }
 
     //Then: create a CuneiformJob to run it
-    CuneiformJob cfjob = new CuneiformJob(job, submitter, user);
+    CuneiformJob cfjob = new CuneiformJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir());
     Execution jh = cfjob.requestExecutionId();
     if (jh != null) {
       submitter.startExecution(cfjob);

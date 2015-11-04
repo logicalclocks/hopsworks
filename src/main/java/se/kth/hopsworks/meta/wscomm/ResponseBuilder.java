@@ -33,6 +33,7 @@ import se.kth.hopsworks.meta.wscomm.message.Message;
 import se.kth.hopsworks.meta.wscomm.message.TemplateMessage;
 import se.kth.hopsworks.meta.wscomm.message.TextMessage;
 import se.kth.hopsworks.meta.wscomm.message.UploadedTemplateMessage;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Helper class to assist Protocol in constructing responses. Keeps Protocol
@@ -441,7 +442,7 @@ public class ResponseBuilder {
     int i = 0;
     double factor = 0.4;
 
-    while (i < se.kth.bbc.lims.Constants.MAX_RETRIES) {
+    while (i < Settings.MAX_RETRIES) {
       try {
         this.sleep((int) (10 * factor));
         

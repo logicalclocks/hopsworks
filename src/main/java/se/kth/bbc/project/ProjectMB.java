@@ -33,7 +33,6 @@ import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.ClientSessionState;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
@@ -42,6 +41,7 @@ import se.kth.bbc.project.privacy.model.Consent;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.bbc.security.ua.UserManager;
+import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -496,7 +496,7 @@ public class ProjectMB implements Serializable {
               sessionState.
               getActiveProject(), sessionState.getLoggedInUser());
       if (deleteFilesOnRemove) {
-        String path = File.separator + Constants.DIR_ROOT + File.separator
+        String path = File.separator + Settings.DIR_ROOT + File.separator
                 + projectName;
         success = fileOps.rmRecursive(path);
         if (!success) {

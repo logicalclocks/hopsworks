@@ -3,6 +3,7 @@ package se.kth.hopsworks.rest;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
@@ -14,8 +15,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -27,6 +28,10 @@ public class DownloadService {
   private static final Logger LOG
           = Logger.getLogger(DownloadService.class.getName());
 
+  @EJB
+  private Settings settings;
+  
+  
   private String path;
 
   public DownloadService() {
@@ -41,7 +46,7 @@ public class DownloadService {
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response downloadFromHDFS() throws AppException {
     Configuration conf = new Configuration();
-    conf.addResource(new Path(Constants.DEFAULT_HADOOP_CONF_DIR + "core-site.xml"));
+    conf.addResource(new Path(settings.getHadoopConfDir() + "core-site.xml"));
     FileSystem hdfs;
     FSDataInputStream stream;
     try {

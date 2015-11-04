@@ -3,8 +3,8 @@ package se.kth.bbc.project.fb;
 import java.util.Date;
 import java.util.Objects;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.dataset.Dataset;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Simplified version of the Inode entity to allow for easier access through web
@@ -82,7 +82,7 @@ public final class InodeView {
     this.shared
             = (!parent.inodePK.getName().equals(ds.getProjectId().getName()));
     if (this.shared) {
-      this.name = parent.inodePK.getName() + Constants.SHARED_FILE_SEPARATOR
+      this.name = parent.inodePK.getName() + Settings.SHARED_FILE_SEPARATOR
               + this.name;
     }
     this.owningProjectName = parent.inodePK.getName();

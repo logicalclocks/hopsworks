@@ -38,7 +38,6 @@ import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.description.JobDescription;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.fb.Inode;
@@ -61,6 +60,7 @@ import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
+import se.kth.hopsworks.util.Settings;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -99,6 +99,8 @@ public class DataSetService {
   private JobController jobcontroller;
   @EJB
   private HdfsUsersController hdfsUsersBean;
+  @EJB
+  private Settings settings;
 
   private Integer projectId;
   private Project project;
@@ -111,7 +113,7 @@ public class DataSetService {
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = this.projectFacade.find(projectId);
-    String rootDir = Constants.DIR_ROOT;
+    String rootDir = Settings.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator
             + this.project.getName();
     this.path = projectPath + File.separator;
@@ -404,7 +406,7 @@ public class DataSetService {
     String[] fullPathArray = newPath.split(File.separator);
     String[] datasetRelativePathArray = Arrays.copyOfRange(fullPathArray, 3,
             fullPathArray.length);
-    String dsPath = File.separator + Constants.DIR_ROOT + File.separator
+    String dsPath = File.separator + Settings.DIR_ROOT + File.separator
             + fullPathArray[1];
     //Check if the DataSet is writeable.
     if (!fullPathArray[1].equals(this.project.getName())) {
@@ -646,7 +648,7 @@ public class DataSetService {
             ecConfig);
     System.out.println("job persisted in the database");
     //instantiate the job
-    ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, user, this.async);
+    ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user, settings.getHadoopDir());
     //persist a job execution instance in the database and get its id
     Execution exec = encodeJob.requestExecutionId();
     System.out.println("\nSTarting the erasure coding job\n");
@@ -741,10 +743,10 @@ public class DataSetService {
     String dsName;
     String projectName;
     String[] parts = path.split(File.separator);
-    if (parts != null && parts[0].contains(Constants.SHARED_FILE_SEPARATOR)) {
+    if (parts != null && parts[0].contains(Settings.SHARED_FILE_SEPARATOR)) {
       //we can split the string and get the project name, but we have to 
       //make sure that the user have access to the dataset.
-      String[] shardDS = parts[0].split(Constants.SHARED_FILE_SEPARATOR);
+      String[] shardDS = parts[0].split(Settings.SHARED_FILE_SEPARATOR);
       if (shardDS.length < 2) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.DATASET_NOT_FOUND);
@@ -762,13 +764,13 @@ public class DataSetService {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 "Dataset is not yet accessible. Accept the share requst to access it.");
       }
-      path = path.replaceFirst(projectName + Constants.SHARED_FILE_SEPARATOR
+      path = path.replaceFirst(projectName + Settings.SHARED_FILE_SEPARATOR
               + dsName, projectName
               + File.separator + dsName);
     } else {
       return this.path + path;
     }
-    return File.separator + Constants.DIR_ROOT + File.separator
+    return File.separator + Settings.DIR_ROOT + File.separator
             + path;
   }
 

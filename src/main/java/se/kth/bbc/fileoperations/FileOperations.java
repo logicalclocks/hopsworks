@@ -10,11 +10,11 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.validation.ValidationException;
 import org.apache.hadoop.fs.Path;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.controller.FolderNameValidator;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Session bean for file operations. Translates high-level operations into
@@ -56,18 +56,20 @@ public class FileOperations {
    * folder name.
    */
   public boolean mkDir(String path) throws IOException {
-    if (!path.startsWith("/")) {
-      path = "/" + path;
-    }
-    String[] pathParts = path.substring(1).split("/");
-    for (String s : pathParts) {
-      try {
-        FolderNameValidator.isValidName(s);
-      } catch (ValidationException e) {
-        throw new IllegalArgumentException("Illegal folder name: " + s
-                + ". Reason: " + e.getLocalizedMessage(), e);
-      }
-    }
+    logger.info(("Creating HDFS directory: " + path));
+
+//    if (!path.startsWith("/")) {
+//      path = "/" + path;
+//    }
+//    String[] pathParts = path.substring(1).split("/");
+//    for (String s : pathParts) {
+//      try {
+//        FolderNameValidator.isValidName(s);
+//      } catch (ValidationException e) {
+//        throw new IllegalArgumentException("Illegal folder name: " + s
+//                + ". Reason: " + e.getLocalizedMessage(), e);
+//      }
+//    }
 
     Path location = new Path(path);
     return fsOps.mkdirs(location);
@@ -249,7 +251,7 @@ public class FileOperations {
     while (relativePath.startsWith("/")) {
       relativePath = relativePath.substring(1);
     }
-    return "hdfs:///" + Constants.DIR_ROOT + "/" + projectname + "/"
+    return "hdfs:///" + Settings.DIR_ROOT + "/" + projectname + "/"
             + relativePath;
   }
 

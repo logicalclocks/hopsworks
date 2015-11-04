@@ -1,6 +1,5 @@
 package se.kth.hopsworks.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,8 +12,8 @@ import se.kth.bbc.jobs.adam.AdamJob;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
-import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Acts as the interaction point between the Adam frontend and backend.
@@ -35,6 +34,8 @@ public class AdamController {
   private ActivityFacade activityFacade;
   @EJB
   private SparkController sparkController;
+  @EJB
+  private Settings settings;
 
   /**
    * Start an execution of the given job, ordered by the given User.
@@ -65,7 +66,7 @@ public class AdamController {
               "Some ADAM jars are not in HDFS and could not be copied in from this host.");
     }
     //Get to starting the job
-    AdamJob adamjob = new AdamJob(job, submitter, user);
+    AdamJob adamjob = new AdamJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir());
     Execution jh = adamjob.requestExecutionId();
     if (jh != null) {
       submitter.startExecution(adamjob);

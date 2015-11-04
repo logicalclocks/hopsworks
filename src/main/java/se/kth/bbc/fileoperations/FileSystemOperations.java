@@ -12,6 +12,7 @@ import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
 import io.hops.metadata.hdfs.entity.EncodingPolicy;
 import io.hops.metadata.hdfs.entity.EncodingStatus;
+import javax.ejb.EJB;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -19,7 +20,7 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import se.kth.bbc.lims.Constants;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Provides an interface for interaction with HDFS. Only interacts with HDFS.
@@ -29,17 +30,20 @@ import se.kth.bbc.lims.Constants;
 @Stateless
 public class FileSystemOperations {
 
+   @EJB
+  private Settings settings;
+  
   //TODO: use fs.copyFromLocalFile
   private static final Logger logger = Logger.getLogger(
           FileSystemOperations.class.getName());
   private DistributedFileSystem dfs;
   private Configuration conf;
-  private String CORE_CONF_DIR;
+  private String hadoopConfDir;
 
   @PostConstruct
   public void init() {
     try {
-      CORE_CONF_DIR = System.getenv("HADOOP_CONF_DIR");
+      hadoopConfDir = System.getenv("HADOOP_CONF_DIR");
       dfs = getDfs();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
@@ -105,28 +109,28 @@ public class FileSystemOperations {
   private DistributedFileSystem getDfs() throws IOException {
 
     //If still not found: throw exception
-    if (CORE_CONF_DIR == null) {
-      logger.log(Level.WARNING, "No configuration path set, using default: "
-              + Constants.DEFAULT_HADOOP_CONF_DIR);
-      CORE_CONF_DIR = Constants.DEFAULT_HADOOP_CONF_DIR;
+    if (hadoopConfDir == null) {
+      logger.log(Level.WARNING, "No HADOOP_CONF_DIR set in environment variable, using settings: "
+              + settings.getHadoopConfDir());
+      hadoopConfDir = settings.getHadoopConfDir();
     }
 
     //Get the configuration file at found path
-    File hadoopConfFile = new File(CORE_CONF_DIR, "core-site.xml");
+    File hadoopConfFile = new File(hadoopConfDir, "core-site.xml");
     if (!hadoopConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               hadoopConfFile);
       throw new IllegalStateException("No hadoop conf file: core-site.xml");
     }
 
-    File yarnConfFile = new File(CORE_CONF_DIR, "yarn-site.xml");
+    File yarnConfFile = new File(hadoopConfDir, "yarn-site.xml");
     if (!yarnConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               yarnConfFile);
       throw new IllegalStateException("No yarn conf file: yarn-site.xml");
     }
 
-    File hdfsConfFile = new File(CORE_CONF_DIR, "hdfs-site.xml");
+    File hdfsConfFile = new File(hadoopConfDir, "hdfs-site.xml");
     if (!hdfsConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               hdfsConfFile);
@@ -287,7 +291,7 @@ public class FileSystemOperations {
 
     //add the erasure coding configuration file
     File erasureCodingConfFile
-            = new File(CORE_CONF_DIR, "erasure-coding-site.xml");
+            = new File(hadoopConfDir, "erasure-coding-site.xml");
     if (!erasureCodingConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               erasureCodingConfFile);

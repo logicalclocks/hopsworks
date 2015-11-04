@@ -16,13 +16,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import se.kth.bbc.fileoperations.FileSystemOperations;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfsUsers.HdfsGroupsFacade;
 import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
+import se.kth.hopsworks.util.Settings;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -38,6 +38,8 @@ public class HdfsUsersController {
   private FileSystemOperations fsOps;
   @EJB
   private ProjectTeamFacade teamFacade;
+  @EJB
+  private Settings settings;
 
   /**
    * Creates a new group in HDFS with the name <code>projectName</code> if it
@@ -65,7 +67,7 @@ public class HdfsUsersController {
     //if new project set owner and permission.
     if (hdfsGroup == null) {
       hdfsGroup = new HdfsGroups(groupId, project.getName());
-      String projectPath = File.separator + Constants.DIR_ROOT + File.separator
+      String projectPath = File.separator + settings.DIR_ROOT + File.separator
               + project.getName();
       Path location = new Path(projectPath);
       //FsPermission(FsAction u, FsAction g, FsAction o) 775
@@ -185,7 +187,7 @@ public class HdfsUsersController {
     HdfsGroups hdfsGroup = hdfsGroupsFacade.findHdfsGroup(groupId);
     if (hdfsGroup == null) {
       hdfsGroup = new HdfsGroups(groupId, datasetGroup);
-      String dsPath = File.separator + Constants.DIR_ROOT + File.separator
+      String dsPath = File.separator + settings.DIR_ROOT + File.separator
               + project.getName() + File.separator + datasetName;
       Path location = new Path(dsPath);
       //FsPermission(FsAction u, FsAction g, FsAction o, boolean sb) 775
