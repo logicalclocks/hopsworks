@@ -7,6 +7,7 @@ package io.hops.hdfs;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 /**
@@ -25,6 +26,14 @@ public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
 
     public HdfsLeDescriptorsFacade() {
         super(HdfsLeDescriptors.class);
+    }
+
+    public HdfsLeDescriptors findById() {
+        try {
+            return em.createNamedQuery("HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
     
 }
