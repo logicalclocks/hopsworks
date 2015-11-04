@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "hops.hdfs_le_descriptors")
 @XmlRootElement
 @NamedQueries({
+    @NamedQuery(name = "HdfsLeDescriptors.findEndpoint", query = "SELECT h FROM HdfsLeDescriptors h ASCENDING ORDER BY h.hdfsLeDescriptorsPK.id LIMIT 1"),
     @NamedQuery(name = "HdfsLeDescriptors.findAll", query = "SELECT h FROM HdfsLeDescriptors h"),
     @NamedQuery(name = "HdfsLeDescriptors.findById", query = "SELECT h FROM HdfsLeDescriptors h WHERE h.hdfsLeDescriptorsPK.id = :id"),
     @NamedQuery(name = "HdfsLeDescriptors.findByCounter", query = "SELECT h FROM HdfsLeDescriptors h WHERE h.counter = :counter"),
