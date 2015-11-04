@@ -192,8 +192,8 @@ public class ResetPassword implements Serializable {
     } catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");
-    } catch (RollbackException | HeuristicMixedException |
-            HeuristicRollbackException | SecurityException |
+    } catch (RollbackException | HeuristicMixedException | MessagingException |
+            HeuristicRollbackException | SecurityException | 
             IllegalStateException | SystemException | NotSupportedException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");
