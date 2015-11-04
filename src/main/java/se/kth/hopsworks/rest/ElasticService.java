@@ -34,7 +34,6 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.QueryBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
@@ -44,12 +43,10 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import org.elasticsearch.search.SearchHit;
-import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.util.Ip;
-import se.kth.rest.application.config.Variables;
-import se.kth.rest.application.config.VariablesFacade;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -69,8 +66,8 @@ public class ElasticService {
   private NoCacheResponse noCacheResponse;
 
   @EJB
-  private VariablesFacade variables;
-
+  private Settings settings;
+  
   /**
    * Searches for content composed of projects and datasets. Hits two elastic indices: 'project' and 'dataset'
    * <p/>
@@ -95,7 +92,7 @@ public class ElasticService {
     }
 
     //some necessary client settings
-    final Settings settings = ImmutableSettings.settingsBuilder()
+    final org.elasticsearch.common.settings.Settings settings = ImmutableSettings.settingsBuilder()
         .put("client.transport.sniff", true) //being able to inspect other nodes 
         .put("cluster.name", "hops")
         .build();
@@ -103,12 +100,12 @@ public class ElasticService {
     String addr = getElasticIpAsString();
     //initialize the client
     Client client = new TransportClient(settings)
-        .addTransportAddress(new InetSocketTransportAddress(addr, Constants.ELASTIC_PORT));
+        .addTransportAddress(new InetSocketTransportAddress(addr, Settings.ELASTIC_PORT));
 
 
     //check if the indices are up and running
-    if (!this.indexExists(client, Constants.META_PROJECT_INDEX) || !this.
-        indexExists(client, Constants.META_DATASET_INDEX)) {
+    if (!this.indexExists(client, Settings.META_PROJECT_INDEX) || !this.
+        indexExists(client, Settings.META_DATASET_INDEX)) {
 
       logger.log(Level.FINE, ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -124,10 +121,10 @@ public class ElasticService {
      */
     //hit the indices - execute the queries
     SearchResponse response
-        = client.prepareSearch(Constants.META_PROJECT_INDEX,
-            Constants.META_DATASET_INDEX).
-        setTypes(Constants.META_PROJECT_PARENT_TYPE,
-            Constants.META_DATASET_PARENT_TYPE)
+        = client.prepareSearch(Settings.META_PROJECT_INDEX,
+            Settings.META_DATASET_INDEX).
+        setTypes(Settings.META_PROJECT_PARENT_TYPE,
+            Settings.META_DATASET_PARENT_TYPE)
         .setQuery(this.matchProjectsDatasetsQuery(searchTerm))
         //.setQuery(this.getDatasetComboQuery(searchTerm))
         .addHighlightedField("name")
@@ -187,22 +184,22 @@ public class ElasticService {
           "Incomplete request!");
     }
 
-    final Settings settings = ImmutableSettings.settingsBuilder()
+    final org.elasticsearch.common.settings.Settings settings = ImmutableSettings.settingsBuilder()
         .put("client.transport.sniff", true) //being able to retrieve other nodes 
         .put("cluster.name", "hops").build();
 
 
     //initialize the client
     Client client = new TransportClient(settings)
-        .addTransportAddress(new InetSocketTransportAddress(getElasticIpAsString(), Constants.ELASTIC_PORT));
+        .addTransportAddress(new InetSocketTransportAddress(getElasticIpAsString(), Settings.ELASTIC_PORT));
 
     //check if the indices are up and running
-    if (!this.indexExists(client, Constants.META_PROJECT_INDEX)) {
+    if (!this.indexExists(client, Settings.META_PROJECT_INDEX)) {
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
-    } else if (!this.typeExists(client, Constants.META_PROJECT_INDEX,
-        Constants.META_PROJECT_CHILD_TYPE)) {
+    } else if (!this.typeExists(client, Settings.META_PROJECT_INDEX,
+        Settings.META_PROJECT_CHILD_TYPE)) {
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
@@ -210,10 +207,10 @@ public class ElasticService {
 
     //hit the indices - execute the queries
     SearchResponse response
-        = client.prepareSearch(Constants.META_PROJECT_INDEX)
-        .setTypes(Constants.META_PROJECT_CHILD_TYPE)
+        = client.prepareSearch(Settings.META_PROJECT_INDEX)
+        .setTypes(Settings.META_PROJECT_CHILD_TYPE)
         .setQuery(this.matchChildQuery(projectName,
-                Constants.META_PROJECT_PARENT_TYPE, searchTerm))
+                Settings.META_PROJECT_PARENT_TYPE, searchTerm))
         .addHighlightedField("name")
         .execute().actionGet();
 
@@ -270,21 +267,21 @@ public class ElasticService {
           "Incomplete request!");
     }
 
-    final Settings settings = ImmutableSettings.settingsBuilder()
+    final org.elasticsearch.common.settings.Settings settings = ImmutableSettings.settingsBuilder()
         .put("client.transport.sniff", true) //being able to retrieve other nodes 
         .put("cluster.name", "hops").build();
 
     //initialize the client
     Client client = new TransportClient(settings)
-        .addTransportAddress(new InetSocketTransportAddress(getElasticIpAsString(), Constants.ELASTIC_PORT));
+        .addTransportAddress(new InetSocketTransportAddress(getElasticIpAsString(), Settings.ELASTIC_PORT));
 
     //check if the indices are up and running
-    if (!this.indexExists(client, Constants.META_DATASET_INDEX)) {
+    if (!this.indexExists(client, Settings.META_DATASET_INDEX)) {
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
-    } else if (!this.typeExists(client, Constants.META_DATASET_INDEX,
-        Constants.META_DATASET_CHILD_TYPE)) {
+    } else if (!this.typeExists(client, Settings.META_DATASET_INDEX,
+        Settings.META_DATASET_CHILD_TYPE)) {
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
@@ -292,10 +289,10 @@ public class ElasticService {
 
     //hit the indices - execute the queries
     SearchResponse response
-        = client.prepareSearch(Constants.META_DATASET_INDEX)
-        .setTypes(Constants.META_DATASET_CHILD_TYPE)
+        = client.prepareSearch(Settings.META_DATASET_INDEX)
+        .setTypes(Settings.META_DATASET_CHILD_TYPE)
         .setQuery(this.matchChildQuery(datasetName,
-                Constants.META_DATASET_PARENT_TYPE, searchTerm))
+                Settings.META_DATASET_PARENT_TYPE, searchTerm))
         .addHighlightedField("name")
         .execute().actionGet();
 
@@ -360,12 +357,12 @@ public class ElasticService {
 
     //build the project base condition queries
     QueryBuilder operationMatch = matchQuery(
-        Constants.META_INODE_OPERATION_FIELD,
-        Constants.META_INODE_OPERATION_ADD);
+        Settings.META_INODE_OPERATION_FIELD,
+        Settings.META_INODE_OPERATION_ADD);
 
     //match searchable
     QueryBuilder searchableMatch = matchQuery(
-        Constants.META_INODE_SEARCHABLE_FIELD, 1);
+        Settings.META_INODE_SEARCHABLE_FIELD, 1);
 
     QueryBuilder baseCondition = boolQuery()
         .must(operationMatch)
@@ -404,10 +401,10 @@ public class ElasticService {
   private QueryBuilder getNameQuery(String searchTerm) {
 
     //prefix name match
-    QueryBuilder namePrefixMatch = prefixQuery(Constants.META_NAME_FIELD,
+    QueryBuilder namePrefixMatch = prefixQuery(Settings.META_NAME_FIELD,
         searchTerm);
 
-    QueryBuilder namePhraseMatch = matchPhraseQuery(Constants.META_NAME_FIELD,
+    QueryBuilder namePhraseMatch = matchPhraseQuery(Settings.META_NAME_FIELD,
         searchTerm);
 
     QueryBuilder nameQuery = boolQuery()
@@ -428,34 +425,34 @@ public class ElasticService {
     //do a prefix query on the description field in case the user starts writing 
     //a full sentence
     QueryBuilder descriptionPrefixMatch = prefixQuery(
-        Constants.META_DESCRIPTION_FIELD, searchTerm);
+        Settings.META_DESCRIPTION_FIELD, searchTerm);
 
     //a phrase query to match the dataset description
     QueryBuilder descriptionMatch = termsQuery(
-        Constants.META_DESCRIPTION_FIELD, searchTerm);
+        Settings.META_DESCRIPTION_FIELD, searchTerm);
 
     //add a phrase match query to enable results to popup while typing phrases
     QueryBuilder descriptionPhraseMatch = matchPhraseQuery(
-        Constants.META_DESCRIPTION_FIELD, searchTerm);
+        Settings.META_DESCRIPTION_FIELD, searchTerm);
 
     //add a fuzzy search on description field
     //QueryBuilder descriptionFuzzyQuery = fuzzyQuery(
-    //        Constants.META_DESCRIPTION_FIELD, searchTerm);
+    //        Settings.META_DESCRIPTION_FIELD, searchTerm);
     //do a prefix query on the metadata first in case the user starts typing a 
     //full sentence
-    QueryBuilder metadataPrefixMatch = prefixQuery(Constants.META_DATA_FIELD,
+    QueryBuilder metadataPrefixMatch = prefixQuery(Settings.META_DATA_FIELD,
         searchTerm);
 
     //apply phrase filter on user metadata
     QueryBuilder metadataMatch = termsQuery(
-        Constants.META_DATA_FIELD, searchTerm);
+        Settings.META_DATA_FIELD, searchTerm);
 
     //add a phrase match query to enable results to popup while typing phrases
     QueryBuilder metadataPhraseMatch = matchPhraseQuery(
-        Constants.META_DATA_FIELD, searchTerm);
+        Settings.META_DATA_FIELD, searchTerm);
 
     //add a fuzzy search on metadata field
-    //QueryBuilder metadataFuzzyQuery = fuzzyQuery(Constants.META_DATA_FIELD,
+    //QueryBuilder metadataFuzzyQuery = fuzzyQuery(Settings.META_DATA_FIELD,
     //        searchTerm);
     QueryBuilder datasetsQuery = boolQuery()
         .should(descriptionPrefixMatch)
@@ -505,16 +502,16 @@ public class ElasticService {
     //TODO: ADD SEARCHABLE FIELD IN CHILD DOCUMENTS. 1 BY DEFAULT BY THE INDEXING SCRIPTS
     QueryBuilder hasParentPart = hasParentQuery(
         parentType,
-        matchQuery(Constants.META_NAME_FIELD, parentName));
+        matchQuery(Settings.META_NAME_FIELD, parentName));
 
     //build the base conditions query for the child documents
     QueryBuilder operationMatch = matchQuery(
-        Constants.META_INODE_OPERATION_FIELD,
-        Constants.META_INODE_OPERATION_ADD);
+        Settings.META_INODE_OPERATION_FIELD,
+        Settings.META_INODE_OPERATION_ADD);
 
     //match searchable
     QueryBuilder searchableMatch = matchQuery(
-        Constants.META_INODE_SEARCHABLE_FIELD, 1);
+        Settings.META_INODE_SEARCHABLE_FIELD, 1);
 
     QueryBuilder baseCondition = boolQuery()
         .must(hasParentPart)
@@ -573,7 +570,7 @@ public class ElasticService {
   private void clientShutdown(Client client) {
 
     client.admin().indices().clearCache(new ClearIndicesCacheRequest(
-        Constants.META_PROJECT_INDEX, Constants.META_DATASET_INDEX));
+        Settings.META_PROJECT_INDEX, Settings.META_DATASET_INDEX));
 
     client.close();
   }
@@ -584,15 +581,12 @@ public class ElasticService {
   private void bootIndices(Client client) {
 
     client.admin().indices().open(new OpenIndexRequest(
-        Constants.META_PROJECT_INDEX, Constants.META_DATASET_INDEX));
+        Settings.META_PROJECT_INDEX, Settings.META_DATASET_INDEX));
   }
 
   private String getElasticIpAsString() throws AppException {
-    String addr = Constants.DEFAULT_ELASTIC_IP;
-    Variables elasticIp = variables.findById(Constants.VARIABLE_ELASTIC_ADDR);
-    if (elasticIp != null && elasticIp.getValue().isEmpty() == false) {
-      addr = elasticIp.getValue();
-    }
+    String addr = settings.getElasticIp();
+
 
     // Validate the ip address pulled from the variables
     if (Ip.validIp(addr) == false) {

@@ -38,7 +38,8 @@ public abstract class HopsJob {
   //Service provider providing access to facades
   protected final AsynchronousJobExecutor services;
   protected final JobDescription jobDescription;
-  private final Users user;
+  protected final Users user;
+  protected final String hadoopDir;
 
   /**
    * Create a HopsJob instance.
@@ -47,10 +48,11 @@ public abstract class HopsJob {
    * @param services A service provider giving access to several execution
    * services.
    * @param user The user executing this job.
+   * @param hadoopDir base Hadoop installation directory
    * @throws NullPointerException If either of the given arguments is null.
    */
   protected HopsJob(JobDescription jobDescription,
-          AsynchronousJobExecutor services, Users user) throws
+          AsynchronousJobExecutor services, Users user, String hadoopDir) throws
           NullPointerException {
     //Check validity
     if (jobDescription == null) {
@@ -64,6 +66,7 @@ public abstract class HopsJob {
     this.jobDescription = jobDescription;
     this.services = services;
     this.user = user;
+    this.hadoopDir = hadoopDir;
   }
 
   /**
