@@ -350,7 +350,7 @@ public class PeopleAdministration implements Serializable {
 
     } catch (EJBException ejb) {
       MessagesController.addSecurityErrorMessage("Rejection failed");
-    } catch (MessagingException ex) {
+    } catch (MessagingException  ex) {
       Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
               "Could not reject user.", ex);
     }
