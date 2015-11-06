@@ -19,7 +19,7 @@ public class EmailBean {
 
   @Asynchronous
   public void sendEmail(String to, String subject, String body) throws
-          MessagingException {
+      MessagingException, SendFailedException {
 
     MimeMessage message = new MimeMessage(mailSession);
     message.setFrom(new InternetAddress(mailSession.getProperty("mail.from")));
