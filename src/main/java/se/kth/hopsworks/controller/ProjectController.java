@@ -112,8 +112,6 @@ public class ProjectController {
         //Persist project object
         this.projectFacade.persistProject(project);
         this.projectFacade.flushEm();
-        //add owner and project group in HDFS
-        hdfsUsersBean.addProjectFolderOwner(project);
         //Add the activity information
         logActivity(ActivityFacade.NEW_PROJECT,
                 ActivityFacade.FLAG_PROJECT, user, project);
@@ -618,7 +616,7 @@ public class ProjectController {
         if (newRole.equals(AllowedRoles.DATA_OWNER)) {
           hdfsUsersBean.addAProjectMember(project, projectTeam);
         } else {
-          hdfsUsersBean.modifyProjectMembership(projectTeam.getUser(), project);
+          hdfsUsersBean.modifyProjectMembership(user, project);
         }
       } catch (IOException ex) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

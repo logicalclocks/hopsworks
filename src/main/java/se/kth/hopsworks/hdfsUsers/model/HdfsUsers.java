@@ -47,11 +47,11 @@ public class HdfsUsers implements Serializable {
     @JoinTable(name = "hops.hdfs_users_groups",
           joinColumns
           = {
-            @JoinColumn(name = "group_id",
+            @JoinColumn(name = "user_id",
                     referencedColumnName = "id")},
           inverseJoinColumns
           = {
-            @JoinColumn(name = "user_id",
+            @JoinColumn(name = "group_id",
                     referencedColumnName = "id")})
   @ManyToMany
   private Collection<HdfsGroups> hdfsGroupsCollection;

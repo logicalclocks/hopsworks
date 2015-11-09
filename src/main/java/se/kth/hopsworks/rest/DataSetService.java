@@ -483,7 +483,7 @@ public class DataSetService {
               "Could not delete the file at " + filePath);
     }
     //remove the group associated with this dataset
-    hdfsUsersBean.deletDatasetGroup(dataset);
+    hdfsUsersBean.deleteDatasetGroup(dataset);
     json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();

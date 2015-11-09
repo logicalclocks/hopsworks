@@ -258,43 +258,53 @@ public class ProjectService {
     try {
       //save the project
       project = projectController.createProject(projectDTO, owner);
-      if (project != null) {
-        projectController.createProjectLogResources(owner, project);
-      } else {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.PROJECT_NAME_EXIST);
-      }
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);
-      json.setErrorMsg(ResponseMessages.PROJECT_FOLDER_NOT_CREATED + "\n "
-              + json.getErrorMsg());
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
     } catch (IllegalArgumentException e) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), e.
               getLocalizedMessage());
     } catch (EJBException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.FOLDER_INODE_NOT_CREATED, ex);
-      json.setErrorMsg(ResponseMessages.FOLDER_INODE_NOT_CREATED + "\n "
-              + json.getErrorMsg());
-    } catch (ProjectInternalFoldersFailedException ee) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.FOLDER_INODE_NOT_CREATED);
+    }
+    if (project != null) {
       try {
-        if (project != null) {
+        hdfsUsersBean.addProjectFolderOwner(project);
+        projectController.createProjectLogResources(owner, project);
+      } catch (ProjectInternalFoldersFailedException ee) {
+        try {
           projectController.removeByID(project.getId(), owner, true);
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Could not create project resources");
+        } catch (IOException e) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                  getStatusCode(), e.getMessage());
         }
-      } catch (IOException e) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(), e.getMessage());
+      } catch (IOException ex) {
+        try {
+          projectController.removeByID(project.getId(), owner, true);
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Could not add project folder owner in HDFS");
+        } catch (IOException e) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                  getStatusCode(), e.getMessage());
+        }
       }
+    } else {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NAME_EXIST);
     }
 
-    if (project != null) {
-      //add members of the project
-      failedMembers = projectController.addMembers(project, owner, projectDTO.
-              getProjectTeam());
-      //add the services for the project
-      projectController.addServices(project, projectServices, owner);
-    }
+    //add members of the project
+    failedMembers = projectController.addMembers(project, owner, projectDTO.
+            getProjectTeam());
+    //add the services for the project
+    projectController.addServices(project, projectServices, owner);
 
     json.setStatus("201");// Created 
     json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);

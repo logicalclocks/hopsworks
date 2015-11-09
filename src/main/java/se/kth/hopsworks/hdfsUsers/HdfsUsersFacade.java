@@ -36,11 +36,6 @@ public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
   }
 
   public void persist(HdfsUsers user) {
-    HdfsUsers u = em.find(HdfsUsers.class, user.getId());
-    if (u != null) {
-      em.merge(u);
-      return;
-    }
     em.persist(user);
   }
 
@@ -48,8 +43,7 @@ public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
     em.merge(user);
   }
 
-  @Override
-  public void remove(HdfsUsers user) {
+  public void removeHdfsUser(HdfsUsers user) {
     HdfsUsers u = em.find(HdfsUsers.class, user.getId());
     if (u != null) {
       em.remove(u);

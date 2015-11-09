@@ -7,6 +7,8 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
@@ -43,8 +45,17 @@ public class HdfsGroups implements Serializable {
           max = 1000)
   @Column(name = "name")
   private String name;
-
-  @ManyToMany(mappedBy = "hdfsGroupsCollection")
+  @JoinTable(name = "hops.hdfs_users_groups",
+          joinColumns
+          = {
+            @JoinColumn(name = "group_id",
+                    referencedColumnName = "id")},
+          inverseJoinColumns
+          = {
+            @JoinColumn(name = "user_id",
+                    referencedColumnName = "id")})
+  @ManyToMany
+  //@ManyToMany(mappedBy = "hdfsGroupsCollection")
   private Collection<HdfsUsers> hdfsUsersCollection;
 
   public HdfsGroups() {
