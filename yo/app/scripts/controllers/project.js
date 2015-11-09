@@ -5,8 +5,8 @@
 
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams', 'UtilsService',
-          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies','DataSetService',
-          function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies, DataSetService) {
+          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies','DataSetService', 'Endpoint',
+          function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies, DataSetService, Endpoint) {
 
             var self = this;
             self.working = false;
@@ -24,6 +24,16 @@ angular.module('hopsWorksApp')
             self.alreadyChoosenServices = [];
             self.selectionProjectTypes = [];
             self.pId = $routeParams.projectID;
+
+
+            var getEndpoint = function () {//
+                Endpoint.findEndpoint().then(
+                    function (success) {
+                        return success.data;
+                    }, function (error) {
+                        return '...';
+                    });
+              };
 
 
             var getCurrentProject = function () {

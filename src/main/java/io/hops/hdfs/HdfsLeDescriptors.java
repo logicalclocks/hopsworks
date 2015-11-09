@@ -17,19 +17,15 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/**
- *
- * @author kerkinos
- */
 @Entity
 @Table(name = "hops.hdfs_le_descriptors")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "HdfsLeDescriptors.findEndpoint", query = "SELECT h FROM HdfsLeDescriptors h ASCENDING ORDER BY h.hdfsLeDescriptorsPK.id LIMIT 1"),
+    @NamedQuery(name = "HdfsLeDescriptors.findEndpoint", query = "SELECT h FROM HdfsLeDescriptors h ORDER BY h.hdfsLeDescriptorsPK.id ASC"),
     @NamedQuery(name = "HdfsLeDescriptors.findAll", query = "SELECT h FROM HdfsLeDescriptors h"),
     @NamedQuery(name = "HdfsLeDescriptors.findById", query = "SELECT h FROM HdfsLeDescriptors h WHERE h.hdfsLeDescriptorsPK.id = :id"),
     @NamedQuery(name = "HdfsLeDescriptors.findByCounter", query = "SELECT h FROM HdfsLeDescriptors h WHERE h.counter = :counter"),
-    @NamedQuery(name = "HdfsLeDescriptors.findByHostname", query = "SELECT h FROM HdfsLeDescriptors h WHERE h.hostname = :hostname"),
+    @NamedQuery(name = "HdfsLeDescriptors.findByHost.jpql.parser.IdentificationVariablname", query = "SELECT h FROM HdfsLeDescriptors h WHERE h.hostname = :hostname"),
     @NamedQuery(name = "HdfsLeDescriptors.findByHttpAddress", query = "SELECT h FROM HdfsLeDescriptors h WHERE h.httpAddress = :httpAddress"),
     @NamedQuery(name = "HdfsLeDescriptors.findByPartitionVal", query = "SELECT h FROM HdfsLeDescriptors h WHERE h.hdfsLeDescriptorsPK.partitionVal = :partitionVal")})
 public class HdfsLeDescriptors implements Serializable {
