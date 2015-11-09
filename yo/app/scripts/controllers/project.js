@@ -5,8 +5,8 @@
 
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams', 'UtilsService',
-          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies','DataSetService', 'Endpoint',
-          function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies, DataSetService, Endpoint) {
+          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies','DataSetService', 'EndpointService',
+          function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies, DataSetService, EndpointService) {
 
             var self = this;
             self.working = false;
@@ -27,7 +27,7 @@ angular.module('hopsWorksApp')
 
 
             var getEndpoint = function () {//
-                Endpoint.findEndpoint().then(
+                EndpointService.findEndpoint().then(
                     function (success) {
                         return success.data;
                     }, function (error) {

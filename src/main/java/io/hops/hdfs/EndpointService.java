@@ -18,11 +18,12 @@ import javax.ws.rs.core.*;
 import java.util.List;
 import java.util.StringTokenizer;
 
+@Path("/endpoint")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class Endpoint {
+public class EndpointService {
 
-    public Endpoint() {
+    public EndpointService() {
     }
 
     @EJB
@@ -31,9 +32,7 @@ public class Endpoint {
     private NoCacheResponse noCacheResponse;
 
     @GET
-    @Path("endpoint")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
     public Response findEndpoint(
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException {

@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .factory('Endpoint', ['$http', function ($http) {
+    .factory(   'EndpointService', ['$http', function ($http) {
         return function () {
             var service = {
 
