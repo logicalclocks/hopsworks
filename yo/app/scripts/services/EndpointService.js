@@ -1,8 +1,9 @@
+/*global angular: false */
+
 'use strict';
 
 angular.module('hopsWorksApp')
-    .factory(   'EndpointService', ['$http', function ($http) {
-        return function () {
+    .factory('EndpointService', ['$http', function ($http) {
             var service = {
 
                 findEndpoint: function () {
@@ -10,5 +11,4 @@ angular.module('hopsWorksApp')
                 }
             };
             return service;
-        }
     }]);

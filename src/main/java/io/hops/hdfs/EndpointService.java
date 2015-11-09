@@ -4,6 +4,7 @@ import se.kth.bbc.project.ProjectTeam;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.rest.AppException;
+import se.kth.hopsworks.rest.JsonResponse;
 import se.kth.hopsworks.rest.NoCacheResponse;
 
 import javax.ejb.EJB;
@@ -36,10 +37,13 @@ public class EndpointService {
     public Response findEndpoint(
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException {
-
+        JsonResponse json = new JsonResponse();
         HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
 
+        json.setStatus("SUCCESS");
+        json.setData(hdfsLeDescriptors.getHostname());
+
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-                hdfsLeDescriptors.getHostname()).build();
+                json).build();
     }
 }

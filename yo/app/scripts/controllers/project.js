@@ -18,6 +18,8 @@ angular.module('hopsWorksApp')
             self.cards = [];
             self.projectMembers = [];
 
+            self.endpoint = '...';
+
             // We could instead implement a service to get all the available types but this will do it for now
 //            self.projectTypes = ['JOBS', 'ZEPPELIN', 'SSH'];
             self.projectTypes = ['JOBS', 'ZEPPELIN'];
@@ -26,15 +28,17 @@ angular.module('hopsWorksApp')
             self.pId = $routeParams.projectID;
 
 
-            var getEndpoint = function () {//
+            var getEndpoint = function () {
                 EndpointService.findEndpoint().then(
                     function (success) {
-                        return success.data;
+                        console.log(success);
+                        self.endpoint = success.data.data.value;
                     }, function (error) {
-                        return '...';
+                        self.endpoint = '...';
                     });
               };
 
+            getEndpoint();
 
             var getCurrentProject = function () {
               ProjectService.get({}, {'id': self.pId}).$promise.then(
