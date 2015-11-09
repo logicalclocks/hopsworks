@@ -11,10 +11,6 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 
-/**
- *
- * @author kerkinos
- */
 @Embeddable
 public class HdfsLeDescriptorsPK implements Serializable {
     @Basic(optional = false)

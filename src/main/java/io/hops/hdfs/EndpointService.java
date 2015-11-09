@@ -34,6 +34,7 @@ public class EndpointService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.ALL})
     public Response findEndpoint(
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException {

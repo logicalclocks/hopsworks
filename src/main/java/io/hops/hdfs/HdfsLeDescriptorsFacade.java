@@ -10,10 +10,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
-/**
- *
- * @author kerkinos
- */
+import se.kth.kthfsdashboard.user.AbstractFacade;
+
 @Stateless
 public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
     @PersistenceContext(unitName = "kthfsPU")
