@@ -289,6 +289,7 @@ public class UsersController {
         emailBean.sendEmail(email,
             UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
         user.setPassword(DigestUtils.sha256Hex(randomPassword));
+        user.setStatus(PeopleAccountStatus.ACCOUNT_PENDING.getValue());
         userBean.update(user);
         resetFalseLogin(user);
         registerLoginInfo(user, "Recovery", "SUCCESS", req);
@@ -305,6 +306,8 @@ public class UsersController {
       String newPassword, String confirmedPassword) throws AppException {
     Users user = userBean.findByEmail(email);
 
+    System.err.println("######################## " + oldPassword + "  " + newPassword +"  " + confirmedPassword);
+    
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
           ResponseMessages.USER_WAS_NOT_FOUND);
