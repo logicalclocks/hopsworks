@@ -266,6 +266,7 @@ public class AuthService {
     JsonResponse json = new JsonResponse();
 
     userController.recoverPassword(email, securityQuestion, securityAnswer, req);
+    
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PASSWORD_RESET_SUCCESSFUL);
 
