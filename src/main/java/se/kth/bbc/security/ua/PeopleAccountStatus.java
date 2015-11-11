@@ -12,9 +12,6 @@ package se.kth.bbc.security.ua;
 public enum PeopleAccountStatus {
 
   // Status of new Yubikey users requests
-// Status of new Yubikey users requests
-// Status of new Yubikey users requests
-// Status of new Yubikey users requests
   YUBIKEY_ACCOUNT_INACTIVE(1),
 
   // Status of new Mobile users requests

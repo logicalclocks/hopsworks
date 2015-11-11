@@ -162,7 +162,7 @@ public class ResetPassword implements Serializable {
         // Lock the account if 5 tmies wrong answer  
         int val = people.getFalseLogin();
         mgr.increaseLockNum(people.getUid(), val + 1);
-        if (val > 5) {
+        if (val > Users.ALLOWED_FALSE_LOGINS) {
           mgr.changeAccountStatus(people.getUid(), "",
                   PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
           return ("welcome");
@@ -192,8 +192,8 @@ public class ResetPassword implements Serializable {
     } catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");
-    } catch (RollbackException | HeuristicMixedException | MessagingException |
-            HeuristicRollbackException | SecurityException | 
+    } catch (RollbackException | HeuristicMixedException |
+            HeuristicRollbackException | SecurityException |
             IllegalStateException | SystemException | NotSupportedException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");
