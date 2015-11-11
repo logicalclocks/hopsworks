@@ -32,11 +32,11 @@ import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.Yubikey;
+import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
 import se.kth.hopsworks.users.*;
-
 
 @Stateless
 //the operations in this method does not need any transaction
@@ -59,13 +59,15 @@ public class UsersController {
 
   @EJB
   private UserManager mgr;
-    // To send the user the QR code image
+  // To send the user the QR code image
   private byte[] qrCode;
-  
-    // BiobankCloud prefix username prefix
+
+  // BiobankCloud prefix username prefix
   private final String USERNAME_PREFIX = "meb";
-  
-  public byte[] registerUser(UserDTO newUser, String url, String ip, String os, String browser, String mac) throws AppException, IOException, UnsupportedEncodingException, WriterException, MessagingException {
+
+  public byte[] registerUser(UserDTO newUser, String url, String ip, String os, String browser, String mac) throws
+      AppException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
+  {
     if (userValidator.isValidEmail(newUser.getEmail())
         && userValidator.isValidPassword(newUser.getChosenPassword(),
             newUser.getRepeatedPassword())
@@ -80,15 +82,13 @@ public class UsersController {
             ResponseMessages.USER_EXIST);
       }
 
-      
       String otpSecret = SecurityUtils.calculateSecretKey();
       String activationKey = SecurityUtils.getRandomString(64);
-      
+
       int uid = userBean.lastUserID() + 1;
 
      // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
-
-      String uname =  USERNAME_PREFIX + uid;
+      String uname = USERNAME_PREFIX + uid;
       List<BbcGroup> groups = new ArrayList<>();
       groups.add(groupBean.findByGroupName(BbcGroup.USER));
 
@@ -124,8 +124,8 @@ public class UsersController {
       a.setPostalcode("-");
       a.setState("-");
       user.setAddress(a);
-      
-      Organization org  = new Organization();
+
+      Organization org = new Organization();
       org.setUid(user);
       org.setContactEmail("-");
       org.setContactPerson("-");
@@ -134,27 +134,34 @@ public class UsersController {
       org.setOrgName("-");
       org.setWebsite("-");
       org.setPhone("-");
-      
+
       user.setOrganization(org);
-      userBean.persist(user);
-      
-      qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), CustomAuthentication.ISSUER,
-              otpSecret);
-      // Notify user about the request
-      emailBean.sendEmail(newUser.getEmail(),
-              UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-              UserAccountsEmailMessages.buildMobileRequestMessage(
-                      //getApplicationUri()
-                      url
-                      , user.getUsername() + activationKey));
+
+      try {
+        // Notify user about the request
+        emailBean.sendEmail(newUser.getEmail(),
+            UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
+            UserAccountsEmailMessages.buildMobileRequestMessage(
+                //getApplicationUri()
+                url, user.getUsername() + activationKey));
+        // Only register the user if i can send the email
+        userBean.persist(user);
+        qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), CustomAuthentication.ISSUER,
+            otpSecret);
+      } catch (IOException | WriterException | MessagingException ex) {
+        Logger.getLogger(UsersController.class.getName()).log(Level.SEVERE, null, ex);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            "Cannot register now due to email service problems");
+      }
       return qrCode;
     }
-    
+
     return null;
   }
-  
-  
-  public boolean registerYubikeyUser(UserDTO newUser, String url, String ip, String os, String browser, String mac) throws AppException, IOException, UnsupportedEncodingException, WriterException, MessagingException {
+
+  public boolean registerYubikeyUser(UserDTO newUser, String url, String ip, String os, String browser, String mac)
+      throws AppException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
+  {
     if (userValidator.isValidEmail(newUser.getEmail())
         && userValidator.isValidPassword(newUser.getChosenPassword(),
             newUser.getRepeatedPassword())
@@ -169,15 +176,13 @@ public class UsersController {
             ResponseMessages.USER_EXIST);
       }
 
-      
       String otpSecret = SecurityUtils.calculateSecretKey();
       String activationKey = SecurityUtils.getRandomString(64);
-      
+
       int uid = userBean.lastUserID() + 1;
 
      // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
-
-      String uname =  USERNAME_PREFIX + uid;
+      String uname = USERNAME_PREFIX + uid;
       List<BbcGroup> groups = new ArrayList<>();
       groups.add(groupBean.findByGroupName(BbcGroup.USER));
 
@@ -214,8 +219,8 @@ public class UsersController {
       a.setPostalcode(newUser.getPostCode());
       a.setState("-");
       user.setAddress(a);
-      
-      Organization org  = new Organization();
+
+      Organization org = new Organization();
       org.setUid(user);
       org.setContactEmail("-");
       org.setContactPerson("-");
@@ -224,37 +229,41 @@ public class UsersController {
       org.setOrgName(newUser.getOrgName());
       org.setWebsite("-");
       org.setPhone("-");
-      
-    
+
       Yubikey yk = new Yubikey();
       yk.setUid(user);
       yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
       user.setYubikey(yk);
-      userBean.persist(user);
-      
-    
-      // Notify user about the request
-      emailBean.sendEmail(newUser.getEmail(),
-              UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-              UserAccountsEmailMessages.buildYubikeyRequestMessage(
-                      //getApplicationUri()
-                      url
-                      , user.getUsername() + activationKey));
+
+      try {
+        // Notify user about the request
+        emailBean.sendEmail(newUser.getEmail(),
+            UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
+            UserAccountsEmailMessages.buildYubikeyRequestMessage(
+                //getApplicationUri()
+                url, user.getUsername() + activationKey));
+        // only register the user if i can send the email to the user
+        userBean.persist(user);
+      } catch (MessagingException ex) {
+        Logger.getLogger(UsersController.class.getName()).log(Level.SEVERE, null, ex);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            "Cannot register now due to email service problems");
+
+      }
       return true;
     }
-    
+
     return false;
   }
-  
-  
+
   // fix this
-    public String getApplicationUri() {
+  public String getApplicationUri() {
     try {
       FacesContext ctxt = FacesContext.getCurrentInstance();
       ExternalContext ext = ctxt.getExternalContext();
       URI uri = new URI(ext.getRequestScheme(),
-              null, ext.getRequestServerName(), ext.getRequestServerPort(),
-              ext.getRequestContextPath(), null, null);
+          null, ext.getRequestServerName(), ext.getRequestServerPort(),
+          ext.getRequestContextPath(), null, null);
       return uri.toASCIIString();
     } catch (URISyntaxException e) {
       throw new FacesException(e);
@@ -276,7 +285,7 @@ public class UsersController {
           || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(
                   securityAnswer.toLowerCase()))) {
         registerFalseLogin(user);
-        registerLoginInfo(user, "Recovery", "Failure",req);
+        registerLoginInfo(user, "Recovery", "Failure", req);
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             ResponseMessages.SEC_QA_INCORRECT);
       }
@@ -337,7 +346,7 @@ public class UsersController {
 
     if (userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
       user.setSecurityQuestion(SecurityQuestion.getQuestion(securityQuestion));
-      user.setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer. toLowerCase()));
+      user.setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer.toLowerCase()));
       userBean.update(user);
     }
   }
@@ -438,5 +447,5 @@ public class UsersController {
     }
     return dtos;
   }
-  
+
 }

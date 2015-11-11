@@ -13,25 +13,25 @@ public class ResponseMessages {
   public final static String USER_EXIST
           = "There is an existing account associated with this email";
   public final static String ACCOUNT_REQUEST
-          = "Your request has not yet been acknowlegded.";
+          = "Your account has not yet been approved.";
   public final static String ACCOUNT_DEACTIVATED
           = "This account have been deactivated.";
   public final static String ACCOUNT_VERIFICATION
           = "You need to verify your account.";
-  public final static String ACCOUNT_BLOCKED = "Your account have been blocked.";
+  public final static String ACCOUNT_BLOCKED = "Your account hsd been blocked. Contact the administrator.";
   public final static String AUTHENTICATION_FAILURE = "Authentication failed";
-  public final static String LOGOUT_FAILURE = "Logout failed on backend";
-  public final static String EMAIL_EMPTY = "Email can not be empty.";
+  public final static String LOGOUT_FAILURE = "Logout failed due to server error";
+  public final static String EMAIL_EMPTY = "Email cannot be empty.";
   public final static String EMAIL_INVALID = "Not a valid email address.";
   public final static String EMAIL_SENDING_FAILURE
           = "Could not send email to the given email address!";
-  public final static String SEC_Q_EMPTY = "Security Question can not be empty.";
-  public final static String SEC_A_EMPTY = "Security Answer can not be empty.";
+  public final static String SEC_Q_EMPTY = "Security Question cannot be empty.";
+  public final static String SEC_A_EMPTY = "Security Answer cannot be empty.";
   public final static String SEC_Q_NOT_IN_LIST
-          = "Choose Security Question from the list.";
+          = "Choose a Security Question from the list.";
   public final static String SEC_QA_INCORRECT
           = "Security question or answer did not match";
-  public final static String PASSWORD_EMPTY = "Password can not be empty.";
+  public final static String PASSWORD_EMPTY = "Password cannot be empty.";
   public final static String PASSWORD_TOO_SHORT = "Password too short.";
   public final static String PASSWORD_TOO_LONG = "Password too long.";
   public final static String PASSWORD_INCORRECT = "Password incorrect";
@@ -48,7 +48,7 @@ public class ResponseMessages {
   //success response 
   public final static String CREATED_ACCOUNT
           = "You have successfully created an account,\n"
-          + "but you might need to wait until your account is activated \n"
+          + "but you might need to wait until your account has been approved \n"
           + "before you can login.";
   public final static String PASSWORD_RESET_SUCCESSFUL
           = "Your password was successfully reset, your new password have been sent to your email.";
@@ -100,7 +100,7 @@ public class ResponseMessages {
   public final static String NO_MEMBER_ADD = " No member added.";
   public final static String TEAM_MEMBER_NOT_FOUND
           = " The selected user is not a team member in this project.";
-  public final static String ROLE_NOT_SET = "Role can not be empty.";
+  public final static String ROLE_NOT_SET = "Role cannot be empty.";
 
   //project success messages
   public final static String PROJECT_CREATED = "Project created successfully.";
@@ -123,7 +123,7 @@ public class ResponseMessages {
 
   //DataSet
   public final static String DATASET_NAME_EMPTY
-          = "DataSet name can not be empty.";
+          = "DataSet name cannot be empty.";
   public final static String DATASET_REMOVED_FROM_HDFS
           = "DataSet removed from hdfs.";
   public final static String SHARED_DATASET_REMOVED

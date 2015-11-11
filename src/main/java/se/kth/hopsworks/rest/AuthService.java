@@ -30,7 +30,7 @@ import se.kth.hopsworks.controller.UsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserDTO;
 import se.kth.hopsworks.users.UserFacade;
-import se.kth.rest.application.config.VariablesFacade;
+import se.kth.hopsworks.util.Settings;
 
 @Path("/auth")
 @Stateless
@@ -47,7 +47,7 @@ public class AuthService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  VariablesFacade vf;
+  Settings settings;
   
   // To distinguish Yubikey users
   private final String YUBIKEY_USER_MARKER = "YUBIKEY_USER_MARKER";
@@ -183,8 +183,6 @@ public class AuthService {
 
     JsonResponse json = new JsonResponse();
 
-    try {
-    
       String domain = req.getRequestURL().toString();
       String cpath = req.getContextPath().toString();
 
@@ -199,13 +197,10 @@ public class AuthService {
       
       qrCode = userController.registerUser(newUser, url, ip, browser, os, mac);
       
-    } catch (IOException | WriterException | MessagingException ex) {
-      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
-    }
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
 
-    if(vf.findById("twofactor_auth").getValue().equals("true")){
+    if(settings.findById("twofactor_auth").getValue().equals("true")){
         json.setQRCode(new String (Base64.encodeBase64(qrCode)));
     } else{
          json.setSuccessMessage("We registered your account request. Please validate you email and we will review your account within 48 hours.");
@@ -229,7 +224,6 @@ public class AuthService {
 
     JsonResponse json = new JsonResponse();
 
-    try {
     
       String domain = req.getRequestURL().toString();
       String cpath = req.getContextPath().toString();
@@ -244,9 +238,6 @@ public class AuthService {
       String os = "Fix this";
       userController.registerYubikeyUser(newUser, url, ip, browser, os, mac);
       
-    } catch (IOException | WriterException | MessagingException ex) {
-      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
-    }
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
 

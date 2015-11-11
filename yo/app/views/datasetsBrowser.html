@@ -23,6 +23,7 @@
 
             <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
               <h3>
+                hdfs://{{projectCtrl.endpoint}}/
                 <a href="#/project/{{datasetsCtrl.projectId}}/datasets">
                   {{ projectCtrl.currentProject.projectName}}
                 </a>

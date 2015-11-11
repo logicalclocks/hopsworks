@@ -5,8 +5,8 @@
 
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams', 'UtilsService',
-          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies','DataSetService',
-          function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies, DataSetService) {
+          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies','DataSetService', 'EndpointService',
+          function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies, DataSetService, EndpointService) {
 
             var self = this;
             self.working = false;
@@ -18,6 +18,8 @@ angular.module('hopsWorksApp')
             self.cards = [];
             self.projectMembers = [];
 
+            self.endpoint = '...';
+
             // We could instead implement a service to get all the available types but this will do it for now
 //            self.projectTypes = ['JOBS', 'ZEPPELIN', 'SSH'];
             self.projectTypes = ['JOBS', 'ZEPPELIN'];
@@ -25,6 +27,18 @@ angular.module('hopsWorksApp')
             self.selectionProjectTypes = [];
             self.pId = $routeParams.projectID;
 
+
+            var getEndpoint = function () {
+                EndpointService.findEndpoint().then(
+                    function (success) {
+                        console.log(success);
+                        self.endpoint = success.data.data.value;
+                    }, function (error) {
+                        self.endpoint = '...';
+                    });
+              };
+
+            getEndpoint();
 
             var getCurrentProject = function () {
               ProjectService.get({}, {'id': self.pId}).$promise.then(

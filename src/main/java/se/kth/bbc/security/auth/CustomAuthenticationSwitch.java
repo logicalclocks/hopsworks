@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
-import se.kth.rest.application.config.VariablesFacade;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * This class is used to switch on/off the two factor authentication.
@@ -23,10 +23,10 @@ public class CustomAuthenticationSwitch implements Serializable {
   private static final long serialVersionUID = 1L;
   
   @EJB 
-  private VariablesFacade vf;
+  private Settings settings;
   
   public boolean isOtpEnabled() {
-    return vf.findById("twofactor_auth").getValue().equals("true");
+    return settings.findById("twofactor_auth").getValue().equals("true");
   }
 
   

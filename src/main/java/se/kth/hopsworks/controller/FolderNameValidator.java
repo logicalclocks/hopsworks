@@ -1,7 +1,7 @@
 package se.kth.hopsworks.controller;
 
 import javax.validation.ValidationException;
-import se.kth.bbc.lims.Constants;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Validator for folder names. A folder name is valid if:
@@ -36,16 +36,16 @@ public class FolderNameValidator {
     } else if (name.endsWith(".")) {
       valid = false;
       reason = ResponseMessages.FOLDER_NAME_ENDS_WITH_DOT;
-    } else if (name.contains("" + Constants.DOUBLE_UNDERSCORE)) {
+    } else if (name.contains("" + Settings.DOUBLE_UNDERSCORE)) {
       valid = false;
        reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
-               + Constants.FILENAME_DISALLOWED_CHARS + Constants.DOUBLE_UNDERSCORE;
+               + Settings.FILENAME_DISALLOWED_CHARS + Settings.DOUBLE_UNDERSCORE;
     }  else {
-      for (char c : Constants.FILENAME_DISALLOWED_CHARS.toCharArray()) {
+      for (char c : Settings.FILENAME_DISALLOWED_CHARS.toCharArray()) {
         if (name.contains("" + c)) {
           valid = false;
           reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
-                  + Constants.FILENAME_DISALLOWED_CHARS + Constants.DOUBLE_UNDERSCORE;
+                  + Settings.FILENAME_DISALLOWED_CHARS + Settings.DOUBLE_UNDERSCORE;
         }
       }
     }

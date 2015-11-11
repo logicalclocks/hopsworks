@@ -239,12 +239,12 @@
     </navigation-case>
     <navigation-case>
       <from-outcome>login</from-outcome>
-      <to-view-id>/index.xhtml</to-view-id>
+      <to-view-id>//#/login</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>welcome</from-outcome>
-      <to-view-id>/index.xhtml</to-view-id>
+      <to-view-id>/#/login</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>

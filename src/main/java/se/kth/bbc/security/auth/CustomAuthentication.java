@@ -22,6 +22,7 @@ import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
 import se.kth.bbc.security.ua.UserManager;
+import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -94,7 +95,7 @@ public class CustomAuthentication implements Serializable {
    * @throws java.net.UnknownHostException
    * @throws java.net.SocketException
    */
-  public String login() throws UnknownHostException, SocketException {
+  public String login() throws UnknownHostException, SocketException, ApplicationException {
 
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
@@ -183,6 +184,7 @@ public class CustomAuthentication implements Serializable {
         } catch (MessagingException ex1) {
           Logger.getLogger(CustomAuthentication.class.getName()).log(
                   Level.SEVERE, null, ex1);
+          throw new ApplicationException("Could not register you now due to a failed service. Tray again later.");
         }
 
       }

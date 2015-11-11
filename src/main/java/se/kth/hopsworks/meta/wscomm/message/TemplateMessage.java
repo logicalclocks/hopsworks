@@ -55,6 +55,7 @@ public class TemplateMessage extends ContentMessage {
               readObject();
       super.setTemplateid(object.getInt("tempid"));
     } catch (NullPointerException e) {
+      // TODO: - Never catch a NPE!! Re-write.
       logger.log(Level.SEVERE, "Error while retrieving the templateid."
               + " Probably fetching the templates");
     }

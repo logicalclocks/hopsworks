@@ -35,12 +35,12 @@ public abstract class YarnJob extends HopsJob {
    * @param job
    * @param user
    * @param services
+   * @param hadoopDir
    * @throws IllegalArgumentException If the JobDescription does not contain a
    * YarnJobConfiguration object.
    */
-  public YarnJob(JobDescription job, Users user,
-          AsynchronousJobExecutor services) {
-    super(job, services, user);
+  public YarnJob(JobDescription job, AsynchronousJobExecutor services, Users user, String hadoopDir) {
+    super(job, services, user, hadoopDir);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain a YarnJobConfiguration object. Received class: "
