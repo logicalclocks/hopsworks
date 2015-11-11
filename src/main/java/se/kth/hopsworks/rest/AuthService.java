@@ -1,9 +1,5 @@
 package se.kth.hopsworks.rest;
 
-import com.google.zxing.WriterException;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -128,11 +124,7 @@ public class AuthService {
                     "No valid role found for this user");
           }
           
-          // reject users that have not validated their accounts
-          if(user.getStatus() == PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()){
-           throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-                    AccountStatusErrorMessages.INACTIVE_ACCOUNT);
-          }
+
 
         } catch (ServletException e) {
           userController.registerFalseLogin(user);

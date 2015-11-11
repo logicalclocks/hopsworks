@@ -421,14 +421,13 @@ public class UsersController {
       if (count > Users.ALLOWED_FALSE_LOGINS) {
         user.setStatus(UserAccountStatus.ACCOUNT_BLOCKED.getValue());
         
-      // notify user about the false attempts
-      userBean.update(user);
       emailBean.sendEmail(user.getEmail(),
                   UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                   UserAccountsEmailMessages.accountBlockedMessage());
 
       }
-    
+      // notify user about the false attempts
+      userBean.update(user);
     }
   }
 
