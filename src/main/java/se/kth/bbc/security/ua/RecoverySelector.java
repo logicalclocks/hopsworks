@@ -263,7 +263,7 @@ public class RecoverySelector implements Serializable {
     } else {
       int val = people.getFalseLogin();
       um.increaseLockNum(people.getUid(), val + 1);
-      if (val > 5) {
+      if (val > Users.ALLOWED_FALSE_LOGINS) {
         um.changeAccountStatus(people.getUid(), "",
                 PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
         try {
@@ -349,7 +349,7 @@ public class RecoverySelector implements Serializable {
 
         int val = people.getFalseLogin();
         um.increaseLockNum(people.getUid(), val + 1);
-        if (val > 5) {
+        if (val > Users.ALLOWED_FALSE_LOGINS) {
           um.changeAccountStatus(people.getUid(), "",
                   PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
           try {
