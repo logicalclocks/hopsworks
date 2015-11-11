@@ -24,6 +24,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.codec.binary.Base64;
+import se.kth.bbc.security.auth.AccountStatusErrorMessages;
+import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
@@ -84,7 +86,7 @@ public class AuthService {
   public Response login(@FormParam("email") String email,
           @FormParam("password") String password,  @FormParam("otp") String otp, @Context SecurityContext sc,
           @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
-          throws AppException {
+          throws AppException, MessagingException {
 
     req.getServletContext().log("email: " + email);
     req.getServletContext().log("SESSIONID@login: " + req.getSession().getId());
@@ -107,9 +109,7 @@ public class AuthService {
     } else if(otp.length() == 44){
       password = password + otp + YUBIKEY_USER_MARKER;
     }
-    
-      
-    
+   
     //only login if not already logged in...
     if (sc.getUserPrincipal() == null) {
       if (user != null && statusValidator.checkStatus(user.getStatus())) {
@@ -126,6 +126,12 @@ public class AuthService {
             req.logout();
             throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                     "No valid role found for this user");
+          }
+          
+          // reject users that have not validated their accounts
+          if(user.getStatus() == PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()){
+           throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+                    AccountStatusErrorMessages.INACTIVE_ACCOUNT);
           }
 
         } catch (ServletException e) {

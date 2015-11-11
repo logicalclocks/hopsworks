@@ -173,13 +173,16 @@ public class ResetPassword implements Serializable {
       // generate a radndom password
       String random_password = SecurityUtils.getRandomString(passwordLength);
 
-      String mess = UserAccountsEmailMessages.buildPasswordResetMessage(
+    
+     String mess = UserAccountsEmailMessages.buildPasswordResetMessage(
               random_password);
-
+    
       userTransaction.begin();
       // make the account pending until it will be reset by user upon first login
-      mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
-
+      // mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
+        // update the status of user to active
+      people.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
+      
       // reset the old password with a new one
       mgr.resetPassword(people, SecurityUtils.converToSHA256(random_password));
 

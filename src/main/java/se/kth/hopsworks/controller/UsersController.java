@@ -284,7 +284,12 @@ public class UsersController {
           securityQuestion)
           || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(
                   securityAnswer.toLowerCase()))) {
-        registerFalseLogin(user);
+        try {
+          registerFalseLogin(user);
+        } catch (MessagingException ex) {
+          Logger.getLogger(UsersController.class.getName()).
+                  log(Level.SEVERE, null, ex);
+        }
         registerLoginInfo(user, "Recovery", "Failure", req);
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             ResponseMessages.SEC_QA_INCORRECT);
@@ -298,7 +303,7 @@ public class UsersController {
         emailBean.sendEmail(email,
             UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
         user.setPassword(DigestUtils.sha256Hex(randomPassword));
-        user.setStatus(PeopleAccountStatus.ACCOUNT_PENDING.getValue());
+        //user.setStatus(PeopleAccountStatus.ACCOUNT_PENDING.getValue());
         userBean.update(user);
         resetFalseLogin(user);
         registerLoginInfo(user, "Recovery", "SUCCESS", req);
@@ -315,8 +320,6 @@ public class UsersController {
       String newPassword, String confirmedPassword) throws AppException {
     Users user = userBean.findByEmail(email);
 
-    System.err.println("######################## " + oldPassword + "  " + newPassword +"  " + confirmedPassword);
-    
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
           ResponseMessages.USER_WAS_NOT_FOUND);
@@ -409,14 +412,23 @@ public class UsersController {
     userLoginsBean.persist(login);
   }
 
-  public void registerFalseLogin(Users user) {
+  public void registerFalseLogin(Users user) throws MessagingException {
     if (user != null) {
       int count = user.getFalseLogin() + 1;
       user.setFalseLogin(count);
+      
+      // block the user account if more than allowed false logins
       if (count > Users.ALLOWED_FALSE_LOGINS) {
         user.setStatus(UserAccountStatus.ACCOUNT_BLOCKED.getValue());
-      }
+        
+      // notify user about the false attempts
       userBean.update(user);
+      emailBean.sendEmail(user.getEmail(),
+                  UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
+                  UserAccountsEmailMessages.accountBlockedMessage());
+
+      }
+    
     }
   }
 
