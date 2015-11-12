@@ -312,13 +312,11 @@ public class DataSetService {
     }
 
     Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
-    hdfsUsersBean.shareDataset(project, dataset);
-
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NOT_FOUND);
     }
-
+    hdfsUsersBean.shareDataset(this.project, ds);
     ds.setStatus(Dataset.ACCEPTED);
     datasetFacade.merge(ds);
     json.setSuccessMessage("The Dataset is now accessable.");
@@ -464,7 +462,7 @@ public class DataSetService {
         //remove the entry in the table that represents shared ds
         //but leave the dataset in hdfs b/c the user does not have the right to delete it.
         hdfsUsersBean.unShareDataset(project, dataset);
-        datasetFacade.remove(this.dataset);
+        datasetFacade.removeDataset(this.dataset);
         json.setSuccessMessage(ResponseMessages.SHARED_DATASET_REMOVED);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(json).build();
@@ -483,7 +481,7 @@ public class DataSetService {
               "Could not delete the file at " + filePath);
     }
     //remove the group associated with this dataset
-    hdfsUsersBean.deleteDatasetGroup(dataset);
+    hdfsUsersBean.deleteDatasetGroup(this.dataset);
     json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -767,7 +765,15 @@ public class DataSetService {
       path = path.replaceFirst(projectName + Settings.SHARED_FILE_SEPARATOR
               + dsName, projectName
               + File.separator + dsName);
-    } else {
+    } else if (parts != null) {
+      dsName = parts[0];
+      Inode parent = inodes.getProjectRoot(this.project.getName());
+      Inode dsInode = inodes.findByParentAndName(parent, dsName);
+      this.dataset = datasetFacade.findByProjectAndInode(this.project, dsInode);
+      if (this.dataset == null) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                ResponseMessages.DATASET_NOT_FOUND);
+      }
       return this.path + path;
     }
     return File.separator + Settings.DIR_ROOT + File.separator

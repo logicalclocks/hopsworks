@@ -30,6 +30,7 @@ import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.dataset.Dataset;
+import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.rest.AppException;
@@ -37,7 +38,6 @@ import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
 import se.kth.hopsworks.user.model.SshKeys;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.SshkeysFacade;
-import se.kth.hopsworks.util.LocalhostServices;
 import se.kth.hopsworks.util.Settings;
 
 @Stateless
@@ -65,13 +65,15 @@ public class ProjectController {
   @EJB
   private DatasetController datasetController;
   @EJB
+  private DatasetFacade datasetFacade;
+  @EJB
   private SshkeysFacade sshKeysBean;
   @EJB
   private HdfsUsersController hdfsUsersBean;
 
   @EJB
   private Settings settings;
-  
+
   /**
    * Creates a new project(project), the related DIR, the different services
    * in the project, and the master of the project.
@@ -354,6 +356,8 @@ public class ProjectController {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
+    List<Dataset> dsInProject = datasetFacade.findByProject(project);
+    Collection<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(project);
     //if we remove the project we cant store activity that has a reference to it!!
     //logActivity(ActivityFacade.REMOVED_PROJECT,
     //ActivityFacade.FLAG_PROJECT, user, project);
@@ -362,7 +366,8 @@ public class ProjectController {
               + project.getName();
       success = fileOps.rmRecursive(path);
       //if the files are removed the group should also go.
-      hdfsUsersBean.deleteProjectGroup(project);
+      hdfsUsersBean.deleteProjectGroupsRecursive(project, dsInProject);
+      hdfsUsersBean.deleteProjectUsers(project, projectTeam);
     } else {
       projectFacade.remove(project);
     }
@@ -412,7 +417,7 @@ public class ProjectController {
             projectTeam.getProjectTeamPK().setProjectId(project.getId());
             projectTeamFacade.persistProjectTeam(projectTeam);
             try {
-              hdfsUsersBean.addAProjectMember(project, projectTeam);
+              hdfsUsersBean.addNewProjectMember(project, projectTeam);
             } catch (IOException ex) {
               projectTeamFacade.removeProjectTeam(project, newMember);
               throw new EJBException("Could not add member to HDFS.");
@@ -571,14 +576,14 @@ public class ProjectController {
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
             ActivityFacade.FLAG_PROJECT, user, project);
 
-    try {
-      LocalhostServices.deleteUserAccount(email, project.getName());
-    } catch (IOException e) {
-      String errMsg = "Could not delete user account: " + LocalhostServices.
-              getUsernameInProject(email, project.getName()) + " ";
-      logger.warning(errMsg + e.getMessage());
-      //  TODO: Should this be rethrown to give a HTTP Response to client??
-    }
+//    try {
+//      LocalhostServices.deleteUserAccount(email, project.getName());
+//    } catch (IOException e) {
+//      String errMsg = "Could not delete user account: " + LocalhostServices.
+//              getUsernameInProject(email, project.getName()) + " ";
+//      logger.warning(errMsg + e.getMessage());
+//      //  TODO: Should this be rethrown to give a HTTP Response to client??
+//    }
   }
 
   /**
@@ -612,15 +617,10 @@ public class ProjectController {
       projectTeam.setTimestamp(new Date());
       projectTeamFacade.update(projectTeam);
 
-      try {
-        if (newRole.equals(AllowedRoles.DATA_OWNER)) {
-          hdfsUsersBean.addAProjectMember(project, projectTeam);
-        } else {
-          hdfsUsersBean.modifyProjectMembership(user, project);
-        }
-      } catch (IOException ex) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "Could not update role in HDFS.");
+      if (newRole.equals(AllowedRoles.DATA_OWNER)) {
+        hdfsUsersBean.addUserToProjectGroup(project, projectTeam);
+      } else {
+        hdfsUsersBean.modifyProjectMembership(user, project);
       }
 
       logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail,

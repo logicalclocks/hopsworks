@@ -28,6 +28,9 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "HdfsGroups.findAll",
           query
           = "SELECT h FROM HdfsGroups h"),
+  @NamedQuery(name = "HdfsGroups.delete",
+          query
+          = "DELETE FROM HdfsGroups h WHERE h.id =:id"),
   @NamedQuery(name = "HdfsGroups.findByName",
           query
           = "SELECT h FROM HdfsGroups h WHERE h.name = :name")})
@@ -105,21 +108,19 @@ public class HdfsGroups implements Serializable {
 
   @Override
   public boolean equals(Object object) {
-    // TODO: Warning - this method won't work in the case the id fields are not set
     if (!(object instanceof HdfsGroups)) {
       return false;
     }
     HdfsGroups other = (HdfsGroups) object;
-    if ((this.id == null && other.id != null) ||
-            (this.id != null && !this.id.equals(other.id))) {
+    if (!this.name.equals(other.name)) {
       return false;
-    }
+  }
     return true;
   }
 
   @Override
   public String toString() {
-    return "se.kth.hopsworks.hdfsUsers.HdfsGroups[ id=" + id + " ]";
+    return "se.kth.hopsworks.hdfsUsers.HdfsGroups[ name=" + name + " ]";
   }
   
 }

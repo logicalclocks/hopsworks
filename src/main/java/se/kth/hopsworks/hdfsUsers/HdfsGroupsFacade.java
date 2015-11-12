@@ -48,7 +48,8 @@ public class HdfsGroupsFacade extends AbstractFacade<HdfsGroups> {
   public void remove(HdfsGroups group) {
     HdfsGroups g = em.find(HdfsGroups.class, group.getId());
     if (g != null) {
-      em.remove(g);
+      em.createNamedQuery("HdfsGroups.delete", HdfsGroups.class).
+              setParameter("id", group.getId()).executeUpdate();
     }
   }
 }

@@ -3,8 +3,6 @@ package se.kth.hopsworks.hdfsUsers.controller;
 import se.kth.hopsworks.hdfsUsers.model.HdfsGroups;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.hdfsUsers.HdfsUsersFacade;
 import se.kth.hopsworks.user.model.Users;
@@ -12,13 +10,18 @@ import io.hops.security.UsersGroups;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
+import se.kth.bbc.project.fb.Inode;
+import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.dataset.Dataset;
+import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfsUsers.HdfsGroupsFacade;
 import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
@@ -27,9 +30,9 @@ import se.kth.hopsworks.util.Settings;
 
 @Stateless
 public class HdfsUsersController {
-  
+
   public static final String USER_NAME_DELIMITER = "__";
-  
+
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
@@ -37,11 +40,15 @@ public class HdfsUsersController {
   @EJB
   private FileSystemOperations fsOps;
   @EJB
-  private ProjectTeamFacade teamFacade;
+  private InodeFacade inodes;
   @EJB
   private Settings settings;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private DatasetFacade datasetFacade;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
 
   /**
    * Creates a new group in HDFS with the name <code>projectName</code> if it
@@ -70,15 +77,17 @@ public class HdfsUsersController {
   }
 
   /**
-   * Adds a member of the project, as a user in HDFS with the name
-   * <code>projectName</code>__<code>username</code> and adds them to the group
+   * Adds a new member to the project.
+   * This will create a new user in HDFS with the name
+   * <code>projectName</code>__<code>username</code> and adds it to the group
    * <code>projectName</code>.
+   * throws IllegalArgumentException if the project group is not found.
    * <p>
    * @param project
    * @param member
    * @throws java.io.IOException
    */
-  public void addAProjectMember(Project project, ProjectTeam member) throws
+  public void addNewProjectMember(Project project, ProjectTeam member) throws
           IOException {
     byte[] groupId = UsersGroups.getGroupID(project.getName());
     HdfsGroups hdfsGroup = hdfsGroupsFacade.findHdfsGroup(groupId);
@@ -104,14 +113,15 @@ public class HdfsUsersController {
     //add only data_owners to project group
     if (member.getTeamRole().equals(AllowedRoles.DATA_OWNER)) {
       if (!memberHdfsUser.getHdfsGroupsCollection().contains(hdfsGroup)) {
-          memberHdfsUser.getHdfsGroupsCollection().add(hdfsGroup);
-        }
+        memberHdfsUser.getHdfsGroupsCollection().add(hdfsGroup);
+      }
     }
     byte[] dsGroupId;
     String dsGroups;
     HdfsGroups hdfsDsGroup;
     // add the member to all dataset groups in the project.
-    for (Dataset ds : project.getDatasetCollection()) {
+    List<Dataset> dsInProject = datasetFacade.findByProject(project);
+    for (Dataset ds : dsInProject) {
       dsGroups = project.getName() + USER_NAME_DELIMITER + ds.getInode().
               getInodePK().getName();
       dsGroupId = UsersGroups.getGroupID(dsGroups);
@@ -123,6 +133,45 @@ public class HdfsUsersController {
       }
     }
     hdfsUsersFacade.merge(memberHdfsUser);
+  }
+
+  /**
+   * Adds a user to project group if the member have a Data owner role in
+   * the project.
+   * <p>
+   * throws IllegalArgumentException if the project group is not found.
+   * <p>
+   * @param project
+   * @param member
+   */
+  public void addUserToProjectGroup(Project project, ProjectTeam member) {
+    byte[] groupId = UsersGroups.getGroupID(project.getName());
+    HdfsGroups hdfsGroup = hdfsGroupsFacade.findHdfsGroup(groupId);
+    if (hdfsGroup == null) {
+      throw new IllegalArgumentException("No group found for project in HDFS.");
+    }
+    String hdfsUsername;
+    HdfsUsers memberHdfsUser;
+    byte[] memberUserId;
+    Users newMember = userFacade.findByEmail(member.getProjectTeamPK().
+            getTeamMember());
+    hdfsUsername = project.getName() + USER_NAME_DELIMITER + newMember.
+            getUsername();
+    memberUserId = UsersGroups.getUserID(hdfsUsername);
+    memberHdfsUser = hdfsUsersFacade.findHdfsUser(memberUserId);
+    if (memberHdfsUser == null) {
+      memberHdfsUser = new HdfsUsers(memberUserId, hdfsUsername);
+      hdfsUsersFacade.persist(memberHdfsUser);
+    }
+    if (memberHdfsUser.getHdfsGroupsCollection() == null) {
+      memberHdfsUser.setHdfsGroupsCollection(new ArrayList<HdfsGroups>());
+    }
+    //add only data_owners to project group
+    if (member.getTeamRole().equals(AllowedRoles.DATA_OWNER)) {
+      if (!memberHdfsUser.getHdfsGroupsCollection().contains(hdfsGroup)) {
+        memberHdfsUser.getHdfsGroupsCollection().add(hdfsGroup);
+      }
+    }
   }
 
   /**
@@ -147,11 +196,11 @@ public class HdfsUsersController {
             == null || datasetName == null) {
       throw new IllegalArgumentException("One or more arguments are null.");
     }
-    
+
     String datasetGroup = project.getName() + USER_NAME_DELIMITER + datasetName;
     String dsOwner = project.getName() + USER_NAME_DELIMITER + owner.
             getUsername();
-    
+
     String dsPath = File.separator + settings.DIR_ROOT + File.separator
             + project.getName() + File.separator + datasetName;
     Path location = new Path(dsPath);
@@ -165,7 +214,7 @@ public class HdfsUsersController {
     }
     fsOps.setOwner(location, dsOwner, datasetGroup);
     fsOps.setPermission(location, fsPermission);
-    
+
     String hdfsUsername;
     HdfsUsers hdfsUser;
     byte[] userId;
@@ -180,14 +229,14 @@ public class HdfsUsersController {
     }
     //add every member to the new ds group
     for (ProjectTeam member : project.getProjectTeamCollection()) {
-      
+
       hdfsUsername = project.getName() + USER_NAME_DELIMITER + member.getUser().
               getUsername();
 
       userId = UsersGroups.getUserID(hdfsUsername);
       hdfsUser = hdfsUsersFacade.findHdfsUser(userId);
       //the owner does not need to be added to the group.
-      if(hdfsUsername.equals(dsOwner)){
+      if (hdfsUsername.equals(dsOwner)) {
         continue;
       }
       if (hdfsUser == null) {
@@ -210,8 +259,7 @@ public class HdfsUsersController {
    * @param project
    */
   public void removeProjectMember(Users user, Project project) {
-    if (user == null || project == null || project.getProjectTeamCollection()
-            == null) {
+    if (user == null || project == null) {
       throw new IllegalArgumentException("One or more arguments are null.");
     }
     String userName = project.getName() + USER_NAME_DELIMITER + user.
@@ -259,15 +307,12 @@ public class HdfsUsersController {
    * @param dataset
    */
   public void shareDataset(Project project, Dataset dataset) {
-    if (project == null || project.getProjectTeamCollection()
-            == null || dataset == null) {
+    if (project == null || dataset == null) {
       throw new IllegalArgumentException("One or more arguments are null.");
     }
-    if (dataset.getInode().getInodePK().getParentId() != dataset.getProjectId().
-            getInode().getId()) {
-      throw new IllegalArgumentException("Dataset is not owned by project.");
-    }
-    String datasetGroup = dataset.getProjectId().getName() + USER_NAME_DELIMITER
+
+    Inode inode = inodes.findById(dataset.getInode().getInodePK().getParentId());
+    String datasetGroup = inode.getInodePK().getName() + USER_NAME_DELIMITER
             + dataset.getInode().getInodePK().getName();
     byte[] groupId = UsersGroups.getGroupID(datasetGroup);
     HdfsGroups hdfsGroup = hdfsGroupsFacade.findHdfsGroup(groupId);
@@ -277,12 +322,14 @@ public class HdfsUsersController {
     if (hdfsGroup.getHdfsUsersCollection() == null) {
       hdfsGroup.setHdfsUsersCollection(new ArrayList<HdfsUsers>());
     }
+    Collection<ProjectTeam> projectTeam = projectTeamFacade.
+            findMembersByProject(project);
     String hdfsUsername;
     HdfsUsers hdfsUser;
     byte[] userId;
     //every member of the project the ds is going to be shard with is
     //added to the dataset group.
-    for (ProjectTeam member : project.getProjectTeamCollection()) {
+    for (ProjectTeam member : projectTeam) {
       hdfsUsername = project.getName() + USER_NAME_DELIMITER + member.getUser().
               getUsername();
       userId = UsersGroups.getUserID(hdfsUsername);
@@ -314,6 +361,57 @@ public class HdfsUsersController {
   }
 
   /**
+   * Deletes the project group and all associated groups from HDFS
+   * <p>
+   * @param project
+   * @param dsInProject
+   */
+  public void deleteProjectGroupsRecursive(Project project,
+          List<Dataset> dsInProject) {
+    if (project == null) {
+      throw new IllegalArgumentException("One or more arguments are null.");
+    }
+    byte[] groupId = UsersGroups.getGroupID(project.getName());
+    HdfsGroups hdfsGroup = hdfsGroupsFacade.findHdfsGroup(groupId);
+    if (hdfsGroup != null) {
+      hdfsGroupsFacade.remove(hdfsGroup);
+    }
+    byte[] dsGroupId;
+    String dsGroups;
+    HdfsGroups hdfsDsGroup;
+    for (Dataset ds : dsInProject) {
+      dsGroups = project.getName() + USER_NAME_DELIMITER + ds.getInode().
+              getInodePK().getName();
+      dsGroupId = UsersGroups.getGroupID(dsGroups);
+      hdfsDsGroup = hdfsGroupsFacade.findHdfsGroup(dsGroupId);
+      hdfsGroupsFacade.remove(hdfsDsGroup);
+    }
+  }
+
+  /**
+   * Deletes all users associated with this project from HDFS
+   * <p>
+   * @param project
+   * @param projectTeam
+   */
+  public void deleteProjectUsers(Project project,
+          Collection<ProjectTeam> projectTeam) {
+    if (project == null || projectTeam == null) {
+      throw new IllegalArgumentException("One or more arguments are null.");
+    }
+    String hdfsUsername;
+    HdfsUsers hdfsUser;
+    byte[] userId;
+    for (ProjectTeam member : projectTeam) {
+      hdfsUsername = project.getName() + USER_NAME_DELIMITER + member.getUser().
+              getUsername();
+      userId = UsersGroups.getUserID(hdfsUsername);
+      hdfsUser = hdfsUsersFacade.findHdfsUser(userId);
+      hdfsUsersFacade.removeHdfsUser(hdfsUser);
+    }
+  }
+
+  /**
    * Deletes the dataset group from HDFS
    * <p>
    * @param dataset
@@ -329,7 +427,7 @@ public class HdfsUsersController {
     if (hdfsGroup != null) {
       hdfsGroupsFacade.remove(hdfsGroup);
     }
-    
+
   }
 
   /**
@@ -339,15 +437,11 @@ public class HdfsUsersController {
    * @param dataset
    */
   public void unShareDataset(Project project, Dataset dataset) {
-    if (project == null || project.getProjectTeamCollection()
-            == null || dataset == null) {
+    if (project == null || dataset == null) {
       throw new IllegalArgumentException("One or more arguments are null.");
     }
-    if (dataset.getInode().getInodePK().getParentId() != dataset.getProjectId().
-            getInode().getId()) {
-      throw new IllegalArgumentException("Dataset is not owned by project.");
-    }
-    String datasetGroup = dataset.getProjectId().getName() + USER_NAME_DELIMITER
+    Inode inode = inodes.findById(dataset.getInode().getInodePK().getParentId());
+    String datasetGroup = inode.getInodePK().getName() + USER_NAME_DELIMITER
             + dataset.getInode().getInodePK().getName();
     byte[] groupId = UsersGroups.getGroupID(datasetGroup);
     HdfsGroups hdfsGroup = hdfsGroupsFacade.findHdfsGroup(groupId);
@@ -357,20 +451,19 @@ public class HdfsUsersController {
     if (hdfsGroup.getHdfsUsersCollection() == null) {
       throw new IllegalArgumentException("The dataset group have no members.");
     }
+    Collection<ProjectTeam> projectTeam = projectTeamFacade.
+            findMembersByProject(project);
     String hdfsUsername;
     HdfsUsers hdfsUser;
     byte[] userId;
-    //every member of the project the ds is going to be shard with is
-    //added to the dataset group.
-    for (ProjectTeam member : project.getProjectTeamCollection()) {
+    //every member of the project the ds is going to be unshard from is
+    //removed from the dataset group.
+    for (ProjectTeam member : projectTeam) {
       hdfsUsername = project.getName() + USER_NAME_DELIMITER + member.getUser().
               getUsername();
       userId = UsersGroups.getUserID(hdfsUsername);
       hdfsUser = hdfsUsersFacade.findHdfsUser(userId);
-      if (hdfsUser == null) {
-        hdfsUser = new HdfsUsers(userId, hdfsUsername);
-      }
-      if (!hdfsGroup.getHdfsUsersCollection().contains(hdfsUser)) {
+      if (hdfsUser != null) {
         hdfsGroup.getHdfsUsersCollection().remove(hdfsUser);
       }
     }

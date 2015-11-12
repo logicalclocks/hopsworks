@@ -46,7 +46,8 @@ public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
   public void removeHdfsUser(HdfsUsers user) {
     HdfsUsers u = em.find(HdfsUsers.class, user.getId());
     if (u != null) {
-      em.remove(u);
+      em.createNamedQuery("HdfsUsers.delete", HdfsUsers.class).
+              setParameter("id", user.getId()).executeUpdate();
     }
   }
 }
