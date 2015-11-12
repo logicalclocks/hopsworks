@@ -34,30 +34,29 @@
 
                 <div class="content">
 
-                    <h:form id="spamReuests">
-                        <p:dataTable id="spamUserReqTable" var="req"
+                    <h:form id="banner">
+                        <p:dataTable id="bannerTable" var="req"
                                      value="#{maintenance.maintenance}"
                                      widgetVar="spamReqsTable"
                                      editable="true"
                                      editMode="cell">
 
                             <p:column id="bannerStatusColumn" headerText="Banner Online">
-                                <h:selectOneRadio value="#{maintenance.status}" layout="pageDirection">
-                                    <f:selectItem itemValue="1" itemLabel="yoyoyoyoyoyoyoyo" />
+                                <h:selectOneRadio id="bannerStatus" binding="#{status}" value="#{maintenance.status}" layout="pageDirection">
+                                    <f:selectItem itemValue="1" itemLabel="Yes" />
                                     <f:selectItem itemValue="0" itemLabel="No" />
                                 </h:selectOneRadio>
                             </p:column>
+
                             <p:column id="bannerMsgColumn" headerText="Banner Message">
-                                <h:inputText value="#{maintenance.message}" />
+                                <h:inputText binding="#{message}" id="bannerMsg" value="#{maintenance.message}" />
                             </p:column>
                             <p:column id="bannerActionColumn" headerText="Action">
-                                <h:commandButton value="Update" action="#{maintenance.setMessage(bannerMsgColumn)}" />
+                                <h:commandButton value="Update" action="#{maintenance.update(status.value, message.value)}" />
                             </p:column>
                         </p:dataTable>
 
                     </h:form>
-
-
 
                     <script>
                         userMgmtTabview.select(#{peopleStatusBean.tabIndex});

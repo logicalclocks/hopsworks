@@ -26,6 +26,22 @@ public class MaintenanceFacade extends AbstractFacade<Maintenance> {
         super(Maintenance.class);
     }
 
+    private Maintenance maintenance;
+
+    public boolean updateStatus(short status) {
+        maintenance = findMaintenanceStatus();
+        maintenance.setStatus(status);
+        em.merge(maintenance);
+        return true;
+    }
+
+    public boolean updateBannerMessage(String msg) {
+        maintenance = findMaintenanceStatus();
+        maintenance.setMessage(msg);
+        em.merge(maintenance);
+        return true;
+    }
+
     public Maintenance findMaintenanceStatus() {
                 try {
                         return em.createNamedQuery("Maintenance.findAll", Maintenance.class).getSingleResult();

@@ -25,12 +25,12 @@ public class MaintenanceBean implements Serializable {
         return maintenanceFacade.findMaintenanceStatus();
     }
 
-    public Boolean getStatus() {
+    public short getStatus() {
         return getMaintenance().getStatus();
     }
 
-    public void setStatus(Boolean status) {
-        getMaintenance().setStatus(status);
+    public void setStatus(short status) {
+        maintenanceFacade.updateStatus(status);
     }
 
     public String getMessage() {
@@ -38,7 +38,12 @@ public class MaintenanceBean implements Serializable {
     }
 
     public void setMessage(String message) {
-        getMaintenance().setMessage(message);
+        maintenanceFacade.updateBannerMessage(message);
+    }
+
+    public void update(short status, String message) {
+        setStatus(status);
+        setMessage(message);
     }
 
 }
