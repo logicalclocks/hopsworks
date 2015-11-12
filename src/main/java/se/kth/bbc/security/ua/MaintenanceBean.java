@@ -5,6 +5,9 @@
  */
 package se.kth.bbc.security.ua;
 
+import se.kth.hopsworks.message.controller.MessageController;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.UserFacade;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
@@ -17,6 +20,12 @@ public class MaintenanceBean implements Serializable {
 
     @EJB
     private MaintenanceFacade maintenanceFacade;
+
+    @EJB
+    private UserFacade userFacade;
+
+    @EJB
+    private MessageController messageController;
 
     public MaintenanceBean() {
     }
@@ -44,6 +53,10 @@ public class MaintenanceBean implements Serializable {
     public void update(short status, String message) {
         setStatus(status);
         setMessage(message);
+
+        if (status == 1) {
+            messageController.sendToMany(userFacade.findAllUsers(), userFacade.findByEmail("admin@kth.se"), "Administration Message", message, "");
+        }
     }
 
 }
