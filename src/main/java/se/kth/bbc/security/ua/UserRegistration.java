@@ -304,7 +304,7 @@ public class UserRegistration implements Serializable {
 
       String otpSecret = SecurityUtils.calculateSecretKey();
       String activationKey = SecurityUtils.getRandomString(64);
-
+				// 
       // Generates a UNIX compliant account
       int uid = mgr.lastUserID() + 1;
 
@@ -368,7 +368,7 @@ public class UserRegistration implements Serializable {
 
     } catch (NotSupportedException | SystemException | NoSuchAlgorithmException |
             IOException | WriterException | MessagingException |
-            RollbackException | HeuristicMixedException |
+            RollbackException | HeuristicMixedException | 
             HeuristicRollbackException | SecurityException |
             IllegalStateException e) {
       MessagesController.addSecurityErrorMessage("Technical Error");
@@ -437,13 +437,13 @@ public class UserRegistration implements Serializable {
       am.registerLoginInfo(user, LoginsAuditActions.REGISTRATION.getValue(), ip,
               browser, os, macAddress, "SUCCESS");
 
-      userTransaction.commit();
-
       // Send email to the user to get notified about the account request
       emailBean.sendEmail(mail,
               UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
               UserAccountsEmailMessages.buildYubikeyRequestMessage(
                       getApplicationUri(), user.getUsername() + activationKey));
+
+      userTransaction.commit();
 
       // Reset the values
       fname = "";
@@ -469,7 +469,7 @@ public class UserRegistration implements Serializable {
 
     } catch (NotSupportedException | SystemException | NoSuchAlgorithmException |
             UnsupportedEncodingException | MessagingException |
-            RollbackException | HeuristicMixedException |
+            RollbackException | HeuristicMixedException | 
             HeuristicRollbackException | SecurityException |
             IllegalStateException e) {
 

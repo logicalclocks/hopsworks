@@ -183,8 +183,6 @@ public class AuthService {
 
     JsonResponse json = new JsonResponse();
 
-    try {
-    
       String domain = req.getRequestURL().toString();
       String cpath = req.getContextPath().toString();
 
@@ -199,9 +197,6 @@ public class AuthService {
       
       qrCode = userController.registerUser(newUser, url, ip, browser, os, mac);
       
-    } catch (IOException | WriterException | MessagingException ex) {
-      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
-    }
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
 
@@ -229,7 +224,6 @@ public class AuthService {
 
     JsonResponse json = new JsonResponse();
 
-    try {
     
       String domain = req.getRequestURL().toString();
       String cpath = req.getContextPath().toString();
@@ -244,9 +238,6 @@ public class AuthService {
       String os = "Fix this";
       userController.registerYubikeyUser(newUser, url, ip, browser, os, mac);
       
-    } catch (IOException | WriterException | MessagingException ex) {
-      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
-    }
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
 
