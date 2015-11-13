@@ -131,7 +131,10 @@
                         <img class="my-avatar img-rounded" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(messageCtrl.email)}}?d=mm">
                     </a>
                     <div class="message-box-body">
-                        <textarea placeholder="Reply here... " class="form-control" ng-model="messageCtrl.newMsg"></textarea>
+                        <textarea
+                                ng-disabled="messageCtrl.selectedMsg.from.fname==='Admin' && messageCtrl.selectedMsg.from.lname==='Admin'"
+                                  placeholder="Reply here... "
+                                   class="form-control" ng-model="messageCtrl.newMsg"></textarea>
                     </div>
                     <div class="pull-right">
                             <a ng-click="messageCtrl.reply()" class="fa fa-paper-plane fa-lg" style="margin-top:-35px; text-decoration: none"> </a>
