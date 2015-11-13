@@ -30,6 +30,8 @@ public final class InodeView {
   private String description;
   private boolean status = true;
   private byte underConstruction;
+  private String owner;
+  private int permission;
 
   public InodeView() {
   }
@@ -57,6 +59,8 @@ public final class InodeView {
     // this is used in the front-end to tell apart accepted and pending shared 
     // top level datasets. 
     this.status = true;
+    this.owner = i.getHdfsUser().getUsername();
+    this.permission = i.getPermission();
   }
 
   /**
@@ -88,6 +92,8 @@ public final class InodeView {
     this.owningProjectName = parent.inodePK.getName();
     this.description = ds.getDescription();
     this.status = ds.getStatus();
+    this.owner = ds.getInode().getHdfsUser().getUsername();
+    this.permission = ds.getInode().getPermission();
   }
 
   private InodeView(String name, boolean dir, boolean parent, String path) {
@@ -229,7 +235,24 @@ public final class InodeView {
   public void setUnderConstruction(byte underConstruction) {
     this.underConstruction = underConstruction;
   }
+
+  public String getOwner() {
+    return owner;
+  }
+
+  public void setOwner(String owner) {
+    this.owner = owner;
+  }
+
+  public int getPermission() {
+    return permission;
+  }
+
+  public void setPermission(int permission) {
+    this.permission = permission;
+  }
  
+  
   @Override
   public int hashCode() {
     int hash = 7;

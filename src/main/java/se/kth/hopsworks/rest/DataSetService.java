@@ -54,6 +54,7 @@ import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.dataset.DatasetRequest;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.Template;
@@ -131,13 +132,17 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException {
 
     Inode parent;
-
+    InodeView inodeView;
+    Users user;
     List<InodeView> kids = new ArrayList<>();
 
     Collection<Dataset> dsInProject = this.project.getDatasetCollection();
     for (Dataset ds : dsInProject) {
       parent = inodes.findParent(ds.getInode());
-      kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode())));
+      inodeView = new InodeView(parent, ds, inodes.getPath(ds.getInode()));
+      user = userfacade.findByUsername(inodeView.getOwner());
+      inodeView.setOwner(user.getFname() + " " + user.getLname());
+      kids.add(inodeView);
     }
 
     GenericEntity<List<InodeView>> inodViews
@@ -179,8 +184,13 @@ public class DataSetService {
               "Path not found.");
     }
     List<InodeView> kids = new ArrayList<>();
+    InodeView inodeView;
+    Users user;
     for (Inode i : cwdChildren) {
-      kids.add(new InodeView(i, inodes.getPath(i)));
+      inodeView = new InodeView(i, inodes.getPath(i));
+      user = userfacade.findByUsername(inodeView.getOwner());
+      inodeView.setOwner(user.getFname() + " " + user.getLname());
+      kids.add(inodeView);
     }
 
     GenericEntity<List<InodeView>> inodViews
@@ -397,6 +407,7 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     String newPath = getFullPath(dataSetName.getName());
     while (newPath.startsWith("/")) {
       newPath = newPath.substring(1);
@@ -419,7 +430,7 @@ public class DataSetService {
     }
 
     try {
-      datasetController.createSubDirectory(project, fullPathArray[2],
+      datasetController.createSubDirectory(user, project, fullPathArray[2],
               dsRelativePath.toString(), dataSetName.getTemplate(), dataSetName.
               getDescription(), dataSetName.isSearchable());
     } catch (IOException e) {
@@ -445,6 +456,7 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException {
     boolean success = false;
     JsonResponse json = new JsonResponse();
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     if (fileName == null || fileName.isEmpty()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NAME_EMPTY);
@@ -470,7 +482,7 @@ public class DataSetService {
     }
 
     try {
-      success = fileOps.rmRecursive(filePath);
+      success = datasetController.deleteDataset(path, user, project);
     } catch (IOException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + filePath);

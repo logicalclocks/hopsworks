@@ -77,13 +77,14 @@
                             <br>
                             <small><b>Added:</b> {{dataset.modification| date:'medium'}}</small>
                             <br/>
-
+                            <small><b>Owner:</b> {{dataset.owner}}</small>
+                            <br/>
                             <div collapse="(iscollapsed$index)" style="text-decoration: none;">
                               <small><b>Modified:</b> {{dataset.modification| date:'medium'}}</small>
                               <br/>
-                              <small><b>Created:</b> April 24, 2015</small>
+                              <small><b>Permission</b> {{dataset.permission}}</small>
                               <br/>
-                              <small><b>Description:</b> A dataset that contains {{dataset.name}} info</small>
+                              <small><b>Description:</b>{{dataset.description}}</small>
                             </div>
                           </div>
                         </a>

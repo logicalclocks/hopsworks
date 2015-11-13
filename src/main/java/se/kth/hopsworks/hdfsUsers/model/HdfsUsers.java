@@ -87,6 +87,11 @@ public class HdfsUsers implements Serializable {
     this.name = name;
   }
 
+  public String getUsername(){
+    int index = this.name.indexOf("__")+2;
+    return this.name.substring(index);
+  }
+  
   @XmlTransient
   @JsonIgnore
   public Collection<HdfsGroups> getHdfsGroupsCollection() {

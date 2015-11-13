@@ -223,7 +223,7 @@ public class HdfsUsersController {
     }
     //add every member to the new ds group
     for (ProjectTeam member : project.getProjectTeamCollection()) {
-      hdfsUsername = getHdfsUserName(project, member.getUser());             
+      hdfsUsername = getHdfsUserName(project, member.getUser());
       userId = UsersGroups.getUserID(hdfsUsername);
       hdfsUser = hdfsUsersFacade.findHdfsUser(userId);
       //the owner does not need to be added to the group.
@@ -451,16 +451,29 @@ public class HdfsUsersController {
     hdfsGroupsFacade.merge(hdfsGroup);
   }
 
-  private String getHdfsUserName(Project project, Users user) {
+  /**
+   * Returns the hdfs username for the user in this project
+   * <p>
+   * @param project
+   * @param user
+   * @return
+   */
+  public String getHdfsUserName(Project project, Users user) {
     if (project == null || user == null) {
       return null;
     }
     return project.getName() + USER_NAME_DELIMITER + user.getUsername();
   }
 
-  //If the dataset is shared with this project we will get a group name that 
-  //does not exist. 
-  private String getHdfsGroupName(Project project, Dataset ds) {
+  /**
+   * If the dataset is shared with this project we will get a group name
+   * that does not exist.
+   * <p>
+   * @param project
+   * @param ds
+   * @return
+   */
+  public String getHdfsGroupName(Project project, Dataset ds) {
     if (project == null || ds == null) {
       return null;
     }
@@ -468,10 +481,14 @@ public class HdfsUsersController {
             getName();
   }
 
-  //This will give us a group name for the dataset 
-  //Warning if the dataset is shared this will still give us 
-  //the group in the owning project.
-  private String getHdfsGroupName(Dataset dataset) {
+  /**
+   * This will return a group name for the dataset Warning if the dataset is
+   * shared this will still give us the group in the owning project.
+   * <p>
+   * @param dataset
+   * @return
+   */
+  public String getHdfsGroupName(Dataset dataset) {
     if (dataset == null) {
       return null;
     }

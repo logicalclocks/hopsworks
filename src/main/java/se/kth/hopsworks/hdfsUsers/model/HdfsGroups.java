@@ -58,7 +58,6 @@ public class HdfsGroups implements Serializable {
             @JoinColumn(name = "user_id",
                     referencedColumnName = "id")})
   @ManyToMany
-  //@ManyToMany(mappedBy = "hdfsGroupsCollection")
   private Collection<HdfsUsers> hdfsUsersCollection;
 
   public HdfsGroups() {
