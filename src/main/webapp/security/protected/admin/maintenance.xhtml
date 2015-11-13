@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+>
+
+<h:head>
+    <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+    <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+</h:head>
+
+<h:body>
+    <ui:insert name="titleBar" >
+        <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+    </ui:insert>
+
+    <p:layout styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.SYSAdmin}">
+
+        <p:layoutUnit  position="center">
+
+            <div class="container">
+                <div align="left">
+                    <h2>Post a Maintenance Message</h2>
+                </div>
+
+                <div class="content">
+
+                    <h:form id="banner">
+                        <p:dataTable id="bannerTable" var="req"
+                                     value="#{maintenance.maintenance}"
+                                     widgetVar="spamReqsTable"
+                                     editable="true"
+                                     editMode="cell">
+
+                            <p:column id="bannerStatusColumn" headerText="Banner Online">
+                                <h:selectOneRadio id="bannerStatus" binding="#{status}" value="#{maintenance.status}" layout="pageDirection">
+                                    <f:selectItem itemValue="1" itemLabel="Yes" />
+                                    <f:selectItem itemValue="0" itemLabel="No" />
+                                </h:selectOneRadio>
+                            </p:column>
+
+                            <p:column id="bannerMsgColumn" headerText="Banner Message">
+                                <h:inputText binding="#{message}" id="bannerMsg" value="#{maintenance.message}" />
+                            </p:column>
+                            <p:column id="bannerActionColumn" headerText="Action">
+                                <h:commandButton value="Update" action="#{maintenance.update(status.value, message.value)}" />
+                            </p:column>
+                        </p:dataTable>
+
+                    </h:form>
+
+                    <script>
+                        userMgmtTabview.select(#{peopleStatusBean.tabIndex});
+                    </script>
+                </div>
+            </div>
+        </p:layoutUnit>
+    </p:layout>
+</h:body>
+</html>
