@@ -22,11 +22,6 @@
               <div class="ibox float-e-margins">
                 <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
                   <div class="file-manager">
-                      <label style="padding-bottom: 5px">Filter Jobs: </label>
-                    <input type="text" ng-model="jobsCtrl.jobFilter.name" placeholder="Job name" class="form-control"/>
-                    
-
-                    <div class="hr-line-dashed"></div>
                     <div class="btn-group"
                          style="width: 100%;">
                       <button style="width: 100%;"
@@ -56,13 +51,14 @@
                 <th style="width: 15%">
                   Created on
                 </th>
-                <th style="width: 30%">
+                <th style="width: 20%">
+                  Filter Jobs: <input type="text" ng-model="jobsCtrl.jobFilter.name" placeholder="Job name" class="form-control"/>
                 </th>
-                <th style="width: 20%"></th>
+                <th style="width: 30%"></th>
                 </thead>
                 <tbody>
                     <tr ng-repeat="job in jobsCtrl.jobs| filter:jobsCtrl.jobFilter:false | orderBy : 'creationTime'" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.untoggle(job,$index);">
-                    <td>   
+                    <td>
                       {{job.name}}
                     </td>
                     <td>
@@ -101,17 +97,17 @@
           <div class="row">
               <div class="col-lg-2"  style="max-width: 250px"></div>
               <div class="col-lg-10" style="max-height: 50%;padding-top: 10px" ng-show="jobsCtrl.hasSelectJob">
-                  
+
                 <ul class="nav nav-tabs">
                   <li class="active"><button class="btn btn-default"
                         data-toggle="tab"
                         data-target="#logs">
                         Execution Logs</button></li>
-                  <li><button class="btn btn-default"                        
+                  <li><button class="btn btn-default"
                         data-toggle="tab"
                         data-target="#errs"
                         >Error Logs</button></li>
-                  
+
                 </ul>
 
                 <div class="tab-content">
@@ -137,13 +133,13 @@
                             </accordion-group>
                         </accordion>
                   </div>
-                </div>                
+                </div>
 
               </div>
           </div>
-          
+
         </div>
-               
+
     </section>
   </div>
   <!-- /#wrapper -->
