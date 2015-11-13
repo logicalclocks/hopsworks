@@ -117,7 +117,7 @@ public class DatasetController {
         datasetFacade.persistDataset(newDS);
         activityFacade.persistActivity(ActivityFacade.NEW_DATA, project, user);
         // creates a stickbit dataset and adds user as owner.
-        hdfsUsersBean.addDatasetUsersGroups(user, project, ds.getInodePK().getName(), stickbit);
+        hdfsUsersBean.addDatasetUsersGroups(user, project, newDS, stickbit);
       } catch (Exception e) {
         IOException failed = new IOException("Failed to create dataset at path "
                 + dsPath + ".", e);
