@@ -20,7 +20,7 @@
           <p class="text-center">SIGN IN TO CONTINUE.</p>
           <form name="loginForm" ng-submit="loginCtrl.login()" role="form">
             <div class="form-group">
-              <input id="login_inputEmail" class="form-control" required
+              <input id="login_inputEmail" class="form-control" required autofocus
                      ng-model="loginCtrl.user.email"
                      autocomplete="on"
                      placeholder="Email"
@@ -42,8 +42,10 @@
             <div class="clearfix">
             
               <div class="pull-right">
-                <a class="text-muted" href="#/recover">Forgot your password?</a>
-              </div>
+                <a tabindex="-1" class="text-muted" href="#/recover">Forgot
+                  your
+                  password?</a>
+                </div>
             </div>
             <button class="btn btn-block btn-primary mt-lg" type="submit" data-ng-disabled="loginCtrl.working">Login</button>
           </form>
