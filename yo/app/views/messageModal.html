@@ -109,7 +109,7 @@
                     <span>Subject: </span>
                     <span>{{messageCtrl.selectedMsg.subject}}</span>
                     <br>
-                    <span ng-if="messageCtrl.selectedMsg.usersCollection.length > 0" class="message-list">To: <a title="e-mail: {{to.email}}" ng-repeat="to in messageCtrl.selectedMsg.usersCollection" style="text-decoration:none;">
+                    <span ng-if="messageCtrl.selectedMsg.usersCollection.length > 0 && messageCtrl.selectedMsg.from.fname!=='Admin' && messageCtrl.selectedMsg.from.lname!=='Admin'" class="message-list">To: <a title="e-mail: {{to.email}}" ng-repeat="to in messageCtrl.selectedMsg.usersCollection" style="text-decoration:none;">
                         {{ to.fname }} {{ to.lname }}; </a>
                     </span>
                     <br>
