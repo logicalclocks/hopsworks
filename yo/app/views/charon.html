@@ -1,0 +1,33 @@
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+  <div id="wrapper" class="toggled">
+    <div class="overlay"></div>
+
+    <div ng-include="'navProject.html'"></div>
+
+    <section>
+      <div class="content-wrapper"  ng-controller="CharonCtrl as charonCtrl">
+        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Consent Forms</h3>
+        <div growl reference="10" class="pull-right" ></div>
+        <div class="row" style="margin: 50px">
+
+
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Unregistered Consent Forms</h3>
+              <div class="panel-body">
+                <div class="col-lg-7">
+                  <div class="row">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+                   
+          
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

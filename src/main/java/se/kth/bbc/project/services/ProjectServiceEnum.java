@@ -7,8 +7,9 @@ package se.kth.bbc.project.services;
 public enum ProjectServiceEnum {
 
   ZEPPELIN("Zeppelin"),
-  SSH("Ssh Access"),
-  BIOBANKING("Biobanking Consent Forms"),
+  SSH("Ssh"),
+  BIOBANKING("Biobanking"),
+  CHARON("Charon"),
   JOBS("Jobs");
 
   private final String readable;

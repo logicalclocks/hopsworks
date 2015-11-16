@@ -2,10 +2,9 @@
 
 angular.module('hopsWorksApp')
         .factory('SecurityQuestions', function () {
-          var questions = ['Who is your favorite historical figure?',
-            'What is the name of your favorite teacher?',
-            'What is your first phone number?',
-            'What is the name of your favorite childhood friend?'];
+          var questions = ["Mother's maiden name?",
+            'Name of your first pet?',
+            'Name of your first love?'];
           return {
             getQuestions: function () {
               return questions;
