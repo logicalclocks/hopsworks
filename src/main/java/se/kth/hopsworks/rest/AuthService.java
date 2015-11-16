@@ -1,9 +1,5 @@
 package se.kth.hopsworks.rest;
 
-import com.google.zxing.WriterException;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -24,6 +20,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.codec.binary.Base64;
+import se.kth.bbc.security.auth.AccountStatusErrorMessages;
+import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
@@ -84,7 +82,7 @@ public class AuthService {
   public Response login(@FormParam("email") String email,
           @FormParam("password") String password,  @FormParam("otp") String otp, @Context SecurityContext sc,
           @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
-          throws AppException {
+          throws AppException, MessagingException {
 
     req.getServletContext().log("email: " + email);
     req.getServletContext().log("SESSIONID@login: " + req.getSession().getId());
@@ -107,9 +105,7 @@ public class AuthService {
     } else if(otp.length() == 44){
       password = password + otp + YUBIKEY_USER_MARKER;
     }
-    
-      
-    
+   
     //only login if not already logged in...
     if (sc.getUserPrincipal() == null) {
       if (user != null && statusValidator.checkStatus(user.getStatus())) {
@@ -127,6 +123,8 @@ public class AuthService {
             throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                     "No valid role found for this user");
           }
+          
+
 
         } catch (ServletException e) {
           userController.registerFalseLogin(user);
@@ -257,6 +255,7 @@ public class AuthService {
     JsonResponse json = new JsonResponse();
 
     userController.recoverPassword(email, securityQuestion, securityAnswer, req);
+    
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PASSWORD_RESET_SUCCESSFUL);
 

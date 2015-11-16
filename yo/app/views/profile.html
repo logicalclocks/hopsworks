@@ -95,8 +95,7 @@
       <label class="text-muted">Current Password</label>
       <input name="user_old_password" ng-model="profileCtrl.loginCredes.oldPassword"
              class="form-control" type="password"
-             ng-minlength="6"
-             ng-pattern="/(?=.*[a-z])(?=.*[A-Z])(?=.*[\d\W]).*$/"
+             ng-minlength="4"
              required>
       <span class="fa fa-lock form-control-feedback text-muted"></span>
       <span ng-show="(credentialsForm.$submitted || credentialsForm.sec_answer.$dirty) &amp;&amp; credentialsForm.sec_answer.$error.required"
