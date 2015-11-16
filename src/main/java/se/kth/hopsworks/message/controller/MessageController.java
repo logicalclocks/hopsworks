@@ -128,7 +128,7 @@ public class MessageController {
    * contain the path
    * to the requested dataset or project.
    */
-  public void sendToMany(List<Users> recipients, Users from, String msg,
+  public void sendToMany(List<Users> recipients, Users from, String subject, String msg,
           String requestPath) {
     Date now = new Date();
     if (recipients == null || recipients.isEmpty()) {
@@ -144,6 +144,7 @@ public class MessageController {
       Message newMsg
               = new Message(from, u, recipients, now, msg, true, false);
       newMsg.setPath(requestPath);
+      newMsg.setSubject(subject);
       messageFacade.save(newMsg);
     }
 

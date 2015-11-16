@@ -5,6 +5,12 @@ CREATE TABLE `bbc_group` (
      PRIMARY KEY (`gid`)
 ) ENGINE=ndbcluster;
 
+create TABLE maintenance (
+    id tinyint(4) not null,
+    status tinyint(4) not null default '0',
+    message varchar(254),
+    PRIMARY KEY (id)
+);
 
 CREATE TABLE `users` (
     `uid` INT(11) NOT NULL AUTO_INCREMENT,
