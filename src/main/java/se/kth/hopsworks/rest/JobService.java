@@ -1,7 +1,6 @@
 package se.kth.hopsworks.rest;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,9 +37,7 @@ import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.JobController;
-import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.meta.exception.DatabaseException;
 
 /**

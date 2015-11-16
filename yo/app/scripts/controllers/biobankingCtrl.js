@@ -8,6 +8,9 @@ angular.module('hopsWorksApp')
             var self = this;
             var projectId = $routeParams.projectID;
 
+            self.registeredConsents = {'registeredConsents': []};
+            self.unRegisteredConsents = {'unRegisteredConsents': []};
+
             var init = function () {
             };
 
