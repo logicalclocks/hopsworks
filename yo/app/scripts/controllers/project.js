@@ -266,7 +266,7 @@ angular.module('hopsWorksApp')
             };
 
             // Dummy data
-            $scope.labels = ["Jobs", "Zeppelin"];
+//            $scope.labels = ["Jobs", "Zeppelin"];
 
 
             $scope.data = [
