@@ -227,3 +227,24 @@ div.scroll > ul > li > textarea {
 .md-input.ng-valid{
   border-color: #27c24c !important;
 }
+
+#announcement.show {
+  margin-top: 0;
+}
+#announcement {
+  background-color: #f0ad4e;
+  margin-top: -51px;
+  padding: 1em 0;
+  transition: margin-top 0.25s ease 0s;
+}
+#announcement #announcement-text{
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+  width: 100%;
+}
+#announcement p{
+  margin: 0;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  line-height: 1.42857143;
+}

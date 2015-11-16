@@ -109,7 +109,7 @@
                     <span>Subject: </span>
                     <span>{{messageCtrl.selectedMsg.subject}}</span>
                     <br>
-                    <span ng-if="messageCtrl.selectedMsg.usersCollection.length > 0" class="message-list">To: <a title="e-mail: {{to.email}}" ng-repeat="to in messageCtrl.selectedMsg.usersCollection" style="text-decoration:none;">
+                    <span ng-if="messageCtrl.selectedMsg.usersCollection.length > 0 && messageCtrl.selectedMsg.from.fname!=='Admin' && messageCtrl.selectedMsg.from.lname!=='Admin'" class="message-list">To: <a title="e-mail: {{to.email}}" ng-repeat="to in messageCtrl.selectedMsg.usersCollection" style="text-decoration:none;">
                         {{ to.fname }} {{ to.lname }}; </a>
                     </span>
                     <br>
@@ -131,7 +131,10 @@
                         <img class="my-avatar img-rounded" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(messageCtrl.email)}}?d=mm">
                     </a>
                     <div class="message-box-body">
-                        <textarea placeholder="Reply here... " class="form-control" ng-model="messageCtrl.newMsg"></textarea>
+                        <textarea
+                                ng-disabled="messageCtrl.selectedMsg.from.fname==='Admin' && messageCtrl.selectedMsg.from.lname==='Admin'"
+                                  placeholder="Reply here... "
+                                   class="form-control" ng-model="messageCtrl.newMsg"></textarea>
                     </div>
                     <div class="pull-right">
                             <a ng-click="messageCtrl.reply()" class="fa fa-paper-plane fa-lg" style="margin-top:-35px; text-decoration: none"> </a>

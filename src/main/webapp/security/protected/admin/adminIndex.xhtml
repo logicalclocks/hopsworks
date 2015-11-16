@@ -74,6 +74,21 @@
               <p:outputLabel style="text-align: left"  value="Consent Management"></p:outputLabel>
             </p:column>
 
+          <p:column>
+            <h:commandLink  action="projectsMgmt">
+              <p:graphicImage id="projects"
+                                value="/resources/images/users/projects.png"
+                              width="100"
+                              height="100"
+                              title="Projects Management"
+              >
+              </p:graphicImage>
+
+            </h:commandLink>
+            <br></br>
+            <p:outputLabel style="text-align: left"  value="Projects Management"></p:outputLabel>
+          </p:column>
+
             <p:column>
               <h:commandLink  action="mobUsers">
                 <p:graphicImage id="mobile" 
@@ -120,6 +135,21 @@
               </h:commandLink>
               <br></br>
               <p:outputLabel style="text-align: left"  value="Spam Requests"></p:outputLabel>
+            </p:column>
+
+            <p:column>
+              <h:commandLink  action="maintenance">
+
+                <p:graphicImage id="maintenance"
+                                value="/resources/images/users/maintenance.png"
+                                width="100"
+                                height="100"
+                                title="Site Maintenance"
+                >
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Site Maintenance"></p:outputLabel>
             </p:column>
 
           </h:panelGrid>
