@@ -1,10 +1,10 @@
+package se.kth.bbc.project.privacy.model;
+
 
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import se.kth.bbc.project.Consents;
-import se.kth.bbc.project.privacy.model.Consent;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 @Stateless
@@ -25,7 +25,7 @@ public class ConsentsFacade extends AbstractFacade<Consents> {
     super(Consents.class);
   }
 
-  public void persistConsent(Consent consent) {
+  public void persistConsent(Consents consent) {
     em.persist(consent);
   }  
   

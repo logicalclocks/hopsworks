@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.bbc.project;
+package se.kth.bbc.project.privacy.model;
 
 import java.io.Serializable;
 import java.util.Date;

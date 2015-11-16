@@ -11,6 +11,16 @@ angular.module('hopsWorksApp')
             self.registeredConsents = {'registeredConsents': []};
             self.unRegisteredConsents = {'unRegisteredConsents': []};
 
+            self.consent = {
+                            "consent":{
+                "email":""
+              },
+              "jobType":"",
+              "name":""
+
+            };
+
+
             var init = function () {
             };
 

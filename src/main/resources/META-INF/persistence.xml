@@ -21,7 +21,7 @@
     <class>se.kth.hopsworks.dataset.DatasetRequest</class>
     <class>se.kth.hopsworks.message.Message</class>
     <class>se.kth.bbc.project.metadata.ProjectMeta</class>
-    <class>se.kth.bbc.project.privacy.model.Consent</class>
+    <class>se.kth.bbc.project.privacy.model.Consents</class>
     <class>se.kth.bbc.project.ProjectTeam</class>
     <class>se.kth.bbc.project.samples.Sample</class>
     <class>se.kth.bbc.project.samples.Disease</class>
@@ -48,7 +48,6 @@
     <class>se.kth.hopsworks.meta.entity.InodeBasicMetadata</class>
     <class>se.kth.hopsworks.util.Variables</class>
     <class>io.hops.hdfs.HdfsLeDescriptors</class>
-    <class>se.kth.bbc.security.ua.Maintenance</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
