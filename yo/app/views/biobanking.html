@@ -6,7 +6,7 @@
         <div ng-include="'navProject.html'"></div>
 
         <section>
-            <div class="content-wrapper">
+            <div class="content-wrapper"  ng-controller="BiobankingCtrl as biobankingCtrl">
                 <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Consent Forms</h3>
                 <div growl reference="10" class="pull-right" ></div>
                 <div class="row" style="margin: 50px">

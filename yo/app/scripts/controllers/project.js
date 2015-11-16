@@ -21,7 +21,6 @@ angular.module('hopsWorksApp')
             self.endpoint = '...';
 
             // We could instead implement a service to get all the available types but this will do it for now
-//            self.projectTypes = ['JOBS', 'ZEPPELIN', 'SSH'];
             self.projectTypes = ['JOBS', 'ZEPPELIN', 'BIOBANKING', 'CHARON'];
             self.alreadyChoosenServices = [];
             self.selectionProjectTypes = [];
@@ -47,7 +46,7 @@ angular.module('hopsWorksApp')
                         self.projectMembers = self.currentProject.projectTeam;
                         self.alreadyChoosenServices = [];
                         self.currentProject.services.forEach(function (entry) {
-                          self.alreadyChoosenServices.push(entry);
+                          self.alreadyChoosenServices.push(entry.toUpperCase());
                         });
 
                         // Remove already choosen services from the service selection
@@ -264,10 +263,6 @@ angular.module('hopsWorksApp')
                 return true;
               }
             };
-
-            // Dummy data
-//            $scope.labels = ["Jobs", "Zeppelin"];
-
 
             $scope.data = [
               [65, 59, 90, 81, 56, 55, 40],
