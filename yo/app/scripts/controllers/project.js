@@ -22,7 +22,7 @@ angular.module('hopsWorksApp')
 
             // We could instead implement a service to get all the available types but this will do it for now
 //            self.projectTypes = ['JOBS', 'ZEPPELIN', 'SSH'];
-            self.projectTypes = ['JOBS', 'ZEPPELIN'];
+            self.projectTypes = ['JOBS', 'ZEPPELIN', 'BIOBANKING', 'CHARON'];
             self.alreadyChoosenServices = [];
             self.selectionProjectTypes = [];
             self.pId = $routeParams.projectID;
@@ -174,6 +174,13 @@ angular.module('hopsWorksApp')
               $location.path('project/' + self.pId + '/ssh');
             };
 
+            self.goToCharon = function () {
+              $location.path('project/' + self.pId + '/charon');
+            };
+
+            self.goToBiobanking = function () {
+              $location.path('project/' + self.pId + '/biobanking');
+            };
 
             self.goToService = function (service) {
                 $location.path('project/' + self.pId + '/' + service.toLowerCase());
@@ -221,34 +228,36 @@ angular.module('hopsWorksApp')
             };
 
             self.showZeppelin = function () {
-              var len = self.alreadyChoosenServices.length;
-              for (var i = 0; i < len; i++) {
-                if (self.alreadyChoosenServices[i] === 'Zeppelin') {
-                  return true;
-                }
-              }
-              return false;
+              return self.showService("Zeppelin");
             };
 
             self.showJobs = function () {
+              return self.showService("Jobs");
+            };
+
+            self.showSsh = function () {
+              return self.showService("Ssh");
+            };
+            
+            self.showCharon = function () {
+              return self.showService("Charon");
+            };
+            
+            self.showBiobanking = function () {
+              return self.showService("Biobanking");
+            };
+
+            self.showService = function (serviceName) {
               var len = self.alreadyChoosenServices.length;
               for (var i = 0; i < len; i++) {
-                if (self.alreadyChoosenServices[i] === 'Jobs') {
+                if (self.alreadyChoosenServices[i] === serviceName) {
                   return true;
                 }
               }
               return false;
             };
 
-            self.showSsh = function () {
-              var len = self.alreadyChoosenServices.length;
-              for (var i = 0; i < len; i++) {
-                if (self.alreadyChoosenServices[i] === 'Ssh') {
-                  return true;
-                }
-              }
-              return false;
-            };
+
 
             self.saveAllowed = function () {
               if (self.currentProject.projectName.length === 0) {

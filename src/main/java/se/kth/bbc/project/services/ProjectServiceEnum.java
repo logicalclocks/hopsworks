@@ -8,6 +8,7 @@ public enum ProjectServiceEnum {
 
   ZEPPELIN("Zeppelin"),
   SSH("Ssh Access"),
+  BIOBANKING("Biobanking Consent Forms"),
   JOBS("Jobs");
 
   private final String readable;
