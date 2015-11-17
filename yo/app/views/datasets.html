@@ -290,7 +290,7 @@
                          
                             <span editable-text="template.name" e-form="editForm" style="font-size: 14px;" onaftersave="metadataCtrl.updateTemplateName(template)">
                                 <span class="glyphicon glyphicon-hand-right" ng-show="template.showing"></span><label style="font-weight: bold;margin-left: 10px" ng-show="template.showing" >{{template.name| cut:true:16:' ...'}}</label> 
-                                <label style="font-weight: normal" ng-hide="template.showing">{{template.name| cut:true:16:' ...'}}</label>                    
+                                <label style="font-weight: normal" ng-hide="template.showing">{{template.name| cut:true:30:' ...'}}</label>
                             </span>
                             <div class="pull-right">
                             <button class="btn btn-danger pull-right"
