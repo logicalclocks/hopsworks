@@ -23,12 +23,7 @@
 
             <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
               <h3>
-                hdfs://{{projectCtrl.endpoint}}/
-                <a href="#/project/{{datasetsCtrl.projectId}}/datasets">
-                  {{ projectCtrl.currentProject.projectName}}
-                </a>
-                <span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/
-                  <a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>
+                hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>
               </h3>
               <div class="row">
                 <div class="col-lg-2" style="margin-top: 13px;">
