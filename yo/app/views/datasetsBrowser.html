@@ -261,7 +261,8 @@
                                                             <input value="" class="fillInMetadataInput" id="sizeFieldInput"
                                                                  tooltips title="{{card.description}}"
                                                                  ng-show="true"
-                                                                 ng-model="metadataCtrl.metaData[card.id]"  style="width: 100px"/>
+                                                                 ng-model="metadataCtrl.metaData[card.id]"  style="width: 100px"
+                                                                   ng-keypress="($event.which === 13)?metadataCtrl.createMetadata(table.id,card.id):0" autofocus/>
                                                           <button class="btn btn-default btn-xs" ng-click="metadataCtrl.createMetadata(table.id,card.id);" ><span class="glyphicon glyphicon-ok"></span></button>
                                                           <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id+'-'+field.tagName,false);"><span class="glyphicon glyphicon-remove"></span></button>
                                                        

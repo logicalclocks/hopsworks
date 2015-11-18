@@ -203,7 +203,7 @@
                             <input type="text" name="newtemplatename"
                                  ng-model="metadataCtrl.newTemplateName"
                                  style="margin:10px; height: 30px; width: 70%;border-radius: 0; text-indent: 5px;color: black"
-                                 placeholder="Template name..." required/>
+                                 placeholder="Template name..." required autofocus/>
                             <button class="btn btn-success" ng-disabled="newTemplateForm.newtemplatename.$error.required"
                                   ng-click="metadataCtrl.addNewTemplate()"
                                   style="border-radius: 0px; margin-left: -13px;margin-top: -9px; height: 30px; width: 20%">
@@ -231,7 +231,8 @@
                             <input type="text" name="exTemplateName"
                                  ng-model="metadataCtrl.extendedTemplateName"
                                  style="margin:10px; height: 30px; width: 70%;border-radius: 0; text-indent: 5px; color:black"
-                                 placeholder="Template name..." required=""/>
+                                 placeholder="Template name..." required=""
+                                   autofocus/>
                           <button class="btn btn-success"
                                   ng-click="metadataCtrl.extendTemplate()" 
                                   ng-disabled="exTemplateForm.exTemplateName.$error.required"
@@ -245,7 +246,7 @@
                                   style="border-radius: 0px;margin: 9px;width: 90%;margin-top:0px;" required>
                             <option ng-repeat="template in datasetsCtrl.availableTemplates"
                                     value="{{template.id}}">
-                              {{template.name}} 
+                              {{template.name}}
                             </option>
                           </select>
                         </div>
