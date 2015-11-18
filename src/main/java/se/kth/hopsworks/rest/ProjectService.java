@@ -63,6 +63,9 @@ public class ProjectService {
   private DataSetService dataSet;
   @Inject
   private JobService jobs;
+  @Inject
+  private BiobankingService biobanking;
+  
   @EJB
   private DatasetFacade datasetFacade;
   @EJB
@@ -201,6 +204,17 @@ public class ProjectService {
       try {
         ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
         se.toString();
+
+       if (s.compareToIgnoreCase(ProjectServiceEnum.BIOBANKING.toString())==0) {
+                     String owner = sc.getUserPrincipal().getName();
+          try {
+            projectController.createProjectConsentFolder(owner, project);
+          } catch (ProjectInternalFoldersFailedException ex) {
+            Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE, null, ex);
+            json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED + " 'consents' \n "
+                + json.getErrorMsg());
+          }
+        }
         projectServices.add(se);
       } catch (IllegalArgumentException iex) {
         logger.log(Level.SEVERE,
@@ -260,6 +274,9 @@ public class ProjectService {
       //save the project
       project = projectController.createProject(projectDTO, owner);
       if (project != null) {
+        if (projectServices.contains(ProjectServiceEnum.BIOBANKING)) {
+                  projectController.createProjectConsentFolder(owner, project);
+        }
         projectController.createProjectLogResources(owner, project);
       }
       else {
@@ -389,4 +406,13 @@ public class ProjectService {
     Project project = projectController.findProjectById(projectId);
     return this.jobs.setProject(project);
   }
+  
+  @Path("{projectId}/biobanking")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public BiobankingService biobanking(@PathParam("projectId") Integer projectId) throws
+          AppException {
+    Project project = projectController.findProjectById(projectId);
+    return this.biobanking.setProject(project);
+  }  
+  
 }

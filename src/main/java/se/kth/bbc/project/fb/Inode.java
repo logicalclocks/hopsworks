@@ -116,7 +116,7 @@ public class Inode implements Serializable {
   private Integer generationStamp;
   @Column(name = "header")
   private BigInteger header;
-  @Size(max = 3000)
+  @Size(max = 255)
   @Column(name = "symlink")
   private String symlink;
   @Basic(optional = false)

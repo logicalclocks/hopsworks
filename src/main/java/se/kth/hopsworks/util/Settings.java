@@ -46,11 +46,15 @@ public class Settings {
   private static final String VARIABLE_NDB_DIR = "ndb_dir";
   private static final String VARIABLE_MYSQL_DIR = "mysql_dir";
   private static final String VARIABLE_HADOOP_DIR = "hadoop_dir";
+  private static final String VARIABLE_CHARON_DIR = "charon_dir";
 
   private String setUserVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (userName.getValue().isEmpty() == false)) {
-      return userName.getValue();
+      String user = userName.getValue();
+      if (user != null && user.isEmpty() == false) {
+        return user;
+      }
     }
     return defaultValue;
   }
@@ -58,7 +62,10 @@ public class Settings {
   private String setDirVar(String varName, String defaultValue) {
     Variables dirName = findById(varName);
     if (dirName != null && dirName.getValue() != null && (new File(dirName.getValue()).isDirectory())) {
-      return dirName.getValue();
+      String val = dirName.getValue();
+      if (val != null && val.isEmpty() == false) {
+        return val;
+      }
     }
     return defaultValue;
   }
@@ -66,7 +73,10 @@ public class Settings {
   private String setIpVar(String varName, String defaultValue) {
     Variables ip = findById(varName);
     if (ip != null && ip.getValue() != null && Ip.validIp(ip.getValue())) {
-      return ip.getValue();
+      String val = ip.getValue();
+      if (val != null && val.isEmpty() == false) {
+        return val;
+      }
     }
     return defaultValue;
   }
@@ -87,6 +97,7 @@ public class Settings {
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
+      CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
       cached = true;
     }
   }
@@ -97,6 +108,13 @@ public class Settings {
     }
   }
 
+  private String CHARON_DIR = "/srv/charon";
+
+  public synchronized String getCharonDir() {
+    checkCache();
+    return CHARON_DIR;
+  }  
+  
   /**
    * Default Directory locations
    */
@@ -160,17 +178,19 @@ public class Settings {
   }
 
   private String FLINK_USER = "flink";
+
   public synchronized String getFlinkUser() {
     checkCache();
     return FLINK_USER;
-  }  
-  
+  }
+
   private String ZEPPELIN_USER = "glassfish";
+
   public synchronized String getZeppelinUser() {
     checkCache();
     return ZEPPELIN_USER;
-  }  
-  
+  }
+
   //Local path to the hiway jar
   public static final String HIWAY_JAR_PATH = "/srv/hiway-1.0.1-SNAPSHOT/hiway-core-1.0.1-SNAPSHOT.jar";
 
@@ -183,7 +203,7 @@ public class Settings {
   }
 
   private static String hadoopConfDir(String hadoopDir) {
-    return hadoopDir + "/etc/hadoop";
+    return hadoopDir + "/" + HADOOP_CONF_RELATIVE_DIR;
   }
 
   public static String getHadoopConfDir(String hadoopDir) {
@@ -276,6 +296,7 @@ public class Settings {
   public static final String DIR_SAMPLES = "Samples";
   public static final String DIR_CUNEIFORM = "Cuneiform";
   public static final String DIR_RESULTS = "Results";
+  public static final String DIR_CONSENTS = "consents";
   public static final String DIR_BAM = "bam";
   public static final String DIR_SAM = "sam";
   public static final String DIR_FASTQ = "fastq";

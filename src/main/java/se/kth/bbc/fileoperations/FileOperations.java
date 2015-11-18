@@ -8,12 +8,10 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.validation.ValidationException;
 import org.apache.hadoop.fs.Path;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
-import se.kth.hopsworks.controller.FolderNameValidator;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -278,6 +276,15 @@ public class FileOperations {
       return Collections.EMPTY_LIST;
     }
   }
+  
+  public List<Inode> getChildInodes(String path) {
+    Inode inode = inodes.getInodeAtPath(path);
+    if (inode.isDir()) {
+      return inodes.getChildren(inode);
+    } else {
+      return Collections.EMPTY_LIST;
+    }
+  }  
 
   /**
    * Marks a file/folder in location as metadata enabled

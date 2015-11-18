@@ -11,10 +11,9 @@ package se.kth.bbc.security.ua;
  */
 public enum SecurityQuestion {
 
-  HISTORY("Who is your favorite historical figure?"),
-  TEACHER("What is the name of your favorite teacher?"),
-  PHONE("What is your first phone number?"),
-  FRIEND("What is the name of your favorite childhood friend?");
+  MAIDEN_NAME("Mother's maiden name?"),
+  PET("Name of your first pet?"),
+  LOVE("Name of your first love?");
 
   private final String value;
 

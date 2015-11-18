@@ -4,13 +4,8 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/**
- *
- * @author Jim Dowling<jdowling@sics.se>
- */
-@XmlRootElement //we don't need this thanks to Jackson
-//@JsonSerialize(include = JsonSerialize.Inclusion.ALWAYS)  
-//@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)  
+
+@XmlRootElement 
 public class JsonResponse {
 
   private static final float version = 1.0f;
