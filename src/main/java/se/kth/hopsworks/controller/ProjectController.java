@@ -75,12 +75,13 @@ public class ProjectController {
   private Settings settings;
 
   /**
-   * Creates a new project(project), the related DIR, the different services
-   * in the project, and the master of the project.
+   * Creates a new project(project), the related DIR, the different services in
+   * the project, and the master of the
+   * project.
    *
    * This needs to be an atomic operation (all or nothing) REQUIRES_NEW will
-   * make sure a new transaction is created even if this method is called from
-   * within a transaction.
+   * make sure a new transaction is created even
+   * if this method is called from within a transaction.
    * <p/>
    * @param newProject
    * @param email
@@ -134,7 +135,8 @@ public class ProjectController {
 
   /**
    * Project default datasets Logs and Resources need to be created in a
-   * separate transaction after the project creation is complete.
+   * separate transaction after the project creation
+   * is complete.
    * <p/>
    * @param username
    * @param project
@@ -153,6 +155,21 @@ public class ProjectController {
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
               "Could not create project resources ", e);
+    }
+  }
+
+  public void createProjectConsentFolder(String username, Project project)
+          throws
+          ProjectInternalFoldersFailedException {
+
+    Users user = userBean.getUserByEmail(username);
+
+    try {
+      datasetController.createDataset(user, project, "consents",
+              "Biobanking consent forms", -1, false, true);
+    } catch (IOException | EJBException e) {
+      throw new ProjectInternalFoldersFailedException(
+              "Could not create project consents folder ", e);
     }
   }
 
@@ -341,7 +358,8 @@ public class ProjectController {
    * @param email
    * @param deleteFilesOnRemove if the associated files should be deleted
    * @return true if the project and the associated files are removed
-   * successfully, and false if the associated files could not be removed.
+   * successfully, and false if the associated files
+   * could not be removed.
    * @throws IOException if the hole operation failed. i.e the project is not
    * removed.
    * @throws AppException if the project could not be found.
@@ -357,7 +375,8 @@ public class ProjectController {
               ResponseMessages.PROJECT_NOT_FOUND);
     }
     List<Dataset> dsInProject = datasetFacade.findByProject(project);
-    Collection<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(project);
+    Collection<ProjectTeam> projectTeam = projectTeamFacade.
+            findMembersByProject(project);
     //if we remove the project we cant store activity that has a reference to it!!
     //logActivity(ActivityFacade.REMOVED_PROJECT,
     //ActivityFacade.FLAG_PROJECT, user, project);
@@ -377,9 +396,9 @@ public class ProjectController {
   }
 
   /**
-   * Adds new team members to a project(project) - bulk persist if team role
-   * not specified or not in (Data owner or Data scientist)defaults to Data
-   * scientist
+   * Adds new team members to a project(project) - bulk persist if team role not
+   * specified or not in (Data owner or Data
+   * scientist)defaults to Data scientist
    * <p/>
    *
    * @param project

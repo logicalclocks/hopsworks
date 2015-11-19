@@ -162,7 +162,7 @@ public class ResetPassword implements Serializable {
         // Lock the account if 5 tmies wrong answer  
         int val = people.getFalseLogin();
         mgr.increaseLockNum(people.getUid(), val + 1);
-        if (val > 5) {
+        if (val > Users.ALLOWED_FALSE_LOGINS) {
           mgr.changeAccountStatus(people.getUid(), "",
                   PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
           return ("welcome");
@@ -173,13 +173,16 @@ public class ResetPassword implements Serializable {
       // generate a radndom password
       String random_password = SecurityUtils.getRandomString(passwordLength);
 
-      String mess = UserAccountsEmailMessages.buildPasswordResetMessage(
+    
+     String mess = UserAccountsEmailMessages.buildPasswordResetMessage(
               random_password);
-
+    
       userTransaction.begin();
       // make the account pending until it will be reset by user upon first login
-      mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
-
+      // mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
+        // update the status of user to active
+      people.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
+      
       // reset the old password with a new one
       mgr.resetPassword(people, SecurityUtils.converToSHA256(random_password));
 
@@ -192,8 +195,8 @@ public class ResetPassword implements Serializable {
     } catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");
-    } catch (RollbackException | HeuristicMixedException | MessagingException |
-            HeuristicRollbackException | SecurityException | 
+    } catch (RollbackException | HeuristicMixedException |
+            HeuristicRollbackException | SecurityException |
             IllegalStateException | SystemException | NotSupportedException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");

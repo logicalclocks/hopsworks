@@ -56,11 +56,12 @@
                   <label class="text-muted">Phone Number</label>
                   <input name="phone_number" placeholder="Phone" autocomplete="on"
                          ng-model="regCtrl.newUser.telephoneNum"
-                         ng-pattern="/^[+ 0]?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
+                         <!--ng-pattern="/^[+ 0]?\d{2}[- ]?\d{3}[- ]?\d{6}$/"-->
+                         ng-pattern="/[+, ,-,0-9]*$/"
                          class="form-control "
                          type="text">
                   <span ng-show="registerForm.phone_number.$dirty &amp;&amp; registerForm.phone_number.$error.pattern"
-                        class="text-danger ng-hide">Phone number should be in (000-000-000000) format.</span>
+                        class="text-danger ng-hide">Phone number should be in the format: 000-000 000000.</span>
                 </div>
                   </div>
             </div>

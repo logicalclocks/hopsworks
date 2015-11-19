@@ -19,7 +19,7 @@ angular.module('hopsWorksApp')
                         });
               },
               recover: function (user) {
-                return $http.post('/api/auth/forgotPassword', TransformRequest.jQueryStyle(user));
+                return $http.post('/api/auth/recoverPassword', TransformRequest.jQueryStyle(user));
               },
               register: function (user) {
 

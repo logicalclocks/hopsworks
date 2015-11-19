@@ -89,7 +89,7 @@ public class Users implements Serializable {
   public static final int IS_ONLINE = 1;
   public static final int IS_OFFLINE = -1;
 
-  public static final int ALLOWED_FALSE_LOGINS = 5;
+  public static final int ALLOWED_FALSE_LOGINS = 20;
   //hopsworks user prefix username prefix
 //  public static final String USERNAME_PREFIX = "meb";
 

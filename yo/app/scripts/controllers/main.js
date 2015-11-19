@@ -58,12 +58,12 @@ angular.module('hopsWorksApp')
 
                           ModalService.viewSearchResult('md', success, dataType)
                                   .then(function (success) {
-                                    growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                                    growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                                   }, function (error) {
 
                                   });
                         }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                 });
               } else if (dataType === 'dataset') {
                 //fetch the dataset
@@ -79,7 +79,7 @@ angular.module('hopsWorksApp')
                                     //show dataset
                                     ModalService.viewSearchResult('md', response, dataType, projects)
                                             .then(function (success) {
-                                              growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                                              growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                                             }, function (error) {
 
                                             });
@@ -88,7 +88,7 @@ angular.module('hopsWorksApp')
                           });
 
                         }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                 });
               }
             };
@@ -113,7 +113,7 @@ angular.module('hopsWorksApp')
             getUnreadCount();
             getMessages();
             //this might be a bit to frequent for refresh rate 
-            var getUnreadCountInterval = $interval(function () { getUnreadCount(); },1000);
+            var getUnreadCountInterval = $interval(function () { getUnreadCount(); },3000);
             self.getMessages = function () {
                 getMessages();
             };
@@ -123,7 +123,7 @@ angular.module('hopsWorksApp')
                 };
                 ModalService.messages('lg', selected)
                     .then(function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 1000})
                     }, function (error) { });
             };
 
@@ -178,7 +178,7 @@ angular.module('hopsWorksApp')
                           self.resultItems = self.searchResult.length;
 
                         }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                         });
               } else if (self.searchType === "projectCentric") {
                 elasticService.projectSearch(UtilsService.getProjectName(), self.searchTerm)
@@ -197,7 +197,7 @@ angular.module('hopsWorksApp')
                           self.resultItems = self.searchResult.length;
                           
                         }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                         });
               }else if (self.searchType === "datasetCentric"){
                 elasticService.datasetSearch(UtilsService.getDatasetName(), self.searchTerm)
@@ -216,7 +216,7 @@ angular.module('hopsWorksApp')
                           self.resultItems = self.searchResult.length;
                           
                         }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                         });
               }
               

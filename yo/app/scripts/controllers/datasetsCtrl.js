@@ -142,10 +142,10 @@ angular.module('hopsWorksApp')
             var removeInode = function (path) {
               dataSetService.removeDataSetDir(path).then(
                       function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                         getDirContents();
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
             };
 
@@ -156,7 +156,7 @@ angular.module('hopsWorksApp')
             self.newDataSetModal = function () {
               ModalService.newFolder('md', getPath(self.pathArray)).then(
                       function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                         getDirContents();
                       }, function (error) {
                 //The user changed his/her mind. Don't really need to do anything.
@@ -185,7 +185,7 @@ angular.module('hopsWorksApp')
 
               ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
                       function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                         getDirContents();
                       }, function (error) {
                 growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
@@ -255,7 +255,7 @@ angular.module('hopsWorksApp')
             self.share = function (name) {
               ModalService.shareDataset('md', name).then(
                       function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                       }, function (error) {
               });
             };

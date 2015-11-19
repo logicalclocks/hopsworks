@@ -5,6 +5,7 @@
  */
 package se.kth.bbc.security.ua;
 
+import se.kth.hopsworks.controller.MaintenanceController;
 import se.kth.hopsworks.message.controller.MessageController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
@@ -19,7 +20,7 @@ import java.io.Serializable;
 public class MaintenanceBean implements Serializable {
 
     @EJB
-    private MaintenanceFacade maintenanceFacade;
+    private MaintenanceController maintenanceController;
 
     @EJB
     private UserFacade userFacade;
@@ -31,23 +32,23 @@ public class MaintenanceBean implements Serializable {
     }
 
     public Maintenance getMaintenance() {
-        return maintenanceFacade.findMaintenanceStatus();
+        return maintenanceController.getMaintenance();
     }
 
     public short getStatus() {
-        return getMaintenance().getStatus();
+        return maintenanceController.getStatus();
     }
 
     public void setStatus(short status) {
-        maintenanceFacade.updateStatus(status);
+        maintenanceController.setStatus(status);
     }
 
     public String getMessage() {
-        return getMaintenance().getMessage();
+        return maintenanceController.getMessage();
     }
 
     public void setMessage(String message) {
-        maintenanceFacade.updateBannerMessage(message);
+        maintenanceController.setMessage(message);
     }
 
     public void update(short status, String message) {

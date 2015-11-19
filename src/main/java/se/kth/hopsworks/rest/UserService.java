@@ -108,9 +108,12 @@ public class UserService {
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
+        
+        System.err.println("#################################  "+ oldPassword + "  "+ newPassword+ " "+confirmedPassword);
+        
         userController.changePassword(sc.getUserPrincipal().getName(), oldPassword,
                 newPassword, confirmedPassword);
-
+        
         json.setStatus("OK");
         json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
 

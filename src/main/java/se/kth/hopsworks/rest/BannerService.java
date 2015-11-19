@@ -1,7 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import se.kth.bbc.security.ua.Maintenance;
-import se.kth.bbc.security.ua.MaintenanceFacade;
+import se.kth.hopsworks.controller.MaintenanceController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -25,7 +25,7 @@ public class BannerService {
     }
 
     @EJB
-    private MaintenanceFacade maintenanceFacade;
+    private MaintenanceController maintenanceController;
     @EJB
     private NoCacheResponse noCacheResponse;
 
@@ -36,7 +36,7 @@ public class BannerService {
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException {
 
-        Maintenance maintenance = maintenanceFacade.findMaintenanceStatus();
+        Maintenance maintenance = maintenanceController.getMaintenance();
 
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 maintenance).build();
