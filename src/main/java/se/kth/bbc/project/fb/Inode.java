@@ -10,9 +10,11 @@ import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -20,6 +22,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.eclipse.persistence.annotations.Convert;
 import org.eclipse.persistence.annotations.Converter;
+import se.kth.hopsworks.hdfsUsers.model.HdfsGroups;
+import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
 import se.kth.hopsworks.meta.entity.Template;
 
 /**
@@ -97,12 +101,16 @@ public class Inode implements Serializable {
   private BigInteger modificationTime;
   @Column(name = "access_time")
   private BigInteger accessTime;
-  @Column(name = "user_id")
-  private byte[] userId;
-  @Column(name = "group_id")
-  private byte[] groupId;
+  @JoinColumn(name = "user_id",
+          referencedColumnName = "id")
+  @OneToOne
+  private HdfsUsers hdfsUser;
+  @JoinColumn(name = "group_id",
+          referencedColumnName = "id")
+  @OneToOne
+  private HdfsGroups hdfsGroup;
   @Column(name = "permission")
-  private int permission;
+  private short permission;
   @Size(max = 100)
   @Column(name = "client_name")
   private String clientName;
@@ -207,11 +215,11 @@ public class Inode implements Serializable {
     this.accessTime = accessTime;
   }
 
-  public int getPermission() {
+  public short getPermission() {
     return permission;
   }
 
-  public void setPermission(int permission) {
+  public void setPermission(short permission) {
     this.permission = permission;
   }
 
@@ -368,20 +376,20 @@ public class Inode implements Serializable {
     return header.equals(BigInteger.ZERO);
   }
 
-  public byte[] getGroupId() {
-    return groupId;
+  public HdfsUsers getHdfsUser() {
+    return hdfsUser;
   }
 
-  public void setGroupId(byte[] groupId) {
-    this.groupId = groupId;
+  public void setHdfsUser(HdfsUsers hdfsUser) {
+    this.hdfsUser = hdfsUser;
   }
 
-  public byte[] getUserId() {
-    return userId;
+  public HdfsGroups getHdfsGroup() {
+    return hdfsGroup;
   }
 
-  public void setUserId(byte[] userId) {
-    this.userId = userId;
+  public void setHdfsGroup(HdfsGroups hdfsGroup) {
+    this.hdfsGroup = hdfsGroup;
   }
 
   
