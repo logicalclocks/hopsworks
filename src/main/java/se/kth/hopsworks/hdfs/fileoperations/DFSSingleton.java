@@ -18,6 +18,7 @@ public class DFSSingleton {
   private Settings settings;
   private final Map<String, DistributedFileSystemOps> distributedFileSystems
           = new LinkedHashMap<>();
+  private DistributedFileSystemOps dfsOps;
 
   public DFSSingleton() {
   }
@@ -53,7 +54,10 @@ public class DFSSingleton {
    * @return DistributedFileSystemOps
    */
   public DistributedFileSystemOps getDfs() {
-    return new DistributedFileSystemOps(settings);
+    if (dfsOps == null){
+      dfsOps = new DistributedFileSystemOps(settings);
+    }
+    return dfsOps;
   }
 
   /**

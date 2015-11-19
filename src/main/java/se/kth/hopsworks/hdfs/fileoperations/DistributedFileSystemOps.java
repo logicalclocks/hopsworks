@@ -7,11 +7,13 @@ import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.util.Settings;
 
 public class DistributedFileSystemOps {
@@ -122,6 +124,29 @@ public class DistributedFileSystemOps {
   }
 
   /**
+   * Create a new directory and its parent directory on the given path.
+   * <p/>
+   * @param location The path to the new folder, its name included.
+   * @param filePermission
+   * @return True if successful.
+   * <p/>
+   * @throws java.io.IOException
+   */
+  public boolean mkdirs(Path location, FsPermission filePermission) throws IOException {
+    return dfs.mkdirs(location, filePermission);
+  }
+  
+  /**
+   * Create a new directory and its parent directory on the given path.
+   * <p/>
+   * @param location The path to the new folder, its name included.
+   * @throws java.io.IOException
+   */
+  public void touchz(Path location) throws IOException {
+    dfs.create(location);
+  }
+  
+  /**
    * Delete a file or directory from the file system.
    *
    * @param location The location of file or directory to be removed.
@@ -152,6 +177,27 @@ public class DistributedFileSystemOps {
   }
 
   /**
+   * Copy a file from the local path to the HDFS destination.
+   * <p/>
+   * @param deleteSource If true, deletes the source file after copying.
+   * @param src
+   * @param destination
+   * @throws IOException
+   * @throws IllegalArgumentException If the destination path contains an
+   * invalid folder name.
+   */
+  public void copyToHDFSFromLocal(boolean deleteSource, String src,
+          String destination)
+          throws IOException {
+    //Make sure the directories exist
+    Path dirs = new Path(Utils.getDirectoryPart(destination));
+    mkdir(dirs, FsPermission.getDirDefault());
+    //Actually copy to HDFS
+    Path destp = new Path(destination);
+    Path srcp = new Path(src);
+    copyFromLocal(deleteSource, srcp, destp);
+  }
+  /**
    * Move a file in HDFS from one path to another.
    * <p/>
    * @param source
@@ -179,7 +225,36 @@ public class DistributedFileSystemOps {
       FileUtil.copy(dfs, src1, dfs, dst, false, conf);
     }
   }
+  
+  /**
+   * Set permission for path.
+   * <p>
+   * @param path
+   * @param permission
+   * @throws IOException
+   */
+  public void setPermission(Path path, FsPermission permission) throws
+          IOException {
+    dfs.setPermission(path, permission);
+  }
 
+  /**
+   * Set owner for path.
+   * <p>
+   * @param path
+   * @param username
+   * @param groupname
+   * @throws IOException
+   */
+  public void setOwner(Path path, String username, String groupname) throws
+          IOException {
+    dfs.setOwner(path, username, groupname);
+  }
+
+
+  public FSDataInputStream open(Path location) throws IOException {
+    return this.dfs.open(location);
+  }
   /**
    * Closes the distributed file system.
    */

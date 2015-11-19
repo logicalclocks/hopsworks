@@ -1,6 +1,7 @@
 package se.kth.rest.application.config;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 
 @javax.ws.rs.ApplicationPath("api")
 public class ApplicationConfig extends ResourceConfig {
@@ -25,6 +26,8 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.SparkService.class);
     register(se.kth.hopsworks.rest.ThrowableExceptionMapper.class);
     register(se.kth.hopsworks.rest.TransactionExceptionMapper.class);
+    register(se.kth.hopsworks.rest.AccessControlExceptionMapper.class);
+    register(se.kth.hopsworks.rest.DownloadService.class);
     register(se.kth.hopsworks.rest.UploadService.class);
     register(se.kth.hopsworks.rest.UserService.class);
     register(se.kth.hopsworks.zeppelin.rest.InterpreterRestApi.class);

@@ -110,7 +110,7 @@ public class Inode implements Serializable {
   @OneToOne
   private HdfsGroups hdfsGroup;
   @Column(name = "permission")
-  private int permission;
+  private short permission;
   @Size(max = 100)
   @Column(name = "client_name")
   private String clientName;
@@ -215,11 +215,11 @@ public class Inode implements Serializable {
     this.accessTime = accessTime;
   }
 
-  public int getPermission() {
+  public short getPermission() {
     return permission;
   }
 
-  public void setPermission(int permission) {
+  public void setPermission(short permission) {
     this.permission = permission;
   }
 
