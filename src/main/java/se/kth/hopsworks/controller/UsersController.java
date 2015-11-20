@@ -211,9 +211,9 @@ public class UsersController {
       Address a = new Address();
       a.setUid(user);
       // default '-' in sql file did not add these values!
-      a.setAddress1(newUser.getStreet());
-      a.setAddress2("-");
-      a.setAddress3(newUser.getDep());
+      a.setAddress1("-");
+      a.setAddress2(newUser.getStreet());
+      a.setAddress3("-");
       a.setCity(newUser.getCity());
       a.setCountry(newUser.getCountry());
       a.setPostalcode(newUser.getPostCode());
@@ -234,7 +234,8 @@ public class UsersController {
       yk.setUid(user);
       yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
       user.setYubikey(yk);
-
+      user.setOrganization(org);
+      
       try {
         // Notify user about the request
         emailBean.sendEmail(newUser.getEmail(),
