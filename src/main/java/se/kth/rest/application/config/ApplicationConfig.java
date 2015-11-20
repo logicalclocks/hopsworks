@@ -17,6 +17,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.AuthService.class);
     register(se.kth.hopsworks.rest.CuneiformService.class);
     register(se.kth.hopsworks.rest.DataSetService.class);
+    register(se.kth.hopsworks.rest.LocalFsService.class);
     register(se.kth.hopsworks.rest.ExecutionService.class);
     register(se.kth.hopsworks.rest.JobService.class);
     register(se.kth.hopsworks.rest.ProjectMembers.class);
@@ -36,7 +37,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.VariablesService.class);
     register(se.kth.hopsworks.rest.BannerService.class);
     register(io.hops.hdfs.EndpointService.class);
-   
+    register(se.kth.hopsworks.rest.DownloadService.class);
     // register resources and features
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     //register(org.glassfish.jersey.filter.LoggingFilter.class);

@@ -1,11 +1,8 @@
 package se.kth.hopsworks.rest;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -27,11 +24,7 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.fb.FsView;
-import se.kth.bbc.project.fb.Inode;
-import se.kth.bbc.project.fb.InodeView;
-import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.ResponseMessages;
-import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.util.Settings;
 

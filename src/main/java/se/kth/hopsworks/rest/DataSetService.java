@@ -98,8 +98,8 @@ public class DataSetService {
   private JobController jobcontroller;
   @EJB
   private Settings settings;
-  @EJB
-  DownloadService downloader;
+  @Inject
+  private DownloadService downloader;
 
   
   private Integer projectId;

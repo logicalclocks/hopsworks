@@ -19,6 +19,18 @@
                 <div class="row"  ng-show="charonCtrl.toHDFS">
                   Path to file in Charon: <input size="60" type="text" ng-model="charonCtrl.charonFilename"/>
                 </div>
+
+                <div class="row" ng-show="charonCtrl.toHDFS">
+                  <button class="btn btn-default" ng-click="charonCtrl.selectCharonFile()" >
+                    <span>Select file in Charon</span>
+                  </button> {{charonCtrl.selectedFile}}
+                </div>
+                <div class="row" ng-show="charonCtrl.fromHDFS">
+                  <button class="btn btn-default" ng-click="charonCtrl.selectCharonDir()">
+                    <span>Select directory in Charon</span>
+                  </button> {{charonCtrl.selectedDir}}
+                </div>
+                
               </div>
             </div>
           </div>

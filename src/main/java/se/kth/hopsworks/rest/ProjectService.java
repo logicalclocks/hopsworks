@@ -426,4 +426,12 @@ public class ProjectService {
     return this.biobanking.setProject(project);
   }  
   
+  @Path("{projectId}/consents")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public BiobankingService consents(@PathParam("projectId") Integer projectId) throws
+          AppException {
+    Project project = projectController.findProjectById(projectId);
+    return this.biobanking.setProject(project);
+  }  
+  
 }

@@ -61,6 +61,27 @@ angular.module('hopsWorksApp')
         };
 
 
+        self.selectCharonFile = function () {
+          ModalService.selectLocalFile('lg', "/[^]*/",
+              "problem selecting file").then(
+              function (success) {
+                self.onFileSelected(success);
+              }, function (error) {
+            //The user changed their mind.
+          });
+        };
+        
+        self.selectCharonDir = function () {
+          ModalService.selectLocalDir('lg', "/[^]*/",
+              "problem selecting file").then(
+              function (success) {
+                self.onDirSelected(success);
+              }, function (error) {
+            //The user changed their mind.
+          });
+        };
+
+
 
         self.init = function () {
         };
