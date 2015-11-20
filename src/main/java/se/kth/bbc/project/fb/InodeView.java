@@ -3,6 +3,9 @@ package se.kth.bbc.project.fb;
 import java.util.Date;
 import java.util.Objects;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.util.Settings;
 
@@ -30,6 +33,8 @@ public final class InodeView {
   private String description;
   private boolean status = true;
   private byte underConstruction;
+  private String owner;
+  private String permission;
 
   public InodeView() {
   }
@@ -57,6 +62,9 @@ public final class InodeView {
     // this is used in the front-end to tell apart accepted and pending shared 
     // top level datasets. 
     this.status = true;
+    this.owner = i.getHdfsUser().getUsername();
+
+    this.permission = FsPermission.createImmutable(i.getPermission()).toString();
   }
 
   /**
@@ -88,6 +96,8 @@ public final class InodeView {
     this.owningProjectName = parent.inodePK.getName();
     this.description = ds.getDescription();
     this.status = ds.getStatus();
+    this.owner = ds.getInode().getHdfsUser().getUsername();
+    this.permission = FsPermission.createImmutable(ds.getInode().getPermission()).toString();
   }
 
   private InodeView(String name, boolean dir, boolean parent, String path) {
@@ -229,7 +239,23 @@ public final class InodeView {
   public void setUnderConstruction(byte underConstruction) {
     this.underConstruction = underConstruction;
   }
- 
+
+  public String getOwner() {
+    return owner;
+  }
+
+  public void setOwner(String owner) {
+    this.owner = owner;
+  }
+
+  public String getPermission() {
+    return permission;
+  }
+
+  public void setPermission(String permission) {
+    this.permission = permission;
+  }
+
   @Override
   public int hashCode() {
     int hash = 7;

@@ -24,9 +24,7 @@
       </c:if>
 
       <c:if test="#{peopleStatusBean.anyAuthorizedResearcherRole and not peopleStatusBean.SYSAdmin}">
-        <ui:insert id="titleBar">
-          <ui:include src="/bbc/lims/titleBar.xhtml"/>     
-        </ui:insert>
+     
       </c:if>
 
       <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
