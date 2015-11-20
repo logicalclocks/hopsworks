@@ -12,20 +12,43 @@
         <div class="row" style="margin: 50px">
 
 
-          <div class="panel panel-default">
+          <div class="panel panel-default col-lg-4">
             <div class="panel-heading">
-              <h3 class="panel-title">Unregistered Consent Forms</h3>
+              <h3 class="panel-title">Charon</h3>
               <div class="panel-body">
-                <div class="col-lg-7">
-                  <div class="row">
-                  </div>
+                <div class="row">
+                  Path to file in Charon: <input size="60" type="text" ng-model="charonCtrl.charonFilename" ng-show="charonCtrl.toHDFS"/>
                 </div>
               </div>
             </div>
           </div>
+          <div class="col-lg-1">
+            <div class="row">
+              <button class="fa fa-long-arrow-left fa-3x" ng-click="charontCtrl.setFromHDFS()" />
+            </div>
+            <div class="row">
+              <button class="fa fa-long-arrow-right fa-3x" ng-click="charontCtrl.setToHdfs()"/>
+            </div>
+          </div>
+          <div class="panel panel-default col-lg-4">
+            <div class="panel-heading">
+              <h3 class="panel-title">HDFS</h3>
+              <div class="panel-body">
+                <div class="row" ng-show="charonCtrl.toHDFS">
+                  <button class="btn btn-default" ng-click="charonCtrl.selectFile()" >
+                    <span>Select file in HDFS</span>
+                  </button> {{charonCtrl.selectedFile}}
+                </div>
+                <div class="row" ng-show="charonCtrl.fromHDFS">
+                  <button class="btn btn-default" ng-click="charonCtrl.selectDir()">
+                    <span>Select directory in HDFS</span>
+                  </button> {{charonCtrl.selectedDir}}
+                </div>
+              </div>
 
-                   
-          
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
