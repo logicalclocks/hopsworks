@@ -27,10 +27,6 @@ public class Settings {
   public void init() {
   }
 
-//  @Override
-//  protected EntityManager getEntityManager() {
-//    return em;
-//  }
   /**
    * Global Variables taken from the DB
    */
@@ -367,7 +363,6 @@ public class Settings {
   }
 
   public Settings() {
-//    super(Variables.class);
   }
 
   /**

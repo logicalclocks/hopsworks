@@ -10,18 +10,20 @@ angular.module('hopsWorksApp')
 
         self.selectedFile = "";
         self.selectedDir = "";
-        self.toHDFS = true;
+        self.toHDFS = false;
         self.fromHDFS = true;
         self.charonFilename = "";
 
         self.setToHDFS = function() {
           self.toHDFS = true;
           self.fromHDFS = false;
+          self.selectedFile = "";
         }
         
         self.setFromHDFS = function() {
           self.toHDFS = false;
           self.fromHDFS = true;
+          self.selectedFile = "";
         }
         /**
          * Callback for when the user selected a file.

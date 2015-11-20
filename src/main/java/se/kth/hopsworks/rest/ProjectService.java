@@ -62,6 +62,8 @@ public class ProjectService {
   @Inject
   private DataSetService dataSet;
   @Inject
+  private LocalFsService localFs;
+  @Inject
   private JobService jobs;
   @Inject
   private BiobankingService biobanking;
@@ -398,6 +400,15 @@ public class ProjectService {
 
     return this.dataSet;
   }
+  
+  @Path("{id}/localfs")
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public LocalFsService localFs(
+          @PathParam("id") Integer id) throws AppException {
+    this.localFs.setProjectId(id);
+
+    return this.localFs;
+  }  
 
   @Path("{projectId}/jobs")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})

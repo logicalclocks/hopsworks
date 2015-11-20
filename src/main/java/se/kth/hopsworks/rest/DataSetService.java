@@ -98,7 +98,10 @@ public class DataSetService {
   private JobController jobcontroller;
   @EJB
   private Settings settings;
+  @EJB
+  DownloadService downloader;
 
+  
   private Integer projectId;
   private Project project;
   private String path;
@@ -596,7 +599,6 @@ public class DataSetService {
       path = path + File.separator;
     }
 
-    DownloadService downloader = new DownloadService();
     downloader.setPath(path);
     return downloader;
   }
