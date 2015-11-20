@@ -104,7 +104,11 @@ public class DataSetService {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
+  private DFSSingleton dfs;
+  @EJB
   private Settings settings;
+  @Inject
+  private DownloadService downloader;
 
   private Integer projectId;
   private Project project;
@@ -144,7 +148,10 @@ public class DataSetService {
       parent = inodes.findParent(ds.getInode());
       inodeView = new InodeView(parent, ds, inodes.getPath(ds.getInode()));
       user = userfacade.findByUsername(inodeView.getOwner());
-      inodeView.setOwner(user.getFname() + " " + user.getLname());
+      if (user != null) {
+        inodeView.setOwner(user.getFname() + " " + user.getLname());
+        inodeView.setEmail(user.getEmail());
+      }
       kids.add(inodeView);
     }
 
@@ -192,7 +199,10 @@ public class DataSetService {
     for (Inode i : cwdChildren) {
       inodeView = new InodeView(i, inodes.getPath(i));
       user = userfacade.findByUsername(inodeView.getOwner());
-      inodeView.setOwner(user.getFname() + " " + user.getLname());
+      if (user != null) {
+        inodeView.setOwner(user.getFname() + " " + user.getLname());
+        inodeView.setEmail(user.getEmail());
+      }
       kids.add(inodeView);
     }
 
@@ -529,8 +539,11 @@ public class DataSetService {
   @Path("fileExists/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response checkFileExist(@PathParam("path") String path) throws
-          AppException {
+  public Response checkFileExist(@PathParam("path") String path,
+          @Context SecurityContext sc) throws
+          AppException, AccessControlException {
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    String username = hdfsUsersBean.getHdfsUserName(project, user);
     if (path == null) {
       path = "";
     }
@@ -543,6 +556,11 @@ public class DataSetService {
       if (!exists || this.fileOps.isDir(path)) {
         throw new IOException("The file does not exist");
       }
+      //tests if the user have permission to access this path
+      dfs.getDfs(username).open(path);
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You can not download the file ");
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -642,9 +660,8 @@ public class DataSetService {
       path = path + File.separator;
     }
 
-    DownloadService downloader = new DownloadService();
-    downloader.setPath(path);
-    downloader.setUsername(username);
+    this.downloader.setPath(path);
+    this.downloader.setUsername(username);
     return downloader;
   }
 

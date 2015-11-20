@@ -48,15 +48,13 @@ public class DownloadService {
     FSDataInputStream stream;
     try {
       if (username != null) {
-        try {
           stream = dfs.getDfs(username).open(new Path(this.path));
-        } catch (AccessControlException ex) {
-          throw new AccessControlException(
-                  "Permission denied: You can not download the file ");
-        }
       } else {
         stream = dfs.getDfs().open(new Path(this.path));
       }
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You can not download the file ");
     } catch (IOException ex) {
       LOG.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

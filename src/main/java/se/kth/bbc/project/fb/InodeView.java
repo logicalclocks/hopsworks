@@ -33,6 +33,7 @@ public final class InodeView {
   private byte underConstruction;
   private String owner;
   private String permission;
+  private String email;
 
   public InodeView() {
   }
@@ -244,6 +245,14 @@ public final class InodeView {
 
   public void setOwner(String owner) {
     this.owner = owner;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
   }
 
   public String getPermission() {

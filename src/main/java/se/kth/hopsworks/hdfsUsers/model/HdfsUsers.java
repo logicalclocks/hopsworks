@@ -88,7 +88,11 @@ public class HdfsUsers implements Serializable {
   }
 
   public String getUsername(){
-    int index = this.name.indexOf("__")+2;
+    int index = this.name.indexOf("__");
+    if (index == -1) {
+      return this.name;
+    }
+    index += 2; //removes the "__"
     return this.name.substring(index);
   }
   

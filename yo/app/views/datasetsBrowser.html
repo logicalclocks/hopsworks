@@ -105,7 +105,7 @@
                                 <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
                                 <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
                                 {{file.name}}</td>
-                              <td>{{file.owner}}</td>
+                              <td>{{file.owner}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;"> {{file.email}}</span></td>
                               <td>{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
                               </td>
                               <td style="width: 12%;">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
@@ -222,7 +222,9 @@
 
                                   <tr style="background-color: #fafafa">
                                     <td style="color:lightgrey;">Owner</td>
-                                    <td style="color: grey;">{{datasetsCtrl.fileDetail.owner}}</td>
+                                    <td style="color: grey;">{{datasetsCtrl.fileDetail.owner}}
+                                    <span style=" color: #757575; font-size: 12px; padding-left: 5px;"> {{datasetsCtrl.fileDetail.email}}</span>
+                                    </td>
                                   </tr>
                                   <tr style="background-color: #fafafa">
                                     <td style="color:lightgrey;">Permission</td>

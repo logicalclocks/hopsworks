@@ -255,6 +255,20 @@ public class DistributedFileSystemOps {
   public FSDataInputStream open(Path location) throws IOException {
     return this.dfs.open(location);
   }
+  
+  public FSDataInputStream open(String location) throws IOException {
+    Path path = new Path(location);
+    return this.dfs.open(path);
+  }
+
+  public Configuration getConf() {
+    return conf;
+  }
+
+  public void setConf(Configuration conf) {
+    this.conf = conf;
+  }
+  
   /**
    * Closes the distributed file system.
    */
