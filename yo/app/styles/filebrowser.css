@@ -284,6 +284,7 @@ md-sidenav {
 
 .md-sidenav-right {
   left: 98%;
+  height: 100%;
 }
 
 md-content {

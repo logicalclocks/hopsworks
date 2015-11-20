@@ -23,12 +23,7 @@
 
             <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
               <h3>
-                hdfs://{{projectCtrl.endpoint}}/
-                <a href="#/project/{{datasetsCtrl.projectId}}/datasets">
-                  {{ projectCtrl.currentProject.projectName}}
-                </a>
-                <span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/
-                  <a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>
+                hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>
               </h3>
               <div class="row">
                 <div class="col-lg-2" style="margin-top: 13px;">
@@ -281,7 +276,8 @@
                                                             <input value="" class="fillInMetadataInput" id="sizeFieldInput"
                                                                  tooltips title="{{card.description}}"
                                                                  ng-show="true"
-                                                                 ng-model="metadataCtrl.metaData[card.id]"  style="width: 100px"/>
+                                                                 ng-model="metadataCtrl.metaData[card.id]"  style="width: 100px"
+                                                                   ng-keypress="($event.which === 13)?metadataCtrl.createMetadata(table.id,card.id):0" autofocus/>
                                                           <button class="btn btn-default btn-xs" ng-click="metadataCtrl.createMetadata(table.id,card.id);" ><span class="glyphicon glyphicon-ok"></span></button>
                                                           <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id+'-'+field.tagName,false);"><span class="glyphicon glyphicon-remove"></span></button>
                                                        
