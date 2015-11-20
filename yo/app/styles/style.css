@@ -249,3 +249,15 @@ div.scroll > ul > li > textarea {
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
   line-height: 1.42857143;
 }
+
+.row-centered {
+    text-align:center;
+}
+.col-centered {
+    display:inline-block;
+    float:none;
+    /* reset the text-align */
+    text-align:left;
+    /* inline-block space fix */
+    margin-right:-4px;
+}

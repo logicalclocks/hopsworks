@@ -15,7 +15,7 @@ angular.module('hopsWorksApp')
             getAllConsentsInProject: function () {
               return $http.get('/api/project/' + id + '/biobanking');
             },
-            registerConsent: function (consent) {
+            registerConsents: function (consent) {
               var req = {
                 method: 'POST',
                 url: '/api/project/' + id + '/biobanking',

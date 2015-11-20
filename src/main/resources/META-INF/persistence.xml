@@ -45,6 +45,8 @@
     <class>se.kth.hopsworks.meta.entity.Field</class>
     <class>se.kth.hopsworks.meta.entity.Template</class>
     <class>se.kth.hopsworks.meta.entity.InodeBasicMetadata</class>
+    <class>se.kth.hopsworks.hdfsUsers.model.HdfsGroups</class>
+    <class>se.kth.hopsworks.hdfsUsers.model.HdfsUsers</class>
     <class>se.kth.hopsworks.util.Variables</class>
     <class>io.hops.hdfs.HdfsLeDescriptors</class>
     <class>io.hops.bbc.Consents</class>

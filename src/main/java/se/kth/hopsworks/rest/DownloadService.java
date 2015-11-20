@@ -46,8 +46,7 @@ public class DownloadService {
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response downloadFromHDFS() throws AppException {
     Configuration conf = new Configuration();
-//    String hdfsPath = settings.getHadoopConfDir() + "/core-site.xml";
-    String hdfsPath = "/srv/hadoop/etc/hadoop/core-site.xml";
+    String hdfsPath = settings.getHadoopConfDir() + "/core-site.xml";
     Path p = new Path(hdfsPath);
     conf.addResource(p);
     FileSystem hdfs;

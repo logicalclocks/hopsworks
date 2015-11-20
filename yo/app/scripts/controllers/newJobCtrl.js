@@ -284,7 +284,7 @@ angular.module('hopsWorksApp')
               ModalService.selectFile('lg', self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs[reason]).then(
                       function (success) {
-                        self.onFileSelected(reason, success);
+                        self.onFileSelected(reason, "hdfs://" + success);
                       }, function (error) {
                 //The user changed their mind.
               });

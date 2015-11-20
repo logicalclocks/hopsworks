@@ -27,10 +27,6 @@ public class Settings {
   public void init() {
   }
 
-//  @Override
-//  protected EntityManager getEntityManager() {
-//    return em;
-//  }
   /**
    * Global Variables taken from the DB
    */
@@ -108,7 +104,7 @@ public class Settings {
     }
   }
 
-  private String CHARON_DIR = "/srv/charon";
+  private String CHARON_DIR = "/srv/charon_fs";
 
   public synchronized String getCharonDir() {
     checkCache();
@@ -367,7 +363,6 @@ public class Settings {
   }
 
   public Settings() {
-//    super(Variables.class);
   }
 
   /**
