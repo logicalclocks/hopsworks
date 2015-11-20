@@ -151,6 +151,7 @@ body.rtls .file-box {
   margin-bottom: 25px;
   margin-top: 0;
   padding: 0;
+  height: 95%;
 }
 .ibox.collapsed .ibox-content {
   display: none;
@@ -341,3 +342,6 @@ md-backdrop.md-sidenav-backdrop {
   color:white;
 }
 
+.md-tabs-content {
+  overflow: auto;
+}
