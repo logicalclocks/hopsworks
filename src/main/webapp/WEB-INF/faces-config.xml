@@ -7,23 +7,22 @@
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
               xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd">
   <navigation-rule>      
-    <navigation-case>
-      <from-outcome>welcome</from-outcome>
-      <to-view-id>/index.xhtml</to-view-id>
+   
+     <navigation-case>
+      <from-outcome>adminIndex</from-outcome>
+      <to-view-id>/security/protected/admin/adminIndex.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-        
     <navigation-case>
       <from-outcome>user_auth</from-outcome>
       <to-view-id>/security/login.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-
     <navigation-case>
       <from-outcome>user_guides</from-outcome>
       <to-view-id>/security/user_guides.xhtml</to-view-id>
       <redirect/>
-    </navigation-case>      
+    </navigation-case>
     <navigation-case>
       <from-outcome>register_mobile</from-outcome>
       <to-view-id>/security/register_mobile.xhtml</to-view-id>
@@ -53,19 +52,16 @@
       <to-view-id>/security/qrcode.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-        
     <navigation-case>
       <from-outcome>login</from-outcome>
       <to-view-id>/security/login.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-
     <navigation-case>
       <from-outcome>yubikeylogin</from-outcome>
       <to-view-id>/security/yubikeylogin.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-
     <navigation-case>
       <from-outcome>logout</from-outcome>
       <to-view-id>/index.xhtml</to-view-id>
@@ -77,7 +73,6 @@
       <to-view-id>/security/loginError.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-  
     <navigation-case>
       <from-outcome>reset_password</from-outcome>
       <to-view-id>/security/reset_password.xhtml</to-view-id>
@@ -89,7 +84,6 @@
       <to-view-id>/security/password_changed.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-        
     <navigation-case>
       <from-outcome>sec_question</from-outcome>
       <to-view-id>/security/sec_question.xhtml</to-view-id>
@@ -113,24 +107,21 @@
       <to-view-id>/security/mobile_recovery.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-        
     <navigation-case>
       <from-outcome>mobile_recovery</from-outcome>
       <to-view-id>/security/yubikey_recovery.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-        
     <navigation-case>
       <from-outcome>validate_code</from-outcome>
       <to-view-id>/security/validate_code.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-        
     <navigation-case>
       <from-outcome>login_issue</from-outcome>
       <to-view-id>/security/login_issue.xhtml</to-view-id>
       <redirect/>
-    </navigation-case>     
+    </navigation-case>
 
     <navigation-case>
       <from-outcome>print_address</from-outcome>
@@ -144,13 +135,11 @@
       <to-view-id>/security/protected/researcher/profile_password.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-        
     <navigation-case>
       <from-outcome>profile_password_changed</from-outcome>
       <to-view-id>/security/profile_password_changed.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
- 
     <navigation-case>
       <from-outcome>change_sec_question</from-outcome>
       <to-view-id>/security/protected/researcher/change_sec_question.xhtml</to-view-id>
@@ -167,50 +156,66 @@
       <to-view-id>/security/protected/researcher/deactivate_account.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-        
     <navigation-case>
       <from-outcome>admin_profile</from-outcome>
       <to-view-id>/security/protected/admin/admin_profile.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-  
-        
     <navigation-case>
       <from-outcome>consentMgmt</from-outcome>
       <to-view-id>/security/protected/admin/consentManagement.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-        
     <navigation-case>
-      <from-outcome>auditMgmt</from-outcome>
-      <to-view-id>/security/protected/audit/auditManagement.xhtml</to-view-id>
+      <from-outcome>adminAuditIndex</from-outcome>
+      <to-view-id>/security/protected/audit/adminAuditIndex.xhtml</to-view-id>
       <redirect/>
-    </navigation-case>       
-    
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>loginsAudit</from-outcome>
+      <to-view-id>/security/protected/audit/loginsAudit.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>accountAudit</from-outcome>
+      <to-view-id>/security/protected/audit/accountAudit.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>rolesAudit</from-outcome>
+      <to-view-id>/security/protected/audit/rolesAudit.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>studyAudit</from-outcome>
+      <to-view-id>/security/protected/audit/studyAudit.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
     <navigation-case>
       <from-outcome>userMgmt</from-outcome>
       <to-view-id>/security/protected/admin/userManagement.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
+    <navigation-case>
+      <from-outcome>mobUsers</from-outcome>
+      <to-view-id>/security/protected/admin/mobileUsers.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>apamUsers</from-outcome>
+      <to-view-id>/security/protected/admin/apamUsers.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>yubikeyUsers</from-outcome>
+      <to-view-id>/security/protected/admin/yubikeyUers.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+ 
 
     <navigation-case>
-      <from-outcome>newProject</from-outcome>
-      <to-view-id>/bbc/lims/newProject.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-    <navigation-case>
-      <from-outcome>projectPage</from-outcome>
-      <to-view-id>/bbc/lims/projectPage.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-    <navigation-case>
-      <from-outcome>newTeamMemb</from-outcome>
-      <to-view-id>/bbc/lims/newTeamMember.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-    <navigation-case>
       <from-outcome>indexPage</from-outcome>
-      <to-view-id>/bbc/lims/index.xhtml</to-view-id>
+      <to-view-id>/security/protected/admin/adminIndex.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>
@@ -220,17 +225,12 @@
     </navigation-case>
     <navigation-case>
       <from-outcome>login</from-outcome>
-      <to-view-id>/index.xhtml</to-view-id>
+      <to-view-id>//#/login</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>welcome</from-outcome>
-      <to-view-id>/index.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-    <navigation-case>
-      <from-outcome>lims</from-outcome>
-      <to-view-id>/bbc/lims/index.xhtml</to-view-id>
+      <to-view-id>/#/login</to-view-id>
       <redirect/>
     </navigation-case>
   </navigation-rule>

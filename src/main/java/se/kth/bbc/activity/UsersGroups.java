@@ -9,7 +9,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -43,7 +43,7 @@ public class UsersGroups implements Serializable {
           insertable = false,
           updatable = false)
   @ManyToOne(optional = false)
-  private User user;
+  private Users user;
 
   public UsersGroups() {
   }
@@ -64,12 +64,12 @@ public class UsersGroups implements Serializable {
     this.usersGroupsPK = usersGroupsPK;
   }
 
-  public User getUser() {
+  public Users getUser() {
     return user;
   }
 
-  public void setUser(User user) {
-    this.user = user;
+  public void setUser(Users user) {
+   this.user = user;
   }
 
   @Override

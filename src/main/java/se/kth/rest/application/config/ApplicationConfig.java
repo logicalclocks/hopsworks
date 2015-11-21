@@ -33,6 +33,9 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.MetadataService.class);
     register(se.kth.hopsworks.rest.MessageService.class);
     register(se.kth.hopsworks.rest.ElasticService.class);
+    register(se.kth.hopsworks.rest.VariablesService.class);
+    register(se.kth.hopsworks.rest.BannerService.class);
+    register(io.hops.hdfs.EndpointService.class);
    
     // register resources and features
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);

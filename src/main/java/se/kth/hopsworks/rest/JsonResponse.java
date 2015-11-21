@@ -4,13 +4,8 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/**
- *
- * @author Jim Dowling<jdowling@sics.se>
- */
-@XmlRootElement //we don't need this thanks to Jackson
-//@JsonSerialize(include = JsonSerialize.Inclusion.ALWAYS)  
-//@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)  
+
+@XmlRootElement 
 public class JsonResponse {
 
   private static final float version = 1.0f;
@@ -19,6 +14,7 @@ public class JsonResponse {
   private Integer statusCode;
   private String errorMsg = "";
   private String successMessage;
+  private String QRCode;
   private List<String> fieldErrors;
   private Object data;
   private String sessionID;
@@ -97,4 +93,13 @@ public class JsonResponse {
     this.sessionID = sessionID;
   }
 
+  public String getQRCode() {
+    return QRCode;
+  }
+
+  public void setQRCode(String QRCode) {
+    this.QRCode = QRCode;
+  }
+
+  
 }

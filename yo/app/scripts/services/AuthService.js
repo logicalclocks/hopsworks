@@ -19,13 +19,27 @@ angular.module('hopsWorksApp')
                         });
               },
               recover: function (user) {
-                return $http.post('/api/auth/forgotPassword', TransformRequest.jQueryStyle(user));
+                return $http.post('/api/auth/recoverPassword', TransformRequest.jQueryStyle(user));
               },
               register: function (user) {
 
                 var regReq = {
                   method: 'POST',
                   url: '/api/auth/register',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: user
+                };
+
+
+                return $http(regReq);
+              },
+              registerYubikey: function (user) {
+
+                var regReq = {
+                  method: 'POST',
+                  url: '/api/auth/registerYubikey',
                   headers: {
                     'Content-Type': 'application/json'
                   },

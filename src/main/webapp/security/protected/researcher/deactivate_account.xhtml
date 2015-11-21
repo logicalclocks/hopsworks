@@ -14,9 +14,6 @@
   </h:head>
 
   <h:body >
-    <ui:insert name="titleBar" >
-      <ui:include src="/bbc/lims/titleBar.xhtml" />       
-    </ui:insert>
 
     <div align="center">
 
@@ -28,7 +25,7 @@
                       required="true"
                       size="35"
                       requiredMessage="Enter password"/>
-          <p:watermark for="tcurp" value="Enter you password" />
+          <p:watermark for="tcurp" value="Enter your password" />
 
           <p:outputLabel value="Deactivation Reason"> </p:outputLabel>  
           <p:inputTextarea id="notes"

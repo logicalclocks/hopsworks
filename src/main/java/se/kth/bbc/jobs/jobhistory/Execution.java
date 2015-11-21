@@ -65,6 +65,9 @@ import se.kth.hopsworks.user.model.Users;
   @NamedQuery(name = "Execution.findByJob",
           query
           = "SELECT e FROM Execution e WHERE e.job = :job ORDER BY e.submissionTime DESC"),
+  @NamedQuery(name = "Execution.findByProjectAndJobId",
+          query
+          = "SELECT e FROM Execution e WHERE e.job.id = :jobid AND e.job.project = :project ORDER BY e.submissionTime DESC"),
   @NamedQuery(name = "Execution.findJobsForExecutionInState",
           query
           = "SELECT DISTINCT e.job FROM Execution e WHERE e.job.project = :project AND e.state IN :stateCollection ORDER BY e.submissionTime DESC")})

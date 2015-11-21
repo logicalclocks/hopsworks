@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+        
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+  <f:view contentType="text/html">
+
+    <h:head>
+      <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/audit.css']}" />
+      <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+    </h:head>
+
+    <h:body>
+      <c:if test="#{peopleStatusBean.SYSAdmin}">
+        <ui:insert name="adminTitleBar">
+          <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+        </ui:insert>
+      </c:if>
+      
+
+      <c:if test="#{peopleStatusBean.onlyAuditorRole}">
+          <ui:include src="/security/protected/audit/auditTitleBar.xhtml" />
+      </c:if>
+
+      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.auditorRole}">  
+
+        <p:layoutUnit id="centerLayout" position="center">
+
+          <div class="container">
+            <div align="left">
+              <h2>Account Audit</h2>
+            </div>
+
+            <div class="content" >
+              <h:form id="auditTrailsSearch">
+                <p:growl id="growl" life="2000" showDetail="false"/>
+                <p:panelGrid columns="10" > 
+
+                  <p:inputText id="username" 
+                               value="#{auditTrails.username}" 
+                               />
+                  <p:watermark value="username" for="username"></p:watermark>
+
+                  <p:calendar id="from"
+                              value="#{auditTrails.from}"
+                              style="padding-right: 10px;"
+                              showOn="button"
+                              required="true"
+                              >
+                  </p:calendar>  
+                  <p:watermark value="From" for="from"></p:watermark>
+
+                  <p:calendar id="to"
+                              value="#{auditTrails.to}"
+                              style="padding-right: 10px;"
+                              required="true"
+                              showOn="button" >
+
+                  </p:calendar>  
+                  <p:watermark value="To" for="to" ></p:watermark>
+
+                  <p:selectOneMenu id="action" 
+                                   editable="false"
+                                   value="#{auditTrails.selectedAccountsAuditAction}"
+                                   required="true"
+                                   >
+
+                    <f:selectItem itemLabel="Select Audit Option"
+
+                                  itemValue="#"
+                                  noSelectionOption="true" />
+                    <f:selectItems value="#{auditTrails.accountsAuditActions}" 
+
+                                   />
+                  </p:selectOneMenu>
+
+
+                  <p:commandButton value="Show"
+                                   update="logsTable"
+                                   ajax="false"
+                                   action="#{auditTrails.processAccountAuditRequest(auditTrails.selectedAccountsAuditAction)}">
+                  </p:commandButton>
+                </p:panelGrid>
+                <br></br>
+                <p:dataTable id="logsTable" var="logs" 
+                             value="#{auditTrails.accountAudit}" 
+                             widgetVar="Audit Trails"
+                             emptyMessage="No record found with given criteria"
+                             rowKey="#{logs.logId}"
+                             style="table-layout: fixed" 
+                             scrollable="false">
+
+                  <p:column id="actionColumn" filterBy="#{logs.initiator.email}" 
+                            headerText="Username" style="width:32%; font-size: 12px; text-align: left;">
+                    <h:outputText value="#{logs.initiator.email}" />
+                  </p:column>
+
+                  <p:column id="dateColumn" filterBy="#{logs.time}" 
+                            headerText="Date" style="width:32%; font-size: 12px; text-align: left;">
+                    <h:outputText value="#{logs.time}" />
+                  </p:column>
+
+                  <p:column id="actColumn" filterBy="#{logs.action}" 
+                            headerText="Action" style="width:32%; font-size: 12px; text-align: left;">
+                    <h:outputText value="#{logs.action}" />
+                  </p:column>
+
+
+                  <p:column id="actionDetailColumn" filterBy="#{logs.message}" 
+                            headerText="Action Detail" style="width:32%; font-size: 12px; text-align: left;">
+                    <h:outputText value="#{logs.message}" />
+                  </p:column>
+
+                  <p:column id="ipColumn" filterBy="#{logs.ip}" 
+                            headerText="IP Address" style="width:32%; font-size: 12px; text-align: left;">
+                    <h:outputText value="#{logs.ip}" />
+                  </p:column>
+
+                  <p:column id="macColumn" filterBy="#{logs.mac}" 
+                            headerText="Mac Address" style="width:32%; font-size: 12px; text-align: left;">
+                    <h:outputText value="#{logs.mac}" />
+                  </p:column>
+
+
+                  <p:column id="outcomeColumn" filterBy="#{logs.outcome}" 
+                            headerText="Outcome" style="width:32%; font-size: 12px; text-align: left;">
+                    <h:outputText value="#{logs.outcome}" />
+                  </p:column>
+
+                </p:dataTable>
+              </h:form>  
+            </div> 
+
+          </div> 
+        </p:layoutUnit>
+      </p:layout>
+    </h:body>
+  </f:view>
+</html>

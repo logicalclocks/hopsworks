@@ -117,7 +117,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
                 new Object[]{rolesSet, userRole});
         json.setStatusCode(Response.Status.FORBIDDEN.getStatusCode());
         json.setErrorMsg(
-                "You do not have the required role to perform this action.");
+                "Your role in this project is not authorized to perform this action.");
         requestContext.abortWith(Response
                 .status(Response.Status.FORBIDDEN)
                 .entity(json)

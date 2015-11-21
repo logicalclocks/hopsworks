@@ -94,8 +94,9 @@
     <div class="form-group has-feedback">
       <label class="text-muted">Current Password</label>
       <input name="user_old_password" ng-model="profileCtrl.loginCredes.oldPassword"
-             match="profileCtrl.user.chosenPassword"
-             class="form-control" type="password" required>
+             class="form-control" type="password"
+             ng-minlength="4"
+             required>
       <span class="fa fa-lock form-control-feedback text-muted"></span>
       <span ng-show="(credentialsForm.$submitted || credentialsForm.sec_answer.$dirty) &amp;&amp; credentialsForm.sec_answer.$error.required"
             class="text-danger ng-hide">You have to enter your current password.</span>
@@ -119,7 +120,7 @@
         <div class="form-group has-feedback">
           <label class="text-muted">Confirm Password</label>
           <input name="user_password_confirm" ng-model="profileCtrl.loginCredes.confirmedPassword"
-                 match="regCtrl.newUser.chosenPassword"
+                 match="profileCtrl.loginCredes.newPassword"
                  class="form-control" type="password">
           <span class="fa fa-lock form-control-feedback text-muted"></span>
         </div>
@@ -141,8 +142,8 @@
     </div>
     <div class="row">
       <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
-        <button class="btn btn-block btn-primary mt-lg" type="submit" 
-              ng-disabled="profileCtrl.credentialWorking">
+        <button class="btn btn-block btn-primary mt-lg" type="submit"
+                ng-disabled="credentialsForm.$invalid">
           <i ng-if="profileCtrl.credentialWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
           Save
         </button>

@@ -1,3 +1,12 @@
+<div id="announcement" ng-show="loginCtrl.showAnnouncement()">
+  <div class="container">
+    <div id="announcement-text" class="col-md-10">
+      <p align="center">
+        <i class="fa fa-bullhorn"></i> {{loginCtrl.announcement}}
+      </p>
+    </div>
+  </div>
+</div>
 <div class="container">
   <div class="row">
     <div class="center-block" style="width: 320px;">
@@ -11,7 +20,7 @@
           <p class="text-center">SIGN IN TO CONTINUE.</p>
           <form name="loginForm" ng-submit="loginCtrl.login()" role="form">
             <div class="form-group">
-              <input id="login_inputEmail" class="form-control" required
+              <input id="login_inputEmail" class="form-control" required autofocus
                      ng-model="loginCtrl.user.email"
                      autocomplete="on"
                      placeholder="Email"
@@ -23,16 +32,17 @@
                      placeholder="Password"
                      name="user_password">
             </div>
+            <div ng-if="loginCtrl.otp === 'true'" class="form-group">
+              <input id="login_inputOTP" class="form-control" type="password" required
+                     ng-model="loginCtrl.user.otp"
+                     placeholder="Mobile PIN or Yubikey PIN"
+                     name="otp_password">
+            </div>
+            
             <div class="clearfix">
-              <div class="checkbox c-checkbox pull-left mt0">
-                <label>
-                  <input class="" type="checkbox" ng-model="user.remember" name="user_remember" value="">
-                  <span class="fa fa-check"></span>
-                  Remember Me
-                </label>
-              </div>
+            
               <div class="pull-right">
-                <a class="text-muted" href="#/recover">Forgot your password?</a>
+                 <a class="text-muted" href="/hopsworks/security/login_issue.xhtml">Need help?</a>
               </div>
             </div>
             <button class="btn btn-block btn-primary mt-lg" type="submit" data-ng-disabled="loginCtrl.working">Login</button>

@@ -1,5 +1,11 @@
 package se.kth.hopsworks.controller;
 
+import com.google.zxing.WriterException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -7,21 +13,30 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.faces.FacesException;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
-import se.kth.bbc.security.ua.model.Userlogins;
+import se.kth.bbc.security.audit.model.Userlogins;
+import se.kth.bbc.security.auth.CustomAuthentication;
+import se.kth.bbc.security.auth.QRCodeGenerator;
+import se.kth.bbc.security.ua.PeopleAccountStatus;
+import se.kth.bbc.security.ua.SecurityUtils;
+import se.kth.bbc.security.ua.UserManager;
+import se.kth.bbc.security.ua.model.Address;
+import se.kth.bbc.security.ua.model.Organization;
+import se.kth.bbc.security.ua.model.Yubikey;
+import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
 import se.kth.hopsworks.users.*;
-import se.kth.hopsworks.util.LocalhostServices;
-
 
 @Stateless
 //the operations in this method does not need any transaction
@@ -42,7 +57,17 @@ public class UsersController {
   @EJB
   private UserLoginsFacade userLoginsBean;
 
-  public void registerUser(UserDTO newUser) throws AppException {
+  @EJB
+  private UserManager mgr;
+  // To send the user the QR code image
+  private byte[] qrCode;
+
+  // BiobankCloud prefix username prefix
+  private final String USERNAME_PREFIX = "meb";
+
+  public byte[] registerUser(UserDTO newUser, String url, String ip, String os, String browser, String mac) throws
+      AppException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
+  {
     if (userValidator.isValidEmail(newUser.getEmail())
         && userValidator.isValidPassword(newUser.getChosenPassword(),
             newUser.getRepeatedPassword())
@@ -57,10 +82,13 @@ public class UsersController {
             ResponseMessages.USER_EXIST);
       }
 
-      int uid = userBean.lastUserID() + 1;
-      String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
+      String otpSecret = SecurityUtils.calculateSecretKey();
+      String activationKey = SecurityUtils.getRandomString(64);
 
-//      String uname = Users.USERNAME_PREFIX + uid;
+      int uid = userBean.lastUserID() + 1;
+
+     // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
+      String uname = USERNAME_PREFIX + uid;
       List<BbcGroup> groups = new ArrayList<>();
       groups.add(groupBean.findByGroupName(BbcGroup.USER));
 
@@ -70,7 +98,109 @@ public class UsersController {
       user.setFname(newUser.getFirstName());
       user.setLname(newUser.getLastName());
       user.setMobile(newUser.getTelephoneNum());
-      user.setStatus(UserAccountStatus.ACCOUNT_INACTIVE.getValue());
+      user.setStatus(PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue());
+      user.setSecret(otpSecret);
+      user.setOrcid("-");
+      user.setMobile("-");
+      user.setTitle("-");
+      user.setMode(PeopleAccountStatus.MOBILE_USER.getValue());
+      user.setValidationKey(activationKey);
+      user.setActivated(new Timestamp(new Date().getTime()));
+      user.setPasswordChanged(new Timestamp(new Date().getTime()));
+      user.setSecurityQuestion(SecurityQuestion.getQuestion(newUser.
+          getSecurityQuestion()));
+      user.setPassword(DigestUtils.sha256Hex(newUser.getChosenPassword()));
+      user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer().
+          toLowerCase()));
+      user.setBbcGroupCollection(groups);
+      Address a = new Address();
+      a.setUid(user);
+      // default '-' in sql file did not add these values!
+      a.setAddress1("-");
+      a.setAddress2("-");
+      a.setAddress3("-");
+      a.setCity("-");
+      a.setCountry("-");
+      a.setPostalcode("-");
+      a.setState("-");
+      user.setAddress(a);
+
+      Organization org = new Organization();
+      org.setUid(user);
+      org.setContactEmail("-");
+      org.setContactPerson("-");
+      org.setDepartment("-");
+      org.setFax("-");
+      org.setOrgName("-");
+      org.setWebsite("-");
+      org.setPhone("-");
+
+      user.setOrganization(org);
+
+      try {
+        // Notify user about the request
+        emailBean.sendEmail(newUser.getEmail(),
+            UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
+            UserAccountsEmailMessages.buildMobileRequestMessage(
+                //getApplicationUri()
+                url, user.getUsername() + activationKey));
+        // Only register the user if i can send the email
+        userBean.persist(user);
+        qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), CustomAuthentication.ISSUER,
+            otpSecret);
+      } catch (IOException | WriterException | MessagingException ex) {
+        Logger.getLogger(UsersController.class.getName()).log(Level.SEVERE, null, ex);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            "Cannot register now due to email service problems");
+      }
+      return qrCode;
+    }
+
+    return null;
+  }
+
+  public boolean registerYubikeyUser(UserDTO newUser, String url, String ip, String os, String browser, String mac)
+      throws AppException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
+  {
+    if (userValidator.isValidEmail(newUser.getEmail())
+        && userValidator.isValidPassword(newUser.getChosenPassword(),
+            newUser.getRepeatedPassword())
+        && userValidator.isValidsecurityQA(newUser.getSecurityQuestion(),
+            newUser.getSecurityAnswer())) {
+      if (newUser.getToS()) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+            ResponseMessages.TOS_NOT_AGREED);
+      }
+      if (userBean.findByEmail(newUser.getEmail()) != null) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+            ResponseMessages.USER_EXIST);
+      }
+
+      String otpSecret = SecurityUtils.calculateSecretKey();
+      String activationKey = SecurityUtils.getRandomString(64);
+
+      int uid = userBean.lastUserID() + 1;
+
+     // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
+      String uname = USERNAME_PREFIX + uid;
+      List<BbcGroup> groups = new ArrayList<>();
+      groups.add(groupBean.findByGroupName(BbcGroup.USER));
+
+      Users user = new Users(uid);
+      user.setUsername(uname);
+      user.setEmail(newUser.getEmail());
+      user.setFname(newUser.getFirstName());
+      user.setLname(newUser.getLastName());
+      user.setMobile(newUser.getTelephoneNum());
+      user.setStatus(PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue());
+      user.setSecret(otpSecret);
+      user.setOrcid("-");
+      user.setMobile("-");
+      user.setTitle("-");
+      user.setMode(PeopleAccountStatus.YUBIKEY_USER.getValue());
+      user.setValidationKey(activationKey);
+      user.setActivated(new Timestamp(new Date().getTime()));
+      user.setPasswordChanged(new Timestamp(new Date().getTime()));
       user.setSecurityQuestion(SecurityQuestion.getQuestion(newUser.
           getSecurityQuestion()));
       user.setPassword(DigestUtils.sha256Hex(newUser.getChosenPassword()));
@@ -78,7 +208,66 @@ public class UsersController {
           toLowerCase()));
       user.setBbcGroupCollection(groups);
 
-      userBean.persist(user);
+      Address a = new Address();
+      a.setUid(user);
+      // default '-' in sql file did not add these values!
+      a.setAddress1("-");
+      a.setAddress2(newUser.getStreet());
+      a.setAddress3("-");
+      a.setCity(newUser.getCity());
+      a.setCountry(newUser.getCountry());
+      a.setPostalcode(newUser.getPostCode());
+      a.setState("-");
+      user.setAddress(a);
+
+      Organization org = new Organization();
+      org.setUid(user);
+      org.setContactEmail("-");
+      org.setContactPerson("-");
+      org.setDepartment(newUser.getDep());
+      org.setFax("-");
+      org.setOrgName(newUser.getOrgName());
+      org.setWebsite("-");
+      org.setPhone("-");
+
+      Yubikey yk = new Yubikey();
+      yk.setUid(user);
+      yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+      user.setYubikey(yk);
+      user.setOrganization(org);
+      
+      try {
+        // Notify user about the request
+        emailBean.sendEmail(newUser.getEmail(),
+            UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
+            UserAccountsEmailMessages.buildYubikeyRequestMessage(
+                //getApplicationUri()
+                url, user.getUsername() + activationKey));
+        // only register the user if i can send the email to the user
+        userBean.persist(user);
+      } catch (MessagingException ex) {
+        Logger.getLogger(UsersController.class.getName()).log(Level.SEVERE, null, ex);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            "Cannot register now due to email service problems");
+
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  // fix this
+  public String getApplicationUri() {
+    try {
+      FacesContext ctxt = FacesContext.getCurrentInstance();
+      ExternalContext ext = ctxt.getExternalContext();
+      URI uri = new URI(ext.getRequestScheme(),
+          null, ext.getRequestServerName(), ext.getRequestServerPort(),
+          ext.getRequestContextPath(), null, null);
+      return uri.toASCIIString();
+    } catch (URISyntaxException e) {
+      throw new FacesException(e);
     }
   }
 
@@ -96,8 +285,13 @@ public class UsersController {
           securityQuestion)
           || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(
                   securityAnswer.toLowerCase()))) {
-        registerFalseLogin(user);
-        registerLoginInfo(user, "False recovery", req);
+        try {
+          registerFalseLogin(user);
+        } catch (MessagingException ex) {
+          Logger.getLogger(UsersController.class.getName()).
+                  log(Level.SEVERE, null, ex);
+        }
+        registerLoginInfo(user, "Recovery", "Failure", req);
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             ResponseMessages.SEC_QA_INCORRECT);
       }
@@ -110,9 +304,10 @@ public class UsersController {
         emailBean.sendEmail(email,
             UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
         user.setPassword(DigestUtils.sha256Hex(randomPassword));
+        //user.setStatus(PeopleAccountStatus.ACCOUNT_PENDING.getValue());
         userBean.update(user);
         resetFalseLogin(user);
-        registerLoginInfo(user, "Successful recovery", req);
+        registerLoginInfo(user, "Recovery", "SUCCESS", req);
       } catch (MessagingException ex) {
         Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE,
             "Could not send email: ", ex);
@@ -155,7 +350,7 @@ public class UsersController {
 
     if (userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
       user.setSecurityQuestion(SecurityQuestion.getQuestion(securityQuestion));
-      user.setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer. toLowerCase()));
+      user.setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer.toLowerCase()));
       userBean.update(user);
     }
   }
@@ -190,7 +385,7 @@ public class UsersController {
     return randomStr.substring(0, length);
   }
 
-  public void registerLoginInfo(Users user, String action,
+  public void registerLoginInfo(Users user, String action, String outcome,
       HttpServletRequest req) {
     String ip = req.getRemoteAddr();
     String userAgent = req.getHeader("User-Agent");
@@ -213,17 +408,26 @@ public class UsersController {
     login.setBrowser(browser);
     login.setIp(ip);
     login.setAction(action);
+    login.setOutcome(outcome);
     login.setLoginDate(new Date());
     userLoginsBean.persist(login);
   }
 
-  public void registerFalseLogin(Users user) {
+  public void registerFalseLogin(Users user) throws MessagingException {
     if (user != null) {
       int count = user.getFalseLogin() + 1;
       user.setFalseLogin(count);
+      
+      // block the user account if more than allowed false logins
       if (count > Users.ALLOWED_FALSE_LOGINS) {
         user.setStatus(UserAccountStatus.ACCOUNT_BLOCKED.getValue());
+        
+      emailBean.sendEmail(user.getEmail(),
+                  UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
+                  UserAccountsEmailMessages.accountBlockedMessage());
+
       }
+      // notify user about the false attempts
       userBean.update(user);
     }
   }

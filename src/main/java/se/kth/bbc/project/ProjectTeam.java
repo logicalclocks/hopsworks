@@ -15,7 +15,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.security.ua.model.User;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -73,7 +73,7 @@ public class ProjectTeam implements Serializable {
           = false,
           updatable = false)
   @ManyToOne(optional = false)
-  private User user;
+  private Users user;
 
   @EmbeddedId
   protected ProjectTeamPK projectTeamPK;
@@ -99,7 +99,7 @@ public class ProjectTeam implements Serializable {
     this.timestamp = timestamp;
   }
 
-  public ProjectTeam(Project project, User user) {
+  public ProjectTeam(Project project, Users user) {
     this.projectTeamPK = new ProjectTeamPK(project.getId(), user.getEmail());
   }
 
@@ -163,11 +163,11 @@ public class ProjectTeam implements Serializable {
     this.project = project;
   }
 
-  public User getUser() {
+  public Users getUser() {
     return user;
   }
 
-  public void setUser(User user) {
+  public void setUser(Users user) {
     this.user = user;
   }
 

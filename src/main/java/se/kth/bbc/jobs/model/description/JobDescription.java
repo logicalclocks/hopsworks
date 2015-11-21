@@ -60,6 +60,9 @@ import se.kth.hopsworks.user.model.Users;
   @NamedQuery(name = "JobDescription.findByProject",
           query
           = "SELECT j FROM JobDescription j WHERE j.project = :project"),
+  @NamedQuery(name = "JobDescription.updateConfig",
+          query
+          = "UPDATE JobDescription j SET j.jobConfig = :jobconfig  WHERE j.id = :id"),
   @NamedQuery(name = "JobDescription.findByProjectAndType",
           query
           = "SELECT j FROM JobDescription j WHERE j.project = :project AND j.type = :type")})

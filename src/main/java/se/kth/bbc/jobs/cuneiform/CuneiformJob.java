@@ -17,9 +17,9 @@ import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.jobs.yarn.YarnRunner;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Takes care of the execution of a Cuneiform job: run job, update history
@@ -43,7 +43,8 @@ public final class CuneiformJob extends YarnJob {
           + ERR_LOGS;
 
   private Path tempFile;
-
+  private String sparkDir;
+    
   //Just for ease of use...
   private final CuneiformJobConfiguration config;
 
@@ -56,14 +57,15 @@ public final class CuneiformJob extends YarnJob {
    * contain a CuneiformJobConfiguration object.
    */
   public CuneiformJob(JobDescription job,
-          AsynchronousJobExecutor services, Users user) {
-    super(job, user, services);
+          AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir) {
+    super(job, services, user, hadoopDir);
     if (!(job.getJobConfig() instanceof CuneiformJobConfiguration)) {
       throw new IllegalArgumentException(
               "The jobconfiguration in JobDescription must be of type CuneiformJobDescription. Received: "
               + job.getJobConfig().getClass());
     }
     this.config = (CuneiformJobConfiguration) job.getJobConfig(); //We can do this because of the type check earlier.
+    this.sparkDir = sparkDir;
   }
 
   @Override
@@ -99,9 +101,9 @@ public final class CuneiformJob extends YarnJob {
       JSONArray outputpaths = jobj.getJSONArray("output");
       for (int i = 0; i < outputpaths.length(); i++) {
         String outfile = outputpaths.getString(i);
-        String destPath = "/" + Constants.DIR_ROOT + "/" + jobDescription.
+        String destPath = "/" + Settings.DIR_ROOT + "/" + jobDescription.
                 getProject().getName() + "/"
-                + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().
+                + Settings.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().
                 getId() + "/" + Utils.getFileName(outfile);
         services.getFileOperations().renameInHdfs(outfile, destPath);
         services.getJobOutputFileFacade().create(getExecution(), Utils.
@@ -152,7 +154,7 @@ public final class CuneiformJob extends YarnJob {
 
     String resultName = "results";
 
-    YarnRunner.Builder b = new YarnRunner.Builder(Constants.HIWAY_JAR_PATH,
+    YarnRunner.Builder b = new YarnRunner.Builder(Settings.HIWAY_JAR_PATH,
             "Hiway.jar");
     b.amMainClass(
             "de.huberlin.wbi.hiway.am.cuneiform.CuneiformApplicationMaster");
@@ -184,7 +186,7 @@ public final class CuneiformJob extends YarnJob {
 
     try {
       //Get the YarnRunner instance
-      runner = b.build();
+      runner = b.build(hadoopDir, sparkDir);
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               "Unable to create temp directory for logs.",
@@ -195,16 +197,12 @@ public final class CuneiformJob extends YarnJob {
     }
 
     //TODO: include input files
-    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.
-            getProject().
-            getName())
-            + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().getId()
+    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName(), user.getUsername())
+            + Settings.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator
             + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.
-            getProject().
-            getName())
-            + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().getId()
+    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName(), user.getUsername())
+            + Settings.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator
             + "stderr.log";
     setStdOutFinalDestination(stdOutFinalDestination);

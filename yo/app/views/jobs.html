@@ -18,15 +18,10 @@
         <!-- Page Content -->
         <div>
           <div class="row">
-            <div class="col-lg-2" style="max-width: 250px">
+            <div class="col-lg-2" style="max-width: 250px;">
               <div class="ibox float-e-margins">
                 <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
                   <div class="file-manager">
-                    <h5 style="margin: 0px; font-weight: bold; color: #2e353d;">Filter: </h5>
-                    <input type="text" ng-model="jobsCtrl.jobFilter.name" placeholder="Job name"/>
-                    
-
-                    <div class="hr-line-dashed"></div>
                     <div class="btn-group"
                          style="width: 100%;">
                       <button style="width: 100%;"
@@ -41,28 +36,28 @@
               </div>
             </div>
 
-            <div class="col-lg-10">
+              <div class="col-lg-10" style="max-height: 50%;overflow-y: auto;padding-bottom: 200px">
               <table class="table table-hover">
                 <thead>
-                <th>
+                <th style="width: 12%">
                   Name
                 </th>
-                <th>
+                <th style="width: 13%">
                   Owner
                 </th>
-                <th>
+                <th style="width: 10%">
                   Type
                 </th>
-                <th>
+                <th style="width: 15%">
                   Created on
                 </th>
-                <th>
+                <th style="width: 20%">
+                  Filter Jobs: <input type="text" ng-model="jobsCtrl.jobFilter.name" placeholder="Job name" class="form-control"/>
                 </th>
-                <th>
-                </th>
+                <th style="width: 30%"></th>
                 </thead>
                 <tbody>
-                  <tr ng-repeat="job in jobsCtrl.jobs| filter:jobsCtrl.jobFilter:false | orderBy : 'creationTime'" ng-click="jobsCtrl.showDetails(job)">
+                    <tr ng-repeat="job in jobsCtrl.jobs| filter:jobsCtrl.jobFilter:false | orderBy : 'creationTime'" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.untoggle(job,$index);">
                     <td>
                       {{job.name}}
                     </td>
@@ -76,11 +71,22 @@
                       {{job.creationTime| date:'mediumDate'}}
                     </td>
                     <td>
-                      <button ng-click="jobsCtrl.runJob(job.id); $event.stopPropagation();" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-play" aria-hidden="true"/>Run</button>
+                        <button ng-click="jobsCtrl.runJob(job.id);$event.stopPropagation();" class="btn btn-default btn-sm" ng-hide="jobsCtrl.running['' + job.id]"><span class="glyphicon glyphicon-play" aria-hidden="true"/>  Run</button>
+                      <button ng-click="$event.stopPropagation();" class="btn btn-success btn-sm" ng-show="jobsCtrl.running['' + job.id]">Running</button>
+                      <div class="dropdown" style="display:inline-block;">
+                            <button class="btn btn-default btn-sm dropdown-toggle"  type="button" data-toggle="dropdown">More Actions
+                            <span class="fa fa-caret-right"></span></button>
+                          <ul class="dropdown-menu" style="left: 100px;top:0%">
+                              <li><a ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"><span class="glyphicon glyphicon-time" style="padding-right: 10px"></span>Schedule</a></li>
+                                <li><a ng-click="jobsCtrl.editAsNew(job);$event.stopPropagation();"><span class="glyphicon glyphicon-edit" style="padding-right: 10px"></span>Edit as New</a></li>
+                                <li><a ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"><span class="glyphicon glyphicon-list-alt" style="padding-right: 10px"></span>Job Details</a></li>
+                                <li><a ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showLogs(job.id);$event.stopPropagation();"><span class="glyphicon glyphicon-hdd" style="padding-right: 10px"></span>Log Files</a></li>
+                                <li role="presentation" class="divider"></li>
+                                <li><a ng-click="jobsCtrl.deleteJob(job.id,job.name);$event.stopPropagation();"><span class="glyphicon glyphicon-trash" style="padding-right: 10px"></span>Delete</a></li>
+                            </ul>
+                      </div>
                     </td>
-                    <td>
-                      <span class="text-info" ng-show="jobsCtrl.running['' + job.id]">Running...</span>
-                    </td>
+                    <td></td>
                   </tr>
                 </tbody>
               </table>
@@ -88,7 +94,52 @@
           </div>
 
           <!-- /#page-content-wrapper -->
+          <div class="row">
+              <div class="col-lg-2"  style="max-width: 250px"></div>
+              <div class="col-lg-10" style="max-height: 50%;padding-top: 10px" ng-show="jobsCtrl.hasSelectJob">
+
+                <ul class="nav nav-tabs">
+                  <li class="active"><button class="btn btn-default"
+                        data-toggle="tab"
+                        data-target="#logs">
+                        Execution Logs</button></li>
+                  <li><button class="btn btn-default"
+                        data-toggle="tab"
+                        data-target="#errs"
+                        >Error Logs</button></li>
+
+                </ul>
+
+                <div class="tab-content">
+                  <div id="logs" class="tab-pane fade in active">
+                        <accordion close-others="true">
+                            <accordion-group data-ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                              <div style="overflow-y: auto">
+                                  <textarea class="form-control" rows="15" placeholer="No log information available" readonly>
+                                      {{item.log}}
+                                  </textarea>
+                              </div>
+                            </accordion-group>
+                        </accordion>
+                  </div>
+                  <div id="errs" class="tab-pane fade">
+                      <accordion close-others="true">
+                          <accordion-group data-ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                              <div style="overflow-y: auto">
+                                  <textarea class="form-control" rows="15" placeholer="No error information available" readonly>
+                                      {{item.err}}
+                                  </textarea>
+                              </div>
+                            </accordion-group>
+                        </accordion>
+                  </div>
+                </div>
+
+              </div>
+          </div>
+
         </div>
+
     </section>
   </div>
   <!-- /#wrapper -->

@@ -16,10 +16,6 @@
     </h:head>
 
     <h:body >
-      <ui:insert name="titleBar" >
-        <ui:include src="/bbc/lims/titleBar.xhtml" />       
-      </ui:insert>
-
       <div align="center">
         <h:panelGrid 
           columns="#{customAuthenticationSwitch.otpEnabled?2:1}" 
@@ -122,14 +118,12 @@
                              requiredMessage="Answer security question" />
                 <p:watermark for="answer" value="Security answer*" />
 
-                <!--
-                                                <p:captcha id ="captcha" 
-                                                           label="Captcha"
-                                                           required="true" 
-                                                           requiredMessage="Enter Captcha"/>
-                
-                                                <p:spacer></p:spacer>
-                -->
+                <p:captcha id ="captcha" 
+                           label="Captcha"
+                           required="true" 
+                           requiredMessage="Enter Captcha"/>
+
+                <p:spacer></p:spacer>
                 <h:panelGroup >
                   <p:selectBooleanCheckbox 
                     value="#{userRegistration.tos}"> 

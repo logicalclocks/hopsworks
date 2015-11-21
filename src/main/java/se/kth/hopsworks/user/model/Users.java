@@ -4,16 +4,20 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -23,7 +27,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.security.ua.SecurityQuestion;
-import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.security.ua.model.Address;
+import se.kth.bbc.security.ua.model.Organization;
+import se.kth.bbc.security.ua.model.Yubikey;
 
 @Entity
 @Table(name = "hopsworks.users")
@@ -63,8 +69,8 @@ import se.kth.bbc.security.ua.model.User;
   @NamedQuery(name = "Users.findBySecurityAnswer",
           query
           = "SELECT u FROM Users u WHERE u.securityAnswer = :securityAnswer"),
-  @NamedQuery(name = "Users.findByYubikeyUser",
-          query = "SELECT u FROM Users u WHERE u.yubikeyUser = :yubikeyUser"),
+  @NamedQuery(name = "Users.findByMode",
+          query = "SELECT u FROM Users u WHERE u.mode = :mode"),
   @NamedQuery(name = "Users.findByPasswordChanged",
           query
           = "SELECT u FROM Users u WHERE u.passwordChanged = :passwordChanged"),
@@ -83,14 +89,14 @@ public class Users implements Serializable {
   public static final int IS_ONLINE = 1;
   public static final int IS_OFFLINE = -1;
 
-  public static final int ALLOWED_FALSE_LOGINS = 5;
+  public static final int ALLOWED_FALSE_LOGINS = 20;
   //hopsworks user prefix username prefix
 //  public static final String USERNAME_PREFIX = "meb";
 
   private static final long serialVersionUID = 1L;
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
-  @NotNull
   @Column(name = "uid")
   private Integer uid;
   @Basic(optional = false)
@@ -106,7 +112,7 @@ public class Users implements Serializable {
   @Column(name = "password")
   private String password;
   // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
-  @Size(max = 45)
+  @Size(max = 254)
   @Column(name = "email")
   private String email;
   @Size(max = 30)
@@ -132,8 +138,12 @@ public class Users implements Serializable {
   private int falseLogin;
   @Basic(optional = false)
   @NotNull
+  @Column(name = "status")
+  private int status;
+  @Basic(optional = false)
+  @NotNull
   @Column(name = "isonline")
-  private boolean isonline;
+  private int isonline;
   @Size(max = 20)
   @Column(name = "secret")
   private String secret;
@@ -148,8 +158,8 @@ public class Users implements Serializable {
   private String securityAnswer;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "yubikey_user")
-  private int yubikeyUser;
+  @Column(name = "mode")
+  private int mode;
   @Basic(optional = false)
   @NotNull
   @Column(name = "password_changed")
@@ -158,13 +168,9 @@ public class Users implements Serializable {
   @Size(max = 500)
   @Column(name = "notes")
   private String notes;
-  @Size(max = 20)
+  @Size(max = 15)
   @Column(name = "mobile")
   private String mobile;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "status")
-  private int status;
   @JoinTable(name = "hopsworks.people_group",
           joinColumns = {
             @JoinColumn(name = "uid",
@@ -175,15 +181,40 @@ public class Users implements Serializable {
   @ManyToMany
   private Collection<BbcGroup> bbcGroupCollection;
 
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "uid")
+  private Address address;
+
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "uid")
+  private Organization organization;
+    
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "uid")
+  private Yubikey yubikey;
+      
+      
   public Users() {
   }
+  
+   public Users(Integer uid, String username, String password, Date activated,
+          int falseLogin, int status, int isonline ) {
+    this.uid = uid;
+    this.username = username;
+    this.password = password;
+    this.activated = activated;
+    this.falseLogin = falseLogin;
+    this.isonline = isonline;
+    this.status = status;
+  }
+   
 
   public Users(Integer uid) {
     this.uid = uid;
   }
 
   public Users(Integer uid, String username, String password, Date activated,
-          int falseLogin, boolean isonline, int yubikeyUser,
+          int falseLogin, int isonline, int mode,
           Date passwordChanged, int status) {
     this.uid = uid;
     this.username = username;
@@ -191,9 +222,17 @@ public class Users implements Serializable {
     this.activated = activated;
     this.falseLogin = falseLogin;
     this.isonline = isonline;
-    this.yubikeyUser = yubikeyUser;
+    this.mode = mode;
     this.passwordChanged = passwordChanged;
     this.status = status;
+  }
+
+  public Yubikey getYubikey() {
+    return yubikey;
+  }
+
+  public void setYubikey(Yubikey yubikey) {
+    this.yubikey = yubikey;
   }
 
   public Integer getUid() {
@@ -202,6 +241,22 @@ public class Users implements Serializable {
 
   public void setUid(Integer uid) {
     this.uid = uid;
+  }
+
+  public Address getAddress() {
+    return address;
+  }
+
+  public void setAddress(Address address) {
+    this.address = address;
+  }
+
+  public Organization getOrganization() {
+    return organization;
+  }
+
+  public void setOrganization(Organization organization) {
+    this.organization = organization;
   }
 
   public String getUsername() {
@@ -284,11 +339,11 @@ public class Users implements Serializable {
     this.falseLogin = falseLogin;
   }
 
-  public boolean getIsonline() {
+  public int getIsonline() {
     return isonline;
   }
 
-  public void setIsonline(boolean isonline) {
+  public void setIsonline(int isonline) {
     this.isonline = isonline;
   }
 
@@ -334,12 +389,12 @@ public class Users implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public int getYubikeyUser() {
-    return yubikeyUser;
+  public int getMode() {
+    return mode;
   }
 
-  public void setYubikeyUser(int yubikeyUser) {
-    this.yubikeyUser = yubikeyUser;
+  public void setMode(int mode) {
+    this.mode = mode;
   }
 
   public Date getPasswordChanged() {
@@ -406,14 +461,14 @@ public class Users implements Serializable {
     }
     return true;
   }
+  
 
   @Override
   public String toString() {
     return "se.kth.hopsworks.model.Users[ uid=" + uid + " ]";
   }
 
-  public User asUser() {
-    return new User(uid, username, password, activated, falseLogin, status,
-            isonline ? 1 : 0);
+  public Users asUser() {
+    return new Users(uid, username, password, activated, falseLogin, status,isonline);
   }
 }

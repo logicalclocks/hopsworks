@@ -18,10 +18,8 @@ import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
-import se.kth.bbc.lims.Constants;
 import se.kth.hopsworks.user.model.Users;
-import se.kth.rest.application.config.Variables;
-import se.kth.rest.application.config.VariablesFacade;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Interaction point between the Spark front- and backend.
@@ -34,17 +32,14 @@ public class SparkController {
   private static final Logger logger = Logger.getLogger(SparkController.class.
       getName());
 
-  private static String SPARK_USER;
-
   @EJB
   private FileOperations fops;
   @EJB
   private AsynchronousJobExecutor submitter;
   @EJB
   private ActivityFacade activityFacade;
-
   @EJB
-  private VariablesFacade variables;
+  private Settings settings;
 
   /**
    * Start the Spark job as the given user.
@@ -72,7 +67,8 @@ public class SparkController {
       throw new IllegalStateException("Spark is not installed on this system.");
     }
 
-    SparkJob sparkjob = new SparkJob(job, user, submitter);
+    SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
+        settings.getSparkUser());
     Execution jh = sparkjob.requestExecutionId();
     if (jh != null) {
       submitter.startExecution(sparkjob);
@@ -95,8 +91,9 @@ public class SparkController {
   public boolean isSparkJarAvailable() {
     boolean isInHdfs;
     try {
-      isInHdfs = fops.exists(getJarPathInHDFS());
+      isInHdfs = fops.exists(settings.getHdfsSparkJarPath());
     } catch (IOException e) {
+      logger.log(Level.WARNING, "Cannot get Spark jar file from HDFS: {0}", settings.getHdfsSparkJarPath());
       //Can't connect to HDFS: return false
       return false;
     }
@@ -104,17 +101,16 @@ public class SparkController {
       return true;
     }
 
-    File localSparkJar = new File(Constants.DEFAULT_SPARK_JAR_PATH);
+    File localSparkJar = new File(settings.getLocalSparkJarPath());
     if (localSparkJar.exists()) {
       try {
-        String hdfsJarPath = getJarPathInHDFS();
-        fops.copyToHDFSFromLocal(false, Constants.DEFAULT_SPARK_JAR_PATH, hdfsJarPath
-        //            Constants.DEFAULT_SPARK_JAR_HDFS_PATH
-        );
+        String hdfsJarPath = settings.getHdfsSparkJarPath();
+        fops.copyToHDFSFromLocal(false, settings.getLocalSparkJarPath(), hdfsJarPath);
       } catch (IOException e) {
         return false;
       }
     } else {
+      logger.log(Level.WARNING, "Cannot find Spark jar file locally: {0}", settings.getLocalSparkJarPath());
       return false;
     }
     return true;
@@ -144,27 +140,4 @@ public class SparkController {
     return config;
   }
 
-  public String getSparkUser() {
-    if (SPARK_USER != null) {
-      return SPARK_USER;
-    }
-    Variables sparkUser = variables.findById(Constants.VARIABLE_SPARK_USER);
-    if (sparkUser == null) {
-      SPARK_USER = Constants.DEFAULT_SPARK_USER;
-    } else {
-      String user = sparkUser.getValue();
-      if (user.isEmpty()) {
-        SPARK_USER = Constants.DEFAULT_SPARK_USER;
-      } else {
-        SPARK_USER = user;
-      }
-    }
-    return SPARK_USER;
-  }
-
-  public String getJarPathInHDFS() {
-    String path = "hdfs:///user/" + getSparkUser() + "/spark.jar";
-    Constants.DEFAULT_SPARK_JAR_HDFS_PATH = path;
-    return path;
-  }
 }

@@ -11,14 +11,14 @@ angular.module('hopsWorksApp')
 
             self.projectMembers = [];
             self.projectTeam = [];
-            // We could instead implement a service to get all the available types but this will do it for now
-//            self.projectTypes = ['JOBS', 'ZEPPELIN', 'SSH'];
-            self.projectTypes = ['JOBS', 'ZEPPELIN'];
+            self.projectTypes = ['JOBS', 'ZEPPELIN', 'BIOBANKING', 'CHARON'];  // 'SSH'
 
 
             self.selectionProjectTypes = [];
             self.projectName = '';
             self.projectDesc = '';
+
+            self.regex = /^(?!.*?__|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#).*$/;
 
             UserService.allcards().then(
                     function (success) {
@@ -85,8 +85,7 @@ angular.module('hopsWorksApp')
                         }
                         $modalInstance.close($scope.newProject);
                       }, function (error) {
-                        self.working = false;
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000, referenceId: 1});
+                        self.working = false;                        
               }
               );
             };
