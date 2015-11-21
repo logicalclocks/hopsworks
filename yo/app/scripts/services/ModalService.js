@@ -303,7 +303,7 @@ angular.module('hopsWorksApp')
               selectDir: function (size, regex, errorMsg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/selectDir.html',
-                  controller: 'SelectDirCtrl as selectDirCtrl',
+                  controller: 'SelectFileCtrl as selectFileCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',
@@ -357,7 +357,7 @@ angular.module('hopsWorksApp')
               selectLocalDir: function (size, regex, errorMsg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/selectLocalDir.html',
-                  controller: 'SelectDirCtrl as selectDirCtrl',
+                  controller: 'SelectFileCtrl as selectFileCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',

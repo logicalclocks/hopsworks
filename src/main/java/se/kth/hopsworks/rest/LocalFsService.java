@@ -8,6 +8,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -50,7 +51,7 @@ public class LocalFsService {
 
   @EJB
   private Settings settings;
-  @EJB
+  @Inject
   DownloadService downloader;
 
   private Integer projectId;

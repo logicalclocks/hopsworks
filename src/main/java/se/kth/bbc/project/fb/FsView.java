@@ -11,6 +11,9 @@ public final class FsView {
   private String path;
   private boolean dir;
 
+  public FsView() {
+  }
+
   public FsView(String path, boolean dir) {
     this.name = new File(path).getName();
     this.dir = dir;

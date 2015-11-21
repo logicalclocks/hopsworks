@@ -23,9 +23,10 @@
                 </button>
               </div>
               <div class="row" ng-show="!charonCtrl.toHDFS" ng-show="charonCtrl.selectedDir != ''">
-                <button class="btn btn-default" ng-click="charonCtrl.selectCharonDir()">
+
+<!--                <button class="btn btn-default" ng-click="charonCtrl.selectCharonDir()">
                   <span>Select directory</span>
-                </button> 
+                </button> -->
               </div>
             </div>
             <div class="panel-footer" ng-show="!charonCtrl.toHDFS && charonCtrl.selectedDir != '' || charonCtrl.toHDFS && charonCtrl.selectedFile != ''" >
@@ -44,7 +45,7 @@
             </div>
             <div class="row center-block">
               <button class="btn btn-default" type="button"  
-                      style="margin-bottom: 10px; margin-top: -10px;" ng-click="switchDirection()">
+                      style="margin-bottom: 10px; margin-top: -10px;" ng-click="switchDirection(projectCtrl.currentProject.projectName)">
                 Switch Direction <span class="fa fa-exchange "></span>
               </button>          
             </div>
@@ -67,7 +68,7 @@
               </div>
               <div class="row" ng-show="charonCtrl.toHDFS">
                 <button class="btn btn-default" ng-click="charonCtrl.selectHdfsDir()">
-                  <span>Select directory</span>
+                  <span>Select DataSet</span>
                 </button> 
               </div>
             </div>

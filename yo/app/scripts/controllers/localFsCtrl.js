@@ -22,8 +22,6 @@ angular.module('hopsWorksApp')
 
             var localFilesystemService = LocalFsService(self.projectId); //The datasetservice for the current project.
 
-            self.metadataView = {};
-            self.availableTemplates = [];
             self.closeSlider = false;
 
             /*
@@ -93,48 +91,6 @@ angular.module('hopsWorksApp')
             init();
 
 
-            /**
-             * Remove the inode at the given path. If called on a folder, will 
-             * remove the folder and all its contents recursively.
-             * @param {type} path. The project-relative path to the inode to be removed.
-             * @returns {undefined}
-             */
-            var removeInode = function (path) {
-              localFilesystemService.removeDataSetDir(path).then(
-                      function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
-                        getDirContents();
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-              });
-            };
-
-            /**
-             * Open a modal dialog for folder creation. The folder is created at the current path.
-             * @returns {undefined}
-             */
-            self.newDataSetModal = function () {
-              ModalService.newFolder('md', getPath(self.pathArray)).then(
-                      function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
-                        getDirContents();
-                      }, function (error) {
-                //The user changed his/her mind. Don't really need to do anything.
-                getDirContents();
-              });
-            };
-
-            /**
-             * Delete the file with the given name under the current path. If called on a folder, will remove the folder 
-             * and all its contents recursively.
-             * @param {type} fileName
-             * @returns {undefined}
-             */
-            self.deleteFile = function (fileName) {
-              var removePathArray = self.pathArray.slice(0);
-              removePathArray.push(fileName);
-              removeInode(getPath(removePathArray));
-            };
 
 
             /**
@@ -204,33 +160,9 @@ angular.module('hopsWorksApp')
               self.fileDetail = file;
             };
 
-            self.toggleLeft = buildToggler('left');
-            self.toggleRight = buildToggler('right');
-
-            function buildToggler(navID) {
-              var debounceFn = $mdUtil.debounce(function () {
-                $mdSidenav(navID).toggle()
-                        .then(function () {
-                          MetadataHelperService.fetchAvailableTemplates()
-                                  .then(function (response) {
-                                    self.availableTemplates = JSON.parse(response.board).templates;
-                                  });
-                        });
-              }, 300);
-              return debounceFn;
-            }
-            ;
 
             self.close = function () {
-              $mdSidenav('right').close()
-                      .then(function () {
-                        $log.debug("Closed metadata designer (right)");
-                      });
 
-              $mdSidenav('left').close()
-                      .then(function () {
-                        $log.debug("Closed metadata designer (left)");
-                      });
             };
 
           }]);

@@ -24,7 +24,7 @@
         <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'"
             ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
             ng-dblclick="selectFileCtrl.dblClick(datasetsCtrl, file)"
-            ng-click="selectFileCtrl.select(file.path); datasetsCtrl.select($index, file);">
+            ng-click="selectFileCtrl.select(file.path, file.dir); datasetsCtrl.select($index, file);">
 
           <td>
             <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
@@ -34,7 +34,7 @@
         </tr>
       </tbody>
     </table>
-    <button ng-click="selectFileCtrl.confirmSelection()" class="btn btn-default">Select</button>
+    <button ng-click="selectFileCtrl.confirmSelection(false)" class="btn btn-default">Select</button>
   </div>
 </div>
 

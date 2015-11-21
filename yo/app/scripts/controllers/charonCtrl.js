@@ -14,10 +14,13 @@ angular.module('hopsWorksApp')
         self.toHDFS = true;
         self.charonFilename = "";
         
-        $scope.switchDirection = function() {
+        $scope.switchDirection = function(projectName) {
           self.toHDFS = ! self.toHDFS;
           self.selectedFile = "";
           self.selectedDir = "";
+          if (!self.toHDFS) {
+            self.selectedDir = "/srv/charon/" + projectName;
+          }
         }
         /**
          * Callback for when the user selected a file.

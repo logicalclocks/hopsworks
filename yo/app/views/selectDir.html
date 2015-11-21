@@ -1,7 +1,7 @@
 <!-- A file selection dialog. -->
 
 <div class="modal-header">
-  <button class="close" ng-click="selectDirCtrl.close()" data-dismiss="modal" aria-hidden="true"
+  <button class="close" ng-click="selectFileCtrl.close()" data-dismiss="modal" aria-hidden="true"
           type="button">&times;</button>
   <h2 class="modal-title">Select Directory in HDFS</h2>
 </div>
@@ -15,15 +15,15 @@
     </div>
     <table class="table table-hover" >
       <tbody ng-model="datasetsCtrl.files">
-        <tr ng-click="selectDirCtrl.back(datasetsCtrl)">
+        <tr ng-click="selectFileCtrl.back(datasetsCtrl)">
           <td style="padding: 0px">&nbsp &nbsp
             <a style="font-size:25px">..</a>
           </td>
         </tr>
         <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'"
             ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
-            ng-dblclick="selectDirCtrl.dblClick(datasetsCtrl, file)"
-            ng-click="selectDirCtrl.select(file.path); datasetsCtrl.select($index, file);">
+            ng-dblclick="selectFileCtrl.dblClick(datasetsCtrl, file)"
+            ng-click="selectFileCtrl.select(file.path, file.dir); datasetsCtrl.select($index, file);">
 
           <td>
             <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
@@ -33,7 +33,7 @@
         </tr>
       </tbody>
     </table>
-    <button ng-click="selectDirCtrl.confirmSelection()" class="btn btn-default">Select</button>
+    <button ng-click="selectFileCtrl.confirmSelection(true)" class="btn btn-default">Select</button>
   </div>
 </div>
 

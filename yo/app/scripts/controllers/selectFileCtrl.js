@@ -9,6 +9,7 @@ angular.module('hopsWorksApp')
             var self = this;
 
             var selectedFilePath;
+            self.isDir = false;
 
             /**
              * Close the modal dialog.
@@ -21,17 +22,26 @@ angular.module('hopsWorksApp')
             /**
              * Select a file.
              * @param {type} filepath
-             * @returns {undefined}
+             * @returns {undefined}elf
              */
-            self.select = function (filepath) {
+            self.select = function (filepath, isDirectory) {
               selectedFilePath = filepath;
+              self.isDir = isDirectory;
             };
 
-            self.confirmSelection = function () {
+            self.confirmSelection = function (isDirectory) {
               if (selectedFilePath == null) {
                 growl.error("Please select a file.", {title: "No file selected", ttl: 15000});
               } else if (!selectedFilePath.match(regex)) {
                 growl.error(errorMsg, {title: "Invalid file extension", ttl: 15000});
+              } else if (self.isDir !== isDirectory) {
+                var msg;
+                if (isDir) {
+                  msg = "You should select a directory."
+                } else {
+                  msg = "You should select a file."
+                }
+                growl.error(errorMsg, {title: msg, ttl: 10000});
               } else {
                 $modalInstance.close(selectedFilePath);
               }
@@ -39,11 +49,11 @@ angular.module('hopsWorksApp')
 
             self.dblClick = function (datasetsCtrl, file) {
               if (file.dir) {
-                self.select(file.path);
+                self.select(file.path, true);
                 datasetsCtrl.openDir(file);
               } else {
-                self.select(file.path);
-                self.confirmSelection();
+                self.select(file.path, false);
+                self.confirmSelection(false);
               }
             };
 

@@ -20,11 +20,11 @@
             <a style="font-size:25px">..</a>
           </td>
         </tr>
-      <a href="selectLocalFile.html"></a>
-        <tr ng-repeat="file in localFsCtrl.files| filter:{status: true} | orderBy: 'name'"
+         <a href="selectLocalFile.html"></a>
+        <tr ng-repeat="file in localFsCtrl.files"
             ng-class="{ 'highlight': localFsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
             ng-dblclick="selectFileCtrl.dblClick(localFsCtrl, file)"
-            ng-click="selectFileCtrl.select(file.path); localFsCtrl.select($index, file);">
+            ng-click="selectFileCtrl.select(file.path, file.dir); localFsCtrl.select($index, file);">
 
           <td>
             <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
