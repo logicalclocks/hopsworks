@@ -31,6 +31,7 @@ import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
 import se.kth.hopsworks.user.model.SshKeys;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.SshkeysFacade;
+import se.kth.hopsworks.util.ConfigFileGenerator;
 import se.kth.hopsworks.util.LocalhostServices;
 import se.kth.hopsworks.util.Settings;
 
@@ -153,6 +154,12 @@ public class ProjectController {
       throw new ProjectInternalFoldersFailedException(
           "Could not create project consents folder ", e);
     }
+  }
+
+  public void createProjectCharonFolder(Project project) throws
+      ProjectInternalFoldersFailedException {
+    String charonDir = settings.getCharonDir();
+    ConfigFileGenerator.mkdirs(charonDir + File.separator + project.getName());
   }
 
   /**

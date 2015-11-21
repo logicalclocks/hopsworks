@@ -43,12 +43,14 @@ angular.module('hopsWorksApp')
               "charonPath" : self.selectedFile,
               "hdfsPath" : self.selectedDir
             }; 
+            console.log("Charon from HDFS: " + JSON.stringify(op));
             charonService.copyFromCharonToHdfs(op)
           } else {
             var op = {
               "charonPath" : self.selectedDir,
               "hdfsPath" : self.selectedFile
             };             
+            console.log("Charon to HDFS: " + JSON.stringify(op));
             charonService.copyFromHdfsToCharon(op)
           }
         };

@@ -29,9 +29,7 @@ import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import java.util.ArrayList;
 import javax.ws.rs.POST;
-import javax.ws.rs.Path;
 import javax.ws.rs.core.GenericEntity;
-import static org.apache.hadoop.yarn.api.ApplicationConstants.Environment.PATH;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.util.Settings;
 

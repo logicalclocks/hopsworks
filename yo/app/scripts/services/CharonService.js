@@ -9,8 +9,8 @@ angular.module('hopsWorksApp')
           var services = {
             copyFromHdfsToCharon: function (op) {
               var regReq = {
-                method: 'GET',
-                url: '/api/project/' + id + '/charon',
+                method: 'POST',
+                url: '/api/project/' + id + '/charon/fromHDFS',
                 headers: {
                   'Content-Type': 'application/json'
                 },
@@ -22,7 +22,7 @@ angular.module('hopsWorksApp')
             copyFromCharonToHdfs: function (op) {
               var regReq = {
                 method: 'POST',
-                url: '/api/project/' + id + '/charon',
+                url: '/api/project/' + id + '/charon/toHDFS',
                 headers: {
                   'Content-Type': 'application/json'
                 },
