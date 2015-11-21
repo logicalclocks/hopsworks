@@ -67,6 +67,8 @@ public class ProjectService {
   private JobService jobs;
   @Inject
   private BiobankingService biobanking;
+  @Inject
+  private CharonService charon;
   
   @EJB
   private DatasetFacade datasetFacade;
@@ -426,12 +428,12 @@ public class ProjectService {
     return this.biobanking.setProject(project);
   }  
   
-  @Path("{projectId}/consents")
+  @Path("{projectId}/charon")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public BiobankingService consents(@PathParam("projectId") Integer projectId) throws
+  public CharonService charon(@PathParam("projectId") Integer projectId) throws
           AppException {
     Project project = projectController.findProjectById(projectId);
-    return this.biobanking.setProject(project);
+    return this.charon.setProject(project);
   }  
   
 }

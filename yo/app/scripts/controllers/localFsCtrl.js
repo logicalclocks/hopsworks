@@ -8,7 +8,6 @@
 angular.module('hopsWorksApp')
         .controller('LocalFsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
           'LocalFsService', '$routeParams', 'ModalService', 'growl', '$location',
-          ,
           function ($scope, $q, $mdSidenav, $mdUtil, $log, LocalFsService, $routeParams,
                   ModalService, growl, $location) {
 

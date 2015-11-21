@@ -1,29 +1,23 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .controller('CharonCtrl', ['$routeParams',
-      'growl', 'ModalService', 'DataSetService',
-      function ($routeParams, growl, ModalService, DataSetService) {
+    .controller('CharonCtrl', ['$scope', '$routeParams',
+      'growl', 'ModalService', 'CharonService', 
+      function ($scope, $routeParams, growl, ModalService, CharonService) {
 
         var self = this;
         self.projectId = $routeParams.projectID;
+        var charonService = CharonService(self.projectId);
 
         self.selectedFile = "";
         self.selectedDir = "";
-        self.toHDFS = false;
-        self.fromHDFS = true;
+        self.toHDFS = true;
         self.charonFilename = "";
-
-        self.setToHDFS = function() {
-          self.toHDFS = true;
-          self.fromHDFS = false;
-          self.selectedFile = "";
-        }
         
-        self.setFromHDFS = function() {
-          self.toHDFS = false;
-          self.fromHDFS = true;
+        $scope.switchDirection = function() {
+          self.toHDFS = ! self.toHDFS;
           self.selectedFile = "";
+          self.selectedDir = "";
         }
         /**
          * Callback for when the user selected a file.
@@ -32,29 +26,45 @@ angular.module('hopsWorksApp')
          * @returns {undefined}
          */
         self.onFileSelected = function (path) {
-          var filename = getFileName(path);
-          self.selectedFile = filename;
+          self.selectedFile = path;
         };
         
         self.onDirSelected = function (path) {
           self.selectedDir = path;
         };
-
-        self.selectFile = function () {
+        
+        self.copyFile = function () {
+          
+          if (self.toHDFS === true) {
+            var op = {
+              "charonPath" : self.selectedFile,
+              "hdfsPath" : self.selectedDir
+            }; 
+            charonService.copyFromCharonToHdfs(op)
+          } else {
+            var op = {
+              "charonPath" : self.selectedDir,
+              "hdfsPath" : self.selectedFile
+            };             
+            charonService.copyFromHdfsToCharon(op)
+          }
+        };
+        
+        self.selectHdfsFile = function () {
           ModalService.selectFile('lg', "/[^]*/",
               "problem selecting file").then(
               function (success) {
-                self.onFileSelected(success);
+                self.onFileSelected("hdfs:/" + success);
               }, function (error) {
             //The user changed their mind.
           });
         };
         
-        self.selectDir = function () {
+        self.selectHdfsDir = function () {
           ModalService.selectDir('lg', "/[^]*/",
               "problem selecting file").then(
               function (success) {
-                self.onDirSelected(success);
+                self.onDirSelected("hdfs:/" + success);
               }, function (error) {
             //The user changed their mind.
           });

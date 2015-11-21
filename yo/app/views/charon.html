@@ -12,58 +12,92 @@
         <div class="row" style="margin: 50px">
 
 
-          <div class="panel panel-default col-lg-4">
+          <div class="panel modal-title col-lg-5">
             <div class="panel-heading">
-              <h3 class="panel-title">Charon</h3>
-              <div class="panel-body">
-                <div class="row"  ng-show="charonCtrl.toHDFS">
-                  Path to file in Charon: <input size="60" type="text" ng-model="charonCtrl.charonFilename"/>
-                </div>
-
-                <div class="row" ng-show="charonCtrl.toHDFS">
-                  <button class="btn btn-default" ng-click="charonCtrl.selectCharonFile()" >
-                    <span>Select file in Charon</span>
-                  </button> {{charonCtrl.selectedFile}}
-                </div>
-                <div class="row" ng-show="charonCtrl.fromHDFS">
-                  <button class="btn btn-default" ng-click="charonCtrl.selectCharonDir()">
-                    <span>Select directory in Charon</span>
-                  </button> {{charonCtrl.selectedDir}}
-                </div>
-                
-              </div>
+              <h3 class="panel-title">Charon <div ng-show="charonCtrl.toHDFS">(Source)</div><div ng-show="!charonCtrl.toHDFS">(Destination)</div></h3>
             </div>
-          </div>
-          <div class="col-lg-1">
-            <div class="row row-centered">
-              <button class="fa fa-long-arrow-left fa-4x" ng-click="charontCtrl.setFromHDFS()" >
-              </button>
-            </div>
-            <div class="row row-centered" style="margin-top: 10px;">
-              <button class="fa fa-long-arrow-right fa-4x" ng-click="charontCtrl.setToHdfs()">
+            <div class="panel-body">
+              <div class="row" ng-show="charonCtrl.toHDFS" >
+                <button class="btn btn-default" ng-click="charonCtrl.selectCharonFile()" >
+                  <span>Select file</span>
                 </button>
+              </div>
+              <div class="row" ng-show="!charonCtrl.toHDFS" ng-show="charonCtrl.selectedDir != ''">
+                <button class="btn btn-default" ng-click="charonCtrl.selectCharonDir()">
+                  <span>Select directory</span>
+                </button> 
+              </div>
+            </div>
+            <div class="panel-footer" ng-show="!charonCtrl.toHDFS && charonCtrl.selectedDir != '' || charonCtrl.toHDFS && charonCtrl.selectedFile != ''" >
+                <div class="row" ng-show="!charonCtrl.toHDFS">
+                    <span> {{charonCtrl.selectedDir}}</span>
+                </div>
+                <div class="row" ng-show="charonCtrl.toHDFS">
+                    <span> {{charonCtrl.selectedFile}}</span>
+                </div>
+            </div>            
+          </div>
+          <div class="col-lg-2 row-centered">
+            <div class="row center-block" style="margin-top: -20px;">
+              <span class="fa fa-long-arrow-right fa-5x" ng-show="charonCtrl.toHDFS"></span>
+              <span class="fa fa-long-arrow-left fa-5x" ng-show="!charonCtrl.toHDFS"></span>
+            </div>
+            <div class="row center-block">
+              <button class="btn btn-default" type="button"  
+                      style="margin-bottom: 10px; margin-top: -10px;" ng-click="switchDirection()">
+                Switch Direction <span class="fa fa-exchange "></span>
+              </button>          
+            </div>
+            <div class="row">
+              <button class="btn btn-success" ng-click="charonCtrl.copyFile()" style="width: available">
+                <span>Copy File</span>
+              </button> 
             </div>
           </div>
-          <div class="panel panel-default col-lg-4">
+          <div class="panel modal-title col-lg-5">
             <div class="panel-heading">
-              <h3 class="panel-title">HDFS</h3>
-              <div class="panel-body">
-                <div class="row" ng-show="charonCtrl.toHDFS">
-                  <button class="btn btn-default" ng-click="charonCtrl.selectFile()" >
-                    <span>Select file in HDFS</span>
-                  </button> {{charonCtrl.selectedFile}}
-                </div>
-                <div class="row" ng-show="charonCtrl.fromHDFS">
-                  <button class="btn btn-default" ng-click="charonCtrl.selectDir()">
-                    <span>Select directory in HDFS</span>
-                  </button> {{charonCtrl.selectedDir}}
-                </div>
+              <h3 class="panel-title">HDFS <div ng-show="!charonCtrl.toHDFS">(Source)</div><div ng-show="charonCtrl.toHDFS">(Destination)</div></h3>              
+            </div>
+            <h3 class="panel-title"></h3>
+            <div class="panel-body">
+              <div class="row center-block" ng-show="!charonCtrl.toHDFS">
+                <button class="btn btn-default" ng-click="charonCtrl.selectHdfsFile()" >
+                  <span>Select file</span>
+                </button> 
               </div>
-
+              <div class="row" ng-show="charonCtrl.toHDFS">
+                <button class="btn btn-default" ng-click="charonCtrl.selectHdfsDir()">
+                  <span>Select directory</span>
+                </button> 
+              </div>
+            </div>
+            <div class="panel-footer" ng-show="(charonCtrl.toHDFS && charonCtrl.selectedDir != '') || (!charonCtrl.toHDFS && charonCtrl.selectedFile != '')" >
+                <div class="row" ng-show="charonCtrl.toHDFS">
+                    <span> {{charonCtrl.selectedDir}}</span>
+                </div>
+                <div class="row" ng-show="!charonCtrl.toHDFS">
+                    <span> {{charonCtrl.selectedFile}}</span>
+                </div>
             </div>
           </div>
 
         </div>
+        <div class="col-lg-5"></div>
+        <div class="col-lg-2">
+
+          <!--                      <div class="row row-centered">
+                        <form>
+                          <button class="fa fa-long-arrow-left fa-3x" type="button" ng-class="{ 'highlight': charonCtrl.toHDFS}"  ng-click="setToHDFS()"></form>
+                        </button>
+                      </div>
+                      <div class="row row-centered">
+                        <form>
+                          <button class="fa fa-long-arrow-right fa-3x" type="button" ng-class="{ 'highlight': !charonCtrl.toHDFS}" ng-click="setFromHDFS()">
+                          </button></form>
+                      </div>-->
+
+        </div>
+        <div class="col-lg-5"></div>
       </div>
     </section>
   </div>

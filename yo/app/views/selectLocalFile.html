@@ -3,7 +3,7 @@
 <div class="modal-header">
   <button class="close" ng-click="selectFileCtrl.close()" data-dismiss="modal" aria-hidden="true"
           type="button">&times;</button>
-  <h2 class="modal-title">Select file</h2>
+  <h2 class="modal-title">Select File in Charon</h2>
 </div>
 <div class="modal-body">
 
@@ -20,6 +20,7 @@
             <a style="font-size:25px">..</a>
           </td>
         </tr>
+      <a href="selectLocalFile.html"></a>
         <tr ng-repeat="file in localFsCtrl.files| filter:{status: true} | orderBy: 'name'"
             ng-class="{ 'highlight': localFsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
             ng-dblclick="selectFileCtrl.dblClick(localFsCtrl, file)"

@@ -34,7 +34,7 @@ angular.module('hopsWorksApp')
               if (selectedPath == null) {
                 growl.error("Please select a directory.", {title: "No directory selected", ttl: 2000});
               } else {
-                $modalInstance.close("hdfs://" + selectedPath);
+                $modalInstance.close(selectedPath);
               }
             };
 
