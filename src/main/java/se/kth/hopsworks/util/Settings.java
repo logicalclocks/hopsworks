@@ -104,7 +104,7 @@ public class Settings {
     }
   }
 
-  private String CHARON_DIR = "/srv/charon";
+  private String CHARON_DIR = "/srv/charon_fs";
 
   public synchronized String getCharonDir() {
     checkCache();

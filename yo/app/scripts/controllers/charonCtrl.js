@@ -19,7 +19,7 @@ angular.module('hopsWorksApp')
           self.selectedFile = "";
           self.selectedDir = "";
           if (!self.toHDFS) {
-            self.selectedDir = "/srv/charon/" + projectName;
+            self.selectedDir = "/srv/charon_fs/" + projectName;
           }
         }
         /**
@@ -43,14 +43,14 @@ angular.module('hopsWorksApp')
               "charonPath" : self.selectedFile,
               "hdfsPath" : self.selectedDir
             }; 
-            console.log("Charon from HDFS: " + JSON.stringify(op));
+            console.log("Copy from Charon from HDFS: " + JSON.stringify(op));
             charonService.copyFromCharonToHdfs(op)
           } else {
             var op = {
               "charonPath" : self.selectedDir,
               "hdfsPath" : self.selectedFile
             };             
-            console.log("Charon to HDFS: " + JSON.stringify(op));
+            console.log("Copy from HDFS to Chron: " + JSON.stringify(op));
             charonService.copyFromHdfsToCharon(op)
           }
         };

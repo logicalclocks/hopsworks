@@ -21,7 +21,7 @@
           </td>
         </tr>
          <a href="selectLocalFile.html"></a>
-        <tr ng-repeat="file in localFsCtrl.files"
+        <tr ng-repeat="file in localFsCtrl.files | orderBy: 'name'"
             ng-class="{ 'highlight': localFsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
             ng-dblclick="selectFileCtrl.dblClick(localFsCtrl, file)"
             ng-click="selectFileCtrl.select(file.path, file.dir); localFsCtrl.select($index, file);">
