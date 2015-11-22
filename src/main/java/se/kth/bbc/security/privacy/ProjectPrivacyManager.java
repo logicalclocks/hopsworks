@@ -27,9 +27,10 @@ import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.UserManager;
 import io.hops.bbc.Consents;
+import se.kth.hopsworks.rest.AppException;
 
 @Stateless
-public class StudyPrivacyManager {
+public class ProjectPrivacyManager {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -73,7 +74,7 @@ public class StudyPrivacyManager {
 
   public Consents getConsentByStudyName(String studyname) throws ParseException {
 
-    TypedQuery<Consents> q = em.createNamedQuery("Consent.findByStudyName",
+    TypedQuery<Consents> q = em.createNamedQuery("Consents.findByStudyName",
             Consents.class);
     q.setParameter("studyName", studyname);
     List<Consents> consent = q.getResultList();
@@ -86,7 +87,7 @@ public class StudyPrivacyManager {
 
   public Consents getConsentByName(String name) throws ParseException {
 
-    TypedQuery<Consents> q = em.createNamedQuery("Consent.findByName",
+    TypedQuery<Consents> q = em.createNamedQuery("Consents.findByName",
             Consents.class);
     q.setParameter("name", name);
     List<Consents> consent = q.getResultList();
@@ -100,14 +101,14 @@ public class StudyPrivacyManager {
 
   public Consents getActiveConsent(String studyName) {
     return (Consents) em.createQuery(
-            "SELECT c FROM Consents c WHERE c.status ='"
+            "SELECT c FROM Consents c WHERE c.ethical_status ='"
             + ConsentStatus.APPROVED.name()+ "' AND c.studyName = '"
             + studyName + "'").getSingleResult();
 
   }
 
   public List<Consents> getAllConsets(String studyName) {
-    TypedQuery<Consents> q = em.createNamedQuery("Consentss.findByStudyName",
+    TypedQuery<Consents> q = em.createNamedQuery("Consents.findByStudyName",
             Consents.class);
     q.setParameter("studyName", studyName);
 
@@ -115,23 +116,23 @@ public class StudyPrivacyManager {
 
   }
 
-  public List<Consents> findAllNewConsets(String status) {
+  public List<Consents> findAllNewConsets(ConsentStatus status) {
     TypedQuery<Consents> q = em.createNamedQuery("Consents.findByStatus",
             Consents.class);
-    q.setParameter("status", status);
+    q.setParameter("consentStatus", status);
 
     return q.getResultList();
 
   }
 
-  public List<Consents> findAllConsets(int status) {
-    String sql
-            = "SELECT * FROM consents LEFT JOIN study ON study.name = consents.study_name where study.status="
-            + status;
-    Query q = em.createNativeQuery(sql, Consents.class);
+  
+  public List<Consents> findAllConsents() {
+     TypedQuery<Consents> q = em.createNamedQuery("Consents.findAll",
+            Consents.class);
     return q.getResultList();
   }
 
+  
   public boolean updateConsentStatus(Consents cons, ConsentStatus status) {
 
     if (cons != null) {

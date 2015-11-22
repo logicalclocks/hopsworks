@@ -325,4 +325,14 @@ public class ProjectFacade extends AbstractFacade<Project> {
     }
     return st;
   }
+
+  public boolean updateStudyStatus(Project st, String name) {
+  
+    if (st != null) {
+      st.setEthicalStatus(name);
+      em.merge(st);
+      return true;
+    }
+    return false;
+  }
 }

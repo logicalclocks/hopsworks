@@ -40,7 +40,7 @@
                     <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
 
                     <p:dataTable id="studyTable" var="req"
-                                 value="#{studyEthicalManager.allStudies}" 
+                                 value="#{projectEthicalManager.allStudies}" 
                                  widgetVar="studyTable"
                                  emptyMessage="No open requests"
                                  rowKey="#{req.name}" 
@@ -68,14 +68,14 @@
                       <p:column id="actionColumn" headerText="Action">
                         <h:panelGrid columns="2" style="width: auto">                                                    
                           <p:commandLink styleClass="ui-button-remove fa fa-ban" 
-                                         action="#{studyEthicalManager.rejectStudy(req)}" 
+                                         action="#{projectEthicalManager.rejectProject(req)}" 
                                          update="@form">
                             <p:confirm header="Approve" 
                                        message="Are you sure you want to reject this study?" 
                                        icon="ui-icon-alert"/>
                           </p:commandLink>
                           <p:commandLink styleClass="ui-button-allow fa fa-check" 
-                                         action="#{studyEthicalManager.approveStudy(req)}" 
+                                         action="#{projectEthicalManager.approveProject(req)}" 
                                          update="@form">
                             <p:confirm header="Aprove Study" 
                                        message="Are you sure you want to approve this study?" 
@@ -96,7 +96,7 @@
                   <h:form id="consentForm">
                     <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
                     <p:dataTable id="consentTable" var="creq"
-                                 value="#{studyEthicalManager.allConsents}" 
+                                 value="#{projectEthicalManager.allConsents}" 
                                  widgetVar="consTable"
                                  emptyMessage="No open requests"
                                  rowKey="#{creq.id}" 
@@ -129,7 +129,7 @@
 
                       <p:column id="cformColumn" headerText="Document" > 
 
-                        <h:commandLink  action="#{studyEthicalManager.showConsent(creq.name)}" 
+                        <h:commandLink  action="#{projectEthicalManager.showConsent(creq.name)}" 
                                         target="_blank"
                                         style="float:left;margin-right:10px">
 
@@ -140,14 +140,14 @@
                       <p:column id="actionColumn" headerText="Action">
                         <h:panelGrid columns="2" style="width: auto">                                                    
                           <p:commandLink styleClass="ui-button-remove fa fa-ban" 
-                                         action="#{studyEthicalManager.rejectConsent(creq)}" 
+                                         action="#{projectEthicalManager.rejectConsent(creq)}" 
                                          update="@form">
                             <p:confirm header="Approve" 
                                        message="Are you sure you want to reject this document?" 
                                        icon="ui-icon-alert"/>
                           </p:commandLink>
                           <p:commandLink styleClass="ui-button-allow fa fa-check" 
-                                         action="#{studyEthicalManager.approveConsent(creq)}" 
+                                         action="#{projectEthicalManager.approveConsent(creq)}" 
                                          update="@form">
                             <p:confirm header="Aprove Study" 
                                        message="Are you sure you want to approve this document?" 
@@ -168,7 +168,7 @@
                   <h:form id="nConsentForm">
                     <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
                     <p:dataTable id="newConsentTable" var="nreq"
-                                 value="#{studyEthicalManager.allNewConsents}" 
+                                 value="#{projectEthicalManager.allNewConsents}" 
                                  widgetVar="newConsentsTable"
                                  emptyMessage="No open requests"
                                  rowKey="#{nreq.id}" 
@@ -195,7 +195,7 @@
 
                       <p:column id="nformColumn" headerText="Document" > 
 
-                        <h:commandLink  action="#{studyEthicalManager.showConsent(nreq.name)}" 
+                        <h:commandLink  action="#{projectEthicalManager.showConsent(nreq.name)}" 
                                         target="_blank"
                                         style="float:left;margin-right:10px">
 
@@ -206,14 +206,14 @@
                       <p:column id="nactionColumn" headerText="Action">
                         <h:panelGrid columns="2" style="width: auto">                                                    
                           <p:commandLink styleClass="ui-button-remove fa fa-ban" 
-                                         action="#{studyEthicalManager.rejectConsent(nreq)}" 
+                                         action="#{projectEthicalManager.rejectConsent(nreq)}" 
                                          update="@form">
                             <p:confirm header="Approve" 
                                        message="Are you sure you want to reject this document?" 
                                        icon="ui-icon-alert"/>
                           </p:commandLink>
                           <p:commandLink styleClass="ui-button-allow fa fa-check" 
-                                         action="#{studyEthicalManager.approveConsent(nreq)}" 
+                                         action="#{projectEthicalManager.approveConsent(nreq)}" 
                                          update="@form">
                             <p:confirm header="Aprove Study" 
                                        message="Are you sure you want to approve this document?" 
@@ -237,7 +237,7 @@
                     <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
 
                     <p:dataTable id="expiredStudyTable" var="ereq"
-                                 value="#{studyEthicalManager.allExpiredStudies}" 
+                                 value="#{projectEthicalManager.allExpiredStudies}" 
                                  widgetVar="studyTable"
                                  emptyMessage="No open requests"
                                  rowKey="#{ereq.name}" 

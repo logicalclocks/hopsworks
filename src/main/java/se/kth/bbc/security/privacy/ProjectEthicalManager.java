@@ -14,12 +14,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.lims.ClientSessionState;
+import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 
-@ManagedBean(name = "studyEthicalManager")
+@ManagedBean(name = "projectEthicalManager")
 @SessionScoped
-public class StudyEthicalManager implements Serializable {
+public class ProjectEthicalManager implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -27,7 +28,7 @@ public class StudyEthicalManager implements Serializable {
   private EntityManager em;
 
   @EJB
-  private StudyPrivacyManager privacyManager;
+  private ProjectPrivacyManager privacyManager;
 
   @EJB
   private ProjectFacade studyController;
@@ -64,13 +65,13 @@ public class StudyEthicalManager implements Serializable {
   }
 
   public List<Consents> getAllConsents() {
-    this.allConsents = privacyManager.findAllConsets(1);
+    this.allConsents = privacyManager.findAllConsents();
     return this.allConsents;
   }
 
   public List<Consents> getAllNewConsents() {
     this.allNewConsents = privacyManager.findAllNewConsets(
-            ConsentStatus.PENDING.name());
+            ConsentStatus.PENDING);
     return this.allNewConsents;
   }
 
@@ -97,14 +98,37 @@ public class StudyEthicalManager implements Serializable {
     }
 
   }
+ public void approveProject(Project project) {
 
-  public void approveStudy(Project study) {
+    if (project == null) {
+      MessagesController.addErrorMessage("Error", "No project found!");
+      return;
+    }
+
+    if (studyController.updateStudyStatus(project, ConsentStatus.APPROVED.name())) {
+      MessagesController.addInfoMessage(project.getName() + " was approved.");
+    } else {
+      MessagesController.addErrorMessage(project.getName() + " was not approved!");
+
+    }
 
   }
 
-  public void rejectStudy(Project study) {
+  public void rejectProject(Project project) {
 
-   
+    if (project == null) {
+      MessagesController.addErrorMessage("Error", "No project found!");
+      return;
+    }
+
+    if (studyController.updateStudyStatus(project, ConsentStatus.REJECTED.name())) {
+      MessagesController.addInfoMessage(project.getName() + " was rejected.");
+    
+    } else {
+      MessagesController.addErrorMessage(project.getName() + " was not rejected!");
+
+    }
+
   }
 
   public void approveConsent(Consents cons) {
