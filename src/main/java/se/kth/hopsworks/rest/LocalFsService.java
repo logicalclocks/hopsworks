@@ -76,6 +76,7 @@ public class LocalFsService {
   }
 
   private Response dirListing(String path) {
+    logger.info("Dir listing for local path: " + path);
     File baseDir = new File(path);
     if (baseDir.exists() == false || baseDir.isDirectory() == false) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();
@@ -123,7 +124,7 @@ public class LocalFsService {
       @PathParam("path") String path,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
-    return dirListing(path);
+    return dirListing(settings.getCharonDir() + File.separator + path);
   }
 
   @POST

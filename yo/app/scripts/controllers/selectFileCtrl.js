@@ -36,7 +36,7 @@ angular.module('hopsWorksApp')
                 growl.error(errorMsg, {title: "Invalid file extension", ttl: 15000});
               } else if (self.isDir !== isDirectory) {
                 var msg;
-                if (isDir) {
+                if (self.isDir) {
                   msg = "You should select a directory."
                 } else {
                   msg = "You should select a file."
