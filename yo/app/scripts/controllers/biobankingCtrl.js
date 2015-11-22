@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .controller('BiobankingCtrl', ['$routeParams', '$timeout', 'growl', 'BiobankingService', 'DataSetService',
-      function ($routeParams, $timeout, growl, BiobankingService, DataSetService) {
+    .controller('BiobankingCtrl', ['$routeParams', 'growl', 'BiobankingService', 'DataSetService',
+      function ($routeParams, growl, BiobankingService, DataSetService) {
 
         var self = this;
         self.projectId = $routeParams.projectID;
@@ -17,7 +17,6 @@ angular.module('hopsWorksApp')
         self.consentStatus = [{name: 'Undefined'}, {name: 'Approved'}, {name: 'Pending'}, {name: 'Rejected'}];
 
         self.fileName = function (path) {
-//          return getFileName(path);
           return path.replace(/^.*[\\\/]/, '');
         };
 
@@ -25,31 +24,34 @@ angular.module('hopsWorksApp')
           dataSetService.fileDownload(path);
         };
 
-        var refresher = function () {
-          getUndefinedConsents();
-          getRegisteredConsents();
-
-        };
-
-        self.registerConsent = function () {
-//          self.registerDisabled = true;
+        self.registerConsents = function () {
+          var consents = [];
+          var j = 0;
           for (var i = self.undefinedConsents.length - 1; i >= 0; i--) {
             if (self.undefinedConsents[i].consentType !== "Undefined") {
-              biobankingService.registerConsent(self.undefinedConsents[i]).then(
+              consents[j] = self.undefinedConsents[i];
+              j++;
+              var allConsents = {"consents" : consents}; 
+              biobankingService.registerConsents(allConsents).then(
                   function (success) {
                     console.log("Success Registering consent");
                     growl.success(success.data.successMessage, {title: 'Consent form registered.', ttl: 1000});
+                    self.undefinedConsents = [];
+                    self.registeredConsents = [];
+                    getUndefinedConsents();
+                    getRegisteredConsents();
                   }, function (error) {
                 console.log("Failure Registering consent");
-                growl.error(error.data, {title: 'Error', ttl: 5000});
+//                growl.error(error.data, {title: 'Error', ttl: 5000});
+                    self.undefinedConsents = [];
+                    self.registeredConsents = [];
+                    getUndefinedConsents();
+                    getRegisteredConsents();
               });
             }
           }
-          self.undefinedConsents = [];
-          self.registeredConsents = [];
-          $timeout(refresher, 1000);
-//          self.registerDisabled = false;
         };
+
 
         var getUndefinedConsents = function () {
           biobankingService.getAllConsentsInProject().then(

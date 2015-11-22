@@ -3,7 +3,7 @@
 <div class="modal-header">
   <button class="close" ng-click="selectFileCtrl.close()" data-dismiss="modal" aria-hidden="true"
           type="button">&times;</button>
-  <h2 class="modal-title">Select File in HDFS</h2>
+  <h2 class="modal-title">Select Directory in HDFS</h2>
 </div>
 <div class="modal-body">
 
@@ -20,7 +20,6 @@
             <a style="font-size:25px">..</a>
           </td>
         </tr>
-      <a href="selectFile.html"></a>
         <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'"
             ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
             ng-dblclick="selectFileCtrl.dblClick(datasetsCtrl, file)"
@@ -34,7 +33,7 @@
         </tr>
       </tbody>
     </table>
-    <button ng-click="selectFileCtrl.confirmSelection(false)" class="btn btn-default">Select</button>
+    <button ng-click="selectFileCtrl.confirmSelection(true)" class="btn btn-default">Select</button>
   </div>
 </div>
 
