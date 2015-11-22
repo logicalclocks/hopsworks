@@ -1,6 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import io.hops.bbc.ConsentDTO;
+import io.hops.bbc.ConsentDTOs;
 import io.hops.bbc.ConsentStatus;
 import io.hops.bbc.ConsentType;
 import io.hops.bbc.Consents;
@@ -133,23 +134,35 @@ public class BiobankingService {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response registerConsentForm(@Context SecurityContext sc,
-      @Context HttpServletRequest req, ConsentDTO consent)
+  public Response registerConsentForms(@Context SecurityContext sc,
+      @Context HttpServletRequest req, ConsentDTOs consents)
       throws AppException {
-    logger.log(Level.INFO, "Registering consent: {0}", consent);
-    String path = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/" + consent.getPath();
-    Inode i = inodeFacade.getInodeAtPath(path);
-    if (i == null) {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).entity(
-          "Could not find file: " + consent.getPath()).build();
+    JsonResponse json = new JsonResponse();
+    for (ConsentDTO consent : consents.getConsents()) {
+      logger.log(Level.INFO, "Registering consent: {0}", consent);
+      String path = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/" + consent.getPath();
+      Inode i = inodeFacade.getInodeAtPath(path);
+      if (i == null) {
+        json.setErrorMsg("Could not find file: " + consent.getPath());
+        Response.ResponseBuilder response = Response.serverError();
+        return response.entity(json).build();
+      }
+      if (ConsentType.create(consent.getConsentType()).equals(ConsentType.UNDEFINED)) {
+        json.setErrorMsg(
+            "You need to change the Consent Type to register the consent form for: " + consent.getPath());
+        Response.ResponseBuilder response = Response.serverError();
+        return response.entity(json).build();
+      }
+      Consents consentBean = new Consents(ConsentType.create(consent.getConsentType()),
+          ConsentStatus.PENDING, i, project);
+      consentsFacade.persistConsent(consentBean);
+      json.setSuccessMessage("Consent form successfully registered.");
     }
-    if (ConsentType.create(consent.getConsentType()).equals(ConsentType.UNDEFINED)) {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).entity(
-          "You need to change the Consent Type to register the consent form for: " + consent.getPath()).build();
-    }
-    Consents consentBean = new Consents(ConsentType.create(consent.getConsentType()),
-        ConsentStatus.PENDING, i, project);
-    consentsFacade.persistConsent(consentBean);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+
+    Response.ResponseBuilder response = Response.ok();
+    return response.entity(json).build();
+
+//    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
+
 }

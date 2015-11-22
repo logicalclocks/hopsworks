@@ -26,6 +26,10 @@ public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
         super(HdfsLeDescriptors.class);
     }
 
+    /**
+     * HdfsLeDescriptors.hostname returns the hostname + port for the Leader NN (e.g., "127.0.0.1:8020")
+     * @return 
+     */
     public HdfsLeDescriptors findEndpoint() {
         try {
             return em.createNamedQuery("HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).getSingleResult();
