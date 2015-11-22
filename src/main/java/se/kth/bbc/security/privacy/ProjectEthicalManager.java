@@ -13,6 +13,7 @@ import javax.faces.bean.SessionScoped;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import se.kth.bbc.activity.ActivityFacade;
+import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.project.Project;
@@ -31,10 +32,10 @@ public class ProjectEthicalManager implements Serializable {
   private ProjectPrivacyManager privacyManager;
 
   @EJB
-  private ProjectFacade studyController;
-
+  private FileOperations fops;
+    
   @EJB
-  private ActivityFacade activityFacade;
+  private ProjectFacade studyController;
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
@@ -88,10 +89,10 @@ public class ProjectEthicalManager implements Serializable {
     this.sessionState = sessionState;
   }
 
-  public void showConsent(String consName) {
+  public void showConsent(Consents consName) {
 
     try {
-      Consents consent = privacyManager.getConsentByName(consName);
+      Consents consent = privacyManager.getConsentByName(consName.getId());
       privacyManager.downloadPDF(consent);
     } catch (ParseException | IOException ex) {
 
@@ -133,12 +134,34 @@ public class ProjectEthicalManager implements Serializable {
 
   public void approveConsent(Consents cons) {
 
-  
+     if (cons == null) {
+      MessagesController.addErrorMessage("Error", "No consent found!");
+      return;
+    }
+
+    if (privacyManager.updateConsentStatus(cons, ConsentStatus.APPROVED)) {
+
+      MessagesController.addInfoMessage(cons.getId() + " was approved.");
+
+    } else {
+      MessagesController.addErrorMessage(cons.getId() + " was not approved!");
+
+    } 
   }
 
   public void rejectConsent(Consents cons) {
 
-   
+     if (cons == null) {
+      MessagesController.addErrorMessage("Error", "No consent found!");
+      return;
+    }
+
+    if (privacyManager.updateConsentStatus(cons, ConsentStatus.REJECTED)) {
+      MessagesController.addErrorMessage(cons.getId() + " was not rejected!");
+
+    } else {
+      MessagesController.addInfoMessage(cons.getInode().getSymlink() + " was rejected.");
+    }
 
   }
 

@@ -315,8 +315,9 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   public List<Project> findAllExpiredStudies() {
 
+
     Query q = em.createNativeQuery(
-            "SELECT * FROM hopsworks.project WHERE ethical_status=1 AND retention_period < NOW()",
+            "SELECT * FROM hopsworks.project WHERE ethical_status='APPROVED' AND retention_period < NOW()",
             Project.class);
 
     List<Project> st = q.getResultList();
