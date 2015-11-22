@@ -2,7 +2,7 @@
 
 angular.module('hopsWorksApp')
     .controller('CharonCtrl', ['$scope', '$routeParams',
-      'growl', 'ModalService', 'CharonService', 
+      'growl', 'ModalService', 'CharonService',
       function ($scope, $routeParams, growl, ModalService, CharonService) {
 
         var self = this;
@@ -13,9 +13,9 @@ angular.module('hopsWorksApp')
         self.selectedDir = "";
         self.toHDFS = true;
         self.charonFilename = "";
-        
-        $scope.switchDirection = function(projectName) {
-          self.toHDFS = ! self.toHDFS;
+
+        $scope.switchDirection = function (projectName) {
+          self.toHDFS = !self.toHDFS;
           self.selectedFile = "";
           self.selectedDir = "";
           if (!self.toHDFS) {
@@ -31,30 +31,40 @@ angular.module('hopsWorksApp')
         self.onFileSelected = function (path) {
           self.selectedFile = path;
         };
-        
+
         self.onDirSelected = function (path) {
           self.selectedDir = path;
         };
-        
+
         self.copyFile = function () {
-          
+
           if (self.toHDFS === true) {
             var op = {
-              "charonPath" : self.selectedFile,
-              "hdfsPath" : self.selectedDir
-            }; 
-            console.log("Copy from Charon from HDFS: " + JSON.stringify(op));
+              "charonPath": self.selectedFile,
+              "hdfsPath": self.selectedDir
+            };
             charonService.copyFromCharonToHdfs(op)
+                .then(function (success) {
+                  growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                },
+                    function (error) {
+                      growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                    });
           } else {
             var op = {
-              "charonPath" : self.selectedDir,
-              "hdfsPath" : self.selectedFile
-            };             
-            console.log("Copy from HDFS to Chron: " + JSON.stringify(op));
+              "charonPath": self.selectedDir,
+              "hdfsPath": self.selectedFile
+            };
             charonService.copyFromHdfsToCharon(op)
+                .then(function (success) {
+                  growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                },
+                    function (error) {
+                      growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                    });
           }
         };
-        
+
         self.selectHdfsFile = function () {
           ModalService.selectFile('lg', "/[^]*/",
               "problem selecting file").then(
@@ -62,9 +72,10 @@ angular.module('hopsWorksApp')
                 self.onFileSelected("hdfs:/" + success);
               }, function (error) {
             //The user changed their mind.
+            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
           });
         };
-        
+
         self.selectHdfsDir = function () {
           ModalService.selectDir('lg', "/[^]*/",
               "problem selecting file").then(
@@ -72,6 +83,7 @@ angular.module('hopsWorksApp')
                 self.onDirSelected("hdfs:/" + success);
               }, function (error) {
             //The user changed their mind.
+            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
           });
         };
 
@@ -83,9 +95,10 @@ angular.module('hopsWorksApp')
                 self.onFileSelected(success);
               }, function (error) {
             //The user changed their mind.
+            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
           });
         };
-        
+
         self.selectCharonDir = function () {
           ModalService.selectLocalDir('lg', "/[^]*/",
               "problem selecting file").then(
@@ -93,6 +106,7 @@ angular.module('hopsWorksApp')
                 self.onDirSelected(success);
               }, function (error) {
             //The user changed their mind.
+            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
           });
         };
 
