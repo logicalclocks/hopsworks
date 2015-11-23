@@ -67,7 +67,7 @@ public class CharonService {
   @POST
   @Path("/fromHDFS")
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response copyFromHDFS(@Context SecurityContext sc,
       @Context HttpServletRequest req, CharonDTO charon)
       throws AppException {
@@ -98,7 +98,7 @@ public class CharonService {
   @POST
   @Path("/toHDFS")
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response copyToHDFS(@Context SecurityContext sc,
       @Context HttpServletRequest req, CharonDTO charon)
       throws AppException {
