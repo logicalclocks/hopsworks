@@ -6,6 +6,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
@@ -310,5 +311,18 @@ public class ProjectFacade extends AbstractFacade<Project> {
     } catch (NoResultException e) {
       return null;
     }
+  }
+
+  public List<Project> findAllExpiredStudies() {
+
+    Query q = em.createNativeQuery(
+            "SELECT * FROM hopsworks.project WHERE ethical_status=1 AND retention_period < NOW()",
+            Project.class);
+
+    List<Project> st = q.getResultList();
+    if (st == null) {
+      return null;
+    }
+    return st;
   }
 }

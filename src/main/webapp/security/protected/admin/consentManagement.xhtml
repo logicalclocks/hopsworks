@@ -28,12 +28,12 @@
 
           <div class="container">
             <div align="left">
-              <h2>Study and Consent Management</h2>
+              <h2>Project and Consent Management</h2>
             </div>
 
             <div class="content">
               <p:tabView dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="ethicalMgmtTabview">
-                <p:tab title="Study Management">
+                <p:tab title="Project Management">
 
                   <h:form id="studyForm">
 
@@ -46,17 +46,17 @@
                                  rowKey="#{req.name}" 
                                  editable="true" editMode="cell">
 
-                      <p:column id="onameColumn" headerText="Study Owner"  
-                                filterBy="#{req.username}">
-                        <h:outputText value="#{req.username}"  />
+                      <p:column id="onameColumn" headerText="Project Owner"  
+                                filterBy="#{req.owner}">
+                        <h:outputText value="#{req.owner.email}"  />
                       </p:column>
 
-                      <p:column id="snameCol" headerText="StudyName" 
+                      <p:column id="snameCol" headerText="Project Name" 
                                 filterBy="#{req.name}">
                         <h:outputText value="#{req.name}" />
                       </p:column>
 
-                      <p:column id="statColumn" headerText="Study Status" 
+                      <p:column id="statColumn" headerText="Project Status" 
                                 filterBy="#{req.ethicalStatus}">
                         <h:outputText value="#{req.ethicalStatus}" />
                       </p:column>
