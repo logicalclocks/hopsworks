@@ -26,15 +26,10 @@ import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
-import se.kth.bbc.activity.ActivityDetail;
-import se.kth.bbc.security.ua.EmailBean;
-import se.kth.bbc.security.ua.UserManager;
 import io.hops.bbc.Consents;
 import java.util.logging.Logger;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.InodeFacade;
-import se.kth.hopsworks.controller.AdamController;
 import se.kth.hopsworks.util.Settings;
 
 @Stateless
@@ -47,15 +42,9 @@ public class ProjectPrivacyManager {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  @EJB
-  private FileOperations fops;
-
-  @EJB
-  private UserManager mgr;
+  
   @EJB
   private InodeFacade inodeFacade;
-
-  private List<ActivityDetail> ad;
 
   private static final int DEFAULT_BUFFER_SIZE = 10240;
 
@@ -144,12 +133,11 @@ public class ProjectPrivacyManager {
     String projectPath = "/" + Settings.DIR_ROOT + "/" + consent.getProject().
             getName();
     String consentsPath = projectPath + "/" + Settings.DIR_CONSENTS;
-    String path = relativePath(inodeFacade.getPath(consent.getInode()), consent.getProject());
+    
+    String path =  relativePath(inodeFacade.getPath(consent.getInode()), consent.getProject());
+    
+    //String path= inodeFacade.getPath(consent.getInode());
 
-
-    if (fops.exists(path) == false) {
-      return;
-    }
     try {
 
       Path path2 = Paths.get(path);
@@ -203,5 +191,5 @@ public class ProjectPrivacyManager {
     logger.info("relative path for: " + path);
     return path.replace("/" + Settings.DIR_ROOT + "/" + project.getName() + "/", "");
   }
-  
+
 }
