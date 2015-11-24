@@ -188,7 +188,7 @@ public class Settings {
   }
 
   //Local path to the hiway jar
-  public static final String HIWAY_JAR_PATH = "/srv/hiway-1.0.1-SNAPSHOT/hiway-core-1.0.1-SNAPSHOT.jar";
+  public static final String HIWAY_JAR_PATH = "/home/glassfish/software/hiway";
 
   //Relative output path (within hdfs project folder) which to write cuneiform in-/output to
   public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Logs/Cuneiform/";

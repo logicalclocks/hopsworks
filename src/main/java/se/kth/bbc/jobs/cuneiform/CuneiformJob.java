@@ -155,10 +155,10 @@ public final class CuneiformJob extends YarnJob {
     String resultName = "results";
 
     YarnRunner.Builder b = new YarnRunner.Builder(Settings.HIWAY_JAR_PATH,
-            "Hiway.jar");
+            "hiway-core.jar");
     b.amMainClass(
             "de.huberlin.wbi.hiway.am.cuneiform.CuneiformApplicationMaster");
-    b.addAmJarToLocalResources(false); // Weird way of hiway working
+    b.addAmJarToLocalResources(false); 
 
     b.localResourcesBasePath("/hiway/"
             + YarnRunner.APPID_PLACEHOLDER);
