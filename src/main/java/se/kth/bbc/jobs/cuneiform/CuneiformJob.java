@@ -44,6 +44,7 @@ public final class CuneiformJob extends YarnJob {
 
   private Path tempFile;
   private String sparkDir;
+  private String hiwayDir;
     
   //Just for ease of use...
   private final CuneiformJobConfiguration config;
@@ -57,7 +58,7 @@ public final class CuneiformJob extends YarnJob {
    * contain a CuneiformJobConfiguration object.
    */
   public CuneiformJob(JobDescription job,
-          AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir) {
+          AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir, String hiwayDir) {
     super(job, services, user, hadoopDir);
     if (!(job.getJobConfig() instanceof CuneiformJobConfiguration)) {
       throw new IllegalArgumentException(
@@ -66,6 +67,7 @@ public final class CuneiformJob extends YarnJob {
     }
     this.config = (CuneiformJobConfiguration) job.getJobConfig(); //We can do this because of the type check earlier.
     this.sparkDir = sparkDir;
+    this.hiwayDir = hiwayDir;
   }
 
   @Override
@@ -154,7 +156,7 @@ public final class CuneiformJob extends YarnJob {
 
     String resultName = "results";
 
-    YarnRunner.Builder b = new YarnRunner.Builder(Settings.HIWAY_JAR_PATH,
+    YarnRunner.Builder b = new YarnRunner.Builder(hiwayDir + "/" + Settings.HIWAY_REL_JAR_PATH,
             "hiway-core.jar");
     b.amMainClass(
             "de.huberlin.wbi.hiway.am.cuneiform.CuneiformApplicationMaster");
@@ -183,7 +185,7 @@ public final class CuneiformJob extends YarnJob {
     b.stdErrPath(ERR_LOGS);
     b.logPathsRelativeToResourcesPath(false);
 
-    b.addToAppMasterEnvironment("CLASSPATH", "/home/glassfish/software/hiway/lib/*:/home/glassfish/software/hiway/*");
+    b.addToAppMasterEnvironment("CLASSPATH", hiwayDir + "/software/hiway/lib/*:" + hiwayDir + "/software/hiway/*");
 
     //Set Yarn configuration
     b.setConfig(config);
