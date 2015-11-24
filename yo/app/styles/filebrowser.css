@@ -283,7 +283,7 @@ md-sidenav {
 }
 
 .md-sidenav-right {
-  left: 98%;
+  /*left: 98%;*/
   height: 100%;
 }
 
@@ -314,9 +314,6 @@ md-backdrop.md-sidenav-backdrop {
   margin:0px;
   padding:0px;
 }
-.dropdown-amore li, a {
-  height: 40px;
-}
 
 .dropdown-amore a > span {
   display: block;
@@ -344,3 +341,6 @@ md-backdrop.md-sidenav-backdrop {
   color:white;
 }
 
+.md-tabs-content {
+  overflow: auto;
+}
