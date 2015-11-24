@@ -144,13 +144,13 @@ public final class CuneiformJob extends YarnJob {
       config.setAppName("Untitled Cuneiform job");
     }
     // Set the job name if necessary.
-    String wfLocation;
-    try {
-      wfLocation = prepWorkflowFile(wf);
-    } catch (IOException e) {
-      writeToLogs(new IOException("Error while setting up workflow file.", e));
-      return false;
-    }
+//    String wfLocation;
+//    try {
+//      wfLocation = prepWorkflowFile(wf);
+//    } catch (IOException e) {
+//      writeToLogs(new IOException("Error while setting up workflow file.", e));
+//      return false;
+//    }
 
     String resultName = "results";
 
@@ -165,21 +165,25 @@ public final class CuneiformJob extends YarnJob {
 
     //construct AM arguments
     StringBuilder args = new StringBuilder("--workflow ");
-    args.append(Utils.getFileName(wfLocation));
+//    args.append(Utils.getFileName(wfLocation));
+    args.append(wf.getPath()).append(",true");
     args.append(" --appid ");
     args.append(YarnRunner.APPID_PLACEHOLDER);
     args.append(" --summary ");
     args.append(resultName);
 
+
+    logger.log(Level.INFO, "Hiway YARN command string: {0}", args.toString());
+    
     b.amArgs(args.toString());
 
     //Pass on workflow file
-    b.addFilePathToBeCopied(wfLocation, true);
+//    b.addFilePathToBeCopied(wfLocation, true);
     b.stdOutPath(OUT_LOGS);
     b.stdErrPath(ERR_LOGS);
     b.logPathsRelativeToResourcesPath(false);
 
-    b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");
+    b.addToAppMasterEnvironment("CLASSPATH", "/home/glassfish/software/hiway/lib/*:/home/glassfish/software/hiway/*");
 
     //Set Yarn configuration
     b.setConfig(config);
