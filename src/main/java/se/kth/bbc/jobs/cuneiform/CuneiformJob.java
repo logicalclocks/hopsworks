@@ -80,9 +80,9 @@ public final class CuneiformJob extends YarnJob {
     proceed = super.monitor();
     //If ok: copy logs
     if (!proceed) {
-      return;
+      return;r
     }
-    copyLogs();
+    coeyLogs();
     //If the application finished normally: process its output
     if (appFinishedSuccessfully()) {
       processOutput();
@@ -200,12 +200,16 @@ public final class CuneiformJob extends YarnJob {
       return false;
     }
 
-    //TODO: include input files
-    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName(), user.getUsername())
+    
+//TODO: include input files
+    String stdOutFinalDestination = 
+        Utils.getHdfsRootPath(hadoopDir, jobDescription.getProject().getName())
             + Settings.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator
             + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName(), user.getUsername())
+//    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName(), user.getUsername())
+    String stdErrFinalDestination = 
+                Utils.getHdfsRootPath(hadoopDir, jobDescription.getProject().getName())
             + Settings.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator
             + "stderr.log";
