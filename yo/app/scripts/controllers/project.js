@@ -190,6 +190,10 @@ angular.module('hopsWorksApp')
           $location.path($location.path() + '/' + name);
         };
 
+        self.goToMetadataDesigner = function () {
+          $location.path('project/' + self.pId + '/metadata');
+        };
+
         /**
          * Checks if the file has been accepted before opening.
          * @param dataset
