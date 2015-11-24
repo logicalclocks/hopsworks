@@ -80,9 +80,9 @@ public final class CuneiformJob extends YarnJob {
     proceed = super.monitor();
     //If ok: copy logs
     if (!proceed) {
-      return;r
+      return;
     }
-    coeyLogs();
+    copyLogs();
     //If the application finished normally: process its output
     if (appFinishedSuccessfully()) {
       processOutput();
