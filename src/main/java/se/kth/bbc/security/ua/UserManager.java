@@ -177,7 +177,7 @@ public class UserManager {
     return list.get(0);
   }
 
-  public Users getUserByUsernmae(String username) {
+  public Users getUserByUsername(String username) {
     TypedQuery<Users> query = em.createNamedQuery("Users.findByUsername",
             Users.class);
     query.setParameter("username", username);

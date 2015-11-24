@@ -315,8 +315,9 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   public List<Project> findAllExpiredStudies() {
 
+
     Query q = em.createNativeQuery(
-            "SELECT * FROM hopsworks.project WHERE ethical_status=1 AND retention_period < NOW()",
+            "SELECT * FROM hopsworks.project WHERE ethical_status='APPROVED' AND retention_period < NOW()",
             Project.class);
 
     List<Project> st = q.getResultList();
@@ -324,5 +325,15 @@ public class ProjectFacade extends AbstractFacade<Project> {
       return null;
     }
     return st;
+  }
+
+  public boolean updateStudyStatus(Project st, String name) {
+  
+    if (st != null) {
+      st.setEthicalStatus(name);
+      em.merge(st);
+      return true;
+    }
+    return false;
   }
 }

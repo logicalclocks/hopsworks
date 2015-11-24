@@ -12,14 +12,15 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import se.kth.bbc.activity.ActivityFacade;
+import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.ClientSessionState;
+import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 
-@ManagedBean(name = "studyEthicalManager")
+@ManagedBean(name = "projectEthicalManager")
 @SessionScoped
-public class StudyEthicalManager implements Serializable {
+public class ProjectEthicalManager implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -27,13 +28,13 @@ public class StudyEthicalManager implements Serializable {
   private EntityManager em;
 
   @EJB
-  private StudyPrivacyManager privacyManager;
+  private ProjectPrivacyManager privacyManager;
 
+  @EJB
+  private FileOperations fops;
+    
   @EJB
   private ProjectFacade studyController;
-
-  @EJB
-  private ActivityFacade activityFacade;
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
@@ -64,13 +65,13 @@ public class StudyEthicalManager implements Serializable {
   }
 
   public List<Consents> getAllConsents() {
-    this.allConsents = privacyManager.findAllConsets(1);
+    this.allConsents = privacyManager.findAllConsents();
     return this.allConsents;
   }
 
   public List<Consents> getAllNewConsents() {
     this.allNewConsents = privacyManager.findAllNewConsets(
-            ConsentStatus.PENDING.name());
+            ConsentStatus.PENDING);
     return this.allNewConsents;
   }
 
@@ -87,34 +88,79 @@ public class StudyEthicalManager implements Serializable {
     this.sessionState = sessionState;
   }
 
-  public void showConsent(String consName) {
+  public void showConsent(Consents consName) {
 
     try {
-      Consents consent = privacyManager.getConsentByName(consName);
+      Consents consent = privacyManager.getConsentByName(consName.getId());
       privacyManager.downloadPDF(consent);
     } catch (ParseException | IOException ex) {
 
     }
 
   }
+ public void approveProject(Project project) {
 
-  public void approveStudy(Project study) {
+    if (project == null) {
+      MessagesController.addErrorMessage("Error", "No project found!");
+      return;
+    }
+
+    if (studyController.updateStudyStatus(project, ConsentStatus.APPROVED.name())) {
+      MessagesController.addInfoMessage(project.getName() + " was approved.");
+    } else {
+      MessagesController.addErrorMessage(project.getName() + " was not approved!");
+
+    }
 
   }
 
-  public void rejectStudy(Project study) {
+  public void rejectProject(Project project) {
 
-   
+    if (project == null) {
+      MessagesController.addErrorMessage("Error", "No project found!");
+      return;
+    }
+
+    if (studyController.updateStudyStatus(project, ConsentStatus.REJECTED.name())) {
+      MessagesController.addInfoMessage(project.getName() + " was rejected.");
+    
+    } else {
+      MessagesController.addErrorMessage(project.getName() + " was not rejected!");
+
+    }
+
   }
 
   public void approveConsent(Consents cons) {
 
-  
+     if (cons == null) {
+      MessagesController.addErrorMessage("Error", "No consent found!");
+      return;
+    }
+
+    if (privacyManager.updateConsentStatus(cons, ConsentStatus.APPROVED)) {
+
+      MessagesController.addInfoMessage(cons.getId() + " was approved.");
+
+    } else {
+      MessagesController.addErrorMessage(cons.getId() + " was not approved!");
+
+    } 
   }
 
   public void rejectConsent(Consents cons) {
 
-   
+     if (cons == null) {
+      MessagesController.addErrorMessage("Error", "No consent found!");
+      return;
+    }
+
+    if (privacyManager.updateConsentStatus(cons, ConsentStatus.REJECTED)) {
+      MessagesController.addErrorMessage(cons.getId() + " was not rejected!");
+
+    } else {
+      MessagesController.addInfoMessage(cons.getInode().getSymlink() + " was rejected.");
+    }
 
   }
 

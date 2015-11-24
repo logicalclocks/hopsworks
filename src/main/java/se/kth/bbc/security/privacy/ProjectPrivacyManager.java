@@ -1,5 +1,9 @@
 package se.kth.bbc.security.privacy;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.Path;
+
 import io.hops.bbc.ConsentStatus;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -15,36 +19,32 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
+
 import javax.persistence.TypedQuery;
 import javax.servlet.http.HttpServletResponse;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
-import se.kth.bbc.activity.ActivityController;
-import se.kth.bbc.activity.ActivityDetail;
-import se.kth.bbc.security.ua.EmailBean;
-import se.kth.bbc.security.ua.UserManager;
 import io.hops.bbc.Consents;
+import java.util.logging.Logger;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.util.Settings;
 
 @Stateless
-public class StudyPrivacyManager {
+public class ProjectPrivacyManager {
+
+  
+  private static final Logger logger = Logger.getLogger(ProjectPrivacyManager.class.
+          getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
+  
   @EJB
-  private ActivityController activityController;
-
-
-  @EJB
-  private UserManager mgr;
-
-  @EJB
-  private EmailBean emailBean;
-
-  private List<ActivityDetail> ad;
+  private InodeFacade inodeFacade;
 
   private static final int DEFAULT_BUFFER_SIZE = 10240;
 
@@ -71,11 +71,11 @@ public class StudyPrivacyManager {
     return true;
   }
 
-  public Consents getConsentByStudyName(String studyname) throws ParseException {
+  public Consents getConsentByName(int cid) throws ParseException {
 
-    TypedQuery<Consents> q = em.createNamedQuery("Consent.findByStudyName",
+    TypedQuery<Consents> q = em.createNamedQuery("Consents.findById",
             Consents.class);
-    q.setParameter("studyName", studyname);
+    q.setParameter("id", cid);
     List<Consents> consent = q.getResultList();
     if (consent.size() > 0) {
       return consent.get(0);
@@ -84,51 +84,27 @@ public class StudyPrivacyManager {
 
   }
 
-  public Consents getConsentByName(String name) throws ParseException {
-
-    TypedQuery<Consents> q = em.createNamedQuery("Consent.findByName",
+  public List<Consents> getAllConsets(int pid) {
+    TypedQuery<Consents> q = em.createNamedQuery("Consents.findByProjectId",
             Consents.class);
-    q.setParameter("name", name);
-    List<Consents> consent = q.getResultList();
-    if (consent.size() > 0) {
-      return consent.get(0);
-    }
-    return null;
-
-  }
-
-
-  public Consents getActiveConsent(String studyName) {
-    return (Consents) em.createQuery(
-            "SELECT c FROM Consents c WHERE c.status ='"
-            + ConsentStatus.APPROVED.name()+ "' AND c.studyName = '"
-            + studyName + "'").getSingleResult();
-
-  }
-
-  public List<Consents> getAllConsets(String studyName) {
-    TypedQuery<Consents> q = em.createNamedQuery("Consentss.findByStudyName",
-            Consents.class);
-    q.setParameter("studyName", studyName);
+    q.setParameter("project.id", pid);
 
     return q.getResultList();
 
   }
 
-  public List<Consents> findAllNewConsets(String status) {
+  public List<Consents> findAllNewConsets(ConsentStatus status) {
     TypedQuery<Consents> q = em.createNamedQuery("Consents.findByStatus",
             Consents.class);
-    q.setParameter("status", status);
+    q.setParameter("consentStatus", status);
 
     return q.getResultList();
 
   }
 
-  public List<Consents> findAllConsets(int status) {
-    String sql
-            = "SELECT * FROM consents LEFT JOIN study ON study.name = consents.study_name where study.status="
-            + status;
-    Query q = em.createNativeQuery(sql, Consents.class);
+  public List<Consents> findAllConsents() {
+    TypedQuery<Consents> q = em.createNamedQuery("Consents.findAll",
+            Consents.class);
     return q.getResultList();
   }
 
@@ -154,16 +130,27 @@ public class StudyPrivacyManager {
     StreamedContent input = null;
     BufferedOutputStream output = null;
 
+    String projectPath = "/" + Settings.DIR_ROOT + "/" + consent.getProject().
+            getName();
+    String consentsPath = projectPath + "/" + Settings.DIR_CONSENTS;
+    
+    String path =  relativePath(inodeFacade.getPath(consent.getInode()), consent.getProject());
+    
+    //String path= inodeFacade.getPath(consent.getInode());
+
     try {
-      // Open file.
-      input = new DefaultStreamedContent(
-              //new ByteArrayInputStream(consent.              getConsentForm())
-      );
+
+      Path path2 = Paths.get(path);
+      byte[] data = Files.readAllBytes(path2);
+
+      input = new DefaultStreamedContent(new ByteArrayInputStream(data));
 
       // Init servlet response.
       response.reset();
       response.setHeader("Content-Type", "application/pdf");
-      //response.setHeader("Content-Length",               String.valueOf(consent.getConsentForm().length)              );
+      response.setHeader("Content-Length",
+              String.valueOf(data.length)
+      );
       output = new BufferedOutputStream(response.getOutputStream(),
               DEFAULT_BUFFER_SIZE);
 
@@ -198,6 +185,11 @@ public class StudyPrivacyManager {
         e.printStackTrace();
       }
     }
+  }
+
+  private String relativePath(String path, Project project) {
+    logger.info("relative path for: " + path);
+    return path.replace("/" + Settings.DIR_ROOT + "/" + project.getName() + "/", "");
   }
 
 }

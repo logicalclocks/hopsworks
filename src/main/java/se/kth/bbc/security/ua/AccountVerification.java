@@ -62,7 +62,7 @@ public class AccountVerification {
       }
     }
 
-    Users user = mgr.getUserByUsernmae(username);
+    Users user = mgr.getUserByUsername(username);
 
     if (user.getStatus() != PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()) {
       return false;

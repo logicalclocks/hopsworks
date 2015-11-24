@@ -45,31 +45,31 @@ public class PolicyAdministrationPoint {
   }
 
   public boolean isInAdminRole(String username) {
-    Users user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsername(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.SYS_ADMIN.
             name());
   }
 
   public boolean isInResearcherRole(String username) {
-    Users user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsername(username);
     return userPolicMgr.findGroups(user.getUid()).contains(
             BBCGroup.BBC_RESEARCHER.name());
   }
 
   public boolean isInDataProviderRole(String username) {
-    Users user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsername(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.BBC_ADMIN.
             name());
   }
 
   public boolean isInAuditorRole(String username) {
-    Users user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsername(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.AUDITOR.
             name());
   }
 
   public boolean isInGuestRole(String username) {
-    Users user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsername(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.BBC_GUEST.
             name());
   }
