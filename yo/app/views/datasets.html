@@ -49,7 +49,6 @@
                 </div>
                 <div class="col-lg-10">
                   <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared:datasetsCtrl.shared, status: datasetsCtrl.status} | orderBy: 'name'">
-                    <div ng-if="($index % 6 == 0) && ($index !== 0)" class="row"></div>
                     <div ng-dblclick="projectCtrl.browseDataset(dataset)"
                          ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset)"
                          ng-init="(iscollapsed$index) = true"
