@@ -49,7 +49,6 @@
                 </div>
                 <div class="col-lg-10">
                   <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared:datasetsCtrl.shared, status: datasetsCtrl.status} | orderBy: 'name'">
-                    <div ng-if="($index % 6 == 0) && ($index !== 0)" class="row"></div>
                     <div ng-dblclick="projectCtrl.browseDataset(dataset)"
                          ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset)"
                          ng-init="(iscollapsed$index) = true"
@@ -269,7 +268,7 @@
         <!--END OF ADD METADATA SLIDER-->
         <div class="col-lg-4" style="border-left: 1px dashed lightgrey;
         padding-left: 0px;">
-          <div class="ibox float-e-margins">
+          <div class="ibox float-e-margins" style="margin-bottom: -25px; height: 95%;">
             <div class="file-manager">
               <div>
                 <md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">
@@ -325,7 +324,7 @@
                           </div>
                         </div>
                         <div class="" height="80%" ng-hide="metadataCtrl.noTemplates">
-                          <div class="input-group-lg" align="left" style="overflow: auto;height: 60%">
+                          <div class="input-group-lg" align="left" style="overflow: auto;height: 70%">
                             <div ng-repeat="table in metadataCtrl.metainfo | orderBy:'name'"
                                  style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
                               <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px">

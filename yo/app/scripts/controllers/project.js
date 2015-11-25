@@ -4,9 +4,9 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams', 'UtilsService',
+    .controller('ProjectCtrl', ['$scope', '$rootScope','$modalStack', '$location', '$routeParams', 'UtilsService',
       'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
-      function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies, DataSetService, EndpointService) {
+      function ($scope, $rootScope,$modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies, DataSetService, EndpointService) {
 
         var self = this;
         self.working = false;
@@ -26,6 +26,13 @@ angular.module('hopsWorksApp')
         self.selectionProjectTypes = [];
         self.pId = $routeParams.projectID;
 
+        self.projectFile = {
+          description : null,
+          id : null,
+          name : null,
+          parentId : null,
+          path : null,
+        };
 
         var getEndpoint = function () {
           EndpointService.findEndpoint().then(
@@ -43,6 +50,17 @@ angular.module('hopsWorksApp')
           ProjectService.get({}, {'id': self.pId}).$promise.then(
               function (success) {
                 self.currentProject = success;
+                self.projectFile.id = self.currentProject.inodeid;
+                self.projectFile.name = self.currentProject.projectName;
+                self.projectFile.parentId = self.currentProject.projectTeam[0].project.inode.inodePK.parentId;
+                self.projectFile.path = "/Projects/"+self.currentProject.projectName;
+                self.projectFile.description = self.currentProject.description;
+                $rootScope.$broadcast('setMetadata', { file:
+                   {id : self.projectFile.id,
+                    name : self.projectFile.name,
+                    parentId : self.projectFile.parentId,
+                    path : self.projectFile.path} });
+
                 self.projectMembers = self.currentProject.projectTeam;
                 self.alreadyChoosenServices = [];
                 self.currentProject.services.forEach(function (entry) {

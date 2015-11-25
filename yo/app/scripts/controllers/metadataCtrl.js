@@ -746,6 +746,10 @@ angular.module('hopsWorksApp')
               
             };
 
+            $scope.$on('setMetadata', function(event, args) {
+              self.setMetadataTemplate(args.file);
+            });
+
             /**
              * Updates the view according to the user template selection.
              * @returns {undefined}
