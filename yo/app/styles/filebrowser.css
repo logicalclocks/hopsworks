@@ -343,4 +343,5 @@ md-backdrop.md-sidenav-backdrop {
 
 .md-tabs-content {
   overflow: auto;
+  height: 88%;
 }
