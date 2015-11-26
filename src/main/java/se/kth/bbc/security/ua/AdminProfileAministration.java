@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package se.kth.bbc.security.ua;
 
 import java.io.IOException;
@@ -29,10 +25,6 @@ import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.hopsworks.user.model.Users;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
 @ManagedBean
 @ViewScoped
 public class AdminProfileAministration implements Serializable {

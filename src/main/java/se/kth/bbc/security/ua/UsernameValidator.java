@@ -17,11 +17,7 @@ import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 
-/**
- * This class validates the user information upon registration.
- *
- * @author Ali Gholmai <gholami@pdc.kth.se>
- */
+
 @ManagedBean
 @RequestScoped
 public class UsernameValidator implements Validator {

@@ -11,11 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import se.kth.bbc.security.ua.authz.PolicyAdministrationPoint;
 
-/**
- *
- * @author Ali Gholmai <gholami@pdc.kth.se>
- */
-
 public class LoginFilter extends PolicyAdministrationPoint implements Filter {
 
   @Override

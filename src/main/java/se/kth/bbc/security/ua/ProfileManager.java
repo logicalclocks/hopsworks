@@ -20,11 +20,7 @@ import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.hopsworks.user.model.Users;
-
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+ 
 @ManagedBean
 @ViewScoped
 public class ProfileManager implements Serializable {

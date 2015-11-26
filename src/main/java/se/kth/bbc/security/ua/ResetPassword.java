@@ -34,10 +34,7 @@ import se.kth.bbc.security.audit.LoginsAuditActions;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.hopsworks.user.model.Users;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+ 
 @ManagedBean
 @SessionScoped
 public class ResetPassword implements Serializable {

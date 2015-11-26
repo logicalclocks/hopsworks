@@ -15,10 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import se.kth.hopsworks.user.model.Users;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+
 @ManagedBean
 @RequestScoped
 public class AccountVerification {

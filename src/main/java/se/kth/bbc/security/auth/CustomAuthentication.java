@@ -25,10 +25,7 @@ import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.user.model.Users;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+
 @ManagedBean
 @RequestScoped
 public class CustomAuthentication implements Serializable {
