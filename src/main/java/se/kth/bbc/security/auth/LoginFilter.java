@@ -1,11 +1,5 @@
 package se.kth.bbc.security.auth;
 
-/**
- *
- * This class redirect the logged in user from the login pages.
- * <p/>
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
 import java.io.IOException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -15,8 +9,14 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import se.kth.bbc.security.ua.authz.PolicyAdministrationPoint;
 
-public class LoginFilter implements Filter {
+/**
+ *
+ * @author Ali Gholmai <gholami@pdc.kth.se>
+ */
+
+public class LoginFilter extends PolicyAdministrationPoint implements Filter {
 
   @Override
   public void doFilter(ServletRequest req, ServletResponse res,
@@ -24,11 +24,24 @@ public class LoginFilter implements Filter {
     HttpServletRequest request = (HttpServletRequest) req;
     HttpServletResponse response = (HttpServletResponse) res;
 
-    // If user is logged in redirect to LIMS first page 
+    String username = request.getRemoteUser();
+
+    // If user is logged in redirect to index first page 
     // otherwise continue 
     if (request.getRemoteUser() != null) {
       String contextPath = ((HttpServletRequest) request).getContextPath();
-      response.sendRedirect(contextPath + "/bbc/lims/index.xhtml");
+      // redirect the admin to the admin pannel
+      // otherwise redirect other authorized roles to the index page
+      if (isInAdminRole(username)) {
+        response.sendRedirect(contextPath
+                + "/security/protected/admin/adminindex.xhtml");
+      } else if (isInAuditorRole(username)) {
+        response.sendRedirect(contextPath
+                + "/security/protected/audit/auditIdex.xhtml");
+      } else if (isInDataProviderRole(username) || isInResearcherRole(username)
+              || isInGuestRole(username)) {
+        response.sendRedirect(contextPath );
+      }
     } else {
       chain.doFilter(req, res);
     }

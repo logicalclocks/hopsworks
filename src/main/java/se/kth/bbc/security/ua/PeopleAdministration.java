@@ -432,7 +432,12 @@ public class PeopleAdministration implements Serializable {
 
       if (!"#".equals(sgroup) && (!sgroup.equals(BBCGroup.BBC_GUEST.name()))) {
         userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
+      }else {
+      
+        MessagesController.addSecurityErrorMessage(sgroup +" already is granted.");
       }
+      
+      
 
       userManager.updateStatus(user1, PeopleAccountStatus.ACCOUNT_ACTIVE.
               getValue());
@@ -561,6 +566,8 @@ public class PeopleAdministration implements Serializable {
 
           userManager.registerGroup(this.selectedYubikyUser, BBCGroup.valueOf(
                   sgroup).getValue());
+        }else{
+          MessagesController.addSecurityErrorMessage(sgroup +" already is granted.");
         }
       }
 
