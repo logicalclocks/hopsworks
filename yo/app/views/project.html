@@ -136,7 +136,7 @@
                         </div>
                       </div>
                       <div class="" height="80%" ng-hide="metadataCtrl.noTemplates">
-                        <div class="input-group-lg" align="left" style="overflow: auto;height: 70%">
+                        <div class="input-group-lg" align="left" style="height: 70%">
                           <div ng-repeat="table in metadataCtrl.metainfo | orderBy:'name'"
                                style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
                             <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px">
@@ -162,6 +162,7 @@
                                     <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[table.id+'-'+field.tagName]">
                                       <input value="" class="fillInMetadataInput" id="sizeFieldInput"
                                              tooltips title="{{card.description}}"
+                                             data-placement="right"
                                              ng-show="true"
                                              ng-model="metadataCtrl.metaData[card.id]"  style="width: 100px"
                                              ng-keypress="($event.which === 13)?metadataCtrl.createMetadata(table.id,card.id):0" autofocus/>
@@ -228,6 +229,7 @@
                                       <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[value.id]">
                                         <input placeholder="{{value.data}}" class="fillInMetadataInput" id="sizeFieldInput"
                                                tooltips title="{{card.description}}"
+                                               data-placement="right"
                                                ng-show="true"
                                                ng-model="metadataCtrl.metaDataDetail[value.id]"  style="width: 100px"/>
                                         <button class="btn btn-default btn-xs" ng-click="metadataCtrl.updateMetadata(value);" ><span class="glyphicon glyphicon-ok"></span></button>
