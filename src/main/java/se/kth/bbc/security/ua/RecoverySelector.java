@@ -22,7 +22,6 @@ import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.hopsworks.user.model.Users;
 
- 
 @ManagedBean
 @SessionScoped
 public class RecoverySelector implements Serializable {

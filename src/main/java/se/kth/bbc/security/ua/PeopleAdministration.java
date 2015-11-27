@@ -113,9 +113,6 @@ public class PeopleAdministration implements Serializable {
   // Yubikey public id. 12 chars: vviehlefjvcb
   private String pubid;
 
-  // Yubikey serial no 
-  private String serial;
-
   // e.g. f1bda8c978766d50c25d48d72ed516e0
   private String secret;
 
@@ -584,13 +581,6 @@ public class PeopleAdministration implements Serializable {
     return "print_address";
   }
 
-  public String getSerial() {
-    return serial;
-  }
-
-  public void setSerial(String serial) {
-    this.serial = serial;
-  }
 
   public List<String> parseCredentials(String creds) {
 
