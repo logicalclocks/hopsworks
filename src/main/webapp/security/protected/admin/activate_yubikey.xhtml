@@ -95,11 +95,11 @@
             </p:column>   
 
             <p:column>
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                #{peopleAdministration.selectedYubikyUser.address.address1}
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">              
+              #{peopleAdministration.selectedYubikyUser.fname} #{peopleAdministration.selectedYubikyUser.lname} 
+
               </h3>
             </p:column>
-
             <p:column>
               <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Street and number" /></h3> 
             </p:column>   
@@ -117,17 +117,18 @@
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                #{peopleAdministration.selectedYubikyUser.address.postalcode}  #{peopleAdministration.selectedYubikyUser.address.city}
+                #{peopleAdministration.selectedYubikyUser.address.postalcode} 
               </h3>
             </p:column>
 
+
             <p:column>
-              <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="State" /></h3> 
+              <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="City" /></h3> 
             </p:column>   
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                #{peopleAdministration.selectedYubikyUser.address.state} 
+               #{peopleAdministration.selectedYubikyUser.address.city}
               </h3>
             </p:column>
 

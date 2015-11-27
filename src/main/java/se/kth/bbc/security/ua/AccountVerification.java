@@ -84,7 +84,7 @@ public class AccountVerification {
     int val = user.getFalseLogin();
     mgr.increaseLockNum(user.getUid(), val + 1);
 
-    if (val > 5) {
+    if (val > Users.ALLOWED_FALSE_LOGINS) {
       mgr.changeAccountStatus(user.getUid(), "SPAM Acccount",
               PeopleAccountStatus.SPAM_ACCOUNT.getValue());
       mgr.resetKey(user.getUid());

@@ -7,7 +7,7 @@ public class UserAccountsEmailMessages {
   /*
    * Subject of account request
    */
-  public final static String ACCOUNT_REQUEST_SUBJECT = "Account Request";
+  public final static String ACCOUNT_REQUEST_SUBJECT = "account verification email";
 
   /*
    * Subject of account confirmation
@@ -77,7 +77,7 @@ public class UserAccountsEmailMessages {
     String l1 = GREETINGS_HEADER + ",\n\n"
             + "We receieved your yubikey account request for the BiobankCloud.\n\n";
     String l2
-            = "You will receive a Yubikey device within 48 hours at your address.\n\n\n";
+            = "Please click on the following link to verify your email address. Afterwards we will activate your account within 48 hours and send you a Yubikey stick to your address.\n\n\n";
 
     String url = path + "/security/validate_account.xhtml?key=" + key;
 
@@ -104,7 +104,7 @@ public class UserAccountsEmailMessages {
 
     String l1 = GREETINGS_HEADER + ",\n\n"
             + "We received your mobile account request for the BiobankCloud.\n\n";
-    String l2 = "Your account will be activated within "
+    String l2 = "Please click on the following link to verify your email address. Afterwards we will activate your account within "
             + ACCOUNT_ACITVATION_PERIOD
             + " hours after validating your email address.\n\n\n";
 

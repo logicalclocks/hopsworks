@@ -171,7 +171,7 @@ public class CustomAuthentication implements Serializable {
       registerLoginInfo(user, LoginsAuditActions.LOGIN.getValue(),
               "FAIL");
 
-      if (val > 5) {
+      if (val > Users.ALLOWED_FALSE_LOGINS) {
         mgr.changeAccountStatus(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.
                 getValue());
         try {
