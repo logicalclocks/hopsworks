@@ -1,6 +1,7 @@
 package se.kth.bbc.security.ua;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -9,9 +10,10 @@ import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.NotSupportedException;
@@ -26,7 +28,7 @@ import se.kth.hopsworks.user.model.Users;
 
  
 @ManagedBean
-@SessionScoped
+@ViewScoped
 public class YubikeyActivator implements Serializable{
 
   private static final long serialVersionUID = 1L;
@@ -59,8 +61,6 @@ public class YubikeyActivator implements Serializable{
    private String sgroup;
   
   // for yubikey administration page
-  
-  @ManagedProperty("#{yUser}")
   private Users selectedYubikyUser;
   
 
@@ -83,10 +83,17 @@ public class YubikeyActivator implements Serializable{
 
    @PostConstruct
    public void init(){
-   
-        FacesContext fc = FacesContext.getCurrentInstance();
-        Map<String,String> params = fc.getExternalContext().getRequestParameterMap();
-        this.selectedYubikyUser = userManager.findByEmail(params.get("yUser"));
+    HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+    this.selectedYubikyUser = userManager.getUserByEmail(request.getParameter("yUser"));
+  
+    actGroups = new ArrayList<>();
+    
+    // dont include BBCADMIN and BBCUSER roles for approving accounts as they are perstudy
+    for (BBCGroup value : BBCGroup.values()) {
+      if(value!= BBCGroup.BBC_GUEST && value!= BBCGroup.BBC_USER){
+          actGroups.add(value.name());
+        }
+    }
    }
 
    
@@ -141,7 +148,7 @@ public class YubikeyActivator implements Serializable{
         yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
 
         userManager.updateYubikey(yubi);
-        if ("#".equals(this.sgroup) && this.sgroup!= null && !this.sgroup.equals(BBCGroup.BBC_GUEST.name()) &&  !this.sgroup.equals(BBCGroup.BBC_USER.name())) {
+        if (!"#".equals(this.sgroup) && this.sgroup!= null && !this.sgroup.equals(BBCGroup.BBC_GUEST.name()) &&  !this.sgroup.equals(BBCGroup.BBC_USER.name())) {
 
           userManager.registerGroup(this.selectedYubikyUser, BBCGroup.valueOf(
                   this.sgroup).getValue());
