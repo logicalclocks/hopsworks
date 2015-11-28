@@ -55,7 +55,7 @@ public class YubikeyActivator implements Serializable{
 
   // e.g. f1bda8c978766d50c25d48d72ed516e0
   private String secret;
-
+  // to remove an existing group
    private String sgroup;
   
   // for yubikey administration page
@@ -63,8 +63,15 @@ public class YubikeyActivator implements Serializable{
   @ManagedProperty("#{yUser}")
   private Users selectedYubikyUser;
   
-  @ManagedProperty("#{sGroup}")
-  private String sGroup;
+
+  public String getSgroup() {
+    return sgroup;
+  }
+
+  public void setSgroup(String sgroup) {
+    this.sgroup = sgroup;
+  }
+
   
   public Users getSelectedYubikyUser() {
     return selectedYubikyUser;
@@ -80,9 +87,22 @@ public class YubikeyActivator implements Serializable{
         FacesContext fc = FacesContext.getCurrentInstance();
         Map<String,String> params = fc.getExternalContext().getRequestParameterMap();
         this.selectedYubikyUser = userManager.findByEmail(params.get("yUser"));
-        this.sGroup = params.get("sGroup");
    }
+
+   
+  // user activation groups to exclude guest and bbcuser
+  List<String> actGroups;
   
+  
+  public List<String> getActGroups() {
+    return actGroups;
+  }
+
+  public void setActGroups(List<String> actGroups) {
+    this.actGroups = actGroups;
+  }
+
+   
   public String activateYubikeyUser() {
     this.address = this.selectedYubikyUser.getAddress();
     return "activate_yubikey";
@@ -121,12 +141,12 @@ public class YubikeyActivator implements Serializable{
         yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
 
         userManager.updateYubikey(yubi);
-        if ("#".equals(this.sGroup) && !this.sGroup.equals(BBCGroup.BBC_GUEST.name()) &&  !this.sGroup.equals(BBCGroup.BBC_USER.name())) {
+        if ("#".equals(this.sgroup) && this.sgroup!= null && !this.sgroup.equals(BBCGroup.BBC_GUEST.name()) &&  !this.sgroup.equals(BBCGroup.BBC_USER.name())) {
 
           userManager.registerGroup(this.selectedYubikyUser, BBCGroup.valueOf(
-                  this.sGroup).getValue());
+                  this.sgroup).getValue());
         }else{
-          MessagesController.addSecurityErrorMessage(this.sGroup +" granting role is not allowed.");
+          MessagesController.addSecurityErrorMessage(this.sgroup +" granting role is not allowed.");
           return ("");
         }
       }
@@ -179,21 +199,12 @@ public class YubikeyActivator implements Serializable{
     this.pubid = pubid;
   }
 
-  public String getsGroup() {
-    return sGroup;
-  }
-
-  public void setsGroup(String sGroup) {
-    this.sGroup = sGroup;
-  }
-
-  public String getSgroup() {
+  public String getsgroup() {
     return sgroup;
   }
 
-  public void setSgroup(String sgroup) {
+  public void setsgroup(String sgroup) {
     this.sgroup = sgroup;
   }
-
   
 }

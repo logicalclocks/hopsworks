@@ -60,19 +60,10 @@
                           filterBy="#{yreq.organization.orgName}">
                   <h:outputText value="#{yreq.organization.orgName}" />
                 </p:column>
-
-                <p:column id="yroleColumn" headerText="Role" >
-
-                  <p:selectOneMenu id="yroleChoose" 
-                                   rendered="#{yreq.yubikey.status==1}"
-                                   value="#{peopleAdministration.sgroup}"
-                                   editable="false"
-                                   >
-                    <f:selectItem itemLabel="Select Role" 
-                                  itemValue="#"
-                                  />
-                    <f:selectItems value="#{peopleAdministration.actGroups}"/>
-                  </p:selectOneMenu>
+                
+                <p:column id="deptColumn" headerText="Department" 
+                          filterBy="#{yreq.organization.department}">
+                  <h:outputText value="#{yreq.organization.department}" />
                 </p:column>
 
                 <p:column id="yactionColumn" headerText="Action">
@@ -88,7 +79,6 @@
                                    action="#{yubikeyActivator.activateYubikeyUser()}" 
                                    update="@form">
                       <f:param name="yUser" value="#{yreq.email}" />
-                      <f:param name="sGroup" value="#{peopleAdministration.sgroup}" />
                       
                       <p:confirm header="Allow user" 
                                  message="Activate selected user?"
