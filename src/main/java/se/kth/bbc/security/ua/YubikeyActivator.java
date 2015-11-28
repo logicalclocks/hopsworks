@@ -153,7 +153,7 @@ public class YubikeyActivator implements Serializable{
           userManager.registerGroup(this.selectedYubikyUser, BBCGroup.valueOf(
                   this.sgroup).getValue());
         }else{
-          MessagesController.addSecurityErrorMessage(this.sgroup +" granting role is not allowed.");
+          MessagesController.addSecurityErrorMessage(this.sgroup +" role can not be granted.");
           return ("");
         }
       }
