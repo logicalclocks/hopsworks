@@ -53,25 +53,6 @@ public class ProfileManager implements Serializable {
     this.editable = editable;
   }
 
-  /*
-   * public User getUser() {
-   * if (user == null) {
-   * try {
-   * user = userManager.findByEmail(getLoginName());
-   * address = user.getAddress();
-   * organization = user.getOrganization();
-   * login = auditManager.getLastUserLogin(user.getUid());
-   * } catch (IOException ex) {
-   * Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null,
-   * ex);
-   *
-   * return null;
-   * }
-   * }
-   *
-   * return user;
-   * }
-   */
   public Organization getOrganization() {
     return organization;
   }

@@ -18,7 +18,7 @@ import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
@@ -30,16 +30,13 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
-import org.apache.avro.generic.GenericData;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AuditManager;
-import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.audit.model.Userlogins;
-import se.kth.bbc.security.ua.model.Yubikey;
 import se.kth.hopsworks.user.model.Users;
  
 @ManagedBean
-@SessionScoped
+@ViewScoped
 public class PeopleAdministration implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -58,10 +55,6 @@ public class PeopleAdministration implements Serializable {
 
   private Users user;
 
-  // for yubikey administration page
-  private Users selectedYubikyUser;
-
-  private Address address;
 
   private String secAnswer;
 
@@ -111,12 +104,6 @@ public class PeopleAdministration implements Serializable {
   // all possible new groups user doesnt belong to
   List<String> nGroups;
 
-  // Yubikey public id. 12 chars: vviehlefjvcb
-  private String pubid;
-
-  // e.g. f1bda8c978766d50c25d48d72ed516e0
-  private String secret;
-
   // current status of the editing user
   private String eStatus;
   
@@ -150,30 +137,6 @@ public class PeopleAdministration implements Serializable {
 
   public void setEditingUser(Users editingUser) {
     this.editingUser = editingUser;
-  }
-
-  public String getSecret() {
-    return secret;
-  }
-
-  public void setSecret(String secret) {
-    this.secret = secret;
-  }
-
-  public String getPubid() {
-    return pubid;
-  }
-
-  public void setPubid(String pubid) {
-    this.pubid = pubid;
-  }
-
-  public Address getAddress() {
-    return address;
-  }
-
-  public void setAddress(Address address) {
-    this.address = address;
   }
 
   public List<Users> getyRequests() {
@@ -507,10 +470,7 @@ public class PeopleAdministration implements Serializable {
 
   public List<Users> getSpamUsers() {
 
-    if (spamUsers == null) {
-      //spamUsers = userManager.findAllSPAMAccounts();
-    }
-    return spamUsers;
+     return spamUsers = userManager.findAllSPAMAccounts();
   }
 
   public void setSpamUsers(List<Users> spamUsers) {
@@ -521,13 +481,7 @@ public class PeopleAdministration implements Serializable {
     return secAnswer;
   }
 
-  public Users getSelectedYubikyUser() {
-    return selectedYubikyUser;
-  }
 
-  public void setSelectedYubikyUser(Users selectedYubikyUser) {
-    this.selectedYubikyUser = selectedYubikyUser;
-  }
 
   public void setSecAnswer(String secAnswer) {
     this.secAnswer = secAnswer;
@@ -535,78 +489,6 @@ public class PeopleAdministration implements Serializable {
 
   public SecurityQuestion[] getQuestions() {
     return SecurityQuestion.values();
-  }
-
-  public String activateYubikeyUser(Users user1) {
-    this.selectedYubikyUser = user1;
-    this.address = this.selectedYubikyUser.getAddress();
-    return "activate_yubikey";
-  }
-
-  public String activateYubikey() throws MessagingException {
-    try {
-      // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
-
-      if (this.selectedYubikyUser.getMode()
-              != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
-        MessagesController.addSecurityErrorMessage(user.getEmail()
-                + " is not a Yubikey user");
-        return "";
-      }
-
-      Yubikey yubi = this.selectedYubikyUser.getYubikey();
-
-      // Trim the input
-      yubi.setPublicId(pubid.replaceAll("\\s", ""));
-      yubi.setAesSecret(secret.replaceAll("\\s", ""));
-
-      // Update the info
-      yubi.setCreated(new Date());
-      yubi.setAccessed(new Date());
-      yubi.setCounter(0);
-      yubi.setSessionUse(0);
-      yubi.setHigh(0);
-      yubi.setLow(0);
-
-      userTransaction.begin();
-
-      if (this.selectedYubikyUser.getYubikey().getStatus()
-              == PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()) {
-        // Set stauts to active
-        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
-
-        userManager.updateYubikey(yubi);
-        if (!"#".equals(sgroup) && !sgroup.equals(BBCGroup.BBC_GUEST.name()) &&  !sgroup.equals(BBCGroup.BBC_USER.name())) {
-
-          userManager.registerGroup(this.selectedYubikyUser, BBCGroup.valueOf(
-                  sgroup).getValue());
-        }else{
-          MessagesController.addSecurityErrorMessage(sgroup +" already is granted.");
-          return ("");
-        }
-      }
-
-      userManager.updateStatus(this.selectedYubikyUser,
-              PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
-      userTransaction.commit();
-
-      
-      emailBean.sendEmail(this.selectedYubikyUser.getEmail(),
-              UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
-              UserAccountsEmailMessages.
-              yubikeyAccountActivatedMessage(this.selectedYubikyUser.getEmail()));
-      
-      // Update the user management GUI
-      yRequests.remove(this.selectedYubikyUser);
-
-    } catch (NotSupportedException | SystemException | RollbackException |
-            HeuristicMixedException | HeuristicRollbackException |
-            SecurityException | IllegalStateException ex) {
-      MessagesController.addSecurityErrorMessage("Technical Error!");
-      return ("");
-    }
-
-    return "print_address";
   }
 
 
