@@ -282,7 +282,6 @@ public class RecoverySelector implements Serializable {
 
   /**
    * Register lost Yubikey device.
-   * <p>
    * @return
    */
   public String sendYubiReq() throws SocketException {
@@ -332,7 +331,7 @@ public class RecoverySelector implements Serializable {
                 getValue());
         um.updatePeople(people);
         email.sendEmail(people.getEmail(),
-                UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, message);
+                UserAccountsEmailMessages.DEVICE_LOST_SUBJECT, message);
 
         am.registerAccountChange(people,
                 AccountsAuditActions.LOSTDEVICE.getValue(),
@@ -340,7 +339,7 @@ public class RecoverySelector implements Serializable {
                 getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
                 "SUCCESS", "RESET YUBIKEY ACCOUNT");
 
-        return "yubico";
+        return "yubico_reset";
       } else {
 
         int val = people.getFalseLogin();

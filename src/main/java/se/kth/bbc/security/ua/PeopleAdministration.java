@@ -568,6 +568,12 @@ public class PeopleAdministration implements Serializable {
               PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
       userTransaction.commit();
 
+      
+      emailBean.sendEmail(this.selectedYubikyUser.getEmail(),
+              UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
+              UserAccountsEmailMessages.
+              yubikeyAccountActivatedMessage(this.selectedYubikyUser.getEmail()));
+      
       // Update the user management GUI
       yRequests.remove(this.selectedYubikyUser);
 
