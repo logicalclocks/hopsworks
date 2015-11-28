@@ -30,6 +30,7 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
+import org.apache.avro.generic.GenericData;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.ua.model.Address;
@@ -118,6 +119,11 @@ public class PeopleAdministration implements Serializable {
 
   // current status of the editing user
   private String eStatus;
+  
+  
+  // user activation groups to exclude guest and bbcuser
+  List<String> actGroups;
+  
 
   public String geteStatus() {
     this.eStatus
@@ -188,11 +194,17 @@ public class PeopleAdministration implements Serializable {
             getStatus() - 1].name();
   }
 
-  /*
-   * public String getUserStatus(People p) {
-   * return Integer.toString(userManager.findByEmail(p.getEmail()).getStatus());
-   * }
-   */
+  public List<String> getActGroups() {
+    return actGroups;
+  }
+
+  public void setActGroups(List<String> actGroups) {
+    
+    
+    this.actGroups = actGroups;
+  }
+
+  
   public Users getUser() {
     return user;
   }
@@ -244,12 +256,21 @@ public class PeopleAdministration implements Serializable {
   public void initGroups() {
     groups = new ArrayList<>();
     status = new ArrayList<>();
-// dont include BBCADMIN and BBCUSER roles for approving accounts as they are perstudy
+    actGroups = new ArrayList<>();
+    // dont include  BBC ADMIN for user management
     for (BBCGroup value : BBCGroup.values()) {
       if (value != BBCGroup.BBC_ADMIN) {
         groups.add(value.name());
       }
     }
+    
+    // dont include BBCADMIN and BBCUSER roles for approving accounts as they are perstudy
+    for (BBCGroup value : BBCGroup.values()) {
+      if(value!= BBCGroup.BBC_GUEST && value!= BBCGroup.BBC_USER){
+          actGroups.add(value.name());
+        }
+    }
+    
   }
 
   public List<String> getStatus() {
@@ -423,11 +444,11 @@ public class PeopleAdministration implements Serializable {
 
       userTransaction.begin();
 
-      if (!"#".equals(sgroup) && (!sgroup.equals(BBCGroup.BBC_GUEST.name()))) {
+      if (!"#".equals(sgroup) && !sgroup.equals(BBCGroup.BBC_GUEST.name()) &&  !sgroup.equals(BBCGroup.BBC_USER.name())) {
         userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
       }else {
-      
         MessagesController.addSecurityErrorMessage(sgroup +" already is granted.");
+        return ;
       }
       
       
@@ -555,12 +576,13 @@ public class PeopleAdministration implements Serializable {
         yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
 
         userManager.updateYubikey(yubi);
-        if (!"#".equals(sgroup) || (!sgroup.equals(BBCGroup.BBC_GUEST.name()))) {
+        if (!"#".equals(sgroup) && !sgroup.equals(BBCGroup.BBC_GUEST.name()) &&  !sgroup.equals(BBCGroup.BBC_USER.name())) {
 
           userManager.registerGroup(this.selectedYubikyUser, BBCGroup.valueOf(
                   sgroup).getValue());
         }else{
           MessagesController.addSecurityErrorMessage(sgroup +" already is granted.");
+          return ("");
         }
       }
 

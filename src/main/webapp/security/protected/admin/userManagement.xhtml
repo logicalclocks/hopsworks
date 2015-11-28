@@ -35,7 +35,7 @@
             </div>
 
             <div class="content">
-              <h:form id="usermodifyForm">
+              <h:form id="usermodifyForm" >
                 <p:growl id="growl" life="2000"/>
 
                 <p:dataTable id="userdataTable" var="muser" 
@@ -45,7 +45,9 @@
                              emptyMessage="No users found with given criteria"
                              rowKey="#{muser.email}"
                              style="table-layout: fixed" 
-                             scrollable="false">
+                             
+                             scrollable="false"
+                             >
 
                   <p:column id="nameColumn" filterBy="#{muser.fname}" headerText="First Name" style="width:32%; font-size: 12px; text-align: left;">
                     <h:outputText value="#{muser.fname}" />
