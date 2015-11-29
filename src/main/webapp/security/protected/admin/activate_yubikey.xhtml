@@ -106,7 +106,7 @@
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"  >
-                #{yubikeyActivator.selectedYubikyUser.address.address2} #{yubikeyActivator.selectedYubikyUser.address.address3} 
+                #{yubikeyActivator.selectedYubikyUser.address.address2}  #{yubikeyActivator.selectedYubikyUser.address.address3 eq '-'? '':yubikeyActivator.selectedYubikyUser.address.address3} 
               </h3>
             </p:column>
 
