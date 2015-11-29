@@ -5,11 +5,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.enterprise.context.RequestScoped;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
@@ -33,6 +34,8 @@ public class YubikeyActivator implements Serializable{
 
   private static final long serialVersionUID = 1L;
   
+   private static final Logger logger = Logger.getLogger(YubikeyActivator.class.
+      getName());
 
   @EJB
   private UserManager userManager;
@@ -81,12 +84,13 @@ public class YubikeyActivator implements Serializable{
     this.selectedYubikyUser = selectedYubikyUser;
   }
 
-   @PostConstruct
+  @PostConstruct
    public void init(){
-    HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-    this.selectedYubikyUser = userManager.getUserByEmail(request.getParameter("yUser"));
-  
-    actGroups = new ArrayList<>();
+   
+    this.selectedYubikyUser = (Users) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("yUser");
+    this.address = this.selectedYubikyUser.getAddress();
+    
+    actGroups = new ArrayList<>();  
     
     // dont include BBCADMIN and BBCUSER roles for approving accounts as they are perstudy
     for (BBCGroup value : BBCGroup.values()) {
@@ -102,6 +106,7 @@ public class YubikeyActivator implements Serializable{
   
   
   public List<String> getActGroups() {
+    
     return actGroups;
   }
 
@@ -110,12 +115,11 @@ public class YubikeyActivator implements Serializable{
   }
 
    
-  public String activateYubikeyUser() {
-    this.address = this.selectedYubikyUser.getAddress();
-    return "activate_yubikey";
-  }
-  
+
   public String activateYubikey() throws MessagingException {
+    
+    
+
     try {
       // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
         

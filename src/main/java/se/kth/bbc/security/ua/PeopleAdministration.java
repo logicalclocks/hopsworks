@@ -563,4 +563,14 @@ public class PeopleAdministration implements Serializable {
       MessagesController.addSecurityErrorMessage("Update failed.");
     }
   }
+  
+   private static final Logger logger = Logger.getLogger(PeopleAdministration.class.
+      getName());
+
+   
+    public String activateYubikeyUser(Users u) {
+        FacesContext.getCurrentInstance().getExternalContext().getSessionMap().put("yUser", u);
+      return "activate_yubikey";
+  }
+  
 }

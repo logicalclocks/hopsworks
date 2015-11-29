@@ -76,10 +76,8 @@
                                  icon="ui-icon-alert"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-check" 
-                                   action="#{yubikeyActivator.activateYubikeyUser()}" 
+                                   action="#{peopleAdministration.activateYubikeyUser(yreq)}" 
                                    update="@form">
-                      <f:param name="yUser" value="#{yreq.email}" />
-                      
                       <p:confirm header="Allow user" 
                                  message="Activate selected user?"
                                  icon="ui-icon-alert"/>
