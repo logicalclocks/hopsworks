@@ -93,7 +93,7 @@ public class UsersController {
      
       List<BbcGroup> groups = new ArrayList<>();
      
-            // add the guest default role so if a user can still browse the platform
+      // add the guest default role so if a user can still browse the platform
       groups.add(groupBean.findByGroupName(BBCGroup.BBC_GUEST.name()));
       
       // add BBC  user default role so  a user can become data owner

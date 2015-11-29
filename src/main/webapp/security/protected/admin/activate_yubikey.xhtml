@@ -96,7 +96,7 @@
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">              
-              #{yubikeyActivator.selectedYubikyUser.fname} #{yubikeyActivator.selectedYubikyUser.lname} 
+              #{yubikeyActivator.selectedYubikyUser.title eq '-'? '':yubikeyActivator.selectedYubikyUser.title}   #{yubikeyActivator.selectedYubikyUser.fname} #{yubikeyActivator.selectedYubikyUser.lname} 
 
               </h3>
             </p:column>
