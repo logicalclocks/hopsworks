@@ -6,11 +6,6 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import se.kth.hopsworks.user.model.Users;
 
-/**
- *
- * <p/>
- * @author Alberto Lorente Leal <albll@kth.se>
- */
 @ManagedBean
 @SessionScoped
 public class BbcViewController implements Serializable {

@@ -1,4 +1,4 @@
-/*
+  /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -34,10 +34,7 @@ import se.kth.bbc.security.audit.LoginsAuditActions;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.hopsworks.user.model.Users;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+ 
 @ManagedBean
 @SessionScoped
 public class ResetPassword implements Serializable {
@@ -159,7 +156,7 @@ public class ResetPassword implements Serializable {
         MessagesController.addSecurityErrorMessage(
                 AccountStatusErrorMessages.INVALID_SEQ_ANSWER);
 
-        // Lock the account if 5 tmies wrong answer  
+        // Lock the account if n tmies wrong answer  
         int val = people.getFalseLogin();
         mgr.increaseLockNum(people.getUid(), val + 1);
         if (val > Users.ALLOWED_FALSE_LOGINS) {

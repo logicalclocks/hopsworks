@@ -28,17 +28,17 @@
 
             <h3 >Recipient</h3>    
 
-            <h:outputLabel id="fname" value="#{peopleAdministration.selectedYubikyUser.fname} #{peopleAdministration.selectedYubikyUser.lname}" />
+            <h:outputLabel id="fname" value="#{yubikeyActivator.selectedYubikyUser.fname} #{yubikeyActivator.selectedYubikyUser.lname}" />
 
-            <h:outputLabel id="co" value="#{peopleAdministration.address.address1}"/>
+            <h:outputLabel id="co" value="#{yubikeyActivator.address.address1}"/>
 
-            <h:outputLabel id="add1" value="#{peopleAdministration.address.address2}"/>
+            <h:outputLabel id="add1" value="#{yubikeyActivator.address.address2}"/>
 
             <h:outputLabel id="city" 
-                           value="#{peopleAdministration.address.city},
-                           #{peopleAdministration.address.postalcode}"/>
+                           value="#{yubikeyActivator.address.city},
+                           #{yubikeyActivator.address.postalcode}"/>
 
-            <h:outputLabel id="country" value="#{peopleAdministration.address.country}"/>
+            <h:outputLabel id="country" value="#{yubikeyActivator.address.country}"/>
           </h:panelGrid>
 
         </h:form>     

@@ -2,6 +2,7 @@ package se.kth.bbc.security.ua;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -237,8 +238,8 @@ public class UserManager {
   public List<Users> findAllSPAMAccounts() {
     List<Users> query = em.createQuery(
             "SELECT p FROM Users p WHERE (p.status ='"
-            + PeopleAccountStatus.SPAM_ACCOUNT.getValue()
-            + "' OR p.status ='" + PeopleAccountStatus.ACCOUNT_VERIFICATION.
+            + PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()
+             + "' OR p.status ='" + PeopleAccountStatus.SPAM_ACCOUNT.
             getValue()
             + "')")
             .getResultList();
@@ -437,18 +438,26 @@ public class UserManager {
       TypedQuery<PeopleGroup> query = em.createNamedQuery(
               "PeopleGroup.findByUid", PeopleGroup.class);
       query.setParameter("uid", u.getUid());
-      PeopleGroup p = (PeopleGroup) query.getSingleResult();
-
-      Address a = u.getAddress();
-
-      em.remove(a);
-      em.remove(p);
-
-      if (u.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
-        em.remove(u.getMode());
+      
+      List <PeopleGroup> p = query.getResultList();
+      for (Iterator<PeopleGroup> iterator = p.iterator(); iterator.hasNext();) {
+        PeopleGroup next = iterator.next();
+        em.remove(next);
       }
 
+      
+      Address a = u.getAddress();
+      em.remove(a);
+
+//      if (u.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+  //      em.remove(u);
+    //  }
+
       em.remove(u);
+      
+      Organization org = u.getOrganization();
+      em.remove(org);
+      
       success = true;
     }
 

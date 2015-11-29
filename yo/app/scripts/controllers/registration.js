@@ -3,7 +3,7 @@
 angular.module('hopsWorksApp')
         .controller('RegCtrl', ['AuthService', '$location', '$scope', 'SecurityQuestions', '$routeParams', '$cookies',
           function (AuthService, $location, $scope, SecurityQuestions, $routeParams, $cookies) {
-
+          
             var self = this;
             self.securityQuestions = SecurityQuestions.getQuestions();
             self.working = false;
@@ -26,6 +26,9 @@ angular.module('hopsWorksApp')
               postCode: '',
               country: ''
             };
+            
+            self.userEmail ='';
+            
             self.QR = $routeParams.QR;
             var empty = angular.copy(self.user);
             self.register = function () {
@@ -39,8 +42,11 @@ angular.module('hopsWorksApp')
                           function (success) {
                             self.user = angular.copy(empty);
                             $scope.registerForm.$setPristine();
+                            
                             self.successMessage = success.data.successMessage;
+                            
                             self.working = false;
+                            
                             //$location.path('/login');
                           }, function (error) {
                              self.working = false;
@@ -50,12 +56,12 @@ angular.module('hopsWorksApp')
                   AuthService.register(self.newUser).then(
                           function (success) {
                             self.user = angular.copy(empty);
+                         
                             $scope.registerForm.$setPristine();
                             self.successMessage = success.data.successMessage;
                             self.working = false;
                             $location.path("/qrCode/" + success.data.QRCode);
                             $location.replace();
-
                             //$location.path('/login');
                           }, function (error) {
                     self.working = false;
@@ -68,6 +74,7 @@ angular.module('hopsWorksApp')
                             $scope.registerForm.$setPristine();
                             self.successMessage = success.data.successMessage;
                             self.working = false;
+                            self.userEmail= success.data.userEmail;
                             $location.path("/yubikey");
                             $location.replace();
                             //$location.path('/login');

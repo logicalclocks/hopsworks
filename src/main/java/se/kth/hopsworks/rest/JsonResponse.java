@@ -18,7 +18,7 @@ public class JsonResponse {
   private List<String> fieldErrors;
   private Object data;
   private String sessionID;
-
+  
   public JsonResponse() {
   }
 
