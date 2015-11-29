@@ -3,7 +3,6 @@ package se.kth.hopsworks.rest;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,7 +26,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.ErasureCodeJob;
@@ -98,7 +96,10 @@ public class DataSetService {
   private JobController jobcontroller;
   @EJB
   private Settings settings;
+  @Inject
+  private DownloadService downloader;
 
+  
   private Integer projectId;
   private Project project;
   private String path;
@@ -186,41 +187,6 @@ public class DataSetService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             inodViews).build();
-  }
-
-  @Deprecated
-  @GET
-  @Path("download/{filePath: .+}")
-  @Produces(MediaType.APPLICATION_OCTET_STREAM)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response downloadFile(
-          @PathParam("filePath") String filePath,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-    InputStream is = null;
-    String fullPath = getFullPath(path);
-    logger.log(Level.INFO, "File to be downloaded from HDFS path: {0}",
-            fullPath);
-
-    if (inodes.getInodeAtPath(fullPath) == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              ResponseMessages.FILE_NOT_FOUND);
-    }
-    try {
-      is = fileOps.getInputStream(fullPath);
-      logger.
-              log(Level.FINE, "File was downloaded from HDFS path: {0}",
-                      fullPath);
-    } catch (IOException ex) {
-      logger.log(Level.INFO, null, ex);
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              "Could not open stream.");
-    }
-    String[] p = filePath.split(File.separator);
-    ResponseBuilder response = noCacheResponse.getNoCacheResponseBuilder(
-            Response.Status.OK);
-    response.header("filename", p[p.length - 1]);
-    return response.entity(is).build();
   }
 
   @POST
@@ -596,7 +562,6 @@ public class DataSetService {
       path = path + File.separator;
     }
 
-    DownloadService downloader = new DownloadService();
     downloader.setPath(path);
     return downloader;
   }

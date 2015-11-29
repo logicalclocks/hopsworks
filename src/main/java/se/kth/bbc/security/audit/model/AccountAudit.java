@@ -23,11 +23,7 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.hopsworks.user.model.Users;
-
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+ 
 @Entity
 @Table(name = "hopsworks.account_audit")
 @XmlRootElement

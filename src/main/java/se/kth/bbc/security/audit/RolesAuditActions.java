@@ -5,10 +5,7 @@
  */
 package se.kth.bbc.security.audit;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+ 
 public enum RolesAuditActions {
 
   // for adding role by the admin

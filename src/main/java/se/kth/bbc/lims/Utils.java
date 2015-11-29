@@ -61,7 +61,8 @@ public final class Utils {
   }
 
   public static String getHdfsRootPath(String hadoopDir, String projectname) {
-    return hadoopDir + "/" + projectname + "/";
+//    return hadoopDir + "/" + projectname + "/";
+    return "/Projects/" + projectname + "/";
   }
   
 //

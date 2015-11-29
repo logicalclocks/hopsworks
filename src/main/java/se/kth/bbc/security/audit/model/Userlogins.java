@@ -17,10 +17,7 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+ 
 @Entity
 @Table(name = "hopsworks.userlogins")
 @XmlRootElement

@@ -18,13 +18,19 @@
     <div class="container">
       <div class="ForgotPassword">
         <h:panelGroup layout="block" rendered="#{accountVerification.valid}">
-          <p>Your account is successfully activated!</p>
+          <p>You have successfully validated your account, but your account still has to be approved 
+            by an administrator. Hopefully soon!</p>
+          <!--
           <p><h:link outcome="welcome">Go to home page</h:link></p>
-        </h:panelGroup>
+          -->
+          </h:panelGroup>
         <h:panelGroup layout="block" rendered="#{!accountVerification.valid}">
-          <p>Activation failed!</p> 
+          <p>Email validation failed!</p> 
+         
+          <!-- Users dont need to go back to main menu since their account just validated
           <p><h:link outcome="welcome">Back to login menu</h:link></p>
-        </h:panelGroup>
+         -->
+         </h:panelGroup>
       </div>
     </div>
   </h:body>  

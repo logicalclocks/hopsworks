@@ -20,11 +20,7 @@ import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.hopsworks.user.model.Users;
-
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+ 
 @ManagedBean
 @ViewScoped
 public class ProfileManager implements Serializable {
@@ -57,25 +53,6 @@ public class ProfileManager implements Serializable {
     this.editable = editable;
   }
 
-  /*
-   * public User getUser() {
-   * if (user == null) {
-   * try {
-   * user = userManager.findByEmail(getLoginName());
-   * address = user.getAddress();
-   * organization = user.getOrganization();
-   * login = auditManager.getLastUserLogin(user.getUid());
-   * } catch (IOException ex) {
-   * Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null,
-   * ex);
-   *
-   * return null;
-   * }
-   * }
-   *
-   * return user;
-   * }
-   */
   public Organization getOrganization() {
     return organization;
   }

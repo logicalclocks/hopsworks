@@ -27,10 +27,6 @@ public class Settings {
   public void init() {
   }
 
-//  @Override
-//  protected EntityManager getEntityManager() {
-//    return em;
-//  }
   /**
    * Global Variables taken from the DB
    */
@@ -47,6 +43,7 @@ public class Settings {
   private static final String VARIABLE_MYSQL_DIR = "mysql_dir";
   private static final String VARIABLE_HADOOP_DIR = "hadoop_dir";
   private static final String VARIABLE_CHARON_DIR = "charon_dir";
+  private static final String VARIABLE_HIWAY_DIR = "hiway_dir";
 
   private String setUserVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -98,6 +95,7 @@ public class Settings {
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
+      HIWAY_DIR = setDirVar(VARIABLE_HIWAY_DIR, HIWAY_DIR);
       cached = true;
     }
   }
@@ -108,7 +106,7 @@ public class Settings {
     }
   }
 
-  private String CHARON_DIR = "/srv/charon";
+  private String CHARON_DIR = "/srv/charon_fs";
 
   public synchronized String getCharonDir() {
     checkCache();
@@ -191,9 +189,20 @@ public class Settings {
     return ZEPPELIN_USER;
   }
 
-  //Local path to the hiway jar
-  public static final String HIWAY_JAR_PATH = "/srv/hiway-1.0.1-SNAPSHOT/hiway-core-1.0.1-SNAPSHOT.jar";
+  private String HIWAY_DIR = "/home/glassfish";
 
+  public synchronized String getHiwayDir() {
+    checkCache();
+    return HIWAY_DIR;
+  }
+
+  public static String HIWAY_REL_JAR_PATH = "software/hiway/hiway-core.jar";
+
+  //Local path to the hiway jar
+//  public static final String HIWAY_JAR_PATH = "/home/glassfish/software/hiway";
+
+  
+  
   //Relative output path (within hdfs project folder) which to write cuneiform in-/output to
   public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Logs/Cuneiform/";
 
@@ -367,7 +376,6 @@ public class Settings {
   }
 
   public Settings() {
-//    super(Variables.class);
   }
 
   /**

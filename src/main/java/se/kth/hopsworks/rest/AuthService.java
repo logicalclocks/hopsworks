@@ -123,9 +123,7 @@ public class AuthService {
             throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                     "No valid role found for this user");
           }
-          
-
-
+       
         } catch (ServletException e) {
           userController.registerFalseLogin(user);
           userController.registerLoginInfo(user, "LOGIN", "FAILED", req);
@@ -193,7 +191,7 @@ public class AuthService {
       String mac= "Fix this";
       String os = "Fix this";
       
-      qrCode = userController.registerUser(newUser, url, ip, browser, os, mac);
+    qrCode = userController.registerUser(newUser, url, ip, browser, os, mac);
       
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
@@ -238,7 +236,7 @@ public class AuthService {
       
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
-
+    
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }

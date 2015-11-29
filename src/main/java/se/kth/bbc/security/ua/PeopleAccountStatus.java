@@ -4,11 +4,7 @@
  * and open the template in the editor.
  */
 package se.kth.bbc.security.ua;
-
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+ 
 public enum PeopleAccountStatus {
 
   // Status of new Yubikey users requests

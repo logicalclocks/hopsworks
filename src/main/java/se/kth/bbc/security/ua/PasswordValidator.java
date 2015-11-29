@@ -16,10 +16,7 @@ import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 
-/**
- *
- * @author Ali Gholmai <gholami@pdc.kth.se>
- */
+ 
 @FacesValidator("passwordValidator")
 public class PasswordValidator implements Validator {
 

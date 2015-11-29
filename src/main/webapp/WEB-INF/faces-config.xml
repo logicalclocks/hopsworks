@@ -48,6 +48,12 @@
     </navigation-case>
 
     <navigation-case>
+      <from-outcome>yubico_reset</from-outcome>
+      <to-view-id>/security/yubico_reset.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
       <from-outcome>qrcode</from-outcome>
       <to-view-id>/security/qrcode.xhtml</to-view-id>
       <redirect/>

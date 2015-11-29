@@ -6,6 +6,7 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
       >
   <f:view contentType="text/html">
 
@@ -35,7 +36,7 @@
             </div>
 
             <div class="content">
-              <h:form id="usermodifyForm">
+              <h:form id="usermodifyForm" >
                 <p:growl id="growl" life="2000"/>
 
                 <p:dataTable id="userdataTable" var="muser" 
@@ -45,7 +46,9 @@
                              emptyMessage="No users found with given criteria"
                              rowKey="#{muser.email}"
                              style="table-layout: fixed" 
-                             scrollable="false">
+                             
+                             scrollable="false"
+                             >
 
                   <p:column id="nameColumn" filterBy="#{muser.fname}" headerText="First Name" style="width:32%; font-size: 12px; text-align: left;">
                     <h:outputText value="#{muser.fname}" />
@@ -59,8 +62,10 @@
                     <h:outputText value="#{muser.email}" />
                   </p:column>
 
-                  <p:column id="unameCol"  filterBy="#{muser.organization.orgName}"  headerText="Organization" style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{muser.organization.orgName}" />
+                  <p:column id="unameCol"  filterBy="#{muser.mode}"  headerText="Authentication Type" style="width:32%;font-size: 12px;text-align: left;">
+                    <h:outputText value="#{muser.mode eq '11'?' 11 (Yubikey)':' 12 (Mobile)'}" />
+                    
+                    
                   </p:column>
 
                   <p:column id="statCol"  filterBy="#{muser.status}" 

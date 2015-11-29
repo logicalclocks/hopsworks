@@ -32,12 +32,7 @@ import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.hopsworks.user.model.Users;
 
-/**
- * This class provides user registration functions to get the input through the
- * user registration GUIs and register the info in the database.
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+
 @ManagedBean
 @SessionScoped
 public class UserRegistration implements Serializable {

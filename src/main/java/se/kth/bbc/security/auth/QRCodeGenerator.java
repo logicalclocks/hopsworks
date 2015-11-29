@@ -16,10 +16,6 @@ import javax.imageio.ImageIO;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
 public class QRCodeGenerator {
 
   private final int width = 200;

@@ -1,7 +1,5 @@
 package io.hops.hdfs;
 
-import se.kth.bbc.project.ProjectTeam;
-import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.JsonResponse;
@@ -16,8 +14,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.*;
-import java.util.List;
-import java.util.StringTokenizer;
 
 @Path("/endpoint")
 @RequestScoped
