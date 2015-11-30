@@ -4,17 +4,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.enterprise.context.RequestScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.NotSupportedException;
@@ -146,8 +143,9 @@ public class YubikeyActivator implements Serializable{
 
       userTransaction.begin();
 
-      if (this.selectedYubikyUser.getYubikey().getStatus()
-              == PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()) {
+      if (this.selectedYubikyUser.getMode()
+              == PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue() && 
+              this.selectedYubikyUser.getYubikey().getStatus()!= PeopleAccountStatus.YUBIKEY_LOST.getValue() ) {
         // Set stauts to active
         yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
 
@@ -160,7 +158,18 @@ public class YubikeyActivator implements Serializable{
           MessagesController.addSecurityErrorMessage(this.sgroup +" role can not be granted.");
           return ("");
         }
-      }
+      } 
+      
+      // for lost yubikey devices there is no need for role assignment
+      if (this.selectedYubikyUser.getMode()
+              == PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue() && 
+              this.selectedYubikyUser.getYubikey().getStatus()== PeopleAccountStatus.YUBIKEY_LOST.getValue() ) {
+        // Set stauts to active
+        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
+
+        userManager.updateYubikey(yubi);
+      } 
+      
 
       userManager.updateStatus(this.selectedYubikyUser,
               PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());

@@ -11,10 +11,11 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpSession;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
-import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
@@ -50,6 +51,16 @@ public class RecoverySelector implements Serializable {
   private String passwd;
 
   private final int passwordLength = 6;
+
+  private int qrEnabled = -1;
+
+  public int getQrEnabled() {
+    return qrEnabled;
+  }
+
+  public void setQrEnabled(int qrEnabled) {
+    this.qrEnabled = qrEnabled;
+  }
 
   public String getQrUrl() {
     return qrUrl;
@@ -138,7 +149,7 @@ public class RecoverySelector implements Serializable {
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
 
       am.registerAccountChange(people,
-              AccountsAuditActions.LOSTDEVICE.getValue(),
+              PeopleAccountStatus.MOBILE_LOST.name(),
               AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
               getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
               "FAIL", "RESET MOBILE ACCOUNT");
@@ -150,7 +161,7 @@ public class RecoverySelector implements Serializable {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
       am.registerAccountChange(people,
-              AccountsAuditActions.LOSTDEVICE.getValue(),
+              PeopleAccountStatus.MOBILE_LOST.name(),
               AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
               getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
               "FAIL", "RESET MOBILE ACCOUNT");
@@ -162,7 +173,7 @@ public class RecoverySelector implements Serializable {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.USER_NOT_FOUND);
       am.registerAccountChange(people,
-              AccountsAuditActions.LOSTDEVICE.getValue(),
+              PeopleAccountStatus.MOBILE_LOST.name(),
               AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
               getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
               "FAIL", "RESET MOBILE ACCOUNT");
@@ -182,7 +193,7 @@ public class RecoverySelector implements Serializable {
                 UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
         am.registerAccountChange(people,
-                AccountsAuditActions.LOSTDEVICE.getValue(),
+                PeopleAccountStatus.MOBILE_LOST.name(),
                 AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
                 getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
                 "SUCCESS", "RESET MOBILE ACCOUNT");
@@ -192,7 +203,7 @@ public class RecoverySelector implements Serializable {
         MessagesController.addSecurityErrorMessage(
                 AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
         am.registerAccountChange(people,
-                AccountsAuditActions.LOSTDEVICE.getValue(),
+                PeopleAccountStatus.MOBILE_LOST.name(),
                 AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
                 getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
                 "FAIL", "RESET MOBILE ACCOUNT");
@@ -202,7 +213,7 @@ public class RecoverySelector implements Serializable {
     } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
             MessagingException ex) {
       am.registerAccountChange(people,
-              AccountsAuditActions.LOSTDEVICE.getValue(),
+              PeopleAccountStatus.MOBILE_LOST.name(),
               AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
               getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
               "FAIL", "RESET MOBILE ACCOUNT");
@@ -249,6 +260,8 @@ public class RecoverySelector implements Serializable {
         um.updateSecret(people.getUid(), otpSecret);
         qrCode = QRCodeGenerator.getQRCode(people.getEmail(),
                 CustomAuthentication.ISSUER, otpSecret);
+        qrEnabled = 1;
+
         return "qrcode";
 
       } catch (IOException | WriterException ex) {
@@ -282,7 +295,9 @@ public class RecoverySelector implements Serializable {
 
   /**
    * Register lost Yubikey device.
+   * <p>
    * @return
+   * @throws java.net.SocketException
    */
   public String sendYubiReq() throws SocketException {
 
@@ -299,7 +314,7 @@ public class RecoverySelector implements Serializable {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
       am.registerAccountChange(people,
-              AccountsAuditActions.LOSTDEVICE.getValue(),
+              PeopleAccountStatus.YUBIKEY_LOST.name(),
               AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
               getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
               "FAIL", "RESET YUBIKEY ACCOUNT");
@@ -312,7 +327,7 @@ public class RecoverySelector implements Serializable {
               AccountStatusErrorMessages.USER_NOT_FOUND);
 
       am.registerAccountChange(people,
-              AccountsAuditActions.LOSTDEVICE.getValue(),
+              PeopleAccountStatus.YUBIKEY_LOST.name(),
               AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
               getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
               "FAIL", "RESET YUBIKEY ACCOUNT");
@@ -334,7 +349,7 @@ public class RecoverySelector implements Serializable {
                 UserAccountsEmailMessages.DEVICE_LOST_SUBJECT, message);
 
         am.registerAccountChange(people,
-                AccountsAuditActions.LOSTDEVICE.getValue(),
+                PeopleAccountStatus.YUBIKEY_LOST.name(),
                 AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
                 getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
                 "SUCCESS", "RESET YUBIKEY ACCOUNT");
@@ -354,7 +369,7 @@ public class RecoverySelector implements Serializable {
           } catch (MessagingException ex1) {
 
             am.registerAccountChange(people,
-                    AccountsAuditActions.LOSTDEVICE.getValue(),
+                    PeopleAccountStatus.YUBIKEY_LOST.name(),
                     AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(),
                     AuditUtil.
                     getOSInfo(), AuditUtil.getMacAddress(AuditUtil.
@@ -368,7 +383,7 @@ public class RecoverySelector implements Serializable {
                 AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
 
         am.registerAccountChange(people,
-                AccountsAuditActions.LOSTDEVICE.getValue(),
+                PeopleAccountStatus.YUBIKEY_LOST.name(),
                 AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
                 getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
                 "FAIL", "RESET YUBIKEY ACCOUNT");
@@ -378,7 +393,7 @@ public class RecoverySelector implements Serializable {
     } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
             MessagingException ex) {
       am.registerAccountChange(people,
-              AccountsAuditActions.LOSTDEVICE.getValue(),
+              PeopleAccountStatus.YUBIKEY_LOST.name(),
               AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
               getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
               "FAIL", "RESET YUBIKEY ACCOUNT");
@@ -387,4 +402,16 @@ public class RecoverySelector implements Serializable {
     return "";
   }
 
+  public String returnMenu() {
+
+    FacesContext ctx = FacesContext.getCurrentInstance();
+    HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
+
+    if (null != sess) {
+      sess.invalidate();
+    }
+    qrCode = null;
+    return ("welcome");
+
+  }
 }

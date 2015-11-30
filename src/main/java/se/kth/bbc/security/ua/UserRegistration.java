@@ -17,6 +17,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpSession;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.NotSupportedException;
@@ -71,6 +72,17 @@ public class UserRegistration implements Serializable {
   private boolean tos;
   private String department;
 
+  private int qrEnabled = -1;
+
+  public int getQrEnabled() {
+    return qrEnabled;
+  }
+
+  public void setQrEnabled(int qrEnabled) {
+    this.qrEnabled = qrEnabled;
+  }
+  
+  
   public String getDepartment() {
     return department;
   }
@@ -345,7 +357,7 @@ public class UserRegistration implements Serializable {
               UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
               UserAccountsEmailMessages.buildMobileRequestMessage(
                       getApplicationUri(), user.getUsername() + activationKey));
-
+      
       // Reset the values
       fname = "";
       lname = "";
@@ -360,7 +372,7 @@ public class UserRegistration implements Serializable {
       password = "";
       passwordAgain = "";
       tos = false;
-
+      qrEnabled = 1;
     } catch (NotSupportedException | SystemException | NoSuchAlgorithmException |
             IOException | WriterException | MessagingException |
             RollbackException | HeuristicMixedException | 
@@ -374,6 +386,7 @@ public class UserRegistration implements Serializable {
       return ("");
 
     }
+
     return ("qrcode");
   }
 
@@ -488,5 +501,17 @@ public class UserRegistration implements Serializable {
     } catch (URISyntaxException e) {
       throw new FacesException(e);
     }
+  }
+  
+  public String returnMenu(){
+  
+    FacesContext ctx = FacesContext.getCurrentInstance();
+    HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
+    qrCode = null;
+    if (null != sess) {
+      sess.invalidate();
+    }
+    return ("welcome");
+  
   }
 }

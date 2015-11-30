@@ -12,8 +12,10 @@
     <title>BiobankCloud - Security Question</title>
     <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
     <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
-  </h:head>
-
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="-1" />
+    </h:head>
   <h:body >
 
     <div class="ForgotPassword" align="center">
@@ -38,7 +40,6 @@
           <p:commandButton value="Continue"
                            ajax="false"
                            action="#{resetPassword.findQuestion}" >
-            <f:param name="username" value="#{resetPassword.username}" />
           </p:commandButton>
           <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" />
         </h:panelGrid>
