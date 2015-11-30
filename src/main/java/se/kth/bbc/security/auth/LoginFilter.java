@@ -1,9 +1,6 @@
 package se.kth.bbc.security.auth;
 
-import static com.mchange.v2.log.MLog.config;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.StringTokenizer;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
