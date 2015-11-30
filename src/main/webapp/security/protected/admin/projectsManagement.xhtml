@@ -51,35 +51,51 @@
                                     <h:outputText value="#{muser.fname}" />
                                 </p:column>
 
-                                <p:column id="userColumn"
+                                <p:column id="yarnquotaColumn"
+                                          filterBy="#{muser.email}"
+                                          headerText="Yarn quota remaining "
+                                          style="width:32%;font-size: 12px;text-align: left;">
+                                    <h:outputText value="#{muser.email}" />
+                                </p:column>
+
+                                <p:column id="hdfsquotaColumn"
+                                          filterBy="#{muser.email}"
+                                          headerText="Hdfs quota remaining "
+                                          style="width:32%;font-size: 12px;text-align: left;">
+                                    <h:outputText value="#{muser.email}" />
+                                </p:column>
+
+                                <p:column id="useremailColumn"
                                           filterBy="#{muser.lname}"
-                                          headerText="User"
+                                          headerText="User email"
                                           style="width:32%; font-size: 12px; text-align: left;">
                                     <h:outputText value="#{muser.lname}" />
                                 </p:column>
 
-                                <p:column id="createdAtColumn"
+                                <p:column id="enabledColumn"
                                           filterBy="#{muser.email}"
-                                          headerText="Created At"
+                                          headerText="Enabled"
                                           style="width:32%;font-size: 12px;text-align: left;">
                                     <h:outputText value="#{muser.email}" />
                                 </p:column>
 
-                                <p:column id="expiringAtColumn"
+                                <p:column id="lastcreditpurchachedColumn"
                                           filterBy="#{muser.email}"
-                                          headerText="Expiring at"
+                                          headerText="Purchased credit at"
                                           style="width:32%;font-size: 12px;text-align: left;">
                                     <h:outputText value="#{muser.email}" />
                                 </p:column>
 
-                                <p:column id="quotaColumn"
+                                <p:column id="totalcreditColumn"
                                           filterBy="#{muser.email}"
-                                          headerText="Quota remaining "
+                                          headerText="Total credit"
                                           style="width:32%;font-size: 12px;text-align: left;">
                                     <h:outputText value="#{muser.email}" />
                                 </p:column>
 
-                                <p:column id="actionProjectColumn" headerText="Modify" style="width:20%;font-size: 12px;">
+                                <p:column id="actionProjectColumn"
+                                          headerText="Actions"
+                                          style="width:20%;font-size: 12px;">
                                     <p:commandLink  action="#{peopleAdministration.modifyProject(muser)}" update="@form" styleClass="fa fa-pencil-square-o" value=""/>
                                 </p:column>
                             </p:dataTable>
