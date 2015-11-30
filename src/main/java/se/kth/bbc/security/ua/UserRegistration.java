@@ -178,7 +178,7 @@ public class UserRegistration implements Serializable {
   private String qrUrl = "Pass";
 
   // To send the user the QR code image
-  private StreamedContent qrCode;
+  private StreamedContent qrCode = null;
 
   public StreamedContent getQrCode() {
     return qrCode;
@@ -307,6 +307,7 @@ public class UserRegistration implements Serializable {
     String os = AuditUtil.getOSInfo();
     String macAddress = AuditUtil.getMacAddress(ip);
     Users user = null;
+    qrCode = null;
     try {
 
       String otpSecret = SecurityUtils.calculateSecretKey();

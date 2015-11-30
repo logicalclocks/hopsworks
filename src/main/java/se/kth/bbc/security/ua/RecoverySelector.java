@@ -44,7 +44,7 @@ public class RecoverySelector implements Serializable {
 
   // Quick response code URL
   private String qrUrl = "Pass";
-  private StreamedContent qrCode;
+  private StreamedContent qrCode= null;
 
   private String uname;
   private String tmpCode;
@@ -229,7 +229,7 @@ public class RecoverySelector implements Serializable {
    * @return
    */
   public String validateTmpCode() {
-
+    qrCode = null;
     people = um.getUserByEmail(this.uname);
 
     if (people == null) {
