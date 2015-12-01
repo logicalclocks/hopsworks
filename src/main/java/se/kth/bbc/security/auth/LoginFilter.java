@@ -23,10 +23,11 @@ public class LoginFilter extends PolicyAdministrationPoint implements Filter {
     String url = request.getServletPath();
     boolean allowedRequest = false;
 
-    if ((url.contains(urlList) && !url.contains("/index.xhtml")) || url.contains("/resources/")) {
+    if ((url.contains(urlList) && !url.contains("/index.html") && !url.contains("/index.xhtml"))) {
       allowedRequest = true;
     }
 
+    
     String username = request.getRemoteUser();
 
     // If user is logged in redirect to index first page 
@@ -43,7 +44,7 @@ public class LoginFilter extends PolicyAdministrationPoint implements Filter {
                 + "/security/protected/audit/auditIdex.xhtml");
       } else if (isInDataProviderRole(username) || isInResearcherRole(username)
               || isInGuestRole(username)) {
-        response.sendRedirect(contextPath);
+        response.sendRedirect(contextPath +"/#home");
       }
     } else {
       chain.doFilter(req, res);

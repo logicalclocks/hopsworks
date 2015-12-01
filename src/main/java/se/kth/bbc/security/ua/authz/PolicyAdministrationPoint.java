@@ -85,12 +85,10 @@ public class PolicyAdministrationPoint implements Serializable {
       return "adminIndex";
     } else if (isInAuditorRole(user)) {
       return "auditIndex";
-    } else if (isInDataProviderRole(user)) {
-      return "indexPage";
-    } else if (isInResearcherRole(user)) {
-      return "indexPage";
+    } else if (isInDataProviderRole(user) || isInResearcherRole(user) ) {
+      return "home";
     }
 
-    return "indexPage";
+    return "home";
   }
 }

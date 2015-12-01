@@ -216,13 +216,17 @@
 
     <init-param>
       <param-name>avoid-urls</param-name>
-      <param-value>.xhtml</param-value>
+      <param-value>html</param-value>
     </init-param>
   </filter>
 
   <filter-mapping>
     <filter-name>LoginFilter</filter-name>
-    <url-pattern>/*</url-pattern>
+    <url-pattern>/security/*</url-pattern>
+    <url-pattern>/bbc/*</url-pattern>
+    <url-pattern>/views/*</url-pattern>
+    <url-pattern>/index.xhtml</url-pattern>
+    <url-pattern>/index.html</url-pattern>
     
   </filter-mapping>
  

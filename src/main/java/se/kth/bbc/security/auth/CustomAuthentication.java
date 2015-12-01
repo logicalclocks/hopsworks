@@ -364,13 +364,10 @@ public class CustomAuthentication implements Serializable {
       return "adminIndex";
     } else if (isInAuditorRole(user)) {
       return "adminAuditIndex";
-    } else if (isInDataProviderRole(user)) {
-      return "indexPage";
-    } else if (isInResearcherRole(user)) {
-      return "indexPage";
-    }
-
-    return "indexPage";
+    } else if (isInDataProviderRole(user)|| isInResearcherRole(user)) {
+      return "home";
+    } 
+    return "home";
   }
 
 }
