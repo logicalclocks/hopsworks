@@ -96,4 +96,11 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
   public void merge(Dataset dataset) {
     em.merge(dataset);
   }
+  
+  public void removeDataset(Dataset dataset){
+    Dataset ds = em.find(Dataset.class, dataset.getId());
+    if (ds != null){
+      em.remove(ds);
+    }
+  }
 }

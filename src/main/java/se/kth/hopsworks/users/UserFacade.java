@@ -48,6 +48,15 @@ public class UserFacade extends AbstractFacade<Users> {
     return query.getResultList();
   }
 
+  public Users findByUsername(String username) {
+    try {
+      return em.createNamedQuery("Users.findByUsername", Users.class).setParameter(
+              "username", username)
+              .getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
   public List<Users> filterUsersBasedOnProject(String name) {
 
     Query query = em.createNativeQuery(

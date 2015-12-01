@@ -27,6 +27,9 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.security.AccessControlException;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.ErasureCodeJob;
 import se.kth.bbc.fileoperations.ErasureCodeJobConfiguration;
@@ -52,6 +55,8 @@ import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.dataset.DatasetRequest;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
@@ -95,6 +100,10 @@ public class DataSetService {
   @EJB
   private JobController jobcontroller;
   @EJB
+  private HdfsUsersController hdfsUsersBean;
+  @EJB
+  private DFSSingleton dfs;
+  @EJB
   private Settings settings;
   @Inject
   private DownloadService downloader;
@@ -129,13 +138,20 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException {
 
     Inode parent;
-
+    InodeView inodeView;
+    Users user;
     List<InodeView> kids = new ArrayList<>();
 
     Collection<Dataset> dsInProject = this.project.getDatasetCollection();
     for (Dataset ds : dsInProject) {
       parent = inodes.findParent(ds.getInode());
-      kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode())));
+      inodeView = new InodeView(parent, ds, inodes.getPath(ds.getInode()));
+      user = userfacade.findByUsername(inodeView.getOwner());
+      if (user != null) {
+        inodeView.setOwner(user.getFname() + " " + user.getLname());
+        inodeView.setEmail(user.getEmail());
+      }
+      kids.add(inodeView);
     }
 
     GenericEntity<List<InodeView>> inodViews
@@ -177,8 +193,16 @@ public class DataSetService {
               "Path not found.");
     }
     List<InodeView> kids = new ArrayList<>();
+    InodeView inodeView;
+    Users user;
     for (Inode i : cwdChildren) {
-      kids.add(new InodeView(i, inodes.getPath(i)));
+      inodeView = new InodeView(i, inodes.getPath(i));
+      user = userfacade.findByUsername(inodeView.getOwner());
+      if (user != null) {
+        inodeView.setOwner(user.getFname() + " " + user.getLname());
+        inodeView.setEmail(user.getEmail());
+      }
+      kids.add(inodeView);
     }
 
     GenericEntity<List<InodeView>> inodViews
@@ -196,7 +220,8 @@ public class DataSetService {
   public Response shareDataSet(
           DataSetDTO dataSet,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws AppException,
+          AccessControlException {
 
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     JsonResponse json = new JsonResponse();
@@ -247,7 +272,21 @@ public class DataSetService {
     if (dsReq != null) {
       datasetRequest.remove(dsReq);//the dataset is shared so remove the request.
     }
-
+    if (newDS.isEditable()) {
+      try {
+        FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
+                FsAction.NONE, true);
+        datasetController.changePermission(inodes.getPath(newDS.getInode()),
+                user, project, fsPermission);
+      } catch (AccessControlException ex) {
+        throw new AccessControlException(
+                "Permission denied: Can not change the permission of this file.");
+      } catch (IOException e) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(), "Error while creating directory: " + e.
+                getLocalizedMessage());
+      }
+    }
     activityFacade.persistActivity(ActivityFacade.SHARED_DATA + dataSet.
             getName() + " with project " + proj.getName(), project, user);
 
@@ -275,12 +314,11 @@ public class DataSetService {
     }
 
     Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
-
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NOT_FOUND);
     }
-
+    hdfsUsersBean.shareDataset(this.project, ds);
     ds.setStatus(Dataset.ACCEPTED);
     datasetFacade.merge(ds);
     json.setSuccessMessage("The Dataset is now accessable.");
@@ -332,7 +370,8 @@ public class DataSetService {
 
     try {
       datasetController.createDataset(user, project, dataSet.getName(), dataSet.
-              getDescription(), dataSet.getTemplate(), dataSet.isSearchable());
+              getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
+              false);
     } catch (NullPointerException c) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), c.
               getLocalizedMessage());
@@ -358,8 +397,10 @@ public class DataSetService {
   public Response createDataSetDir(
           DataSetDTO dataSetName,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws AppException,
+          AccessControlException {
     JsonResponse json = new JsonResponse();
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     String newPath = getFullPath(dataSetName.getName());
     while (newPath.startsWith("/")) {
       newPath = newPath.substring(1);
@@ -382,9 +423,13 @@ public class DataSetService {
     }
 
     try {
-      datasetController.createSubDirectory(project, fullPathArray[2],
+      datasetController.createSubDirectory(user, project, fullPathArray[2],
               dsRelativePath.toString(), dataSetName.getTemplate(), dataSetName.
               getDescription(), dataSetName.isSearchable());
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You can not create a folder in "
+              + fullPathArray[2]);
     } catch (IOException e) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error while creating directory: " + e.
@@ -405,9 +450,11 @@ public class DataSetService {
   public Response removedataSetdir(
           @PathParam("fileName") String fileName,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws AppException,
+          AccessControlException {
     boolean success = false;
     JsonResponse json = new JsonResponse();
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     if (fileName == null || fileName.isEmpty()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NAME_EMPTY);
@@ -424,7 +471,8 @@ public class DataSetService {
       if (!this.dataset.isEditable()) {
         //remove the entry in the table that represents shared ds
         //but leave the dataset in hdfs b/c the user does not have the right to delete it.
-        datasetFacade.remove(this.dataset);
+        hdfsUsersBean.unShareDataset(project, dataset);
+        datasetFacade.removeDataset(this.dataset);
         json.setSuccessMessage(ResponseMessages.SHARED_DATASET_REMOVED);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(json).build();
@@ -432,28 +480,34 @@ public class DataSetService {
     }
 
     try {
-      success = fileOps.rmRecursive(filePath);
+      success = datasetController.deleteDataset(filePath, user, project);
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You can not delete the file " + filePath);
     } catch (IOException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + filePath);
     }
-
     if (!success) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + filePath);
     }
+    //remove the group associated with this dataset
+    hdfsUsersBean.deleteDatasetGroup(this.dataset);
     json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
-
   }
 
   @GET
   @Path("fileExists/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response checkFileExist(@PathParam("path") String path) throws
-          AppException {
+  public Response checkFileExist(@PathParam("path") String path,
+          @Context SecurityContext sc) throws
+          AppException, AccessControlException {
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    String username = hdfsUsersBean.getHdfsUserName(project, user);
     if (path == null) {
       path = "";
     }
@@ -466,6 +520,11 @@ public class DataSetService {
       if (!exists || this.fileOps.isDir(path)) {
         throw new IOException("The file does not exist");
       }
+      //tests if the user have permission to access this path
+      dfs.getDfs(username).open(path);
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You can not download the file ");
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -545,8 +604,11 @@ public class DataSetService {
 
   @Path("fileDownload/{path: .+}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public DownloadService downloadDS(@PathParam("path") String path) throws
+  public DownloadService downloadDS(@PathParam("path") String path,
+          @Context SecurityContext sc) throws
           AppException {
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    String username = hdfsUsersBean.getHdfsUserName(project, user);
     if (path == null) {
       path = "";
     }
@@ -555,14 +617,15 @@ public class DataSetService {
     if (!pathArray[2].equals(this.project.getName())) {
       if (!this.dataset.isEditable()) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "You can not upload to a shared dataset.");
+                "You can not download a shared dataset.");
       }
     }
     if (!path.endsWith(File.separator)) {
       path = path + File.separator;
     }
 
-    downloader.setPath(path);
+    this.downloader.setPath(path);
+    this.downloader.setUsername(username);
     return downloader;
   }
 
@@ -605,7 +668,8 @@ public class DataSetService {
             ecConfig);
     System.out.println("job persisted in the database");
     //instantiate the job
-    ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user, settings.getHadoopDir());
+    ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
+            settings.getHadoopDir());
     //persist a job execution instance in the database and get its id
     Execution exec = encodeJob.requestExecutionId();
     System.out.println("\nSTarting the erasure coding job\n");
@@ -630,8 +694,10 @@ public class DataSetService {
   @Path("upload/{path: .+}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public UploadService upload(
-          @PathParam("path") String path,
+          @PathParam("path") String path, @Context SecurityContext sc,
           @QueryParam("templateId") int templateId) throws AppException {
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    String username = hdfsUsersBean.getHdfsUserName(project, user);
     if (path == null) {
       path = "";
     }
@@ -652,6 +718,7 @@ public class DataSetService {
     }
 
     this.uploader.setPath(path);
+    this.uploader.setUsername(username);
 
     return this.uploader;
   }
@@ -724,7 +791,15 @@ public class DataSetService {
       path = path.replaceFirst(projectName + Settings.SHARED_FILE_SEPARATOR
               + dsName, projectName
               + File.separator + dsName);
-    } else {
+    } else if (parts != null) {
+      dsName = parts[0];
+      Inode parent = inodes.getProjectRoot(this.project.getName());
+      Inode dsInode = inodes.findByParentAndName(parent, dsName);
+      this.dataset = datasetFacade.findByProjectAndInode(this.project, dsInode);
+      if (this.dataset == null) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                ResponseMessages.DATASET_NOT_FOUND);
+      }
       return this.path + path;
     }
     return File.separator + Settings.DIR_ROOT + File.separator

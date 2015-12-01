@@ -25,10 +25,6 @@ import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectMembers {
