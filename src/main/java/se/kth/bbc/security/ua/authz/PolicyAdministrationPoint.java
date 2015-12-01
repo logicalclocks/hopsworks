@@ -6,8 +6,6 @@
 package se.kth.bbc.security.ua.authz;
 
 import java.io.Serializable;
-import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import se.kth.bbc.security.ua.BBCGroup;

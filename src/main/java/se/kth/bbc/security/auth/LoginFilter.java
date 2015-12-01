@@ -42,7 +42,7 @@ public class LoginFilter extends PolicyAdministrationPoint implements Filter {
                 + "/security/protected/admin/adminIndex.xhtml");
       } else if (isInAuditorRole(username)) {
         response.sendRedirect(contextPath
-                + "/security/protected/audit/auditIdex.xhtml");
+                + "/security/protected/audit/adminAuditIndex.xhtml");
       } else if (isInDataProviderRole(username) || isInResearcherRole(username)
               || isInGuestRole(username)) {
         response.sendRedirect(contextPath +"/#home");
