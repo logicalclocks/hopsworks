@@ -15,11 +15,6 @@
   </h:head>
 
   <h:body >
-    <ui:insert name="titleBar" >
-      <ui:include src="/bbc/lims/titleBar.xhtml" />       
-    </ui:insert>
-
-
     <div class="ForgotPassword" align="center">
 
       <h:form >
@@ -45,12 +40,9 @@
         <h:panelGrid columns="2"  >
           <p:commandButton type="submit" value="Submit" action="#{recoverySelector.sendYubiReq()}"/>
           <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
-
         </h:panelGrid>
 
-
       </h:form>
-
     </div>
   </h:body>
 </html>

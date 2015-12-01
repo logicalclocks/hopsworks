@@ -15,10 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import se.kth.hopsworks.user.model.Users;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+
 @ManagedBean
 @RequestScoped
 public class AccountVerification {
@@ -62,7 +59,7 @@ public class AccountVerification {
       }
     }
 
-    Users user = mgr.getUserByUsernmae(username);
+    Users user = mgr.getUserByUsername(username);
 
     if (user.getStatus() != PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()) {
       return false;
@@ -87,7 +84,7 @@ public class AccountVerification {
     int val = user.getFalseLogin();
     mgr.increaseLockNum(user.getUid(), val + 1);
 
-    if (val > 5) {
+    if (val > Users.ALLOWED_FALSE_LOGINS) {
       mgr.changeAccountStatus(user.getUid(), "SPAM Acccount",
               PeopleAccountStatus.SPAM_ACCOUNT.getValue());
       mgr.resetKey(user.getUid());

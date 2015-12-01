@@ -19,11 +19,7 @@ import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.audit.LoginsAuditActions;
 import se.kth.hopsworks.user.model.Users;
-
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+ 
 @ManagedBean
 @RequestScoped
 public class PeopleStatusBean implements Serializable {

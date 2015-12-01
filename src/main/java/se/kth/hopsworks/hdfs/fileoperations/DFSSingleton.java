@@ -49,7 +49,7 @@ public class DFSSingleton {
   }
 
   /**
-   * creates a new distributed file system operations with the default user
+   * creates a new distributed file system operations with the super user
    * <p>
    * @return DistributedFileSystemOps
    */

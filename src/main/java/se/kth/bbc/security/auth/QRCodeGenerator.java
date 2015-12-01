@@ -16,10 +16,6 @@ import javax.imageio.ImageIO;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
 public class QRCodeGenerator {
 
   private final int width = 200;
@@ -112,7 +108,7 @@ public class QRCodeGenerator {
   public static byte[] getQRCodeBytes(String user, String host,
           String secret) throws UnsupportedEncodingException, IOException,
           WriterException {
-
+    
     // Format the qr code
     String chl = "otpauth://totp/" + user + "?secret=" + secret + "&issuer="
             + host;

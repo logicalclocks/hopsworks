@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
+  <META HTTP-EQUIV="Pragma" CONTENT="no-cache"/>
+  <META HTTP-EQUIV="Expires" CONTENT="-1"/>
+  <h:head>
+    <title>Yubikey Reset</title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+  </h:head>
+  <h:body>
+
+    <h:form class="stylelayout" id="formToolbar">
+      <p:toolbar styleClass="MainToolbar" >
+        <p:toolbarGroup align="left">
+          <p:commandLink value="BiobankCloud"/>
+        </p:toolbarGroup>
+      </p:toolbar>
+    </h:form>
+
+    <div class="GenericMenue">
+      Yubikey reset request submitted successfully. We will send you a new Yubikey stick to your address. Please follow
+      The instructions sent to your email address.
+      <br></br>
+      <p:spacer height="40"></p:spacer>
+      <div align="left">
+        <p:commandLink value="Back to main page" action="welcome"/>
+      </div>
+    </div>
+
+  </h:body>  
+</html>

@@ -26,6 +26,7 @@ import se.kth.bbc.security.ua.UserAccountsEmailMessages;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
+import se.kth.bbc.security.ua.BBCGroup;
 import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.bbc.security.ua.SecurityUtils;
 import se.kth.bbc.security.ua.UserManager;
@@ -89,9 +90,15 @@ public class UsersController {
 
      // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
       String uname = USERNAME_PREFIX + uid;
+     
       List<BbcGroup> groups = new ArrayList<>();
-      groups.add(groupBean.findByGroupName(BbcGroup.USER));
-
+     
+      // add the guest default role so if a user can still browse the platform
+      groups.add(groupBean.findByGroupName(BBCGroup.BBC_GUEST.name()));
+      
+      // add BBC  user default role so  a user can become data owner
+      groups.add(groupBean.findByGroupName(BBCGroup.BBC_USER.name()));
+      
       Users user = new Users(uid);
       user.setUsername(uname);
       user.setEmail(newUser.getEmail());
@@ -184,7 +191,13 @@ public class UsersController {
      // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
       String uname = USERNAME_PREFIX + uid;
       List<BbcGroup> groups = new ArrayList<>();
-      groups.add(groupBean.findByGroupName(BbcGroup.USER));
+      
+      // add the guest default role so if a user can still browse the platform
+      groups.add(groupBean.findByGroupName(BBCGroup.BBC_GUEST.name()));
+      
+      // add BBC  user default role so  a user can become data owner
+      groups.add(groupBean.findByGroupName(BBCGroup.BBC_USER.name()));
+      
 
       Users user = new Users(uid);
       user.setUsername(uname);
@@ -211,9 +224,9 @@ public class UsersController {
       Address a = new Address();
       a.setUid(user);
       // default '-' in sql file did not add these values!
-      a.setAddress1(newUser.getStreet());
-      a.setAddress2("-");
-      a.setAddress3(newUser.getDep());
+      a.setAddress1("-");
+      a.setAddress2(newUser.getStreet());
+      a.setAddress3("-");
       a.setCity(newUser.getCity());
       a.setCountry(newUser.getCountry());
       a.setPostalcode(newUser.getPostCode());
@@ -234,7 +247,8 @@ public class UsersController {
       yk.setUid(user);
       yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
       user.setYubikey(yk);
-
+      user.setOrganization(org);
+      
       try {
         // Notify user about the request
         emailBean.sendEmail(newUser.getEmail(),

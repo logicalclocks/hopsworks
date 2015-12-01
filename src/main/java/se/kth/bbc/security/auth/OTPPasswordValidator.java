@@ -7,10 +7,7 @@ import javax.faces.validator.FacesValidator;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
 
-/**
- *
- * @author Ali Gholmai <gholami@pdc.kth.se>
- */
+
 @FacesValidator("otpPasswordValidator")
 public class OTPPasswordValidator implements Validator {
 

@@ -1,0 +1,46 @@
+<!-- A file selection dialog. -->
+
+<div class="modal-header">
+  <button class="close" ng-click="selectFileCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Select Directory in Charon</h2>
+</div>
+<div class="modal-body">
+
+  <div class="table-responsive" style="overflow: hidden;" ng-controller="LocalFsCtrl as localFsCtrl">
+    <div ng-controller="ProjectCtrl as projectCtrl" class="row">
+      >> /{{ projectCtrl.currentProject.projectName}}
+      <span data-ng-repeat="path in localFsCtrl.pathArray track by $index">
+        /srv/charon_fs/{{path}}</span>
+    </div>
+    <table class="table table-hover" >
+      <tbody ng-model="selectFileCtrl.files">
+        <tr ng-click="selectFileCtrl.back(localFsCtrl)">
+          <td style="padding: 0px">&nbsp &nbsp
+            <a style="font-size:25px">..</a>
+          </td>
+        </tr>
+        <tr ng-click="selectFileCtrl.select("/srv/charon_fs/{{ projectCtrl.currentProject.projectName}}", true);">
+          <td>
+            <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
+            .
+          </td>
+        </tr>
+
+        <tr ng-repeat="file in localFsCtrl.files | orderBy: 'name'"
+            ng-class="{ 'highlight': localFsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
+            ng-dblclick="selectFileCtrl.dblClick(localFsCtrl, file)"
+            ng-click="selectFileCtrl.select(file.path, file.dir); localFsCtrl.select($index, file);">
+
+          <td>
+            <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
+            <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
+            {{file.name}}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <button ng-click="selectFileCtrl.confirmSelection(true)" class="btn btn-default">Select</button>
+  </div>
+</div>
+

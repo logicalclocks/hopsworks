@@ -1,8 +1,10 @@
 package se.kth.hopsworks.controller;
 
+import io.hops.bbc.ConsentStatus;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -38,6 +40,7 @@ import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
 import se.kth.hopsworks.user.model.SshKeys;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.SshkeysFacade;
+import se.kth.hopsworks.util.ConfigFileGenerator;
 import se.kth.hopsworks.util.Settings;
 
 @Stateless
@@ -108,10 +111,19 @@ public class ProjectController {
         Date now = new Date();
         Project project = new Project(newProject.getProjectName(), user, now);
         project.setDescription(newProject.getDescription());
-
+        
+         // make ethical status pending
+        project.setEthicalStatus(ConsentStatus.PENDING.name());
+        
+        // set retention period to next 10 years by default
+        Calendar cal = Calendar.getInstance(); 
+        cal.setTime(now);
+        cal.add(Calendar.YEAR, 10);
+        project.setRetentionPeriod(cal.getTime());
+        
         Inode projectInode = this.inodes.getProjectRoot(project.getName());
         project.setInode(projectInode);
-
+        
         //Persist project object
         this.projectFacade.persistProject(project);
         this.projectFacade.flushEm();
@@ -171,6 +183,12 @@ public class ProjectController {
       throw new ProjectInternalFoldersFailedException(
               "Could not create project consents folder ", e);
     }
+  }
+
+  public void createProjectCharonFolder(Project project) throws
+      ProjectInternalFoldersFailedException {
+    String charonDir = settings.getCharonDir();
+    ConfigFileGenerator.mkdirs(charonDir + File.separator + project.getName());
   }
 
   /**

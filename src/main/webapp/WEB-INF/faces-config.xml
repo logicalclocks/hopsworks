@@ -48,6 +48,12 @@
     </navigation-case>
 
     <navigation-case>
+      <from-outcome>yubico_reset</from-outcome>
+      <to-view-id>/security/yubico_reset.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
       <from-outcome>qrcode</from-outcome>
       <to-view-id>/security/qrcode.xhtml</to-view-id>
       <redirect/>
@@ -76,6 +82,11 @@
     <navigation-case>
       <from-outcome>reset_password</from-outcome>
       <to-view-id>/security/reset_password.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>password_sent</from-outcome>
+      <to-view-id>/security/password_sent.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 

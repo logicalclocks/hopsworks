@@ -5,16 +5,21 @@
  */
 package se.kth.bbc.security.ua.authz;
 
+import java.io.Serializable;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import se.kth.bbc.security.ua.BBCGroup;
 import se.kth.bbc.security.ua.UserManager;
+import se.kth.bbc.security.ua.YubikeyActivator;
 import se.kth.hopsworks.user.model.Users;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
-public class PolicyAdministrationPoint {
+
+public class PolicyAdministrationPoint implements Serializable {
+
+  private static final long serialVersionUID = 1L;
+
+  private static final Logger logger = Logger.getLogger(YubikeyActivator.class.
+          getName());
 
   @EJB
   private UserManager userPolicMgr;
@@ -45,31 +50,31 @@ public class PolicyAdministrationPoint {
   }
 
   public boolean isInAdminRole(String username) {
-    Users user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByEmail(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.SYS_ADMIN.
             name());
   }
 
   public boolean isInResearcherRole(String username) {
-    Users user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsername(username);
     return userPolicMgr.findGroups(user.getUid()).contains(
             BBCGroup.BBC_RESEARCHER.name());
   }
 
   public boolean isInDataProviderRole(String username) {
-    Users user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsername(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.BBC_ADMIN.
             name());
   }
 
   public boolean isInAuditorRole(String username) {
-    Users user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsername(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.AUDITOR.
             name());
   }
 
   public boolean isInGuestRole(String username) {
-    Users user = userPolicMgr.getUserByUsernmae(username);
+    Users user = userPolicMgr.getUserByUsername(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.BBC_GUEST.
             name());
   }

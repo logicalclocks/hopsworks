@@ -33,7 +33,7 @@
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                #{peopleAdministration.selectedYubikyUser.title} #{peopleAdministration.selectedYubikyUser.fname} #{peopleAdministration.selectedYubikyUser.lname} 
+                 #{yubikeyActivator.selectedYubikyUser.fname} #{yubikeyActivator.selectedYubikyUser.lname} 
               </h3>
             </p:column>
 
@@ -43,7 +43,7 @@
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                #{peopleAdministration.selectedYubikyUser.activated}
+                #{yubikeyActivator.selectedYubikyUser.activated}
               </h3>
             </p:column>
 
@@ -52,7 +52,7 @@
             </p:column>
 
             <p:column>
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{peopleAdministration.selectedYubikyUser.email}  </h3>
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{yubikeyActivator.selectedYubikyUser.email}  </h3>
             </p:column>
 
             <p:column>
@@ -60,7 +60,7 @@
             </p:column>
 
             <p:column>
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{peopleAdministration.selectedYubikyUser.mobile}  </h3>
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{yubikeyActivator.selectedYubikyUser.mobile}  </h3>
             </p:column>
 
             <p:column>
@@ -68,7 +68,7 @@
             </p:column>
 
             <p:column>
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{peopleAdministration.selectedYubikyUser.organization.orgName}  </h3>
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{yubikeyActivator.selectedYubikyUser.organization.orgName}  </h3>
             </p:column>
 
             <p:column>
@@ -76,7 +76,7 @@
             </p:column>
 
             <p:column>
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{peopleAdministration.selectedYubikyUser.orcid}  </h3>
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{yubikeyActivator.selectedYubikyUser.orcid}  </h3>
             </p:column>
 
 
@@ -95,18 +95,18 @@
             </p:column>   
 
             <p:column>
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                #{peopleAdministration.selectedYubikyUser.address.address1}
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">              
+              #{yubikeyActivator.selectedYubikyUser.title eq '-'? '':yubikeyActivator.selectedYubikyUser.title}   #{yubikeyActivator.selectedYubikyUser.fname} #{yubikeyActivator.selectedYubikyUser.lname} 
+
               </h3>
             </p:column>
-
             <p:column>
               <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Street and number" /></h3> 
             </p:column>   
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"  >
-                #{peopleAdministration.selectedYubikyUser.address.address2} #{peopleAdministration.selectedYubikyUser.address.address3} 
+                #{yubikeyActivator.selectedYubikyUser.address.address2}  #{yubikeyActivator.selectedYubikyUser.address.address3 eq '-'? '':yubikeyActivator.selectedYubikyUser.address.address3} 
               </h3>
             </p:column>
 
@@ -117,17 +117,18 @@
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                #{peopleAdministration.selectedYubikyUser.address.postalcode}  #{peopleAdministration.selectedYubikyUser.address.city}
+                #{yubikeyActivator.selectedYubikyUser.address.postalcode} 
               </h3>
             </p:column>
 
+
             <p:column>
-              <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="State" /></h3> 
+              <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="City" /></h3> 
             </p:column>   
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                #{peopleAdministration.selectedYubikyUser.address.state} 
+               #{yubikeyActivator.selectedYubikyUser.address.city}
               </h3>
             </p:column>
 
@@ -137,7 +138,7 @@
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                #{peopleAdministration.selectedYubikyUser.address.country} 
+                #{yubikeyActivator.selectedYubikyUser.address.country} 
               </h3>
             </p:column>
 
@@ -147,18 +148,30 @@
 
         <h:form>
           <h:panelGrid columns="3">  
-
+            <p:spacer rendered="#{yubikeyActivator.selectedYubikyUser.yubikey.status !=7}"/>
+                  <p:selectOneMenu id="yroleChoose" 
+                                   value="#{yubikeyActivator.sgroup}"
+                                   rendered="#{yubikeyActivator.selectedYubikyUser.yubikey.status !=7}"
+                                   editable="false"
+                                   required="true"
+                                   >
+                    <f:selectItem itemLabel="Select Role" 
+                                  itemValue="#"
+                                  />
+                    <f:selectItems value="#{yubikeyActivator.actGroups}"/>
+                  </p:selectOneMenu>
+          <p:spacer rendered="#{yubikeyActivator.selectedYubikyUser.yubikey.status !=7}"/>
+            
             <p:outputLabel for="pid" 
                            style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"
                            value="Yubikey PublicId"/>
 
             <p:inputText id="pid" 
-                         value="#{peopleAdministration.pubid}" 
+                         value="#{yubikeyActivator.pubid}" 
                          required="true"
                          requiredMessage="Enter the Yubikey  Public Id" 
                          size="40">
             </p:inputText>
-
             <p:tooltip   for="pid" 
                          value="Yubikey Public Identity ( 6 bytes Modhex)" 
                          trackMouse="true" />
@@ -167,7 +180,7 @@
                            style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"
                            value="Yubikey Secret"/>
             <p:inputText id="secret"
-                         value="#{peopleAdministration.secret}" 
+                         value="#{yubikeyActivator.secret}" 
                          required="true"
                          requiredMessage="Enter the Yubikey Secret Code" 
                          size="40">
@@ -175,13 +188,15 @@
             <p:tooltip   for="secret" 
                          value="Yubikey Secret Key (16 bytes Hex)" 
                          trackMouse="true" />
+            
             <p:spacer></p:spacer>
             <p:messages id="messages" autoUpdate="true" showDetail="false" closable="true"/>
             <p:spacer></p:spacer>
           </h:panelGrid>
 
           <div align="center">
-            <p:commandButton  type="submit" value="Register" action="#{peopleAdministration.activateYubikey()}"/>
+            <p:commandButton  type="submit" value="Register" action="#{yubikeyActivator.activateYubikey()}">
+             </p:commandButton>  
             <p:spacer width="10px"></p:spacer>
             <p:commandButton  type="submit" value="Cancel" action="userMgmt" immediate="true" />
           </div>

@@ -20,8 +20,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.codec.binary.Base64;
-import se.kth.bbc.security.auth.AccountStatusErrorMessages;
-import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
@@ -123,9 +121,7 @@ public class AuthService {
             throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                     "No valid role found for this user");
           }
-          
-
-
+       
         } catch (ServletException e) {
           userController.registerFalseLogin(user);
           userController.registerLoginInfo(user, "LOGIN", "FAILED", req);
@@ -193,7 +189,7 @@ public class AuthService {
       String mac= "Fix this";
       String os = "Fix this";
       
-      qrCode = userController.registerUser(newUser, url, ip, browser, os, mac);
+    qrCode = userController.registerUser(newUser, url, ip, browser, os, mac);
       
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
@@ -238,7 +234,7 @@ public class AuthService {
       
     req.getServletContext().log("successfully registered new user: '" + newUser.
             getEmail() + "'");
-
+    
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }

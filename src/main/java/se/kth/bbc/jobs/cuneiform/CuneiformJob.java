@@ -44,6 +44,7 @@ public final class CuneiformJob extends YarnJob {
 
   private Path tempFile;
   private String sparkDir;
+  private String hiwayDir;
     
   //Just for ease of use...
   private final CuneiformJobConfiguration config;
@@ -57,7 +58,7 @@ public final class CuneiformJob extends YarnJob {
    * contain a CuneiformJobConfiguration object.
    */
   public CuneiformJob(JobDescription job,
-          AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir) {
+          AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir, String hiwayDir) {
     super(job, services, user, hadoopDir);
     if (!(job.getJobConfig() instanceof CuneiformJobConfiguration)) {
       throw new IllegalArgumentException(
@@ -66,6 +67,7 @@ public final class CuneiformJob extends YarnJob {
     }
     this.config = (CuneiformJobConfiguration) job.getJobConfig(); //We can do this because of the type check earlier.
     this.sparkDir = sparkDir;
+    this.hiwayDir = hiwayDir;
   }
 
   @Override
@@ -144,42 +146,46 @@ public final class CuneiformJob extends YarnJob {
       config.setAppName("Untitled Cuneiform job");
     }
     // Set the job name if necessary.
-    String wfLocation;
-    try {
-      wfLocation = prepWorkflowFile(wf);
-    } catch (IOException e) {
-      writeToLogs(new IOException("Error while setting up workflow file.", e));
-      return false;
-    }
+//    String wfLocation;
+//    try {
+//      wfLocation = prepWorkflowFile(wf);
+//    } catch (IOException e) {
+//      writeToLogs(new IOException("Error while setting up workflow file.", e));
+//      return false;
+//    }
 
     String resultName = "results";
 
-    YarnRunner.Builder b = new YarnRunner.Builder(Settings.HIWAY_JAR_PATH,
-            "Hiway.jar");
+    YarnRunner.Builder b = new YarnRunner.Builder(hiwayDir + "/" + Settings.HIWAY_REL_JAR_PATH,
+            "hiway-core.jar");
     b.amMainClass(
             "de.huberlin.wbi.hiway.am.cuneiform.CuneiformApplicationMaster");
-    b.addAmJarToLocalResources(false); // Weird way of hiway working
+    b.addAmJarToLocalResources(false); 
 
     b.localResourcesBasePath("/hiway/"
             + YarnRunner.APPID_PLACEHOLDER);
 
     //construct AM arguments
     StringBuilder args = new StringBuilder("--workflow ");
-    args.append(Utils.getFileName(wfLocation));
+//    args.append(Utils.getFileName(wfLocation));
+    args.append(wf.getPath()).append(",true");
     args.append(" --appid ");
     args.append(YarnRunner.APPID_PLACEHOLDER);
     args.append(" --summary ");
     args.append(resultName);
 
+
+    logger.log(Level.INFO, "Hiway YARN command string: {0}", args.toString());
+    
     b.amArgs(args.toString());
 
     //Pass on workflow file
-    b.addFilePathToBeCopied(wfLocation, true);
+//    b.addFilePathToBeCopied(wfLocation, true);
     b.stdOutPath(OUT_LOGS);
     b.stdErrPath(ERR_LOGS);
     b.logPathsRelativeToResourcesPath(false);
 
-    b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");
+    b.addToAppMasterEnvironment("CLASSPATH", hiwayDir + "/software/hiway/lib/*:" + hiwayDir + "/software/hiway/*");
 
     //Set Yarn configuration
     b.setConfig(config);
@@ -196,12 +202,16 @@ public final class CuneiformJob extends YarnJob {
       return false;
     }
 
-    //TODO: include input files
-    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName(), user.getUsername())
+    
+//TODO: include input files
+    String stdOutFinalDestination = 
+        Utils.getHdfsRootPath(hadoopDir, jobDescription.getProject().getName())
             + Settings.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator
             + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName(), user.getUsername())
+//    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName(), user.getUsername())
+    String stdErrFinalDestination = 
+                Utils.getHdfsRootPath(hadoopDir, jobDescription.getProject().getName())
             + Settings.CUNEIFORM_DEFAULT_OUTPUT_PATH + getExecution().getId()
             + File.separator
             + "stderr.log";

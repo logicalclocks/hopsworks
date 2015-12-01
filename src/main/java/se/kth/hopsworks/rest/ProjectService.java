@@ -59,10 +59,14 @@ public class ProjectService {
   @Inject
   private DataSetService dataSet;
   @Inject
+  private LocalFsService localFs;
+  @Inject
   private JobService jobs;
   @Inject
   private BiobankingService biobanking;
-  
+  @Inject
+  private CharonService charon;
+
   @EJB
   private DatasetFacade datasetFacade;
   @EJB
@@ -204,14 +208,27 @@ public class ProjectService {
         ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
         se.toString();
 
-       if (s.compareToIgnoreCase(ProjectServiceEnum.BIOBANKING.toString())==0) {
-                     String owner = sc.getUserPrincipal().getName();
+        if (s.compareToIgnoreCase(ProjectServiceEnum.BIOBANKING.toString()) == 0) {
+          String owner = sc.getUserPrincipal().getName();
           try {
             projectController.createProjectConsentFolder(owner, project);
           } catch (ProjectInternalFoldersFailedException ex) {
-            Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE, null, ex);
-            json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED + " 'consents' \n "
-                + json.getErrorMsg());
+            Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+                    null, ex);
+            json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
+                    + " 'consents' \n "
+                    + json.getErrorMsg());
+          }
+        }
+        if (s.compareToIgnoreCase(ProjectServiceEnum.CHARON.toString()) == 0) {
+          try {
+            projectController.createProjectCharonFolder(project);
+          } catch (ProjectInternalFoldersFailedException ex) {
+            Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+                    null, ex);
+            json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
+                    + " 'consents' \n "
+                    + json.getErrorMsg());
           }
         }
         projectServices.add(se);
@@ -268,7 +285,6 @@ public class ProjectService {
                 + json.getErrorMsg());
       }
     }
-
     try {
       //save the project
       project = projectController.createProject(projectDTO, owner);
@@ -281,8 +297,7 @@ public class ProjectService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), e.
               getLocalizedMessage());
     } catch (EJBException ex) {
-      logger.log(Level.SEVERE,
-              ResponseMessages.FOLDER_INODE_NOT_CREATED, ex);
+      logger.log(Level.SEVERE, ResponseMessages.FOLDER_INODE_NOT_CREATED, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.FOLDER_INODE_NOT_CREATED);
     }
@@ -291,13 +306,16 @@ public class ProjectService {
         hdfsUsersBean.addProjectFolderOwner(project);
         projectController.createProjectLogResources(owner, project);
         if (projectServices.contains(ProjectServiceEnum.BIOBANKING)) {
-                  projectController.createProjectConsentFolder(owner, project);
+          projectController.createProjectConsentFolder(owner, project);
+        }
+        if (projectServices.contains(ProjectServiceEnum.CHARON)) {
+          projectController.createProjectCharonFolder(project);
         }
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.removeByID(project.getId(), owner, true);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not create project resources");
+                  "Could not create project resources");
         } catch (IOException e) {
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                   getStatusCode(), e.getMessage());
@@ -306,7 +324,7 @@ public class ProjectService {
         try {
           projectController.removeByID(project.getId(), owner, true);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not add project folder owner in HDFS");
+                  "Could not add project folder owner in HDFS");
         } catch (IOException e) {
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                   getStatusCode(), e.getMessage());
@@ -316,8 +334,7 @@ public class ProjectService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NAME_EXIST);
     }
-
-    //add members of the project
+    //add members of the project   
     failedMembers = projectController.addMembers(project, owner, projectDTO.
             getProjectTeam());
     //add the services for the project
@@ -406,6 +423,15 @@ public class ProjectService {
     return this.dataSet;
   }
 
+  @Path("{id}/localfs")
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public LocalFsService localFs(
+          @PathParam("id") Integer id) throws AppException {
+    this.localFs.setProjectId(id);
+
+    return this.localFs;
+  }
+
   @Path("{projectId}/jobs")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public JobService jobs(@PathParam("projectId") Integer projectId) throws
@@ -413,13 +439,22 @@ public class ProjectService {
     Project project = projectController.findProjectById(projectId);
     return this.jobs.setProject(project);
   }
-  
+
   @Path("{projectId}/biobanking")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public BiobankingService biobanking(@PathParam("projectId") Integer projectId) throws
+  public BiobankingService biobanking(@PathParam("projectId") Integer projectId)
+          throws
           AppException {
     Project project = projectController.findProjectById(projectId);
     return this.biobanking.setProject(project);
-  }  
-  
+  }
+
+  @Path("{projectId}/charon")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public CharonService charon(@PathParam("projectId") Integer projectId) throws
+          AppException {
+    Project project = projectController.findProjectById(projectId);
+    return this.charon.setProject(project);
+  }
+
 }

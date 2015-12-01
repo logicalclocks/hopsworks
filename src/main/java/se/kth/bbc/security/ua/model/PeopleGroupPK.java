@@ -5,11 +5,7 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
-
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+ 
 @Embeddable
 public class PeopleGroupPK implements Serializable {
 

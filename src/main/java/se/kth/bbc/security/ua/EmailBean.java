@@ -7,10 +7,6 @@ import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
 @Stateless
 public class EmailBean {
 

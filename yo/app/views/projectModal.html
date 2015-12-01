@@ -28,7 +28,8 @@
 
             <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.pattern"
-                    class="text-danger ng-hide">Invalid project name.</span>
+                    class="text-danger ng-hide">Invalid project name. Spaces in project names and special characters such as /, \, ?,
+              *, :, |, ', ", <, >, %, (, ), &, ;, #, are not allowed.</span>
 
             <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.maxlength"

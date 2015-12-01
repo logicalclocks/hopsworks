@@ -37,6 +37,13 @@ public class UserDTO {
     this.firstName = user.getFname();
     this.lastName = user.getLname();
     this.telephoneNum = user.getMobile();
+    this.orgName= user.getOrganization().getOrgName();
+    this.dep = user.getOrganization().getDepartment();
+    this.street = user.getAddress().getAddress2();
+    this.city = user.getAddress().getCity();
+    this.postCode = user.getAddress().getPostalcode();
+    this.country = user.getAddress().getCountry();
+     
   }
 
   public String getEmail() {
