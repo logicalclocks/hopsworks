@@ -1,9 +1,11 @@
-package se.kth.bbc.security.ua;
+package se.kth.bbc.security.ua.authz;
 
 import java.io.Serializable;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
+import se.kth.bbc.security.ua.UserManager;
+import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.user.model.Users;
 
 @ManagedBean

@@ -24,12 +24,13 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.audit.LoginsAuditActions;
-import se.kth.bbc.security.auth.CustomAuthentication;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.hopsworks.user.model.Users;
 
@@ -326,10 +327,10 @@ public class UserRegistration implements Serializable {
               tel,
               orcid,
               uid,
-              SecurityUtils.converToSHA256(password),
+              DigestUtils.sha256Hex(password),
               otpSecret,
               security_question,
-              SecurityUtils.converToSHA256(security_answer),
+              DigestUtils.sha256Hex(security_answer),
               PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue(),
               PeopleAccountStatus.MOBILE_USER.getValue(),
               activationKey);
@@ -345,7 +346,7 @@ public class UserRegistration implements Serializable {
       mgr.registerOrg(user, org, department);
 
       // Generate qr code to be displayed to user
-      qrCode = QRCodeGenerator.getQRCode(mail, CustomAuthentication.ISSUER,
+      qrCode = QRCodeGenerator.getQRCode(mail, AuthenticationConstants.ISSUER,
               otpSecret);
 
       am.registerLoginInfo(user, LoginsAuditActions.REGISTRATION.getValue(), ip,
@@ -374,7 +375,7 @@ public class UserRegistration implements Serializable {
       passwordAgain = "";
       tos = false;
       qrEnabled = 1;
-    } catch (NotSupportedException | SystemException | NoSuchAlgorithmException |
+    } catch (NotSupportedException | SystemException |
             IOException | WriterException | MessagingException |
             RollbackException | HeuristicMixedException | 
             HeuristicRollbackException | SecurityException |
@@ -422,9 +423,9 @@ public class UserRegistration implements Serializable {
               tel,
               orcid,
               uid,
-              SecurityUtils.converToSHA256(password),
+              DigestUtils.sha256Hex(password),
               "-1",
-              security_question, SecurityUtils.converToSHA256(security_answer),
+              security_question, DigestUtils.sha256Hex(security_answer),
               PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue(),
               PeopleAccountStatus.YUBIKEY_USER.getValue(),
               activationKey);
@@ -476,8 +477,7 @@ public class UserRegistration implements Serializable {
       tos = false;
       department = "";
 
-    } catch (NotSupportedException | SystemException | NoSuchAlgorithmException |
-            UnsupportedEncodingException | MessagingException |
+    } catch (NotSupportedException | SystemException | MessagingException |
             RollbackException | HeuristicMixedException | 
             HeuristicRollbackException | SecurityException |
             IllegalStateException e) {

@@ -20,6 +20,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.codec.binary.Base64;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
@@ -44,16 +45,6 @@ public class AuthService {
   private NoCacheResponse noCacheResponse;
   @EJB
   Settings settings;
-  
-  // To distinguish Yubikey users
-  private final String YUBIKEY_USER_MARKER = "YUBIKEY_USER_MARKER";
-
-  // For disabled OTP auth mode
-  private final String YUBIKEY_OTP_PADDING
-          = "EaS5ksRVErn2jiOmSQy5LM2X7LgWAZWfWYKQoPavbrhN";
-  
-  // For padding when password field is empty
-  private final String MOBILE_OTP_PADDING = "123456";
   
   @GET
   @Path("session")
@@ -95,13 +86,13 @@ public class AuthService {
     
     // Add padding if custom realm is disabled
     if (otp == null || otp.isEmpty()) {
-      otp = MOBILE_OTP_PADDING;
+      otp = AuthenticationConstants.MOBILE_OTP_PADDING;
     }
     
     if(otp.length() == 6){
       password = password + otp;
     } else if(otp.length() == 44){
-      password = password + otp + YUBIKEY_USER_MARKER;
+      password = password + otp + AuthenticationConstants.YUBIKEY_USER_MARKER;
     }
    
     //only login if not already logged in...

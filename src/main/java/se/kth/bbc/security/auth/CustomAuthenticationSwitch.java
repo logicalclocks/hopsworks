@@ -11,11 +11,6 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import se.kth.hopsworks.util.Settings;
 
-/**
- * This class is used to switch on/off the two factor authentication.
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
 @ManagedBean
 @RequestScoped
 public class CustomAuthenticationSwitch implements Serializable {

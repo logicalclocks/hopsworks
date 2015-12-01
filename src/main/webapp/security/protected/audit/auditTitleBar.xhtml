@@ -15,21 +15,21 @@ and open the template in the editor.
       <h:form class="stylelayout" id="formToolbar">  
         <p:toolbar styleClass="MainToolbar">
           <p:toolbarGroup align="left">  
-            <p:commandLink value="BiobankCloud" action="adminAuditIndex" rendered="#{peopleStatusBean.loggedIn}"/>
-            <p:commandLink value="BiobankCloud" action="welcome" rendered="#{!peopleStatusBean.loggedIn}"/>
+            <p:commandLink value="BiobankCloud" action="adminAuditIndex" rendered="#{roleEnforcementPoint.loggedIn}"/>
+            <p:commandLink value="BiobankCloud" action="welcome" rendered=roleEnforcementPointBean.loggedIn}"/>
           </p:toolbarGroup> 
 
           <p:toolbarGroup align="left">              
           </p:toolbarGroup>  
 
 
-          <p:toolbarGroup align="right" rendered="#{peopleStatusBean.loggedIn}">
+          <p:toolbarGroup align="right" renderedroleEnforcementPointBean.loggedIn}">
 
             <p:commandButton id="userBtn" value=" #{peopleAdministration.loginName}" type="button" icon="ui-icon-person"/>  
             <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
               <p:menuitem value="My Account" action="profile" /> 
               <p:separator/>
-              <p:menuitem value="Logout" action='#{peopleStatusBean.logOut()}'/> 
+              <p:menuitem value="LogoutroleEnforcementPointleStatusBean.logOut()}'/> 
             </p:menu>  
           </p:toolbarGroup>  
 

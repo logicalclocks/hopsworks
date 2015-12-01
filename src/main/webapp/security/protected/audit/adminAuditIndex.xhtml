@@ -23,14 +23,14 @@
 
     <h:body>
 
-        <c:if test="#{peopleStatusBean.SYSAdmin}">
+        <c:if test="#{roleEnforcementPoint.SYSAdmin}">
         <ui:insert name="adminTitleBar">
           <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
         </ui:insert>
       </c:if>
       
 
-      <c:if test="#{peopleStatusBean.onlyAuditorRole}">
+      <c:if test="#{roleEnforcementPoint.onlyAuditorRole}">
           <ui:include src="/security/protected/audit/auditTitleBar.xhtml" />
       </c:if>
 

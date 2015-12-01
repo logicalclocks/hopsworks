@@ -24,29 +24,6 @@ public class SecurityUtils {
   }
 
   /**
-   * Convert the passwords or security questions to sha256.
-   *
-   * @param data
-   * @return
-   * @throws NoSuchAlgorithmException
-   * @throws UnsupportedEncodingException
-   */
-  public static String converToSHA256(String data) throws
-          NoSuchAlgorithmException, UnsupportedEncodingException {
-    MessageDigest md = MessageDigest.getInstance("SHA-256");
-    md.update(data.getBytes("UTF-8"));
-    return bytesToHex(md.digest());
-  }
-
-  public static String bytesToHex(byte[] bytes) {
-    StringBuffer result = new StringBuffer();
-    for (byte byt : bytes) {
-      result.append(Integer.toString((byt & 0xff) + 0x100, 16).substring(1));
-    }
-    return result.toString();
-  }
-
-  /**
    * Generate a random password to be sent to the user
    *
    * @param length

@@ -25,7 +25,7 @@
         <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
       </ui:insert>
 
-      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.SYSAdmin}">  
+      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.SYSAdmin}">  
 
         <p:growl autoUpdate="true" showDetail="true"/>
         <p:layoutUnit id="centerLayout" position="center">
@@ -85,7 +85,7 @@
               </h:form>   
 
               <script>
-                userMgmtTabview.select(#{peopleStatusBean.tabIndex});
+                userMgmtTabview.selecroleEnforcementPointBean.tabIndex});
               </script>
             </div>
           </div> 

@@ -2,7 +2,6 @@ package se.kth.hopsworks.controller;
 
 import com.google.zxing.WriterException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Timestamp;
@@ -24,7 +23,7 @@ import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
 import se.kth.bbc.security.audit.model.Userlogins;
-import se.kth.bbc.security.auth.CustomAuthentication;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.bbc.security.ua.BBCGroup;
 import se.kth.bbc.security.ua.PeopleAccountStatus;
@@ -33,7 +32,6 @@ import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.Yubikey;
-import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
@@ -63,8 +61,6 @@ public class UsersController {
   // To send the user the QR code image
   private byte[] qrCode;
 
-  // BiobankCloud prefix username prefix
-  private final String USERNAME_PREFIX = "meb";
 
   public byte[] registerUser(UserDTO newUser, String url, String ip, String os, String browser, String mac) throws
       AppException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
@@ -89,7 +85,7 @@ public class UsersController {
       int uid = userBean.lastUserID() + 1;
 
      // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
-      String uname = USERNAME_PREFIX + uid;
+      String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
      
       List<BbcGroup> groups = new ArrayList<>();
      
@@ -153,12 +149,15 @@ public class UsersController {
                 url, user.getUsername() + activationKey));
         // Only register the user if i can send the email
         userBean.persist(user);
-        qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), CustomAuthentication.ISSUER,
+        qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), AuthenticationConstants.ISSUER,
             otpSecret);
-      } catch (IOException | WriterException | MessagingException ex) {
+      } catch (WriterException | MessagingException ex) {
         Logger.getLogger(UsersController.class.getName()).log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
             "Cannot register now due to email service problems");
+      } catch (IOException ex) {
+        Logger.getLogger(UsersController.class.getName()).
+                log(Level.SEVERE, null, ex);
       }
       return qrCode;
     }
@@ -189,7 +188,7 @@ public class UsersController {
       int uid = userBean.lastUserID() + 1;
 
      // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
-      String uname = USERNAME_PREFIX + uid;
+      String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
       List<BbcGroup> groups = new ArrayList<>();
       
       // add the guest default role so if a user can still browse the platform
@@ -432,7 +431,7 @@ public class UsersController {
       user.setFalseLogin(count);
       
       // block the user account if more than allowed false logins
-      if (count > Users.ALLOWED_FALSE_LOGINS) {
+      if (count > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         user.setStatus(UserAccountStatus.ACCOUNT_BLOCKED.getValue());
         
       emailBean.sendEmail(user.getEmail(),
