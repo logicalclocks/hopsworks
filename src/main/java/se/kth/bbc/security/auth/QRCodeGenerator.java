@@ -108,7 +108,7 @@ public class QRCodeGenerator {
   public static byte[] getQRCodeBytes(String user, String host,
           String secret) throws UnsupportedEncodingException, IOException,
           WriterException {
-
+    
     // Format the qr code
     String chl = "otpauth://totp/" + user + "?secret=" + secret + "&issuer="
             + host;

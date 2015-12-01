@@ -148,17 +148,19 @@
 
         <h:form>
           <h:panelGrid columns="3">  
-            <p:spacer></p:spacer>
+            <p:spacer rendered="#{yubikeyActivator.selectedYubikyUser.yubikey.status !=7}"/>
                   <p:selectOneMenu id="yroleChoose" 
                                    value="#{yubikeyActivator.sgroup}"
+                                   rendered="#{yubikeyActivator.selectedYubikyUser.yubikey.status !=7}"
                                    editable="false"
+                                   required="true"
                                    >
                     <f:selectItem itemLabel="Select Role" 
                                   itemValue="#"
                                   />
                     <f:selectItems value="#{yubikeyActivator.actGroups}"/>
                   </p:selectOneMenu>
-            <p:spacer></p:spacer> 
+          <p:spacer rendered="#{yubikeyActivator.selectedYubikyUser.yubikey.status !=7}"/>
             
             <p:outputLabel for="pid" 
                            style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"

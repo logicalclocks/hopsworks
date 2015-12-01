@@ -14,23 +14,19 @@
   </h:head>
   <h:body>
 
-    <h:form class="stylelayout" id="formToolbar">
-      <p:toolbar styleClass="MainToolbar" >
-        <p:toolbarGroup align="left">
-          <p:commandLink value="BiobankCloud"/>
-        </p:toolbarGroup>
-      </p:toolbar>
-    </h:form>
+    <h:form >
 
-    <div class="GenericMenue">
-      Yubikey account request submitted successfully. You will need to validate your email address throught the link we sent you.
-      After you will receive a Yubikey device in 48 hours at your address.
-      <br></br>
-      <p:spacer height="40"></p:spacer>
-      <div align="left">
-        <p:commandLink value="Back to main page" action="welcome"/>
+      <div class="GenericMenue">
+        Yubikey account request submitted successfully. You will need to validate your email address throught the link we sent you.
+        After you will receive a Yubikey device in 48 hours at your address.
+        <br></br>
+        <p:spacer height="40"></p:spacer>
+        <div align="left">
+          <p:commandLink value="Back to main page" action="#{recoverySelector.returnMenu()}" process="@this" ajax="false" }/>
+        </div>
       </div>
-    </div>
+
+    </h:form>
 
   </h:body>  
 </html>
