@@ -1,12 +1,9 @@
 package se.kth.bbc.security.privacy;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.Path;
 
+import org.apache.hadoop.fs.Path;
 import io.hops.bbc.ConsentStatus;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.text.ParseException;
@@ -19,17 +16,16 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-
 import javax.persistence.TypedQuery;
 import javax.servlet.http.HttpServletResponse;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
-import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.StreamedContent;
 import io.hops.bbc.Consents;
 import java.util.logging.Logger;
+import org.apache.hadoop.fs.FSDataInputStream;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
 import se.kth.hopsworks.util.Settings;
 
 @Stateless
@@ -38,6 +34,10 @@ public class ProjectPrivacyManager {
   
   private static final Logger logger = Logger.getLogger(ProjectPrivacyManager.class.
           getName());
+  
+  @EJB
+  private DFSSingleton dfs;
+
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -127,7 +127,6 @@ public class ProjectPrivacyManager {
     HttpServletResponse response = (HttpServletResponse) externalContext.
             getResponse();
 
-    StreamedContent input = null;
     BufferedOutputStream output = null;
 
     String projectPath = "/" + Settings.DIR_ROOT + "/" + consent.getProject().
@@ -135,29 +134,27 @@ public class ProjectPrivacyManager {
     String consentsPath = projectPath + "/" + Settings.DIR_CONSENTS;
     
     String path =  relativePath(inodeFacade.getPath(consent.getInode()), consent.getProject());
-    
-    //String path= inodeFacade.getPath(consent.getInode());
+  
+    FSDataInputStream stream;
+    try { 
+        stream = dfs.getDfs().open(new Path(path));
+      //response.header("Content-disposition", "attachment;");
 
-    try {
-
-      Path path2 = Paths.get(path);
-      byte[] data = Files.readAllBytes(path2);
-
-      input = new DefaultStreamedContent(new ByteArrayInputStream(data));
 
       // Init servlet response.
       response.reset();
-      response.setHeader("Content-Type", "application/pdf");
-      response.setHeader("Content-Length",
-              String.valueOf(data.length)
-      );
+  //    response.setHeader("Content-Type", "application/pdf");
+    //  response.setHeader("Content-Length",
+      //        String.valueOf(data.length)
+      //);
+      response.setHeader("Content-disposition", "attachment;");
       output = new BufferedOutputStream(response.getOutputStream(),
               DEFAULT_BUFFER_SIZE);
 
       // Write file contents to response.
       byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
       int length;
-      while ((length = input.getStream().read(buffer)) > 0) {
+      while ((length = stream.read(buffer)) > 0) {
         output.write(buffer, 0, length);
       }
 

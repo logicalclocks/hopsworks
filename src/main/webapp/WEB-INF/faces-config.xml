@@ -213,8 +213,8 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
-      <from-outcome>apamUsers</from-outcome>
-      <to-view-id>/security/protected/admin/apamUsers.xhtml</to-view-id>
+      <from-outcome>spamUsers</from-outcome>
+      <to-view-id>/security/protected/admin/spamUsers.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>
@@ -225,7 +225,7 @@
  
 
     <navigation-case>
-      <from-outcome>indexPage</from-outcome>
+      <from-outcome>adminIndex</from-outcome>
       <to-view-id>/security/protected/admin/adminIndex.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
@@ -244,6 +244,12 @@
       <to-view-id>/#/login</to-view-id>
       <redirect/>
     </navigation-case>
+    
+      <navigation-case>
+      <from-outcome>home</from-outcome>
+      <to-view-id>/#/home</to-view-id>
+      <redirect/>
+    </navigation-case>      
   </navigation-rule>
     
   <application>

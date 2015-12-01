@@ -56,25 +56,26 @@ public class PolicyAdministrationPoint implements Serializable {
   }
 
   public boolean isInResearcherRole(String username) {
-    Users user = userPolicMgr.getUserByUsername(username);
+    Users user = userPolicMgr.getUserByEmail(username);
     return userPolicMgr.findGroups(user.getUid()).contains(
             BBCGroup.BBC_RESEARCHER.name());
   }
 
   public boolean isInDataProviderRole(String username) {
-    Users user = userPolicMgr.getUserByUsername(username);
+  Users user = userPolicMgr.getUserByEmail(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.BBC_ADMIN.
             name());
   }
 
   public boolean isInAuditorRole(String username) {
-    Users user = userPolicMgr.getUserByUsername(username);
+    Users user = userPolicMgr.getUserByEmail(username);
+
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.AUDITOR.
             name());
   }
 
   public boolean isInGuestRole(String username) {
-    Users user = userPolicMgr.getUserByUsername(username);
+    Users user = userPolicMgr.getUserByEmail(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.BBC_GUEST.
             name());
   }
@@ -84,13 +85,11 @@ public class PolicyAdministrationPoint implements Serializable {
     if (isInAdminRole(user)) {
       return "adminIndex";
     } else if (isInAuditorRole(user)) {
-      return "auditIndex";
-    } else if (isInDataProviderRole(user)) {
-      return "indexPage";
-    } else if (isInResearcherRole(user)) {
-      return "indexPage";
+      return "adminAuditIndex";
+    } else if (isInDataProviderRole(user) || isInResearcherRole(user) ) {
+      return "home";
     }
 
-    return "indexPage";
+    return "home";
   }
 }

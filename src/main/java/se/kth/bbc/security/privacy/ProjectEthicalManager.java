@@ -94,7 +94,7 @@ public class ProjectEthicalManager implements Serializable {
       Consents consent = privacyManager.getConsentByName(consName.getId());
       privacyManager.downloadPDF(consent);
     } catch (ParseException | IOException ex) {
-
+      MessagesController.addErrorMessage("Could not download the consent");
     }
 
   }
