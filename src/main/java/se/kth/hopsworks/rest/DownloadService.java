@@ -11,56 +11,56 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.AccessControlException;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.util.Settings;
+import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
 
-/**
- *
- * @author ermiasg
- */
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class DownloadService {
+
   private static final Logger LOG
           = Logger.getLogger(DownloadService.class.getName());
 
   @EJB
-  private Settings settings;
-  
-  
+  private DFSSingleton dfs;
+
   private String path;
+  private String username;
 
   public DownloadService() {
   }
-  
+
   public void setPath(String path) {
     this.path = path;
   }
-  
+
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
   @GET
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response downloadFromHDFS() throws AppException {
-    Configuration conf = new Configuration();
-    String hdfsPath = settings.getHadoopConfDir() + "/core-site.xml";
-    Path p = new Path(hdfsPath);
-    conf.addResource(p);
-    FileSystem hdfs;
+  public Response downloadFromHDFS() throws AppException, AccessControlException {
     FSDataInputStream stream;
-    try { 
-      hdfs = FileSystem.get(conf);
-      stream = hdfs.open(new Path(this.path));
+    try {
+      if (username != null) {
+          stream = dfs.getDfs(username).open(new Path(this.path));
+      } else {
+        stream = dfs.getDfs().open(new Path(this.path));
+      }
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You can not download the file ");
     } catch (IOException ex) {
       LOG.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "File does not exist: " + this.path);
+              "File does not exist: " + this.path);
     }
-
-    Response.ResponseBuilder response = Response.ok((Object)stream);
+    Response.ResponseBuilder response = Response.ok((Object) stream);
     response.header("Content-disposition", "attachment;");
 
     return response.build();
