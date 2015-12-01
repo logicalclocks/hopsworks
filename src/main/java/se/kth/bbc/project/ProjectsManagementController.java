@@ -15,37 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.hops.bbc;
+package se.kth.bbc.project;
 
-public enum ProjectAction {
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ViewScoped;
+import java.io.Serializable;
 
-  YARN_CHANCED_QUOTA("Yarn changed quota"),
-  HDFS_CHANCED_QUOTA("HDFS changed quota"),
-  DISABLED("Disabled"),
-  UNDEFINED("Undefined");
-
-  private final String readable;
-
-  private ProjectAction(String readable) {
-    this.readable = readable;
-  }
-
-  public static ProjectAction create(String str) {
-    if (str.compareTo(YARN_CHANCED_QUOTA.toString()) == 0) {
-      return YARN_CHANCED_QUOTA;
-    }
-    if (str.compareTo(HDFS_CHANCED_QUOTA.toString()) == 0) {
-      return HDFS_CHANCED_QUOTA;
-    }
-    if (str.compareTo(DISABLED.toString()) == 0) {
-      return DISABLED;
-    }
-    return UNDEFINED;
-  }
-
-  @Override
-  public String toString() {
-    return readable;
-  }
+@ManagedBean
+@ViewScoped
+public class ProjectsManagementController implements Serializable {
 
 }
+

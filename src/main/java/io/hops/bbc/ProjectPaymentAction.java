@@ -17,28 +17,24 @@
  */
 package io.hops.bbc;
 
-public enum ProjectAction {
+public enum  ProjectPaymentAction {
 
-  YARN_CHANCED_QUOTA("Yarn changed quota"),
-  HDFS_CHANCED_QUOTA("HDFS changed quota"),
-  DISABLED("Disabled"),
+  DEPOSIT_MONEY("Deposit money"),
+  WITHDRAW_MONEY("Withdraw money"),
   UNDEFINED("Undefined");
 
   private final String readable;
 
-  private ProjectAction(String readable) {
+  private ProjectPaymentAction(String readable) {
     this.readable = readable;
   }
 
-  public static ProjectAction create(String str) {
-    if (str.compareTo(YARN_CHANCED_QUOTA.toString()) == 0) {
-      return YARN_CHANCED_QUOTA;
+  public static ProjectPaymentAction create(String str) {
+    if (str.compareTo(DEPOSIT_MONEY.toString()) == 0) {
+      return DEPOSIT_MONEY;
     }
-    if (str.compareTo(HDFS_CHANCED_QUOTA.toString()) == 0) {
-      return HDFS_CHANCED_QUOTA;
-    }
-    if (str.compareTo(DISABLED.toString()) == 0) {
-      return DISABLED;
+    if (str.compareTo(WITHDRAW_MONEY.toString()) == 0) {
+      return WITHDRAW_MONEY;
     }
     return UNDEFINED;
   }

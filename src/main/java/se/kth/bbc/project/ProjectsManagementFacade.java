@@ -15,37 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.hops.bbc;
+package se.kth.bbc.project;
 
-public enum ProjectAction {
-
-  YARN_CHANCED_QUOTA("Yarn changed quota"),
-  HDFS_CHANCED_QUOTA("HDFS changed quota"),
-  DISABLED("Disabled"),
-  UNDEFINED("Undefined");
-
-  private final String readable;
-
-  private ProjectAction(String readable) {
-    this.readable = readable;
-  }
-
-  public static ProjectAction create(String str) {
-    if (str.compareTo(YARN_CHANCED_QUOTA.toString()) == 0) {
-      return YARN_CHANCED_QUOTA;
-    }
-    if (str.compareTo(HDFS_CHANCED_QUOTA.toString()) == 0) {
-      return HDFS_CHANCED_QUOTA;
-    }
-    if (str.compareTo(DISABLED.toString()) == 0) {
-      return DISABLED;
-    }
-    return UNDEFINED;
-  }
-
-  @Override
-  public String toString() {
-    return readable;
-  }
-
+public class ProjectsManagementFacade {
 }
