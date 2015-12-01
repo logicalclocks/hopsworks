@@ -22,6 +22,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.hadoop.security.AccessControlException;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import se.kth.bbc.fileoperations.FileOperations;
@@ -35,6 +36,7 @@ import se.kth.bbc.upload.ResumableInfoStorage;
 import se.kth.hopsworks.controller.FolderNameValidator;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
 import se.kth.hopsworks.meta.db.InodeBasicMetadataFacade;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.InodeBasicMetadata;
@@ -69,8 +71,11 @@ public class UploadService {
   private ResponseBuilder responseBuilder;
   @EJB
   private InodeBasicMetadataFacade basicMetaFacade;
+  @EJB
+  private DFSSingleton dfs;
 
   private String path;
+  private String username;
   private Inode fileParent;
   private int templateId;
 
@@ -113,6 +118,10 @@ public class UploadService {
     logger.log(Level.INFO, "Constructor end. by setting fileParent to {0}",
             this.fileParent);
     this.path = uploadPath;
+  }
+
+  public void setUsername(String username) {
+    this.username = username;
   }
 
   /**
@@ -160,7 +169,7 @@ public class UploadService {
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response testMethod(
           @Context HttpServletRequest request)
-          throws AppException {
+          throws AppException, IOException, AccessControlException {
     String fileName = request.getParameter("flowFilename");
     logger.log(Level.INFO, "File parent. {0}", this.fileParent);
     Inode parent;
@@ -171,7 +180,17 @@ public class UploadService {
                 ResponseMessages.FILE_NAME_EXIST);
       }
     }
-
+    //test if the user have permission to create a file in the path.
+    //the file will be overwriten by the uploaded 
+    if (this.username != null) {
+      try {
+        dfs.getDfs(username).touchz(new org.apache.hadoop.fs.Path(this.path
+                + fileName));
+      } catch (AccessControlException ex) {
+        throw new AccessControlException(
+                "Permission denied: You can not upload to this folder. ");
+      }
+    }
     JsonResponse json = new JsonResponse();
     int resumableChunkNumber = getResumableChunkNumber(request);
     ResumableInfo info = getResumableInfo(request, this.path, this.templateId);
@@ -267,21 +286,29 @@ public class UploadService {
           }
           fileContent = Utils.getFileContents(filePath);
           JsonObject obj = Json.createReader(new StringReader(fileContent)).
-            readObject();
-          String templateName= obj.getString("templateName");
-          if(template.isTemplateAvailable(templateName.toLowerCase())){
-            logger.log(Level.INFO, templateName.toLowerCase()+" already exists.");
+                  readObject();
+          String templateName = obj.getString("templateName");
+          if (template.isTemplateAvailable(templateName.toLowerCase())) {
+            logger.log(Level.INFO, "{0} already exists.", templateName.
+                    toLowerCase());
             json.setErrorMsg("Already exists.");
             return noCacheResponse.getNoCacheResponseBuilder(
                     Response.Status.NOT_ACCEPTABLE).entity(json).build();
           }
-         
+
         }
 
         this.path = Utils.ensurePathEndsInSlash(this.path);
-        fileOps.copyToHDFSFromLocal(true, stagingManager.getStagingPath()
-                + this.path + fileName, this.path
-                + fileName);
+        if (this.username != null) {
+          dfs.getDfs(username).copyToHDFSFromLocal(true, stagingManager.
+                  getStagingPath()
+                  + this.path + fileName, this.path
+                  + fileName);
+        } else { // to accommodate previous implimentations  
+          fileOps.copyToHDFSFromLocal(true, stagingManager.getStagingPath()
+                  + this.path + fileName, this.path
+                  + fileName);
+        }
         logger.log(Level.INFO, "Copied to HDFS");
 
         if (templateid != 0 && templateid != -1) {
@@ -298,7 +325,7 @@ public class UploadService {
           //find the corresponding inode
           Inode parent = this.inodes.getInodeAtPath(this.path);
           Inode file = this.inodes.findByParentAndName(parent, fileName);
-          
+
           InodeBasicMetadata basicMeta = new InodeBasicMetadata(file, "", true);
           this.basicMetaFacade.addBasicMetadata(basicMeta);
         }

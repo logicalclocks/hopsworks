@@ -20,10 +20,6 @@ import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
 
-/**
- *
- * @author ermiasg
- */
 @Stateless
 public class ZeppelinResource {
 

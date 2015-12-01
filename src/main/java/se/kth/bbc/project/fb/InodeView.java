@@ -3,7 +3,6 @@ package se.kth.bbc.project.fb;
 import java.util.Date;
 import java.util.Objects;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import se.kth.hopsworks.dataset.Dataset;
@@ -35,6 +34,7 @@ public final class InodeView {
   private byte underConstruction;
   private String owner;
   private String permission;
+  private String email;
 
   public InodeView() {
   }
@@ -63,7 +63,6 @@ public final class InodeView {
     // top level datasets. 
     this.status = true;
     this.owner = i.getHdfsUser().getUsername();
-
     this.permission = FsPermission.createImmutable(i.getPermission()).toString();
   }
 
@@ -246,6 +245,14 @@ public final class InodeView {
 
   public void setOwner(String owner) {
     this.owner = owner;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
   }
 
   public String getPermission() {
