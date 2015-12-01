@@ -222,8 +222,7 @@
 
   <filter-mapping>
     <filter-name>LoginFilter</filter-name>
-    <url-pattern>/security/*</url-pattern>
-    
+    <url-pattern>/*</url-pattern>
     
   </filter-mapping>
  

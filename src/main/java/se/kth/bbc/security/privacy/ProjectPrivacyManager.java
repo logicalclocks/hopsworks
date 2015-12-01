@@ -27,9 +27,15 @@ import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import io.hops.bbc.Consents;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.Response;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
 
 @Stateless
@@ -38,6 +44,10 @@ public class ProjectPrivacyManager {
   
   private static final Logger logger = Logger.getLogger(ProjectPrivacyManager.class.
           getName());
+  
+   @EJB
+  private Settings settings;
+  
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -127,7 +137,6 @@ public class ProjectPrivacyManager {
     HttpServletResponse response = (HttpServletResponse) externalContext.
             getResponse();
 
-    StreamedContent input = null;
     BufferedOutputStream output = null;
 
     String projectPath = "/" + Settings.DIR_ROOT + "/" + consent.getProject().
@@ -135,29 +144,33 @@ public class ProjectPrivacyManager {
     String consentsPath = projectPath + "/" + Settings.DIR_CONSENTS;
     
     String path =  relativePath(inodeFacade.getPath(consent.getInode()), consent.getProject());
-    
-    //String path= inodeFacade.getPath(consent.getInode());
 
-    try {
+        Configuration conf = new Configuration();
+    String hdfsPath = settings.getHadoopConfDir() + "/core-site.xml";
+    org.apache.hadoop.fs.Path p = new org.apache.hadoop.fs.Path(hdfsPath);
+    conf.addResource(p);
+    FileSystem hdfs;
+    FSDataInputStream stream;
+    try { 
+      hdfs = FileSystem.get(conf);
+      stream = hdfs.open(new org.apache.hadoop.fs.Path(path));
+    //response.header("Content-disposition", "attachment;");
 
-      Path path2 = Paths.get(path);
-      byte[] data = Files.readAllBytes(path2);
-
-      input = new DefaultStreamedContent(new ByteArrayInputStream(data));
 
       // Init servlet response.
       response.reset();
-      response.setHeader("Content-Type", "application/pdf");
-      response.setHeader("Content-Length",
-              String.valueOf(data.length)
-      );
+  //    response.setHeader("Content-Type", "application/pdf");
+    //  response.setHeader("Content-Length",
+      //        String.valueOf(data.length)
+      //);
+      response.setHeader("Content-disposition", "attachment;");
       output = new BufferedOutputStream(response.getOutputStream(),
               DEFAULT_BUFFER_SIZE);
 
       // Write file contents to response.
       byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
       int length;
-      while ((length = input.getStream().read(buffer)) > 0) {
+      while ((length = stream.read(buffer)) > 0) {
         output.write(buffer, 0, length);
       }
 

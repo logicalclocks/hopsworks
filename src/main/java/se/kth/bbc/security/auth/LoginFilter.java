@@ -23,7 +23,7 @@ public class LoginFilter extends PolicyAdministrationPoint implements Filter {
     String url = request.getServletPath();
     boolean allowedRequest = false;
 
-    if (url.contains(urlList)) {
+    if ((url.contains(urlList) && !url.contains("/index.xhtml")) || url.contains("/resources/")) {
       allowedRequest = true;
     }
 
