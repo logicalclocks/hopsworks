@@ -16,38 +16,12 @@ import se.kth.hopsworks.util.Settings;
 public class CustomAuthenticationSwitch implements Serializable {
 
   private static final long serialVersionUID = 1L;
-  
-  @EJB 
+
+  @EJB
   private Settings settings;
-  
+
   public boolean isOtpEnabled() {
     return settings.findById("twofactor_auth").getValue().equals("true");
-  }
-
-  
-  
-  public boolean isOtpEnabledFromPropFile() {
-
-    Properties prop = new Properties();
-    try {
-      // Load the two factor authentication property file
-      InputStream inputStream
-              = getClass().getClassLoader().getResourceAsStream(
-                      "clientcauth.properties");
-      prop.load(inputStream);
-
-    } catch (IOException ex) {
-
-    }
-
-    // Check if custom realm is enabled if not disable the gui
-    if (!"true".equals(prop.getProperty("cauth-realm-enabled"))) {
-      Logger.getLogger(CustomAuthenticationSwitch.class.getName()).log(
-              Level.INFO, "## Custom authentication configuration disabled");
-      return false;
-    }
-
-    return true;
   }
 
 }
