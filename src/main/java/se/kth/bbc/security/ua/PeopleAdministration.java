@@ -407,10 +407,10 @@ public class PeopleAdministration implements Serializable {
 
       userTransaction.begin();
 
-      if (!"#".equals(sgroup) && !sgroup.equals(BBCGroup.BBC_GUEST.name()) &&  !sgroup.equals(BBCGroup.BBC_USER.name())) {
+      if (!"#".equals(sgroup) && (!sgroup.isEmpty() || sgroup!=null)) {
         userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
       }else {
-        MessagesController.addSecurityErrorMessage(sgroup +" already is granted.");
+        MessagesController.addSecurityErrorMessage("Role could not be granted.");
         return ;
       }
       

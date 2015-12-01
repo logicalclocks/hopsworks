@@ -34,7 +34,6 @@ import se.kth.bbc.security.audit.LoginsAuditActions;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.hopsworks.user.model.Users;
 
- 
 @ManagedBean
 @SessionScoped
 public class ResetPassword implements Serializable {
@@ -59,9 +58,6 @@ public class ResetPassword implements Serializable {
 
   @EJB
   private AuditManager auditManager;
-
-  @ManagedProperty(value = "#{clientSessionState}")
-  private ClientSessionState sessionState;
 
   @EJB
   private UserManager mgr;
@@ -90,10 +86,6 @@ public class ResetPassword implements Serializable {
 
   public void setQuestion(SecurityQuestion question) {
     this.question = question;
-  }
-
-  public void setSessionState(ClientSessionState sessionState) {
-    this.sessionState = sessionState;
   }
 
   public String getCurrent() {
@@ -162,7 +154,7 @@ public class ResetPassword implements Serializable {
         if (val > Users.ALLOWED_FALSE_LOGINS) {
           mgr.changeAccountStatus(people.getUid(), "",
                   PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
-          return ("welcome");
+          return returnMenu();
         }
         return "";
       }
@@ -170,16 +162,15 @@ public class ResetPassword implements Serializable {
       // generate a radndom password
       String random_password = SecurityUtils.getRandomString(passwordLength);
 
-    
-     String mess = UserAccountsEmailMessages.buildPasswordResetMessage(
+      String mess = UserAccountsEmailMessages.buildPasswordResetMessage(
               random_password);
-    
+
       userTransaction.begin();
       // make the account pending until it will be reset by user upon first login
       // mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
-        // update the status of user to active
+      // update the status of user to active
       people.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
-      
+
       // reset the old password with a new one
       mgr.resetPassword(people, SecurityUtils.converToSHA256(random_password));
 
@@ -219,17 +210,14 @@ public class ResetPassword implements Serializable {
     people = mgr.getUserByEmail(req.getRemoteUser());
 
     if (people == null) {
-      FacesContext context = FacesContext.getCurrentInstance();
-      HttpSession session = (HttpSession) context.getExternalContext().
-              getSession(false);
-      session.invalidate();
+
       auditManager.registerAccountChange(people,
               AccountsAuditActions.PASSWORDCHANGE.getValue(),
               AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
               getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
               "FAIL", "PASSWORD CHANGE");
 
-      return ("welcome");
+      return returnMenu();
     }
 
     if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
@@ -254,13 +242,6 @@ public class ResetPassword implements Serializable {
               AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
               getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
               "SUCCESS", "PASSWORD CHANGE");
-
-      // logout user
-      FacesContext context = FacesContext.getCurrentInstance();
-      HttpSession session = (HttpSession) context.getExternalContext().
-              getSession(false);
-      session.invalidate();
-
       return ("password_changed");
     } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
             MessagingException ex) {
@@ -602,4 +583,15 @@ public class ResetPassword implements Serializable {
     return ("welcome");
   }
 
+  public String returnMenu() {
+
+    FacesContext ctx = FacesContext.getCurrentInstance();
+    HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
+
+    if (null != sess) {
+      sess.invalidate();
+    }
+    return ("welcome");
+
+  }
 }
