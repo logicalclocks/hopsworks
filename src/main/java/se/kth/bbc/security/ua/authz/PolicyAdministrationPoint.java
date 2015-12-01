@@ -6,6 +6,8 @@
 package se.kth.bbc.security.ua.authz;
 
 import java.io.Serializable;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import se.kth.bbc.security.ua.BBCGroup;
@@ -56,25 +58,26 @@ public class PolicyAdministrationPoint implements Serializable {
   }
 
   public boolean isInResearcherRole(String username) {
-    Users user = userPolicMgr.getUserByUsername(username);
+    Users user = userPolicMgr.getUserByEmail(username);
     return userPolicMgr.findGroups(user.getUid()).contains(
             BBCGroup.BBC_RESEARCHER.name());
   }
 
   public boolean isInDataProviderRole(String username) {
-    Users user = userPolicMgr.getUserByUsername(username);
+  Users user = userPolicMgr.getUserByEmail(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.BBC_ADMIN.
             name());
   }
 
   public boolean isInAuditorRole(String username) {
-    Users user = userPolicMgr.getUserByUsername(username);
+    Users user = userPolicMgr.getUserByEmail(username);
+
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.AUDITOR.
             name());
   }
 
   public boolean isInGuestRole(String username) {
-    Users user = userPolicMgr.getUserByUsername(username);
+    Users user = userPolicMgr.getUserByEmail(username);
     return userPolicMgr.findGroups(user.getUid()).contains(BBCGroup.BBC_GUEST.
             name());
   }
@@ -84,7 +87,7 @@ public class PolicyAdministrationPoint implements Serializable {
     if (isInAdminRole(user)) {
       return "adminIndex";
     } else if (isInAuditorRole(user)) {
-      return "auditIndex";
+      return "adminAuditIndex";
     } else if (isInDataProviderRole(user) || isInResearcherRole(user) ) {
       return "home";
     }

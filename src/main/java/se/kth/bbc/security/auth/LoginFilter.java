@@ -28,6 +28,7 @@ public class LoginFilter extends PolicyAdministrationPoint implements Filter {
     }
 
     
+    
     String username = request.getRemoteUser();
 
     // If user is logged in redirect to index first page 
