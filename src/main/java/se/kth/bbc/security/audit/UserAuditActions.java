@@ -1,6 +1,6 @@
 package se.kth.bbc.security.audit;
 
-public enum LoginAuditActions {
+public enum UserAuditActions {
 
   // for user authentication
   LOGIN("LOGIN"),
@@ -9,11 +9,25 @@ public enum LoginAuditActions {
   // to get registration audit logs
   REGISTRATION("REGISTRATION"),
   // get all the logs
-  ALL("ALL");
+  ALL("ALL"),
+  
+  SUCCESS("SUCCESS"),
+  
+  FAILED("FAILED"),
+  
+  ABORTED("ABORTED"), 
+  
+  RECOVERY("RECOVERY"),
+  QRCODE("QR CODE"),
+  
+  SECQUESTION("SECURTY QUESTION RESET"),
+  
+  PROFILE("PROFILE UPDATE"),
+  PASSWORD("PASSWORD CHANGE") ;
 
   private final String value;
 
-  private LoginAuditActions(String value) {
+  private UserAuditActions(String value) {
     this.value = value;
   }
 
@@ -21,9 +35,9 @@ public enum LoginAuditActions {
     return value;
   }
 
-  public static LoginAuditActions getLoginsAuditActions(String text) {
+  public static UserAuditActions getLoginsAuditActions(String text) {
     if (text != null) {
-      for (LoginAuditActions b : LoginAuditActions.values()) {
+      for (UserAuditActions b : UserAuditActions.values()) {
         if (text.equalsIgnoreCase(b.value)) {
           return b;
         }

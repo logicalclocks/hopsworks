@@ -1,5 +1,6 @@
 package se.kth.hopsworks.rest;
 
+import java.net.SocketException;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -21,7 +22,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.codec.binary.Base64;
 import se.kth.bbc.security.audit.AuditManager;
-import se.kth.bbc.security.audit.LoginAuditActions;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
@@ -99,7 +100,7 @@ public class AuthService {
 
           req.login(email, password);
           userController.resetFalseLogin(user);
-          am.registerLoginInfo(user, LoginAuditActions.LOGIN.name(), "SUCCESS", req);
+          am.registerLoginInfo(user, UserAuditActions.LOGIN.name(), "SUCCESS", req);
 
           //if the logedin user has no supported role logout
           if (!sc.isUserInRole("BBC_USER") && !sc.isUserInRole("SYS_ADMIN")) {
@@ -110,7 +111,7 @@ public class AuthService {
 
         } catch (ServletException e) {
           userController.registerFalseLogin(user);
-          am.registerLoginInfo(user, LoginAuditActions.LOGIN.name(), "FAILED", req);
+          am.registerLoginInfo(user, UserAuditActions.LOGIN.name(), "FAILED", req);
           throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                   ResponseMessages.AUTHENTICATION_FAILURE);
         }
@@ -154,25 +155,13 @@ public class AuthService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   public Response register(UserDTO newUser, @Context HttpServletRequest req)
-          throws AppException {
+          throws AppException, SocketException {
 
     byte[] qrCode = null;
 
     JsonResponse json = new JsonResponse();
 
-    String domain = req.getRequestURL().toString();
-    String cpath = req.getContextPath().toString();
-
-    String url = domain.substring(0, domain.indexOf(cpath));
-
-    url = url + cpath;
-
-    String ip = req.getRemoteAddr();
-    String browser = "Fix this";
-    String mac = "Fix this";
-    String os = "Fix this";
-
-    qrCode = userController.registerUser(newUser, url, ip, browser, os, mac);
+    qrCode = userController.registerUser(newUser,req);
 
     if (settings.findById("twofactor_auth").getValue().equals("true")) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
@@ -191,28 +180,12 @@ public class AuthService {
   @Consumes(MediaType.APPLICATION_JSON)
   public Response registerYubikey(UserDTO newUser,
           @Context HttpServletRequest req)
-          throws AppException {
+          throws AppException, SocketException {
 
-    req.getServletContext().log("Registering..." + newUser.getEmail() + ", "
-            + newUser.getFirstName());
 
     JsonResponse json = new JsonResponse();
 
-    String domain = req.getRequestURL().toString();
-    String cpath = req.getContextPath().toString();
-
-    String url = domain.substring(0, domain.indexOf(cpath));
-
-    url = url + cpath;
-
-    String ip = req.getRemoteAddr();
-    String browser = "Fix this";
-    String mac = "Fix this";
-    String os = "Fix this";
-    userController.registerYubikeyUser(newUser, url, ip, browser, os, mac);
-
-    req.getServletContext().log("successfully registered new user: '" + newUser.
-            getEmail() + "'");
+    userController.registerYubikeyUser(newUser, req);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();

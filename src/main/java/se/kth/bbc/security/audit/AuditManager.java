@@ -5,6 +5,7 @@
  */
 package se.kth.bbc.security.audit;
 
+import java.net.SocketException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -53,16 +54,17 @@ public class AuditManager {
   public List<Userlogins> getUsersLoginsFromTo(Date from, Date to, String action) {
 
     String sql;
-    if (action.equals(LoginAuditActions.ALL.name())) {
-      sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '"
+    if(action.equals(UserAuditActions.ALL.name())) {
+  
+          sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '"
               + from
-              + "' AND login_date <='" + to + "')";
-
+              + "' AND login_date <='" + to + "' AND action =')";
+    
     } else {
       sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '"
               + from
               + "' AND login_date <='" + to + "' AND action ='" + action + "')";
-
+    
     }
     Query query = em.createNativeQuery(sql, Userlogins.class);
 
@@ -225,32 +227,52 @@ public class AuditManager {
 
   public void registerLoginInfo(Users user, String action, String outcome,
           HttpServletRequest req) {
-    String ip = req.getRemoteAddr();
-    String userAgent = req.getHeader("User-Agent");
-    String browser = null;
-    Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE,
-            "User agent --->>> {0}", userAgent);
-    if (userAgent.contains("MSIE")) {
-      browser = "Internet Explorer";
-    } else if (userAgent.contains("Firefox")) {
-      browser = "Firefox";
-    } else if (userAgent.contains("Chrome")) {
-      browser = "Chrome";
-    } else if (userAgent.contains("Opera")) {
-      browser = "Opera";
-    } else if (userAgent.contains("Safari")) {
-      browser = "Safari";
-    }
+
     Userlogins login = new Userlogins();
     login.setUid(user.getUid());
-    login.setBrowser(browser);
-    login.setIp(ip);
+    login.setBrowser(AuditUtil.getBrowserInfo());
+    login.setIp(AuditUtil.getIPAddress(req));
     login.setAction(action);
+    login.setOs(AuditUtil.getOSInfo(req));
     login.setOutcome(outcome);
     login.setLoginDate(new Date());
     em.persist(login);
   }
 
+    /**
+   * Register the role assignment changes.
+   * <p>
+   * @param u
+   * @param action
+   * @param ip
+   * @param browser
+   * @param os
+   * @param mac
+   * @param outcome
+   * @param message
+   * @param tar
+   * @return
+   */
+  public boolean registerRoleChange(Users u, String action, String outcome, String message,
+          Users tar, HttpServletRequest req) throws SocketException {
+
+    RolesAudit ra = new RolesAudit();
+    ra.setInitiator(u.getUid());
+    ra.setBrowser(AuditUtil.getBrowserInfo(req));
+    ra.setIp(AuditUtil.getIPAddress(req));
+    ra.setOs(AuditUtil.getOSInfo(req));
+    ra.setEmail(u.getEmail());
+    ra.setAction(action);
+    ra.setOutcome(outcome);
+    ra.setTime(new Timestamp(new Date().getTime()));
+    ra.setEmail(u.getEmail());
+    ra.setMac(AuditUtil.getMacAddress(AuditUtil.getIPAddress(req)));
+    ra.setMessage(message);
+    ra.setTarget(tar);
+    em.persist(ra);
+
+    return true;
+  }
   /**
    * Register the role assignment changes.
    * <p>

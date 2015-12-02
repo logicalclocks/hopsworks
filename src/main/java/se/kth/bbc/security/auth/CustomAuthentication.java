@@ -16,7 +16,7 @@ import javax.servlet.http.HttpSession;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
-import se.kth.bbc.security.audit.LoginAuditActions;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
@@ -147,7 +147,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       // Set the onlne flag
       mgr.setOnline(userid, AuthenticationConstants.IS_ONLINE);
 
-      registerLoginInfo(user, LoginAuditActions.LOGIN.getValue(),
+      registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
               "SUCCESS");
 
     } catch (ServletException ex) {
@@ -155,7 +155,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       int val = user.getFalseLogin();
       mgr.increaseLockNum(userid, val + 1);
 
-      registerLoginInfo(user, LoginAuditActions.LOGIN.getValue(),
+      registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
               "FAIL");
 
       if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
@@ -249,7 +249,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       this.otpCode = AuthenticationConstants.YUBIKEY_OTP_PADDING;
     }
 
-    registerLoginInfo(user, LoginAuditActions.LOGIN.getValue(),
+    registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
             "SUCCESS");
 
     try {
@@ -265,7 +265,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       // If more than five times block the account
       int val = user.getFalseLogin();
       mgr.increaseLockNum(userid, val + 1);
-      registerLoginInfo(user, LoginAuditActions.LOGIN.getValue(),
+      registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
               "FAIL");
       if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         mgr.changeAccountStatus(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.
@@ -310,7 +310,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
     String macAddress;
     try {
       macAddress = AuditUtil.getMacAddress(ip);
-      am.registerLoginInfo(user, LoginAuditActions.LOGOUT.getValue(), ip,
+      am.registerLoginInfo(user, UserAuditActions.LOGOUT.getValue(), ip,
               browser, os, macAddress, "SUCCESS");
 
       mgr.setOnline(userid, AuthenticationConstants.IS_OFFLINE);

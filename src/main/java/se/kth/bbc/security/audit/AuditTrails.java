@@ -48,7 +48,7 @@ public class AuditTrails implements Serializable {
 
   private StudyAuditActions selectedStudyAuditAction;
 
-  private LoginAuditActions selectedLoginsAuditAction;
+  private UserAuditActions selectedLoginsAuditAction;
 
   private List<Userlogins> userLogins;
 
@@ -118,8 +118,8 @@ public class AuditTrails implements Serializable {
     return RolesAuditActions.values();
   }
 
-  public LoginAuditActions[] getLoginsAuditActions() {
-    return LoginAuditActions.values();
+  public UserAuditActions[] getLoginsAuditActions() {
+    return UserAuditActions.values();
   }
 
   public StudyAuditActions[] getStudyAuditActions() {
@@ -153,12 +153,12 @@ public class AuditTrails implements Serializable {
     this.selectedStudyAuditAction = selectedStudyAuditAction;
   }
 
-  public LoginAuditActions getSelectedLoginsAuditAction() {
+  public UserAuditActions getSelectedLoginsAuditAction() {
     return selectedLoginsAuditAction;
   }
 
   public void setSelectedLoginsAuditAction(
-          LoginAuditActions selectedLoginsAuditAction) {
+          UserAuditActions selectedLoginsAuditAction) {
     this.selectedLoginsAuditAction = selectedLoginsAuditAction;
   }
 
@@ -252,15 +252,15 @@ public class AuditTrails implements Serializable {
    * <p>
    * @param action
    */
-  public void processLoginAuditRequest(LoginAuditActions action) {
+  public void processLoginAuditRequest(UserAuditActions action) {
 
-    if (action.getValue().equals(LoginAuditActions.REGISTRATION.getValue())) {
+    if (action.getValue().equals(UserAuditActions.REGISTRATION.getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
-    } else if (action.getValue().equals(LoginAuditActions.LOGIN.
-            getValue()) || action.getValue().equals(LoginAuditActions.LOGOUT.
+    } else if (action.getValue().equals(UserAuditActions.LOGIN.
+            getValue()) || action.getValue().equals(UserAuditActions.LOGOUT.
                     getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
-    }else if(action.getValue().equals(LoginAuditActions.ALL.getValue())){
+    }else if(action.getValue().equals(UserAuditActions.ALL.getValue())){
          userLogins = getUserLogins(username, from, to, action.getValue());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
@@ -303,7 +303,7 @@ public class AuditTrails implements Serializable {
    */
   public void processRoleAuditRequest(RolesAuditActions action) {
 
-    if (action.getValue().equals(RolesAuditActions.ADDROME.getValue())) {
+    if (action.getValue().equals(RolesAuditActions.ADDROLE.getValue())) {
       roleAudit = getRoleAudit(username, from, to, action.getValue());
     } else if (action.getValue().equals(RolesAuditActions.REMOVEROLE.getValue())) {
       roleAudit = getRoleAudit(username, from, to, action.getValue());

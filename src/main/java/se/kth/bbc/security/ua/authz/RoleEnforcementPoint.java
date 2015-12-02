@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
-import se.kth.bbc.security.audit.LoginAuditActions;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.bbc.security.ua.UserManager;
@@ -166,7 +166,7 @@ public class RoleEnforcementPoint implements Serializable {
     String os = AuditUtil.getOSInfo();
     String macAddress = AuditUtil.getMacAddress(ip);
 
-    am.registerLoginInfo(getUserFromSession(), LoginAuditActions.LOGOUT.getValue(), ip,
+    am.registerLoginInfo(getUserFromSession(), UserAuditActions.LOGOUT.getValue(), ip,
             browser, os, macAddress, "SUCCESS");
 
     userManager.setOnline(user.getUid(), AuthenticationConstants.IS_OFFLINE);

@@ -1,5 +1,6 @@
 package se.kth.hopsworks.rest;
 
+import static com.mchange.v2.c3p0.impl.C3P0Defaults.user;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.security.RolesAllowed;
@@ -14,6 +15,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UsersController;
 import se.kth.hopsworks.filters.AllowedRoles;
@@ -88,7 +90,7 @@ public class UserService {
         JsonResponse json = new JsonResponse();
 
         UserDTO userDTO = userController.updateProfile(sc.getUserPrincipal().
-                getName(), firstName, lastName, telephoneNum);
+                getName(), firstName, lastName, telephoneNum, req);
 
         json.setStatus("OK");
         json.setSuccessMessage(ResponseMessages.PROFILE_UPDATED);
@@ -109,10 +111,8 @@ public class UserService {
             @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
         
-        System.err.println("#################################  "+ oldPassword + "  "+ newPassword+ " "+confirmedPassword);
-        
         userController.changePassword(sc.getUserPrincipal().getName(), oldPassword,
-                newPassword, confirmedPassword);
+                newPassword, confirmedPassword, req);
         
         json.setStatus("OK");
         json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
@@ -131,8 +131,8 @@ public class UserService {
                                      @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
         userController.changeSecQA(sc.getUserPrincipal().getName(), oldPassword,
-                securityQuestion, securityAnswer);
-
+                securityQuestion, securityAnswer ,req);
+        
         json.setStatus("OK");
         json.setSuccessMessage(ResponseMessages.SEC_QA_CHANGED);
 

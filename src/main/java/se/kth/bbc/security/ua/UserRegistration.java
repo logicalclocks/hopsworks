@@ -27,7 +27,7 @@ import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
-import se.kth.bbc.security.audit.LoginAuditActions;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.hopsworks.user.model.Users;
@@ -347,7 +347,7 @@ public class UserRegistration implements Serializable {
       qrCode = QRCodeGenerator.getQRCode(mail, AuthenticationConstants.ISSUER,
               otpSecret);
 
-      am.registerLoginInfo(user, LoginAuditActions.REGISTRATION.getValue(), ip,
+      am.registerLoginInfo(user, UserAuditActions.REGISTRATION.getValue(), ip,
               browser, os, macAddress, "SUCCESS");
 
       userTransaction.commit();
@@ -380,7 +380,7 @@ public class UserRegistration implements Serializable {
             IllegalStateException e) {
       MessagesController.addSecurityErrorMessage("Technical Error");
 
-      am.registerLoginInfo(user, LoginAuditActions.REGISTRATION.getValue(), ip,
+      am.registerLoginInfo(user, UserAuditActions.REGISTRATION.getValue(), ip,
               browser, os, macAddress, "FAIL");
 
       return ("");
@@ -442,7 +442,7 @@ public class UserRegistration implements Serializable {
 
       mgr.registerYubikey(user);
 
-      am.registerLoginInfo(user, LoginAuditActions.REGISTRATION.getValue(), ip,
+      am.registerLoginInfo(user, UserAuditActions.REGISTRATION.getValue(), ip,
               browser, os, macAddress, "SUCCESS");
 
       // Send email to the user to get notified about the account request
@@ -480,7 +480,7 @@ public class UserRegistration implements Serializable {
             HeuristicRollbackException | SecurityException |
             IllegalStateException e) {
 
-      am.registerLoginInfo(user, LoginAuditActions.REGISTRATION.getValue(), ip,
+      am.registerLoginInfo(user, UserAuditActions.REGISTRATION.getValue(), ip,
               browser, os, macAddress, "FAIL");
 
       MessagesController.addSecurityErrorMessage("Technical Error");
