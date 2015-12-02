@@ -17,13 +17,33 @@
  */
 package se.kth.bbc.project;
 
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ViewScoped;
-import java.io.Serializable;
+import se.kth.hopsworks.util.Settings;
 
-@ManagedBean
-@ViewScoped
-public class ProjectsManagementController implements Serializable {
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+@Stateless
+public class ProjectsManagementController {
+
+  @EJB
+  private ProjectFacade projectFacade;
+
+  @EJB
+  private Settings settings;
+
+  @PersistenceContext(unitName = "kthfsPU")
+  private EntityManager em;
+
+  public ProjectsManagementController() {
+  }
+
+  //TODO
+  //get everything from projects_management view
+  //get set hdfs quota also to projectController
+  //sort by quotas
+  //buttons or list or something
+  //make the buttons do things
 
 }
-

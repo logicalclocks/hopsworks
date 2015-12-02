@@ -10,6 +10,7 @@ import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -25,38 +26,34 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name = "ProjectsManagement.findAll", query = "SELECT p FROM ProjectsManagement p"),
     @NamedQuery(name = "ProjectsManagement.findByProjectname", query = "SELECT p FROM ProjectsManagement p WHERE p.projectname = :projectname"),
-    @NamedQuery(name = "ProjectsManagement.findByQuotaRemaining", query = "SELECT p FROM ProjectsManagement p WHERE p.quotaRemaining = :quotaRemaining"),
-    @NamedQuery(name = "ProjectsManagement.findByTotal", query = "SELECT p FROM ProjectsManagement p WHERE p.total = :total"),
+    @NamedQuery(name = "ProjectsManagement.findByYarnQuotaRemaining", query = "SELECT p FROM ProjectsManagement p WHERE p.yarnQuotaRemaining = :yarnQuotaRemaining"),
+    @NamedQuery(name = "ProjectsManagement.findByYarnQuotaTotal", query = "SELECT p FROM ProjectsManagement p WHERE p.yarnQuotaTotal = :yarnQuotaTotal"),
     @NamedQuery(name = "ProjectsManagement.findByUsername", query = "SELECT p FROM ProjectsManagement p WHERE p.username = :username"),
     @NamedQuery(name = "ProjectsManagement.findByRetentionPeriod", query = "SELECT p FROM ProjectsManagement p WHERE p.retentionPeriod = :retentionPeriod"),
-    @NamedQuery(name = "ProjectsManagement.findByArchived", query = "SELECT p FROM ProjectsManagement p WHERE p.archived = :archived"),
-    @NamedQuery(name = "ProjectsManagement.findByDate", query = "SELECT p FROM ProjectsManagement p WHERE p.date = :date")})
+    @NamedQuery(name = "ProjectsManagement.findByDisabled", query = "SELECT p FROM ProjectsManagement p WHERE p.disabled = :disabled"),
+    @NamedQuery(name = "ProjectsManagement.findByLastPaidAt", query = "SELECT p FROM ProjectsManagement p WHERE p.lastPaidAt = :lastPaidAt")})
 public class ProjectsManagement implements Serializable {
     private static final long serialVersionUID = 1L;
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 100)
-    @Column(name = "projectname")
+    @Id
     private String projectname;
-    @Column(name = "quota_remaining")
-    private Integer quotaRemaining;
-    @Column(name = "total")
-    private Integer total;
+    @Column(name = "yarn_quota_remaining")
+    private Integer yarnQuotaRemaining;
+    @Column(name = "yarn_quota_total")
+    private Integer yarnQuotaTotal;
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 150)
-    @Column(name = "username")
     private String username;
     @Column(name = "retention_period")
     @Temporal(TemporalType.DATE)
     private Date retentionPeriod;
-    @Column(name = "archived")
-    private Boolean archived;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "date")
+    private Boolean disabled;
+    @Column(name = "last_paid_at")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date date;
+    private Date lastPaidAt;
 
     public ProjectsManagement() {
     }
@@ -69,20 +66,20 @@ public class ProjectsManagement implements Serializable {
         this.projectname = projectname;
     }
 
-    public Integer getQuotaRemaining() {
-        return quotaRemaining;
+    public Integer getYarnQuotaRemaining() {
+        return yarnQuotaRemaining;
     }
 
-    public void setQuotaRemaining(Integer quotaRemaining) {
-        this.quotaRemaining = quotaRemaining;
+    public void setYarnQuotaRemaining(Integer yarnQuotaRemaining) {
+        this.yarnQuotaRemaining = yarnQuotaRemaining;
     }
 
-    public Integer getTotal() {
-        return total;
+    public Integer getYarnQuotaTotal() {
+        return yarnQuotaTotal;
     }
 
-    public void setTotal(Integer total) {
-        this.total = total;
+    public void setYarnQuotaTotal(Integer yarnQuotaTotal) {
+        this.yarnQuotaTotal = yarnQuotaTotal;
     }
 
     public String getUsername() {
@@ -101,20 +98,20 @@ public class ProjectsManagement implements Serializable {
         this.retentionPeriod = retentionPeriod;
     }
 
-    public Boolean getArchived() {
-        return archived;
+    public Boolean getDisabled() {
+        return disabled;
     }
 
-    public void setArchived(Boolean archived) {
-        this.archived = archived;
+    public void setDisabled(Boolean disabled) {
+        this.disabled = disabled;
     }
 
-    public Date getDate() {
-        return date;
+    public Date getLastPaidAt() {
+        return lastPaidAt;
     }
 
-    public void setDate(Date date) {
-        this.date = date;
+    public void setLastPaidAt(Date lastPaidAt) {
+        this.lastPaidAt = lastPaidAt;
     }
     
 }
