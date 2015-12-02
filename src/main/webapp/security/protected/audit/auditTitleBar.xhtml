@@ -16,7 +16,7 @@ and open the template in the editor.
         <p:toolbar styleClass="MainToolbar">
           <p:toolbarGroup align="left">  
             <p:commandLink value="BiobankCloud" action="adminAuditIndex" rendered="#{roleEnforcementPoint.loggedIn}"/>
-            <p:commandLink value="BiobankCloud" action="welcome" rendered=#{roleEnforcementPoint.loggedIn}"/>
+            <p:commandLink value="BiobankCloud" action="welcome" rendered="#{!roleEnforcementPoint.loggedIn}"/>
           </p:toolbarGroup> 
 
           <p:toolbarGroup align="left">              

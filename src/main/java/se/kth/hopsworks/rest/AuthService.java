@@ -89,9 +89,9 @@ public class AuthService {
       otp = AuthenticationConstants.MOBILE_OTP_PADDING;
     }
     
-    if(otp.length() == 6){
+    if(otp.length() == AuthenticationConstants.MOBILE_OTP_PADDING.length()){
       password = password + otp;
-    } else if(otp.length() == 44){
+    } else if(otp.length() == AuthenticationConstants.YUBIKEY_OTP_PADDING.length()){
       password = password + otp + AuthenticationConstants.YUBIKEY_USER_MARKER;
     }
    
