@@ -13,7 +13,6 @@ angular.module('hopsWorksApp')
         self.currentProject = [];
         self.activities = [];
         self.currentPage = 1;
-        self.retentionPeriod= new Date();
         self.card = {};
         self.cards = [];
         self.projectMembers = [];
