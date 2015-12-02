@@ -145,7 +145,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       // Reset the lock for failed accounts
       mgr.resetLock(userid);
       // Set the onlne flag
-      mgr.setOnline(userid, 1);
+      mgr.setOnline(userid, AuthenticationConstants.IS_ONLINE);
 
       registerLoginInfo(user, LoginsAuditActions.LOGIN.getValue(),
               "SUCCESS");
@@ -259,7 +259,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       // Reset the lock for failed accounts
       mgr.resetLock(userid);
       // Set the onlne flag
-      mgr.setOnline(userid, 1);
+      mgr.setOnline(userid, AuthenticationConstants.IS_ONLINE);
 
     } catch (ServletException ex) {
       // If more than five times block the account
@@ -313,7 +313,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       am.registerLoginInfo(user, LoginsAuditActions.LOGOUT.getValue(), ip,
               browser, os, macAddress, "SUCCESS");
 
-      mgr.setOnline(userid, -1);
+      mgr.setOnline(userid, AuthenticationConstants.IS_OFFLINE);
 
     } catch (SocketException ex) {
       Logger.getLogger(CustomAuthentication.class.getName()).

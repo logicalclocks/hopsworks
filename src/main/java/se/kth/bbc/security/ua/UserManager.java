@@ -10,6 +10,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.project.Project;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.PeopleGroup;
@@ -17,10 +18,7 @@ import se.kth.bbc.security.ua.model.PeopleGroupPK;
 import se.kth.bbc.security.ua.model.Yubikey;
 import se.kth.hopsworks.user.model.Users;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
+
 @Stateless
 public class UserManager {
 
@@ -29,9 +27,6 @@ public class UserManager {
 
   // Strating user id from 1000 to create a POSIX compliant username: meb1000
   private final int STARTING_USER = 1000;
-
-  // BiobankCloud prefix username prefix
-  private final String USERNAME_PREFIX = "meb";
 
   /**
    * Register a new group for user.
@@ -363,7 +358,7 @@ public class UserManager {
           String validationKey) {
 
     // assigne a username
-    String uname = USERNAME_PREFIX + uid;
+    String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
 
     Users user = new Users();
     user.setUsername(uname);
@@ -378,11 +373,7 @@ public class UserManager {
     user.setActivated(new Timestamp(new Date().getTime()));
     user.setStatus(status);
     user.setValidationKey(validationKey);
-    /*
-     * offline: -1
-     * online: 1
-     */
-    user.setIsonline(-1);
+    user.setIsonline(AuthenticationConstants.IS_OFFLINE);
     user.setSecurityQuestion(question);
     user.setSecurityAnswer(answer);
     user.setPasswordChanged(new Timestamp(new Date().getTime()));
@@ -448,10 +439,6 @@ public class UserManager {
       
       Address a = u.getAddress();
       em.remove(a);
-
-//      if (u.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
-  //      em.remove(u);
-    //  }
 
       em.remove(u);
       

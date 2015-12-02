@@ -13,6 +13,7 @@ import javax.servlet.http.HttpSession;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.audit.LoginsAuditActions;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.user.model.Users;
@@ -40,7 +41,7 @@ public class RoleEnforcementPoint implements Serializable {
     this.open_requests = open_reauests;
   }
 
-  public Users getUser() {
+  public Users getUserFromSession() {
     if (user == null) {
       ExternalContext context = FacesContext.getCurrentInstance().
               getExternalContext();
@@ -165,10 +166,10 @@ public class RoleEnforcementPoint implements Serializable {
     String os = AuditUtil.getOSInfo();
     String macAddress = AuditUtil.getMacAddress(ip);
 
-    am.registerLoginInfo(getUser(), LoginsAuditActions.LOGOUT.getValue(), ip,
+    am.registerLoginInfo(getUserFromSession(), LoginsAuditActions.LOGOUT.getValue(), ip,
             browser, os, macAddress, "SUCCESS");
 
-    userManager.setOnline(user.getUid(), -1);
+    userManager.setOnline(user.getUid(), AuthenticationConstants.IS_OFFLINE);
 
     if (null != sess) {
       sess.invalidate();
