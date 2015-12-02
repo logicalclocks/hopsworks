@@ -81,17 +81,6 @@ import se.kth.bbc.security.ua.model.Yubikey;
   @NamedQuery(name = "Users.findByStatus",
           query = "SELECT u FROM Users u WHERE u.status = :status")})
 public class Users implements Serializable {
-  /*
-   * offline: -1
-   * online: 1
-   */
-
-  public static final int IS_ONLINE = 1;
-  public static final int IS_OFFLINE = -1;
-
-  public static final int ALLOWED_FALSE_LOGINS = 20;
-  //hopsworks user prefix username prefix
-//  public static final String USERNAME_PREFIX = "meb";
 
   private static final long serialVersionUID = 1L;
   @Id

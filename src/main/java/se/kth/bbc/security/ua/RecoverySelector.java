@@ -3,9 +3,7 @@ package se.kth.bbc.security.ua;
 import com.google.zxing.WriterException;
 import java.io.IOException;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
-import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -14,11 +12,13 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.hopsworks.user.model.Users;
@@ -183,7 +183,7 @@ public class RecoverySelector implements Serializable {
 
     try {
 
-      if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
+      if (people.getPassword().equals(DigestUtils.sha256Hex(passwd))) {
 
         // generate a randome secret of legth 6
         String random = SecurityUtils.getRandomString(passwordLength);
@@ -210,8 +210,7 @@ public class RecoverySelector implements Serializable {
 
         return "";
       }
-    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
-            MessagingException ex) {
+    } catch (MessagingException ex) {
       am.registerAccountChange(people,
               PeopleAccountStatus.MOBILE_LOST.name(),
               AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
@@ -259,7 +258,7 @@ public class RecoverySelector implements Serializable {
 
         um.updateSecret(people.getUid(), otpSecret);
         qrCode = QRCodeGenerator.getQRCode(people.getEmail(),
-                CustomAuthentication.ISSUER, otpSecret);
+                AuthenticationConstants.ISSUER, otpSecret);
         qrEnabled = 1;
 
         return "qrcode";
@@ -272,7 +271,7 @@ public class RecoverySelector implements Serializable {
     } else {
       int val = people.getFalseLogin();
       um.increaseLockNum(people.getUid(), val + 1);
-      if (val > Users.ALLOWED_FALSE_LOGINS) {
+      if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         um.changeAccountStatus(people.getUid(), "",
                 PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
         try {
@@ -336,7 +335,7 @@ public class RecoverySelector implements Serializable {
     }
 
     try {
-      if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
+      if (people.getPassword().equals(DigestUtils.sha256Hex(passwd))) {
 
         String message = UserAccountsEmailMessages.buildYubikeyResetMessage();
         people.
@@ -359,7 +358,7 @@ public class RecoverySelector implements Serializable {
 
         int val = people.getFalseLogin();
         um.increaseLockNum(people.getUid(), val + 1);
-        if (val > Users.ALLOWED_FALSE_LOGINS) {
+        if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
           um.changeAccountStatus(people.getUid(), "",
                   PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
           try {
@@ -390,8 +389,7 @@ public class RecoverySelector implements Serializable {
 
         return "";
       }
-    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
-            MessagingException ex) {
+    } catch (MessagingException ex) {
       am.registerAccountChange(people,
               PeopleAccountStatus.YUBIKEY_LOST.name(),
               AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.

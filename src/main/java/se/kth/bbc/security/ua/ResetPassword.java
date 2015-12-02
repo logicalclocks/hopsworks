@@ -1,19 +1,11 @@
-  /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.ua;
 
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
-import java.security.NoSuchAlgorithmException;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
@@ -25,13 +17,14 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
-import se.kth.bbc.lims.ClientSessionState;
+import org.apache.commons.codec.digest.DigestUtils;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.audit.LoginsAuditActions;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.user.model.Users;
 
 @ManagedBean
@@ -142,7 +135,7 @@ public class ResetPassword implements Serializable {
 
     try {
 
-      if (!SecurityUtils.converToSHA256(answer).equals(people.
+      if (!DigestUtils.sha256Hex(answer).equals(people.
               getSecurityAnswer())) {
 
         MessagesController.addSecurityErrorMessage(
@@ -151,7 +144,7 @@ public class ResetPassword implements Serializable {
         // Lock the account if n tmies wrong answer  
         int val = people.getFalseLogin();
         mgr.increaseLockNum(people.getUid(), val + 1);
-        if (val > Users.ALLOWED_FALSE_LOGINS) {
+        if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
           mgr.changeAccountStatus(people.getUid(), "",
                   PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
           return returnMenu();
@@ -172,7 +165,7 @@ public class ResetPassword implements Serializable {
       people.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
 
       // reset the old password with a new one
-      mgr.resetPassword(people, SecurityUtils.converToSHA256(random_password));
+      mgr.resetPassword(people, DigestUtils.sha256Hex(random_password));
 
       userTransaction.commit();
 
@@ -180,9 +173,6 @@ public class ResetPassword implements Serializable {
       emailBean.sendEmail(people.getEmail(),
               UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
 
-    } catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
-      MessagesController.addSecurityErrorMessage("Technical Error!");
-      return ("");
     } catch (RollbackException | HeuristicMixedException |
             HeuristicRollbackException | SecurityException |
             IllegalStateException | SystemException | NotSupportedException ex) {
@@ -228,7 +218,7 @@ public class ResetPassword implements Serializable {
     try {
 
       // Reset the old password with a new one
-      mgr.resetPassword(people, SecurityUtils.converToSHA256(passwd1));
+      mgr.resetPassword(people, DigestUtils.sha256Hex(passwd1));
 
       mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
 
@@ -243,8 +233,7 @@ public class ResetPassword implements Serializable {
               getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
               "SUCCESS", "PASSWORD CHANGE");
       return ("password_changed");
-    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
-            MessagingException ex) {
+    } catch (MessagingException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
 
       auditManager.registerAccountChange(people,
@@ -327,12 +316,11 @@ public class ResetPassword implements Serializable {
     }
 
     try {
-      if (SecurityUtils.converToSHA256(this.current).
+      if (DigestUtils.sha256Hex(this.current).
               equals(people.getPassword())) {
 
         // update the security question
-        mgr.resetSecQuestion(people.getUid(), question, SecurityUtils.
-                converToSHA256(this.answer));
+        mgr.resetSecQuestion(people.getUid(), question, DigestUtils.sha256Hex(this.answer));
 
         // send email    
         String message = UserAccountsEmailMessages.buildSecResetMessage();
@@ -358,8 +346,7 @@ public class ResetPassword implements Serializable {
 
         return "";
       }
-    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
-            MessagingException ex) {
+    } catch (MessagingException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");
     }
@@ -417,7 +404,7 @@ public class ResetPassword implements Serializable {
 
       }
 
-      if (SecurityUtils.converToSHA256(this.current).
+      if (DigestUtils.sha256Hex(this.current).
               equals(people.getPassword())) {
 
         // close the account
@@ -444,8 +431,7 @@ public class ResetPassword implements Serializable {
                 "FAIL", "ACCOUNT DEACTIVATION");
         return "";
       }
-    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
-            MessagingException ex) {
+    } catch (MessagingException ex) {
 
       auditManager.registerAccountChange(people,
               AccountsAuditActions.USERMANAGEMENT.getValue(),
@@ -509,10 +495,10 @@ public class ResetPassword implements Serializable {
 
     try {
 
-      if (SecurityUtils.converToSHA256(current).equals(people.getPassword())) {
+      if (DigestUtils.sha256Hex(current).equals(people.getPassword())) {
 
         // reset the old password with a new one
-        mgr.resetPassword(people, SecurityUtils.converToSHA256(passwd1));
+        mgr.resetPassword(people, DigestUtils.sha256Hex(passwd1));
 
         // send email    
         String message = UserAccountsEmailMessages.buildResetMessage();
@@ -538,8 +524,7 @@ public class ResetPassword implements Serializable {
 
         return "";
       }
-    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
-            MessagingException ex) {
+    } catch (MessagingException ex) {
       MessagesController.addSecurityErrorMessage("Email Technical Error!");
 
       auditManager.registerAccountChange(people,

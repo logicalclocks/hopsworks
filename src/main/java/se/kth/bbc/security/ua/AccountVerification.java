@@ -13,6 +13,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.user.model.Users;
 
 
@@ -84,7 +85,7 @@ public class AccountVerification {
     int val = user.getFalseLogin();
     mgr.increaseLockNum(user.getUid(), val + 1);
 
-    if (val > Users.ALLOWED_FALSE_LOGINS) {
+    if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
       mgr.changeAccountStatus(user.getUid(), "SPAM Acccount",
               PeopleAccountStatus.SPAM_ACCOUNT.getValue());
       mgr.resetKey(user.getUid());

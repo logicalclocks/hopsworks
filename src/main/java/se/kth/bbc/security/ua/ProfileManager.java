@@ -4,7 +4,6 @@ package se.kth.bbc.security.ua;
 import java.io.Serializable;
 import java.net.SocketException;
 import java.util.List;
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;

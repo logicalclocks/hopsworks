@@ -1,233 +1,220 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee           http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
-  <context-param>
-    <param-name>primefaces.PUBLIC_CAPTCHA_KEY</param-name>
-    <param-value>6LcIf_8SAAAAABc1fN-43v-YTk92XL-dbf2QhBHA</param-value>
-  </context-param>
-  <context-param>
-    <param-name>primefaces.PRIVATE_CAPTCHA_KEY</param-name>
-    <param-value>6LcIf_8SAAAAAApk-GuqRydfQEE31lurGKKa58RK</param-value>
-  </context-param>
-  <context-param>
-    <param-name>javax.faces.PROJECT_STAGE</param-name>
-    <param-value>Development</param-value>
-  </context-param>
-  <context-param>
-    <param-name>com.sun.faces.verifyObjects</param-name>
-    <param-value>false</param-value>
-  </context-param>
-  <context-param>
-    <param-name>com.sun.faces.validateXml</param-name>
-    <param-value>true</param-value>
-  </context-param>
-  <context-param>
-    <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
-    <param-value>server</param-value>
-  </context-param>
-  <context-param>
-    <param-name>Webhdfs-http</param-name>
-    <param-value>http://snurran.sics.se:50070/webhdfs/v1</param-value>
-  </context-param>
-  <context-param>
-    <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
-    <param-value>true</param-value>
-  </context-param>
-  <context-param>
-    <param-name>javax.faces.PARTIAL_STATE_SAVING</param-name>
-    <param-value>true</param-value>
-  </context-param>
-  <context-param>
-    <param-name>javax.faces.FACELETS_BUFFER_SIZE</param-name>
-    <param-value>65535</param-value>
-  </context-param>
-  <servlet>
-    <servlet-name>Faces Servlet</servlet-name>
-    <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>Faces Servlet</servlet-name>
-    <url-pattern>/faces/*</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>Faces Servlet</servlet-name>
-    <url-pattern>*.xhtml</url-pattern>
-  </servlet-mapping>
-  
-  <welcome-file-list>
-    <welcome-file>index.html</welcome-file>
-  </welcome-file-list>
-  <servlet>
-    <servlet-name>UploadServlet</servlet-name>
-    <servlet-class>se.kth.bbc.upload.UploadServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>UploadServlet</servlet-name>
-    <url-pattern>/bbc/uploader</url-pattern>
-  </servlet-mapping>
-  <servlet>
-    <servlet-name>AppScriptServlet</servlet-name>
-    <servlet-class>se.kth.hopsworks.zeppelin.server.AppScriptServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>AppScriptServlet</servlet-name>
-    <url-pattern>/zeppelin/scripts/scripts.js</url-pattern>
-    <url-pattern>/zeppelin/scripts/app.js</url-pattern>
-  </servlet-mapping>
-  <!-- declare the roles relevant for our webapp -->
-  <security-role>
-    <role-name>SYS_ADMIN</role-name>
-  </security-role>
-  <security-role>
-    <role-name>BBC_ADMIN</role-name>
-  </security-role>
-  <security-role>
-    <role-name>BBC_RESEARCHER</role-name>
-  </security-role>
-  <security-role>
-    <role-name>BBC_GUEST</role-name>
-  </security-role>
-  <security-role>
-    <role-name>BBC_USER</role-name>
-  </security-role>
-  <security-role>
-    <role-name>AUDITOR</role-name>
-  </security-role>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>BiobankCloud Public Pages</web-resource-name>
-      <url-pattern>/bbc/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>BBC_ADMIN</role-name>
-      <role-name>BBC_RESEARCHER</role-name>
-      <role-name>BBC_USER</role-name>
-      <role-name>SYS_ADMIN</role-name>
-      <role-name>AUDITOR</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>BiobankCloud Lab Info Mgmt System (LIMS)</web-resource-name>
-      <url-pattern>/bbc/lims/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>BBC_ADMIN</role-name>
-      <role-name>BBC_RESEARCHER</role-name>
-    </auth-constraint>
-  </security-constraint>
-
-
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>BiobankCloud Lab Info Mgmt System (LIMS)</web-resource-name>
-      <url-pattern>/bbc/lims/index.xhtml</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>BBC_ADMIN</role-name>
-      <role-name>BBC_RESEARCHER</role-name>
-      <role-name>SYS_ADMIN</role-name>
-      <role-name>AUDITOR</role-name>
-      <role-name>BBC_GUEST</role-name>
-    </auth-constraint>
-  </security-constraint>
-
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>BiobankCloud Researcher Private pages</web-resource-name>
-      <url-pattern>/wf/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>BBC_ADMIN</role-name>
-      <role-name>SYS_ADMIN</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>User Management</web-resource-name>
-      <url-pattern>/security/protected/admin/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>SYS_ADMIN</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>Platfrom Audit</web-resource-name>
-      <url-pattern>/security/protected/audit/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>SYS_ADMIN</role-name>
-      <role-name>AUDITOR</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>Researcher Profile</web-resource-name>
-      <url-pattern>/security/protected/researcher/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>SYS_ADMIN</role-name>
-      <role-name>BBC_RESEARCHER</role-name>
-      <role-name>AUDITOR</role-name>
-      <role-name>BBC_GUEST</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>Viewpoint Secure URLs</web-resource-name>
-      <url-pattern>/*</url-pattern>
-    </web-resource-collection>
-  </security-constraint>
-  <login-config>
-    <auth-method>BASIC</auth-method>
-    <realm-name>cauthRealm</realm-name>
-    <form-login-config>
-      <form-login-page>/index.xhtml</form-login-page>
-      <form-error-page>/error.xhtml</form-error-page>
-    </form-login-config>
-  </login-config>
-
-  <session-config>
-    <!-- on production systems you might have another value for the timeout -->
-    <session-timeout>30</session-timeout>
-    <!-- we don't want to use the default name JSESSIONID because this
+    <context-param>
+        <param-name>primefaces.PUBLIC_CAPTCHA_KEY</param-name>
+        <param-value>6LcIf_8SAAAAABc1fN-43v-YTk92XL-dbf2QhBHA</param-value>
+    </context-param>
+    <context-param>
+        <param-name>primefaces.PRIVATE_CAPTCHA_KEY</param-name>
+        <param-value>6LcIf_8SAAAAAApk-GuqRydfQEE31lurGKKa58RK</param-value>
+    </context-param>
+    <context-param>
+        <param-name>javax.faces.PROJECT_STAGE</param-name>
+        <param-value>Development</param-value>
+    </context-param>
+    <context-param>
+        <param-name>com.sun.faces.verifyObjects</param-name>
+        <param-value>false</param-value>
+    </context-param>
+    <context-param>
+        <param-name>com.sun.faces.validateXml</param-name>
+        <param-value>true</param-value>
+    </context-param>
+    <context-param>
+        <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
+        <param-value>server</param-value>
+    </context-param>
+    <context-param>
+        <param-name>Webhdfs-http</param-name>
+        <param-value>http://snurran.sics.se:50070/webhdfs/v1</param-value>
+    </context-param>
+    <context-param>
+        <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
+        <param-value>true</param-value>
+    </context-param>
+    <context-param>
+        <param-name>javax.faces.PARTIAL_STATE_SAVING</param-name>
+        <param-value>true</param-value>
+    </context-param>
+    <context-param>
+        <param-name>javax.faces.FACELETS_BUFFER_SIZE</param-name>
+        <param-value>65535</param-value>
+    </context-param>
+    <servlet>
+        <servlet-name>Faces Servlet</servlet-name>
+        <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Faces Servlet</servlet-name>
+        <url-pattern>/faces/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Faces Servlet</servlet-name>
+        <url-pattern>*.xhtml</url-pattern>
+    </servlet-mapping>
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+    <servlet>
+        <servlet-name>UploadServlet</servlet-name>
+        <servlet-class>se.kth.bbc.upload.UploadServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UploadServlet</servlet-name>
+        <url-pattern>/bbc/uploader</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>AppScriptServlet</servlet-name>
+        <servlet-class>se.kth.hopsworks.zeppelin.server.AppScriptServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AppScriptServlet</servlet-name>
+        <url-pattern>/zeppelin/scripts/scripts.js</url-pattern>
+        <url-pattern>/zeppelin/scripts/app.js</url-pattern>
+    </servlet-mapping>
+    <!-- declare the roles relevant for our webapp -->
+    <security-role>
+        <role-name>SYS_ADMIN</role-name>
+    </security-role>
+    <security-role>
+        <role-name>BBC_ADMIN</role-name>
+    </security-role>
+    <security-role>
+        <role-name>BBC_RESEARCHER</role-name>
+    </security-role>
+    <security-role>
+        <role-name>BBC_GUEST</role-name>
+    </security-role>
+    <security-role>
+        <role-name>BBC_USER</role-name>
+    </security-role>
+    <security-role>
+        <role-name>AUDITOR</role-name>
+    </security-role>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>BiobankCloud Public Pages</web-resource-name>
+            <url-pattern>/bbc/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>BBC_ADMIN</role-name>
+            <role-name>BBC_RESEARCHER</role-name>
+            <role-name>BBC_USER</role-name>
+            <role-name>SYS_ADMIN</role-name>
+            <role-name>AUDITOR</role-name>
+        </auth-constraint>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>BiobankCloud Lab Info Mgmt System (LIMS)</web-resource-name>
+            <url-pattern>/bbc/lims/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>BBC_ADMIN</role-name>
+            <role-name>BBC_RESEARCHER</role-name>
+        </auth-constraint>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>BiobankCloud Lab Info Mgmt System (LIMS)</web-resource-name>
+            <url-pattern>/bbc/lims/index.xhtml</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>BBC_ADMIN</role-name>
+            <role-name>BBC_RESEARCHER</role-name>
+            <role-name>SYS_ADMIN</role-name>
+            <role-name>AUDITOR</role-name>
+            <role-name>BBC_GUEST</role-name>
+        </auth-constraint>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>BiobankCloud Researcher Private pages</web-resource-name>
+            <url-pattern>/wf/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>BBC_ADMIN</role-name>
+            <role-name>SYS_ADMIN</role-name>
+        </auth-constraint>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>User Management</web-resource-name>
+            <url-pattern>/security/protected/admin/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>SYS_ADMIN</role-name>
+        </auth-constraint>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Platfrom Audit</web-resource-name>
+            <url-pattern>/security/protected/audit/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>SYS_ADMIN</role-name>
+            <role-name>AUDITOR</role-name>
+        </auth-constraint>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Researcher Profile</web-resource-name>
+            <url-pattern>/security/protected/researcher/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>SYS_ADMIN</role-name>
+            <role-name>BBC_RESEARCHER</role-name>
+            <role-name>AUDITOR</role-name>
+            <role-name>BBC_GUEST</role-name>
+        </auth-constraint>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Viewpoint Secure URLs</web-resource-name>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+    </security-constraint>
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>cauthRealm</realm-name>
+        <form-login-config>
+            <form-login-page>/index.xhtml</form-login-page>
+            <form-error-page>/error.xhtml</form-error-page>
+        </form-login-config>
+    </login-config>
+    <session-config>
+        <!-- on production systems you might have another value for the timeout -->
+        <session-timeout>30</session-timeout>
+        <!-- we don't want to use the default name JSESSIONID because this
     tells everyone (especially hackers) that our application is based on java -->
-    <cookie-config>
-      <name>SESSIONID</name>
-    </cookie-config>
-  </session-config>
-
-  <!-- PrimeFaces FileUpload Filter -->
-  <filter>
-    <filter-name>PrimeFaces FileUpload Filter</filter-name>
-    <filter-class>org.primefaces.webapp.filter.FileUploadFilter</filter-class>
-  </filter>
-  <filter-mapping>
-    <filter-name>PrimeFaces FileUpload Filter</filter-name>
-    <servlet-name>Faces Servlet</servlet-name>
-  </filter-mapping>
-
- 
-  
-  <filter>
-    <filter-name>LoginFilter</filter-name>
-    <filter-class>se.kth.bbc.security.auth.LoginFilter</filter-class>
-
-    <init-param>
-      <param-name>avoid-urls</param-name>
-      <param-value>html</param-value>
-    </init-param>
-  </filter>
-
-  <filter-mapping>
-    <filter-name>LoginFilter</filter-name>
-    <url-pattern>/security/*</url-pattern>
-    <url-pattern>/bbc/*</url-pattern>
-    <url-pattern>/views/*</url-pattern>
-    <url-pattern>/index.xhtml</url-pattern>
-    <url-pattern>/index.html</url-pattern>
-    
-  </filter-mapping>
- 
+        <cookie-config>
+            <name>SESSIONID</name>
+        </cookie-config>
+    </session-config>
+    <!-- PrimeFaces FileUpload Filter -->
+    <filter>
+        <filter-name>PrimeFaces FileUpload Filter</filter-name>
+        <filter-class>org.primefaces.webapp.filter.FileUploadFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>PrimeFaces FileUpload Filter</filter-name>
+        <servlet-name>Faces Servlet</servlet-name>
+    </filter-mapping>
+    <filter>
+        <filter-name>LoginFilter</filter-name>
+        <filter-class>se.kth.bbc.security.ua.authz.LoginFilter</filter-class>
+        <init-param>
+            <param-name>avoid-urls</param-name>
+            <param-value>html</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>LoginFilter</filter-name>
+        <url-pattern>/security/*</url-pattern>
+        <url-pattern>/bbc/*</url-pattern>
+        <url-pattern>/views/*</url-pattern>
+        <url-pattern>/index.xhtml</url-pattern>
+        <url-pattern>/index.html</url-pattern>
+    </filter-mapping>
 </web-app>
