@@ -11,7 +11,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.authz.PolicyDecisionPoint;
 import se.kth.hopsworks.user.model.Users;
 
 public class LoginFilter extends PolicyDecisionPoint implements Filter {
