@@ -9,10 +9,7 @@ import java.net.SocketException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.Stateless;
-import javax.mail.MessagingException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
@@ -20,10 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.security.audit.model.AccountAudit;
 import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.audit.model.Userlogins;
-import se.kth.bbc.security.auth.AuthenticationConstants;
-import se.kth.bbc.security.ua.UserAccountsEmailMessages;
-import se.kth.hopsworks.rest.AuthService;
-import se.kth.hopsworks.user.model.UserAccountStatus;
 import se.kth.hopsworks.user.model.Users;
 
 @Stateless
@@ -58,7 +51,7 @@ public class AuditManager {
   
           sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '"
               + from
-              + "' AND login_date <='" + to + "' AND action =')";
+              + "' AND login_date <='" + to + "')";
     
     } else {
       sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '"
@@ -230,7 +223,7 @@ public class AuditManager {
 
     Userlogins login = new Userlogins();
     login.setUid(user.getUid());
-    login.setBrowser(AuditUtil.getBrowserInfo());
+    login.setBrowser(AuditUtil.getBrowserInfo(req));
     login.setIp(AuditUtil.getIPAddress(req));
     login.setAction(action);
     login.setOs(AuditUtil.getOSInfo(req));

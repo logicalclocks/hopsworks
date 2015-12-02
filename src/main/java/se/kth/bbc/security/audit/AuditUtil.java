@@ -34,9 +34,8 @@ public class AuditUtil {
    * @return 
    */
    public static String getIPAddress(HttpServletRequest req) {
-    HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.
-            getCurrentInstance().getExternalContext().getRequest();
-    return httpServletRequest.getRemoteAddr();
+    
+    return req.getRemoteHost();
   }
   /**
    * Get the user operating system info.
