@@ -97,7 +97,7 @@ public class UserManager {
 
   public boolean resetKey(int id) {
     Users p = (Users) em.find(Users.class, id);
-    p.setValidationKey(SecurityUtils.getRandomString(64));
+    p.setValidationKey(SecurityUtils.getRandomPassword(64));
     em.merge(p);
     return true;
   }

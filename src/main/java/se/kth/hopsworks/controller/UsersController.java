@@ -19,10 +19,10 @@ import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import org.apache.commons.codec.digest.DigestUtils;
+import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
-import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.bbc.security.ua.BBCGroup;
@@ -54,7 +54,7 @@ public class UsersController {
   @EJB
   private BbcGroupFacade groupBean;
   @EJB
-  private UserLoginsFacade userLoginsBean;
+  private AuditManager am;
 
   @EJB
   private UserManager mgr;
@@ -80,7 +80,7 @@ public class UsersController {
       }
 
       String otpSecret = SecurityUtils.calculateSecretKey();
-      String activationKey = SecurityUtils.getRandomString(64);
+      String activationKey = SecurityUtils.getRandomPassword(64);
 
       int uid = userBean.lastUserID() + 1;
 
@@ -183,7 +183,7 @@ public class UsersController {
       }
 
       String otpSecret = SecurityUtils.calculateSecretKey();
-      String activationKey = SecurityUtils.getRandomString(64);
+      String activationKey = SecurityUtils.getRandomPassword(64);
 
       int uid = userBean.lastUserID() + 1;
 
@@ -303,12 +303,12 @@ public class UsersController {
           Logger.getLogger(UsersController.class.getName()).
                   log(Level.SEVERE, null, ex);
         }
-        registerLoginInfo(user, "Recovery", "Failure", req);
+        am.registerLoginInfo(user, "Recovery", "Failure", req);
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             ResponseMessages.SEC_QA_INCORRECT);
       }
 
-      String randomPassword = getRandomPassword(
+      String randomPassword = SecurityUtils.getRandomPassword(
           UserValidator.PASSWORD_MIN_LENGTH);
       try {
         String message = UserAccountsEmailMessages.buildTempResetMessage(
@@ -319,7 +319,7 @@ public class UsersController {
         //user.setStatus(PeopleAccountStatus.ACCOUNT_PENDING.getValue());
         userBean.update(user);
         resetFalseLogin(user);
-        registerLoginInfo(user, "Recovery", "SUCCESS", req);
+        am.registerLoginInfo(user, "Recovery", "SUCCESS", req);
       } catch (MessagingException ex) {
         Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE,
             "Could not send email: ", ex);
@@ -389,41 +389,6 @@ public class UsersController {
     return new UserDTO(user);
   }
 
-  private String getRandomPassword(int length) {
-    String randomStr = UUID.randomUUID().toString();
-    while (randomStr.length() < length) {
-      randomStr += UUID.randomUUID().toString();
-    }
-    return randomStr.substring(0, length);
-  }
-
-  public void registerLoginInfo(Users user, String action, String outcome,
-      HttpServletRequest req) {
-    String ip = req.getRemoteAddr();
-    String userAgent = req.getHeader("User-Agent");
-    String browser = null;
-    Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE,
-        "User agent --->>> {0}", userAgent);
-    if (userAgent.contains("MSIE")) {
-      browser = "Internet Explorer";
-    } else if (userAgent.contains("Firefox")) {
-      browser = "Firefox";
-    } else if (userAgent.contains("Chrome")) {
-      browser = "Chrome";
-    } else if (userAgent.contains("Opera")) {
-      browser = "Opera";
-    } else if (userAgent.contains("Safari")) {
-      browser = "Safari";
-    }
-    Userlogins login = new Userlogins();
-    login.setUid(user.getUid());
-    login.setBrowser(browser);
-    login.setIp(ip);
-    login.setAction(action);
-    login.setOutcome(outcome);
-    login.setLoginDate(new Date());
-    userLoginsBean.persist(login);
-  }
 
   public void registerFalseLogin(Users user) throws MessagingException {
     if (user != null) {

@@ -48,7 +48,7 @@ public class AuditTrails implements Serializable {
 
   private StudyAuditActions selectedStudyAuditAction;
 
-  private LoginsAuditActions selectedLoginsAuditAction;
+  private LoginAuditActions selectedLoginsAuditAction;
 
   private List<Userlogins> userLogins;
 
@@ -118,8 +118,8 @@ public class AuditTrails implements Serializable {
     return RolesAuditActions.values();
   }
 
-  public LoginsAuditActions[] getLoginsAuditActions() {
-    return LoginsAuditActions.values();
+  public LoginAuditActions[] getLoginsAuditActions() {
+    return LoginAuditActions.values();
   }
 
   public StudyAuditActions[] getStudyAuditActions() {
@@ -153,12 +153,12 @@ public class AuditTrails implements Serializable {
     this.selectedStudyAuditAction = selectedStudyAuditAction;
   }
 
-  public LoginsAuditActions getSelectedLoginsAuditAction() {
+  public LoginAuditActions getSelectedLoginsAuditAction() {
     return selectedLoginsAuditAction;
   }
 
   public void setSelectedLoginsAuditAction(
-          LoginsAuditActions selectedLoginsAuditAction) {
+          LoginAuditActions selectedLoginsAuditAction) {
     this.selectedLoginsAuditAction = selectedLoginsAuditAction;
   }
 
@@ -252,14 +252,16 @@ public class AuditTrails implements Serializable {
    * <p>
    * @param action
    */
-  public void processLoginAuditRequest(LoginsAuditActions action) {
+  public void processLoginAuditRequest(LoginAuditActions action) {
 
-    if (action.getValue().equals(LoginsAuditActions.REGISTRATION.getValue())) {
+    if (action.getValue().equals(LoginAuditActions.REGISTRATION.getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
-    } else if (action.getValue().equals(LoginsAuditActions.LOGIN.
-            getValue()) || action.getValue().equals(LoginsAuditActions.LOGOUT.
+    } else if (action.getValue().equals(LoginAuditActions.LOGIN.
+            getValue()) || action.getValue().equals(LoginAuditActions.LOGOUT.
                     getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
+    }else if(action.getValue().equals(LoginAuditActions.ALL.getValue())){
+         userLogins = getUserLogins(username, from, to, action.getValue());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
     }

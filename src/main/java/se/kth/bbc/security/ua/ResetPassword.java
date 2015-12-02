@@ -22,7 +22,7 @@ import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
-import se.kth.bbc.security.audit.LoginsAuditActions;
+import se.kth.bbc.security.audit.LoginAuditActions;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.user.model.Users;
@@ -153,7 +153,7 @@ public class ResetPassword implements Serializable {
       }
 
       // generate a radndom password
-      String random_password = SecurityUtils.getRandomString(passwordLength);
+      String random_password = SecurityUtils.getRandomPassword(passwordLength);
 
       String mess = UserAccountsEmailMessages.buildPasswordResetMessage(
               random_password);
@@ -559,7 +559,7 @@ public class ResetPassword implements Serializable {
     String os = AuditUtil.getOSInfo();
     String macAddress = AuditUtil.getMacAddress(ip);
 
-    auditManager.registerLoginInfo(people, LoginsAuditActions.LOGOUT.getValue(),
+    auditManager.registerLoginInfo(people, LoginAuditActions.LOGOUT.getValue(),
             ip, browser, os, macAddress, "SUCCESS");
 
     session.invalidate();

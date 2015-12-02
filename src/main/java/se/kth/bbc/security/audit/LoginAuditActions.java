@@ -1,23 +1,19 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.audit;
 
- 
-public enum LoginsAuditActions {
+public enum LoginAuditActions {
 
   // for user authentication
   LOGIN("LOGIN"),
   // for user authentication
   LOGOUT("LOGOUT"),
   // to get registration audit logs
-  REGISTRATION("REGISTRATION");
+  REGISTRATION("REGISTRATION"),
+  // get all the logs
+  ALL("ALL");
 
   private final String value;
 
-  private LoginsAuditActions(String value) {
+  private LoginAuditActions(String value) {
     this.value = value;
   }
 
@@ -25,9 +21,9 @@ public enum LoginsAuditActions {
     return value;
   }
 
-  public static LoginsAuditActions getLoginsAuditActions(String text) {
+  public static LoginAuditActions getLoginsAuditActions(String text) {
     if (text != null) {
-      for (LoginsAuditActions b : LoginsAuditActions.values()) {
+      for (LoginAuditActions b : LoginAuditActions.values()) {
         if (text.equalsIgnoreCase(b.value)) {
           return b;
         }

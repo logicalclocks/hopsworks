@@ -8,16 +8,23 @@ package se.kth.bbc.security.audit;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
+import javax.mail.MessagingException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.security.audit.model.AccountAudit;
 import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.audit.model.Userlogins;
+import se.kth.bbc.security.auth.AuthenticationConstants;
+import se.kth.bbc.security.ua.UserAccountsEmailMessages;
+import se.kth.hopsworks.rest.AuthService;
+import se.kth.hopsworks.user.model.UserAccountStatus;
 import se.kth.hopsworks.user.model.Users;
 
- 
 @Stateless
 public class AuditManager {
 
@@ -28,7 +35,6 @@ public class AuditManager {
     String sql = "SELECT * FROM hopsworks.userlogins  WHERE uid=" + uid
             + " ORDER BY login_date DESC LIMIT 1 OFFSET 2";
     Query query = em.createNativeQuery(sql, Userlogins.class);
-  
 
     List<Userlogins> ul = query.getResultList();
 
@@ -46,9 +52,18 @@ public class AuditManager {
 
   public List<Userlogins> getUsersLoginsFromTo(Date from, Date to, String action) {
 
-    String sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '" + from
-            + "' AND login_date <='" + to + "' AND action ='" + action + "')";
+    String sql;
+    if (action.equals(LoginAuditActions.ALL.name())) {
+      sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '"
+              + from
+              + "' AND login_date <='" + to + "')";
 
+    } else {
+      sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '"
+              + from
+              + "' AND login_date <='" + to + "' AND action ='" + action + "')";
+
+    }
     Query query = em.createNativeQuery(sql, Userlogins.class);
 
     List<Userlogins> ul = query.getResultList();
@@ -206,6 +221,34 @@ public class AuditManager {
     em.persist(l);
 
     return true;
+  }
+
+  public void registerLoginInfo(Users user, String action, String outcome,
+          HttpServletRequest req) {
+    String ip = req.getRemoteAddr();
+    String userAgent = req.getHeader("User-Agent");
+    String browser = null;
+    Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE,
+            "User agent --->>> {0}", userAgent);
+    if (userAgent.contains("MSIE")) {
+      browser = "Internet Explorer";
+    } else if (userAgent.contains("Firefox")) {
+      browser = "Firefox";
+    } else if (userAgent.contains("Chrome")) {
+      browser = "Chrome";
+    } else if (userAgent.contains("Opera")) {
+      browser = "Opera";
+    } else if (userAgent.contains("Safari")) {
+      browser = "Safari";
+    }
+    Userlogins login = new Userlogins();
+    login.setUid(user.getUid());
+    login.setBrowser(browser);
+    login.setIp(ip);
+    login.setAction(action);
+    login.setOutcome(outcome);
+    login.setLoginDate(new Date());
+    em.persist(login);
   }
 
   /**
