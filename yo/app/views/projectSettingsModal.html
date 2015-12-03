@@ -12,8 +12,7 @@
 
 <form role="form" name="projectForm" ng-submit="projectCtrl.saveProject()" novalidate class="form-validate">
   <div class="modal-body" id="testmodal">
-
-
+  
     <div class="row">
 
       <div class="col-md-8">
@@ -56,8 +55,18 @@
             </md-checkbox>
           </div>
         </fieldset>
-      </div>
+       
+         <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Status</h3>
 
+        <fieldset>
+          <span>
+            {{projectCtrl.ethicalStatus}}
+          </span>
+        </fieldset>
+       
+         
+      </div>
+      
       <div class="col-md-8">
         <fieldset>
         
