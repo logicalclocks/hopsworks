@@ -161,8 +161,9 @@ public class ProjectController {
 
     try {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
-        datasetController.createDataset(user, project, ds.getName(), ds.
-                getDescription(), -1, false, true);
+          boolean globallyVisible = ds.equals(Settings.DefaultDataset.RESOURCES);
+          datasetController.createDataset(user, project, ds.getName(), ds.
+                getDescription(), -1, false, true, globallyVisible);
       }
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
@@ -178,7 +179,7 @@ public class ProjectController {
 
     try {
       datasetController.createDataset(user, project, "consents",
-              "Biobanking consent forms", -1, false, true);
+              "Biobanking consent forms", -1, false, true, false);
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
               "Could not create project consents folder ", e);

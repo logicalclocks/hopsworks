@@ -80,7 +80,7 @@ public class DatasetController {
    */
   public void createDataset(Users user, Project project, String dataSetName,
           String datasetDescription, int templateId, boolean searchable,
-          boolean stickbit)
+          boolean stickbit, boolean globallyVisible)
           throws IOException {
     //Parameter checking.
     if (user == null) {
@@ -111,12 +111,11 @@ public class DatasetController {
               "Invalid folder name for DataSet creation. "
               + ResponseMessages.FOLDER_NAME_EXIST);
     }
-    success = createFolder(dsPath, templateId, null);
+    success = createFolder(dsPath, globallyVisible, templateId, null);
     
     if (success) {
       //set the dataset meta enabled. Support 3 level indexing
       this.fileOps.setMetaEnabled(dsPath);
-      
       try {
         
         ds = inodes.findByParentAndName(parent, dataSetName);
@@ -228,7 +227,7 @@ public class DatasetController {
     }
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     //Now actually create the folder
-    boolean success = this.createFolder(fullPath, templateId, username);
+    boolean success = this.createFolder(fullPath, false, templateId, username);
 
     //if the folder was created successfully, persist basic metadata to it -
     //description and searchable attribute
@@ -290,19 +289,22 @@ public class DatasetController {
    * @return
    * @throws IOException
    */
-  private boolean createFolder(String path, int template, String username)
-          throws IOException {
+  private boolean createFolder(String path, boolean globallyVisible,
+          int template, String username) throws IOException {
     boolean success = false;
+        //Permission hdfs dfs -chmod 750 or 755
+        FsAction global = globallyVisible == true ? FsAction.NONE :
+                FsAction.READ_EXECUTE;
+        FsPermission fsPermission = new FsPermission(FsAction.ALL,
+                FsAction.READ_EXECUTE, global);
     try {
       //create the folder in the file system
       if (username == null) {
         success = fileOps.mkDir(path);
       } else {
         Path location = new Path(path);
+
         DistributedFileSystemOps dfs = dfsSingleton.getDfs(username);
-        FsPermission fsPermission = new FsPermission(FsAction.ALL,
-                FsAction.READ_EXECUTE,
-                FsAction.NONE);//Permission hdfs dfs -chmod 750
         success = dfs.mkdir(location, fsPermission);
       }
       if (success && template != 0 && template != -1) {
