@@ -219,12 +219,14 @@ public class AuditManager {
   }
 
   public void registerLoginInfo(Users user, String action, String outcome,
-          HttpServletRequest req) {
+          HttpServletRequest req) throws SocketException {
 
     Userlogins login = new Userlogins();
     login.setUid(user.getUid());
+    login.setEmail(user.getEmail());
     login.setBrowser(AuditUtil.getBrowserInfo(req));
     login.setIp(AuditUtil.getIPAddress(req));
+    login.setMac(AuditUtil.getMacAddress(AuditUtil.getIPAddress(req)));
     login.setAction(action);
     login.setOs(AuditUtil.getOSInfo(req));
     login.setOutcome(outcome);
@@ -237,14 +239,12 @@ public class AuditManager {
    * <p>
    * @param u
    * @param action
-   * @param ip
-   * @param browser
-   * @param os
-   * @param mac
    * @param outcome
    * @param message
+   * @param req
    * @param tar
    * @return
+   * @throws java.net.SocketException
    */
   public boolean registerRoleChange(Users u, String action, String outcome, String message,
           Users tar, HttpServletRequest req) throws SocketException {

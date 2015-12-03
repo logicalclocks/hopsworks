@@ -304,7 +304,15 @@ public class UsersController {
         } catch (MessagingException ex) {
           Logger.getLogger(UsersController.class.getName()).
                   log(Level.SEVERE, null, ex);
-          am.registerLoginInfo(user, UserAuditActions.RECOVERY.name(), UserAuditActions.FAILED.name(), req);
+          try {
+            am.registerLoginInfo(user, UserAuditActions.RECOVERY.name(), UserAuditActions.FAILED.name(), req);
+          } catch (SocketException ex1) {
+            Logger.getLogger(UsersController.class.getName()).
+                    log(Level.SEVERE, null, ex1);
+          }
+        } catch (SocketException ex) {
+          Logger.getLogger(UsersController.class.getName()).
+                  log(Level.SEVERE, null, ex);
         }
    
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -328,6 +336,9 @@ public class UsersController {
                 "Could not send email: ", ex);
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.EMAIL_SENDING_FAILURE);
+      } catch (SocketException ex) {
+        Logger.getLogger(UsersController.class.getName()).
+                log(Level.SEVERE, null, ex);
       }
     }
   }
@@ -341,7 +352,12 @@ public class UsersController {
               ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (!user.getPassword().equals(DigestUtils.sha256Hex(oldPassword))) {
-      am.registerLoginInfo(user, UserAuditActions.PASSWORD.name(), UserAuditActions.FAILED.name(), req);
+      try {
+        am.registerLoginInfo(user, UserAuditActions.PASSWORD.name(), UserAuditActions.FAILED.name(), req);
+      } catch (SocketException ex) {
+        Logger.getLogger(UsersController.class.getName()).
+                log(Level.SEVERE, null, ex);
+      }
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PASSWORD_INCORRECT);
       
@@ -349,7 +365,12 @@ public class UsersController {
     if (userValidator.isValidPassword(newPassword, confirmedPassword)) {
       user.setPassword(DigestUtils.sha256Hex(newPassword));
       userBean.update(user);
-      am.registerLoginInfo(user, UserAuditActions.PASSWORD.name(), UserAuditActions.SUCCESS.name(), req);
+      try {
+        am.registerLoginInfo(user, UserAuditActions.PASSWORD.name(), UserAuditActions.SUCCESS.name(), req);
+      } catch (SocketException ex) {
+        Logger.getLogger(UsersController.class.getName()).
+                log(Level.SEVERE, null, ex);
+      }
     }
   }
 
@@ -362,7 +383,12 @@ public class UsersController {
               ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (!user.getPassword().equals(DigestUtils.sha256Hex(oldPassword))) {
-      am.registerLoginInfo(user, UserAuditActions.SECQUESTION.name(), UserAuditActions.FAILED.name(), req);
+      try {
+        am.registerLoginInfo(user, UserAuditActions.SECQUESTION.name(), UserAuditActions.FAILED.name(), req);
+      } catch (SocketException ex) {
+        Logger.getLogger(UsersController.class.getName()).
+                log(Level.SEVERE, null, ex);
+      }
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PASSWORD_INCORRECT);
     }
@@ -373,7 +399,12 @@ public class UsersController {
               setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer.
                               toLowerCase()));
       userBean.update(user);
-      am.registerLoginInfo(user, UserAuditActions.SECQUESTION.name(), UserAuditActions.SUCCESS.name(), req);
+      try {
+        am.registerLoginInfo(user, UserAuditActions.SECQUESTION.name(), UserAuditActions.SUCCESS.name(), req);
+      } catch (SocketException ex) {
+        Logger.getLogger(UsersController.class.getName()).
+                log(Level.SEVERE, null, ex);
+      }
     }
   }
 
@@ -394,7 +425,12 @@ public class UsersController {
     if (telephoneNum != null) {
       user.setMobile(telephoneNum);
     }
-    am.registerLoginInfo(user, UserAuditActions.SECQUESTION.name(), UserAuditActions.SUCCESS.name(), req);
+    try {
+      am.registerLoginInfo(user, UserAuditActions.SECQUESTION.name(), UserAuditActions.SUCCESS.name(), req);
+    } catch (SocketException ex) {
+      Logger.getLogger(UsersController.class.getName()).log(Level.SEVERE, null,
+              ex);
+    }
     userBean.update(user);
     return new UserDTO(user);
   }
