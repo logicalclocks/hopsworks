@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 import io.hops.bbc.Consents;
+import java.io.FileInputStream;
 import java.util.logging.Logger;
 import org.apache.hadoop.fs.FSDataInputStream;
 import se.kth.bbc.project.Project;
@@ -131,25 +132,22 @@ public class ProjectPrivacyManager {
 
     String projectPath = "/" + Settings.DIR_ROOT + "/" + consent.getProject().
             getName();
-    String consentsPath = projectPath + "/" + Settings.DIR_CONSENTS;
+    String consentsPath = projectPath + "/" + Settings.DIR_CONSENTS +"/"+ consent.getProject().getInode().getInodePK().getName()+".pdf";
     
-    String path =  relativePath(inodeFacade.getPath(consent.getInode()), consent.getProject());
+    
   
     FSDataInputStream stream;
     try { 
-        stream = dfs.getDfs().open(new Path(path));
+        stream = dfs.getDfs().open(new Path(consentsPath));
       //response.header("Content-disposition", "attachment;");
-
-
+      
       // Init servlet response.
       response.reset();
-  //    response.setHeader("Content-Type", "application/pdf");
-    //  response.setHeader("Content-Length",
-      //        String.valueOf(data.length)
-      //);
-      response.setHeader("Content-disposition", "attachment;");
-      output = new BufferedOutputStream(response.getOutputStream(),
-              DEFAULT_BUFFER_SIZE);
+      response.setHeader("Content-Type", "application/pdf");
+      response.setHeader( "Content-Disposition", "attachment;filename="
+      + consent.getProject().getInode().getInodePK().getName()+".pdf");
+      
+      output = new BufferedOutputStream(response.getOutputStream());
 
       // Write file contents to response.
       byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
@@ -157,13 +155,13 @@ public class ProjectPrivacyManager {
       while ((length = stream.read(buffer)) > 0) {
         output.write(buffer, 0, length);
       }
-
-      // Finalize task.
       output.flush();
     } finally {
-      // Gently close streams.
+
       close(output);
     }
+
+       
 
     // Inform JSF that it doesn't need to handle response.
     // This is very important, otherwise you will get the following exception in the logs:
@@ -184,9 +182,5 @@ public class ProjectPrivacyManager {
     }
   }
 
-  private String relativePath(String path, Project project) {
-    logger.info("relative path for: " + path);
-    return path.replace("/" + Settings.DIR_ROOT + "/" + project.getName() + "/", "");
-  }
 
 }

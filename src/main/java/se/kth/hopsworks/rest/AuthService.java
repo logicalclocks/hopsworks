@@ -1,5 +1,8 @@
 package se.kth.hopsworks.rest;
 
+import java.net.SocketException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -20,6 +23,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.hadoop.hdfs.server.namenode.AuditLogger;
+import se.kth.bbc.security.audit.AuditManager;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
@@ -34,7 +40,6 @@ import se.kth.hopsworks.util.Settings;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AuthService {
 
-
   @EJB
   private UserFacade userBean;
   @EJB
@@ -45,7 +50,9 @@ public class AuthService {
   private NoCacheResponse noCacheResponse;
   @EJB
   Settings settings;
-  
+  @EJB
+  AuditManager am;
+
   @GET
   @Path("session")
   @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
@@ -65,6 +72,7 @@ public class AuthService {
             json).build();
   }
 
+ 
   @POST
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
@@ -81,9 +89,6 @@ public class AuthService {
     JsonResponse json = new JsonResponse();
     Users user = userBean.findByEmail(email);
 
-    req.getServletContext().log("USER: " + user);
-    req.getServletContext().log("1 step: " + email);
-    
     // Add padding if custom realm is disabled
     if (otp == null || otp.isEmpty()) {
       otp = AuthenticationConstants.MOBILE_OTP_PADDING;
@@ -105,8 +110,7 @@ public class AuthService {
           req.login(email, password);
           req.getServletContext().log("3 step: " + email);
           userController.resetFalseLogin(user);
-          userController.registerLoginInfo(user, "LOGIN", "SUCCESS", req);
-          //if the logedin user has no supported role logout
+          am.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.SUCCESS.name(), req);          //if the logedin user has no supported role logout
           if (!sc.isUserInRole("BBC_USER") && !sc.isUserInRole("SYS_ADMIN")) {
             req.logout();
             throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
@@ -115,9 +119,17 @@ public class AuthService {
        
         } catch (ServletException e) {
           userController.registerFalseLogin(user);
-          userController.registerLoginInfo(user, "LOGIN", "FAILED", req);
+          try {
+            am.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), req);
+          } catch (SocketException ex) {
+            Logger.getLogger(AuthService.class.getName()).
+                    log(Level.SEVERE, null, ex);
+          }
           throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                   ResponseMessages.AUTHENTICATION_FAILURE);
+        } catch (SocketException ex) {
+          Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null,
+                  ex);
         }
       } else { // if user == null
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
@@ -140,17 +152,27 @@ public class AuthService {
   @Path("logout")
   @Produces(MediaType.APPLICATION_JSON)
   public Response logout(@Context HttpServletRequest req) throws AppException {
-    req.getServletContext().log("Logging out...");
+    
+    Users user = userBean.findByEmail(req.getRemoteUser());
     JsonResponse json = new JsonResponse();
-
+    
     try {
       req.logout();
       json.setStatus("SUCCESS");
       req.getSession().invalidate();
+     am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.SUCCESS.name(), req);
+
     } catch (ServletException e) {
+      try {
+        am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.FAILED.name(), req);
+      } catch (SocketException ex) {
+        Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
+      }
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
               "Logout failed on backend");
+    } catch (SocketException ex) {
+      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
     }
     return Response.ok().entity(json).build();
   }
@@ -160,38 +182,21 @@ public class AuthService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   public Response register(UserDTO newUser, @Context HttpServletRequest req)
-          throws AppException {
+          throws AppException, SocketException {
 
-    byte[]  qrCode = null ;
-    req.getServletContext().log("Registering..." + newUser.getEmail() + ", "
-            + newUser.getFirstName());
+    byte[] qrCode = null;
 
     JsonResponse json = new JsonResponse();
 
-      String domain = req.getRequestURL().toString();
-      String cpath = req.getContextPath().toString();
+    qrCode = userController.registerUser(newUser,req);
 
-      String url = domain.substring(0, domain.indexOf(cpath));
-
-      url = url + cpath;
-
-      String ip = req.getRemoteAddr();
-      String browser ="Fix this";
-      String mac= "Fix this";
-      String os = "Fix this";
-      
-    qrCode = userController.registerUser(newUser, url, ip, browser, os, mac);
-      
-    req.getServletContext().log("successfully registered new user: '" + newUser.
-            getEmail() + "'");
-
-    if(settings.findById("twofactor_auth").getValue().equals("true")){
-        json.setQRCode(new String (Base64.encodeBase64(qrCode)));
-    } else{
-         json.setSuccessMessage("We registered your account request. Please validate you email and we will review your account within 48 hours.");
+    if (settings.findById("twofactor_auth").getValue().equals("true")) {
+      json.setQRCode(new String(Base64.encodeBase64(qrCode)));
+    } else {
+      json.setSuccessMessage(
+              "We registered your account request. Please validate you email and we will review your account within 48 hours.");
     }
-      
-   
+
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
@@ -200,37 +205,19 @@ public class AuthService {
   @Path("registerYubikey")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response registerYubikey(UserDTO newUser, @Context HttpServletRequest req)
-          throws AppException {
+  public Response registerYubikey(UserDTO newUser,
+          @Context HttpServletRequest req)
+          throws AppException, SocketException {
 
-    
-    req.getServletContext().log("Registering..." + newUser.getEmail() + ", "
-            + newUser.getFirstName());
 
     JsonResponse json = new JsonResponse();
 
-    
-      String domain = req.getRequestURL().toString();
-      String cpath = req.getContextPath().toString();
+    userController.registerYubikeyUser(newUser, req);
 
-      String url = domain.substring(0, domain.indexOf(cpath));
-
-      url = url + cpath;
-
-      String ip = req.getRemoteAddr();
-      String browser ="Fix this";
-      String mac= "Fix this";
-      String os = "Fix this";
-      userController.registerYubikeyUser(newUser, url, ip, browser, os, mac);
-      
-    req.getServletContext().log("successfully registered new user: '" + newUser.
-            getEmail() + "'");
-    
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
 
-  
   @POST
   @Path("recoverPassword")
   @Produces(MediaType.APPLICATION_JSON)
@@ -242,14 +229,12 @@ public class AuthService {
     JsonResponse json = new JsonResponse();
 
     userController.recoverPassword(email, securityQuestion, securityAnswer, req);
-    
+
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PASSWORD_RESET_SUCCESSFUL);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
-  
-  
 
 }

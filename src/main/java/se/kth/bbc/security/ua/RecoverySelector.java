@@ -186,7 +186,7 @@ public class RecoverySelector implements Serializable {
       if (people.getPassword().equals(DigestUtils.sha256Hex(passwd))) {
 
         // generate a randome secret of legth 6
-        String random = SecurityUtils.getRandomString(passwordLength);
+        String random = SecurityUtils.getRandomPassword(passwordLength);
         um.updateSecret(people.getUid(), random);
         String message = UserAccountsEmailMessages.buildTempResetMessage(random);
         email.sendEmail(people.getEmail(),

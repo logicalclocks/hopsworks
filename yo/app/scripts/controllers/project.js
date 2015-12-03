@@ -13,7 +13,6 @@ angular.module('hopsWorksApp')
         self.currentProject = [];
         self.activities = [];
         self.currentPage = 1;
-
         self.card = {};
         self.cards = [];
         self.projectMembers = [];
@@ -155,7 +154,8 @@ angular.module('hopsWorksApp')
           $scope.newProject = {
             'projectName': self.currentProject.projectName,
             'description': self.currentProject.description,
-            'services': self.selectionProjectTypes
+            'services': self.selectionProjectTypes,
+            'retentionPeriod': self.currentProject.retentionPeriod
           };
 
           ProjectService.update({id: self.currentProject.projectId}, $scope.newProject)

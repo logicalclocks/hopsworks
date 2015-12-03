@@ -300,17 +300,19 @@ public class ProjectController {
    * @param newProjectDesc
    * @param userEmail of the user making the change
    */
-  public void changeProjectDesc(Project project, String newProjectDesc,
-          String userEmail) {
+  public void updateProject(Project project, ProjectDTO proj,
+          String userEmail ) {
     Users user = userBean.getUserByEmail(userEmail);
 
-    project.setDescription(newProjectDesc);
+    project.setDescription(proj.getDescription());
+    project.setRetentionPeriod(proj.getRetentionPeriod());
+ 
     projectFacade.mergeProject(project);
-
     logActivity(ActivityFacade.PROJECT_DESC_CHANGED, ActivityFacade.FLAG_PROJECT,
             user, project);
   }
 
+  
   //Set the project owner as project master in ProjectTeam table
   private void addProjectOwner(Integer project_id, String userName) {
     ProjectTeamPK stp = new ProjectTeamPK(project_id, userName);

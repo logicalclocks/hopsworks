@@ -26,7 +26,7 @@ public class SecurityUtils {
    * @param length
    * @return
    */
-  public static String getRandomString(int length) {
+  public static String getRandomPassword(int length) {
 
     String randomStr = UUID.randomUUID().toString();
     while (randomStr.length() < length) {
