@@ -87,10 +87,7 @@ public class ProjectsManagementBean {
     projectsManagementController.changeYarnQuota(projectname, quota);
   }
 
-  //Magic must happen here
   public void onRowEdit(RowEditEvent event) {
-//    FacesMessage msg = new FacesMessage("Car Edited", ((Car) event.getObject()).getId());
-//    FacesContext.getCurrentInstance().addMessage(null, msg);
     ProjectsManagement row = (ProjectsManagement) event.getObject();
     if (row.getDisabled()) {
       projectsManagementController.disableProject(row.getProjectname());
@@ -102,8 +99,6 @@ public class ProjectsManagementBean {
   }
 
   public void onRowCancel(RowEditEvent event) {
-//    FacesMessage msg = new FacesMessage("Edit Cancelled", ((Car) event.getObject()).getId());
-//    FacesContext.getCurrentInstance().addMessage(null, msg);
   }
 
 }

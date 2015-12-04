@@ -48,13 +48,6 @@ public class ProjectsManagementController {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  //TODO
-  //get everything from projects_management view
-  //get set hdfs quota also to projectController
-  //sort by quotas
-  //buttons or list or something
-  //make the buttons do things
-
   public int getHdfsQuota() {
     return Integer.parseInt(settings.getHdfsDefaultQuota());
   }
