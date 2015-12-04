@@ -34,7 +34,6 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "ProjectsManagement.findByLastPaidAt", query = "SELECT p FROM ProjectsManagement p WHERE p.lastPaidAt = :lastPaidAt")})
 public class ProjectsManagement implements Serializable {
     private static final long serialVersionUID = 1L;
-    @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 100)
     @Id

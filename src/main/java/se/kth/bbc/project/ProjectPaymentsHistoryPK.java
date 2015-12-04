@@ -8,12 +8,17 @@ package se.kth.bbc.project;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+/**
+ *
+ * @author kerkinos
+ */
 @Embeddable
 public class ProjectPaymentsHistoryPK implements Serializable {
     @Basic(optional = false)
@@ -22,15 +27,16 @@ public class ProjectPaymentsHistoryPK implements Serializable {
     private String projectname;
     @Basic(optional = false)
     @NotNull
+    @Column(name = "transaction_date")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date date;
+    private Date transactionDate;
 
     public ProjectPaymentsHistoryPK() {
     }
 
-    public ProjectPaymentsHistoryPK(String projectname, Date date) {
+    public ProjectPaymentsHistoryPK(String projectname, Date transactionDate) {
         this.projectname = projectname;
-        this.date = date;
+        this.transactionDate = transactionDate;
     }
 
     public String getProjectname() {
@@ -41,19 +47,19 @@ public class ProjectPaymentsHistoryPK implements Serializable {
         this.projectname = projectname;
     }
 
-    public Date getDate() {
-        return date;
+    public Date getTransactionDate() {
+        return transactionDate;
     }
 
-    public void setDate(Date date) {
-        this.date = date;
+    public void setTransactionDate(Date transactionDate) {
+        this.transactionDate = transactionDate;
     }
 
     @Override
     public int hashCode() {
         int hash = 0;
         hash += (projectname != null ? projectname.hashCode() : 0);
-        hash += (date != null ? date.hashCode() : 0);
+        hash += (transactionDate != null ? transactionDate.hashCode() : 0);
         return hash;
     }
 
@@ -67,7 +73,7 @@ public class ProjectPaymentsHistoryPK implements Serializable {
         if ((this.projectname == null && other.projectname != null) || (this.projectname != null && !this.projectname.equals(other.projectname))) {
             return false;
         }
-        if ((this.date == null && other.date != null) || (this.date != null && !this.date.equals(other.date))) {
+        if ((this.transactionDate == null && other.transactionDate != null) || (this.transactionDate != null && !this.transactionDate.equals(other.transactionDate))) {
             return false;
         }
         return true;
@@ -75,7 +81,7 @@ public class ProjectPaymentsHistoryPK implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.bbc.project.ProjectPaymentsHistoryPK[ projectname=" + projectname + ", date=" + date + " ]";
+        return "se.kth.bbc.project.ProjectPaymentsHistoryPK[ projectname=" + projectname + ", transactionDate=" + transactionDate + " ]";
     }
     
 }

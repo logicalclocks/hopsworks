@@ -24,85 +24,154 @@
             <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
         </ui:insert>
 
-        <p:layout id="ProjectMgmLayout" styleClass="BbcMainLayoutProject" rendered="#{peopleStatusBean.SYSAdmin}">
+        <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.SYSAdmin}">
 
-            <p:growl autoUpdate="true" showDetail="true"/>
             <p:layoutUnit id="centerLayout" position="center">
 
-                <div class="container">
+                <div class="container" style="max-width: 1600px;">
                     <div align="left">
                         <h2>Project Administration</h2>
                     </div>
 
                     <div class="content">
-                        <h:form id="usermodifyForm">
-                            <p:growl id="growl" life="2000"/>
+                        <h:form id="projectmodifyForm" >
+                            <p:growl id="msgs" showDetail="true"/>
 
-                            <p:dataTable id="userdataTable" var="muser"
-                                         widgetVar="projectssTable"
+                            <p:dataTable id="projectsTable" var="project"
+                                         value="#{projectsmanagement.allProjects}"
+                                         filteredValue="#{projectsmanagement.filteredProjects}"
+                                         widgetVar="projectsTable"
                                          emptyMessage="No projects found with given criteria"
+                                         rowKey="#{project.projectname}"
                                          style="table-layout: fixed"
-                                         scrollable="false">
+                                         sortMode="multiple"
+                                         editable="true"
+                                         scrollable="false"
+                                         rows="25"
+                                         paginator="true"
+                                         paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                         rowsPerPageTemplate="15,25,35,45,55">
+
+                                <p:ajax event="rowEdit" listener="#{projectsmanagement.onRowEdit}"
+                                        update=":projectmodifyForm:msgs" />
+                                <p:ajax event="rowEditCancel" update=":projectmodifyForm:msgs" />
 
                                 <p:column id="projectNameColumn"
-                                          filterBy="#{muser.fname}"
-                                          headerText="Project Name"
-                                          style="width:32%; font-size: 12px; text-align: left;">
-                                    <h:outputText value="#{muser.fname}" />
+                                          filterBy="#{project.projectname}"
+                                          sortBy="#{project.projectname}"
+                                          filterMatchMode="contains"
+                                          headerText="Project"
+                                          style=" font-size: 12px; text-align: left;">
+                                        <h:outputText value="#{project.projectname}" />
                                 </p:column>
 
                                 <p:column id="yarnquotaColumn"
-                                          filterBy="#{muser.email}"
-                                          headerText="Yarn quota remaining "
-                                          style="width:32%;font-size: 12px;text-align: left;">
-                                    <h:outputText value="#{muser.email}" />
+                                          filterBy="#{project.yarnQuotaRemaining}"
+                                          sortBy="#{project.yarnQuotaRemaining}"
+                                          filterMatchMode="contains"
+                                          headerText="CPU quota left"
+                                          style=" font-size: 12px; text-align: center;">
+                                    <p:cellEditor>
+                                        <f:facet name="output">
+                                          <h:outputText value="#{project.yarnQuotaRemaining}" />
+                                        </f:facet>
+                                        <f:facet name="input">
+                                            <p:inputText value="#{project.yarnQuotaRemaining}" style="width:100%"/>
+                                        </f:facet>
+                                    </p:cellEditor>
+                                </p:column>
+
+                                <p:column id="yarntotalquotaColumn"
+                                          filterBy="#{project.yarnQuotaTotal}"
+                                          sortBy="#{project.yarnQuotaTotal}"
+                                          filterMatchMode="contains"
+                                          headerText="CPU to date"
+                                          style=" font-size: 12px; text-align: center;">
+                                    <h:outputText
+                                        value="#{project.yarnQuotaTotal}" />
                                 </p:column>
 
                                 <p:column id="hdfsquotaColumn"
-                                          filterBy="#{muser.email}"
-                                          headerText="Hdfs quota remaining "
-                                          style="width:32%;font-size: 12px;text-align: left;">
-                                    <h:outputText value="#{muser.email}" />
+                                          filterBy="#{projectsmanagement.hdfsQuota}"
+                                          sortBy="#{projectsmanagement.hdfsQuota}"
+                                          filterMatchMode="contains"
+                                          headerText="Disk quota"
+                                          style=" font-size: 12px; text-align: center;">
+                                    <!--<p:cellEditor>-->
+                                        <!--<f:facet name="output">-->
+                                            <h:outputText
+                                                value="#{projectsmanagement.hdfsQuota}" />
+                                        <!--</f:facet>-->
+                                        <!--<f:facet name="input">-->
+                                            <!--<p:inputText value="#{projectsmanagement.hdfsQuota}" style="width:100%"/>-->
+                                        <!--</f:facet>-->
+                                    <!--</p:cellEditor>-->
+                                </p:column>
+
+                                <p:column id="hdfstotalquotaColumn"
+                                          filterBy="#{projectsmanagement.hdfsQuota}"
+                                          sortBy="#{projectsmanagement.hdfsQuota}"
+                                          filterMatchMode="contains"
+                                          headerText="Disk used"
+                                          style=" font-size: 12px; text-align: center;">
+                                    <h:outputText value="#{projectsmanagement.hdfsQuota}" />
                                 </p:column>
 
                                 <p:column id="useremailColumn"
-                                          filterBy="#{muser.lname}"
-                                          headerText="User email"
-                                          style="width:32%; font-size: 12px; text-align: left;">
-                                    <h:outputText value="#{muser.lname}" />
+                                          filterBy="#{project.username}"
+                                          sortBy="#{project.username}"
+                                          filterMatchMode="contains"
+                                          headerText="Owner"
+                                          style=" font-size: 12px; text-align: left;">
+                                    <h:outputText value="#{project.username}" />
                                 </p:column>
 
                                 <p:column id="enabledColumn"
-                                          filterBy="#{muser.email}"
-                                          headerText="Enabled"
-                                          style="width:32%;font-size: 12px;text-align: left;">
-                                    <h:outputText value="#{muser.email}" />
+                                          filterBy="#{project.disabled}"
+                                          sortBy="#{project.disabled}"
+                                          filterMatchMode="contains"
+                                          headerText="Disabled"
+                                          style=" font-size: 12px; text-align: center;">
+
+                                    <p:cellEditor>
+                                        <f:facet name="output">
+                                            <h:outputText value="#{project.disabled}" />
+                                        </f:facet>
+                                        <f:facet name="input">
+                                            <h:selectBooleanCheckbox value="#{project.disabled}" style="width:100%"/>
+                                        </f:facet>
+                                    </p:cellEditor>
                                 </p:column>
 
                                 <p:column id="lastcreditpurchachedColumn"
-                                          filterBy="#{muser.email}"
-                                          headerText="Purchased credit at"
-                                          style="width:32%;font-size: 12px;text-align: left;">
-                                    <h:outputText value="#{muser.email}" />
+                                          filterBy="#{project.lastPaidAt}"
+                                          sortBy="#{project.lastPaidAt}"
+                                          filterMatchMode="contains"
+                                          headerText="Last purchase"
+                                          style=" font-size: 12px; text-align: left;">
+                                    <h:outputText
+                                        value="#{project.lastPaidAt}" />
                                 </p:column>
 
                                 <p:column id="totalcreditColumn"
-                                          filterBy="#{muser.email}"
-                                          headerText="Total credit"
-                                          style="width:32%;font-size: 12px;text-align: left;">
-                                    <h:outputText value="#{muser.email}" />
+                                          filterBy="#{project.retentionPeriod}"
+                                          sortBy="#{project.retentionPeriod}"
+                                          filterMatchMode="contains"
+                                          headerText="Expires at"
+                                          style=" font-size: 12px; text-align: left;">
+                                            <h:outputText
+                                                value="#{project.retentionPeriod}" />
                                 </p:column>
 
-                                <p:column id="actionProjectColumn"
-                                          headerText="Actions"
-                                          style="width:20%;font-size: 12px;">
-                                    <p:commandLink  action="#{peopleAdministration.modifyProject(muser)}" update="@form" styleClass="fa fa-pencil-square-o" value=""/>
+                                <p:column headerText="Edit"
+                                          style="width:32px">
+                                    <p:rowEditor />
                                 </p:column>
                             </p:dataTable>
                         </h:form>
 
                         <script>
-                            userMgmtTabview.select(#{peopleStatusBean.tabIndex});
+                            userMgmtTabview.select(#{roleEnforcementPoint.tabIndex});
                         </script>
                     </div>
                 </div>

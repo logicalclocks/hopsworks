@@ -21,23 +21,32 @@ import se.kth.hopsworks.util.Settings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.util.List;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectsManagementController {
+  @EJB
+  private ProjectsManagementFacade projectsManagementFacade;
 
   @EJB
   private ProjectFacade projectFacade;
+
+  @EJB
+  private ProjectPaymentsHistoryFacade projectPaymentsHistoryFacade;
+
+  @EJB
+  private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
 
   @EJB
   private Settings settings;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-
-  public ProjectsManagementController() {
-  }
 
   //TODO
   //get everything from projects_management view
@@ -46,4 +55,23 @@ public class ProjectsManagementController {
   //buttons or list or something
   //make the buttons do things
 
+  public int getHdfsQuota() {
+    return Integer.parseInt(settings.getHdfsDefaultQuota());
+  }
+
+  public List<ProjectsManagement> getAllProjects() {
+    return projectsManagementFacade.findAll();
+  }
+
+  public void disableProject(String projectname) {
+    projectFacade.archiveProject(projectname);
+  }
+
+  public void enableProject(String projectname) {
+    projectFacade.unarchiveProject(projectname);
+  }
+
+  public void changeYarnQuota(String projectname, int quota) {
+    yarnProjectsQuotaFacade.changeYarnQuota(projectname, quota);
+  }
 }
