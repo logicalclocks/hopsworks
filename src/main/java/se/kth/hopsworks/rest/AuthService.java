@@ -23,7 +23,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.hadoop.hdfs.server.namenode.AuditLogger;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.auth.AuthenticationConstants;

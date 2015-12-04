@@ -90,9 +90,7 @@ public class UsersController {
       // add the guest default role so if a user can still browse the platform
       groups.add(groupBean.findByGroupName(BBCGroup.BBC_GUEST.name()));
 
-      // add BBC  user default role so  a user can become data owner
-      groups.add(groupBean.findByGroupName(BBCGroup.BBC_USER.name()));
-
+  
       Users user = new Users(uid);
       user.setUsername(uname);
       user.setEmail(newUser.getEmail());
@@ -153,13 +151,11 @@ public class UsersController {
         am.registerLoginInfo(user, UserAuditActions.REGISTRATION.name(), UserAuditActions.SUCCESS.name(), req);
         am.registerLoginInfo(user, UserAuditActions.QRCODE.name(), UserAuditActions.SUCCESS.name(), req); 
         am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(), user, req);
-        am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_USER.name(), user, req);
       } catch (WriterException | MessagingException | IOException ex) {
         
         am.registerLoginInfo(user, UserAuditActions.REGISTRATION.name(), UserAuditActions.FAILED.name(), req);
         am.registerLoginInfo(user, UserAuditActions.QRCODE.name(), UserAuditActions.FAILED.name(), req); 
         am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.name(), BBCGroup.BBC_GUEST.name(), user, req);
-        am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.name(), BBCGroup.BBC_USER.name(), user, req);
 
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
@@ -199,9 +195,6 @@ public class UsersController {
 
       // add the guest default role so if a user can still browse the platform
       groups.add(groupBean.findByGroupName(BBCGroup.BBC_GUEST.name()));
-
-      // add BBC  user default role so  a user can become data owner
-      groups.add(groupBean.findByGroupName(BBCGroup.BBC_USER.name()));
 
       Users user = new Users(uid);
       user.setUsername(uname);
@@ -264,12 +257,10 @@ public class UsersController {
         userBean.persist(user);
         am.registerLoginInfo(user, UserAuditActions.REGISTRATION.name(), UserAuditActions.SUCCESS.name(), req);
         am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(), user, req);
-        am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_USER.name(), user, req);
       } catch (MessagingException | IOException ex) {
         
         am.registerLoginInfo(user, UserAuditActions.REGISTRATION.name(), UserAuditActions.FAILED.name(), req);
         am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.name(), BBCGroup.BBC_GUEST.name(), user, req);
-        am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.name(), BBCGroup.BBC_USER.name(), user, req);
 
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),

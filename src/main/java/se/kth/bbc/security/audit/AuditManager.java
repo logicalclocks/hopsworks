@@ -301,35 +301,31 @@ public class AuditManager {
 
     return true;
   }
-
-  /**
-   * Register the account update info.
-   * <p>
-   * @param u
-   * @param action
-   * @param ip
-   * @param browser
-   * @param os
-   * @param mac
-   * @param outcome
-   * @param message
-   * @return
-   */
-  public boolean registerAccountChange(Users u, String action, String ip,
-          String browser, String os, String mac, String outcome, String message
-  ) {
+/**
+ * Register the account update info.
+ * 
+ * @param init
+ * @param action
+ * @param outcome
+ * @param message
+ * @param target
+ * @return
+ * @throws SocketException 
+ */
+  public boolean registerAccountChange(Users init, String action, String outcome, String message, Users target) throws SocketException
+  {
 
     AccountAudit aa = new AccountAudit();
-    aa.setInitiator(u);
-    aa.setBrowser(browser);
-    aa.setIp(ip);
-    aa.setOs(os);
+    aa.setInitiator(init);
+    aa.setBrowser(AuditUtil.getBrowserInfo());
+    aa.setIp(AuditUtil.getIPAddress());
+    aa.setOs(AuditUtil.getOSInfo());
     aa.setAction(action);
     aa.setOutcome(outcome);
     aa.setMessage(message);
     aa.setTime(new Timestamp(new Date().getTime()));
-    aa.setMac(mac);
-    aa.setEmail(u.getEmail());
+    aa.setMac(AuditUtil.getMacAddress(AuditUtil.getIPAddress()));
+    aa.setEmail(target.getEmail());
     em.persist(aa);
 
     return true;
