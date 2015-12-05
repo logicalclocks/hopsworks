@@ -50,6 +50,9 @@
     <class>se.kth.hopsworks.util.Variables</class>
     <class>io.hops.hdfs.HdfsLeDescriptors</class>
     <class>io.hops.bbc.Consents</class>
+    <class>se.kth.bbc.project.ProjectsManagement</class>
+    <class>se.kth.bbc.project.ProjectPaymentsHistory</class>
+    <class>se.kth.bbc.project.YarnProjectsQuota</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
