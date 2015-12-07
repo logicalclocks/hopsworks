@@ -195,11 +195,23 @@ public class ProjectService {
     // Update the description if it have been chenged
     if (project.getDescription() == null || !project.getDescription().equals(
             projectDTO.getDescription())) {
-      projectController.changeProjectDesc(project, projectDTO.getDescription(),
+      projectController.updateProject(project, projectDTO,
               userEmail);
       json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
       updated = true;
     }
+    
+    
+    // Update the description if it have been chenged
+    if (project.getRetentionPeriod() == null || !project.getRetentionPeriod().equals(
+            projectDTO.getDescription())) {
+      projectController.updateProject(project, projectDTO,
+              userEmail);
+      json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
+      updated = true;
+    }
+
+    
 
     // Add all the new services
     List<ProjectServiceEnum> projectServices = new ArrayList<>();

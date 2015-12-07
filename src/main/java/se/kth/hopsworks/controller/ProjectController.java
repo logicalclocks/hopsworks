@@ -12,6 +12,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.*;
 import javax.ws.rs.core.Response;
+
+import io.hops.bbc.ProjectPaymentAction;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -21,10 +23,16 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
+import se.kth.bbc.project.ProjectPaymentsHistory;
+import se.kth.bbc.project.ProjectPaymentsHistoryFacade;
+import se.kth.bbc.project.ProjectPaymentsHistoryPK;
 import se.kth.bbc.project.ProjectRoleTypes;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.bbc.project.ProjectTeamPK;
+import se.kth.bbc.project.ProjectsManagementFacade;
+import se.kth.bbc.project.YarnProjectsQuota;
+import se.kth.bbc.project.YarnProjectsQuotaFacade;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
@@ -53,6 +61,10 @@ public class ProjectController {
   private ProjectFacade projectFacade;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private ProjectPaymentsHistoryFacade projectPaymentsHistoryFacade;
+  @EJB
+  private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
   private UserManager userBean;
   @EJB
@@ -127,6 +139,16 @@ public class ProjectController {
         //Persist project object
         this.projectFacade.persistProject(project);
         this.projectFacade.flushEm();
+        this.projectPaymentsHistoryFacade.persistProjectPaymentsHistory(new
+            ProjectPaymentsHistory(new ProjectPaymentsHistoryPK(project
+            .getName(),project.getCreated()), project.getOwner().getEmail(),
+            ProjectPaymentAction.DEPOSIT_MONEY, 0));
+        this.projectPaymentsHistoryFacade.flushEm();
+        this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(new
+            YarnProjectsQuota(project.getName(), Integer.parseInt(settings
+            .getYarnDefaultQuota
+                ()), 0));
+        this.yarnProjectsQuotaFacade.flushEm();
         //Add the activity information
         logActivity(ActivityFacade.NEW_PROJECT,
                 ActivityFacade.FLAG_PROJECT, user, project);
@@ -161,8 +183,9 @@ public class ProjectController {
 
     try {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
-        datasetController.createDataset(user, project, ds.getName(), ds.
-                getDescription(), -1, false, true);
+          boolean globallyVisible = ds.equals(Settings.DefaultDataset.RESOURCES);
+          datasetController.createDataset(user, project, ds.getName(), ds.
+                getDescription(), -1, false, true, globallyVisible);
       }
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
@@ -178,7 +201,7 @@ public class ProjectController {
 
     try {
       datasetController.createDataset(user, project, "consents",
-              "Biobanking consent forms", -1, false, true);
+              "Biobanking consent forms", -1, false, true, false);
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
               "Could not create project consents folder ", e);
@@ -300,17 +323,19 @@ public class ProjectController {
    * @param newProjectDesc
    * @param userEmail of the user making the change
    */
-  public void changeProjectDesc(Project project, String newProjectDesc,
-          String userEmail) {
+  public void updateProject(Project project, ProjectDTO proj,
+          String userEmail ) {
     Users user = userBean.getUserByEmail(userEmail);
 
-    project.setDescription(newProjectDesc);
+    project.setDescription(proj.getDescription());
+    project.setRetentionPeriod(proj.getRetentionPeriod());
+ 
     projectFacade.mergeProject(project);
-
     logActivity(ActivityFacade.PROJECT_DESC_CHANGED, ActivityFacade.FLAG_PROJECT,
             user, project);
   }
 
+  
   //Set the project owner as project master in ProjectTeam table
   private void addProjectOwner(Integer project_id, String userName) {
     ProjectTeamPK stp = new ProjectTeamPK(project_id, userName);
@@ -392,6 +417,10 @@ public class ProjectController {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
+    ProjectPaymentsHistory projectPaymentsHistory =
+        projectPaymentsHistoryFacade.findByProjectName(project.getName());
+    YarnProjectsQuota yarnProjectsQuota =
+        yarnProjectsQuotaFacade.findByProjectName(project.getName());
     List<Dataset> dsInProject = datasetFacade.findByProject(project);
     Collection<ProjectTeam> projectTeam = projectTeamFacade.
             findMembersByProject(project);
@@ -407,6 +436,8 @@ public class ProjectController {
       hdfsUsersBean.deleteProjectUsers(project, projectTeam);
     } else {
       projectFacade.remove(project);
+      projectPaymentsHistoryFacade.remove(projectPaymentsHistory);
+      yarnProjectsQuotaFacade.remove(yarnProjectsQuota);
     }
     logger.log(Level.FINE, "{0} - project removed.", project.getName());
 

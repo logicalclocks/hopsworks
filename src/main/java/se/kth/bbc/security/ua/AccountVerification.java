@@ -50,6 +50,7 @@ public class AccountVerification {
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
             getRequest();
 
+    /*
     if (req.getRemoteUser() != null) {
       HttpSession session = (HttpSession) ctx.getExternalContext().getSession(
               false);
@@ -58,7 +59,7 @@ public class AccountVerification {
         session.invalidate();
         return false;
       }
-    }
+    } */
 
     Users user = mgr.getUserByUsername(username);
 
