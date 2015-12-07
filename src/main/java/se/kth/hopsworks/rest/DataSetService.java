@@ -521,7 +521,7 @@ public class DataSetService {
         throw new IOException("The file does not exist");
       }
       //tests if the user have permission to access this path
-      dfs.getDfs(username).open(path);
+      dfs.getDfsOps(username).open(path);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not download the file ");
