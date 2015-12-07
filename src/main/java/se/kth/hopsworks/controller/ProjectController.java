@@ -772,31 +772,17 @@ public class ProjectController {
 
   public void setQuota(String projectname, long diskspaceQuota)
       throws IOException {
-    String rootDir = settings.DIR_ROOT;
-    String fullProjectPath = File.separator + rootDir + File.separator
-        + projectname;
-    String project = this.extractProjectName(fullProjectPath + File.separator);
-    String projectPath = File.separator + rootDir + File.separator + project;
-    dfsSingleton.getDfsOps().setQuota(new Path(projectPath), diskspaceQuota);
+    dfsSingleton.getDfsOps().setQuota(new Path(settings.getProjectPath(projectname)),
+        diskspaceQuota);
   }
 
   //Get quota in GB
   public long getQuota(String projectname) throws IOException {
-    String rootDir = settings.DIR_ROOT;
-    String fullProjectPath = File.separator + rootDir + File.separator
-        + projectname;
-    String project = this.extractProjectName(fullProjectPath + File.separator);
-    String projectPath = File.separator + rootDir + File.separator + project;
-    return dfsSingleton.getDfsOps().getQuota(new Path(projectPath));
+    return dfsSingleton.getDfsOps().getQuota(new Path(settings.getProjectPath(projectname)));
   }
 
   //Get used disk space in GB
   public long getUsedQuota(String projectname) throws IOException {
-    String rootDir = settings.DIR_ROOT;
-    String fullProjectPath = File.separator + rootDir + File.separator
-        + projectname;
-    String project = this.extractProjectName(fullProjectPath + File.separator);
-    String projectPath = File.separator + rootDir + File.separator + project;
-    return dfsSingleton.getDfsOps().getUsedQuota(new Path(projectPath));
+    return dfsSingleton.getDfsOps().getUsedQuota(new Path(settings.getProjectPath(projectname)));
   }
 }

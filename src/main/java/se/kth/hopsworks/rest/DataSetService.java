@@ -120,9 +120,7 @@ public class DataSetService {
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = this.projectFacade.find(projectId);
-    String rootDir = Settings.DIR_ROOT;
-    String projectPath = File.separator + rootDir + File.separator
-            + this.project.getName();
+    String projectPath = settings.getProjectPath(this.project.getName());
     this.path = projectPath + File.separator;
   }
 
