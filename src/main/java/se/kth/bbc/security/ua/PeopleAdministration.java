@@ -4,12 +4,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.SocketException;
 import java.security.Principal;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -615,4 +611,13 @@ public class PeopleAdministration implements Serializable {
     return "activate_yubikey";
   }
 
+  public ClientSessionState getSessionState() {
+    return sessionState;
+  }
+
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
+  }
+
+  
 }

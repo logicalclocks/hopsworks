@@ -224,4 +224,49 @@ public class ActivityFacade extends AbstractFacade<Activity> {
             Activity.class).setParameter("flag", flag);
     return query.getResultList();
   }
+  
+  
+  /**
+   * Get all the activities performed on study <i>studyName</i>.
+   * <p>
+   * @param studyName
+   * @return
+   */
+  public List<Activity> activityDetailOnStudy(String projName) {
+    TypedQuery<Activity> q = em.createNamedQuery(
+            "Activity.findByProject", Activity.class);
+    q.setParameter("projectname", projName);
+    return q.getResultList();
+  }
+
+  /**
+   * Get all the activities performed on study <i>studyName</i>.
+   * <p>
+   * @param studyName
+   * @param from
+   * @param to
+   * @return
+   */
+  public List<Activity> activityDetailOnStudyAudit(String studyName, Date from,
+          Date to) {
+    String sql =null;
+    if(!studyName.isEmpty() && studyName!=null){
+      sql = "SELECT * FROM hopsworks.activity WHERE  (created >= '"
+            + from + "' AND created <='" + to + "' AND project_id = (SELECT project_id FROM hopsworks.project WHERE projectname='"+studyName +"'))";
+    }else {
+      sql= "SELECT * FROM hopsworks.activity  WHERE  (created >= '"
+            + from + "' AND created <='" + to + "')";
+    }
+    
+    Query query = em.createNativeQuery(sql, Activity.class);
+
+    List<Activity> ul = query.getResultList();
+
+    if (ul.isEmpty()) {
+      return null;
+    }
+
+    return ul;
+  }
+
 }

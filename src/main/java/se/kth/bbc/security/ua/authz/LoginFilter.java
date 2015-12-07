@@ -18,7 +18,6 @@ public class LoginFilter extends PolicyDecisionPoint implements Filter {
   @EJB
   private UserManager uManager;
 
-
   private String urlList;
 
   @Override
@@ -29,19 +28,19 @@ public class LoginFilter extends PolicyDecisionPoint implements Filter {
     String url = request.getServletPath();
     boolean allowedRequest = false;
 
-    if ((url.contains(urlList) && !url.contains("/index.html") && !url.contains("/index.xhtml"))) {
+    if ((url.contains(urlList) && !url.contains("/index.html") && !url.contains(
+            "/index.xhtml"))) {
       allowedRequest = true;
     }
 
-    
     String username = request.getRemoteUser();
 
-    Users user= null;
-    
-    if(username!= null){
+    Users user = null;
+
+    if (username != null) {
       user = uManager.findByEmail(username);
     }
-    
+
     // If user is logged in redirect to index first page 
     // otherwise continue 
     if (request.getRemoteUser() != null && !allowedRequest) {
@@ -56,7 +55,7 @@ public class LoginFilter extends PolicyDecisionPoint implements Filter {
                 + "/security/protected/audit/adminAuditIndex.xhtml");
       } else if (isInDataProviderRole(user) || isInResearcherRole(user)
               || isInGuestRole(user)) {
-        response.sendRedirect(contextPath +"/#home");
+        response.sendRedirect(contextPath + "/#home");
       }
     } else {
       chain.doFilter(req, res);
@@ -66,8 +65,8 @@ public class LoginFilter extends PolicyDecisionPoint implements Filter {
   @Override
   public void init(FilterConfig config) throws ServletException {
 
-   urlList= config.getInitParameter("avoid-urls");
-    
+    urlList = config.getInitParameter("avoid-urls");
+
   }
 
   @Override

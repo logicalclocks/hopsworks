@@ -250,7 +250,7 @@ public class AuditManager {
           Users tar, HttpServletRequest req) throws SocketException {
 
     RolesAudit ra = new RolesAudit();
-    ra.setInitiator(u.getUid());
+    ra.setInitiator(u);
     ra.setBrowser(AuditUtil.getBrowserInfo(req));
     ra.setIp(AuditUtil.getIPAddress(req));
     ra.setOs(AuditUtil.getOSInfo(req));
@@ -285,7 +285,7 @@ public class AuditManager {
           Users tar) {
 
     RolesAudit ra = new RolesAudit();
-    ra.setInitiator(u.getUid());
+    ra.setInitiator(u);
     ra.setBrowser(browser);
     ra.setIp(ip);
     ra.setOs(os);
