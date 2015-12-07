@@ -77,7 +77,11 @@
                                           <h:outputText value="#{project.yarnQuotaRemaining}" />
                                         </f:facet>
                                         <f:facet name="input">
-                                            <p:inputText value="#{project.yarnQuotaRemaining}" style="width:100%"/>
+                                            <p:inputText value="#{project.yarnQuotaRemaining}" style="width:100%">
+                                                <f:validateLongRange
+                                                        maximum="100000"
+                                                        minimum="1" />
+                                            </p:inputText>
                                         </f:facet>
                                     </p:cellEditor>
                                 </p:column>
@@ -105,7 +109,11 @@
                                         </f:facet>
                                         <f:facet name="input">
                                             <p:inputText
-                                                value="#{projectsmanagement.hdfsquota}" style="width:100%"/>
+                                                value="#{projectsmanagement.hdfsquota}" style="width:100%">
+                                                <f:validateLongRange
+                                                    maximum="100000"
+                                                    minimum="1" />
+                                            </p:inputText>
                                         </f:facet>
                                     </p:cellEditor>
                                 </p:column>
