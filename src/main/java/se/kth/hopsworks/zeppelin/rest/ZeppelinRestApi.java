@@ -9,6 +9,9 @@ import javax.ws.rs.core.Response;
 @Path("/")
 public class ZeppelinRestApi {
 
+  public ZeppelinRestApi() {
+  }
+
   /**
    * Get the root endpoint Return always 200.
    * <p/>

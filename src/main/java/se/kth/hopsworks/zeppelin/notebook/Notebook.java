@@ -29,9 +29,12 @@ import java.util.Map;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
 import org.apache.zeppelin.display.AngularObject;
+import org.apache.zeppelin.display.AngularObjectRegistry;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
+import org.apache.zeppelin.interpreter.InterpreterGroup;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 import org.apache.zeppelin.notebook.JobListenerFactory;
+import org.apache.zeppelin.interpreter.remote.RemoteAngularObjectRegistry;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.notebook.NoteInterpreterLoader;
@@ -127,6 +130,38 @@ public class Notebook {
     return note;
   }
 
+  /**
+   * Clone existing note.
+   * <p>
+   * @param sourceNoteID - the note ID to clone
+   * @param newNoteName - the name of the new note
+   * @return noteId
+   * @throws IOException, CloneNotSupportedException, IllegalArgumentException
+   */
+  public Note cloneNote(String sourceNoteID, String newNoteName) throws
+          IOException, CloneNotSupportedException, IllegalArgumentException {
+
+    Note sourceNote = getNote(sourceNoteID);
+    if (sourceNote == null) {
+      throw new IllegalArgumentException(sourceNoteID + "not found");
+    }
+    Note newNote = createNote();
+    if (newNoteName != null) {
+      newNote.setName(newNoteName);
+    }
+    // Copy the interpreter bindings
+    List<String> boundInterpreterSettingsIds = getBindedInterpreterSettingsIds(
+            sourceNote.id());
+    bindInterpretersToNote(newNote.id(), boundInterpreterSettingsIds);
+
+    List<Paragraph> paragraphs = sourceNote.getParagraphs();
+    for (Paragraph p : paragraphs) {
+      newNote.addCloneParagraph(p);
+    }
+    newNote.persist();
+    return newNote;
+  }
+
   public void bindInterpretersToNote(String id,
           List<String> interpreterSettingIds) throws IOException {
     Note note = getNote(id);
@@ -154,7 +189,7 @@ public class Notebook {
     }
   }
 
-  private Note getNote(String id) {
+  public Note getNote(String id) {
     synchronized (notes) {
       return notes.get(id);
     }
@@ -170,6 +205,19 @@ public class Notebook {
     synchronized (notes) {
       note = notes.remove(id);
     }
+
+    // remove from all interpreter instance's angular object registry
+    for (InterpreterSetting settings : replFactory.get()) {
+      AngularObjectRegistry registry = settings.getInterpreterGroup().
+              getAngularObjectRegistry();
+      if (registry instanceof RemoteAngularObjectRegistry) {
+        ((RemoteAngularObjectRegistry) registry).
+                removeAllAndNotifyRemoteProcess(id);
+      } else {
+        registry.removeAll(id);
+      }
+    }
+
     try {
       note.unpersist();
     } catch (IOException e) {
@@ -238,12 +286,48 @@ public class Notebook {
       notes.put(note.id(), note);
       refreshCron(note.id());
     }
+
+    for (String name : angularObjectSnapshot.keySet()) {
+      SnapshotAngularObject snapshot = angularObjectSnapshot.get(name);
+      List<InterpreterSetting> settings = replFactory.get();
+      for (InterpreterSetting setting : settings) {
+        InterpreterGroup intpGroup = setting.getInterpreterGroup();
+        if (intpGroup.getId().equals(snapshot.getIntpGroupId())) {
+          AngularObjectRegistry registry = intpGroup.getAngularObjectRegistry();
+          String noteId = snapshot.getAngularObject().getNoteId();
+          // at this point, remote interpreter process is not created.
+          // so does not make sense add it to the remote.
+          // 
+          // therefore instead of addAndNotifyRemoteProcess(), need to use add()
+          // that results add angularObject only in ZeppelinServer side not remoteProcessSide
+          registry.add(name, snapshot.getAngularObject().get(), noteId);
+        }
+      }
+    }
     return note;
   }
 
   private void loadAllNotes() throws IOException {
     List<NoteInfo> noteInfos = notebookRepo.list();
 
+    for (NoteInfo info : noteInfos) {
+      loadNoteFromRepo(info.getId());
+    }
+  }
+
+  /**
+   * Reload all notes from repository after clearing `notes`
+   * to reflect the changes of added/deleted/modified notebooks on file system
+   * level.
+   *
+   * @return
+   * @throws IOException
+   */
+  private void reloadAllNotes() throws IOException {
+    synchronized (notes) {
+      notes.clear();
+    }
+    List<NoteInfo> noteInfos = notebookRepo.list();
     for (NoteInfo info : noteInfos) {
       loadNoteFromRepo(info.getId());
     }
@@ -277,27 +361,35 @@ public class Notebook {
   }
 
   public List<Note> getAllNotes() {
-
-    List<Note> noteList = new ArrayList<>(notesInProject.values());
-    Collections.sort(noteList, new Comparator() {
-      @Override
-      public int compare(Object one, Object two) {
-        Note note1 = (Note) one;
-        Note note2 = (Note) two;
-
-        String name1 = note1.id();
-        if (note1.getName() != null) {
-          name1 = note1.getName();
-        }
-        String name2 = note2.id();
-        if (note2.getName() != null) {
-          name2 = note2.getName();
-        }
-        ((Note) one).getName();
-        return name1.compareTo(name2);
+    if (conf.getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_RELOAD_FROM_STORAGE)) {
+      try {
+        reloadAllNotes();
+      } catch (IOException e) {
+        logger.error("Cannot reload notes from storage", e);
       }
-    });
-    return noteList;
+    }
+    synchronized (notes) {
+      List<Note> noteList = new ArrayList<>(notesInProject.values());
+      Collections.sort(noteList, new Comparator() {
+        @Override
+        public int compare(Object one, Object two) {
+          Note note1 = (Note) one;
+          Note note2 = (Note) two;
+
+          String name1 = note1.id();
+          if (note1.getName() != null) {
+            name1 = note1.getName();
+          }
+          String name2 = note2.id();
+          if (note2.getName() != null) {
+            name2 = note2.getName();
+          }
+          ((Note) one).getName();
+          return name1.compareTo(name2);
+        }
+      });
+      return noteList;
+    }
   }
 
   public JobListenerFactory getJobListenerFactory() {
@@ -390,5 +482,9 @@ public class Notebook {
 
   public void setNotebookRepo(NotebookRepo notebookRepo) {
     this.notebookRepo = notebookRepo;
+  }
+  
+  public ZeppelinConfiguration getConf() {
+    return conf;
   }
 }

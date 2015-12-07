@@ -14,28 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.kth.hopsworks.zeppelin.rest.message;
 
-import java.util.Properties;
+package se.kth.hopsworks.zeppelin.server;
+
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import org.apache.zeppelin.interpreter.InterpreterOption;
 
 /**
- *
+ * Created by eranw on 8/30/15.
+ * Omit InterpreterOption from serialization
  */
-public class UpdateInterpreterSettingRequest {
+public class JsonExclusionStrategy implements ExclusionStrategy {
 
-  // option was deprecated
-  Properties properties;
-
-  public UpdateInterpreterSettingRequest(InterpreterOption option,
-          Properties properties) {
-    super();
-    this.properties = properties;
+  public boolean shouldSkipClass(Class<?> arg0) {
+    //exclude only InterpreterOption
+    return InterpreterOption.class.equals(arg0);
   }
 
-  public Properties getProperties() {
-    return properties;
+  public boolean shouldSkipField(FieldAttributes f) {
+
+    return false;
   }
-
-
 }

@@ -94,19 +94,42 @@
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin</artifactId>
-      <version>0.5.0-incubating</version>
+      <version>0.6.0-incubating-SNAPSHOT</version>
       <type>pom</type>
     </dependency>
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
+      <artifactId>zeppelin-interpreter</artifactId>
+      <version>0.6.0-incubating-SNAPSHOT</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-zengine</artifactId>
-      <version>0.5.0-incubating</version>
+      <version>0.6.0-incubating-SNAPSHOT</version>
     </dependency>
     <dependency>		
       <groupId>org.apache.zeppelin</groupId>		
       <artifactId>zeppelin-web</artifactId>		
-      <version>0.5.0-incubating</version>		
+      <version>0.6.0-incubating-SNAPSHOT</version>		
       <type>war</type>		
+    </dependency>
+    
+    <dependency>
+      <groupId>org.quartz-scheduler</groupId>
+      <artifactId>quartz</artifactId>
+      <version>2.2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.5</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-vfs2</artifactId>
+      <version>2.0</version>
+      <type>jar</type>
     </dependency>
     <!--End of Zeppelin dependencies -->
     <!--Elastic dependency-->

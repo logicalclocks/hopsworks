@@ -3,10 +3,6 @@ package se.kth.hopsworks.zeppelin.rest;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 
-/**
- *
- * @author ermiasg
- */
 @XmlRootElement
 public class InterpreterDTO {
   

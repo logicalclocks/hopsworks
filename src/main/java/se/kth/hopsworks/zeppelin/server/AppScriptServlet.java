@@ -28,7 +28,7 @@ public class AppScriptServlet extends HttpServlet {
   private final int websocketPort;
 
   public AppScriptServlet() {
-    this.websocketPort = zeppelin.getConf().getWebSocketPort();
+    this.websocketPort = zeppelin.getConf().getServerPort();
   }
 
   @Override

@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,9 +38,11 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
+import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
 import org.apache.zeppelin.display.AngularObject;
 import org.apache.zeppelin.display.AngularObjectRegistry;
 import org.apache.zeppelin.display.AngularObjectRegistryListener;
+import org.apache.zeppelin.display.Input;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 import org.apache.zeppelin.notebook.JobListenerFactory;
@@ -95,14 +98,16 @@ public class NotebookServer implements
   @OnOpen
   public void open(Session conn, EndpointConfig config) {
     logger.log(Level.INFO, "Create zeppelin websocket on port {0}:{1}",
-            new Object[]{conn.getRequestURI().getHost(), conn.getRequestURI().getPort()});
+            new Object[]{conn.getRequestURI().getHost(), conn.getRequestURI().
+              getPort()});
     this.session = conn;
     this.sender = (String) config.getUserProperties().get("user");
     this.project = getProject((String) config.getUserProperties().get(
             "projectID"));
     authenticateUser(conn, this.project, this.sender);
     if (this.userRole == null) {
-      logger.log(Level.INFO, "User not authorized for Zeepelin Access: {0}", this.sender);
+      logger.log(Level.INFO, "User not authorized for Zeepelin Access: {0}",
+              this.sender);
       return;
     }
     this.notebook = setupNotebook(this.project);
@@ -125,14 +130,23 @@ public class NotebookServer implements
         case LIST_NOTES:
           sendNoteList(conn);
           break;
+        case GET_HOME_NOTE:
+          sendHomeNote(conn, notebook);
+          break;
         case GET_NOTE:
           sendNote(conn, notebook, messagereceived);
           break;
         case NEW_NOTE:
-          createNote(conn, notebook);
+          createNote(conn, notebook, messagereceived);
           break;
         case DEL_NOTE:
           removeNote(conn, notebook, messagereceived);
+          break;
+        case CLONE_NOTE:
+          cloneNote(conn, notebook, messagereceived);
+          break;
+        case IMPORT_NOTE:
+          importNote(conn, notebook, messagereceived);
           break;
         case COMMIT_PARAGRAPH:
           updateParagraph(conn, notebook, messagereceived);
@@ -151,6 +165,9 @@ public class NotebookServer implements
           break;
         case PARAGRAPH_REMOVE:
           removeParagraph(conn, notebook, messagereceived);
+          break;
+        case PARAGRAPH_CLEAR_OUTPUT:
+          clearParagraphOutput(conn, notebook, messagereceived);
           break;
         case NOTE_UPDATE:
           updateNote(conn, notebook, messagereceived);
@@ -290,6 +307,26 @@ public class NotebookServer implements
     }
   }
 
+  private void broadcastExcept(String noteId, Message m, Session exclude) {
+    synchronized (noteSocketMap) {
+      List<Session> socketLists = noteSocketMap.get(noteId);
+      if (socketLists == null || socketLists.isEmpty()) {
+        return;
+      }
+      logger.log(Level.INFO, "SEND >> {0}", m.op);
+      for (Session conn : socketLists) {
+        if (exclude.equals(conn)) {
+          continue;
+        }
+        try {
+          conn.getBasicRemote().sendText(serializeMessage(m));
+        } catch (IOException ex) {
+          logger.log(Level.SEVERE, "Unable to send message " + m, ex);
+        }
+      }
+    }
+  }
+
   //broadcast to every one in the same project as this.project.id
   private void broadcastAll(Message m) {
     synchronized (connectedSockets) {
@@ -324,11 +361,59 @@ public class NotebookServer implements
     }
   }
 
-  private void broadcastNote(Note note) {
+  public List<Map<String, String>> generateNotebooksInfo() {
+    Notebook notebook = notebook();
+
+    ZeppelinConfiguration conf = notebook.getConf();
+    String homescreenNotebookId = conf.getString(
+            ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN);
+    boolean hideHomeScreenNotebookFromList = conf
+            .getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN_HIDE);
+
+    List<Note> notes = notebook.getAllNotes();
+    List<Map<String, String>> notesInfo = new LinkedList<>();
+    for (Note note : notes) {
+      Map<String, String> info = new HashMap<>();
+
+      if (hideHomeScreenNotebookFromList && note.id().equals(
+              homescreenNotebookId)) {
+        continue;
+      }
+
+      info.put("id", note.id());
+      info.put("name", note.getName());
+      notesInfo.add(info);
+    }
+
+    return notesInfo;
+  }
+
+  public void broadcastNote(Note note) {
     broadcast(note.id(), new Message(OP.NOTE).put("note", note));
   }
 
-  private void broadcastNoteList() {
+  private void sendHomeNote(Session conn, Notebook notebook) throws IOException {
+    String noteId = notebook.getConf().getString(
+            ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN);
+
+    Note note = null;
+    if (noteId != null) {
+      note = notebook.getNote(noteId);
+    }
+
+    if (note != null) {
+      addConnectionToNote(note.id(), conn);
+      conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).put(
+              "note", note)));
+      sendAllAngularObjects(note, conn);
+    } else {
+      removeConnectionFromAllNote(conn);
+      conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).put(
+              "note", null)));
+    }
+  }
+
+  public void broadcastNoteList() {
     Notebook notebook = notebook();
     List<Note> notes = notebook.getAllNotes();//returns notes in project
     List<Map<String, String>> notesInfo = new LinkedList<>();
@@ -378,12 +463,11 @@ public class NotebookServer implements
       boolean cronUpdated = isCronUpdated(config, note.getConfig());
       note.setName(name);
       note.setConfig(config);
-
       if (cronUpdated) {
         notebook.refreshCron(note.id());
       }
-      note.persist();
 
+      note.persist();
       broadcastNote(note);
       broadcastNoteList();
     }
@@ -400,13 +484,24 @@ public class NotebookServer implements
     } else if (configA.get("cron") != null || configB.get("cron") != null) {
       cronUpdated = true;
     }
+
     return cronUpdated;
   }
 
-  private void createNote(Session conn, Notebook notebook) throws IOException {
+  private void createNote(Session conn, Notebook notebook, Message message)
+          throws IOException {
     Note note = notebook.createNote();
     note.addParagraph(); // it's an empty note. so add one paragraph
+    if (message != null) {
+      String noteName = (String) message.get("name");
+      if (noteName == null || noteName.isEmpty()) {
+        noteName = "Note " + note.getId();
+      }
+      note.setName(noteName);
+    }
+
     note.persist();
+    addConnectionToNote(note.id(), conn);
     broadcastNote(note);
     broadcastNoteList();
   }
@@ -446,6 +541,73 @@ public class NotebookServer implements
     broadcast(note.id(), new Message(OP.PARAGRAPH).put("paragraph", p));
   }
 
+  private void cloneNote(Session conn, Notebook notebook, Message fromMessage)
+          throws IOException, CloneNotSupportedException {
+    String noteId = getOpenNoteId(conn);
+    String name = (String) fromMessage.get("name");
+    Note newNote = notebook.cloneNote(noteId, name);
+    addConnectionToNote(newNote.id(), conn);
+    broadcastNote(newNote);
+    broadcastNoteList();
+  }
+
+  protected Note importNote(Session conn, Notebook notebook, Message fromMessage)
+          throws IOException {
+
+    Note note = notebook.createNote();
+    if (fromMessage != null) {
+      String noteName = (String) ((Map) fromMessage.get("notebook")).get("name");
+      if (noteName == null || noteName.isEmpty()) {
+        noteName = "Note " + note.getId();
+      }
+      note.setName(noteName);
+      ArrayList<Map> paragraphs = ((Map<String, ArrayList>) fromMessage.get(
+              "notebook"))
+              .get("paragraphs");
+      if (paragraphs.size() > 0) {
+        for (Map paragraph : paragraphs) {
+          try {
+            Paragraph p = note.addParagraph();
+            String text = (String) paragraph.get("text");
+            p.setText(text);
+            p.setTitle((String) paragraph.get("title"));
+            Map<String, Object> params = (Map<String, Object>) ((Map) paragraph
+                    .get("settings")).get("params");
+            Map<String, Input> forms = (Map<String, Input>) ((Map) paragraph
+                    .get("settings")).get("forms");
+            if (params != null) {
+              p.settings.setParams(params);
+            }
+            if (forms != null) {
+              p.settings.setForms(forms);
+            }
+            Map<String, Object> result = (Map) paragraph.get("result");
+            if (result != null) {
+              InterpreterResult.Code code = InterpreterResult.Code
+                      .valueOf((String) result.get("code"));
+              InterpreterResult.Type type = InterpreterResult.Type
+                      .valueOf((String) result.get("type"));
+              String msg = (String) result.get("msg");
+              p.setReturn(new InterpreterResult(code, type, msg), null);
+            }
+
+            Map<String, Object> config = (Map<String, Object>) paragraph
+                    .get("config");
+            p.setConfig(config);
+          } catch (Exception e) {
+            logger.log(Level.SEVERE,
+                    "Exception while setting parameter in paragraph", e);
+          }
+        }
+      }
+    }
+
+    note.persist();
+    broadcastNote(note);
+    broadcastNoteList();
+    return note;
+  }
+
   private void removeParagraph(Session conn, Notebook notebook,
           Message fromMessage)
           throws IOException {
@@ -467,12 +629,22 @@ public class NotebookServer implements
     }
   }
 
+  private void clearParagraphOutput(Session conn, Notebook notebook,
+          Message fromMessage) throws IOException {
+    final String paragraphId = (String) fromMessage.get("id");
+    if (paragraphId == null) {
+      return;
+    }
+    final Note note = notebook.getNote(getOpenNoteId(conn));
+    note.clearParagraphOutput(paragraphId);
+    broadcastNote(note);
+  }
+
   private void completion(Session conn, Notebook notebook, Message fromMessage) {
     String paragraphId = (String) fromMessage.get("id");
     String buffer = (String) fromMessage.get("buf");
     int cursor = (int) Double.parseDouble(fromMessage.get("cursor").toString());
     Message resp = new Message(OP.COMPLETION_LIST).put("id", paragraphId);
-
     if (paragraphId == null) {
       try {
         conn.getBasicRemote().sendText(serializeMessage(resp));
@@ -494,10 +666,10 @@ public class NotebookServer implements
 
   /**
    * When angular object updated from client
-   * <p/>
-   * @param conn
-   * @param notebook
-   * @param fromMessage
+   *
+   * @param conn the web socket.
+   * @param notebook the notebook.
+   * @param fromMessage the message.
    */
   private void angularObjectUpdated(Session conn, Notebook notebook,
           Message fromMessage) {
@@ -505,7 +677,8 @@ public class NotebookServer implements
     String interpreterGroupId = (String) fromMessage.get("interpreterGroupId");
     String varName = (String) fromMessage.get("name");
     Object varValue = fromMessage.get("value");
-
+    AngularObject ao = null;
+    boolean global = false;
     // propagate change to (Remote) AngularObjectRegistry
     Note note = notebook.getNoteInProject(noteId);
     if (note != null) {
@@ -515,42 +688,54 @@ public class NotebookServer implements
         if (setting.getInterpreterGroup() == null) {
           continue;
         }
-
         if (interpreterGroupId.equals(setting.getInterpreterGroup().getId())) {
           AngularObjectRegistry angularObjectRegistry = setting
                   .getInterpreterGroup().getAngularObjectRegistry();
-          AngularObject ao = angularObjectRegistry.get(varName);
+          // first trying to get local registry
+          ao = angularObjectRegistry.get(varName, noteId);
           if (ao == null) {
             logger.log(Level.WARNING, "Object {} is not binded", varName);
           } else {
             // path from client -> server
             ao.set(varValue, false);
+            global = true;
           }
-
-          break;
+        } else {
+          // path from client -> server
+          ao.set(varValue, false);
+          global = false;
         }
+        break;
       }
     }
-
-    // broadcast change to all web session that uses related interpreter.
-    for (Note n : notebook.getAllNotes()) {
-      List<InterpreterSetting> settings = note.getNoteReplLoader().
-              getInterpreterSettings();
-      for (InterpreterSetting setting : settings) {
-        if (setting.getInterpreterGroup() == null) {
-          continue;
-        }
-
-        if (interpreterGroupId.equals(setting.getInterpreterGroup().getId())) {
-          AngularObjectRegistry angularObjectRegistry = setting
-                  .getInterpreterGroup().getAngularObjectRegistry();
-          AngularObject ao = angularObjectRegistry.get(varName);
-          this.broadcast(n.id(), new Message(OP.ANGULAR_OBJECT_UPDATE)
-                  .put("angularObject", ao)
-                  .put("interpreterGroupId", interpreterGroupId)
-                  .put("noteId", n.id()));
+    if (global) {
+      // broadcast change to all web session that uses related
+      // interpreter.
+      for (Note n : notebook.getAllNotes()) {
+        List<InterpreterSetting> settings = note.getNoteReplLoader().
+                getInterpreterSettings();
+        for (InterpreterSetting setting : settings) {
+          if (setting.getInterpreterGroup() == null) {
+            continue;
+          }
+          if (interpreterGroupId.equals(setting.getInterpreterGroup().getId())) {
+            AngularObjectRegistry angularObjectRegistry = setting
+                    .getInterpreterGroup().getAngularObjectRegistry();
+            ao = angularObjectRegistry.get(varName, noteId);
+            this.broadcastExcept(n.id(),
+                    new Message(OP.ANGULAR_OBJECT_UPDATE)
+                    .put("angularObject", ao)
+                    .put("interpreterGroupId", interpreterGroupId)
+                    .put("noteId", n.id()), conn);
+          }
         }
       }
+    } else { // broadcast to all web session for the note
+      this.broadcastExcept(note.id(),
+              new Message(OP.ANGULAR_OBJECT_UPDATE).put("angularObject", ao)
+              .put("interpreterGroupId", interpreterGroupId)
+              .put("noteId", note.id()),
+              conn);
     }
   }
 
@@ -611,16 +796,14 @@ public class NotebookServer implements
     p.settings.setParams(params);
     Map<String, Object> config = (Map<String, Object>) fromMessage.get("config");
     p.setConfig(config);
-
     // if it's the last paragraph, let's add a new one
     boolean isTheLastParagraph = note.getLastParagraph().getId().equals(p.
             getId());
     if (!Strings.isNullOrEmpty(text) && isTheLastParagraph) {
       note.addParagraph();
     }
-    note.persist();
-    broadcastNote(note);
 
+    note.persist();
     try {
       note.run(paragraphId);
     } catch (Exception ex) {
@@ -634,6 +817,7 @@ public class NotebookServer implements
   }
 
   /**
+   * Need description here.
    *
    */
   public static class ParagraphJobListener implements JobListener {
@@ -660,8 +844,11 @@ public class NotebookServer implements
     @Override
     public void afterStatusChange(Job job, Status before, Status after) {
       if (after == Status.ERROR) {
-        job.getException().printStackTrace();
+        if (job.getException() != null) {
+          logger.log(Level.INFO, "Error", job.getException());
+        }
       }
+
       if (job.isTerminated()) {
         logger.log(Level.INFO, "Job {0} is finished", job.getId());
         try {
@@ -690,9 +877,9 @@ public class NotebookServer implements
     }
 
     for (InterpreterSetting intpSetting : settings) {
-      AngularObjectRegistry registry = intpSetting.getInterpreterGroup().
-              getAngularObjectRegistry();
-      List<AngularObject> objects = registry.getAll();
+      AngularObjectRegistry registry = intpSetting.getInterpreterGroup()
+              .getAngularObjectRegistry();
+      List<AngularObject> objects = registry.getAllWithGlobal(note.id());
       for (AngularObject object : objects) {
         try {
           conn.getBasicRemote().sendText(serializeMessage(new Message(
@@ -718,9 +905,16 @@ public class NotebookServer implements
   @Override
   public void onUpdate(String interpreterGroupId, AngularObject object) {
     Notebook notebook = notebook();
+    if (notebook == null) {
+      return;
+    }
 
     List<Note> notes = notebook.getAllNotes();
     for (Note note : notes) {
+      if (object.getNoteId() != null && !note.id().equals(object.getNoteId())) {
+        continue;
+      }
+
       List<InterpreterSetting> intpSettings = note.getNoteReplLoader()
               .getInterpreterSettings();
 
@@ -740,17 +934,21 @@ public class NotebookServer implements
   }
 
   @Override
-  public void onRemove(String interpreterGroupId, AngularObject object) {
+  public void onRemove(String interpreterGroupId, String name, String noteId) {
     Notebook notebook = notebook();
     List<Note> notes = notebook.getAllNotes();
     for (Note note : notes) {
+      if (noteId != null && !note.id().equals(noteId)) {
+        continue;
+      }
+
       List<String> ids = note.getNoteReplLoader().getInterpreters();
       for (String id : ids) {
         if (id.equals(interpreterGroupId)) {
           broadcast(
                   note.id(),
-                  new Message(OP.ANGULAR_OBJECT_REMOVE).put("name",
-                          object.getName()));
+                  new Message(OP.ANGULAR_OBJECT_REMOVE).put("name", name).put(
+                          "noteId", noteId));
         }
       }
     }
@@ -765,7 +963,8 @@ public class NotebookServer implements
       notebookStorageClass = Class.forName(conf.getString(
               ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE));
       Constructor<?> constructor = notebookStorageClass.getConstructor(
-              ZeppelinConfiguration.class, Project.class);
+              ZeppelinConfiguration.class, Project.class
+      );
       notebookRepo = (NotebookRepo) constructor.newInstance(conf, project);
 
       notebook = new Notebook(notebookRepo);
