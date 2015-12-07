@@ -162,8 +162,7 @@ public class NotebookRestApi {
 
   /**
    * Delete note REST API
-   * @param
-   * @return JSON with status.OK
+   * @param notebookId@return JSON with status.OK
    * @throws IOException
    */
   @DELETE
@@ -180,10 +179,12 @@ public class NotebookRestApi {
     return new JsonResponse(Status.OK, "").build();
   }
   /**
-   * Clone note REST API
-   * @param
-   * @return JSON with status.CREATED
+   * Clone note REST API@return JSON with status.CREATED
+   * @param notebookId
+   * @param message
+   * @return 
    * @throws IOException
+   * @throws java.lang.CloneNotSupportedException
    */
   @POST
   @Path("{notebookId}")
@@ -206,6 +207,7 @@ public class NotebookRestApi {
    * @throws se.kth.hopsworks.rest.AppException
    */
   @GET
+  @Path("/tutorial")
   public Response getTutorialNotes() throws AppException {
     List<NoteInfo> noteInfo;
     try {

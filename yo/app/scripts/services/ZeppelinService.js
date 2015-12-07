@@ -16,7 +16,7 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/notebook/'+ projectId);
             },
             tutorialNotebooks: function () {
-                return $http.get('/api/notebook');
+                return $http.get('/api/notebook/tutorial');
             },
             createNotebook: function (projectId) {
                 return $http.get('/api/notebook/'+ projectId + '/new');

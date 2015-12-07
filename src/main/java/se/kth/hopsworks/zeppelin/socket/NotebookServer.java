@@ -65,7 +65,7 @@ import se.kth.hopsworks.zeppelin.socket.Message.OP;
  * Zeppelin websocket service.
  *
  */
-@ServerEndpoint(value = "/websocket",
+@ServerEndpoint(value = "/zeppelin/ws",
         configurator = ZeppelinEndpointConfig.class)
 public class NotebookServer implements
         JobListenerFactory, AngularObjectRegistryListener {
