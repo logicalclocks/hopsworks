@@ -11,8 +11,10 @@ import java.util.List;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
+import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityDetail;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.model.AccountAudit;
 import se.kth.bbc.security.audit.model.RolesAudit;
@@ -34,7 +36,7 @@ public class AuditTrails implements Serializable {
   private AuditManager auditManager;
 
   @EJB
-  private ActivityController activityController;
+  private ActivityFacade activityController;
 
   private String username;
 
@@ -56,7 +58,7 @@ public class AuditTrails implements Serializable {
 
   private List<AccountAudit> accountAudit;
 
-  private List<ActivityDetail> ad;
+  private List<Activity> ad;
 
   public String getUsername() {
     return username;
@@ -162,11 +164,11 @@ public class AuditTrails implements Serializable {
     this.selectedLoginsAuditAction = selectedLoginsAuditAction;
   }
 
-  public List<ActivityDetail> getAd() {
+  public List<Activity> getAd() {
     return ad;
   }
 
-  public void setAd(List<ActivityDetail> ad) {
+  public void setAd(List<Activity> ad) {
     this.ad = ad;
   }
 
@@ -199,7 +201,7 @@ public class AuditTrails implements Serializable {
    * @param to
    * @return
    */
-  public List<ActivityDetail> getStudyAudit(String studyName, Date from, Date to) {
+  public List<Activity> getStudyAudit(String studyName, Date from, Date to) {
     return activityController.activityDetailOnStudyAudit(studyName,
             convertTosqlDate(from), convertTosqlDate(to));
   }

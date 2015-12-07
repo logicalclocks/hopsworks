@@ -7,15 +7,14 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.security.ua.model.Address;
-import se.kth.bbc.security.ua.model.Organization;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 @Stateless
 public class UserFacade extends AbstractFacade<Users> {
 
-  private final int STARTING_USER = 1000;
+
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -76,7 +75,7 @@ public class UserFacade extends AbstractFacade<Users> {
     Object obj = query.getSingleResult();
 
     if (obj == null) {
-      return STARTING_USER;
+      return AuthenticationConstants.STARTING_USER;
     }
     return (Integer) obj;
   }
