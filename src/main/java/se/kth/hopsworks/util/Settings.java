@@ -428,4 +428,8 @@ public class Settings {
     em.detach(variable);
   }
 
+  public static String getProjectPath(String projectname) {
+    return File.separator + DIR_ROOT + File.separator + projectname;
+  }
+
 }

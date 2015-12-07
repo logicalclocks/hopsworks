@@ -48,9 +48,9 @@ public class DownloadService {
     FSDataInputStream stream;
     try {
       if (username != null) {
-          stream = dfs.getDfs(username).open(new Path(this.path));
+          stream = dfs.getDfsOps(username).open(new Path(this.path));
       } else {
-        stream = dfs.getDfs().open(new Path(this.path));
+        stream = dfs.getDfsOps().open(new Path(this.path));
       }
     } catch (AccessControlException ex) {
       throw new AccessControlException(
