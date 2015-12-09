@@ -262,7 +262,15 @@ public class AuditTrails implements Serializable {
             getValue()) || action.getValue().equals(UserAuditActions.LOGOUT.
                     getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
-    }else if(action.getValue().equals(UserAuditActions.ALL.getValue())){
+    } else if (action.getValue().equals(UserAuditActions.SUCCESS.
+            getValue()) || action.getValue().equals(UserAuditActions.FAILED.
+                    getValue())) {
+      userLogins = getUserLogins(username, from, to, action.getValue());
+    } else if (action.getValue().equals(UserAuditActions.QRCODE.
+            getValue()) || action.getValue().equals(UserAuditActions.RECOVERY.
+                    getValue())) {
+      userLogins = getUserLogins(username, from, to, action.getValue());
+    } else if(action.getValue().equals(UserAuditActions.ALL.getValue())){
          userLogins = getUserLogins(username, from, to, action.getValue());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
@@ -293,6 +301,9 @@ public class AuditTrails implements Serializable {
     } else if (action.getValue().equals(AccountsAuditActions.USERMANAGEMENT.
             getValue())) {
       accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    } else if (action.getValue().equals(AccountsAuditActions.USERMANAGEMENT.
+            getValue())) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
     }
@@ -311,6 +322,8 @@ public class AuditTrails implements Serializable {
       roleAudit = getRoleAudit(username, from, to, action.getValue());
     } else if (action.getValue().equals(RolesAuditActions.ALLROLEASSIGNMENTS.
             getValue())) {
+      roleAudit = getRoleAudit(username, from, to, action.getValue());
+    }else if (action.getValue().equals(RolesAuditActions.SUCCESS) || action.getValue().equals(RolesAuditActions.FAILED)) {
       roleAudit = getRoleAudit(username, from, to, action.getValue());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
