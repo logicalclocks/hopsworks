@@ -13,6 +13,7 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.util.Settings;
 
@@ -251,6 +252,21 @@ public class DistributedFileSystemOps {
     dfs.setOwner(path, username, groupname);
   }
 
+  //Set quota in GB
+  public void setQuota(Path src, long diskspaceQuota) throws
+      IOException {
+    dfs.setQuota(src, HdfsConstants.QUOTA_DONT_SET, 1073741824*diskspaceQuota);
+  }
+
+  //Get quota in GB
+  public long getQuota(Path path) throws IOException {
+    return dfs.getContentSummary(path).getSpaceQuota()/1073741824;
+  }
+
+  //Get used disk space in GB
+  public long getUsedQuota(Path path) throws IOException {
+    return dfs.getContentSummary(path).getSpaceConsumed()/1073741824;
+  }
 
   public FSDataInputStream open(Path location) throws IOException {
     return this.dfs.open(location);

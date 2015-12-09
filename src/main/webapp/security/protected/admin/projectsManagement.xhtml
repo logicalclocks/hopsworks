@@ -52,7 +52,8 @@
                                          paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
                                          rowsPerPageTemplate="15,25,35,45,55">
 
-                                <p:ajax event="rowEdit" listener="#{projectsmanagement.onRowEdit}"
+                                <p:ajax event="rowEdit"
+                                        listener="#{projectsmanagement.onRowEdit}"
                                         update=":projectmodifyForm:msgs" />
                                 <p:ajax event="rowEditCancel" update=":projectmodifyForm:msgs" />
 
@@ -76,7 +77,11 @@
                                           <h:outputText value="#{project.yarnQuotaRemaining}" />
                                         </f:facet>
                                         <f:facet name="input">
-                                            <p:inputText value="#{project.yarnQuotaRemaining}" style="width:100%"/>
+                                            <p:inputText value="#{project.yarnQuotaRemaining}" style="width:100%">
+                                                <f:validateLongRange
+                                                        maximum="100000"
+                                                        minimum="1" />
+                                            </p:inputText>
                                         </f:facet>
                                     </p:cellEditor>
                                 </p:column>
@@ -92,29 +97,34 @@
                                 </p:column>
 
                                 <p:column id="hdfsquotaColumn"
-                                          filterBy="#{projectsmanagement.hdfsQuota}"
-                                          sortBy="#{projectsmanagement.hdfsQuota}"
+                                          filterBy="#{projectsmanagement.getHdfsQuota(project.projectname)}"
+                                          sortBy="#{projectsmanagement.getHdfsQuota(project.projectname)}"
                                           filterMatchMode="contains"
                                           headerText="Disk quota"
                                           style=" font-size: 12px; text-align: center;">
-                                    <!--<p:cellEditor>-->
-                                        <!--<f:facet name="output">-->
+                                    <p:cellEditor>
+                                        <f:facet name="output">
                                             <h:outputText
-                                                value="#{projectsmanagement.hdfsQuota}" />
-                                        <!--</f:facet>-->
-                                        <!--<f:facet name="input">-->
-                                            <!--<p:inputText value="#{projectsmanagement.hdfsQuota}" style="width:100%"/>-->
-                                        <!--</f:facet>-->
-                                    <!--</p:cellEditor>-->
+                                                value="#{projectsmanagement.getHdfsQuota(project.projectname)}" />
+                                        </f:facet>
+                                        <f:facet name="input">
+                                            <p:inputText
+                                                value="#{projectsmanagement.hdfsquota}" style="width:100%">
+                                                <f:validateLongRange
+                                                    maximum="100000"
+                                                    minimum="1" />
+                                            </p:inputText>
+                                        </f:facet>
+                                    </p:cellEditor>
                                 </p:column>
 
                                 <p:column id="hdfstotalquotaColumn"
-                                          filterBy="#{projectsmanagement.hdfsQuota}"
-                                          sortBy="#{projectsmanagement.hdfsQuota}"
+                                          filterBy="#{projectsmanagement.getHDFSUsedQuota(project.projectname)}"
+                                          sortBy="#{projectsmanagement.getHDFSUsedQuota(project.projectname)}"
                                           filterMatchMode="contains"
                                           headerText="Disk used"
                                           style=" font-size: 12px; text-align: center;">
-                                    <h:outputText value="#{projectsmanagement.hdfsQuota}" />
+                                    <h:outputText value="#{projectsmanagement.getHDFSUsedQuota(project.projectname)}" />
                                 </p:column>
 
                                 <p:column id="useremailColumn"

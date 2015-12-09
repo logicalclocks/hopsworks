@@ -17,6 +17,8 @@
  */
 package se.kth.bbc.project;
 
+import org.apache.hadoop.fs.Path;
+import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.util.Settings;
 
 import javax.ejb.EJB;
@@ -25,6 +27,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.io.IOException;
 import java.util.List;
 
 @Stateless
@@ -32,6 +35,9 @@ import java.util.List;
 public class ProjectsManagementController {
   @EJB
   private ProjectsManagementFacade projectsManagementFacade;
+
+  @EJB
+  private ProjectController projectController;
 
   @EJB
   private ProjectFacade projectFacade;
@@ -48,8 +54,16 @@ public class ProjectsManagementController {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  public int getHdfsQuota() {
-    return Integer.parseInt(settings.getHdfsDefaultQuota());
+  public long getHdfsQuota(String projectname) throws IOException {
+    return projectController.getQuota(projectname);
+  }
+
+  public long getHDFSUsedQuota(String projectname) throws IOException {
+    return projectController.getUsedQuota(projectname);
+  }
+
+  public void setHdfsQuota(String projectname, long quota) throws IOException {
+    projectController.setQuota(projectname, quota);
   }
 
   public List<ProjectsManagement> getAllProjects() {

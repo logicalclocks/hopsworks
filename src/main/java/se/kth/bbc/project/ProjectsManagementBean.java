@@ -18,15 +18,11 @@
 package se.kth.bbc.project;
 
 import org.primefaces.event.RowEditEvent;
-import se.kth.hopsworks.user.model.Users;
 
 import javax.ejb.EJB;
-import javax.faces.application.FacesMessage;
-import javax.faces.bean.RequestScoped;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
+import java.io.IOException;
 import java.util.List;
 
 @ManagedBean(name = "projectsmanagement")
@@ -41,6 +37,16 @@ public class ProjectsManagementBean {
   private List<ProjectsManagement> filteredProjects;
 
   private List<ProjectsManagement> allProjects;
+
+  private String hdfsquota;
+
+  public String getHdfsquota() {
+    return hdfsquota;
+  }
+
+  public void setHdfsquota(String hdfsquota) {
+    this.hdfsquota = hdfsquota;
+  }
 
   public void setFilteredProjects(List<ProjectsManagement> filteredProjects) {
     this.filteredProjects = filteredProjects;
@@ -61,8 +67,14 @@ public class ProjectsManagementBean {
     return allProjects;
   }
 
-  public int getHdfsQuota() {
-    return projectsManagementController.getHdfsQuota();
+  public int getHdfsQuota(String projectname) throws IOException {
+    long quota = projectsManagementController.getHdfsQuota(projectname);
+    this.hdfsquota = String.valueOf(quota);
+    return (int) quota;
+  }
+
+  public int getHDFSUsedQuota(String projectname) throws IOException {
+    return (int) projectsManagementController.getHDFSUsedQuota(projectname);
   }
 
   public String getAction() {
@@ -87,7 +99,8 @@ public class ProjectsManagementBean {
     projectsManagementController.changeYarnQuota(projectname, quota);
   }
 
-  public void onRowEdit(RowEditEvent event) {
+  public void onRowEdit(RowEditEvent event)
+      throws IOException {
     ProjectsManagement row = (ProjectsManagement) event.getObject();
     if (row.getDisabled()) {
       projectsManagementController.disableProject(row.getProjectname());
@@ -96,6 +109,8 @@ public class ProjectsManagementBean {
     }
     projectsManagementController.changeYarnQuota(row.getProjectname(), row
         .getYarnQuotaRemaining());
+    projectsManagementController.setHdfsQuota(row.getProjectname(),
+        Long.parseLong(hdfsquota));
   }
 
   public void onRowCancel(RowEditEvent event) {

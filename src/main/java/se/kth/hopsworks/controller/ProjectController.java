@@ -42,6 +42,7 @@ import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
@@ -85,6 +86,8 @@ public class ProjectController {
   private SshkeysFacade sshKeysBean;
   @EJB
   private HdfsUsersController hdfsUsersBean;
+  @EJB
+  private DFSSingleton dfsSingleton;
 
   @EJB
   private Settings settings;
@@ -135,7 +138,7 @@ public class ProjectController {
         
         Inode projectInode = this.inodes.getProjectRoot(project.getName());
         project.setInode(projectInode);
-        
+
         //Persist project object
         this.projectFacade.persistProject(project);
         this.projectFacade.flushEm();
@@ -383,6 +386,10 @@ public class ProjectController {
     //Create first the projectPath
     projectDirCreated = fileOps.mkDir(projectPath);
     fileOps.setMetaEnabled(projectPath);
+
+    //Set default space quota in GB
+    setQuota(new Path(projectPath), Integer.parseInt(settings
+        .getHdfsDefaultQuota()));
 
     //create the rest of the child folders if any
     if (projectDirCreated && !fullProjectPath.equals(projectPath)) {
@@ -756,5 +763,26 @@ public class ProjectController {
     int endIndex = path.indexOf('/', startIndex + 1);
 
     return path.substring(startIndex + 1, endIndex);
+  }
+
+  public void setQuota(Path src, long diskspaceQuota)
+      throws IOException {
+    dfsSingleton.getDfsOps().setQuota(src, diskspaceQuota);
+  }
+
+  public void setQuota(String projectname, long diskspaceQuota)
+      throws IOException {
+    dfsSingleton.getDfsOps().setQuota(new Path(settings.getProjectPath(projectname)),
+        diskspaceQuota);
+  }
+
+  //Get quota in GB
+  public long getQuota(String projectname) throws IOException {
+    return dfsSingleton.getDfsOps().getQuota(new Path(settings.getProjectPath(projectname)));
+  }
+
+  //Get used disk space in GB
+  public long getUsedQuota(String projectname) throws IOException {
+    return dfsSingleton.getDfsOps().getUsedQuota(new Path(settings.getProjectPath(projectname)));
   }
 }
