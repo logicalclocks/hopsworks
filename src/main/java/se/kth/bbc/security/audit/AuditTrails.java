@@ -263,7 +263,8 @@ public class AuditTrails implements Serializable {
                     getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
     } else if (action.getValue().equals(UserAuditActions.SUCCESS.
-            getValue()) || action.getValue().equals(UserAuditActions.FAILED.
+            getValue()) || action.getValue().equals(UserAuditActions.FAILED.getValue())
+                    || action.getValue().equals(UserAuditActions.ABORTED.
                     getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
     } else if (action.getValue().equals(UserAuditActions.QRCODE.
@@ -304,7 +305,10 @@ public class AuditTrails implements Serializable {
     } else if (action.getValue().equals(AccountsAuditActions.USERMANAGEMENT.
             getValue())) {
       accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else {
+    } else if (action.getValue().equals(AccountsAuditActions.ALL.
+            getValue())) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    }else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
     }
   }

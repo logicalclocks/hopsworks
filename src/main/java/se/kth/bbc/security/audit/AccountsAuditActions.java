@@ -17,7 +17,9 @@ public enum AccountsAuditActions {
   // for approving/changing status of users
   USERMANAGEMENT("USER MANAGEMENT"),
   // for mobile lost or yubikeyu lost devices
-  LOSTDEVICE("LOST DEVICE REPORT");
+  LOSTDEVICE("LOST DEVICE REPORT"),
+  // get all actions
+  ALL("ALL") ;
 
   private final String value;
 
