@@ -12,8 +12,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import se.kth.bbc.activity.Activity;
-import se.kth.bbc.activity.ActivityController;
-import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.model.AccountAudit;
@@ -21,7 +19,7 @@ import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.user.model.Users;
- 
+
 @ManagedBean
 @ViewScoped
 
@@ -188,22 +186,13 @@ public class AuditTrails implements Serializable {
     if (u == null) {
       return auditManager.getAccountAudit(convertTosqlDate(from),
               convertTosqlDate(to), action);
-    } else {
+    } else if (action.equals(AccountsAuditActions.SUCCESS.name()) || action.equals(
+            AccountsAuditActions.FAILED.name())) {
+      return auditManager.getAccountAuditOutcome(from, to, action);
+    }else {
       return auditManager.getAccountAudit(u.getUid(), convertTosqlDate(from),
               convertTosqlDate(to), action);
     }
-  }
-
-  /**
-   *
-   * @param studyName
-   * @param from
-   * @param to
-   * @return
-   */
-  public List<Activity> getStudyAudit(String studyName, Date from, Date to) {
-    return activityController.activityDetailOnStudyAudit(studyName,
-            convertTosqlDate(from), convertTosqlDate(to));
   }
 
   /**
@@ -222,6 +211,9 @@ public class AuditTrails implements Serializable {
     if (u == null) {
       return auditManager.getRoletAudit(convertTosqlDate(from),
               convertTosqlDate(to), action);
+    } else if (action.equals(RolesAuditActions.SUCCESS.name()) || action.equals(
+            RolesAuditActions.FAILED.name())) {
+      return auditManager.getRoletAuditOutcome(from, to, action);
     } else {
       return auditManager.getRoletAudit(u.getUid(), convertTosqlDate(from),
               convertTosqlDate(to), action);
@@ -242,6 +234,12 @@ public class AuditTrails implements Serializable {
     if (u == null) {
       return auditManager.getUsersLoginsFromTo(convertTosqlDate(from),
               convertTosqlDate(to), action);
+    } else if (action.equals(UserAuditActions.SUCCESS.name()) || action.equals(
+            UserAuditActions.FAILED.name())
+            || action.equals(UserAuditActions.ABORTED.name())) {
+      return auditManager.getUserLoginsOutcome(u.getUid(),
+              convertTosqlDate(from),
+              convertTosqlDate(to), action);
     } else {
       return auditManager.
               getUserLoginsFromTo(u.getUid(), convertTosqlDate(from),
@@ -256,14 +254,18 @@ public class AuditTrails implements Serializable {
    */
   public void processLoginAuditRequest(UserAuditActions action) {
 
-    if (action.getValue().equals(UserAuditActions.REGISTRATION.getValue())) {
-      userLogins = getUserLogins(username, from, to, action.getValue());
-    } else if (action.getValue().equals(UserAuditActions.LOGIN.
+    if (action.getValue().equals(UserAuditActions.LOGIN.
             getValue()) || action.getValue().equals(UserAuditActions.LOGOUT.
                     getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
-    }else if(action.getValue().equals(UserAuditActions.ALL.getValue())){
-         userLogins = getUserLogins(username, from, to, action.getValue());
+    } else if (action.getValue().equals(UserAuditActions.SUCCESS.
+            getValue()) || action.getValue().equals(UserAuditActions.FAILED.
+                    getValue())
+            || action.getValue().equals(UserAuditActions.ABORTED.
+                    getValue())) {
+      userLogins = getUserLogins(username, from, to, action.getValue());
+    } else if (action.getValue().equals(UserAuditActions.ALL.getValue())) {
+      userLogins = getUserLogins(username, from, to, action.getValue());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
     }
@@ -290,7 +292,26 @@ public class AuditTrails implements Serializable {
     } else if (action.getValue().equals(AccountsAuditActions.PROFILEUPDATE.
             getValue())) {
       accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.USERMANAGEMENT.
+    } else if (action.getValue().equals(AccountsAuditActions.REGISTRATION.
+            getValue())) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    } else if (action.getValue().equals(AccountsAuditActions.QRCODE.
+            getValue())) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    } else if (action.getValue().equals(AccountsAuditActions.PROFILE.
+            getValue())) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    } else if (action.getValue().equals(AccountsAuditActions.PASSWORD.
+            getValue())) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    } else if (action.getValue().equals(AccountsAuditActions.RECOVERY.
+            getValue())) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    }else if (action.getValue().equals(AccountsAuditActions.SUCCESS.
+            getValue()) || action.getValue().equals(AccountsAuditActions.FAILED.
+            getValue()) ) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    } else if (action.getValue().equals(AccountsAuditActions.ALL.
             getValue())) {
       accountAudit = getAccoutnAudit(username, from, to, action.getValue());
     } else {
@@ -311,6 +332,9 @@ public class AuditTrails implements Serializable {
       roleAudit = getRoleAudit(username, from, to, action.getValue());
     } else if (action.getValue().equals(RolesAuditActions.ALLROLEASSIGNMENTS.
             getValue())) {
+      roleAudit = getRoleAudit(username, from, to, action.getValue());
+    } else if (action.getValue().equals(RolesAuditActions.SUCCESS) || action.
+            getValue().equals(RolesAuditActions.FAILED)) {
       roleAudit = getRoleAudit(username, from, to, action.getValue());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
@@ -341,4 +365,5 @@ public class AuditTrails implements Serializable {
   public java.sql.Date convertTosqlDate(java.util.Date calendarDate) {
     return new java.sql.Date(calendarDate.getTime());
   }
+
 }

@@ -266,7 +266,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       int val = user.getFalseLogin();
       mgr.increaseLockNum(userid, val + 1);
       registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
-              "FAIL");
+              UserAuditActions.FAILED.name());
       if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         mgr.changeAccountStatus(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.
                 getValue());
