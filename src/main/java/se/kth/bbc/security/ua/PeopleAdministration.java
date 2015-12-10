@@ -468,40 +468,6 @@ public class PeopleAdministration implements Serializable {
     requests.remove(user1);
   }
 
-  public void blockUser(Users user1) {
-    try {
-      userTransaction.begin();
-      userManager.updateStatus(user1, PeopleAccountStatus.ACCOUNT_BLOCKED.
-              getValue());
-      userTransaction.commit();
-
-      emailBean.sendEmail(user1.getEmail(),
-              UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
-              UserAccountsEmailMessages.accountBlockedMessage());
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              PeopleAccountStatus.ACCOUNT_BLOCKED.name(),
-              UserAuditActions.SUCCESS.name(), "", user1);
-    } catch (NotSupportedException | SystemException | MessagingException |
-            RollbackException | HeuristicMixedException |
-            HeuristicRollbackException | SecurityException |
-            IllegalStateException ex) {
-      Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
-              null, ex);
-      try {
-        auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-                PeopleAccountStatus.ACCOUNT_BLOCKED.name(),
-                UserAuditActions.FAILED.name(), "", user1);
-      } catch (SocketException ex1) {
-        Logger.getLogger(PeopleAdministration.class.getName()).
-                log(Level.SEVERE, null, ex1);
-      }
-    } catch (SocketException ex) {
-      Logger.getLogger(PeopleAdministration.class.getName()).
-              log(Level.SEVERE, null, ex);
-    }
-    requests.remove(user1);
-  }
-
   public String modifyUser(Users user1) {
     // Get the latest status
     Users newStatus = userManager.getUserByEmail(user1.getEmail());
@@ -535,78 +501,6 @@ public class PeopleAdministration implements Serializable {
 
   public SecurityQuestion[] getQuestions() {
     return SecurityQuestion.values();
-  }
-
-  /**
-   * Update user roles from profile by admin.
-   * @throws java.net.SocketException
-   */
-  public void updateUserByAdmin() throws SocketException {
-    try {
-      // update status
-      if (!"#".equals(selectedStatus)) {
-        editingUser.setStatus(PeopleAccountStatus.valueOf(selectedStatus).
-                getValue());
-        userManager.updateStatus(editingUser, PeopleAccountStatus.valueOf(
-                selectedStatus).getValue());
-        auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-                AccountsAuditActions.CHANGEDSTATUS.name(), UserAuditActions.SUCCESS.
-                name(), selectedStatus, editingUser);
-
-        MessagesController.addInfoMessage("Success",
-                "Status updated successfully.");
-      }
-
-      // register a new group
-      if (!"#".equals(nGroup)) {
-        userManager.registerGroup(editingUser, BBCGroup.valueOf(nGroup).
-                getValue());
-        
-        auditManager.registerRoleChange(sessionState.getLoggedInUser(),
-                RolesAuditActions.ADDROLE.name(), UserAuditActions.SUCCESS.
-                name(), BBCGroup.valueOf(nGroup).name(), editingUser);
-
-        MessagesController.addInfoMessage("Success",
-                "Role updated successfully.");
-
-      }
-
-      // remove a group
-      if (!"#".equals(sgroup)) {
-        if (sgroup.equals(BBCGroup.BBC_GUEST.name())) {
-
-          MessagesController.addSecurityErrorMessage(BBCGroup.BBC_GUEST.name()
-                  + " can not be removed.");
-        } else {
-
-          userManager.removeGroup(editingUser, BBCGroup.valueOf(sgroup).
-                  getValue());
-          auditManager.registerRoleChange(sessionState.getLoggedInUser(),
-                  RolesAuditActions.REMOVEROLE.name(), UserAuditActions.SUCCESS.
-                  name(), BBCGroup.valueOf(sgroup).name(), editingUser);
-          
-          MessagesController.addInfoMessage("Success",
-                  "User updated successfully.");
-        }
-      }
-
-      if ("#".equals(sgroup)) {
-
-        if (("#".equals(selectedStatus))
-                || "#".equals(nGroup)) {
-          MessagesController.addSecurityErrorMessage("No selection made!");
-        }
-      }
-
-    } catch (EJBException ejb) {
-      auditManager.registerRoleChange(sessionState.getLoggedInUser(),
-                  RolesAuditActions.ALLROLEASSIGNMENTS.name(), UserAuditActions.FAILED.
-                  name(), "Could not update user account", editingUser);
-      MessagesController.addSecurityErrorMessage("Update failed.");
-    } catch (SocketException ex) {
-      Logger.getLogger(PeopleAdministration.class.getName()).
-              log(Level.SEVERE, null, ex);
-    }
   }
 
   public String activateYubikeyUser(Users u) {

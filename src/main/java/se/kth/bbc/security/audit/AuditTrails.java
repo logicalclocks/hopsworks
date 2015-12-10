@@ -186,10 +186,11 @@ public class AuditTrails implements Serializable {
     if (u == null) {
       return auditManager.getAccountAudit(convertTosqlDate(from),
               convertTosqlDate(to), action);
-    } else if (action.equals(AccountsAuditActions.SUCCESS.name()) || action.equals(
-            AccountsAuditActions.FAILED.name())) {
+    } else if (action.equals(AccountsAuditActions.SUCCESS.name()) || action.
+            equals(
+                    AccountsAuditActions.FAILED.name())) {
       return auditManager.getAccountAuditOutcome(from, to, action);
-    }else {
+    } else {
       return auditManager.getAccountAudit(u.getUid(), convertTosqlDate(from),
               convertTosqlDate(to), action);
     }
@@ -307,9 +308,9 @@ public class AuditTrails implements Serializable {
     } else if (action.getValue().equals(AccountsAuditActions.RECOVERY.
             getValue())) {
       accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    }else if (action.getValue().equals(AccountsAuditActions.SUCCESS.
+    } else if (action.getValue().equals(AccountsAuditActions.SUCCESS.
             getValue()) || action.getValue().equals(AccountsAuditActions.FAILED.
-            getValue()) ) {
+                    getValue())) {
       accountAudit = getAccoutnAudit(username, from, to, action.getValue());
     } else if (action.getValue().equals(AccountsAuditActions.ALL.
             getValue())) {

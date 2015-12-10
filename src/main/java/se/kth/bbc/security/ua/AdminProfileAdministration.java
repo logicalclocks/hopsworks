@@ -2,17 +2,26 @@ package se.kth.bbc.security.ua;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.SocketException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.audit.AccountsAuditActions;
+import se.kth.bbc.security.audit.AuditManager;
+import se.kth.bbc.security.audit.RolesAuditActions;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.hopsworks.user.model.Users;
@@ -27,6 +36,12 @@ public class AdminProfileAdministration implements Serializable {
   @EJB
   private UserManager userManager;
 
+  @EJB
+  private AuditManager am;
+
+  @ManagedProperty(value = "#{clientSessionState}")
+  private ClientSessionState sessionState;
+ 
   private Users user;
   // for modifying user roles and status
   private Users editingUser;
@@ -250,10 +265,28 @@ public class AdminProfileAdministration implements Serializable {
   public void updateStatusByAdmin() {
     // Update status
     if (!"#".equals(selectedStatus)) {
+      try {
       editingUser.setStatus(PeopleAccountStatus.valueOf(selectedStatus).
               getValue());
       userManager.updateStatus(editingUser, PeopleAccountStatus.valueOf(
               selectedStatus).getValue());
+        am.registerAccountChange(sessionState.getLoggedInUser(),
+                AccountsAuditActions.CHANGEDSTATUS.name(), UserAuditActions.SUCCESS.
+                        name(), selectedStatus, editingUser);
+      } catch (SocketException ex) {
+   
+        try {
+          am.registerAccountChange(sessionState.getLoggedInUser(),
+                  AccountsAuditActions.CHANGEDSTATUS.name(), UserAuditActions.FAILED.
+                          name(), selectedStatus, editingUser);
+        } catch (SocketException ex1) {
+          Logger.getLogger(AdminProfileAdministration.class.getName()).
+                  log(Level.SEVERE, null, ex1);
+        }
+   
+        Logger.getLogger(AdminProfileAdministration.class.getName()).
+                log(Level.SEVERE, null, ex);
+      }
       MessagesController.addInfoMessage("Success",
               "Status updated successfully.");
 
@@ -270,6 +303,26 @@ public class AdminProfileAdministration implements Serializable {
     if (!"#".equals(newGroup)) {
       userManager.registerGroup(editingUser, BBCGroup.valueOf(newGroup).
               getValue());
+      try {
+        am.registerRoleChange(sessionState.getLoggedInUser(),
+                RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.
+                        name(),BBCGroup.valueOf(newGroup).name(), editingUser);
+      } catch (SocketException ex) {
+        
+        try {
+          am.registerRoleChange(sessionState.getLoggedInUser(),
+                  RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.
+                          name(),BBCGroup.valueOf(newGroup).name(), editingUser);
+        } catch (SocketException ex1) {
+          Logger.getLogger(AdminProfileAdministration.class.getName()).
+                  log(Level.SEVERE, null, ex1);
+        }
+        
+        Logger.getLogger(AdminProfileAdministration.class.getName()).
+                log(Level.SEVERE, null, ex);
+        
+      }
+      
       MessagesController.addInfoMessage("Success", "Role updated successfully.");
 
     } else {
@@ -287,8 +340,28 @@ public class AdminProfileAdministration implements Serializable {
         MessagesController.addErrorMessage("Error", BBCGroup.BBC_GUEST.
                 toString() + " can not be removed.");
       } else {
+        
+        try {
         userManager.removeGroup(editingUser, BBCGroup.valueOf(selectedGroup).
                 getValue());
+
+          am.registerRoleChange(sessionState.getLoggedInUser(),
+                  RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.SUCCESS.
+                          name(),BBCGroup.valueOf(selectedGroup).name(), editingUser);
+        } catch (SocketException ex) {
+
+          try {
+            am.registerRoleChange(sessionState.getLoggedInUser(),
+                    RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.FAILED.
+                            name(),BBCGroup.valueOf(selectedGroup).name(), editingUser);
+          } catch (SocketException ex1) {
+            Logger.getLogger(AdminProfileAdministration.class.getName()).
+                    log(Level.SEVERE, null, ex1);
+          }
+          Logger.getLogger(AdminProfileAdministration.class.getName()).
+                  log(Level.SEVERE, null, ex);
+        }
+        
         MessagesController.addInfoMessage("Success",
                 "User updated successfully.");
       }
@@ -303,4 +376,13 @@ public class AdminProfileAdministration implements Serializable {
     }
 
   }
+
+  public ClientSessionState getSessionState() {
+    return sessionState;
+  }
+
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
+  }
+
 }
