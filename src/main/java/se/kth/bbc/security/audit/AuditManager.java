@@ -189,6 +189,31 @@ public class AuditManager {
     return ul;
   }
 
+  
+  public List<RolesAudit> getRoletAuditOutcome(Date from, Date to,
+          String outcome) {
+
+    String sql = null;
+
+    if (outcome.isEmpty() || outcome == null || outcome.equals("ALL")) {
+      sql = "SELECT * FROM hopsworks.roles_audit WHERE ( time >= '" + from
+              + "' AND time <= '" + to + "')";
+    } else {
+      sql = "SELECT * FROM hopsworks.roles_audit WHERE ( time >= '" + from
+              + "' AND time <= '" + to + "' AND outcome = '"
+              + outcome + "')";
+    }
+
+    Query query = em.createNativeQuery(sql, RolesAudit.class);
+
+    List<RolesAudit> ul = query.getResultList();
+
+    if (ul.isEmpty()) {
+      return null;
+    }
+    return ul;
+  }
+  
   public List<RolesAudit> getInitiatorRoletAudit(int uid, Date from, Date to,
           String action) {
 

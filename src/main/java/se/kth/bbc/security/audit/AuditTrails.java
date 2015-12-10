@@ -352,4 +352,5 @@ public class AuditTrails implements Serializable {
   public java.sql.Date convertTosqlDate(java.util.Date calendarDate) {
     return new java.sql.Date(calendarDate.getTime());
   }
+
 }
