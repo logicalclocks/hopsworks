@@ -19,7 +19,7 @@ import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.user.model.Users;
- 
+
 @ManagedBean
 @ViewScoped
 
@@ -192,7 +192,6 @@ public class AuditTrails implements Serializable {
     }
   }
 
-
   /**
    * Generate audit report for role entitlement.
    * <p>
@@ -209,6 +208,9 @@ public class AuditTrails implements Serializable {
     if (u == null) {
       return auditManager.getRoletAudit(convertTosqlDate(from),
               convertTosqlDate(to), action);
+    } else if (action.equals(RolesAuditActions.SUCCESS.name()) || action.equals(
+            RolesAuditActions.FAILED.name())) {
+      return auditManager.getRoletAuditOutcome(from, to, action);
     } else {
       return auditManager.getRoletAudit(u.getUid(), convertTosqlDate(from),
               convertTosqlDate(to), action);
@@ -229,10 +231,12 @@ public class AuditTrails implements Serializable {
     if (u == null) {
       return auditManager.getUsersLoginsFromTo(convertTosqlDate(from),
               convertTosqlDate(to), action);
-    } else if ( action.equals(UserAuditActions.SUCCESS.name()) || action.equals(UserAuditActions.FAILED.name())
-            || action.equals(UserAuditActions.ABORTED.name())){
-    return auditManager.getUserLoginsOutcome(u.getUid(), convertTosqlDate(from),
-                      convertTosqlDate(to), action);
+    } else if (action.equals(UserAuditActions.SUCCESS.name()) || action.equals(
+            UserAuditActions.FAILED.name())
+            || action.equals(UserAuditActions.ABORTED.name())) {
+      return auditManager.getUserLoginsOutcome(u.getUid(),
+              convertTosqlDate(from),
+              convertTosqlDate(to), action);
     } else {
       return auditManager.
               getUserLoginsFromTo(u.getUid(), convertTosqlDate(from),
@@ -254,16 +258,17 @@ public class AuditTrails implements Serializable {
                     getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
     } else if (action.getValue().equals(UserAuditActions.SUCCESS.
-            getValue()) || action.getValue().equals(UserAuditActions.FAILED.getValue())
-                    || action.getValue().equals(UserAuditActions.ABORTED.
+            getValue()) || action.getValue().equals(UserAuditActions.FAILED.
+                    getValue())
+            || action.getValue().equals(UserAuditActions.ABORTED.
                     getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
     } else if (action.getValue().equals(UserAuditActions.QRCODE.
             getValue()) || action.getValue().equals(UserAuditActions.RECOVERY.
                     getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
-    } else if(action.getValue().equals(UserAuditActions.ALL.getValue())){
-         userLogins = getUserLogins(username, from, to, action.getValue());
+    } else if (action.getValue().equals(UserAuditActions.ALL.getValue())) {
+      userLogins = getUserLogins(username, from, to, action.getValue());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
     }
@@ -293,13 +298,10 @@ public class AuditTrails implements Serializable {
     } else if (action.getValue().equals(AccountsAuditActions.USERMANAGEMENT.
             getValue())) {
       accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.USERMANAGEMENT.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
     } else if (action.getValue().equals(AccountsAuditActions.ALL.
             getValue())) {
       accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    }else {
+    } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
     }
   }
@@ -318,7 +320,8 @@ public class AuditTrails implements Serializable {
     } else if (action.getValue().equals(RolesAuditActions.ALLROLEASSIGNMENTS.
             getValue())) {
       roleAudit = getRoleAudit(username, from, to, action.getValue());
-    }else if (action.getValue().equals(RolesAuditActions.SUCCESS) || action.getValue().equals(RolesAuditActions.FAILED)) {
+    } else if (action.getValue().equals(RolesAuditActions.SUCCESS) || action.
+            getValue().equals(RolesAuditActions.FAILED)) {
       roleAudit = getRoleAudit(username, from, to, action.getValue());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
