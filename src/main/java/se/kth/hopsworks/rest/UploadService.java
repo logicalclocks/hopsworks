@@ -184,7 +184,7 @@ public class UploadService {
     //the file will be overwriten by the uploaded 
     if (this.username != null) {
       try {
-        dfs.getDfs(username).touchz(new org.apache.hadoop.fs.Path(this.path
+        dfs.getDfsOps(username).touchz(new org.apache.hadoop.fs.Path(this.path
                 + fileName));
       } catch (AccessControlException ex) {
         throw new AccessControlException(
@@ -300,7 +300,7 @@ public class UploadService {
 
         this.path = Utils.ensurePathEndsInSlash(this.path);
         if (this.username != null) {
-          dfs.getDfs(username).copyToHDFSFromLocal(true, stagingManager.
+          dfs.getDfsOps(username).copyToHDFSFromLocal(true, stagingManager.
                   getStagingPath()
                   + this.path + fileName, this.path
                   + fileName);

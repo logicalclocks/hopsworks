@@ -21,10 +21,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 import io.hops.bbc.Consents;
-import java.io.FileInputStream;
+
 import java.util.logging.Logger;
 import org.apache.hadoop.fs.FSDataInputStream;
-import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
 import se.kth.hopsworks.util.Settings;
@@ -138,7 +137,7 @@ public class ProjectPrivacyManager {
   
     FSDataInputStream stream;
     try { 
-        stream = dfs.getDfs().open(new Path(consentsPath));
+        stream = dfs.getDfsOps().open(new Path(consentsPath));
       //response.header("Content-disposition", "attachment;");
       
       // Init servlet response.

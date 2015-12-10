@@ -8,15 +8,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.primefaces.model.StreamedContent;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.auth.CustomAuthentication;
@@ -44,13 +47,13 @@ public class RecoverySelector implements Serializable {
 
   // Quick response code URL
   private String qrUrl = "Pass";
-  private StreamedContent qrCode= null;
+  private StreamedContent qrCode = null;
 
   private String uname;
   private String tmpCode;
   private String passwd;
 
-  private final int passwordLength = 6;
+  private final int passwordLength = AuthenticationConstants.PASSWORD_LENGTH;
 
   private int qrEnabled = -1;
 
@@ -148,11 +151,8 @@ public class RecoverySelector implements Serializable {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
 
-      am.registerAccountChange(people,
-              PeopleAccountStatus.MOBILE_LOST.name(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "RESET MOBILE ACCOUNT");
+      am.registerAccountChange(people, UserAuditActions.RECOVERY.name(),
+              UserAuditActions.FAILED.name(), "", people);
 
       return "";
     }
@@ -160,23 +160,16 @@ public class RecoverySelector implements Serializable {
     if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
-      am.registerAccountChange(people,
-              PeopleAccountStatus.MOBILE_LOST.name(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "RESET MOBILE ACCOUNT");
-
+      am.registerAccountChange(people, UserAuditActions.RECOVERY.name(),
+              UserAuditActions.FAILED.name(), "", people);
       return "";
     }
 
     if (people.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.USER_NOT_FOUND);
-      am.registerAccountChange(people,
-              PeopleAccountStatus.MOBILE_LOST.name(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "RESET MOBILE ACCOUNT");
+      am.registerAccountChange(people, UserAuditActions.RECOVERY.name(),
+              UserAuditActions.FAILED.name(), "", people);
 
       return "";
     }
@@ -192,30 +185,21 @@ public class RecoverySelector implements Serializable {
         email.sendEmail(people.getEmail(),
                 UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
-        am.registerAccountChange(people,
-                PeopleAccountStatus.MOBILE_LOST.name(),
-                AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-                getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-                "SUCCESS", "RESET MOBILE ACCOUNT");
+        am.registerAccountChange(people, UserAuditActions.RECOVERY.name(),
+                UserAuditActions.SUCCESS.name(), "", people);
 
         return "validate_code";
       } else {
         MessagesController.addSecurityErrorMessage(
                 AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
-        am.registerAccountChange(people,
-                PeopleAccountStatus.MOBILE_LOST.name(),
-                AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-                getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-                "FAIL", "RESET MOBILE ACCOUNT");
+        am.registerAccountChange(people, UserAuditActions.RECOVERY.name(),
+                UserAuditActions.FAILED.name(), "", people);
 
         return "";
       }
     } catch (MessagingException ex) {
-      am.registerAccountChange(people,
-              PeopleAccountStatus.MOBILE_LOST.name(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "RESET MOBILE ACCOUNT");
+      am.registerAccountChange(people, UserAuditActions.RECOVERY.name(),
+              UserAuditActions.FAILED.name(), "", people);
 
     }
 
@@ -312,12 +296,8 @@ public class RecoverySelector implements Serializable {
     if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
-      am.registerAccountChange(people,
-              PeopleAccountStatus.YUBIKEY_LOST.name(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "RESET YUBIKEY ACCOUNT");
-
+      am.registerAccountChange(people, UserAuditActions.RECOVERY.name(),
+              UserAuditActions.FAILED.name(), "", people);
       return "";
     }
 
@@ -325,11 +305,8 @@ public class RecoverySelector implements Serializable {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.USER_NOT_FOUND);
 
-      am.registerAccountChange(people,
-              PeopleAccountStatus.YUBIKEY_LOST.name(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "RESET YUBIKEY ACCOUNT");
+      am.registerAccountChange(people, UserAuditActions.RECOVERY.name(),
+              UserAuditActions.FAILED.name(), "", people);
 
       return "";
     }
@@ -347,12 +324,8 @@ public class RecoverySelector implements Serializable {
         email.sendEmail(people.getEmail(),
                 UserAccountsEmailMessages.DEVICE_LOST_SUBJECT, message);
 
-        am.registerAccountChange(people,
-                PeopleAccountStatus.YUBIKEY_LOST.name(),
-                AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-                getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-                "SUCCESS", "RESET YUBIKEY ACCOUNT");
-
+        am.registerAccountChange(people, UserAuditActions.RECOVERY.name(),
+                UserAuditActions.SUCCESS.name(), "", people);
         return "yubico_reset";
       } else {
 
@@ -367,13 +340,8 @@ public class RecoverySelector implements Serializable {
                     UserAccountsEmailMessages.accountBlockedMessage());
           } catch (MessagingException ex1) {
 
-            am.registerAccountChange(people,
-                    PeopleAccountStatus.YUBIKEY_LOST.name(),
-                    AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(),
-                    AuditUtil.
-                    getOSInfo(), AuditUtil.getMacAddress(AuditUtil.
-                            getIPAddress()),
-                    "FAIL", "RESET YUBIKEY ACCOUNT");
+            am.registerAccountChange(people, UserAuditActions.RECOVERY.name(),
+                    UserAuditActions.FAILED.name(), "", people);
 
           }
         }
@@ -381,22 +349,15 @@ public class RecoverySelector implements Serializable {
         MessagesController.addSecurityErrorMessage(
                 AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
 
-        am.registerAccountChange(people,
-                PeopleAccountStatus.YUBIKEY_LOST.name(),
-                AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-                getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-                "FAIL", "RESET YUBIKEY ACCOUNT");
+        am.registerAccountChange(people, UserAuditActions.RECOVERY.name(),
+                UserAuditActions.FAILED.name(), "", people);
 
         return "";
       }
     } catch (MessagingException ex) {
-      am.registerAccountChange(people,
-              PeopleAccountStatus.YUBIKEY_LOST.name(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "RESET YUBIKEY ACCOUNT");
+      am.registerAccountChange(people, UserAuditActions.RECOVERY.name(),
+              UserAuditActions.FAILED.name(), "", people);
     }
-
     return "";
   }
 

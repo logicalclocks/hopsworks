@@ -147,12 +147,13 @@ public class YubikeyActivator implements Serializable{
               == PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue() && 
               this.selectedYubikyUser.getYubikey().getStatus()!= PeopleAccountStatus.YUBIKEY_LOST.getValue() ) {
         // Set stauts to active
-        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
+        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVEATED.getValue());
 
         userManager.updateYubikey(yubi);
         if (!"#".equals(this.sgroup.trim()) &&( this.sgroup!=null || !this.sgroup.isEmpty())) {
           userManager.registerGroup(this.selectedYubikyUser, BBCGroup.valueOf(
                   this.sgroup).getValue());
+          userManager.registerGroup(this.selectedYubikyUser, BBCGroup.BBC_USER.getValue());
         }else{
           MessagesController.addSecurityErrorMessage(" Role could not be granted.");
           return ("");
@@ -165,14 +166,14 @@ public class YubikeyActivator implements Serializable{
               this.selectedYubikyUser.getYubikey().getStatus()== PeopleAccountStatus.YUBIKEY_LOST.getValue() ) {
         
         // Set stauts to active
-        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
+        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVEATED.getValue());
 
         userManager.updateYubikey(yubi);
       } 
       
 
       userManager.updateStatus(this.selectedYubikyUser,
-              PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
+              PeopleAccountStatus.ACCOUNT_ACTIVEATED.getValue());
       userTransaction.commit();
 
       

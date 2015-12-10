@@ -95,16 +95,16 @@
                              value="#{auditTrails.roleAudit}" 
                              widgetVar="Audit Trails"
                              emptyMessage="No record found with given criteria"
-                             rowKey="#{logs.loginId}"
+                             rowKey="#{logs.logId}"
                              style="table-layout: fixed" 
                              scrollable="false">
 
-                  <p:column id="emailColumn" filterBy="#{logs.email}" 
+                  <p:column id="emailColumn" filterBy="#{logs.initiator.email}" 
                             headerText="Initiator" style="width:25%; font-size: 12px; text-align: left;">
-                    <h:outputText value="#{logs.email}" />
+                    <h:outputText value="#{logs.initiator.email}" />
                   </p:column>
 
-                  <p:column id="targetColumn" filterBy="#{logs.target}" 
+                  <p:column id="targetColumn" filterBy="#{logs.target.email}" 
                             headerText="Target" style="width:25%; font-size: 12px; text-align: left;">
                     <h:outputText value="#{logs.target.email}" />
                   </p:column>

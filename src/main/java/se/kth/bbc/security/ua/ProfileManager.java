@@ -1,4 +1,3 @@
-
 package se.kth.bbc.security.ua;
 
 import java.io.Serializable;
@@ -15,11 +14,12 @@ import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditUtil;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.hopsworks.user.model.Users;
- 
+
 @ManagedBean
 @ViewScoped
 public class ProfileManager implements Serializable {
@@ -102,24 +102,20 @@ public class ProfileManager implements Serializable {
 
   public void updateUserInfo() throws SocketException {
 
-
     if (userManager.updatePeople(user)) {
       MessagesController.addInfoMessage("Success",
               "Profile updated successfully.");
-      auditManager.registerAccountChange(getUser(),
-              AccountsAuditActions.PROFILEUPDATE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "SUCCESS", "UPDATE INFO");
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+              AccountsAuditActions.PROFILEUPDATE.name(),
+              UserAuditActions.SUCCESS.name(), "", getUser());
+
     } else {
       FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
               "Failed to update", null);
       FacesContext.getCurrentInstance().addMessage(null, msg);
-      auditManager.registerAccountChange(getUser(),
-              AccountsAuditActions.PROFILEUPDATE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "UPDATE INFO");
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+              AccountsAuditActions.PROFILEUPDATE.name(),
+              UserAuditActions.FAILED.name(), "", getUser());
       return;
     }
   }
@@ -133,21 +129,17 @@ public class ProfileManager implements Serializable {
     if (userManager.updateOrganization(organization)) {
       MessagesController.addInfoMessage("Success",
               "Profile updated successfully.");
-      auditManager.registerAccountChange(getUser(),
-              AccountsAuditActions.PROFILEUPDATE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "SUCCESS", "UPDATE ORGANIZATION");
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+              AccountsAuditActions.PROFILEUPDATE.name(),
+              UserAuditActions.SUCCESS.name(), "Update Organization", getUser());
     } else {
       FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
               "Failed to update", null);
       FacesContext.getCurrentInstance().addMessage(null, msg);
 
-      auditManager.registerAccountChange(getUser(),
-              AccountsAuditActions.PROFILEUPDATE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "UPDATE ORGANIZATION");
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+              AccountsAuditActions.PROFILEUPDATE.name(),
+              UserAuditActions.FAILED.name(), "Update Organization", getUser());
       return;
     }
   }
@@ -162,18 +154,14 @@ public class ProfileManager implements Serializable {
     if (userManager.updateAddress(address)) {
       MessagesController.addInfoMessage("Success",
               "Address updated successfully.");
-      auditManager.registerAccountChange(getUser(),
-              AccountsAuditActions.PROFILEUPDATE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "SUCCESS", "UPDATE ADDRESS");
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+              AccountsAuditActions.PROFILEUPDATE.name(),
+              UserAuditActions.SUCCESS.name(), "Update Address", getUser());
     } else {
       MessagesController.addSecurityErrorMessage("Update failed.");
-      auditManager.registerAccountChange(getUser(),
-              AccountsAuditActions.PROFILEUPDATE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "UPDATE ADDRESS");
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+              AccountsAuditActions.PROFILEUPDATE.name(),
+              UserAuditActions.FAILED.name(), "Update Address", getUser());
 
       return;
     }
