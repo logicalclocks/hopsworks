@@ -46,6 +46,7 @@ module.exports = function (config) {
       'bower_components/ng-sortable/dist/ng-sortable.js',
       'bower_components/bootstrap-switch/dist/js/bootstrap-switch.js',
       'bower_components/angular-multi-select/isteven-multi-select.js',
+      'bower_components/angular-utils-pagination/dirPagination.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',
