@@ -29,6 +29,7 @@ import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.RolesAuditActions;
 import se.kth.bbc.security.audit.UserAuditActions;
@@ -538,8 +539,9 @@ public class PeopleAdministration implements Serializable {
 
   /**
    * Update user roles from profile by admin.
+   * @throws java.net.SocketException
    */
-  public void updateUserByAdmin() {
+  public void updateUserByAdmin() throws SocketException {
     try {
       // update status
       if (!"#".equals(selectedStatus)) {
@@ -548,7 +550,7 @@ public class PeopleAdministration implements Serializable {
         userManager.updateStatus(editingUser, PeopleAccountStatus.valueOf(
                 selectedStatus).getValue());
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-                RolesAuditActions.ADDROLE.name(), UserAuditActions.SUCCESS.
+                AccountsAuditActions.CHANGEDSTATUS.name(), UserAuditActions.SUCCESS.
                 name(), selectedStatus, editingUser);
 
         MessagesController.addInfoMessage("Success",
@@ -559,8 +561,8 @@ public class PeopleAdministration implements Serializable {
       if (!"#".equals(nGroup)) {
         userManager.registerGroup(editingUser, BBCGroup.valueOf(nGroup).
                 getValue());
-
-        auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+        
+        auditManager.registerRoleChange(sessionState.getLoggedInUser(),
                 RolesAuditActions.ADDROLE.name(), UserAuditActions.SUCCESS.
                 name(), BBCGroup.valueOf(nGroup).name(), editingUser);
 
@@ -579,10 +581,10 @@ public class PeopleAdministration implements Serializable {
 
           userManager.removeGroup(editingUser, BBCGroup.valueOf(sgroup).
                   getValue());
-          auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+          auditManager.registerRoleChange(sessionState.getLoggedInUser(),
                   RolesAuditActions.REMOVEROLE.name(), UserAuditActions.SUCCESS.
                   name(), BBCGroup.valueOf(sgroup).name(), editingUser);
-
+          
           MessagesController.addInfoMessage("Success",
                   "User updated successfully.");
         }
@@ -597,7 +599,9 @@ public class PeopleAdministration implements Serializable {
       }
 
     } catch (EJBException ejb) {
-
+      auditManager.registerRoleChange(sessionState.getLoggedInUser(),
+                  RolesAuditActions.ALLROLEASSIGNMENTS.name(), UserAuditActions.FAILED.
+                  name(), "Could not update user account", editingUser);
       MessagesController.addSecurityErrorMessage("Update failed.");
     } catch (SocketException ex) {
       Logger.getLogger(PeopleAdministration.class.getName()).

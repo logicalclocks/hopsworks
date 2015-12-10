@@ -186,7 +186,10 @@ public class AuditTrails implements Serializable {
     if (u == null) {
       return auditManager.getAccountAudit(convertTosqlDate(from),
               convertTosqlDate(to), action);
-    } else {
+    } else if (action.equals(AccountsAuditActions.SUCCESS.name()) || action.equals(
+            AccountsAuditActions.FAILED.name())) {
+      return auditManager.getAccountAuditOutcome(from, to, action);
+    }else {
       return auditManager.getAccountAudit(u.getUid(), convertTosqlDate(from),
               convertTosqlDate(to), action);
     }
@@ -251,9 +254,7 @@ public class AuditTrails implements Serializable {
    */
   public void processLoginAuditRequest(UserAuditActions action) {
 
-    if (action.getValue().equals(UserAuditActions.REGISTRATION.getValue())) {
-      userLogins = getUserLogins(username, from, to, action.getValue());
-    } else if (action.getValue().equals(UserAuditActions.LOGIN.
+    if (action.getValue().equals(UserAuditActions.LOGIN.
             getValue()) || action.getValue().equals(UserAuditActions.LOGOUT.
                     getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
@@ -261,10 +262,6 @@ public class AuditTrails implements Serializable {
             getValue()) || action.getValue().equals(UserAuditActions.FAILED.
                     getValue())
             || action.getValue().equals(UserAuditActions.ABORTED.
-                    getValue())) {
-      userLogins = getUserLogins(username, from, to, action.getValue());
-    } else if (action.getValue().equals(UserAuditActions.QRCODE.
-            getValue()) || action.getValue().equals(UserAuditActions.RECOVERY.
                     getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
     } else if (action.getValue().equals(UserAuditActions.ALL.getValue())) {
@@ -295,8 +292,24 @@ public class AuditTrails implements Serializable {
     } else if (action.getValue().equals(AccountsAuditActions.PROFILEUPDATE.
             getValue())) {
       accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.USERMANAGEMENT.
+    } else if (action.getValue().equals(AccountsAuditActions.REGISTRATION.
             getValue())) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    } else if (action.getValue().equals(AccountsAuditActions.QRCODE.
+            getValue())) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    } else if (action.getValue().equals(AccountsAuditActions.PROFILE.
+            getValue())) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    } else if (action.getValue().equals(AccountsAuditActions.PASSWORD.
+            getValue())) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    } else if (action.getValue().equals(AccountsAuditActions.RECOVERY.
+            getValue())) {
+      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    }else if (action.getValue().equals(AccountsAuditActions.SUCCESS.
+            getValue()) || action.getValue().equals(AccountsAuditActions.FAILED.
+            getValue()) ) {
       accountAudit = getAccoutnAudit(username, from, to, action.getValue());
     } else if (action.getValue().equals(AccountsAuditActions.ALL.
             getValue())) {

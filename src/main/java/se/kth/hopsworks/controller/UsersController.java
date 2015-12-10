@@ -15,6 +15,7 @@ import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import org.apache.commons.codec.digest.DigestUtils;
+import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.audit.RolesAuditActions;
@@ -148,13 +149,13 @@ public class UsersController {
         qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(),
                 AuthenticationConstants.ISSUER,
                 otpSecret);
-        am.registerLoginInfo(user, UserAuditActions.REGISTRATION.name(), UserAuditActions.SUCCESS.name(), req);
-        am.registerLoginInfo(user, UserAuditActions.QRCODE.name(), UserAuditActions.SUCCESS.name(), req); 
+        am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(), AccountsAuditActions.SUCCESS.name(), "", user, req);
+        am.registerAccountChange(user, AccountsAuditActions.QRCODE.name(), AccountsAuditActions.SUCCESS.name(),"", user, req);
         am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(), user, req);
       } catch (WriterException | MessagingException | IOException ex) {
         
-        am.registerLoginInfo(user, UserAuditActions.REGISTRATION.name(), UserAuditActions.FAILED.name(), req);
-        am.registerLoginInfo(user, UserAuditActions.QRCODE.name(), UserAuditActions.FAILED.name(), req); 
+        am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(), AccountsAuditActions.FAILED.name(),  "", user, req);
+        am.registerAccountChange(user, AccountsAuditActions.QRCODE.name(), AccountsAuditActions.FAILED.name(),  "", user, req);
         am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.name(), BBCGroup.BBC_GUEST.name(), user, req);
 
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -255,11 +256,11 @@ public class UsersController {
                         AuditUtil.getBrowserInfo(req), user.getUsername() + activationKey));
         // only register the user if i can send the email to the user
         userBean.persist(user);
-        am.registerLoginInfo(user, UserAuditActions.REGISTRATION.name(), UserAuditActions.SUCCESS.name(), req);
+        am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(), AccountsAuditActions.SUCCESS.name(), "", user, req);
         am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(), user, req);
       } catch (MessagingException | IOException ex) {
         
-        am.registerLoginInfo(user, UserAuditActions.REGISTRATION.name(), UserAuditActions.FAILED.name(), req);
+        am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(), AccountsAuditActions.FAILED.name(), "", user, req);
         am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.name(), BBCGroup.BBC_GUEST.name(), user, req);
 
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -291,12 +292,12 @@ public class UsersController {
                               securityAnswer.toLowerCase()))) {
         try {
           registerFalseLogin(user);
-          am.registerLoginInfo(user, UserAuditActions.RECOVERY.name(), UserAuditActions.FAILED.name(), req);
+          am.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(), UserAuditActions.FAILED.name(), "", user, req);
         } catch (MessagingException ex) {
           Logger.getLogger(UsersController.class.getName()).
                   log(Level.SEVERE, null, ex);
           try {
-            am.registerLoginInfo(user, UserAuditActions.RECOVERY.name(), UserAuditActions.FAILED.name(), req);
+            am.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(), UserAuditActions.FAILED.name(),  "", user, req);
           } catch (SocketException ex1) {
             Logger.getLogger(UsersController.class.getName()).
                     log(Level.SEVERE, null, ex1);
@@ -321,7 +322,7 @@ public class UsersController {
         //user.setStatus(PeopleAccountStatus.ACCOUNT_PENDING.getValue());
         userBean.update(user);
         resetFalseLogin(user);
-        am.registerLoginInfo(user, UserAuditActions.RECOVERY.name(), UserAuditActions.SUCCESS.name(), req);
+        am.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(), UserAuditActions.SUCCESS.name(),  "", user, req);
       } catch (MessagingException ex) {
         Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE,
                 "Could not send email: ", ex);
@@ -344,7 +345,7 @@ public class UsersController {
     }
     if (!user.getPassword().equals(DigestUtils.sha256Hex(oldPassword))) {
       try {
-        am.registerLoginInfo(user, UserAuditActions.PASSWORD.name(), UserAuditActions.FAILED.name(), req);
+        am.registerAccountChange(user, AccountsAuditActions.PASSWORD.name(), AccountsAuditActions.FAILED.name(),  "", user, req);
       } catch (SocketException ex) {
         Logger.getLogger(UsersController.class.getName()).
                 log(Level.SEVERE, null, ex);
@@ -357,7 +358,7 @@ public class UsersController {
       user.setPassword(DigestUtils.sha256Hex(newPassword));
       userBean.update(user);
       try {
-        am.registerLoginInfo(user, UserAuditActions.PASSWORD.name(), UserAuditActions.SUCCESS.name(), req);
+        am.registerAccountChange(user, AccountsAuditActions.PASSWORD.name(), AccountsAuditActions.SUCCESS.name(),  "", user, req);
       } catch (SocketException ex) {
         Logger.getLogger(UsersController.class.getName()).
                 log(Level.SEVERE, null, ex);
@@ -375,7 +376,7 @@ public class UsersController {
     }
     if (!user.getPassword().equals(DigestUtils.sha256Hex(oldPassword))) {
       try {
-        am.registerLoginInfo(user, UserAuditActions.SECQUESTION.name(), UserAuditActions.FAILED.name(), req);
+        am.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(), AccountsAuditActions.FAILED.name(),  "", user, req);
       } catch (SocketException ex) {
         Logger.getLogger(UsersController.class.getName()).
                 log(Level.SEVERE, null, ex);
@@ -391,7 +392,7 @@ public class UsersController {
                               toLowerCase()));
       userBean.update(user);
       try {
-        am.registerLoginInfo(user, UserAuditActions.SECQUESTION.name(), UserAuditActions.SUCCESS.name(), req);
+        am.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(), AccountsAuditActions.SUCCESS.name(),  "", user, req);
       } catch (SocketException ex) {
         Logger.getLogger(UsersController.class.getName()).
                 log(Level.SEVERE, null, ex);
@@ -417,7 +418,7 @@ public class UsersController {
       user.setMobile(telephoneNum);
     }
     try {
-      am.registerLoginInfo(user, UserAuditActions.SECQUESTION.name(), UserAuditActions.SUCCESS.name(), req);
+      am.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(), AccountsAuditActions.SUCCESS.name(),  "", user, req);
     } catch (SocketException ex) {
       Logger.getLogger(UsersController.class.getName()).log(Level.SEVERE, null,
               ex);

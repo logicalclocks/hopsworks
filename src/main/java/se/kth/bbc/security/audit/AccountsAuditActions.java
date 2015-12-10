@@ -18,8 +18,27 @@ public enum AccountsAuditActions {
   USERMANAGEMENT("USER MANAGEMENT"),
   // for mobile lost or yubikeyu lost devices
   LOSTDEVICE("LOST DEVICE REPORT"),
-  // get all actions
-  ALL("ALL") ;
+  // for adminchange user account status
+  CHANGEDSTATUS("CHANGED STATUS"), 
+  // to get registration audit logs
+  REGISTRATION("REGISTRATION"),
+  
+  RECOVERY("RECOVERY"),
+  
+  QRCODE("QR CODE"),
+  
+  SECQUESTION("SECURTY QUESTION RESET"),
+  
+  PROFILE("PROFILE UPDATE"),
+  PASSWORD("PASSWORD CHANGE"),
+  // get all the logs
+  ALL("ALL"),
+  
+  SUCCESS("SUCCESS"),
+  
+  FAILED("FAILED"),
+  
+  ABORTED("ABORTED");
 
   private final String value;
 

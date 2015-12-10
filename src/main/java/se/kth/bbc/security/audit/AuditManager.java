@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.security.audit.model.AccountAudit;
 import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.audit.model.Userlogins;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.user.model.Users;
 
 @Stateless
@@ -47,17 +48,25 @@ public class AuditManager {
   public List<Userlogins> getUsersLoginsFromTo(Date from, Date to, String action) {
 
     String sql;
-    if(action.equals(UserAuditActions.ALL.name())) {
-  
-          sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '"
+    if (action.equals(UserAuditActions.ALL.name())) {
+
+      sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '"
               + from
               + "' AND login_date <='" + to + "')";
-    
+
+    } else if (action.equals(UserAuditActions.SUCCESS.name()) || action.equals(
+            UserAuditActions.FAILED.name())
+            || action.equals(UserAuditActions.ABORTED.name())) {
+
+      sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '"
+              + from
+              + "' AND login_date <='" + to + "' AND outcome ='" + action + "')";
+
     } else {
       sql = "SELECT * FROM hopsworks.userlogins  WHERE  (login_date >= '"
               + from
               + "' AND login_date <='" + to + "' AND action ='" + action + "')";
-    
+
     }
     Query query = em.createNativeQuery(sql, Userlogins.class);
 
@@ -88,13 +97,21 @@ public class AuditManager {
     return ul;
   }
 
-    public List<Userlogins> getUserLoginsOutcome(int uid, Date from, Date to,
+  public List<Userlogins> getUserLoginsOutcome(int uid, Date from, Date to,
           String outcome) {
+    String sql;
 
-    String sql = "SELECT * FROM hopsworks.userlogins  WHERE (uid=" + uid
-            + " AND login_date >= '" + from + "' AND login_date <='" + to
-            + "' AND outcome ='" + outcome + "')";
+    if (uid >= AuthenticationConstants.STARTING_USER) {
+      sql = "SELECT * FROM hopsworks.userlogins  WHERE (uid=" + uid
+              + " AND login_date >= '" + from + "' AND login_date <='" + to
+              + "' AND outcome ='" + outcome + "')";
+    } else {
 
+      sql = "SELECT * FROM hopsworks.userlogins  WHERE ( login_date >= '" + from
+              + "' AND login_date <='" + to
+              + "' AND outcome ='" + outcome + "')";
+
+    }
     Query query = em.createNativeQuery(sql, Userlogins.class);
 
     List<Userlogins> ul = query.getResultList();
@@ -105,13 +122,28 @@ public class AuditManager {
 
     return ul;
   }
-    
+
   public List<AccountAudit> getAccountAudit(Date from, Date to,
           String action) {
 
-    String sql = "SELECT * FROM hopsworks.account_audit WHERE ( time >='" + from
-            + "' AND time <='" + to + "' AND action ='"
-            + action + "')";
+    String sql;
+    if (action.equals(AccountsAuditActions.ALL.name())) {
+
+      sql = "SELECT * FROM hopsworks.account_audit WHERE ( time >='" + from
+              + "' AND time <='" + to + "')";
+    } else if (action.equals(AccountsAuditActions.SUCCESS.name()) ||
+            action.equals(AccountsAuditActions.FAILED.name()) ||
+            action.equals(AccountsAuditActions.ABORTED.name())) {
+      sql = "SELECT * FROM hopsworks.account_audit WHERE ( time >='" + from
+              + "' AND time <='" + to + "' AND outcome ='"
+              + action + "')";
+    
+    }else {
+
+      sql = "SELECT * FROM hopsworks.account_audit WHERE ( time >='" + from
+              + "' AND time <='" + to + "' AND action ='"
+              + action + "')";
+    }
     Query query = em.createNativeQuery(sql, AccountAudit.class);
 
     List<AccountAudit> ul = query.getResultList();
@@ -189,7 +221,6 @@ public class AuditManager {
     return ul;
   }
 
-  
   public List<RolesAudit> getRoletAuditOutcome(Date from, Date to,
           String outcome) {
 
@@ -207,6 +238,30 @@ public class AuditManager {
     Query query = em.createNativeQuery(sql, RolesAudit.class);
 
     List<RolesAudit> ul = query.getResultList();
+
+    if (ul.isEmpty()) {
+      return null;
+    }
+    return ul;
+  }
+
+  public List<AccountAudit> getAccountAuditOutcome(Date from, Date to,
+          String outcome) {
+
+    String sql = null;
+
+    if (outcome.isEmpty() || outcome == null || outcome.equals("ALL")) {
+      sql = "SELECT * FROM hopsworks.account_audit WHERE ( time >= '" + from
+              + "' AND time <= '" + to + "')";
+    } else {
+      sql = "SELECT * FROM hopsworks.account_audit WHERE ( time >= '" + from
+              + "' AND time <= '" + to + "' AND outcome = '"
+              + outcome + "')";
+    }
+
+    Query query = em.createNativeQuery(sql, AccountAudit.class);
+
+    List<AccountAudit> ul = query.getResultList();
 
     if (ul.isEmpty()) {
       return null;
@@ -277,7 +332,7 @@ public class AuditManager {
     em.persist(login);
   }
 
-    /**
+  /**
    * Register the role assignment changes.
    * <p>
    * @param u
@@ -289,7 +344,8 @@ public class AuditManager {
    * @return
    * @throws java.net.SocketException
    */
-  public boolean registerRoleChange(Users u, String action, String outcome, String message,
+  public boolean registerRoleChange(Users u, String action, String outcome,
+          String message,
           Users tar, HttpServletRequest req) throws SocketException {
 
     RolesAudit ra = new RolesAudit();
@@ -301,7 +357,6 @@ public class AuditManager {
     ra.setAction(action);
     ra.setOutcome(outcome);
     ra.setTime(new Timestamp(new Date().getTime()));
-    ra.setEmail(u.getEmail());
     ra.setMac(AuditUtil.getMacAddress(AuditUtil.getIPAddress(req)));
     ra.setMessage(message);
     ra.setTarget(tar);
@@ -309,54 +364,41 @@ public class AuditManager {
 
     return true;
   }
-  /**
-   * Register the role assignment changes.
-   * <p>
-   * @param u
-   * @param action
-   * @param ip
-   * @param browser
-   * @param os
-   * @param mac
-   * @param outcome
-   * @param message
-   * @param tar
-   * @return
-   */
-  public boolean registerRoleChange(Users u, String action, String ip,
-          String browser, String os, String mac, String outcome, String message,
-          Users tar) {
+
+  public boolean registerRoleChange(Users u, String action, String outcome,
+          String message,
+          Users tar) throws SocketException {
 
     RolesAudit ra = new RolesAudit();
     ra.setInitiator(u);
-    ra.setBrowser(browser);
-    ra.setIp(ip);
-    ra.setOs(os);
-    ra.setEmail(u.getEmail());
+    ra.setBrowser(AuditUtil.getBrowserInfo());
+    ra.setIp(AuditUtil.getIPAddress());
+    ra.setOs(AuditUtil.getOSInfo());
     ra.setAction(action);
     ra.setOutcome(outcome);
     ra.setTime(new Timestamp(new Date().getTime()));
     ra.setEmail(u.getEmail());
-    ra.setMac(mac);
+    ra.setMac(AuditUtil.getMacAddress(AuditUtil.getIPAddress()));
     ra.setMessage(message);
     ra.setTarget(tar);
     em.persist(ra);
 
     return true;
   }
-/**
- * Register the account update info.
- * 
- * @param init
- * @param action
- * @param outcome
- * @param message
- * @param target
- * @return
- * @throws SocketException 
- */
-  public boolean registerAccountChange(Users init, String action, String outcome, String message, Users target) throws SocketException
-  {
+
+  /**
+   * Register the account update info.
+   * <p>
+   * @param init
+   * @param action
+   * @param outcome
+   * @param message
+   * @param target
+   * @return
+   * @throws SocketException
+   */
+  public boolean registerAccountChange(Users init, String action, String outcome,
+          String message, Users target) throws SocketException {
 
     AccountAudit aa = new AccountAudit();
     aa.setInitiator(init);
@@ -369,6 +411,28 @@ public class AuditManager {
     aa.setTime(new Timestamp(new Date().getTime()));
     aa.setMac(AuditUtil.getMacAddress(AuditUtil.getIPAddress()));
     aa.setEmail(target.getEmail());
+    aa.setTarget(target);
+    em.persist(aa);
+
+    return true;
+  }
+
+  public boolean registerAccountChange(Users init, String action, String outcome,
+          String message, Users target, HttpServletRequest req) throws
+          SocketException {
+
+    AccountAudit aa = new AccountAudit();
+    aa.setInitiator(init);
+    aa.setBrowser(AuditUtil.getBrowserInfo(req));
+    aa.setIp(AuditUtil.getIPAddress(req));
+    aa.setOs(AuditUtil.getOSInfo(req));
+    aa.setAction(action);
+    aa.setOutcome(outcome);
+    aa.setMessage(message);
+    aa.setTime(new Timestamp(new Date().getTime()));
+    aa.setMac(AuditUtil.getMacAddress(AuditUtil.getIPAddress(req)));
+    aa.setEmail(init.getEmail());
+    aa.setTarget(target);
     em.persist(aa);
 
     return true;
