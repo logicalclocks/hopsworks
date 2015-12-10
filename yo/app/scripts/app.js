@@ -22,7 +22,8 @@ angular.module('hopsWorksApp', [
   'ngMaterial',
   'ngMessages',
   'as.sortable',
-  'isteven-multi-select'
+  'isteven-multi-select',
+  'angularUtils.directives.dirPagination'
 ])
     .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider',
       function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider) {
