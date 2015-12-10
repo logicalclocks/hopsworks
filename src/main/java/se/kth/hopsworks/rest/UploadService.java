@@ -173,28 +173,30 @@ public class UploadService {
     String fileName = request.getParameter("flowFilename");
     logger.log(Level.INFO, "File parent. {0}", this.fileParent);
     Inode parent;
-    if (this.fileParent != null) {
-      parent = inodes.findByParentAndName(this.fileParent, fileName);
-      if (parent != null) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.FILE_NAME_EXIST);
-      }
-    }
-    //test if the user have permission to create a file in the path.
-    //the file will be overwriten by the uploaded 
-    if (this.username != null) {
-      try {
-        dfs.getDfsOps(username).touchz(new org.apache.hadoop.fs.Path(this.path
-                + fileName));
-      } catch (AccessControlException ex) {
-        throw new AccessControlException(
-                "Permission denied: You can not upload to this folder. ");
-      }
-    }
     JsonResponse json = new JsonResponse();
     int resumableChunkNumber = getResumableChunkNumber(request);
+    if (resumableChunkNumber == 1) {//check if file exist, permission only on the first chunk
+      if (this.fileParent != null) {
+        parent = inodes.findByParentAndName(this.fileParent, fileName);
+        if (parent != null) {
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  ResponseMessages.FILE_NAME_EXIST);
+        }
+      }
+      //test if the user have permission to create a file in the path.
+      //the file will be overwriten by the uploaded 
+      if (this.username != null) {
+        try {
+          dfs.getDfsOps(username).touchz(new org.apache.hadoop.fs.Path(this.path
+                  + fileName));
+        } catch (AccessControlException ex) {
+          throw new AccessControlException(
+                  "Permission denied: You can not upload to this folder. ");
+        }
+      }
+    }
     ResumableInfo info = getResumableInfo(request, this.path, this.templateId);
-
+    logger.log(Level.INFO, "Resumable Chunk Number. {0}", resumableChunkNumber);
     if (info.isUploaded(new ResumableInfo.ResumableChunkNumber(
             resumableChunkNumber))) {
       json.setSuccessMessage("Uploaded");//This Chunk has been Uploaded.
@@ -332,6 +334,9 @@ public class UploadService {
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(json).build();
+      } catch (AccessControlException ex) {
+        throw new AccessControlException(
+                "Permission denied: You can not upload to this folder. ");
       } catch (IOException e) {
         logger.log(Level.INFO, "Failed to write to HDFS", e);
         json.setErrorMsg("Failed to write to HDFS");
