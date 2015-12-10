@@ -17,10 +17,13 @@
 
 package se.kth.hopsworks.zeppelin.rest.message;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  *  NewNotebookRequest rest api request message
  *
  */
+@XmlRootElement
 public class NewNotebookRequest {
   String name;
 
@@ -31,4 +34,9 @@ public class NewNotebookRequest {
   public String getName() {
     return name;
   }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+  
 }

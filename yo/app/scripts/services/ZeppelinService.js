@@ -18,8 +18,16 @@ angular.module('hopsWorksApp')
             tutorialNotebooks: function () {
                 return $http.get('/api/notebook/tutorial');
             },
-            createNotebook: function (projectId) {
-                return $http.get('/api/notebook/'+ projectId + '/new');
+            createNotebook: function (projectId, noteName) {
+              var regReq = {
+                    method: 'POST',
+                    url: '/api/notebook/'+ projectId + '/new',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    data: noteName
+                  };
+                  return $http(regReq);             
             },
             interpreters: function () {
                 return $http.get('/api/interpreter/interpretersWithStatus');

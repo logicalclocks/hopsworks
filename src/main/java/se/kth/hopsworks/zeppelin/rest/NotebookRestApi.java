@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.ejb.EJB;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -14,6 +15,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
@@ -128,7 +130,6 @@ public class NotebookRestApi {
   }
 
   @GET
-  @Path("/")
   public Response getNotebookList() throws IOException {
     List<Map<String, String>> notesInfo = zeppelin.getNotebookServer().
             generateNotebooksInfo();
@@ -143,7 +144,6 @@ public class NotebookRestApi {
    * @throws IOException
    */
   @POST
-  @Path("/")
   public Response createNote(String message) throws IOException {
     logger.info("Create new notebook by JSON {}", message);
     NewNotebookRequest request = gson.fromJson(message,
@@ -256,13 +256,16 @@ public class NotebookRestApi {
    * Create new note in a project
    * <p/>
    * @param id
+   * @param newNote
    * @return note info if successful.
    * @throws se.kth.hopsworks.rest.AppException
    */
-  @GET
+  @POST
   @Path("{id}/new")
+  @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response createNew(@PathParam("id") Integer id) throws
+  public Response createNew(@PathParam("id") Integer id,
+          NewNotebookRequest newNote) throws
           AppException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
@@ -277,6 +280,12 @@ public class NotebookRestApi {
       newNotebook = new Notebook(notebookRepo);
       note = newNotebook.createNote();
       note.addParagraph(); // it's an empty note. so add one paragraph
+      String noteName = newNote.getName();
+      
+      if (noteName == null || noteName.isEmpty()) {
+        noteName = "Note " + note.getId();
+      }
+      note.setName(noteName);
       note.persist();
       noteInfo = new NoteInfo(note);
     } catch (IOException | SchedulerException ex) {
