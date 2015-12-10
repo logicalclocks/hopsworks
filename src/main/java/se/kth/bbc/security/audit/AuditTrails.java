@@ -256,7 +256,7 @@ public class AuditTrails implements Serializable {
     } else if (action.getValue().equals(UserAuditActions.SUCCESS.
             getValue()) || action.getValue().equals(UserAuditActions.FAILED.getValue())
                     || action.getValue().equals(UserAuditActions.ABORTED.
-                    name())) {
+                    getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
     } else if (action.getValue().equals(UserAuditActions.QRCODE.
             getValue()) || action.getValue().equals(UserAuditActions.RECOVERY.
