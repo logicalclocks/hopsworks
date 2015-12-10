@@ -140,10 +140,13 @@ public class DataSetService {
     Users user;
     List<InodeView> kids = new ArrayList<>();
 
+    String projPath = Settings.getProjectPath(this.project.getName());
+
     Collection<Dataset> dsInProject = this.project.getDatasetCollection();
     for (Dataset ds : dsInProject) {
       parent = inodes.findParent(ds.getInode());
-      inodeView = new InodeView(parent, ds, inodes.getPath(ds.getInode()));
+      inodeView = new InodeView(parent, ds, projPath + "" + ds.getInode()
+          .getInodePK().getName());
       user = userfacade.findByUsername(inodeView.getOwner());
       if (user != null) {
         inodeView.setOwner(user.getFname() + " " + user.getLname());
@@ -194,7 +197,8 @@ public class DataSetService {
     InodeView inodeView;
     Users user;
     for (Inode i : cwdChildren) {
-      inodeView = new InodeView(i, inodes.getPath(i));
+
+      inodeView = new InodeView(i, fullpath + "/" + i.getInodePK().getName());
       user = userfacade.findByUsername(inodeView.getOwner());
       if (user != null) {
         inodeView.setOwner(user.getFname() + " " + user.getLname());

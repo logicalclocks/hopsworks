@@ -86,24 +86,24 @@
                               </i>
                             </td>
                             </tr>
-
                             <tr ng-repeat="file in datasetsCtrl.files| orderBy: 'name'"
                                 context-menu
                                 data-target="menu-{{ $index}}"
-
                                 ng-class="{ 'highlight': datasetsCtrl.selected === $index, 'expanded': expanded }"
-                                ng-dblclick="datasetsCtrl.openDir(file)"
-                                ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file)"
                                 id="table-{{ $index}}">
-
                               <td>
-                                <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
-                                <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
-                                {{file.name}}</td>
-                              <td>{{file.owner}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;"> {{file.email}}</span></td>
-                              <td>{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
+                                <i
+                                  ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file)" class="glyphicon glyphicon-search" style="margin-top: 4px;padding-right: 5px; color: #5bc0de; float: left;"></i>
+                                <i ng-click="datasetsCtrl.openDir(file)"
+                                   ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
+                                <i ng-click="datasetsCtrl.openDir(file)"
+                                   ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
+                                <div ng-click="datasetsCtrl.openDir(file)">{{file.name}}</div></td>
+                              <td ng-click="datasetsCtrl.openDir(file)">{{file.owner}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">
+                                {{file.email}}</span></td>
+                              <td ng-click="datasetsCtrl.openDir(file)">{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
                               </td>
-                              <td style="width: 12%;">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
+                              <td ng-click="datasetsCtrl.openDir(file)" style="width: 12%;">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
 
                               <td>
                                 <div class="dropdown position-fixed" id="menu-{{ $index}}">
