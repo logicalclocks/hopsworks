@@ -134,9 +134,10 @@ public class NotebookRestApi {
             generateNotebooksInfo();
     return new JsonResponse(Status.OK, "", notesInfo).build();
   }
-  
+
   /**
    * Create new note REST API
+   * <p>
    * @param message - JSON with new note name
    * @return JSON with new note ID
    * @throws IOException
@@ -144,9 +145,9 @@ public class NotebookRestApi {
   @POST
   @Path("/")
   public Response createNote(String message) throws IOException {
-    logger.info("Create new notebook by JSON {}" , message);
+    logger.info("Create new notebook by JSON {}", message);
     NewNotebookRequest request = gson.fromJson(message,
-        NewNotebookRequest.class);
+            NewNotebookRequest.class);
     Note note = notebook.createNote();
     note.addParagraph(); // it's an empty note. so add one paragraph
     String noteName = request.getName();
@@ -157,17 +158,19 @@ public class NotebookRestApi {
     note.persist();
     zeppelin.getNotebookServer().broadcastNote(note);
     zeppelin.getNotebookServer().broadcastNoteList();
-    return new JsonResponse(Status.CREATED, "", note.getId() ).build();
+    return new JsonResponse(Status.CREATED, "", note.getId()).build();
   }
 
   /**
    * Delete note REST API
+   * <p>
    * @param notebookId@return JSON with status.OK
    * @throws IOException
    */
   @DELETE
   @Path("{notebookId}")
-  public Response deleteNote(@PathParam("notebookId") String notebookId) throws IOException {
+  public Response deleteNote(@PathParam("notebookId") String notebookId) throws
+          IOException {
     logger.info("Delete notebook {} ", notebookId);
     if (!(notebookId.isEmpty())) {
       Note note = notebook.getNote(notebookId);
@@ -178,21 +181,24 @@ public class NotebookRestApi {
     zeppelin.getNotebookServer().broadcastNoteList();
     return new JsonResponse(Status.OK, "").build();
   }
+
   /**
    * Clone note REST API@return JSON with status.CREATED
+   * <p>
    * @param notebookId
    * @param message
-   * @return 
+   * @return
    * @throws IOException
    * @throws java.lang.CloneNotSupportedException
    */
   @POST
   @Path("{notebookId}")
-  public Response cloneNote(@PathParam("notebookId") String notebookId, String message) throws
-      IOException, CloneNotSupportedException, IllegalArgumentException {
-    logger.info("clone notebook by JSON {}" , message);
+  public Response cloneNote(@PathParam("notebookId") String notebookId,
+          String message) throws
+          IOException, CloneNotSupportedException, IllegalArgumentException {
+    logger.info("clone notebook by JSON {}", message);
     NewNotebookRequest request = gson.fromJson(message,
-        NewNotebookRequest.class);
+            NewNotebookRequest.class);
     String newNoteName = request.getName();
     Note newNote = notebook.cloneNote(notebookId, newNoteName);
     zeppelin.getNotebookServer().broadcastNote(newNote);
