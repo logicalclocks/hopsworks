@@ -381,7 +381,7 @@ public class UserRegistration implements Serializable {
       MessagesController.addSecurityErrorMessage("Technical Error");
 
       am.registerLoginInfo(user, UserAuditActions.REGISTRATION.getValue(), ip,
-              browser, os, macAddress, "FAIL");
+              browser, os, macAddress, UserAuditActions.FAILED.name());
 
       return ("");
 
@@ -481,7 +481,7 @@ public class UserRegistration implements Serializable {
             IllegalStateException e) {
 
       am.registerLoginInfo(user, UserAuditActions.REGISTRATION.getValue(), ip,
-              browser, os, macAddress, "FAIL");
+              browser, os, macAddress, UserAuditActions.FAILED.name());
 
       MessagesController.addSecurityErrorMessage("Technical Error");
       return ("");

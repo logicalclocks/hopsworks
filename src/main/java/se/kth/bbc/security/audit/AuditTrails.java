@@ -12,8 +12,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import se.kth.bbc.activity.Activity;
-import se.kth.bbc.activity.ActivityController;
-import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.model.AccountAudit;
@@ -194,17 +192,6 @@ public class AuditTrails implements Serializable {
     }
   }
 
-  /**
-   *
-   * @param studyName
-   * @param from
-   * @param to
-   * @return
-   */
-  public List<Activity> getStudyAudit(String studyName, Date from, Date to) {
-    return activityController.activityDetailOnStudyAudit(studyName,
-            convertTosqlDate(from), convertTosqlDate(to));
-  }
 
   /**
    * Generate audit report for role entitlement.
@@ -242,6 +229,10 @@ public class AuditTrails implements Serializable {
     if (u == null) {
       return auditManager.getUsersLoginsFromTo(convertTosqlDate(from),
               convertTosqlDate(to), action);
+    } else if ( action.equals(UserAuditActions.SUCCESS.name()) || action.equals(UserAuditActions.FAILED.name())
+            || action.equals(UserAuditActions.ABORTED.name())){
+    return auditManager.getUserLoginsOutcome(u.getUid(), convertTosqlDate(from),
+                      convertTosqlDate(to), action);
     } else {
       return auditManager.
               getUserLoginsFromTo(u.getUid(), convertTosqlDate(from),
@@ -265,7 +256,7 @@ public class AuditTrails implements Serializable {
     } else if (action.getValue().equals(UserAuditActions.SUCCESS.
             getValue()) || action.getValue().equals(UserAuditActions.FAILED.getValue())
                     || action.getValue().equals(UserAuditActions.ABORTED.
-                    getValue())) {
+                    name())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
     } else if (action.getValue().equals(UserAuditActions.QRCODE.
             getValue()) || action.getValue().equals(UserAuditActions.RECOVERY.

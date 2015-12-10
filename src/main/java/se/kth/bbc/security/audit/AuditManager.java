@@ -88,6 +88,24 @@ public class AuditManager {
     return ul;
   }
 
+    public List<Userlogins> getUserLoginsOutcome(int uid, Date from, Date to,
+          String outcome) {
+
+    String sql = "SELECT * FROM hopsworks.userlogins  WHERE (uid=" + uid
+            + " AND login_date >= '" + from + "' AND login_date <='" + to
+            + "' AND outcome ='" + outcome + "')";
+
+    Query query = em.createNativeQuery(sql, Userlogins.class);
+
+    List<Userlogins> ul = query.getResultList();
+
+    if (ul.isEmpty()) {
+      return null;
+    }
+
+    return ul;
+  }
+    
   public List<AccountAudit> getAccountAudit(Date from, Date to,
           String action) {
 
