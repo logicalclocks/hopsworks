@@ -29,9 +29,7 @@ import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
-import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
-import se.kth.bbc.security.audit.RolesAuditActions;
 import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.hopsworks.user.model.Users;
@@ -340,9 +338,6 @@ public class PeopleAdministration implements Serializable {
     } catch (MessagingException ex) {
       Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
               "Could not reject user.", ex);
-    } catch (SocketException ex) {
-      Logger.getLogger(PeopleAdministration.class.getName()).
-              log(Level.SEVERE, null, ex);
     }
 
   }
@@ -444,26 +439,10 @@ public class PeopleAdministration implements Serializable {
             RollbackException | HeuristicMixedException |
             HeuristicRollbackException | SecurityException |
             IllegalStateException e) {
-      try {
-        auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-                PeopleAccountStatus.ACCOUNT_ACTIVEATED.name(),
-                UserAuditActions.FAILED.name(), "", user1);
-      } catch (SocketException ex) {
-        Logger.getLogger(PeopleAdministration.class.getName()).
-                log(Level.SEVERE, null, ex);
-      }
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+              PeopleAccountStatus.ACCOUNT_ACTIVEATED.name(),
+              UserAuditActions.FAILED.name(), "", user1);
       return;
-    } catch (SocketException ex) {
-      try {
-        auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-                PeopleAccountStatus.ACCOUNT_ACTIVEATED.name(),
-                UserAuditActions.FAILED.name(), "", user1);
-        Logger.getLogger(PeopleAdministration.class.getName()).
-                log(Level.SEVERE, null, ex);
-      } catch (SocketException ex1) {
-        Logger.getLogger(PeopleAdministration.class.getName()).
-                log(Level.SEVERE, null, ex1);
-      }
     }
     requests.remove(user1);
   }
@@ -517,5 +496,4 @@ public class PeopleAdministration implements Serializable {
     this.sessionState = sessionState;
   }
 
-  
 }

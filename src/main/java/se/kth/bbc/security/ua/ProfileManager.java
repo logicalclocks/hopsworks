@@ -100,7 +100,7 @@ public class ProfileManager implements Serializable {
     return list;
   }
 
-  public void updateUserInfo() throws SocketException {
+  public void updateUserInfo() {
 
     if (userManager.updatePeople(user)) {
       MessagesController.addInfoMessage("Success",
@@ -121,10 +121,9 @@ public class ProfileManager implements Serializable {
   }
 
   /**
-   *
-   * @throws java.net.SocketException
+   * Update organization info.
    */
-  public void updateUserOrg() throws SocketException {
+  public void updateUserOrg(){
 
     if (userManager.updateOrganization(organization)) {
       MessagesController.addInfoMessage("Success",
@@ -146,10 +145,8 @@ public class ProfileManager implements Serializable {
 
   /**
    * Update the user address in the profile and register the audit logs.
-   * <p>
-   * @throws SocketException
    */
-  public void updateAddress() throws SocketException {
+  public void updateAddress() {
 
     if (userManager.updateAddress(address)) {
       MessagesController.addInfoMessage("Success",
