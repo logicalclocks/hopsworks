@@ -5,7 +5,6 @@
  */
 package se.kth.bbc.security.audit;
 
-import java.net.SocketException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -23,6 +22,7 @@ import se.kth.hopsworks.user.model.Users;
 @Stateless
 public class AuditManager {
 
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -259,7 +259,6 @@ public class AuditManager {
    */
   public List<RolesAudit> getRoletAudit(Date from, Date to,
           String action) {
-
     String sql = null;
 
     if (action.isEmpty() || action == null || action.equals("ALL")) {
@@ -291,21 +290,21 @@ public class AuditManager {
   public List<RolesAudit> getRoletAuditOutcome(Date from, Date to,
           String outcome) {
 
+    
     String sql = null;
 
     if (outcome.isEmpty() || outcome == null || outcome.equals("ALL")) {
       sql = "SELECT * FROM hopsworks.roles_audit WHERE ( time >= '" + from
               + "' AND time <= '" + to + "')";
     } else {
-      sql = "SELECT * FROM hopsworks.roles_audit WHERE ( time >= '" + from
+        sql = "SELECT * FROM hopsworks.roles_audit WHERE ( time >= '" + from
               + "' AND time <= '" + to + "' AND outcome = '"
               + outcome + "')";
     }
-
     Query query = em.createNativeQuery(sql, RolesAudit.class);
 
     List<RolesAudit> ul = query.getResultList();
-
+          
     if (ul.isEmpty()) {
       return null;
     }
