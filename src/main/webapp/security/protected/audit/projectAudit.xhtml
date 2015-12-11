@@ -72,7 +72,7 @@
 
                   <p:selectOneMenu id="action" 
                                    editable="false"
-                                   value="#{auditTrails.selectedStudyAuditAction}"
+                                   value="#{auditTrails.selectedProjectAuditAction}"
                                    required="true"
                                    >
 
@@ -80,7 +80,7 @@
 
                                   itemValue="#"
                                   noSelectionOption="true" />
-                    <f:selectItems value="#{auditTrails.studyAuditActions}" 
+                    <f:selectItems value="#{auditTrails.projectAuditActions}" 
 
                                    />
                   </p:selectOneMenu>
@@ -89,7 +89,7 @@
                   <p:commandButton value="Show"
                                    update="logsTable"
                                    ajax="false"
-                                   action="#{auditTrails.processStudyAuditRequest(auditTrails.selectedStudyAuditAction)}">
+                                   action="#{auditTrails.processProjectAuditRequest(auditTrails.selectedProjectAuditAction)}">
                   </p:commandButton>
                 </p:panelGrid>
                 <br></br>

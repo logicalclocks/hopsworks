@@ -17,6 +17,7 @@ import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
+import se.kth.bbc.security.audit.AuditManager;
 
 @ManagedBean(name = "projectEthicalManager")
 @SessionScoped
@@ -32,9 +33,12 @@ public class ProjectEthicalManager implements Serializable {
 
   @EJB
   private FileOperations fops;
-    
+
   @EJB
-  private ProjectFacade studyController;
+  private ProjectFacade projectController;
+
+  @EJB
+  AuditManager am;
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
@@ -60,7 +64,7 @@ public class ProjectEthicalManager implements Serializable {
   }
 
   public List<Project> getAllStudies() {
-    this.allStudies = studyController.findAll();
+    this.allStudies = projectController.findAll();
     return this.allStudies;
   }
 
@@ -76,7 +80,7 @@ public class ProjectEthicalManager implements Serializable {
   }
 
   public List<Project> getAllExpiredStudies() {
-    this.allExpiredStudies = studyController.findAllExpiredStudies();
+    this.allExpiredStudies = projectController.findAllExpiredStudies();
     return this.allExpiredStudies;
   }
 
@@ -91,24 +95,39 @@ public class ProjectEthicalManager implements Serializable {
   public void showConsent(Consents consName) {
 
     try {
-      Consents consent = privacyManager.getConsentByName(consName.getId());
+      Consents consent = privacyManager.getConsentById(consName.getId());
       privacyManager.downloadPDF(consent);
     } catch (ParseException | IOException ex) {
       MessagesController.addErrorMessage("Could not download the consent");
     }
 
   }
- public void approveProject(Project project) {
+
+  public void showConsent(String consName) {
+
+    try {
+      Consents consent = privacyManager.getConsentByName(consName);
+      privacyManager.downloadPDF(consent);
+    } catch (ParseException | IOException ex) {
+      MessagesController.addErrorMessage("Could not download the consent");
+    }
+
+  }
+
+  public void approveProject(Project project) {
 
     if (project == null) {
       MessagesController.addErrorMessage("Error", "No project found!");
       return;
     }
 
-    if (studyController.updateStudyStatus(project, ConsentStatus.APPROVED.name())) {
+    if (projectController.updateStudyStatus(project, ConsentStatus.APPROVED.
+            name())) {
+
       MessagesController.addInfoMessage(project.getName() + " was approved.");
     } else {
-      MessagesController.addErrorMessage(project.getName() + " was not approved!");
+      MessagesController.addErrorMessage(project.getName()
+              + " was not approved!");
 
     }
 
@@ -121,11 +140,13 @@ public class ProjectEthicalManager implements Serializable {
       return;
     }
 
-    if (studyController.updateStudyStatus(project, ConsentStatus.REJECTED.name())) {
+    if (projectController.updateStudyStatus(project, ConsentStatus.REJECTED.
+            name())) {
       MessagesController.addInfoMessage(project.getName() + " was rejected.");
-    
+
     } else {
-      MessagesController.addErrorMessage(project.getName() + " was not rejected!");
+      MessagesController.addErrorMessage(project.getName()
+              + " was not rejected!");
 
     }
 
@@ -133,7 +154,7 @@ public class ProjectEthicalManager implements Serializable {
 
   public void approveConsent(Consents cons) {
 
-     if (cons == null) {
+    if (cons == null) {
       MessagesController.addErrorMessage("Error", "No consent found!");
       return;
     }
@@ -145,12 +166,12 @@ public class ProjectEthicalManager implements Serializable {
     } else {
       MessagesController.addErrorMessage(cons.getId() + " was not approved!");
 
-    } 
+    }
   }
 
   public void rejectConsent(Consents cons) {
 
-     if (cons == null) {
+    if (cons == null) {
       MessagesController.addErrorMessage("Error", "No consent found!");
       return;
     }
@@ -159,7 +180,8 @@ public class ProjectEthicalManager implements Serializable {
       MessagesController.addErrorMessage(cons.getId() + " was not rejected!");
 
     } else {
-      MessagesController.addInfoMessage(cons.getInode().getSymlink() + " was rejected.");
+      MessagesController.addInfoMessage(cons.getInode().getSymlink()
+              + " was rejected.");
     }
 
   }

@@ -14,6 +14,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.security.audit.model.AccountAudit;
+import se.kth.bbc.security.audit.model.ConsentsAudit;
 import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.auth.AuthenticationConstants;
@@ -341,7 +342,29 @@ public class AuditManager {
     }
     return ul;
   }
-  
+
+    public List<ConsentsAudit> getConsentsAudit(Date from, Date to,
+          String action) {
+    String sql = null;
+
+    if (action.isEmpty() || action == null || action.equals("ALL")) {
+      sql = "SELECT * FROM hopsworks.consents_audit WHERE ( time >= '" + from
+              + "' AND time <= '" + to + "')";
+    } else {
+      sql = "SELECT * FROM hopsworks.consents_audit WHERE ( time >= '" + from
+              + "' AND time <= '" + to + "' AND action = '"
+              + action + "')";
+    }
+
+    Query query = em.createNativeQuery(sql, ConsentsAudit.class);
+
+    List<ConsentsAudit> ul = query.getResultList();
+
+    if (ul.isEmpty()) {
+      return null;
+    }
+    return ul;
+  }
  
   /**
    * Register the login information into the log storage.
