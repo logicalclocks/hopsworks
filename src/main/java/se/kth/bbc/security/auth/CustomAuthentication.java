@@ -308,23 +308,18 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
     String browser = AuditUtil.getBrowserInfo();
     String os = AuditUtil.getOSInfo();
     String macAddress;
-    try {
       macAddress = AuditUtil.getMacAddress(ip);
       am.registerLoginInfo(user, UserAuditActions.LOGOUT.getValue(), ip,
-              browser, os, macAddress, "SUCCESS");
+              browser, os, macAddress, UserAuditActions.SUCCESS.name());
 
       mgr.setOnline(userid, AuthenticationConstants.IS_OFFLINE);
 
-    } catch (SocketException ex) {
-      Logger.getLogger(CustomAuthentication.class.getName()).
-              log(Level.SEVERE, null, ex);
-    }
 
     return ("welcome");
   }
 
   public void registerLoginInfo(Users p, String action, String outcome) throws
-          UnknownHostException, SocketException {
+          UnknownHostException {
 
     String ip = AuditUtil.getIPAddress();
     String browser = AuditUtil.getBrowserInfo();

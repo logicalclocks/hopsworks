@@ -186,10 +186,12 @@ public class AuditTrails implements Serializable {
     if (u == null) {
       return auditManager.getAccountAudit(convertTosqlDate(from),
               convertTosqlDate(to), action);
-    } else if (action.equals(AccountsAuditActions.SUCCESS.name()) || action.equals(
-            AccountsAuditActions.FAILED.name())) {
-      return auditManager.getAccountAuditOutcome(from, to, action);
-    }else {
+    } else if (action.equals(AccountsAuditActions.SUCCESS.name()) || action.
+            equals(
+                    AccountsAuditActions.FAILED.name())) {
+      return auditManager.getAccountAuditOutcome(convertTosqlDate(from),
+              convertTosqlDate(to), action);
+    } else {
       return auditManager.getAccountAudit(u.getUid(), convertTosqlDate(from),
               convertTosqlDate(to), action);
     }
@@ -206,14 +208,12 @@ public class AuditTrails implements Serializable {
    */
   public List<RolesAudit> getRoleAudit(String username, Date from, Date to,
           String action) {
+
     Users u = userManager.getUserByEmail(username);
 
     if (u == null) {
       return auditManager.getRoletAudit(convertTosqlDate(from),
               convertTosqlDate(to), action);
-    } else if (action.equals(RolesAuditActions.SUCCESS.name()) || action.equals(
-            RolesAuditActions.FAILED.name())) {
-      return auditManager.getRoletAuditOutcome(from, to, action);
     } else {
       return auditManager.getRoletAudit(u.getUid(), convertTosqlDate(from),
               convertTosqlDate(to), action);
@@ -278,42 +278,33 @@ public class AuditTrails implements Serializable {
    */
   public void processAccountAuditRequest(AccountsAuditActions action) {
 
-    if (action.getValue().equals(AccountsAuditActions.PASSWORDCHANGE.getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.LOSTDEVICE.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.PROFILEUPDATE.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.SECQUESTIONCHANGE.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.PROFILEUPDATE.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.REGISTRATION.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.QRCODE.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.PROFILE.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.PASSWORD.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.RECOVERY.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    }else if (action.getValue().equals(AccountsAuditActions.SUCCESS.
-            getValue()) || action.getValue().equals(AccountsAuditActions.FAILED.
-            getValue()) ) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.ALL.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    if (action.equals(AccountsAuditActions.PASSWORDCHANGE)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.LOSTDEVICE)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.PROFILEUPDATE)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.SECQUESTIONCHANGE)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.PROFILEUPDATE)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.REGISTRATION)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.QRCODE)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.PROFILE)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.PASSWORD)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.USERMANAGEMENT)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.RECOVERY)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.SUCCESS) || action.equals(
+            AccountsAuditActions.FAILED)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.ALL)) {
+      accountAudit = getAccoutnAudit(username, from, to, action.name());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
     }
@@ -325,17 +316,19 @@ public class AuditTrails implements Serializable {
    * @param action
    */
   public void processRoleAuditRequest(RolesAuditActions action) {
-
-    if (action.getValue().equals(RolesAuditActions.ADDROLE.getValue())) {
-      roleAudit = getRoleAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(RolesAuditActions.REMOVEROLE.getValue())) {
-      roleAudit = getRoleAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(RolesAuditActions.ALLROLEASSIGNMENTS.
-            getValue())) {
-      roleAudit = getRoleAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(RolesAuditActions.SUCCESS) || action.
-            getValue().equals(RolesAuditActions.FAILED)) {
-      roleAudit = getRoleAudit(username, from, to, action.getValue());
+    if (action.equals(RolesAuditActions.ADDROLE)) {
+      roleAudit = getRoleAudit(username, convertTosqlDate(from),
+              convertTosqlDate(to), action.name());
+    } else if (action.equals(RolesAuditActions.REMOVEROLE)) {
+      roleAudit = getRoleAudit(username, convertTosqlDate(from),
+              convertTosqlDate(to), action.name());
+    } else if (action.equals(RolesAuditActions.ALLROLEASSIGNMENTS)) {
+      roleAudit = getRoleAudit(username, convertTosqlDate(from),
+              convertTosqlDate(to), action.name());
+    } else if (action.equals(RolesAuditActions.SUCCESS) || action.equals(
+            RolesAuditActions.FAILED)) {
+      roleAudit = auditManager.getRoletAuditOutcome(convertTosqlDate(from),
+              convertTosqlDate(to), action.name());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
     }

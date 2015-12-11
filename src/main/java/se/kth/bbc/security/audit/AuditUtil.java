@@ -10,6 +10,8 @@ import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.faces.FacesException;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -127,6 +129,7 @@ public class AuditUtil {
 
     /**
    * Get the user's browser info.
+   * @param req
    * @return 
    */
   public static String getBrowserInfo(HttpServletRequest req){
@@ -154,22 +157,32 @@ public class AuditUtil {
   /**
    * Get the user MAC address.
    * @param ip
-   * @return
-   * @throws SocketException 
+   * @return 
    */
-  public static String getMacAddress(String ip) throws SocketException {
+  public static String getMacAddress(String ip){
 
     // Get the mac
     String macAddress = null;
 
-    Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.
-            getNetworkInterfaces();
+    Enumeration<NetworkInterface> networkInterfaces = null;
+    try {
+      networkInterfaces
+              = NetworkInterface.
+                      getNetworkInterfaces();
+    } catch (SocketException ex) {
+      Logger.getLogger(AuditUtil.class.getName()).log(Level.SEVERE, null, ex);
+    }
 
     while (networkInterfaces.hasMoreElements()) {
 
       NetworkInterface network = networkInterfaces.nextElement();
 
-      byte[] mac = network.getHardwareAddress();
+      byte[] mac=null;
+      try {
+        mac = network.getHardwareAddress();
+      } catch (SocketException ex) {
+        Logger.getLogger(AuditUtil.class.getName()).log(Level.SEVERE, null, ex);
+      }
 
       if (mac != null) {
         StringBuilder sb = new StringBuilder();

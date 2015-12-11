@@ -11,7 +11,7 @@ public enum RolesAuditActions {
   // for adding role by the admin
   ADDROLE("ADDED ROLE"),
   // for removing role by the admin
-  REMOVEROLE("ROMVED ROLE"),
+  REMOVEROLE("REMOVED ROLE"),
   
   SUCCESS("SUCCESS"),
   

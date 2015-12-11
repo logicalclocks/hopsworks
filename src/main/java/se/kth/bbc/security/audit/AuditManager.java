@@ -5,7 +5,6 @@
  */
 package se.kth.bbc.security.audit;
 
-import java.net.SocketException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -23,9 +22,16 @@ import se.kth.hopsworks.user.model.Users;
 @Stateless
 public class AuditManager {
 
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
+  
+  /**
+   * Get the user last login info.
+   * @param uid
+   * @return 
+   */
   public Userlogins getLastUserLogin(int uid) {
     String sql = "SELECT * FROM hopsworks.userlogins  WHERE uid=" + uid
             + " ORDER BY login_date DESC LIMIT 1 OFFSET 2";
@@ -45,6 +51,13 @@ public class AuditManager {
 
   }
 
+  /**
+   * Get all user logins in a period.
+   * @param from
+   * @param to
+   * @param action
+   * @return 
+   */
   public List<Userlogins> getUsersLoginsFromTo(Date from, Date to, String action) {
 
     String sql;
@@ -79,6 +92,15 @@ public class AuditManager {
     return ul;
   }
 
+  
+  /**
+   * Get user logins with an specific action in a period of time.
+   * @param uid
+   * @param from
+   * @param to
+   * @param action
+   * @return 
+   */
   public List<Userlogins> getUserLoginsFromTo(int uid, Date from, Date to,
           String action) {
 
@@ -97,6 +119,14 @@ public class AuditManager {
     return ul;
   }
 
+  /**
+   * Get user logins outcomes: success/failed.
+   * @param uid
+   * @param from
+   * @param to
+   * @param outcome
+   * @return 
+   */
   public List<Userlogins> getUserLoginsOutcome(int uid, Date from, Date to,
           String outcome) {
     String sql;
@@ -123,6 +153,13 @@ public class AuditManager {
     return ul;
   }
 
+  /**
+   * Get account changes within a period.
+   * @param from
+   * @param to
+   * @param action
+   * @return 
+   */
   public List<AccountAudit> getAccountAudit(Date from, Date to,
           String action) {
 
@@ -154,6 +191,14 @@ public class AuditManager {
     return ul;
   }
 
+  /**
+   * Get account changes for a specific user.
+   * @param uid
+   * @param from
+   * @param to
+   * @param action
+   * @return 
+   */
   public List<AccountAudit> getAccountAudit(int uid, Date from, Date to,
           String action) {
 
@@ -170,6 +215,14 @@ public class AuditManager {
     return ul;
   }
 
+  /**
+   * Get roles entitlement for user.
+   * @param uid
+   * @param from
+   * @param to
+   * @param action
+   * @return 
+   */
   public List<RolesAudit> getRoletAudit(int uid, Date from, Date to,
           String action) {
 
@@ -197,9 +250,15 @@ public class AuditManager {
     return ul;
   }
 
+  /**
+   * Get all role entitelments in a period of time.
+   * @param from
+   * @param to
+   * @param action
+   * @return 
+   */
   public List<RolesAudit> getRoletAudit(Date from, Date to,
           String action) {
-
     String sql = null;
 
     if (action.isEmpty() || action == null || action.equals("ALL")) {
@@ -221,30 +280,44 @@ public class AuditManager {
     return ul;
   }
 
+  /**
+   * Get all role outcomes: success/failure.
+   * @param from
+   * @param to
+   * @param outcome
+   * @return 
+   */
   public List<RolesAudit> getRoletAuditOutcome(Date from, Date to,
           String outcome) {
 
+    
     String sql = null;
 
     if (outcome.isEmpty() || outcome == null || outcome.equals("ALL")) {
       sql = "SELECT * FROM hopsworks.roles_audit WHERE ( time >= '" + from
               + "' AND time <= '" + to + "')";
     } else {
-      sql = "SELECT * FROM hopsworks.roles_audit WHERE ( time >= '" + from
+        sql = "SELECT * FROM hopsworks.roles_audit WHERE ( time >= '" + from
               + "' AND time <= '" + to + "' AND outcome = '"
               + outcome + "')";
     }
-
     Query query = em.createNativeQuery(sql, RolesAudit.class);
 
     List<RolesAudit> ul = query.getResultList();
-
+          
     if (ul.isEmpty()) {
       return null;
     }
     return ul;
   }
 
+  /**
+   * Get all account changes in a period of time based on outcome: success/failure.
+   * @param from
+   * @param to
+   * @param outcome
+   * @return 
+   */
   public List<AccountAudit> getAccountAuditOutcome(Date from, Date to,
           String outcome) {
 
@@ -269,23 +342,7 @@ public class AuditManager {
     return ul;
   }
   
-  public List<RolesAudit> getInitiatorRoletAudit(int uid, Date from, Date to,
-          String action) {
-
-    String sql = "SELECT * FROM hopsworks.rolse_audit WHERE (initiator=" + uid
-            + " AND time >= '" + from + "' AND time <= '" + to
-            + "' AND action ='"
-            + action + "')";
-    Query query = em.createNativeQuery(sql, RolesAudit.class);
-
-    List<RolesAudit> ul = query.getResultList();
-
-    if (ul.isEmpty()) {
-      return null;
-    }
-    return ul;
-  }
-
+ 
   /**
    * Register the login information into the log storage.
    * <p>
@@ -316,8 +373,15 @@ public class AuditManager {
     return true;
   }
 
+  /**
+   * Register user logins attempts.
+   * @param user
+   * @param action
+   * @param outcome
+   * @param req 
+   */
   public void registerLoginInfo(Users user, String action, String outcome,
-          HttpServletRequest req) throws SocketException {
+          HttpServletRequest req) {
 
     Userlogins login = new Userlogins();
     login.setUid(user.getUid());
@@ -342,11 +406,10 @@ public class AuditManager {
    * @param req
    * @param tar
    * @return
-   * @throws java.net.SocketException
    */
   public boolean registerRoleChange(Users u, String action, String outcome,
           String message,
-          Users tar, HttpServletRequest req) throws SocketException {
+          Users tar, HttpServletRequest req) {
 
     RolesAudit ra = new RolesAudit();
     ra.setInitiator(u);
@@ -364,10 +427,19 @@ public class AuditManager {
 
     return true;
   }
-
+  
+  /**
+   * Register role entitlement changes.
+   * @param u
+   * @param action
+   * @param outcome
+   * @param message
+   * @param tar
+   * @return 
+   */
   public boolean registerRoleChange(Users u, String action, String outcome,
           String message,
-          Users tar) throws SocketException {
+          Users tar) {
 
     RolesAudit ra = new RolesAudit();
     ra.setInitiator(u);
@@ -395,10 +467,9 @@ public class AuditManager {
    * @param message
    * @param target
    * @return
-   * @throws SocketException
    */
   public boolean registerAccountChange(Users init, String action, String outcome,
-          String message, Users target) throws SocketException {
+          String message, Users target) {
 
     AccountAudit aa = new AccountAudit();
     aa.setInitiator(init);
@@ -417,9 +488,18 @@ public class AuditManager {
     return true;
   }
 
+  /**
+   * Register account related changes.
+   * @param init
+   * @param action
+   * @param outcome
+   * @param message
+   * @param target
+   * @param req
+   * @return 
+   */
   public boolean registerAccountChange(Users init, String action, String outcome,
-          String message, Users target, HttpServletRequest req) throws
-          SocketException {
+          String message, Users target, HttpServletRequest req){
 
     AccountAudit aa = new AccountAudit();
     aa.setInitiator(init);

@@ -12,7 +12,8 @@ import javax.faces.bean.ManagedProperty;
 import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import se.kth.bbc.security.audit.AccountsAuditActions;
+import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.user.model.Users;
 
@@ -24,8 +25,9 @@ public class AccountVerification {
   @EJB
   private UserManager mgr;
 
-  @EJB
-  private EmailBean emailBean;
+    @EJB
+  private AuditManager am;
+
 
   @ManagedProperty(value = "#{param.key}")
   private String key;
@@ -64,6 +66,9 @@ public class AccountVerification {
     Users user = mgr.getUserByUsername(username);
 
     if (user.getStatus() != PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()) {
+       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+              AccountsAuditActions.FAILED.name(), "Could not verify the account due to wrnong status.", user);
+
       return false;
     }
 
@@ -75,10 +80,15 @@ public class AccountVerification {
 
       } else if (user.getMode() == PeopleAccountStatus.MOBILE_USER.
               getValue()) {
+         
 
         mgr.changeAccountStatus(user.getUid(), "",
                 PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
       }
+              
+       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+              AccountsAuditActions.SUCCESS.name(), "Verified account email address.", user);
+
       mgr.resetKey(user.getUid());
       return true;
     }
@@ -91,6 +101,10 @@ public class AccountVerification {
               PeopleAccountStatus.SPAM_ACCOUNT.getValue());
       mgr.resetKey(user.getUid());
       mgr.resetKey(user.getUid());
+       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+              AccountsAuditActions.FAILED.name(), "Too many false activation attemps.", user);
+
+      
     }
 
     return false;

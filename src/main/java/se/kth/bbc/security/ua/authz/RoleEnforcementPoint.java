@@ -155,7 +155,7 @@ public class RoleEnforcementPoint implements Serializable {
 
   
   // MOVE OUT THIS
-  public String logOut() throws SocketException {
+  public String logOut() {
     getRequest().getSession().invalidate();
 
     FacesContext ctx = FacesContext.getCurrentInstance();
@@ -167,10 +167,10 @@ public class RoleEnforcementPoint implements Serializable {
     String macAddress = AuditUtil.getMacAddress(ip);
 
     am.registerLoginInfo(getUserFromSession(), UserAuditActions.LOGOUT.getValue(), ip,
-            browser, os, macAddress, "SUCCESS");
+            browser, os, macAddress, UserAuditActions.SUCCESS.name());
 
     userManager.setOnline(user.getUid(), AuthenticationConstants.IS_OFFLINE);
-
+    
     if (null != sess) {
       sess.invalidate();
     }
