@@ -185,6 +185,7 @@ public class UsersController {
             && userValidator.isValidsecurityQA(newUser.getSecurityQuestion(),
                     newUser.getSecurityAnswer())) {
       if (newUser.getToS()) {
+
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.TOS_NOT_AGREED);
       }
@@ -340,9 +341,10 @@ public class UsersController {
       }
     }
   }
-  
-   public void changePassword(String email, String oldPassword,
-          String newPassword, String confirmedPassword, HttpServletRequest req) throws AppException {
+
+  public void changePassword(String email, String oldPassword,
+          String newPassword, String confirmedPassword, HttpServletRequest req)
+          throws AppException {
     Users user = userBean.findByEmail(email);
 
     if (user == null) {
@@ -350,17 +352,19 @@ public class UsersController {
               ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (!user.getPassword().equals(DigestUtils.sha256Hex(oldPassword))) {
-     
-        am.registerAccountChange(user, AccountsAuditActions.PASSWORD.name(), AccountsAuditActions.FAILED.name(),  "", user, req);
+
+      am.registerAccountChange(user, AccountsAuditActions.PASSWORD.name(),
+              AccountsAuditActions.FAILED.name(), "", user, req);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PASSWORD_INCORRECT);
-      
+
     }
     if (userValidator.isValidPassword(newPassword, confirmedPassword)) {
       user.setPassword(DigestUtils.sha256Hex(newPassword));
       userBean.update(user);
-     
-        am.registerAccountChange(user, AccountsAuditActions.PASSWORD.name(), AccountsAuditActions.SUCCESS.name(),  "", user, req);
+
+      am.registerAccountChange(user, AccountsAuditActions.PASSWORD.name(),
+              AccountsAuditActions.SUCCESS.name(), "", user, req);
     }
   }
 
@@ -387,7 +391,8 @@ public class UsersController {
                               toLowerCase()));
       userBean.update(user);
       am.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
-              AccountsAuditActions.SUCCESS.name(), "", user, req);
+              AccountsAuditActions.SUCCESS.name(),
+              "Changed Security Question to: " + securityQuestion, user, req);
     }
   }
 
@@ -409,7 +414,8 @@ public class UsersController {
       user.setMobile(telephoneNum);
     }
     am.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
-            AccountsAuditActions.SUCCESS.name(), "", user, req);
+            AccountsAuditActions.SUCCESS.name(), "Update Profile Info", user,
+            req);
 
     userBean.update(user);
     return new UserDTO(user);

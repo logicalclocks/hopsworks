@@ -13,7 +13,6 @@ import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AccountsAuditActions;
-import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;

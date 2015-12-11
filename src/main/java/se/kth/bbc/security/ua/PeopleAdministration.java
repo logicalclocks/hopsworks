@@ -2,7 +2,6 @@ package se.kth.bbc.security.ua;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.SocketException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
@@ -321,6 +320,9 @@ public class PeopleAdministration implements Serializable {
           requests.remove(user1);
         }
       } else {
+        auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+              PeopleAccountStatus.SPAM_ACCOUNT.name(), UserAuditActions.FAILED.
+              name(), "Could not delete the user", user1);
         MessagesController.addSecurityErrorMessage("Could not delete the user!");
       }
 
@@ -419,6 +421,9 @@ public class PeopleAdministration implements Serializable {
         userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
         userManager.registerGroup(user1, BBCGroup.BBC_USER.getValue());
       } else {
+          auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+              PeopleAccountStatus.ACCOUNT_ACTIVEATED.name(),
+              UserAuditActions.FAILED.name(), "Role could not be granted.", user1);
         MessagesController.addSecurityErrorMessage("Role could not be granted.");
         return;
       }

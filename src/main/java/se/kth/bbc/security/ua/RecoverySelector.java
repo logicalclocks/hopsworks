@@ -8,19 +8,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.primefaces.model.StreamedContent;
-import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
-import se.kth.bbc.security.audit.AuditUtil;
-import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.auth.CustomAuthentication;
@@ -245,6 +241,8 @@ public class RecoverySelector implements Serializable {
         qrCode = QRCodeGenerator.getQRCode(people.getEmail(),
                 AuthenticationConstants.ISSUER, otpSecret);
         qrEnabled = 1;
+         am.registerAccountChange(people, AccountsAuditActions.QRCODE.name(),
+              AccountsAuditActions.SUCCESS.name(), "QR code reset.", people);
 
         return "qrcode";
 
@@ -260,6 +258,9 @@ public class RecoverySelector implements Serializable {
         um.changeAccountStatus(people.getUid(), "",
                 PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
         try {
+          am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
+              AccountsAuditActions.SUCCESS.name(), "Account bloecked due to many false attempts.", people);
+
           email.sendEmail(people.getEmail(),
                   UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                   UserAccountsEmailMessages.accountBlockedMessage());
@@ -335,12 +336,15 @@ public class RecoverySelector implements Serializable {
         if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
           um.changeAccountStatus(people.getUid(), "",
                   PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
+           am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
+              AccountsAuditActions.SUCCESS.name(), "Account bloecked due to many false attempts.", people);
+
           try {
             email.sendEmail(people.getEmail(),
                     UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                     UserAccountsEmailMessages.accountBlockedMessage());
           } catch (MessagingException ex1) {
-
+            
             am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
                     AccountsAuditActions.FAILED.name(), "", people);
 

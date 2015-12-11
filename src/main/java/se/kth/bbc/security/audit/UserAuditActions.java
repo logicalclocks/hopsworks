@@ -7,6 +7,7 @@ public enum UserAuditActions {
   // for user authentication
   LOGOUT("LOGOUT"),
 
+  UNAUTHORIZED("UNAUTHORIZED ACCESS"),
   // get all the logs
   ALL("ALL"),
   
