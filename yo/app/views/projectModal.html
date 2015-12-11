@@ -17,7 +17,8 @@
               <input name="project_name" type="text" id="projectname"
                      ng-model="projectCreatorCtrl.projectName" tabindex="1"
                      ng-pattern="projectCreatorCtrl.regex"
-                     autofocus="autofocus"                                                                                                                                                                                      ng-maxlength="24"
+                     autofocus="autofocus"
+                     ng-maxlength="24"
                      required
                      >
             </md-input-container>
@@ -28,7 +29,8 @@
 
             <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.pattern"
-                    class="text-danger ng-hide">Invalid project name. Spaces in project names and special characters such as /, \, ?,
+                    class="text-danger ng-hide">Invalid project name. Spaces
+              in project names and special characters such as __, /, \, ?,
               *, :, |, ', ", <, >, %, (, ), &, ;, #, are not allowed.</span>
 
             <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;

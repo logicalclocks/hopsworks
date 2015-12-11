@@ -23,6 +23,8 @@ angular.module('hopsWorksApp')
 
             self.templates = [];
 
+            self.regex = /^(?!.*?__|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#).*$/;
+
             MetadataActionService.fetchTemplates($cookies['email'])
                     .then(function (response) {
                       var temps = JSON.parse(response.board);
