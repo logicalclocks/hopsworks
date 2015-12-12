@@ -90,6 +90,11 @@ public class AccountAudit implements Serializable {
   @ManyToOne
   private Users initiator;
 
+  @JoinColumn(name = "target",
+          referencedColumnName = "uid")
+  @ManyToOne
+  private Users target;
+    
   public AccountAudit() {
   }
 
@@ -183,6 +188,14 @@ public class AccountAudit implements Serializable {
 
   public void setInitiator(Users initiator) {
     this.initiator = initiator;
+  }
+
+  public Users getTarget() {
+    return target;
+  }
+
+  public void setTarget(Users target) {
+    this.target = target;
   }
 
   @Override

@@ -96,7 +96,9 @@
         </span>
       </div>
       <div ng-repeat="project in homeCtrl.projects| filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects - 1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
-        <a href="#/project/{{project.project.id}}"
+          <a
+           ng-class="{disabled: project.project.archived}"
+           href="#/project/{{project.project.id}}"
            class="list-group-item"
            context-menu
            data-target="menu-{{$index}}">
@@ -105,6 +107,10 @@
           </div>
           <div ng-if="project.teamRole == 'Data owner'">
             <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-unlock fa-2 pull-left"></i>
+          </div>
+          <div ng-if="project.project.archived">
+            <i style="width: 20px; margin-right: 10px; font-size: 20px; color: #9d261d"
+               class="fa fa-ban fa-2 pull-left"></i>
           </div>
           {{project.project.name}}
         </a>

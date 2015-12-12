@@ -25,6 +25,7 @@ import javax.transaction.UserTransaction;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.audit.UserAuditActions;
@@ -347,8 +348,8 @@ public class UserRegistration implements Serializable {
       qrCode = QRCodeGenerator.getQRCode(mail, AuthenticationConstants.ISSUER,
               otpSecret);
 
-      am.registerLoginInfo(user, UserAuditActions.REGISTRATION.getValue(), ip,
-              browser, os, macAddress, "SUCCESS");
+      am.registerLoginInfo(user, AccountsAuditActions.REGISTRATION.getValue(), ip,
+              browser, os, macAddress, AccountsAuditActions.SUCCESS.name());
 
       userTransaction.commit();
 
@@ -380,8 +381,8 @@ public class UserRegistration implements Serializable {
             IllegalStateException e) {
       MessagesController.addSecurityErrorMessage("Technical Error");
 
-      am.registerLoginInfo(user, UserAuditActions.REGISTRATION.getValue(), ip,
-              browser, os, macAddress, "FAIL");
+      am.registerLoginInfo(user, AccountsAuditActions.REGISTRATION.getValue(), ip,
+              browser, os, macAddress, AccountsAuditActions.FAILED.name());
 
       return ("");
 
@@ -442,8 +443,7 @@ public class UserRegistration implements Serializable {
 
       mgr.registerYubikey(user);
 
-      am.registerLoginInfo(user, UserAuditActions.REGISTRATION.getValue(), ip,
-              browser, os, macAddress, "SUCCESS");
+      am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.getValue(), AccountsAuditActions.SUCCESS.name(), "", user);
 
       // Send email to the user to get notified about the account request
       emailBean.sendEmail(mail,
@@ -480,8 +480,7 @@ public class UserRegistration implements Serializable {
             HeuristicRollbackException | SecurityException |
             IllegalStateException e) {
 
-      am.registerLoginInfo(user, UserAuditActions.REGISTRATION.getValue(), ip,
-              browser, os, macAddress, "FAIL");
+      am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.getValue(), UserAuditActions.FAILED.name() , "", user);
 
       MessagesController.addSecurityErrorMessage("Technical Error");
       return ("");

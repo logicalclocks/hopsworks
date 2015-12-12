@@ -2,7 +2,6 @@ package se.kth.hopsworks.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -258,7 +257,7 @@ public class DatasetController {
     boolean success;
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     Path location = new Path(path);
-    success = dfsSingleton.getDfs(username).rm(location, true);
+    success = dfsSingleton.getDfsOps(username).rm(location, true);
     return success;
   }
   
@@ -275,7 +274,7 @@ public class DatasetController {
           FsPermission pemission) throws IOException {
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     Path location = new Path(path);
-    dfsSingleton.getDfs(username).setPermission(location, pemission);
+    dfsSingleton.getDfsOps(username).setPermission(location, pemission);
   }
 
   /**
@@ -304,7 +303,7 @@ public class DatasetController {
       } else {
         Path location = new Path(path);
 
-        DistributedFileSystemOps dfs = dfsSingleton.getDfs(username);
+        DistributedFileSystemOps dfs = dfsSingleton.getDfsOps(username);
         success = dfs.mkdir(location, fsPermission);
       }
       if (success && template != 0 && template != -1) {

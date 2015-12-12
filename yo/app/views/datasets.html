@@ -49,19 +49,20 @@
                 </div>
                 <div class="col-lg-10">
                   <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared:datasetsCtrl.shared, status: datasetsCtrl.status} | orderBy: 'name'">
-                    <div ng-dblclick="projectCtrl.browseDataset(dataset)"
-                         ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset)"
-                         ng-init="(iscollapsed$index) = true"
+                    <div ng-init="(iscollapsed$index) = true"
                          class="file-box"
                          context-menu
                          data-target="menu-{{ $index}}">
-                      <div class="file">
+                      <div  class="file">
+                        <div ng-click="projectCtrl.browseDataset(dataset)">
                         <a>
                           <span class="corner"></span>
 
                           <div class="icon">
                             <i class="glyphicon glyphicon-folder-open"></i>
                           </div>
+                        </a>
+                        </div>
                           <div class="file-name">
                             {{dataset.name}}
                             <br/>
@@ -69,8 +70,13 @@
                             <br/>
                             <small><b>Permission: </b>
                               {{dataset.permission}}</small>
+                            <button
+                              style="font-size:15px;height:28px;color:white;padding-top: 3px; margin-left: 20px; margin-top: -40px;"
+                                    ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset)"
+                                    class="btn btn-info">
+                              <i class="fa fa-search"></i>
+                            </button>
                           </div>
-                        </a>
                       </div>
                     </div>
                     <div class="dropdown position-fixed" id="menu-{{$index}}">
@@ -546,6 +552,7 @@
         </div>
       </section>
     </div>
+  </div>
   </div>
   <!-- /#wrapper -->
 </div>

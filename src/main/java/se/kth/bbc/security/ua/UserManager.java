@@ -2,8 +2,8 @@ package se.kth.bbc.security.ua;
 
 import java.sql.Timestamp;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -18,15 +18,14 @@ import se.kth.bbc.security.ua.model.PeopleGroupPK;
 import se.kth.bbc.security.ua.model.Yubikey;
 import se.kth.hopsworks.user.model.Users;
 
-
 @Stateless
 public class UserManager {
 
+  private static final Logger logger = Logger.getLogger(UserManager.class.
+          getName());
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-
-  // Strating user id from 1000 to create a POSIX compliant username: meb1000
-  private final int STARTING_USER = 1000;
 
   /**
    * Register a new group for user.
@@ -141,7 +140,8 @@ public class UserManager {
   }
 
   public List<Users> findInactivateUsers() {
-    Query query = em.createNativeQuery("SELECT * FROM hopsworks.users p WHERE p.active = "
+    Query query = em.createNativeQuery(
+            "SELECT * FROM hopsworks.users p WHERE p.active = "
             + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
     List<Users> people = query.getResultList();
     return people;
@@ -162,7 +162,8 @@ public class UserManager {
    * @return
    */
   public Users getUserByEmail(String username) {
-    TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail", Users.class);
+    TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
+            Users.class);
     query.setParameter("email", username);
     List<Users> list = query.getResultList();
 
@@ -234,7 +235,7 @@ public class UserManager {
     List<Users> query = em.createQuery(
             "SELECT p FROM Users p WHERE (p.status ='"
             + PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()
-             + "' OR p.status ='" + PeopleAccountStatus.SPAM_ACCOUNT.
+            + "' OR p.status ='" + PeopleAccountStatus.SPAM_ACCOUNT.
             getValue()
             + "')")
             .getResultList();
@@ -243,7 +244,8 @@ public class UserManager {
   }
 
   public Users findByEmail(String email) {
-    TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail", Users.class);
+    TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
+            Users.class);
     query.setParameter("email", email);
     return query.getSingleResult();
   }
@@ -389,11 +391,12 @@ public class UserManager {
    * @return
    */
   public int lastUserID() {
-    Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM hopsworks.users p");
+    Query query = em.createNativeQuery(
+            "SELECT MAX(p.uid) FROM hopsworks.users p");
     Object obj = query.getSingleResult();
 
     if (obj == null) {
-      return STARTING_USER;
+      return AuthenticationConstants.STARTING_USER;
     }
     return (Integer) obj;
   }
@@ -417,33 +420,31 @@ public class UserManager {
   }
 
   /**
-   * Remove a user by email address.
+   * Delete user account requests.
    *
-   * @param email
+   * @param u
    * @return
    */
-  public boolean removeByEmail(String email) {
+  public boolean deleteUserRequest(Users u) {
     boolean success = false;
-    Users u = findByEmail(email);
+
     if (u != null) {
       TypedQuery<PeopleGroup> query = em.createNamedQuery(
               "PeopleGroup.findByUid", PeopleGroup.class);
       query.setParameter("uid", u.getUid());
-      
-      List <PeopleGroup> p = query.getResultList();
-      for (Iterator<PeopleGroup> iterator = p.iterator(); iterator.hasNext();) {
-        PeopleGroup next = iterator.next();
-        em.remove(next);
+      List<PeopleGroup> p = query.getResultList();
+
+      for (PeopleGroup next : p) {
+        em.remove(p);
       }
 
-      
-      Address a = u.getAddress();
-      em.remove(a);
+      if (em.contains(u)) {
+        em.remove(u);
+      } else {
 
-      em.remove(u);
-      
-      Organization org = u.getOrganization();
-      em.remove(org);
+        em.remove(em.merge(u));
+
+      }
       
       success = true;
     }
@@ -472,7 +473,7 @@ public class UserManager {
     return true;
   }
 
-    /**
+  /**
    * Get all the users that are not in the given project.
    *
    * @param project The project on which to search.
@@ -486,6 +487,4 @@ public class UserManager {
     return query.getResultList();
   }
 
-
-  
 }

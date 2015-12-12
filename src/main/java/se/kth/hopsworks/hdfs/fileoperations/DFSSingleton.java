@@ -37,7 +37,7 @@ public class DFSSingleton {
    * @param username
    * @return
    */
-  public DistributedFileSystemOps getDfs(String username) {
+  public DistributedFileSystemOps getDfsOps(String username) {
     DistributedFileSystemOps dfs;
     synchronized (distributedFileSystems) {
       dfs = distributedFileSystems.get(username);
@@ -53,7 +53,7 @@ public class DFSSingleton {
    * <p>
    * @return DistributedFileSystemOps
    */
-  public DistributedFileSystemOps getDfs() {
+  public DistributedFileSystemOps getDfsOps() {
     if (dfsOps == null){
       dfsOps = new DistributedFileSystemOps(settings);
     }
