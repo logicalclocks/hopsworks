@@ -19,6 +19,7 @@
             <div class="panel-body">
               <div class="row" ng-show="charonCtrl.toHDFS" >
                 <div class="table-responsive" style="overflow: hidden;" ng-controller="LocalFsCtrl as localFsCtrl">
+                  <div  ng-controller="SelectFileCtrl as selectFileCtrl">
                   <div ng-controller="ProjectCtrl as projectCtrl" class="row">
                     >> /{{ projectCtrl.currentProject.projectName}}
                   <span data-ng-repeat="path in localFsCtrl.pathArray track by $index">/{{path}}</span>
@@ -45,6 +46,7 @@
                     </tbody>
                   </table>
                   <button ng-click="selectFileCtrl.confirmSelection(false)" class="btn btn-default">Select</button>
+                </div>
                 </div>
               </div>
               <div class="row" ng-show="!charonCtrl.toHDFS" ng-show="charonCtrl.selectedDir != ''">
