@@ -65,7 +65,7 @@ public class ConsentsAudit implements Serializable {
   @Column(name = "action")
   private String action;
   @Column(name = "time")
-  @Temporal(TemporalType.DATE)
+  @Temporal(TemporalType.TIMESTAMP)
   private Date time;
   @Size(max = 500)
   @Column(name = "message")
