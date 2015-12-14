@@ -9,17 +9,17 @@ angular.module('hopsWorksApp')
         self.projectId = $routeParams.projectID;
         var charonService = CharonService(self.projectId);
 
-        self.selectedFile = "";
-        self.selectedDir = "";
+        self.selectedCharonPath = "";
+        self.selectedHdfsPath = "";
         self.toHDFS = true;
         self.charonFilename = "";
 
         $scope.switchDirection = function (projectName) {
           self.toHDFS = !self.toHDFS;
-          self.selectedFile = "";
-          self.selectedDir = "";
+          self.selectedCharonPath = "";
+          self.selectedHdfsPath = "";
           if (!self.toHDFS) {
-            self.selectedDir = "/srv/charon_fs/" + projectName;
+            self.selectedHdfsPath = "/srv/charon_fs/" + projectName;
           }
         }
         /**
@@ -28,20 +28,20 @@ angular.module('hopsWorksApp')
          * @param {String} path
          * @returns {undefined}
          */
-        self.onFileSelected = function (path) {
-          self.selectedFile = path;
+        self.onCharonPathSelected = function (path) {
+          self.selectedCharonPath = path;
         };
 
-        self.onDirSelected = function (path) {
-          self.selectedDir = path;
+        self.onHdfsPathSelected = function (path) {
+          self.selectedHdfsPath = path;
         };
 
         self.copyFile = function () {
 
           if (self.toHDFS === true) {
             var op = {
-              "charonPath": self.selectedFile,
-              "hdfsPath": self.selectedDir
+              "charonPath": self.selectedCharonPath,
+              "hdfsPath": self.selectedHdfsPath
             };
             charonService.copyFromCharonToHdfs(op)
                 .then(function (success) {
@@ -52,8 +52,8 @@ angular.module('hopsWorksApp')
                     });
           } else {
             var op = {
-              "charonPath": self.selectedDir,
-              "hdfsPath": self.selectedFile
+              "charonPath": self.selectedHdfsPath,
+              "hdfsPath": self.selectedCharonPath
             };
             charonService.copyFromHdfsToCharon(op)
                 .then(function (success) {
