@@ -331,6 +331,8 @@ public class AuditTrails implements Serializable {
     } else if (action.equals(AccountsAuditActions.SUCCESS) || action.equals(
             AccountsAuditActions.FAILED)) {
       accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.CHANGEDSTATUS)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
     } else if (action.equals(AccountsAuditActions.ALL)) {
       accountAudit = getAccountAudit(username, from, to, action.name());
     } else {
@@ -346,10 +348,10 @@ public class AuditTrails implements Serializable {
   public void processRoleAuditRequest(RolesAuditActions action) {
     if (action.equals(RolesAuditActions.ADDROLE)) {
       roleAudit = getRoleAudit(username, convertTosqlDate(from),
-              convertTosqlDate(to), action.getValue());
+              convertTosqlDate(to), action.name());
     } else if (action.equals(RolesAuditActions.REMOVEROLE)) {
       roleAudit = getRoleAudit(username, convertTosqlDate(from),
-              convertTosqlDate(to), action.getValue());
+              convertTosqlDate(to), action.name());
     } else if (action.equals(RolesAuditActions.ALLROLEASSIGNMENTS)) {
       roleAudit = getRoleAudit(username, convertTosqlDate(from),
               convertTosqlDate(to), action.getValue());

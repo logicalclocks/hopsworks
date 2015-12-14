@@ -104,15 +104,22 @@
                     <h:outputText value="#{logs.initiator.email}" />
                   </p:column>
 
+                  
+                  <p:column id="tarColumn" filterBy="#{logs.target.email}" 
+                            headerText="Target" style="width:32%; font-size: 12px; text-align: left;">
+                    <h:outputText value="#{logs.target.email}" />
+                  </p:column>
+                  
+                  
+                  <p:column id="actColumn" filterBy="#{logs.action}" 
+                            headerText="Action" style="width:32%; font-size: 12px; text-align: left;">
+                    <h:outputText value="#{logs.action}" />
+                  </p:column>
                   <p:column id="dateColumn" filterBy="#{logs.time}" 
                             headerText="Date" style="width:32%; font-size: 12px; text-align: left;">
                     <h:outputText value="#{logs.time}" />
                   </p:column>
 
-                  <p:column id="actColumn" filterBy="#{logs.action}" 
-                            headerText="Action" style="width:32%; font-size: 12px; text-align: left;">
-                    <h:outputText value="#{logs.action}" />
-                  </p:column>
 
 
                   <p:column id="actionDetailColumn" filterBy="#{logs.message}" 
