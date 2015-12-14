@@ -422,13 +422,13 @@ public class PeopleAdministration implements Serializable {
         userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
         userManager.registerGroup(user1, BBCGroup.BBC_USER.getValue());
         
-        auditManager.registerRoleChange(user, RolesAuditActions.ADDROLE.name(),
+        auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
                 RolesAuditActions.SUCCESS.name(), BBCGroup.valueOf(sgroup).name(),
-                user);
+                user1);
         
-        auditManager.registerRoleChange(user, RolesAuditActions.ADDROLE.name(),
+        auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
                 RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(),
-                user);
+                user1);
           
       } else {
           auditManager.registerAccountChange(sessionState.getLoggedInUser(),
