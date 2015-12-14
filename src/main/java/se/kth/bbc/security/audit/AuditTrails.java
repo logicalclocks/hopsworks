@@ -240,7 +240,7 @@ public class AuditTrails implements Serializable {
     Users u = userManager.getUserByEmail(username);
 
     if (u == null) {
-      return auditManager.getRoletAudit(convertTosqlDate(from),
+      return auditManager.getRolesAudit(convertTosqlDate(from),
               convertTosqlDate(to), action);
     } else {
       return auditManager.getRoletAudit(u.getUid(), convertTosqlDate(from),
@@ -346,13 +346,13 @@ public class AuditTrails implements Serializable {
   public void processRoleAuditRequest(RolesAuditActions action) {
     if (action.equals(RolesAuditActions.ADDROLE)) {
       roleAudit = getRoleAudit(username, convertTosqlDate(from),
-              convertTosqlDate(to), action.name());
+              convertTosqlDate(to), action.getValue());
     } else if (action.equals(RolesAuditActions.REMOVEROLE)) {
       roleAudit = getRoleAudit(username, convertTosqlDate(from),
-              convertTosqlDate(to), action.name());
+              convertTosqlDate(to), action.getValue());
     } else if (action.equals(RolesAuditActions.ALLROLEASSIGNMENTS)) {
       roleAudit = getRoleAudit(username, convertTosqlDate(from),
-              convertTosqlDate(to), action.name());
+              convertTosqlDate(to), action.getValue());
     } else if (action.equals(RolesAuditActions.SUCCESS) || action.equals(
             RolesAuditActions.FAILED)) {
       roleAudit = auditManager.getRoletAuditOutcome(convertTosqlDate(from),

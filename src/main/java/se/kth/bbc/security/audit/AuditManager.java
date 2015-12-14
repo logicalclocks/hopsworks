@@ -259,7 +259,7 @@ public class AuditManager {
    * @param action
    * @return 
    */
-  public List<RolesAudit> getRoletAudit(Date from, Date to,
+  public List<RolesAudit> getRolesAudit(Date from, Date to,
           String action) {
     String sql = null;
 
