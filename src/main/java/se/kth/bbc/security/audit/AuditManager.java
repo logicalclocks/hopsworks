@@ -5,6 +5,7 @@
  */
 package se.kth.bbc.security.audit;
 
+import io.hops.bbc.Consents;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -541,4 +542,29 @@ public class AuditManager {
     return true;
   }
 
+  
+  /**
+   * Register consent information in audit logs.
+   * @param user
+   * @param action
+   * @param outcome
+   * @param cons
+   * @param req 
+   */
+  public void registerConsnetInfo(Users user, String action, String outcome, Consents cons,
+          HttpServletRequest req) {
+
+    ConsentsAudit ca = new ConsentsAudit();
+    ca.setConsentID(cons);
+    ca.setInitiator(user);
+    ca.setBrowser(AuditUtil.getBrowserInfo(req));
+    ca.setIp(AuditUtil.getIPAddress(req));
+    ca.setOs(AuditUtil.getOSInfo(req));
+    ca.setAction(action);
+    ca.setOutcome(outcome);
+    ca.setTime(new Timestamp(new Date().getTime()));
+    ca.setMac(AuditUtil.getMacAddress(AuditUtil.getIPAddress(req)));
+    
+    em.persist(ca);
+  }
 }

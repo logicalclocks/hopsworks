@@ -30,6 +30,7 @@ import se.kth.bbc.project.fb.InodeFacade;
 import java.util.ArrayList;
 import javax.ws.rs.POST;
 import javax.ws.rs.core.GenericEntity;
+import se.kth.bbc.security.audit.AuditManager;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.util.Settings;
 
@@ -51,6 +52,9 @@ public class BiobankingService {
   @EJB
   private InodeFacade inodeFacade;
 
+  @EJB 
+  AuditManager am;
+  
   private Project project;
 
   BiobankingService setProject(Project project) {
@@ -156,6 +160,7 @@ public class BiobankingService {
       Consents consentBean = new Consents(ConsentType.create(consent.getConsentType()),
           ConsentStatus.PENDING, i, project);
       consentsFacade.persistConsent(consentBean);
+      am.registerConsnetInfo(consentBean.getProject().getOwner(),"REGISTER" , "SUCCESS", consentBean, req);
       json.setSuccessMessage("Consent form successfully registered.");
     }
 

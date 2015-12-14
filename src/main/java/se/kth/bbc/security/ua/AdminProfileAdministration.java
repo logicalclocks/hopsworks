@@ -2,7 +2,6 @@ package se.kth.bbc.security.ua;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.SocketException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;

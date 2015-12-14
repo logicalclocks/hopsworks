@@ -123,7 +123,6 @@ public class ProjectEthicalManager implements Serializable {
 
     if (projectController.updateStudyStatus(project, ConsentStatus.APPROVED.
             name())) {
-
       MessagesController.addInfoMessage(project.getName() + " was approved.");
     } else {
       MessagesController.addErrorMessage(project.getName()
@@ -160,10 +159,15 @@ public class ProjectEthicalManager implements Serializable {
     }
 
     if (privacyManager.updateConsentStatus(cons, ConsentStatus.APPROVED)) {
-
+      am.registerConsnetInfo(sessionState.getLoggedInUser(),
+              ConsentStatus.APPROVED.name(), "SUCCESS", cons, sessionState.
+              getRequest());
       MessagesController.addInfoMessage(cons.getId() + " was approved.");
 
     } else {
+      am.registerConsnetInfo(sessionState.getLoggedInUser(),
+              ConsentStatus.APPROVED.name(), "FAILED", cons, sessionState.
+              getRequest());
       MessagesController.addErrorMessage(cons.getId() + " was not approved!");
 
     }
@@ -177,9 +181,15 @@ public class ProjectEthicalManager implements Serializable {
     }
 
     if (privacyManager.updateConsentStatus(cons, ConsentStatus.REJECTED)) {
+      am.registerConsnetInfo(sessionState.getLoggedInUser(),
+              ConsentStatus.REJECTED.name(), "FAILED", cons, sessionState.
+              getRequest());
       MessagesController.addErrorMessage(cons.getId() + " was not rejected!");
 
     } else {
+      am.registerConsnetInfo(sessionState.getLoggedInUser(),
+              ConsentStatus.REJECTED.name(), "SUCCESS", cons, sessionState.
+              getRequest());
       MessagesController.addInfoMessage(cons.getInode().getSymlink()
               + " was rejected.");
     }

@@ -49,7 +49,7 @@ public class ClientSessionState implements Serializable {
     activeProject = projectFacade.findByNameAndOwner(projectname, user);
   }
 
-  private HttpServletRequest getRequest() {
+  public HttpServletRequest getRequest() {
     return (HttpServletRequest) FacesContext.getCurrentInstance().
             getExternalContext().getRequest();
   }
