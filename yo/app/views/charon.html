@@ -7,6 +7,7 @@
 
     <section>
       <div class="content-wrapper"  ng-controller="CharonCtrl as charonCtrl">
+        <div  ng-controller="LocalFsCtrl as localFsCtrl">
         <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Consent Forms</h3>
         <div growl reference="10" class="pull-right" ></div>
         <div class="row" style="margin: 50px">
@@ -14,11 +15,11 @@
 
           <div class="panel modal-title col-lg-5">
             <div class="panel-heading">
-              <h3 class="panel-title">Charon <div ng-show="charonCtrl.toHDFS">(Source)</div><div ng-show="!charonCtrl.toHDFS">(Destination)</div></h3>
+              <h3 class="panel-title">Charon <div ng-show="charonCtrl.toHDFS"style=" float: right; ">(Source)</div><div ng-show="!charonCtrl.toHDFS"style=" float: right; ">(Destination)</div></h3>
             </div>
             <div class="panel-body">
               <div class="row" ng-show="charonCtrl.toHDFS" >
-                <div class="table-responsive" style="overflow: hidden;" ng-controller="LocalFsCtrl as localFsCtrl">
+                <div class="table-responsive" style="overflow: hidden;">
                   <div  ng-controller="SelectFileCtrl as selectFileCtrl">
                   <div ng-controller="ProjectCtrl as projectCtrl" class="row">
                     >> {{charonCtrl.selectedCharonPath}}
@@ -49,35 +50,59 @@
                 </div>
                 </div>
               </div>
-            </div>
-            <div class="panel-footer" ng-show="!charonCtrl.toHDFS && charonCtrl.selectedCharonPath != '' || charonCtrl.toHDFS && charonCtrl.selectedCharonPath != ''" >
-                    <span> {{charonCtrl.selectedCharonPath}}</span>
+              <div class="row" ng-show="!charonCtrl.toHDFS" >
+                <div class="table-responsive" style="overflow: hidden;">
+                  <div  ng-controller="SelectFileCtrl as selectFileCtrl">
+                    <div ng-controller="ProjectCtrl as projectCtrl" class="row">
+                      >> {{charonCtrl.selectedCharonPath}}
+                      <span
+                        data-ng-repeat="path in localFsCtrl.pathArray track by $index"></span>
+                    </div>
+                    <table class="table table-hover" >
+                        <tbody ng-model="localFsCtrl.files">
+                      <a href="selectLocalFile.html"></a>
+                      <tr style="opacity: 0.6;"
+                        ng-repeat="file in localFsCtrl.projectFiles | orderBy: 'name'"
+                        ng-class="{ 'highlight': localFsCtrl.selected === {{ $index}}, 'expanded' : expanded }">
+
+                        <td>
+                          <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
+                          <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
+                          {{file.name}}
+                        </td>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="col-lg-2 row-centered">
-            <div class="row center-block" style="margin-top: -20px;">
+            <div class="row " style="margin-top: -20px;">
               <span class="fa fa-long-arrow-right fa-5x" ng-show="charonCtrl.toHDFS"></span>
               <span class="fa fa-long-arrow-left fa-5x" ng-show="!charonCtrl.toHDFS"></span>
             </div>
-            <div class="row center-block">
-              <button class="btn btn-default" type="button"  
-                      style="margin-bottom: 10px; margin-top: -10px;" ng-click="switchDirection(projectCtrl.currentProject.projectName)">
+            <div class="row ">
+              <button class="btn btn-default" type="button"
+                      style="margin-bottom: 10px; margin-top: -10px;" ng-click="switchDirection(projectCtrl.currentProject.projectName);
+                      localFsCtrl.getProjectContents(projectCtrl.currentProject.projectName);">
                 Switch Direction <span class="fa fa-exchange "></span>
-              </button>          
+              </button>
             </div>
             <div class="row">
               <button class="btn btn-success" ng-click="charonCtrl.copyFile()" style="width: available">
-                <span>Copy File</span>
-              </button> 
+                <span>Copy <i ng-if="charonCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i></span>
+              </button>
             </div>
           </div>
           <div class="panel modal-title col-lg-5">
             <div class="panel-heading">
-              <h3 class="panel-title">HDFS <div ng-show="!charonCtrl.toHDFS">(Source)</div><div ng-show="charonCtrl.toHDFS">(Destination)</div></h3>              
+              <h3 class="panel-title">HDFS <div ng-show="!charonCtrl.toHDFS"style=" float: right; ">(Source)</div><div ng-show="charonCtrl.toHDFS"style=" float: right; ">(Destination)</div></h3>
             </div>
             <h3 class="panel-title"></h3>
             <div class="panel-body">
-              <div class="row center-block" ng-show="!charonCtrl.toHDFS">
+              <div class="row " ng-show="!charonCtrl.toHDFS">
                 <div class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
                   <div  ng-controller="SelectFileCtrl as selectFileCtrl">
                   <div ng-controller="ProjectCtrl as projectCtrl" class="row">
@@ -139,14 +164,12 @@
                 </div>
               </div>
             </div>
-            <div class="panel-footer" ng-show="(charonCtrl.toHDFS && charonCtrl.selectedHdfsPath != '') || (!charonCtrl.toHDFS && charonCtrl.selectedHdfsPath != '')" >
-                    <span> {{charonCtrl.selectedHdfsPath}}</span>
-            </div>
           </div>
 
         </div>
         <div class="col-lg-5"></div>
         <div class="col-lg-5"></div>
+      </div>
       </div>
     </section>
    </div>

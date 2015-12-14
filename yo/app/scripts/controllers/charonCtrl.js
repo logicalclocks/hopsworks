@@ -9,6 +9,7 @@ angular.module('hopsWorksApp')
         self.projectId = $routeParams.projectID;
         var charonService = CharonService(self.projectId);
 
+        self.working = false;
         self.selectedCharonPath = "";
         self.selectedHdfsPath = "";
         self.toHDFS = true;
@@ -37,7 +38,7 @@ angular.module('hopsWorksApp')
         };
 
         self.copyFile = function () {
-
+          self.working = true;
           if (self.toHDFS === true) {
             var op = {
               "charonPath": self.selectedCharonPath,
@@ -45,21 +46,25 @@ angular.module('hopsWorksApp')
             };
             charonService.copyFromCharonToHdfs(op)
                 .then(function (success) {
+                    self.working = false;
                   growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
                 },
                     function (error) {
+                      self.working = false;
                       growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                     });
           } else {
             var op = {
-              "charonPath": self.selectedHdfsPath,
-              "hdfsPath": self.selectedCharonPath
+              "charonPath": self.selectedCharonPath,
+              "hdfsPath": self.selectedHdfsPath
             };
             charonService.copyFromHdfsToCharon(op)
                 .then(function (success) {
+                    self.working = false;
                   growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
                 },
                     function (error) {
+                      self.working = false;
                       growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                     });
           }
