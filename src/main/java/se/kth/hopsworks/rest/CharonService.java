@@ -87,7 +87,7 @@ public class CharonService {
     } catch (IOException ex) {
       Logger.getLogger(CharonService.class.getName()).log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(),
-          "Could not copy file from Charon to HDFS.");
+          "Could not copy file from HDFS to Charon.");
     }
 
     json.setSuccessMessage("File copied successfully from HDFS to Charon .");

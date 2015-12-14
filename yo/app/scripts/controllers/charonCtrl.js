@@ -19,7 +19,7 @@ angular.module('hopsWorksApp')
           self.selectedCharonPath = "";
           self.selectedHdfsPath = "";
           if (!self.toHDFS) {
-            self.selectedHdfsPath = "/srv/charon_fs/" + projectName;
+            self.selectedCharonPath = "/srv/charon_fs/" + projectName;
           }
         }
         /**

@@ -50,6 +50,9 @@
                 </div>
               </div>
             </div>
+            <div class="panel-footer" ng-show="!charonCtrl.toHDFS && charonCtrl.selectedCharonPath != '' || charonCtrl.toHDFS && charonCtrl.selectedCharonPath != ''" >
+                    <span> {{charonCtrl.selectedCharonPath}}</span>
+            </div>
           </div>
           <div class="col-lg-2 row-centered">
             <div class="row center-block" style="margin-top: -20px;">
@@ -135,6 +138,9 @@
                 </div>
                 </div>
               </div>
+            </div>
+            <div class="panel-footer" ng-show="(charonCtrl.toHDFS && charonCtrl.selectedHdfsPath != '') || (!charonCtrl.toHDFS && charonCtrl.selectedHdfsPath != '')" >
+                    <span> {{charonCtrl.selectedHdfsPath}}</span>
             </div>
           </div>
 
