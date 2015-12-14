@@ -141,7 +141,6 @@ public class UsersController {
         emailBean.sendEmail(newUser.getEmail(),
                 UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
                 UserAccountsEmailMessages.buildMobileRequestMessage(
-                        //getApplicationUri()
                         AuditUtil.getUserURL(req), user.getUsername()
                         + activationKey));
         // Only register the user if i can send the email
@@ -261,8 +260,7 @@ public class UsersController {
         emailBean.sendEmail(newUser.getEmail(),
                 UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
                 UserAccountsEmailMessages.buildYubikeyRequestMessage(
-                        //getApplicationUri()
-                        AuditUtil.getBrowserInfo(req), user.getUsername()
+                         AuditUtil.getUserURL(req), user.getUsername()
                         + activationKey));
         // only register the user if i can send the email to the user
         userBean.persist(user);
