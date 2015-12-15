@@ -77,6 +77,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
    * @return
    * @throws java.net.UnknownHostException
    * @throws java.net.SocketException
+   * @throws se.kth.hopsworks.meta.exception.ApplicationException
    */
   public String login() throws UnknownHostException, SocketException,
           ApplicationException {
@@ -148,7 +149,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       mgr.setOnline(userid, AuthenticationConstants.IS_ONLINE);
 
       registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
-              "SUCCESS");
+              UserAuditActions.SUCCESS.name());
 
     } catch (ServletException ex) {
       // If more than five times block the account
@@ -156,7 +157,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       mgr.increaseLockNum(userid, val + 1);
 
       registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
-              "FAIL");
+           UserAuditActions.FAILED.name());
 
       if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         mgr.changeAccountStatus(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.
@@ -250,7 +251,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
     }
 
     registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
-            "SUCCESS");
+            UserAuditActions.SUCCESS.name());
 
     try {
       // Concatenate the static password with the otp due to limitations of passing two passwords to glassfish

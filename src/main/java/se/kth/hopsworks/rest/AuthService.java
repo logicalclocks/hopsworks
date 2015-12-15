@@ -24,6 +24,7 @@ import org.apache.commons.codec.binary.Base64;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.auth.AuthenticationConstants;
+import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
@@ -87,15 +88,14 @@ public class AuthService {
     Users user = userBean.findByEmail(email);
 
     // Add padding if custom realm is disabled
-    if (otp == null || otp.isEmpty()) {
+    if (otp == null || otp.isEmpty() && user.getMode() == PeopleAccountStatus.MOBILE_USER.getValue()) {
       otp = AuthenticationConstants.MOBILE_OTP_PADDING;
-    }
+    } 
 
     if (otp.length() == AuthenticationConstants.MOBILE_OTP_PADDING.length()) {
       password = password + otp;
-    } else if (otp.length() == AuthenticationConstants.YUBIKEY_OTP_PADDING.
-            length()) {
-      password = password + otp + AuthenticationConstants.YUBIKEY_USER_MARKER;
+    } else if (user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+        password = password + otp + AuthenticationConstants.YUBIKEY_USER_MARKER;
     }
 
     //only login if not already logged in...
@@ -111,9 +111,10 @@ public class AuthService {
           am.registerLoginInfo(user, UserAuditActions.LOGIN.name(),
                   UserAuditActions.SUCCESS.name(), req);          //if the logedin user has no supported role logout
           if (!sc.isUserInRole("BBC_USER") && !sc.isUserInRole("SYS_ADMIN")) {
-           am.registerLoginInfo(user, UserAuditActions.UNAUTHORIZED.getValue(), UserAuditActions.FAILED.name(), req);
+            am.registerLoginInfo(user, UserAuditActions.UNAUTHORIZED.getValue(),
+                    UserAuditActions.FAILED.name(), req);
             req.logout();
-           
+
             throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                     "No valid role found for this user");
           }
