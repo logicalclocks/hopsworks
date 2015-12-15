@@ -62,7 +62,7 @@ public class RolesAudit implements Serializable {
   @Column(name = "action")
   private String action;
   @Column(name = "time")
-  @Temporal(TemporalType.DATE)
+  @Temporal(TemporalType.TIMESTAMP)
   private Date time;
   @Size(max = 45)
   @Column(name = "message")

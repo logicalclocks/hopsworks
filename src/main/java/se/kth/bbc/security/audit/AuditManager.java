@@ -5,6 +5,7 @@
  */
 package se.kth.bbc.security.audit;
 
+import io.hops.bbc.Consents;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -14,6 +15,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.security.audit.model.AccountAudit;
+import se.kth.bbc.security.audit.model.ConsentsAudit;
 import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.auth.AuthenticationConstants;
@@ -257,7 +259,7 @@ public class AuditManager {
    * @param action
    * @return 
    */
-  public List<RolesAudit> getRoletAudit(Date from, Date to,
+  public List<RolesAudit> getRolesAudit(Date from, Date to,
           String action) {
     String sql = null;
 
@@ -341,7 +343,29 @@ public class AuditManager {
     }
     return ul;
   }
-  
+
+    public List<ConsentsAudit> getConsentsAudit(Date from, Date to,
+          String action) {
+    String sql = null;
+
+    if (action.isEmpty() || action == null || action.equals("ALL")) {
+      sql = "SELECT * FROM hopsworks.consents_audit WHERE ( time >= '" + from
+              + "' AND time <= '" + to + "')";
+    } else {
+      sql = "SELECT * FROM hopsworks.consents_audit WHERE ( time >= '" + from
+              + "' AND time <= '" + to + "' AND action = '"
+              + action + "')";
+    }
+
+    Query query = em.createNativeQuery(sql, ConsentsAudit.class);
+
+    List<ConsentsAudit> ul = query.getResultList();
+
+    if (ul.isEmpty()) {
+      return null;
+    }
+    return ul;
+  }
  
   /**
    * Register the login information into the log storage.
@@ -518,4 +542,29 @@ public class AuditManager {
     return true;
   }
 
+  
+  /**
+   * Register consent information in audit logs.
+   * @param user
+   * @param action
+   * @param outcome
+   * @param cons
+   * @param req 
+   */
+  public void registerConsnetInfo(Users user, String action, String outcome, Consents cons,
+          HttpServletRequest req) {
+
+    ConsentsAudit ca = new ConsentsAudit();
+    ca.setConsentID(cons);
+    ca.setInitiator(user);
+    ca.setBrowser(AuditUtil.getBrowserInfo(req));
+    ca.setIp(AuditUtil.getIPAddress(req));
+    ca.setOs(AuditUtil.getOSInfo(req));
+    ca.setAction(action);
+    ca.setOutcome(outcome);
+    ca.setTime(new Timestamp(new Date().getTime()));
+    ca.setMac(AuditUtil.getMacAddress(AuditUtil.getIPAddress(req)));
+    
+    em.persist(ca);
+  }
 }

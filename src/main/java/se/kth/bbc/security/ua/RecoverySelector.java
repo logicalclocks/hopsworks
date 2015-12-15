@@ -183,7 +183,7 @@ public class RecoverySelector implements Serializable {
                 UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
         am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
-                AccountsAuditActions.SUCCESS.name(), "", people);
+                AccountsAuditActions.SUCCESS.name(), "Reset QR code.", people);
 
         return "validate_code";
       } else {

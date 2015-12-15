@@ -1,8 +1,6 @@
 package se.kth.hopsworks.rest;
 
 import java.net.SocketException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

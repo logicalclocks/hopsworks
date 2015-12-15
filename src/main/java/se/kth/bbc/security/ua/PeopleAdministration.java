@@ -29,6 +29,7 @@ import javax.transaction.UserTransaction;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AuditManager;
+import se.kth.bbc.security.audit.RolesAuditActions;
 import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.hopsworks.user.model.Users;
@@ -420,10 +421,19 @@ public class PeopleAdministration implements Serializable {
       if (!"#".equals(sgroup) && (!sgroup.isEmpty() || sgroup != null)) {
         userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
         userManager.registerGroup(user1, BBCGroup.BBC_USER.getValue());
+        
+        auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
+                RolesAuditActions.SUCCESS.name(), BBCGroup.valueOf(sgroup).name(),
+                user1);
+        
+        auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
+                RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(),
+                user1);
+          
       } else {
           auditManager.registerAccountChange(sessionState.getLoggedInUser(),
               PeopleAccountStatus.ACCOUNT_ACTIVEATED.name(),
-              UserAuditActions.FAILED.name(), "Role could not be granted.", user1);
+              RolesAuditActions.FAILED.name(), "Role could not be granted.", user1);
         MessagesController.addSecurityErrorMessage("Role could not be granted.");
         return;
       }

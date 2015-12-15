@@ -2,7 +2,6 @@ package se.kth.bbc.security.ua;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.SocketException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
@@ -290,13 +289,13 @@ public class AdminProfileAdministration implements Serializable {
       userManager.registerGroup(editingUser, BBCGroup.valueOf(newGroup).
               getValue());
       am.registerRoleChange(sessionState.getLoggedInUser(),
-              RolesAuditActions.ADDROLE.getValue(), RolesAuditActions.SUCCESS.
+              RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.
               name(), BBCGroup.valueOf(newGroup).name(), editingUser);
       MessagesController.addInfoMessage("Success", "Role updated successfully.");
 
     } else {
       am.registerRoleChange(sessionState.getLoggedInUser(),
-              RolesAuditActions.ADDROLE.getValue(), RolesAuditActions.FAILED.
+              RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.
               name(), BBCGroup.valueOf(newGroup).name(), editingUser);
 
       MessagesController.addErrorMessage("Error", "No selection made!!");
@@ -311,7 +310,7 @@ public class AdminProfileAdministration implements Serializable {
     if (!"#".equals(selectedGroup)) {
       if (selectedGroup.equals(BBCGroup.BBC_GUEST.toString())) {
         am.registerRoleChange(sessionState.getLoggedInUser(),
-                RolesAuditActions.ADDROLE.getValue(), RolesAuditActions.FAILED.
+                RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.FAILED.
                 name(), BBCGroup.valueOf(selectedGroup).name(), editingUser);
         MessagesController.addErrorMessage("Error", BBCGroup.BBC_GUEST.
                 toString() + " can not be removed.");
@@ -321,7 +320,7 @@ public class AdminProfileAdministration implements Serializable {
                 getValue());
 
         am.registerRoleChange(sessionState.getLoggedInUser(),
-                RolesAuditActions.ADDROLE.getValue(), RolesAuditActions.SUCCESS.
+                RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.SUCCESS.
                 name(), BBCGroup.valueOf(selectedGroup).name(), editingUser);
       }
 
@@ -334,7 +333,7 @@ public class AdminProfileAdministration implements Serializable {
       if (("#".equals(selectedStatus))
               || "#".equals(newGroup)) {
         am.registerRoleChange(sessionState.getLoggedInUser(),
-                RolesAuditActions.ADDROLE.getValue(), RolesAuditActions.FAILED.
+                RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.FAILED.
                 name(), BBCGroup.valueOf(selectedGroup).name(), editingUser);
         MessagesController.addErrorMessage("Error", "No selection made!");
       }

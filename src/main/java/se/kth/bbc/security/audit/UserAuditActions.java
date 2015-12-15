@@ -10,11 +10,11 @@ public enum UserAuditActions {
   UNAUTHORIZED("UNAUTHORIZED ACCESS"),
   // get all the logs
   ALL("ALL"),
-  
+
   SUCCESS("SUCCESS"),
-  
+
   FAILED("FAILED"),
-  
+
   ABORTED("ABORTED");
 
   private final String value;

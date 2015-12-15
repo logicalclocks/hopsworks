@@ -37,7 +37,7 @@
 
           <div class="container">
             <div align="left">
-              <h2>Account Audit</h2>
+              <h2>Consents Audit</h2>
             </div>
 
             <div class="content" >
@@ -70,7 +70,7 @@
 
                   <p:selectOneMenu id="action" 
                                    editable="false"
-                                   value="#{auditTrails.selectedAccountsAuditAction}"
+                                   value="#{auditTrails.selectedConsentAction}"
                                    required="true"
                                    >
 
@@ -78,7 +78,7 @@
 
                                   itemValue="#"
                                   noSelectionOption="true" />
-                    <f:selectItems value="#{auditTrails.accountsAuditActions}" 
+                    <f:selectItems value="#{auditTrails.consentAuditActions}" 
 
                                    />
                   </p:selectOneMenu>
@@ -87,61 +87,59 @@
                   <p:commandButton value="Show"
                                    update="logsTable"
                                    ajax="false"
-                                   action="#{auditTrails.processAccountAuditRequest(auditTrails.selectedAccountsAuditAction)}">
+                                   action="#{auditTrails.processConsentsAuditRequest(auditTrails.selectedConsentAction)}">
                   </p:commandButton>
                 </p:panelGrid>
                 <br></br>
-                <p:dataTable id="logsTable" var="logs" 
-                             value="#{auditTrails.accountAudit}" 
+                <p:dataTable id="consentsTable" var="logs" 
+                             value="#{auditTrails.consnetAudit}" 
                              widgetVar="Audit Trails"
                              emptyMessage="No record found with given criteria"
                              rowKey="#{logs.logId}"
                              style="table-layout: fixed" 
                              scrollable="false">
 
-                  <p:column id="actionColumn" filterBy="#{logs.initiator.email}" 
-                            headerText="Username" style="width:32%; font-size: 12px; text-align: left;">
+                  <p:column id="emailColumn" filterBy="#{logs.initiator.email}" 
+                            headerText="Initiator" style="width:25%; font-size: 12px; text-align: left;">
                     <h:outputText value="#{logs.initiator.email}" />
                   </p:column>
 
-                  
-                  <p:column id="tarColumn" filterBy="#{logs.target.email}" 
-                            headerText="Target" style="width:32%; font-size: 12px; text-align: left;">
-                    <h:outputText value="#{logs.target.email}" />
+                  <p:column id="targetColumn" filterBy="#{logs.consentID.project.name}" 
+                            headerText="Project Name" style="width:25%; font-size: 12px; text-align: left;">
+                    <h:outputText value="#{logs.consentID.project.name}" />
                   </p:column>
                   
-                  
-                  <p:column id="actColumn" filterBy="#{logs.action}" 
-                            headerText="Action" style="width:32%; font-size: 12px; text-align: left;">
-                    <h:outputText value="#{logs.action}" />
+                  <p:column id="ownerColumn" filterBy="#{logs.consentID.project.owner}" 
+                            headerText="Project Owner" style="width:25%; font-size: 12px; text-align: left;">
+                    <h:outputText value="#{logs.consentID.project.owner}" />
                   </p:column>
+                  
+                  <p:column id="ipColumn" filterBy="#{logs.ip}" 
+                            headerText="IP Address" style="width:25%; font-size: 12px; text-align: left;">
+                    <h:outputText value="#{logs.ip}" />
+                  </p:column>
+
+                   <p:column id="nformColumn" headerText="Document" > 
+
+                     <h:commandLink  action="#{projectEthicalManager.showConsent(logs.consentID.inode.inodePK.name)}" 
+                                        target="_blank"
+                                        style="float:left;margin-right:10px">
+
+                          <h:outputText value="#{logs.consentID.inode.inodePK.name}" />
+                        </h:commandLink>
+                      </p:column>
+
                   <p:column id="dateColumn" filterBy="#{logs.time}" 
-                            headerText="Date" style="width:32%; font-size: 12px; text-align: left;">
+                            headerText="Date" style="width:25%; font-size: 12px; text-align: left;">
                     <h:outputText value="#{logs.time}" />
                   </p:column>
 
 
-
-                  <p:column id="actionDetailColumn" filterBy="#{logs.message}" 
-                            headerText="Action Detail" style="width:32%; font-size: 12px; text-align: left;">
-                    <h:outputText value="#{logs.message}" />
-                  </p:column>
-
-                  <p:column id="ipColumn" filterBy="#{logs.ip}" 
-                            headerText="IP Address" style="width:32%; font-size: 12px; text-align: left;">
-                    <h:outputText value="#{logs.ip}" />
-                  </p:column>
-
-                  <p:column id="macColumn" filterBy="#{logs.mac}" 
-                            headerText="Mac Address" style="width:32%; font-size: 12px; text-align: left;">
-                    <h:outputText value="#{logs.mac}" />
-                  </p:column>
-
-
                   <p:column id="outcomeColumn" filterBy="#{logs.outcome}" 
-                            headerText="Outcome" style="width:32%; font-size: 12px; text-align: left;">
+                            headerText="Outcome" style="width:25%; font-size: 12px; text-align: left;">
                     <h:outputText value="#{logs.outcome}" />
                   </p:column>
+
 
                 </p:dataTable>
               </h:form>  

@@ -1,6 +1,6 @@
-
 package se.kth.bbc.security.audit.model;
 
+import io.hops.bbc.Consents;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.Basic;
@@ -19,48 +19,55 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.hopsworks.user.model.Users;
- 
+
 @Entity
-@Table(name = "hopsworks.account_audit")
+@Table(name = "consents_audit")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "AccountAudit.findAll",
-          query = "SELECT a FROM AccountAudit a"),
-  @NamedQuery(name = "AccountAudit.findByLogId",
-          query = "SELECT a FROM AccountAudit a WHERE a.logId = :logId"),
-  @NamedQuery(name = "AccountAudit.findByAction",
-          query = "SELECT a FROM AccountAudit a WHERE a.action = :action"),
-  @NamedQuery(name = "AccountAudit.findByTime",
-          query = "SELECT a FROM AccountAudit a WHERE a.time = :time"),
-  @NamedQuery(name = "AccountAudit.findByMessage",
-          query = "SELECT a FROM AccountAudit a WHERE a.message = :message"),
-  @NamedQuery(name = "AccountAudit.findByOutcome",
-          query = "SELECT a FROM AccountAudit a WHERE a.outcome = :outcome"),
-  @NamedQuery(name = "AccountAudit.findByIp",
-          query = "SELECT a FROM AccountAudit a WHERE a.ip = :ip"),
-  @NamedQuery(name = "AccountAudit.findByEmail",
-          query = "SELECT a FROM AccountAudit a WHERE a.email = :email"),
-  @NamedQuery(name = "AccountAudit.findByBrowser",
-          query = "SELECT a FROM AccountAudit a WHERE a.browser = :browser"),
-  @NamedQuery(name = "AccountAudit.findByOs",
-          query = "SELECT a FROM AccountAudit a WHERE a.os = :os"),
-  @NamedQuery(name = "AccountAudit.findByMac",
-          query = "SELECT a FROM AccountAudit a WHERE a.mac = :mac")})
-public class AccountAudit implements Serializable {
-
+  @NamedQuery(name = "ConsentsAudit.findAll",
+          query
+          = "SELECT c FROM ConsentsAudit c"),
+  @NamedQuery(name = "ConsentsAudit.findByLogId",
+          query
+          = "SELECT c FROM ConsentsAudit c WHERE c.logId = :logId"),
+  @NamedQuery(name = "ConsentsAudit.findByAction",
+          query
+          = "SELECT c FROM ConsentsAudit c WHERE c.action = :action"),
+  @NamedQuery(name = "ConsentsAudit.findByTime",
+          query
+          = "SELECT c FROM ConsentsAudit c WHERE c.time = :time"),
+  @NamedQuery(name = "ConsentsAudit.findByMessage",
+          query
+          = "SELECT c FROM ConsentsAudit c WHERE c.message = :message"),
+  @NamedQuery(name = "ConsentsAudit.findByOutcome",
+          query
+          = "SELECT c FROM ConsentsAudit c WHERE c.outcome = :outcome"),
+  @NamedQuery(name = "ConsentsAudit.findByIp",
+          query
+          = "SELECT c FROM ConsentsAudit c WHERE c.ip = :ip"),
+  @NamedQuery(name = "ConsentsAudit.findByBrowser",
+          query
+          = "SELECT c FROM ConsentsAudit c WHERE c.browser = :browser"),
+  @NamedQuery(name = "ConsentsAudit.findByOs",
+          query
+          = "SELECT c FROM ConsentsAudit c WHERE c.os = :os"),
+  @NamedQuery(name = "ConsentsAudit.findByMac",
+          query
+          = "SELECT c FROM ConsentsAudit c WHERE c.mac = :mac")})
+public class ConsentsAudit implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
   @Column(name = "log_id")
-  private Integer logId;
+  private Long logId;
   @Size(max = 45)
   @Column(name = "action")
   private String action;
   @Column(name = "time")
   @Temporal(TemporalType.TIMESTAMP)
   private Date time;
-  @Size(max = 100)
+  @Size(max = 500)
   @Column(name = "message")
   private String message;
   @Size(max = 45)
@@ -75,34 +82,32 @@ public class AccountAudit implements Serializable {
   @Size(max = 45)
   @Column(name = "os")
   private String os;
-  @Size(max = 254)
-  @Column(name = "email")
-  private String email;
   @Size(max = 45)
   @Column(name = "mac")
   private String mac;
+
   @JoinColumn(name = "initiator",
           referencedColumnName = "uid")
   @ManyToOne
   private Users initiator;
-
-  @JoinColumn(name = "target",
-          referencedColumnName = "uid")
+  
+  @JoinColumn(name = "consent_id",
+          referencedColumnName = "id")
   @ManyToOne
-  private Users target;
-    
-  public AccountAudit() {
+  private Consents consentID;
+  
+  public ConsentsAudit() {
   }
 
-  public AccountAudit(Integer logId) {
+  public ConsentsAudit(Long logId) {
     this.logId = logId;
   }
 
-  public Integer getLogId() {
+  public Long getLogId() {
     return logId;
   }
 
-  public void setLogId(Integer logId) {
+  public void setLogId(Long logId) {
     this.logId = logId;
   }
 
@@ -112,14 +117,6 @@ public class AccountAudit implements Serializable {
 
   public void setAction(String action) {
     this.action = action;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
   }
 
   public Date getTime() {
@@ -186,12 +183,12 @@ public class AccountAudit implements Serializable {
     this.initiator = initiator;
   }
 
-  public Users getTarget() {
-    return target;
+  public Consents getConsentID() {
+    return consentID;
   }
 
-  public void setTarget(Users target) {
-    this.target = target;
+  public void setConsentID(Consents consentID) {
+    this.consentID = consentID;
   }
 
   @Override
@@ -204,12 +201,12 @@ public class AccountAudit implements Serializable {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof AccountAudit)) {
+    if (!(object instanceof ConsentsAudit)) {
       return false;
     }
-    AccountAudit other = (AccountAudit) object;
-    if ((this.logId == null && other.logId != null) || (this.logId != null
-            && !this.logId.equals(other.logId))) {
+    ConsentsAudit other = (ConsentsAudit) object;
+    if ((this.logId == null && other.logId != null) ||
+            (this.logId != null && !this.logId.equals(other.logId))) {
       return false;
     }
     return true;
@@ -217,7 +214,7 @@ public class AccountAudit implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bb.security.audit.model.AccountAudit[ logId=" + logId + " ]";
+    return "se.kth.bbc.security.audit.model.ConsentsAudit[ logId=" + logId + " ]";
   }
-
+  
 }

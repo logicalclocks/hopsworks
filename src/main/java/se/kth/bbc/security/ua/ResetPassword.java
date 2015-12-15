@@ -167,7 +167,8 @@ public class ResetPassword implements Serializable {
       mgr.resetPassword(people, DigestUtils.sha256Hex(random_password));
 
       userTransaction.commit();
-
+      
+      auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORDCHANGE.name(), AccountsAuditActions.SUCCESS.name(),"Temporary Password Sent.", people);
       // sned the new password to the user email
       emailBean.sendEmail(people.getEmail(),
               UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
