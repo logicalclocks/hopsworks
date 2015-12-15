@@ -342,7 +342,8 @@
                                   <div class="panel panel-default">
                                     <div>
                                       <label>{{field.tagName}}</label>
-                                                    <span class="field-info" tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
+                                                    <span class="field-info" tooltip-placement="right"
+                                                          tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
                                                               <i class="fa fa-exclamation-circle"></i>
                                                     </span>
                                       <a style="color: green;padding-left: 10px " ng-click="metadataCtrl.setVisibilityAddMetadata(table.id+'-'+field.tagName,true)" ng-hide="metadataCtrl.visibilityInfo[table.id+'-'+field.tagName]"><i class="fa fa-plus"></i></a>
