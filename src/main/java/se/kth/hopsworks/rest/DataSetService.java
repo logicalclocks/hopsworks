@@ -145,7 +145,7 @@ public class DataSetService {
     Collection<Dataset> dsInProject = this.project.getDatasetCollection();
     for (Dataset ds : dsInProject) {
       parent = inodes.findParent(ds.getInode());
-      inodeView = new InodeView(parent, ds, projPath + "" + ds.getInode()
+      inodeView = new InodeView(parent, ds, projPath + "/" + ds.getInode()
           .getInodePK().getName());
       user = userfacade.findByUsername(inodeView.getOwner());
       if (user != null) {

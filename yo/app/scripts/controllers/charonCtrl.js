@@ -9,17 +9,18 @@ angular.module('hopsWorksApp')
         self.projectId = $routeParams.projectID;
         var charonService = CharonService(self.projectId);
 
-        self.selectedFile = "";
-        self.selectedDir = "";
+        self.working = false;
+        self.selectedCharonPath = "";
+        self.selectedHdfsPath = "";
         self.toHDFS = true;
         self.charonFilename = "";
 
         $scope.switchDirection = function (projectName) {
           self.toHDFS = !self.toHDFS;
-          self.selectedFile = "";
-          self.selectedDir = "";
+          self.selectedCharonPath = "";
+          self.selectedHdfsPath = "";
           if (!self.toHDFS) {
-            self.selectedDir = "/srv/charon_fs/" + projectName;
+            self.selectedCharonPath = "/srv/charon_fs/" + projectName;
           }
         }
         /**
@@ -28,38 +29,42 @@ angular.module('hopsWorksApp')
          * @param {String} path
          * @returns {undefined}
          */
-        self.onFileSelected = function (path) {
-          self.selectedFile = path;
+        self.onCharonPathSelected = function (path) {
+          self.selectedCharonPath = path;
         };
 
-        self.onDirSelected = function (path) {
-          self.selectedDir = path;
+        self.onHdfsPathSelected = function (path) {
+          self.selectedHdfsPath = path;
         };
 
         self.copyFile = function () {
-
+          self.working = true;
           if (self.toHDFS === true) {
             var op = {
-              "charonPath": self.selectedFile,
-              "hdfsPath": self.selectedDir
+              "charonPath": self.selectedCharonPath,
+              "hdfsPath": self.selectedHdfsPath
             };
             charonService.copyFromCharonToHdfs(op)
                 .then(function (success) {
+                    self.working = false;
                   growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
                 },
                     function (error) {
+                      self.working = false;
                       growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                     });
           } else {
             var op = {
-              "charonPath": self.selectedDir,
-              "hdfsPath": self.selectedFile
+              "charonPath": self.selectedCharonPath,
+              "hdfsPath": self.selectedHdfsPath
             };
             charonService.copyFromHdfsToCharon(op)
                 .then(function (success) {
+                    self.working = false;
                   growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
                 },
                     function (error) {
+                      self.working = false;
                       growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                     });
           }
