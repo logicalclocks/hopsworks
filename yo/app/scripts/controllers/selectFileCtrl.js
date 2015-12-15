@@ -3,14 +3,21 @@
  * Controller for the file selection dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('SelectFileCtrl', ['growl',
-          function ( growl) {
+        .controller('SelectFileCtrl', ['$modalInstance', 'growl', 'regex', 'errorMsg',
+          function ($modalInstance, growl, regex, errorMsg) {
 
             var self = this;
 
             var selectedFilePath;
             self.isDir = false;
 
+            /**
+             * Close the modal dialog.
+             * @returns {undefined}
+             */
+            self.close = function () {
+              $modalInstance.dismiss('cancel');
+            };
 
             /**
              * Select a file.
@@ -25,6 +32,8 @@ angular.module('hopsWorksApp')
             self.confirmSelection = function (isDirectory) {
               if (selectedFilePath == null) {
                 growl.error("Please select a file.", {title: "No file selected", ttl: 15000});
+              } else if (!selectedFilePath.match(regex)) {
+                growl.error(errorMsg, {title: "Invalid file extension", ttl: 15000});
               } else if (self.isDir !== isDirectory) {
                 var msg;
                 if (self.isDir) {
@@ -33,6 +42,8 @@ angular.module('hopsWorksApp')
                   msg = "You should select a file."
                 }
                 growl.error(errorMsg, {title: msg, ttl: 10000});
+              } else {
+                $modalInstance.close(selectedFilePath);
               }
             };
 
