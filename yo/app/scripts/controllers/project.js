@@ -155,7 +155,8 @@ angular.module('hopsWorksApp')
             'projectName': self.currentProject.projectName,
             'description': self.currentProject.description,
             'services': self.selectionProjectTypes,
-            'retentionPeriod': self.currentProject.retentionPeriod
+            'retentionPeriod': self.currentProject.retentionPeriod,
+            'ethicalStatus': self.currentProject.ethicalStatus
           };
 
           ProjectService.update({id: self.currentProject.projectId}, $scope.newProject)

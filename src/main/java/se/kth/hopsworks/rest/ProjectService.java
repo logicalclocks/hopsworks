@@ -204,7 +204,7 @@ public class ProjectService {
     
     // Update the description if it have been chenged
     if (project.getRetentionPeriod() == null || !project.getRetentionPeriod().equals(
-            projectDTO.getDescription())) {
+            projectDTO.getRetentionPeriod())) {
       projectController.updateProject(project, projectDTO,
               userEmail);
       json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
