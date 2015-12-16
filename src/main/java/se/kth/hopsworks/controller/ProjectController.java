@@ -38,6 +38,7 @@ import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
+import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
@@ -323,7 +324,7 @@ public class ProjectController {
    * <p/>
    *
    * @param project
-   * @param newProjectDesc
+   * @param proj
    * @param userEmail of the user making the change
    */
   public void updateProject(Project project, ProjectDTO proj,
