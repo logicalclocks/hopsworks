@@ -60,14 +60,24 @@
                   <div class="row">
                     <div class="col-md-12" style="margin-top: 25px;">
                       <div class="table-responsive" style="overflow: hidden;">
-
+                        <form class="form-inline">
+                          <div class="form-group">
+                            <label style="margin-top: 5px;">Filter:</label>
+                            <input type="text" ng-model="search"
+                                   class="form-control" placeholder="Search" style="float: right; margin-left: 10px;">
+                          </div>
+                        </form>
                         <table class="table table-bordred table-hover" >
 
                           <thead>
-                          <th >Name</th>
-                          <th >Owner</th>
-                          <th >Last modified</th>
-                          <th >File size</th>
+                          <th ng-click="sort('name')">Name
+                            <span class="glyphicon sort-icon" ng-show="sortKey=='name'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
+                          <th ng-click="sort('owner')">Owner
+                            <span class="glyphicon sort-icon" ng-show="sortKey=='owner'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
+                          <th ng-click="sort('modification')">Last modified
+                            <span class="glyphicon sort-icon" ng-show="sortKey=='modification'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
+                          <th ng-click="sort('size')">File size
+                            <span class="glyphicon sort-icon" ng-show="sortKey=='size'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                           <th></th>
                           <th></th>
                           </thead>
@@ -86,7 +96,8 @@
                               </i>
                             </td>
                             </tr>
-                            <tr ng-repeat="file in datasetsCtrl.files| orderBy: 'name'"
+                            <tr
+                              dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:20"
                                 context-menu
                                 data-target="menu-{{ $index}}"
                                 ng-class="{ 'highlight': datasetsCtrl.selected === $index, 'expanded': expanded }"
@@ -172,6 +183,11 @@
                             </tr>
                           </tbody>
                         </table>
+                        <dir-pagination-controls
+                          max-size="5"
+                          direction-links="true"
+                          boundary-links="true" >
+                        </dir-pagination-controls>
                       </div>
                     </div>
                   </div>
@@ -535,7 +551,8 @@
                               </div>
 
                               <div tabindex="2" class="col-md-1" style="padding-bottom: 0;">
-                                <span class="field-info pull-left" tooltip="{{card.description}}">
+                                <span class="field-info pull-left" tooltip-placement="right"
+                                      tooltip="{{card.description}}">
                                   <i class="fa fa-exclamation-circle"></i>
                                 </span>
                               </div>

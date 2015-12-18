@@ -19,6 +19,7 @@ angular.module('hopsWorksApp')
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
             self.selected; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
+            self.projectFiles;
 
             var localFilesystemService = LocalFsService(self.projectId); //The datasetservice for the current project.
 
@@ -74,6 +75,22 @@ angular.module('hopsWorksApp')
                 console.log("Error getting the contents of the path " + getPath(newPathArray));
                 console.log(error);
               });
+            };
+
+            self.getProjectContents = function (project) {
+              localFilesystemService.getContents(project).then(
+                function (success) {
+                  //Reset the selected file
+                  self.selected = null;
+                  self.fileDetail = null;
+                  //Set the current files and path
+                  self.projectFiles = success.data;
+                  console.log(success);
+                }, function (error) {
+                  self.working = false;
+                  console.log("Error getting the contents of the path " + getPath(project));
+                  console.log(error);
+                });
             };
 
             var init = function () {

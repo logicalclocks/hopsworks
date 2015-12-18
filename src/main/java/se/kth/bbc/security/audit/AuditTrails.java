@@ -5,6 +5,8 @@
  */
 package se.kth.bbc.security.audit;
 
+import io.hops.bbc.ConsentStatus;
+import io.hops.bbc.ConsentType;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -12,16 +14,15 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import se.kth.bbc.activity.Activity;
-import se.kth.bbc.activity.ActivityController;
-import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.model.AccountAudit;
+import se.kth.bbc.security.audit.model.ConsentsAudit;
 import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.user.model.Users;
- 
+
 @ManagedBean
 @ViewScoped
 
@@ -48,13 +49,17 @@ public class AuditTrails implements Serializable {
 
   private RolesAuditActions selectdeRolesAuditAction;
 
-  private StudyAuditActions selectedStudyAuditAction;
+  private ProjectAuditActions selectedProjectAuditAction;
 
   private UserAuditActions selectedLoginsAuditAction;
-
+  
+  private ConsentStatus selectedConsentAction;
+  
   private List<Userlogins> userLogins;
 
   private List<RolesAudit> roleAudit;
+  
+  private List<ConsentsAudit> consnetAudit;
 
   private List<AccountAudit> accountAudit;
 
@@ -82,6 +87,14 @@ public class AuditTrails implements Serializable {
 
   public void setTo(Date to) {
     this.to = to;
+  }
+
+  public ConsentStatus getSelectedConsentAction() {
+    return selectedConsentAction;
+  }
+
+  public void setSelectedConsentAction(ConsentStatus selectedConsentAction) {
+    this.selectedConsentAction = selectedConsentAction;
   }
 
   public RolesAuditActions[] getAuditActions() {
@@ -124,8 +137,8 @@ public class AuditTrails implements Serializable {
     return UserAuditActions.values();
   }
 
-  public StudyAuditActions[] getStudyAuditActions() {
-    return StudyAuditActions.values();
+  public ProjectAuditActions[] getProjectAuditActions() {
+    return ProjectAuditActions.values();
   }
 
   public AccountsAuditActions getSelectedAccountsAuditAction() {
@@ -146,13 +159,13 @@ public class AuditTrails implements Serializable {
     this.selectdeRolesAuditAction = selectdeRolesAuditAction;
   }
 
-  public StudyAuditActions getSelectedStudyAuditAction() {
-    return selectedStudyAuditAction;
+  public ProjectAuditActions getSelectedProjectAuditAction() {
+    return selectedProjectAuditAction;
   }
 
-  public void setSelectedStudyAuditAction(
-          StudyAuditActions selectedStudyAuditAction) {
-    this.selectedStudyAuditAction = selectedStudyAuditAction;
+  public void setSelectedProjectAuditAction(
+          ProjectAuditActions selectedStudyAuditAction) {
+    this.selectedProjectAuditAction = selectedStudyAuditAction;
   }
 
   public UserAuditActions getSelectedLoginsAuditAction() {
@@ -172,6 +185,18 @@ public class AuditTrails implements Serializable {
     this.ad = ad;
   }
 
+  public List<ConsentsAudit> getConsnetAudit() {
+    return consnetAudit;
+  }
+
+  public void setConsnetAudit(List<ConsentsAudit> consnetAudit) {
+    this.consnetAudit = consnetAudit;
+  }
+
+   public ConsentStatus[] getConsentAuditActions() {
+    return ConsentStatus.values();
+  }
+
   /**
    * Generate audit report for account modifications.
    * <p>
@@ -181,12 +206,17 @@ public class AuditTrails implements Serializable {
    * @param action
    * @return
    */
-  public List<AccountAudit> getAccoutnAudit(String username, Date from, Date to,
+  public List<AccountAudit> getAccountAudit(String username, Date from, Date to,
           String action) {
     Users u = userManager.getUserByEmail(username);
 
     if (u == null) {
       return auditManager.getAccountAudit(convertTosqlDate(from),
+              convertTosqlDate(to), action);
+    } else if (action.equals(AccountsAuditActions.SUCCESS.name()) || action.
+            equals(
+                    AccountsAuditActions.FAILED.name())) {
+      return auditManager.getAccountAuditOutcome(convertTosqlDate(from),
               convertTosqlDate(to), action);
     } else {
       return auditManager.getAccountAudit(u.getUid(), convertTosqlDate(from),
@@ -194,18 +224,7 @@ public class AuditTrails implements Serializable {
     }
   }
 
-  /**
-   *
-   * @param studyName
-   * @param from
-   * @param to
-   * @return
-   */
-  public List<Activity> getStudyAudit(String studyName, Date from, Date to) {
-    return activityController.activityDetailOnStudyAudit(studyName,
-            convertTosqlDate(from), convertTosqlDate(to));
-  }
-
+  
   /**
    * Generate audit report for role entitlement.
    * <p>
@@ -217,10 +236,11 @@ public class AuditTrails implements Serializable {
    */
   public List<RolesAudit> getRoleAudit(String username, Date from, Date to,
           String action) {
+
     Users u = userManager.getUserByEmail(username);
 
     if (u == null) {
-      return auditManager.getRoletAudit(convertTosqlDate(from),
+      return auditManager.getRolesAudit(convertTosqlDate(from),
               convertTosqlDate(to), action);
     } else {
       return auditManager.getRoletAudit(u.getUid(), convertTosqlDate(from),
@@ -242,6 +262,12 @@ public class AuditTrails implements Serializable {
     if (u == null) {
       return auditManager.getUsersLoginsFromTo(convertTosqlDate(from),
               convertTosqlDate(to), action);
+    } else if (action.equals(UserAuditActions.SUCCESS.name()) || action.equals(
+            UserAuditActions.FAILED.name())
+            || action.equals(UserAuditActions.ABORTED.name())) {
+      return auditManager.getUserLoginsOutcome(u.getUid(),
+              convertTosqlDate(from),
+              convertTosqlDate(to), action);
     } else {
       return auditManager.
               getUserLoginsFromTo(u.getUid(), convertTosqlDate(from),
@@ -256,14 +282,18 @@ public class AuditTrails implements Serializable {
    */
   public void processLoginAuditRequest(UserAuditActions action) {
 
-    if (action.getValue().equals(UserAuditActions.REGISTRATION.getValue())) {
-      userLogins = getUserLogins(username, from, to, action.getValue());
-    } else if (action.getValue().equals(UserAuditActions.LOGIN.
+    if (action.getValue().equals(UserAuditActions.LOGIN.
             getValue()) || action.getValue().equals(UserAuditActions.LOGOUT.
                     getValue())) {
       userLogins = getUserLogins(username, from, to, action.getValue());
-    }else if(action.getValue().equals(UserAuditActions.ALL.getValue())){
-         userLogins = getUserLogins(username, from, to, action.getValue());
+    } else if (action.getValue().equals(UserAuditActions.SUCCESS.
+            getValue()) || action.getValue().equals(UserAuditActions.FAILED.
+                    getValue())
+            || action.getValue().equals(UserAuditActions.ABORTED.
+                    getValue())) {
+      userLogins = getUserLogins(username, from, to, action.getValue());
+    } else if (action.getValue().equals(UserAuditActions.ALL.getValue())) {
+      userLogins = getUserLogins(username, from, to, action.getValue());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
     }
@@ -276,23 +306,35 @@ public class AuditTrails implements Serializable {
    */
   public void processAccountAuditRequest(AccountsAuditActions action) {
 
-    if (action.getValue().equals(AccountsAuditActions.PASSWORDCHANGE.getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.LOSTDEVICE.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.PROFILEUPDATE.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.SECQUESTIONCHANGE.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.PROFILEUPDATE.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(AccountsAuditActions.USERMANAGEMENT.
-            getValue())) {
-      accountAudit = getAccoutnAudit(username, from, to, action.getValue());
+    if (action.equals(AccountsAuditActions.PASSWORDCHANGE)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.LOSTDEVICE)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.PROFILEUPDATE)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.SECQUESTIONCHANGE)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.PROFILEUPDATE)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.REGISTRATION)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.QRCODE)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.PROFILE)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.PASSWORD)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.USERMANAGEMENT)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.RECOVERY)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.SUCCESS) || action.equals(
+            AccountsAuditActions.FAILED)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.CHANGEDSTATUS)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
+    } else if (action.equals(AccountsAuditActions.ALL)) {
+      accountAudit = getAccountAudit(username, from, to, action.name());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
     }
@@ -304,14 +346,19 @@ public class AuditTrails implements Serializable {
    * @param action
    */
   public void processRoleAuditRequest(RolesAuditActions action) {
-
-    if (action.getValue().equals(RolesAuditActions.ADDROLE.getValue())) {
-      roleAudit = getRoleAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(RolesAuditActions.REMOVEROLE.getValue())) {
-      roleAudit = getRoleAudit(username, from, to, action.getValue());
-    } else if (action.getValue().equals(RolesAuditActions.ALLROLEASSIGNMENTS.
-            getValue())) {
-      roleAudit = getRoleAudit(username, from, to, action.getValue());
+    if (action.equals(RolesAuditActions.ADDROLE)) {
+      roleAudit = getRoleAudit(username, convertTosqlDate(from),
+              convertTosqlDate(to), action.name());
+    } else if (action.equals(RolesAuditActions.REMOVEROLE)) {
+      roleAudit = getRoleAudit(username, convertTosqlDate(from),
+              convertTosqlDate(to), action.name());
+    } else if (action.equals(RolesAuditActions.ALLROLEASSIGNMENTS)) {
+      roleAudit = getRoleAudit(username, convertTosqlDate(from),
+              convertTosqlDate(to), action.getValue());
+    } else if (action.equals(RolesAuditActions.SUCCESS) || action.equals(
+            RolesAuditActions.FAILED)) {
+      roleAudit = auditManager.getRoletAuditOutcome(convertTosqlDate(from),
+              convertTosqlDate(to), action.name());
     } else {
       MessagesController.addSecurityErrorMessage("Audit action not supported.");
     }
@@ -322,9 +369,9 @@ public class AuditTrails implements Serializable {
    * <p>
    * @param action
    */
-  public void processStudyAuditRequest(StudyAuditActions action) {
+  public void processProjectAuditRequest(ProjectAuditActions action) {
 
-    if (action.getValue().equals(StudyAuditActions.AUDITTRAILS.getValue())) {
+    if (action.equals(ProjectAuditActions.AUDITTRAILS)) {
       ad = activityController.activityDetailOnStudyAudit(username,
               convertTosqlDate(from), convertTosqlDate(to));
     } else {
@@ -332,6 +379,15 @@ public class AuditTrails implements Serializable {
     }
   }
 
+    public void processConsentsAuditRequest(ConsentStatus action) {
+
+    if (!action.name().isEmpty() && action!=null) {
+      consnetAudit = auditManager.getConsentsAudit(convertTosqlDate(from), convertTosqlDate(to) , action.name());
+    } else {
+      MessagesController.addSecurityErrorMessage("Audit action not supported.");
+    }
+  }
+    
   /**
    * Convert the GUI date to SQL format.
    * <p>
@@ -341,4 +397,5 @@ public class AuditTrails implements Serializable {
   public java.sql.Date convertTosqlDate(java.util.Date calendarDate) {
     return new java.sql.Date(calendarDate.getTime());
   }
+
 }

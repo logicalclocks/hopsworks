@@ -1,8 +1,6 @@
 package se.kth.hopsworks.rest;
 
 import java.net.SocketException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -26,6 +24,8 @@ import org.apache.commons.codec.binary.Base64;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.auth.AuthenticationConstants;
+import se.kth.bbc.security.ua.BBCGroup;
+import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
@@ -71,12 +71,12 @@ public class AuthService {
             json).build();
   }
 
- 
   @POST
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
   public Response login(@FormParam("email") String email,
-          @FormParam("password") String password,  @FormParam("otp") String otp, @Context SecurityContext sc,
+          @FormParam("password") String password, @FormParam("otp") String otp,
+          @Context SecurityContext sc,
           @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
           throws AppException, MessagingException {
 
@@ -87,18 +87,18 @@ public class AuthService {
             "BBC_USER"));
     JsonResponse json = new JsonResponse();
     Users user = userBean.findByEmail(email);
-
+    String newPassword = null;
     // Add padding if custom realm is disabled
-    if (otp == null || otp.isEmpty()) {
+    if (otp == null || otp.isEmpty() && user.getMode() == PeopleAccountStatus.MOBILE_USER.getValue()) {
       otp = AuthenticationConstants.MOBILE_OTP_PADDING;
+    } 
+
+    if (otp.length() == AuthenticationConstants.MOBILE_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.MOBILE_USER.getValue()) {
+      newPassword = password + otp;
+    } else if (otp.length() == AuthenticationConstants.YUBIKEY_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+        newPassword = password + otp + AuthenticationConstants.YUBIKEY_USER_MARKER;
     }
     
-    if(otp.length() == AuthenticationConstants.MOBILE_OTP_PADDING.length()){
-      password = password + otp;
-    } else if(otp.length() == AuthenticationConstants.YUBIKEY_OTP_PADDING.length()){
-      password = password + otp + AuthenticationConstants.YUBIKEY_USER_MARKER;
-    }
-   
     //only login if not already logged in...
     if (sc.getUserPrincipal() == null) {
       if (user != null && statusValidator.checkStatus(user.getStatus())) {
@@ -106,29 +106,27 @@ public class AuthService {
 
           req.getServletContext().log("going to login. User status: " + user.
                   getStatus());
-          req.login(email, password);
+          req.login(email, newPassword);
           req.getServletContext().log("3 step: " + email);
           userController.resetFalseLogin(user);
-          am.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.SUCCESS.name(), req);          //if the logedin user has no supported role logout
-          if (!sc.isUserInRole("BBC_USER") && !sc.isUserInRole("SYS_ADMIN")) {
+          am.registerLoginInfo(user, UserAuditActions.LOGIN.name(),
+                  UserAuditActions.SUCCESS.name(), req);         
+          //if the logedin user has no supported role logout
+          if (!sc.isUserInRole(BBCGroup.BBC_USER.name()) && !sc.isUserInRole(BBCGroup.SYS_ADMIN.name())) {
+            am.registerLoginInfo(user, UserAuditActions.UNAUTHORIZED.getValue(),
+                    UserAuditActions.FAILED.name(), req);
             req.logout();
+
             throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                     "No valid role found for this user");
           }
-       
+
         } catch (ServletException e) {
           userController.registerFalseLogin(user);
-          try {
-            am.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), req);
-          } catch (SocketException ex) {
-            Logger.getLogger(AuthService.class.getName()).
-                    log(Level.SEVERE, null, ex);
-          }
+          am.registerLoginInfo(user, UserAuditActions.LOGIN.name(),
+                  UserAuditActions.FAILED.name(), req);
           throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                   ResponseMessages.AUTHENTICATION_FAILURE);
-        } catch (SocketException ex) {
-          Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null,
-                  ex);
         }
       } else { // if user == null
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
@@ -151,27 +149,24 @@ public class AuthService {
   @Path("logout")
   @Produces(MediaType.APPLICATION_JSON)
   public Response logout(@Context HttpServletRequest req) throws AppException {
-    
+
     Users user = userBean.findByEmail(req.getRemoteUser());
     JsonResponse json = new JsonResponse();
-    
+
     try {
       req.logout();
       json.setStatus("SUCCESS");
       req.getSession().invalidate();
-     am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.SUCCESS.name(), req);
+      am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
+              UserAuditActions.SUCCESS.name(), req);
 
     } catch (ServletException e) {
-      try {
-        am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.FAILED.name(), req);
-      } catch (SocketException ex) {
-        Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
-      }
+
+      am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
+              UserAuditActions.FAILED.name(), req);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
               "Logout failed on backend");
-    } catch (SocketException ex) {
-      Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE, null, ex);
     }
     return Response.ok().entity(json).build();
   }
@@ -187,7 +182,7 @@ public class AuthService {
 
     JsonResponse json = new JsonResponse();
 
-    qrCode = userController.registerUser(newUser,req);
+    qrCode = userController.registerUser(newUser, req);
 
     if (settings.findById("twofactor_auth").getValue().equals("true")) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
@@ -207,7 +202,6 @@ public class AuthService {
   public Response registerYubikey(UserDTO newUser,
           @Context HttpServletRequest req)
           throws AppException, SocketException {
-
 
     JsonResponse json = new JsonResponse();
 

@@ -25,6 +25,8 @@ public class ActivityController {
   public static final String REMOVED_SAMPLE = " removed a sample ";
   public static final String REMOVED_FILE = " removed a file ";
   public static final String REMOVED_STUDY = " removed study ";
+  public static final String CHANGE_RETENTION = " changed retention period ";
+  
   // Flag constants
   public static final String FLAG_STUDY = "STUDY";
 

@@ -77,6 +77,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
    * @return
    * @throws java.net.UnknownHostException
    * @throws java.net.SocketException
+   * @throws se.kth.hopsworks.meta.exception.ApplicationException
    */
   public String login() throws UnknownHostException, SocketException,
           ApplicationException {
@@ -148,7 +149,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       mgr.setOnline(userid, AuthenticationConstants.IS_ONLINE);
 
       registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
-              "SUCCESS");
+              UserAuditActions.SUCCESS.name());
 
     } catch (ServletException ex) {
       // If more than five times block the account
@@ -156,7 +157,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       mgr.increaseLockNum(userid, val + 1);
 
       registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
-              "FAIL");
+           UserAuditActions.FAILED.name());
 
       if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         mgr.changeAccountStatus(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.
@@ -250,7 +251,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
     }
 
     registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
-            "SUCCESS");
+            UserAuditActions.SUCCESS.name());
 
     try {
       // Concatenate the static password with the otp due to limitations of passing two passwords to glassfish
@@ -266,7 +267,7 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
       int val = user.getFalseLogin();
       mgr.increaseLockNum(userid, val + 1);
       registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
-              "FAIL");
+              UserAuditActions.FAILED.name());
       if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         mgr.changeAccountStatus(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.
                 getValue());
@@ -308,23 +309,18 @@ public class CustomAuthentication extends PolicyDecisionPoint implements
     String browser = AuditUtil.getBrowserInfo();
     String os = AuditUtil.getOSInfo();
     String macAddress;
-    try {
       macAddress = AuditUtil.getMacAddress(ip);
       am.registerLoginInfo(user, UserAuditActions.LOGOUT.getValue(), ip,
-              browser, os, macAddress, "SUCCESS");
+              browser, os, macAddress, UserAuditActions.SUCCESS.name());
 
       mgr.setOnline(userid, AuthenticationConstants.IS_OFFLINE);
 
-    } catch (SocketException ex) {
-      Logger.getLogger(CustomAuthentication.class.getName()).
-              log(Level.SEVERE, null, ex);
-    }
 
     return ("welcome");
   }
 
   public void registerLoginInfo(Users p, String action, String outcome) throws
-          UnknownHostException, SocketException {
+          UnknownHostException {
 
     String ip = AuditUtil.getIPAddress();
     String browser = AuditUtil.getBrowserInfo();

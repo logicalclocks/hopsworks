@@ -6,24 +6,16 @@ public enum UserAuditActions {
   LOGIN("LOGIN"),
   // for user authentication
   LOGOUT("LOGOUT"),
-  // to get registration audit logs
-  REGISTRATION("REGISTRATION"),
+
+  UNAUTHORIZED("UNAUTHORIZED ACCESS"),
   // get all the logs
   ALL("ALL"),
-  
+
   SUCCESS("SUCCESS"),
-  
+
   FAILED("FAILED"),
-  
-  ABORTED("ABORTED"), 
-  
-  RECOVERY("RECOVERY"),
-  QRCODE("QR CODE"),
-  
-  SECQUESTION("SECURTY QUESTION RESET"),
-  
-  PROFILE("PROFILE UPDATE"),
-  PASSWORD("PASSWORD CHANGE") ;
+
+  ABORTED("ABORTED");
 
   private final String value;
 
