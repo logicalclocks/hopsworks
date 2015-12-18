@@ -88,7 +88,8 @@ public class ProjectController {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private DFSSingleton dfsSingleton;
-
+  @EJB
+  private DFSSingleton dfs;
   @EJB
   private Settings settings;
 
@@ -126,31 +127,32 @@ public class ProjectController {
         Date now = new Date();
         Project project = new Project(newProject.getProjectName(), user, now);
         project.setDescription(newProject.getDescription());
-        
-         // make ethical status pending
+
+        // make ethical status pending
         project.setEthicalStatus(ConsentStatus.PENDING.name());
-        
+
         // set retention period to next 10 years by default
-        Calendar cal = Calendar.getInstance(); 
+        Calendar cal = Calendar.getInstance();
         cal.setTime(now);
         cal.add(Calendar.YEAR, 10);
         project.setRetentionPeriod(cal.getTime());
-        
+
         Inode projectInode = this.inodes.getProjectRoot(project.getName());
         project.setInode(projectInode);
 
         //Persist project object
         this.projectFacade.persistProject(project);
         this.projectFacade.flushEm();
-        this.projectPaymentsHistoryFacade.persistProjectPaymentsHistory(new
-            ProjectPaymentsHistory(new ProjectPaymentsHistoryPK(project
-            .getName(),project.getCreated()), project.getOwner().getEmail(),
-            ProjectPaymentAction.DEPOSIT_MONEY, 0));
+        this.projectPaymentsHistoryFacade.persistProjectPaymentsHistory(
+                new ProjectPaymentsHistory(new ProjectPaymentsHistoryPK(project
+                                .getName(), project.getCreated()), project.
+                        getOwner().getEmail(),
+                        ProjectPaymentAction.DEPOSIT_MONEY, 0));
         this.projectPaymentsHistoryFacade.flushEm();
-        this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(new
-            YarnProjectsQuota(project.getName(), Integer.parseInt(settings
-            .getYarnDefaultQuota
-                ()), 0));
+        this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(
+                new YarnProjectsQuota(project.getName(), Integer.parseInt(
+                                settings
+                                .getYarnDefaultQuota()), 0));
         this.yarnProjectsQuotaFacade.flushEm();
         //Add the activity information
         logActivity(ActivityFacade.NEW_PROJECT,
@@ -186,8 +188,8 @@ public class ProjectController {
 
     try {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
-          boolean globallyVisible = ds.equals(Settings.DefaultDataset.RESOURCES);
-          datasetController.createDataset(user, project, ds.getName(), ds.
+        boolean globallyVisible = ds.equals(Settings.DefaultDataset.RESOURCES);
+        datasetController.createDataset(user, project, ds.getName(), ds.
                 getDescription(), -1, false, true, globallyVisible);
       }
     } catch (IOException | EJBException e) {
@@ -212,7 +214,7 @@ public class ProjectController {
   }
 
   public void createProjectCharonFolder(Project project) throws
-      ProjectInternalFoldersFailedException {
+          ProjectInternalFoldersFailedException {
     String charonDir = settings.getCharonDir();
     ConfigFileGenerator.mkdirs(charonDir + File.separator + project.getName());
   }
@@ -327,18 +329,17 @@ public class ProjectController {
    * @param userEmail of the user making the change
    */
   public void updateProject(Project project, ProjectDTO proj,
-          String userEmail ) {
+          String userEmail) {
     Users user = userBean.getUserByEmail(userEmail);
 
     project.setDescription(proj.getDescription());
     project.setRetentionPeriod(proj.getRetentionPeriod());
- 
+
     projectFacade.mergeProject(project);
     logActivity(ActivityFacade.PROJECT_DESC_CHANGED, ActivityFacade.FLAG_PROJECT,
             user, project);
   }
 
-  
   //Set the project owner as project master in ProjectTeam table
   private void addProjectOwner(Integer project_id, String userName) {
     ProjectTeamPK stp = new ProjectTeamPK(project_id, userName);
@@ -389,7 +390,7 @@ public class ProjectController {
 
     //Set default space quota in GB
     setQuota(new Path(projectPath), Integer.parseInt(settings
-        .getHdfsDefaultQuota()));
+            .getHdfsDefaultQuota()));
 
     //create the rest of the child folders if any
     if (projectDirCreated && !fullProjectPath.equals(projectPath)) {
@@ -418,16 +419,17 @@ public class ProjectController {
   public boolean removeByID(Integer projectID, String email,
           boolean deleteFilesOnRemove) throws IOException, AppException {
     boolean success = !deleteFilesOnRemove;
-    //User user = userBean.getUserByEmail(email);
+    Users user = userBean.getUserByEmail(email);
     Project project = projectFacade.find(projectID);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
-    ProjectPaymentsHistory projectPaymentsHistory =
-        projectPaymentsHistoryFacade.findByProjectName(project.getName());
-    YarnProjectsQuota yarnProjectsQuota =
-        yarnProjectsQuotaFacade.findByProjectName(project.getName());
+    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    ProjectPaymentsHistory projectPaymentsHistory
+            = projectPaymentsHistoryFacade.findByProjectName(project.getName());
+    YarnProjectsQuota yarnProjectsQuota = yarnProjectsQuotaFacade.
+            findByProjectName(project.getName());
     List<Dataset> dsInProject = datasetFacade.findByProject(project);
     Collection<ProjectTeam> projectTeam = projectTeamFacade.
             findMembersByProject(project);
@@ -437,10 +439,14 @@ public class ProjectController {
     if (deleteFilesOnRemove) {
       String path = File.separator + settings.DIR_ROOT + File.separator
               + project.getName();
-      success = fileOps.rmRecursive(path);
+      Path location = new Path(path);
+      success = dfs.getDfsOps(username).rm(location, true);
+      //success = fileOps.rmRecursive(path);
       //if the files are removed the group should also go.
-      hdfsUsersBean.deleteProjectGroupsRecursive(project, dsInProject);
-      hdfsUsersBean.deleteProjectUsers(project, projectTeam);
+      if (success) {
+        hdfsUsersBean.deleteProjectGroupsRecursive(project, dsInProject);
+        hdfsUsersBean.deleteProjectUsers(project, projectTeam);
+      }
     } else {
       projectFacade.remove(project);
       projectPaymentsHistoryFacade.remove(projectPaymentsHistory);
@@ -766,23 +772,26 @@ public class ProjectController {
   }
 
   public void setQuota(Path src, long diskspaceQuota)
-      throws IOException {
+          throws IOException {
     dfsSingleton.getDfsOps().setQuota(src, diskspaceQuota);
   }
 
   public void setQuota(String projectname, long diskspaceQuota)
-      throws IOException {
-    dfsSingleton.getDfsOps().setQuota(new Path(settings.getProjectPath(projectname)),
-        diskspaceQuota);
+          throws IOException {
+    dfsSingleton.getDfsOps().setQuota(new Path(settings.getProjectPath(
+            projectname)),
+            diskspaceQuota);
   }
 
   //Get quota in GB
   public long getQuota(String projectname) throws IOException {
-    return dfsSingleton.getDfsOps().getQuota(new Path(settings.getProjectPath(projectname)));
+    return dfsSingleton.getDfsOps().getQuota(new Path(settings.getProjectPath(
+            projectname)));
   }
 
   //Get used disk space in GB
   public long getUsedQuota(String projectname) throws IOException {
-    return dfsSingleton.getDfsOps().getUsedQuota(new Path(settings.getProjectPath(projectname)));
+    return dfsSingleton.getDfsOps().getUsedQuota(new Path(settings.
+            getProjectPath(projectname)));
   }
 }
