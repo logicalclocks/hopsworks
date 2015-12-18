@@ -441,7 +441,6 @@ public class ProjectController {
               + project.getName();
       Path location = new Path(path);
       success = dfs.getDfsOps(username).rm(location, true);
-      //success = fileOps.rmRecursive(path);
       //if the files are removed the group should also go.
       if (success) {
         hdfsUsersBean.deleteProjectGroupsRecursive(project, dsInProject);
