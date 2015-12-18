@@ -27,6 +27,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.hadoop.security.AccessControlException;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeam;
@@ -74,6 +75,9 @@ public class ProjectService {
   private InodeFacade inodes;
   @EJB
   private HdfsUsersController hdfsUsersBean;
+
+  @EJB
+  private ActivityFacade activityController;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
           getName());
@@ -198,17 +202,18 @@ public class ProjectService {
             projectDTO.getDescription())) {
       projectController.updateProject(project, projectDTO,
               userEmail);
+      
       json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
       updated = true;
     }
-
-    // Update the description if it have been chenged
-    if (project.getRetentionPeriod() == null || !project.getRetentionPeriod().
-            equals(
-                    projectDTO.getDescription())) {
+    
+    // Update the retention period if it have been chenged
+    if (project.getRetentionPeriod() == null || !project.getRetentionPeriod().equals(
+            projectDTO.getRetentionPeriod())) {
       projectController.updateProject(project, projectDTO,
               userEmail);
-      json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
+      activityController.persistActivity("Changed   retention period to "+ projectDTO.getRetentionPeriod(), project, userEmail);
+      json.setSuccessMessage(ResponseMessages.PROJECT_RETENTON_CHANGED);
       updated = true;
     }
 

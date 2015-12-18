@@ -24,6 +24,7 @@ import org.apache.commons.codec.binary.Base64;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.auth.AuthenticationConstants;
+import se.kth.bbc.security.ua.BBCGroup;
 import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
@@ -86,18 +87,18 @@ public class AuthService {
             "BBC_USER"));
     JsonResponse json = new JsonResponse();
     Users user = userBean.findByEmail(email);
-
+    String newPassword = null;
     // Add padding if custom realm is disabled
     if (otp == null || otp.isEmpty() && user.getMode() == PeopleAccountStatus.MOBILE_USER.getValue()) {
       otp = AuthenticationConstants.MOBILE_OTP_PADDING;
     } 
 
-    if (otp.length() == AuthenticationConstants.MOBILE_OTP_PADDING.length()) {
-      password = password + otp;
-    } else if (user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
-        password = password + otp + AuthenticationConstants.YUBIKEY_USER_MARKER;
+    if (otp.length() == AuthenticationConstants.MOBILE_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.MOBILE_USER.getValue()) {
+      newPassword = password + otp;
+    } else if (otp.length() == AuthenticationConstants.YUBIKEY_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+        newPassword = password + otp + AuthenticationConstants.YUBIKEY_USER_MARKER;
     }
-
+    
     //only login if not already logged in...
     if (sc.getUserPrincipal() == null) {
       if (user != null && statusValidator.checkStatus(user.getStatus())) {
@@ -105,12 +106,13 @@ public class AuthService {
 
           req.getServletContext().log("going to login. User status: " + user.
                   getStatus());
-          req.login(email, password);
+          req.login(email, newPassword);
           req.getServletContext().log("3 step: " + email);
           userController.resetFalseLogin(user);
           am.registerLoginInfo(user, UserAuditActions.LOGIN.name(),
-                  UserAuditActions.SUCCESS.name(), req);          //if the logedin user has no supported role logout
-          if (!sc.isUserInRole("BBC_USER") && !sc.isUserInRole("SYS_ADMIN")) {
+                  UserAuditActions.SUCCESS.name(), req);         
+          //if the logedin user has no supported role logout
+          if (!sc.isUserInRole(BBCGroup.BBC_USER.name()) && !sc.isUserInRole(BBCGroup.SYS_ADMIN.name())) {
             am.registerLoginInfo(user, UserAuditActions.UNAUTHORIZED.getValue(),
                     UserAuditActions.FAILED.name(), req);
             req.logout();
