@@ -56,12 +56,13 @@
           </div>
         </fieldset>
        
-         <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Status</h3>
+       <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Status</h3>
 
         <fieldset>
-          <span>
-            {{projectCtrl.ethicalStatus}}
+         <span style="margin-top: 40px; margin-left:40px; margin-bottom:0px">
+            {{projectCtrl.currentProject.ethicalStatus}}
           </span>
+          
         </fieldset>
        
          
@@ -72,17 +73,20 @@
         
           <div class="control-group col-md-offset-1">
             <label for="projectname" style="color: black;">Data Retention Period</label>
-            <div class='input-group date col-md-6' id='schedulePicker'>
-                  <input type='text' ng-model="projectCtrl.currentProject.retentionPeriod" class="form-control">
+            <div class='input-group date col-md-6' id='datetimepicker'>
+                  <input type='text' ng-model="projectCtrl.currentProject.retentionPeriod" data-format="yyyy-MM-dd" class="form-control">
                   <span class="input-group-addon">
                     <span class="glyphicon glyphicon-calendar"></span>
                   </span>
                 </div>
               </div>
               <script type="text/javascript">
-                                $(function () {
-                                $('#schedulePicker').datetimepicker();
-                                });</script>
+              $(function() {              
+                 $('#datetimepicker').datetimepicker({
+                       format: 'YYYY-MM-DD'
+                 });
+              });      
+          </script>
           </fieldset>
           </div>
       </div>
