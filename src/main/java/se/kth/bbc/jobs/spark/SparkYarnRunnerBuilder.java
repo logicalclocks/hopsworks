@@ -122,10 +122,7 @@ public class SparkYarnRunnerBuilder {
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
 
-    // https://fossies.org/diffs/spark/1.4.1_vs_1.5.0/
-    // yarn/src/main/scala/org/apache/spark/deploy/yarn/
-    // ApplicationMasterArguments.scala-diff.html
-    // spark 1.5.x removed --num-executors
+    // spark 1.5.x replaced --num-executors with --properties-file
     // amargs.append(" --num-executors ").append(numberOfExecutors);
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);

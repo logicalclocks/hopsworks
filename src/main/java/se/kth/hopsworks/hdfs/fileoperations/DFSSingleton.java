@@ -2,6 +2,7 @@ package se.kth.hopsworks.hdfs.fileoperations;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
@@ -39,10 +40,14 @@ public class DFSSingleton {
    */
   public DistributedFileSystemOps getDfsOps(String username) {
     DistributedFileSystemOps dfs;
+    if (username == null || username.isEmpty()) {
+      throw new NullPointerException("username not set.");
+    }
     synchronized (distributedFileSystems) {
       dfs = distributedFileSystems.get(username);
     }
     if (dfs == null) {
+      logger.log(Level.INFO, "No dfs object found for {0} creating new.", username);
       dfs = createDfs(username);
     }
     return dfs;
@@ -55,6 +60,7 @@ public class DFSSingleton {
    */
   public DistributedFileSystemOps getDfsOps() {
     if (dfsOps == null){
+      logger.log(Level.INFO, "No dfs object found creating new.");
       dfsOps = new DistributedFileSystemOps(settings);
     }
     return dfsOps;

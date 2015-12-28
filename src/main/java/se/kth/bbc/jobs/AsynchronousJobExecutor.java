@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs;
 
+import java.io.IOException;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -8,6 +9,9 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
+import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 
 /**
  * Utility class for executing a HopsJob asynchronously. Passing the Hopsjob to
@@ -27,6 +31,8 @@ public class AsynchronousJobExecutor {
   private JobOutputFileFacade jobOutputFileFacade;
   @EJB
   private FileOperations fileOperations;
+  @EJB
+  private DFSSingleton dfs;
 
   @Asynchronous
   public void startExecution(HopsJob job) {
@@ -44,5 +50,8 @@ public class AsynchronousJobExecutor {
   public FileOperations getFileOperations() {
     return fileOperations;
   }
-
+  
+  public DistributedFileSystemOps getFileOperations(String hdfsUser) throws IOException {  
+    return dfs.getDfsOps(hdfsUser);
+  }
 }

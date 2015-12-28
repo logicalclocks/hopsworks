@@ -1,5 +1,7 @@
 package se.kth.hopsworks.hdfs.fileoperations;
 
+import io.hops.metadata.hdfs.entity.EncodingPolicy;
+import io.hops.metadata.hdfs.entity.EncodingStatus;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +26,7 @@ public class DistributedFileSystemOps {
   private final DistributedFileSystem dfs;
   private final String username;
   private Configuration conf;
+  private String hadoopConfDir;
 
   public DistributedFileSystemOps(Settings settings) {
     this.username = null;
@@ -36,7 +39,7 @@ public class DistributedFileSystemOps {
   }
 
   private DistributedFileSystem getDfs(String username, Settings settings) {
-    String hadoopConfDir = settings.getHadoopConfDir();
+    hadoopConfDir = settings.getHadoopConfDir();
     //Get the configuration file at found path
     File hadoopConfFile = new File(hadoopConfDir, "core-site.xml");
     if (!hadoopConfFile.exists()) {
@@ -110,7 +113,29 @@ public class DistributedFileSystemOps {
       return out.toString();
     }
   }
-
+  
+/**
+   * Get the contents of the file at the given path.
+   * <p/>
+   * @param file
+   * @return
+   * @throws IOException
+   */
+  public String cat(String file) throws IOException {
+    Path path = new Path(file);
+    StringBuilder out = new StringBuilder();
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(dfs.
+            open(path)));) {
+      String line;
+      line = br.readLine();
+      while (line != null) {
+        out.append(line).append("\n");
+        line = br.readLine();
+      }
+      return out.toString();
+    }
+  }
+  
   /**
    * Create a new folder on the given path only if the parent folders exist
    * <p/>
@@ -192,7 +217,7 @@ public class DistributedFileSystemOps {
           throws IOException {
     //Make sure the directories exist
     Path dirs = new Path(Utils.getDirectoryPart(destination));
-    mkdir(dirs, FsPermission.getDirDefault());
+    mkdirs(dirs, FsPermission.getDirDefault());
     //Actually copy to HDFS
     Path destp = new Path(destination);
     Path srcp = new Path(src);
@@ -209,6 +234,54 @@ public class DistributedFileSystemOps {
     dfs.rename(source, destination);
   }
 
+  /**
+   * Move the file from the source path to the destination path.
+   * <p/>
+   * @param source
+   * @param destination
+   * @throws IOException
+   * @thows IllegalArgumentException If the destination path contains an invalid
+   * folder name.
+   */
+  public void renameInHdfs(String source, String destination) throws IOException {
+    //Check if source and destination are the same
+    if (source.equals(destination)) {
+      return;
+    }
+    //If source does not start with hdfs, prepend.
+    if (!source.startsWith("hdfs")) {
+      source = "hdfs://" + source;
+    }
+
+    //Check destination place, create directory.
+    String destDir;
+    if (!destination.startsWith("hdfs")) {
+      destDir = Utils.getDirectoryPart(destination);
+      destination = "hdfs://" + destination;
+    } else {
+      String tmp = destination.substring("hdfs://".length());
+      destDir = Utils.getDirectoryPart(tmp);
+    }
+    Path dest = new Path(destDir);
+    if (!dfs.exists(dest)) {
+      dfs.mkdirs(dest);
+    }
+    Path src = new Path(source);
+    Path dst = new Path(destination);
+    moveWithinHdfs(src, dst);
+  }
+  
+  /**
+   * Check if the path exists in HDFS.
+   * <p/>
+   * @param path
+   * @return
+   * @throws IOException
+   */
+  public boolean exists(String path) throws IOException {
+    Path location = new Path(path);
+    return dfs.exists(location);
+  }
   /**
    * Copy a file within HDFS. Largely taken from Hadoop code.
    * <p/>
@@ -284,6 +357,50 @@ public class DistributedFileSystemOps {
   public void setConf(Configuration conf) {
     this.conf = conf;
   }
+  
+  /**
+   * Compress a file from the given location
+   * <p/>
+   * @param p
+   * @return
+   * @throws IOException
+   */
+  public boolean compress(String p) throws IOException,
+          IllegalStateException {
+    Path location = new Path(p);
+    //add the erasure coding configuration file
+    File erasureCodingConfFile
+            = new File(hadoopConfDir, "erasure-coding-site.xml");
+    if (!erasureCodingConfFile.exists()) {
+      logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
+              erasureCodingConfFile);
+      throw new IllegalStateException(
+              "No erasure coding conf file: erasure-coding-site.xml");
+    }
+
+    this.conf.addResource(new Path(erasureCodingConfFile.getAbsolutePath()));
+
+    DistributedFileSystem localDfs = this.getDfs();
+    localDfs.setConf(this.conf);
+
+    EncodingPolicy policy = new EncodingPolicy("src", (short) 1);
+
+    String path = location.toUri().getPath();
+    localDfs.encodeFile(path, policy);
+
+    EncodingStatus encodingStatus;
+    while (!(encodingStatus = localDfs.getEncodingStatus(path)).isEncoded()) {
+      try {
+        Thread.sleep(1000);
+        logger.log(Level.INFO, "ongoing file compression of {0} ", path);
+      } catch (InterruptedException e) {
+        logger.log(Level.SEVERE, "Wait for encoding thread was interrupted.");
+        return false;
+      }
+    }
+    return true;
+  }
+
   
   /**
    * Closes the distributed file system.
