@@ -107,6 +107,9 @@ public class ResponseMessages {
   public final static String PROJECT_CREATED = "Project created successfully.";
   public final static String PROJECT_DESCRIPTION_CHANGED
           = "Project description changed.";
+ public final static String PROJECT_RETENTON_CHANGED
+          = "Project retention period changed.";
+
   public final static String PROJECT_SERVICE_ADDED = "Project service added";
   public final static String PROJECT_REMOVED
           = "The project and all related files were removed successfully.";

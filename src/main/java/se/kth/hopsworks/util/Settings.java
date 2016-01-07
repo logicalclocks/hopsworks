@@ -40,6 +40,9 @@ public class Settings {
   private static final String VARIABLE_HADOOP_DIR = "hadoop_dir";
   private static final String VARIABLE_CHARON_DIR = "charon_dir";
   private static final String VARIABLE_HIWAY_DIR = "hiway_dir";
+  private static final String VARIABLE_YARN_DEFAULT_QUOTA = "yarn_default_quota";
+  private static final String VARIABLE_HDFS_DEFAULT_QUOTA = "hdfs_default_quota";
+  private static final String VARIABLE_MAX_NUM_PROJ_PER_USER = "max_num_proj_per_user";
 
   private String setUserVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -92,6 +95,9 @@ public class Settings {
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
       HIWAY_DIR = setDirVar(VARIABLE_HIWAY_DIR, HIWAY_DIR);
+      YARN_DEFAULT_QUOTA = setDirVar(VARIABLE_YARN_DEFAULT_QUOTA, YARN_DEFAULT_QUOTA);
+      HDFS_DEFAULT_QUOTA = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA);
+      MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
       cached = true;
     }
   }
@@ -190,6 +196,27 @@ public class Settings {
   public synchronized String getHiwayDir() {
     checkCache();
     return HIWAY_DIR;
+  }
+
+  private String YARN_DEFAULT_QUOTA = "100";
+
+  public synchronized String getYarnDefaultQuota() {
+    checkCache();
+    return YARN_DEFAULT_QUOTA;
+  }
+
+  private String HDFS_DEFAULT_QUOTA = "100";
+
+  public synchronized String getHdfsDefaultQuota() {
+    checkCache();
+    return HDFS_DEFAULT_QUOTA;
+  }
+
+  private String MAX_NUM_PROJ_PER_USER = "10";
+
+  public synchronized String getMaxNumProjPerUser() {
+    checkCache();
+    return MAX_NUM_PROJ_PER_USER;
   }
 
   public static String HIWAY_REL_JAR_PATH = "software/hiway/hiway-core.jar";
@@ -399,6 +426,10 @@ public class Settings {
 //  }
   public void detach(Variables variable) {
     em.detach(variable);
+  }
+
+  public static String getProjectPath(String projectname) {
+    return File.separator + DIR_ROOT + File.separator + projectname;
   }
 
 }

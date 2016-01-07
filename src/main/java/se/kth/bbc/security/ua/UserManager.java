@@ -2,14 +2,15 @@ package se.kth.bbc.security.ua;
 
 import java.sql.Timestamp;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.project.Project;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.PeopleGroup;
@@ -17,21 +18,14 @@ import se.kth.bbc.security.ua.model.PeopleGroupPK;
 import se.kth.bbc.security.ua.model.Yubikey;
 import se.kth.hopsworks.user.model.Users;
 
-/**
- *
- * @author Ali Gholami <gholami@pdc.kth.se>
- */
 @Stateless
 public class UserManager {
 
+  private static final Logger logger = Logger.getLogger(UserManager.class.
+          getName());
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-
-  // Strating user id from 1000 to create a POSIX compliant username: meb1000
-  private final int STARTING_USER = 1000;
-
-  // BiobankCloud prefix username prefix
-  private final String USERNAME_PREFIX = "meb";
 
   /**
    * Register a new group for user.
@@ -102,7 +96,7 @@ public class UserManager {
 
   public boolean resetKey(int id) {
     Users p = (Users) em.find(Users.class, id);
-    p.setValidationKey(SecurityUtils.getRandomString(64));
+    p.setValidationKey(SecurityUtils.getRandomPassword(64));
     em.merge(p);
     return true;
   }
@@ -146,7 +140,8 @@ public class UserManager {
   }
 
   public List<Users> findInactivateUsers() {
-    Query query = em.createNativeQuery("SELECT * FROM hopsworks.users p WHERE p.active = "
+    Query query = em.createNativeQuery(
+            "SELECT * FROM hopsworks.users p WHERE p.active = "
             + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
     List<Users> people = query.getResultList();
     return people;
@@ -167,7 +162,8 @@ public class UserManager {
    * @return
    */
   public Users getUserByEmail(String username) {
-    TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail", Users.class);
+    TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
+            Users.class);
     query.setParameter("email", username);
     List<Users> list = query.getResultList();
 
@@ -239,7 +235,7 @@ public class UserManager {
     List<Users> query = em.createQuery(
             "SELECT p FROM Users p WHERE (p.status ='"
             + PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()
-             + "' OR p.status ='" + PeopleAccountStatus.SPAM_ACCOUNT.
+            + "' OR p.status ='" + PeopleAccountStatus.SPAM_ACCOUNT.
             getValue()
             + "')")
             .getResultList();
@@ -248,7 +244,8 @@ public class UserManager {
   }
 
   public Users findByEmail(String email) {
-    TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail", Users.class);
+    TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
+            Users.class);
     query.setParameter("email", email);
     return query.getSingleResult();
   }
@@ -363,7 +360,7 @@ public class UserManager {
           String validationKey) {
 
     // assigne a username
-    String uname = USERNAME_PREFIX + uid;
+    String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
 
     Users user = new Users();
     user.setUsername(uname);
@@ -378,11 +375,7 @@ public class UserManager {
     user.setActivated(new Timestamp(new Date().getTime()));
     user.setStatus(status);
     user.setValidationKey(validationKey);
-    /*
-     * offline: -1
-     * online: 1
-     */
-    user.setIsonline(-1);
+    user.setIsonline(AuthenticationConstants.IS_OFFLINE);
     user.setSecurityQuestion(question);
     user.setSecurityAnswer(answer);
     user.setPasswordChanged(new Timestamp(new Date().getTime()));
@@ -398,11 +391,12 @@ public class UserManager {
    * @return
    */
   public int lastUserID() {
-    Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM hopsworks.users p");
+    Query query = em.createNativeQuery(
+            "SELECT MAX(p.uid) FROM hopsworks.users p");
     Object obj = query.getSingleResult();
 
     if (obj == null) {
-      return STARTING_USER;
+      return AuthenticationConstants.STARTING_USER;
     }
     return (Integer) obj;
   }
@@ -426,37 +420,31 @@ public class UserManager {
   }
 
   /**
-   * Remove a user by email address.
+   * Delete user account requests.
    *
-   * @param email
+   * @param u
    * @return
    */
-  public boolean removeByEmail(String email) {
+  public boolean deleteUserRequest(Users u) {
     boolean success = false;
-    Users u = findByEmail(email);
+
     if (u != null) {
       TypedQuery<PeopleGroup> query = em.createNamedQuery(
               "PeopleGroup.findByUid", PeopleGroup.class);
       query.setParameter("uid", u.getUid());
-      
-      List <PeopleGroup> p = query.getResultList();
-      for (Iterator<PeopleGroup> iterator = p.iterator(); iterator.hasNext();) {
-        PeopleGroup next = iterator.next();
-        em.remove(next);
+      List<PeopleGroup> p = query.getResultList();
+
+      for (PeopleGroup next : p) {
+        em.remove(p);
       }
 
-      
-      Address a = u.getAddress();
-      em.remove(a);
+      if (em.contains(u)) {
+        em.remove(u);
+      } else {
 
-//      if (u.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
-  //      em.remove(u);
-    //  }
+        em.remove(em.merge(u));
 
-      em.remove(u);
-      
-      Organization org = u.getOrganization();
-      em.remove(org);
+      }
       
       success = true;
     }
@@ -485,7 +473,7 @@ public class UserManager {
     return true;
   }
 
-    /**
+  /**
    * Get all the users that are not in the given project.
    *
    * @param project The project on which to search.
@@ -499,6 +487,4 @@ public class UserManager {
     return query.getResultList();
   }
 
-
-  
 }

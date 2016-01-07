@@ -14,6 +14,7 @@
     <class>se.kth.bbc.security.audit.model.AccountAudit</class>
     <class>se.kth.bbc.security.audit.model.RolesAudit</class>
     <class>se.kth.bbc.security.audit.model.Userlogins</class>
+    <class>se.kth.bbc.security.audit.model.ConsentsAudit</class>
     <class>se.kth.bbc.activity.Activity</class>
     <class>se.kth.hopsworks.user.model.BbcGroup</class>
     <class>se.kth.hopsworks.user.model.Users</class>
@@ -50,6 +51,9 @@
     <class>se.kth.hopsworks.util.Variables</class>
     <class>io.hops.hdfs.HdfsLeDescriptors</class>
     <class>io.hops.bbc.Consents</class>
+    <class>se.kth.bbc.project.ProjectsManagement</class>
+    <class>se.kth.bbc.project.ProjectPaymentsHistory</class>
+    <class>se.kth.bbc.project.YarnProjectsQuota</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package se.kth.bbc.security.audit.model;
 
 import java.io.Serializable;
@@ -62,7 +58,7 @@ public class AccountAudit implements Serializable {
   @Column(name = "action")
   private String action;
   @Column(name = "time")
-  @Temporal(TemporalType.DATE)
+  @Temporal(TemporalType.TIMESTAMP)
   private Date time;
   @Size(max = 100)
   @Column(name = "message")
@@ -90,6 +86,11 @@ public class AccountAudit implements Serializable {
   @ManyToOne
   private Users initiator;
 
+  @JoinColumn(name = "target",
+          referencedColumnName = "uid")
+  @ManyToOne
+  private Users target;
+    
   public AccountAudit() {
   }
 
@@ -183,6 +184,14 @@ public class AccountAudit implements Serializable {
 
   public void setInitiator(Users initiator) {
     this.initiator = initiator;
+  }
+
+  public Users getTarget() {
+    return target;
+  }
+
+  public void setTarget(Users target) {
+    this.target = target;
   }
 
   @Override

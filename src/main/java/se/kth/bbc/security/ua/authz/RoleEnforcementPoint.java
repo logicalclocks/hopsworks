@@ -1,9 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package se.kth.bbc.security.ua;
+package se.kth.bbc.security.ua.authz;
 
 import java.io.Serializable;
 import java.net.SocketException;
@@ -17,33 +12,36 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
-import se.kth.bbc.security.audit.LoginsAuditActions;
+import se.kth.bbc.security.audit.UserAuditActions;
+import se.kth.bbc.security.auth.AuthenticationConstants;
+import se.kth.bbc.security.ua.PeopleAccountStatus;
+import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.user.model.Users;
  
 @ManagedBean
 @RequestScoped
-public class PeopleStatusBean implements Serializable {
+public class RoleEnforcementPoint implements Serializable {
 
+  
   @EJB
-  private UserManager userManager;
+  protected UserManager userManager;
 
   @EJB
   private AuditManager am;
 
-  private boolean open_reauests = false;
-  private boolean open_consents = false;
+  private boolean open_requests = false;
   private int tabIndex;
   private Users user;
 
-  public boolean isOpen_reauests() {
+  public boolean isOpen_requests() {
     return checkForRequests();
   }
 
-  public void setOpen_reauests(boolean open_reauests) {
-    this.open_reauests = open_reauests;
+  public void setOpen_requests(boolean open_reauests) {
+    this.open_requests = open_reauests;
   }
 
-  public Users getUser() {
+  public Users getUserFromSession() {
     if (user == null) {
       ExternalContext context = FacesContext.getCurrentInstance().
               getExternalContext();
@@ -132,19 +130,20 @@ public class PeopleStatusBean implements Serializable {
   public boolean checkForRequests() {
     if (isSYSAdmin()) {
       //return false if no requests
-      open_reauests = !(userManager.findAllByStatus(
+      open_requests = !(userManager.findAllByStatus(
               PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()).isEmpty())
               || !(userManager.findAllByStatus(
                       PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()).
               isEmpty());
     }
-    return open_reauests;
+    return open_requests;
   }
 
   public boolean isLoggedIn() {
     return getRequest().getRemoteUser() != null;
   }
 
+  
   public String openRequests() {
     this.tabIndex = 1;
     if (!userManager.findAllByStatus(
@@ -154,7 +153,9 @@ public class PeopleStatusBean implements Serializable {
     return "yubikeyUsers";
   }
 
-  public String logOut() throws SocketException {
+  
+  // MOVE OUT THIS
+  public String logOut() {
     getRequest().getSession().invalidate();
 
     FacesContext ctx = FacesContext.getCurrentInstance();
@@ -165,11 +166,11 @@ public class PeopleStatusBean implements Serializable {
     String os = AuditUtil.getOSInfo();
     String macAddress = AuditUtil.getMacAddress(ip);
 
-    am.registerLoginInfo(getUser(), LoginsAuditActions.LOGOUT.getValue(), ip,
-            browser, os, macAddress, "SUCCESS");
+    am.registerLoginInfo(getUserFromSession(), UserAuditActions.LOGOUT.getValue(), ip,
+            browser, os, macAddress, UserAuditActions.SUCCESS.name());
 
-    userManager.setOnline(user.getUid(), -1);
-
+    userManager.setOnline(user.getUid(), AuthenticationConstants.IS_OFFLINE);
+    
     if (null != sess) {
       sess.invalidate();
     }

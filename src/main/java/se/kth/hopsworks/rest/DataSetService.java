@@ -120,9 +120,7 @@ public class DataSetService {
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = this.projectFacade.find(projectId);
-    String rootDir = Settings.DIR_ROOT;
-    String projectPath = File.separator + rootDir + File.separator
-            + this.project.getName();
+    String projectPath = settings.getProjectPath(this.project.getName());
     this.path = projectPath + File.separator;
   }
 
@@ -142,10 +140,13 @@ public class DataSetService {
     Users user;
     List<InodeView> kids = new ArrayList<>();
 
+    String projPath = Settings.getProjectPath(this.project.getName());
+
     Collection<Dataset> dsInProject = this.project.getDatasetCollection();
     for (Dataset ds : dsInProject) {
       parent = inodes.findParent(ds.getInode());
-      inodeView = new InodeView(parent, ds, inodes.getPath(ds.getInode()));
+      inodeView = new InodeView(parent, ds, projPath + "/" + ds.getInode()
+          .getInodePK().getName());
       user = userfacade.findByUsername(inodeView.getOwner());
       if (user != null) {
         inodeView.setOwner(user.getFname() + " " + user.getLname());
@@ -196,7 +197,8 @@ public class DataSetService {
     InodeView inodeView;
     Users user;
     for (Inode i : cwdChildren) {
-      inodeView = new InodeView(i, inodes.getPath(i));
+
+      inodeView = new InodeView(i, fullpath + "/" + i.getInodePK().getName());
       user = userfacade.findByUsername(inodeView.getOwner());
       if (user != null) {
         inodeView.setOwner(user.getFname() + " " + user.getLname());
@@ -371,7 +373,7 @@ public class DataSetService {
     try {
       datasetController.createDataset(user, project, dataSet.getName(), dataSet.
               getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
-              false);
+              false, false);
     } catch (NullPointerException c) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), c.
               getLocalizedMessage());
@@ -521,7 +523,7 @@ public class DataSetService {
         throw new IOException("The file does not exist");
       }
       //tests if the user have permission to access this path
-      dfs.getDfs(username).open(path);
+      dfs.getDfsOps(username).open(path);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not download the file ");

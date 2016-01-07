@@ -6,18 +6,14 @@
 package se.kth.bbc.security.audit;
 
  
-public enum LoginsAuditActions {
+public enum ProjectAuditActions {
 
-  // for user authentication
-  LOGIN("LOGIN"),
-  // for user authentication
-  LOGOUT("LOGOUT"),
-  // to get registration audit logs
-  REGISTRATION("REGISTRATION");
+  // for detialed audit info
+  AUDITTRAILS("AUDIT TRAILS");
 
   private final String value;
 
-  private LoginsAuditActions(String value) {
+  private ProjectAuditActions(String value) {
     this.value = value;
   }
 
@@ -25,9 +21,9 @@ public enum LoginsAuditActions {
     return value;
   }
 
-  public static LoginsAuditActions getLoginsAuditActions(String text) {
+  public static ProjectAuditActions getProjectAuditActions(String text) {
     if (text != null) {
-      for (LoginsAuditActions b : LoginsAuditActions.values()) {
+      for (ProjectAuditActions b : ProjectAuditActions.values()) {
         if (text.equalsIgnoreCase(b.value)) {
           return b;
         }

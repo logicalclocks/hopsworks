@@ -12,8 +12,7 @@
 
 <form role="form" name="projectForm" ng-submit="projectCtrl.saveProject()" novalidate class="form-validate">
   <div class="modal-body" id="testmodal">
-
-
+  
     <div class="row">
 
       <div class="col-md-8">
@@ -56,10 +55,41 @@
             </md-checkbox>
           </div>
         </fieldset>
-      </div>
+       
+       <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Status</h3>
 
-    </div>
-  </div>
+        <fieldset>
+         <span style="margin-top: 40px; margin-left:40px; margin-bottom:0px">
+            {{projectCtrl.currentProject.ethicalStatus}}
+          </span>          
+        </fieldset>
+       
+         
+      </div>
+      
+      <div class="col-md-8">
+        <fieldset>        
+          <div class="control-group col-md-offset-1">
+            <label for="projectname" style="color: black;">Data Retention Period</label>
+            <div class='input-group date col-md-6' id='schedulePicker'>
+                  <input id="dpInput" type="text" ng-model="projectCtrl.currentProject.retentionPeriod" data-format="yyyy-MM-dd" class="form-control">
+                  <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                  </span>
+                </div>
+              </div>
+              <script type="text/javascript">
+                                $(function () {
+                                $('#schedulePicker').datetimepicker({
+                                  format: 'YYYY-MM-DD'
+                                }).on('dp.change',function(e) {
+                                    $('#dpInput').trigger('input');
+                                });
+                                });</script>
+          </fieldset>
+          </div>
+      </div>
+    
   <div class="modal-footer">
     <button class="btn btn-default" type="button" ng-click="projectCtrl.close()">Cancel</button>
     <button class="btn btn-primary" type="submit" 

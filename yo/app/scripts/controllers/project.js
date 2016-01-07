@@ -13,7 +13,6 @@ angular.module('hopsWorksApp')
         self.currentProject = [];
         self.activities = [];
         self.currentPage = 1;
-
         self.card = {};
         self.cards = [];
         self.projectMembers = [];
@@ -55,6 +54,7 @@ angular.module('hopsWorksApp')
                 self.projectFile.parentId = self.currentProject.projectTeam[0].project.inode.inodePK.parentId;
                 self.projectFile.path = "/Projects/"+self.currentProject.projectName;
                 self.projectFile.description = self.currentProject.description;
+                self.projectFile.retentionPeriod = self.currentProject.retentionPeriod;
                 $rootScope.$broadcast('setMetadata', { file:
                    {id : self.projectFile.id,
                     name : self.projectFile.name,
@@ -155,7 +155,9 @@ angular.module('hopsWorksApp')
           $scope.newProject = {
             'projectName': self.currentProject.projectName,
             'description': self.currentProject.description,
-            'services': self.selectionProjectTypes
+            'services': self.selectionProjectTypes,
+            'retentionPeriod': self.currentProject.retentionPeriod,
+            'ethicalStatus': self.currentProject.ethicalStatus
           };
 
           ProjectService.update({id: self.currentProject.projectId}, $scope.newProject)

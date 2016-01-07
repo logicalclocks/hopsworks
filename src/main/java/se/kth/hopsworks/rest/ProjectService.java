@@ -26,6 +26,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.hadoop.security.AccessControlException;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeam;
@@ -73,6 +75,9 @@ public class ProjectService {
   private InodeFacade inodes;
   @EJB
   private HdfsUsersController hdfsUsersBean;
+
+  @EJB
+  private ActivityFacade activityController;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
           getName());
@@ -195,9 +200,20 @@ public class ProjectService {
     // Update the description if it have been chenged
     if (project.getDescription() == null || !project.getDescription().equals(
             projectDTO.getDescription())) {
-      projectController.changeProjectDesc(project, projectDTO.getDescription(),
+      projectController.updateProject(project, projectDTO,
               userEmail);
+      
       json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
+      updated = true;
+    }
+    
+    // Update the retention period if it have been chenged
+    if (project.getRetentionPeriod() == null || !project.getRetentionPeriod().equals(
+            projectDTO.getRetentionPeriod())) {
+      projectController.updateProject(project, projectDTO,
+              userEmail);
+      activityController.persistActivity("Changed   retention period to "+ projectDTO.getRetentionPeriod(), project, userEmail);
+      json.setSuccessMessage(ResponseMessages.PROJECT_RETENTON_CHANGED);
       updated = true;
     }
 
@@ -357,25 +373,35 @@ public class ProjectService {
   public Response removeProjectAndFiles(
           @PathParam("id") Integer id,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws AppException,
+          AccessControlException {
 
     String user = sc.getUserPrincipal().getName();
     JsonResponse json = new JsonResponse();
     boolean success = true;
     try {
       success = projectController.removeByID(id, user, true);
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You don't have delete permission to one or all files in this folder.");
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_FOLDER_NOT_REMOVED, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
     }
-    json.setStatus("OK");
     if (success) {
       json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(
+                      json).build();
+    } else {
+      json.setErrorMsg(ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
+      return noCacheResponse.getNoCacheResponseBuilder(
+              Response.Status.BAD_REQUEST).entity(
+                      json).build();
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+
   }
 
   @DELETE
@@ -418,6 +444,11 @@ public class ProjectService {
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public DataSetService datasets(
           @PathParam("id") Integer id) throws AppException {
+    Project project = projectController.findProjectById(id);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+    }
     this.dataSet.setProjectId(id);
 
     return this.dataSet;
@@ -437,6 +468,10 @@ public class ProjectService {
   public JobService jobs(@PathParam("projectId") Integer projectId) throws
           AppException {
     Project project = projectController.findProjectById(projectId);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+    }
     return this.jobs.setProject(project);
   }
 

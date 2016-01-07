@@ -58,13 +58,11 @@ public class RolesAudit implements Serializable {
   @Basic(optional = false)
   @Column(name = "log_id")
   private Long logId;
-  @Column(name = "initiator")
-  private Integer initiator;
   @Size(max = 45)
   @Column(name = "action")
   private String action;
   @Column(name = "time")
-  @Temporal(TemporalType.DATE)
+  @Temporal(TemporalType.TIMESTAMP)
   private Date time;
   @Size(max = 45)
   @Column(name = "message")
@@ -92,6 +90,11 @@ public class RolesAudit implements Serializable {
   @ManyToOne
   private Users target;
 
+  @JoinColumn(name = "initiator",
+          referencedColumnName = "uid")
+  @ManyToOne
+  private Users initiator;
+  
   public RolesAudit() {
   }
 
@@ -107,14 +110,15 @@ public class RolesAudit implements Serializable {
     this.logId = logId;
   }
 
-  public Integer getInitiator() {
+  public Users getInitiator() {
     return initiator;
   }
 
-  public void setInitiator(Integer initiator) {
+  public void setInitiator(Users initiator) {
     this.initiator = initiator;
   }
 
+ 
   public String getAction() {
     return action;
   }

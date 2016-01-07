@@ -1,19 +1,10 @@
-  /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.ua;
 
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.net.SocketException;
-import java.security.NoSuchAlgorithmException;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
@@ -25,13 +16,14 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
-import se.kth.bbc.lims.ClientSessionState;
+import org.apache.commons.codec.digest.DigestUtils;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
-import se.kth.bbc.security.audit.LoginsAuditActions;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.user.model.Users;
 
 @ManagedBean
@@ -142,7 +134,7 @@ public class ResetPassword implements Serializable {
 
     try {
 
-      if (!SecurityUtils.converToSHA256(answer).equals(people.
+      if (!DigestUtils.sha256Hex(answer).equals(people.
               getSecurityAnswer())) {
 
         MessagesController.addSecurityErrorMessage(
@@ -151,7 +143,7 @@ public class ResetPassword implements Serializable {
         // Lock the account if n tmies wrong answer  
         int val = people.getFalseLogin();
         mgr.increaseLockNum(people.getUid(), val + 1);
-        if (val > Users.ALLOWED_FALSE_LOGINS) {
+        if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
           mgr.changeAccountStatus(people.getUid(), "",
                   PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
           return returnMenu();
@@ -160,7 +152,7 @@ public class ResetPassword implements Serializable {
       }
 
       // generate a radndom password
-      String random_password = SecurityUtils.getRandomString(passwordLength);
+      String random_password = SecurityUtils.getRandomPassword(passwordLength);
 
       String mess = UserAccountsEmailMessages.buildPasswordResetMessage(
               random_password);
@@ -169,20 +161,18 @@ public class ResetPassword implements Serializable {
       // make the account pending until it will be reset by user upon first login
       // mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
       // update the status of user to active
-      people.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
+      people.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVEATED.getValue());
 
       // reset the old password with a new one
-      mgr.resetPassword(people, SecurityUtils.converToSHA256(random_password));
+      mgr.resetPassword(people, DigestUtils.sha256Hex(random_password));
 
       userTransaction.commit();
-
+      
+      auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORDCHANGE.name(), AccountsAuditActions.SUCCESS.name(),"Temporary Password Sent.", people);
       // sned the new password to the user email
       emailBean.sendEmail(people.getEmail(),
               UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
 
-    } catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
-      MessagesController.addSecurityErrorMessage("Technical Error!");
-      return ("");
     } catch (RollbackException | HeuristicMixedException |
             HeuristicRollbackException | SecurityException |
             IllegalStateException | SystemException | NotSupportedException ex) {
@@ -198,7 +188,7 @@ public class ResetPassword implements Serializable {
    * <p>
    * @return
    */
-  public String changePassword() throws SocketException {
+  public String changePassword() {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
             getRequest();
@@ -210,14 +200,6 @@ public class ResetPassword implements Serializable {
     people = mgr.getUserByEmail(req.getRemoteUser());
 
     if (people == null) {
-
-      auditManager.registerAccountChange(people,
-              AccountsAuditActions.PASSWORDCHANGE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "PASSWORD CHANGE");
-
-      return returnMenu();
     }
 
     if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
@@ -228,9 +210,11 @@ public class ResetPassword implements Serializable {
     try {
 
       // Reset the old password with a new one
-      mgr.resetPassword(people, SecurityUtils.converToSHA256(passwd1));
+      mgr.resetPassword(people, DigestUtils.sha256Hex(passwd1));
 
-      mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
+      mgr.
+              updateStatus(people, PeopleAccountStatus.ACCOUNT_ACTIVEATED.
+                      getValue());
 
       // Send email    
       String message = UserAccountsEmailMessages.buildResetMessage();
@@ -238,20 +222,17 @@ public class ResetPassword implements Serializable {
               UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
       auditManager.registerAccountChange(people,
-              AccountsAuditActions.PASSWORDCHANGE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "SUCCESS", "PASSWORD CHANGE");
+              UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET,
+              UserAuditActions.SUCCESS.name(), "",
+              people);
       return ("password_changed");
-    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
-            MessagingException ex) {
+    } catch (MessagingException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
 
       auditManager.registerAccountChange(people,
-              AccountsAuditActions.PASSWORDCHANGE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "PASSWORD CHANGE");
+              UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET,
+              UserAuditActions.FAILED.name(), "",
+              people);
       return ("");
 
     }
@@ -262,7 +243,7 @@ public class ResetPassword implements Serializable {
    *
    * @return
    */
-  public String changeSecQuestion() throws SocketException {
+  public String changeSecQuestion() {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
             getRequest();
@@ -278,10 +259,9 @@ public class ResetPassword implements Serializable {
       MessagesController.addSecurityErrorMessage("No valid answer!");
 
       auditManager.registerAccountChange(people,
-              AccountsAuditActions.SECQUESTIONCHANGE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "CHNAGED SEC QUESTION");
+              AccountsAuditActions.SECQUESTION.name(),
+              AccountsAuditActions.FAILED.name(), "",
+              people);
 
       return ("");
     }
@@ -293,10 +273,10 @@ public class ResetPassword implements Serializable {
       session.invalidate();
 
       auditManager.registerAccountChange(people,
-              AccountsAuditActions.SECQUESTIONCHANGE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "CHNAGED SEC QUESTION");
+              AccountsAuditActions.SECQUESTION.name(),
+              AccountsAuditActions.FAILED.name(), "",
+              people);
+
       return ("welcome");
     }
 
@@ -304,12 +284,10 @@ public class ResetPassword implements Serializable {
     if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
-
       auditManager.registerAccountChange(people,
-              AccountsAuditActions.SECQUESTIONCHANGE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "CHNAGED SEC QUESTION");
+              AccountsAuditActions.SECQUESTION.name(),
+              AccountsAuditActions.FAILED.name(), "",
+              people);
 
       return "";
     }
@@ -318,21 +296,20 @@ public class ResetPassword implements Serializable {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
       auditManager.registerAccountChange(people,
-              AccountsAuditActions.SECQUESTIONCHANGE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "CHNAGED SEC QUESTION");
+              AccountsAuditActions.SECQUESTION.name(),
+              AccountsAuditActions.FAILED.name(), "",
+              people);
 
       return "";
     }
 
     try {
-      if (SecurityUtils.converToSHA256(this.current).
+      if (DigestUtils.sha256Hex(this.current).
               equals(people.getPassword())) {
 
         // update the security question
-        mgr.resetSecQuestion(people.getUid(), question, SecurityUtils.
-                converToSHA256(this.answer));
+        mgr.resetSecQuestion(people.getUid(), question, DigestUtils.sha256Hex(
+                this.answer));
 
         // send email    
         String message = UserAccountsEmailMessages.buildSecResetMessage();
@@ -340,10 +317,9 @@ public class ResetPassword implements Serializable {
                 UserAccountsEmailMessages.ACCOUNT_PROFILE_UPDATE, message);
 
         auditManager.registerAccountChange(people,
-                AccountsAuditActions.SECQUESTIONCHANGE.getValue(),
-                AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-                getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-                "SUCCESS", "CHNAGED SEC QUESTION");
+                AccountsAuditActions.SECQUESTION.name(),
+                AccountsAuditActions.SUCCESS.name(), "",
+                people);
 
         return ("sec_question_changed");
       } else {
@@ -351,15 +327,13 @@ public class ResetPassword implements Serializable {
                 AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
 
         auditManager.registerAccountChange(people,
-                AccountsAuditActions.SECQUESTIONCHANGE.getValue(),
-                AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-                getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-                "FAIL", "CHNAGED SEC QUESTION");
+                AccountsAuditActions.SECQUESTION.name(),
+                AccountsAuditActions.FAILED.name(), "",
+                people);
 
         return "";
       }
-    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
-            MessagingException ex) {
+    } catch (MessagingException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");
     }
@@ -391,7 +365,7 @@ public class ResetPassword implements Serializable {
     return ("reset_password");
   }
 
-  public String deactivatedProfile() throws SocketException {
+  public String deactivatedProfile() {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
             getRequest();
@@ -410,14 +384,12 @@ public class ResetPassword implements Serializable {
                 AccountStatusErrorMessages.INCCORCT_DEACTIVATION_LENGTH);
 
         auditManager.registerAccountChange(people,
-                AccountsAuditActions.USERMANAGEMENT.getValue(),
-                AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-                getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-                "FAIL", "ACCOUNT DEACTIVATION");
-
+                PeopleAccountStatus.ACCOUNT_DEACTIVATED.name(),
+                UserAuditActions.FAILED.name(), "",
+                people);
       }
 
-      if (SecurityUtils.converToSHA256(this.current).
+      if (DigestUtils.sha256Hex(this.current).
               equals(people.getPassword())) {
 
         // close the account
@@ -429,34 +401,30 @@ public class ResetPassword implements Serializable {
                 UserAccountsEmailMessages.ACCOUNT_DEACTIVATED, message);
 
         auditManager.registerAccountChange(people,
-                AccountsAuditActions.USERMANAGEMENT.getValue(),
-                AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-                getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-                "SUCCESS", "ACCOUNT DEACTIVATION");
+                PeopleAccountStatus.ACCOUNT_DEACTIVATED.name(),
+                UserAuditActions.FAILED.name(), "",
+                people);
       } else {
         MessagesController.addSecurityErrorMessage(
                 AccountStatusErrorMessages.INCCORCT_PASSWORD);
 
         auditManager.registerAccountChange(people,
-                AccountsAuditActions.USERMANAGEMENT.getValue(),
-                AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-                getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-                "FAIL", "ACCOUNT DEACTIVATION");
+                PeopleAccountStatus.ACCOUNT_DEACTIVATED.name(),
+                UserAuditActions.FAILED.name(), "",
+                people);
         return "";
       }
-    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
-            MessagingException ex) {
+    } catch (MessagingException ex) {
 
       auditManager.registerAccountChange(people,
-              AccountsAuditActions.USERMANAGEMENT.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "ACCOUNT DEACTIVATION");
+              PeopleAccountStatus.ACCOUNT_DEACTIVATED.name(),
+              UserAuditActions.FAILED.name(), "",
+              people);
     }
     return logout();
   }
 
-  public String changeProfilePassword() throws SocketException {
+  public String changeProfilePassword() {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
             getRequest();
@@ -480,12 +448,9 @@ public class ResetPassword implements Serializable {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
 
-      auditManager.registerAccountChange(people,
-              AccountsAuditActions.PASSWORDCHANGE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "PASSWORD RESET");
-
+      auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.
+              name(), AccountsAuditActions.FAILED.name(), "",
+              people);
       return "";
     }
 
@@ -493,11 +458,9 @@ public class ResetPassword implements Serializable {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
 
-      auditManager.registerAccountChange(people,
-              AccountsAuditActions.PASSWORDCHANGE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "PASSWORD RESET");
+      auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.
+              name(), AccountsAuditActions.FAILED.name(), "",
+              people);
 
       return "";
     }
@@ -509,10 +472,10 @@ public class ResetPassword implements Serializable {
 
     try {
 
-      if (SecurityUtils.converToSHA256(current).equals(people.getPassword())) {
+      if (DigestUtils.sha256Hex(current).equals(people.getPassword())) {
 
         // reset the old password with a new one
-        mgr.resetPassword(people, SecurityUtils.converToSHA256(passwd1));
+        mgr.resetPassword(people, DigestUtils.sha256Hex(passwd1));
 
         // send email    
         String message = UserAccountsEmailMessages.buildResetMessage();
@@ -520,39 +483,33 @@ public class ResetPassword implements Serializable {
                 UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT, message);
 
         auditManager.registerAccountChange(people,
-                AccountsAuditActions.PASSWORDCHANGE.getValue(),
-                AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-                getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-                "SUCCESS", "PASSWORD RESET");
+                AccountsAuditActions.PASSWORD.name(),
+                AccountsAuditActions.SUCCESS.name(), "",
+                people);
 
         return ("profile_password_changed");
       } else {
         MessagesController.addSecurityErrorMessage(
                 AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
-
         auditManager.registerAccountChange(people,
-                AccountsAuditActions.PASSWORDCHANGE.getValue(),
-                AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-                getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-                "FAIL", "PASSWORD RESET");
+                AccountsAuditActions.PASSWORD.name(),
+                AccountsAuditActions.FAILED.name(), "",
+                people);
 
         return "";
       }
-    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
-            MessagingException ex) {
+    } catch (MessagingException ex) {
       MessagesController.addSecurityErrorMessage("Email Technical Error!");
 
-      auditManager.registerAccountChange(people,
-              AccountsAuditActions.PASSWORDCHANGE.getValue(),
-              AuditUtil.getIPAddress(), AuditUtil.getBrowserInfo(), AuditUtil.
-              getOSInfo(), AuditUtil.getMacAddress(AuditUtil.getIPAddress()),
-              "FAIL", "PASSWORD RESET");
+      auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.
+              name(), AccountsAuditActions.FAILED.name(), "",
+              people);
 
       return ("");
     }
   }
 
-  public String logout() throws SocketException {
+  public String logout() {
 
     // Logout user
     FacesContext context = FacesContext.getCurrentInstance();
@@ -574,8 +531,8 @@ public class ResetPassword implements Serializable {
     String os = AuditUtil.getOSInfo();
     String macAddress = AuditUtil.getMacAddress(ip);
 
-    auditManager.registerLoginInfo(people, LoginsAuditActions.LOGOUT.getValue(),
-            ip, browser, os, macAddress, "SUCCESS");
+    auditManager.registerLoginInfo(people, UserAuditActions.LOGOUT.getValue(),
+            ip, browser, os, macAddress, UserAuditActions.SUCCESS.name());
 
     session.invalidate();
 

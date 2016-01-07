@@ -16,34 +16,21 @@ import javax.servlet.http.HttpSession;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
-import se.kth.bbc.security.audit.LoginsAuditActions;
-import se.kth.bbc.security.ua.BBCGroup;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
 import se.kth.bbc.security.ua.UserManager;
+import se.kth.bbc.security.ua.authz.PolicyDecisionPoint;
 import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.user.model.Users;
 
-
 @ManagedBean
 @RequestScoped
-public class CustomAuthentication implements Serializable {
+public class CustomAuthentication extends PolicyDecisionPoint implements
+        Serializable {
 
   private static final long serialVersionUID = 1L;
-
-  // Issuer of the QrCode
-  public static final String ISSUER = "BiobankCloud";
-
-  // To distinguish Yubikey users
-  private final String YUBIKEY_USER_MARKER = "YUBIKEY_USER_MARKER";
-
-  // For disabled OTP auth mode
-  private final String YUBIKEY_OTP_PADDING
-          = "EaS5ksRVErn2jiOmSQy5LM2X7LgWAZWfWYKQoPavbrhN";
-
-  // For padding when password field is empty
-  private final String MOBILE_OTP_PADDING = "123456";
 
   @EJB
   private UserManager mgr;
@@ -84,15 +71,16 @@ public class CustomAuthentication implements Serializable {
     this.otpCode = otpCode;
   }
 
-
   /**
    * Authenticate the users using two factor mobile authentication.
    *
    * @return
    * @throws java.net.UnknownHostException
    * @throws java.net.SocketException
+   * @throws se.kth.hopsworks.meta.exception.ApplicationException
    */
-  public String login() throws UnknownHostException, SocketException, ApplicationException {
+  public String login() throws UnknownHostException, SocketException,
+          ApplicationException {
 
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
@@ -109,7 +97,7 @@ public class CustomAuthentication implements Serializable {
 
     // Add padding if custom realm is disabled
     if (this.otpCode == null || this.otpCode.isEmpty()) {
-      this.otpCode = MOBILE_OTP_PADDING;
+      this.otpCode = AuthenticationConstants.MOBILE_OTP_PADDING;
     }
 
     // Return if username is wrong
@@ -158,20 +146,20 @@ public class CustomAuthentication implements Serializable {
       // Reset the lock for failed accounts
       mgr.resetLock(userid);
       // Set the onlne flag
-      mgr.setOnline(userid, 1);
+      mgr.setOnline(userid, AuthenticationConstants.IS_ONLINE);
 
-      registerLoginInfo(user, LoginsAuditActions.LOGIN.getValue(),
-              "SUCCESS");
+      registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
+              UserAuditActions.SUCCESS.name());
 
     } catch (ServletException ex) {
       // If more than five times block the account
       int val = user.getFalseLogin();
       mgr.increaseLockNum(userid, val + 1);
 
-      registerLoginInfo(user, LoginsAuditActions.LOGIN.getValue(),
-              "FAIL");
+      registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
+           UserAuditActions.FAILED.name());
 
-      if (val > Users.ALLOWED_FALSE_LOGINS) {
+      if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         mgr.changeAccountStatus(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.
                 getValue());
         try {
@@ -181,7 +169,8 @@ public class CustomAuthentication implements Serializable {
         } catch (MessagingException ex1) {
           Logger.getLogger(CustomAuthentication.class.getName()).log(
                   Level.SEVERE, null, ex1);
-          throw new ApplicationException("Could not register you now due to a failed service. Tray again later.");
+          throw new ApplicationException(
+                  "Could not register you now due to a failed service. Tray again later.");
         }
 
       }
@@ -258,28 +247,28 @@ public class CustomAuthentication implements Serializable {
 
     // Add padding if custom realm is disabled
     if (this.otpCode == null || this.otpCode.isEmpty()) {
-      this.otpCode = YUBIKEY_OTP_PADDING;
+      this.otpCode = AuthenticationConstants.YUBIKEY_OTP_PADDING;
     }
 
-    registerLoginInfo(user, LoginsAuditActions.LOGIN.getValue(),
-            "SUCCESS");
+    registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
+            UserAuditActions.SUCCESS.name());
 
     try {
       // Concatenate the static password with the otp due to limitations of passing two passwords to glassfish
       req.login(this.username, this.password + this.otpCode
-              + this.YUBIKEY_USER_MARKER);
+              + AuthenticationConstants.YUBIKEY_USER_MARKER);
       // Reset the lock for failed accounts
       mgr.resetLock(userid);
       // Set the onlne flag
-      mgr.setOnline(userid, 1);
+      mgr.setOnline(userid, AuthenticationConstants.IS_ONLINE);
 
     } catch (ServletException ex) {
       // If more than five times block the account
       int val = user.getFalseLogin();
       mgr.increaseLockNum(userid, val + 1);
-      registerLoginInfo(user, LoginsAuditActions.LOGIN.getValue(),
-              "FAIL");
-      if (val > Users.ALLOWED_FALSE_LOGINS) {
+      registerLoginInfo(user, UserAuditActions.LOGIN.getValue(),
+              UserAuditActions.FAILED.name());
+      if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         mgr.changeAccountStatus(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.
                 getValue());
         try {
@@ -307,7 +296,7 @@ public class CustomAuthentication implements Serializable {
     return redirectUser(user);
   }
 
-  public String logout() throws SocketException {
+  public String logout() {
 
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
@@ -319,18 +308,19 @@ public class CustomAuthentication implements Serializable {
     String ip = AuditUtil.getIPAddress();
     String browser = AuditUtil.getBrowserInfo();
     String os = AuditUtil.getOSInfo();
-    String macAddress = AuditUtil.getMacAddress(ip);
+    String macAddress;
+      macAddress = AuditUtil.getMacAddress(ip);
+      am.registerLoginInfo(user, UserAuditActions.LOGOUT.getValue(), ip,
+              browser, os, macAddress, UserAuditActions.SUCCESS.name());
 
-    am.registerLoginInfo(user, LoginsAuditActions.LOGOUT.getValue(), ip,
-                    browser, os, macAddress, "SUCCESS");
+      mgr.setOnline(userid, AuthenticationConstants.IS_OFFLINE);
 
-    mgr.setOnline(userid, -1);
 
     return ("welcome");
   }
 
   public void registerLoginInfo(Users p, String action, String outcome) throws
-          UnknownHostException, SocketException {
+          UnknownHostException {
 
     String ip = AuditUtil.getIPAddress();
     String browser = AuditUtil.getBrowserInfo();
@@ -339,38 +329,6 @@ public class CustomAuthentication implements Serializable {
 
     am.registerLoginInfo(p, action, ip, browser, os, macAddress, outcome);
 
-  }
-
-  public boolean isInAdminRole(Users user) {
-    return mgr.findGroups(user.getUid()).contains(BBCGroup.SYS_ADMIN.name());
-  }
-
-  public boolean isInDataProviderRole(Users user) {
-    return mgr.findGroups(user.getUid()).contains(BBCGroup.BBC_ADMIN.name());
-  }
-
-  public boolean isInAuditorRole(Users user) {
-    return mgr.findGroups(user.getUid()).contains(BBCGroup.AUDITOR.name());
-  }
-
-  public boolean isInResearcherRole(Users user) {
-    return mgr.findGroups(user.getUid()).
-            contains(BBCGroup.BBC_RESEARCHER.name());
-  }
-
-  public String redirectUser(Users user) {
-
-    if (isInAdminRole(user)) {
-      return "adminIndex";
-    } else if (isInAuditorRole(user)) {
-      return "adminAuditIndex";
-    } else if (isInDataProviderRole(user)) {
-      return "indexPage";
-    } else if (isInResearcherRole(user)) {
-      return "indexPage";
-    }
-
-    return "indexPage";
   }
 
 }

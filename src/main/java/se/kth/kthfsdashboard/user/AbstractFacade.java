@@ -26,6 +26,9 @@ public abstract class AbstractFacade<T> {
   }
 
   public void remove(T entity) {
+    if (entity == null) {
+      return;
+    }
     getEntityManager().remove(getEntityManager().merge(entity));
   }
 

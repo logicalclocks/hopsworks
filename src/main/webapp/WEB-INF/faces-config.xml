@@ -197,9 +197,15 @@
       <to-view-id>/security/protected/audit/rolesAudit.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
+
     <navigation-case>
-      <from-outcome>studyAudit</from-outcome>
-      <to-view-id>/security/protected/audit/studyAudit.xhtml</to-view-id>
+      <from-outcome>consentsAudit</from-outcome>
+      <to-view-id>/security/protected/audit/consentsAudit.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>projectAudit</from-outcome>
+      <to-view-id>/security/protected/audit/projectAudit.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>
@@ -208,13 +214,18 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
+      <from-outcome>projectsMgmt</from-outcome>
+      <to-view-id>/security/protected/admin/projectsManagement.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
       <from-outcome>mobUsers</from-outcome>
       <to-view-id>/security/protected/admin/mobileUsers.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>
-      <from-outcome>apamUsers</from-outcome>
-      <to-view-id>/security/protected/admin/apamUsers.xhtml</to-view-id>
+      <from-outcome>spamUsers</from-outcome>
+      <to-view-id>/security/protected/admin/spamUsers.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>
@@ -225,7 +236,7 @@
  
 
     <navigation-case>
-      <from-outcome>indexPage</from-outcome>
+      <from-outcome>adminIndex</from-outcome>
       <to-view-id>/security/protected/admin/adminIndex.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
@@ -244,6 +255,12 @@
       <to-view-id>/#/login</to-view-id>
       <redirect/>
     </navigation-case>
+    
+      <navigation-case>
+      <from-outcome>home</from-outcome>
+      <to-view-id>/#/home</to-view-id>
+      <redirect/>
+    </navigation-case>      
   </navigation-rule>
     
   <application>

@@ -21,25 +21,25 @@
 
     <h:body>
       
-      <c:if test="#{peopleStatusBean.SYSAdmin}">
+      <c:if test="#{roleEnforcementPoint.SYSAdmin}">
         <ui:insert name="adminTitleBar">
           <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
         </ui:insert>
       </c:if>
       
 
-      <c:if test="#{peopleStatusBean.onlyAuditorRole}">
+      <c:if test="#{roleEnforcementPoint.onlyAuditorRole}">
           <ui:include src="/security/protected/audit/auditTitleBar.xhtml" />
       </c:if>
 
 
-      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.auditorRole}">  
+      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.auditorRole}">  
 
         <p:layoutUnit id="centerLayout" position="center">
 
           <div class="container">
             <div align="left">
-              <h2>Study Audit</h2>
+              <h2>Project Audit</h2>
             </div>
 
             <div class="content" >
@@ -50,7 +50,7 @@
                   <p:inputText id="studyname" 
                                value="#{auditTrails.username}" 
                                />
-                  <p:watermark value="Study Name" for="studyname"></p:watermark>
+                  <p:watermark value="Project Name" for="studyname"></p:watermark>
 
                   <p:calendar id="from"
                               value="#{auditTrails.from}"
@@ -72,7 +72,7 @@
 
                   <p:selectOneMenu id="action" 
                                    editable="false"
-                                   value="#{auditTrails.selectedStudyAuditAction}"
+                                   value="#{auditTrails.selectedProjectAuditAction}"
                                    required="true"
                                    >
 
@@ -80,7 +80,7 @@
 
                                   itemValue="#"
                                   noSelectionOption="true" />
-                    <f:selectItems value="#{auditTrails.studyAuditActions}" 
+                    <f:selectItems value="#{auditTrails.projectAuditActions}" 
 
                                    />
                   </p:selectOneMenu>
@@ -89,50 +89,52 @@
                   <p:commandButton value="Show"
                                    update="logsTable"
                                    ajax="false"
-                                   action="#{auditTrails.processStudyAuditRequest(auditTrails.selectedStudyAuditAction)}">
+                                   action="#{auditTrails.processProjectAuditRequest(auditTrails.selectedProjectAuditAction)}">
                   </p:commandButton>
                 </p:panelGrid>
                 <br></br>
 
-                <p:dataTable var="user"
+                <p:dataTable var="activity"
                              value="#{auditTrails.ad}" 
                              emptyMessage="No audit logs"
                              scrollable="true">
 
                   <f:facet name="header" >Audit </f:facet>
 
-                  <p:column id="lnameColumn" filterBy="#{user.performedByName}"
-                            headerText="Name"
+                  
+
+                  <p:column id="studyName" filterBy="#{activity.project.name}"
+                            headerText="Project Name"
                             style="width:32%; font-size: 12px; text-align: left;">
 
-                    <h:outputText value="#{user.performedByName}" />
+                    <h:outputText value="#{activity.project.name}" />
+                  </p:column>
+                  
+                  <p:column id="perfColumn" filterBy="#{activity.user.lname}"
+                            headerText="Initiator"
+                            style="width:32%; font-size: 12px; text-align: left;">
+
+                    <h:outputText value="#{activity.user.fname} #{activity.user.lname}" />
                   </p:column>
 
 
-                  <p:column id="studyName" filterBy="#{user.studyname}"
-                            headerText="Study Name"
-                            style="width:32%; font-size: 12px; text-align: left;">
-
-                    <h:outputText value="#{user.studyname}" />
-                  </p:column>
-
-                  <p:column id="emailColumn" filterBy="#{user.performedByEmail}"
+                  <p:column id="emailColumn" filterBy="#{activity.user.email}"
                             headerText="Email" 
                             style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{user.performedByEmail}" />
+                    <h:outputText value="#{activity.user.email}" />
                   </p:column>
 
 
-                  <p:column  filterBy="#{user.timestamp}"
+                  <p:column  filterBy="#{activity.timestamp}"
                              headerText="Action Date" 
                              style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{user.timestamp}"/>
+                    <h:outputText value="#{activity.timestamp}"/>
                   </p:column>
 
-                  <p:column  filterBy="#{user.description}"
+                  <p:column  filterBy="#{activity.activity}"
                              headerText="Action" 
                              style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{user.description}"/>
+                    <h:outputText value="#{activity.activity}"/>
                   </p:column>
                 </p:dataTable>
               </h:form>  

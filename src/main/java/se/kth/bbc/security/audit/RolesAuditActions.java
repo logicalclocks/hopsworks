@@ -9,9 +9,14 @@ package se.kth.bbc.security.audit;
 public enum RolesAuditActions {
 
   // for adding role by the admin
-  ADDROME("ADDED ROLE"),
+  ADDROLE("ADDED ROLE"),
   // for removing role by the admin
-  REMOVEROLE("ROMVED ROLE"),
+  REMOVEROLE("REMOVED ROLE"),
+  
+  SUCCESS("SUCCESS"),
+  
+  FAILED("FAILED"),
+  
   // for getting all changin rele
   ALLROLEASSIGNMENTS("ALL");
 

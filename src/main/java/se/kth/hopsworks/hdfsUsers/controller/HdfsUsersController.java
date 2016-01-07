@@ -204,7 +204,7 @@ public class HdfsUsersController {
             FsAction.NONE);//Permission hdfs dfs -chmod 750
     if (stickyBit) {
       fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
-              FsAction.NONE, stickyBit);//Permission hdfs dfs -chmod 1770
+              FsAction.READ_EXECUTE, stickyBit);//Permission hdfs dfs -chmod 1770
     }
     fsOps.setOwner(location, dsOwner, datasetGroup);
     fsOps.setPermission(location, fsPermission);

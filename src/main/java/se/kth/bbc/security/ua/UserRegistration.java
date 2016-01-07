@@ -3,12 +3,10 @@ package se.kth.bbc.security.ua;
 import com.google.zxing.WriterException;
 import java.io.IOException;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.security.NoSuchAlgorithmException;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.faces.FacesException;
@@ -24,12 +22,14 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.AuditUtil;
-import se.kth.bbc.security.audit.LoginsAuditActions;
-import se.kth.bbc.security.auth.CustomAuthentication;
+import se.kth.bbc.security.audit.UserAuditActions;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.hopsworks.user.model.Users;
 
@@ -311,7 +311,7 @@ public class UserRegistration implements Serializable {
     try {
 
       String otpSecret = SecurityUtils.calculateSecretKey();
-      String activationKey = SecurityUtils.getRandomString(64);
+      String activationKey = SecurityUtils.getRandomPassword(64);
 				// 
       // Generates a UNIX compliant account
       int uid = mgr.lastUserID() + 1;
@@ -326,10 +326,10 @@ public class UserRegistration implements Serializable {
               tel,
               orcid,
               uid,
-              SecurityUtils.converToSHA256(password),
+              DigestUtils.sha256Hex(password),
               otpSecret,
               security_question,
-              SecurityUtils.converToSHA256(security_answer),
+              DigestUtils.sha256Hex(security_answer),
               PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue(),
               PeopleAccountStatus.MOBILE_USER.getValue(),
               activationKey);
@@ -345,11 +345,11 @@ public class UserRegistration implements Serializable {
       mgr.registerOrg(user, org, department);
 
       // Generate qr code to be displayed to user
-      qrCode = QRCodeGenerator.getQRCode(mail, CustomAuthentication.ISSUER,
+      qrCode = QRCodeGenerator.getQRCode(mail, AuthenticationConstants.ISSUER,
               otpSecret);
 
-      am.registerLoginInfo(user, LoginsAuditActions.REGISTRATION.getValue(), ip,
-              browser, os, macAddress, "SUCCESS");
+      am.registerLoginInfo(user, AccountsAuditActions.REGISTRATION.getValue(), ip,
+              browser, os, macAddress, AccountsAuditActions.SUCCESS.name());
 
       userTransaction.commit();
 
@@ -374,15 +374,15 @@ public class UserRegistration implements Serializable {
       passwordAgain = "";
       tos = false;
       qrEnabled = 1;
-    } catch (NotSupportedException | SystemException | NoSuchAlgorithmException |
+    } catch (NotSupportedException | SystemException |
             IOException | WriterException | MessagingException |
             RollbackException | HeuristicMixedException | 
             HeuristicRollbackException | SecurityException |
             IllegalStateException e) {
       MessagesController.addSecurityErrorMessage("Technical Error");
 
-      am.registerLoginInfo(user, LoginsAuditActions.REGISTRATION.getValue(), ip,
-              browser, os, macAddress, "FAIL");
+      am.registerLoginInfo(user, AccountsAuditActions.REGISTRATION.getValue(), ip,
+              browser, os, macAddress, AccountsAuditActions.FAILED.name());
 
       return ("");
 
@@ -410,7 +410,7 @@ public class UserRegistration implements Serializable {
       // Generates a UNIX compliant account
       int uid = mgr.lastUserID() + 1;
 
-      String activationKey = SecurityUtils.getRandomString(64);
+      String activationKey = SecurityUtils.getRandomPassword(64);
 
       // Register the request in the platform
       userTransaction.begin();
@@ -422,9 +422,9 @@ public class UserRegistration implements Serializable {
               tel,
               orcid,
               uid,
-              SecurityUtils.converToSHA256(password),
+              DigestUtils.sha256Hex(password),
               "-1",
-              security_question, SecurityUtils.converToSHA256(security_answer),
+              security_question, DigestUtils.sha256Hex(security_answer),
               PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue(),
               PeopleAccountStatus.YUBIKEY_USER.getValue(),
               activationKey);
@@ -443,8 +443,7 @@ public class UserRegistration implements Serializable {
 
       mgr.registerYubikey(user);
 
-      am.registerLoginInfo(user, LoginsAuditActions.REGISTRATION.getValue(), ip,
-              browser, os, macAddress, "SUCCESS");
+      am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.getValue(), AccountsAuditActions.SUCCESS.name(), "", user);
 
       // Send email to the user to get notified about the account request
       emailBean.sendEmail(mail,
@@ -476,14 +475,12 @@ public class UserRegistration implements Serializable {
       tos = false;
       department = "";
 
-    } catch (NotSupportedException | SystemException | NoSuchAlgorithmException |
-            UnsupportedEncodingException | MessagingException |
+    } catch (NotSupportedException | SystemException | MessagingException |
             RollbackException | HeuristicMixedException | 
             HeuristicRollbackException | SecurityException |
             IllegalStateException e) {
 
-      am.registerLoginInfo(user, LoginsAuditActions.REGISTRATION.getValue(), ip,
-              browser, os, macAddress, "FAIL");
+      am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.getValue(), UserAuditActions.FAILED.name() , "", user);
 
       MessagesController.addSecurityErrorMessage("Technical Error");
       return ("");

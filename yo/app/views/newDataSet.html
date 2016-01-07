@@ -15,6 +15,8 @@
           <md-input-container style="height: 50px;">
             <input name="dataSet_name" type="text" id="dataSetName"
                    ng-model="datasetCreatorCtrl.dataSet.name"
+                   ng-pattern="datasetCreatorCtrl.regex"
+                   ng-maxlength="24"
                    required autofocus>
           </md-input-container>
 
@@ -22,6 +24,17 @@
             ng-show="(dataSetForm.$submitted || dataSetForm.dataSet_name.$dirty) &amp;&amp;
                 dataSetForm.dataSet_name.$error.required"
             class="text-danger ng-hide">This field is required</span>
+
+          <span ng-show="(dataSetForm.dataSet_name.$dirty) &amp;&amp;
+                  dataSetForm.dataSet_name.$error.pattern"
+                class="text-danger ng-hide">Invalid dataset name. Spaces in
+            datasets names and special characters such as __, /, \, ?,
+              *, :, |, ', ", <, >, %, (, ), &, ;, #, are not allowed.</span>
+
+            <span ng-show="(dataSetForm.dataSet_name.$dirty) &amp;&amp;
+                  dataSetForm.dataSet_name.$error.maxlength"
+                  class="text-danger ng-hide">Dataset name shouldn't be longer
+              than 24 characters.</span>
 
           <p></p>
 
@@ -70,7 +83,9 @@
 
       <button  class="btn btn-default" type="button" ng-click="datasetCreatorCtrl.close()">Cancel</button>
       <button class="btn btn-primary" type="submit" 
-              ng-disabled="dataSetForm.dataSet_name.$error.required || datasetCreatorCtrl.working">
+              ng-disabled="dataSetForm.dataSet_name.$error.required || datasetCreatorCtrl.working
+              || dataSetForm.dataSet_name.$error.pattern
+              || dataSetForm.dataSet_name.$error.maxlength">
         <i ng-if="datasetCreatorCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
         Create
       </button>

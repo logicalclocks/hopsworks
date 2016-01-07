@@ -2,9 +2,7 @@ package se.kth.hopsworks.controller;
 
 import com.google.zxing.WriterException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.SocketException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Level;
@@ -13,18 +11,19 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.faces.FacesException;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import org.apache.commons.codec.digest.DigestUtils;
+import se.kth.bbc.security.audit.AccountsAuditActions;
+import se.kth.bbc.security.audit.AuditManager;
+import se.kth.bbc.security.audit.AuditUtil;
+import se.kth.bbc.security.audit.RolesAuditActions;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
-import se.kth.bbc.security.audit.model.Userlogins;
-import se.kth.bbc.security.auth.CustomAuthentication;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.bbc.security.ua.BBCGroup;
 import se.kth.bbc.security.ua.PeopleAccountStatus;
@@ -33,7 +32,6 @@ import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.Yubikey;
-import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
@@ -56,49 +54,43 @@ public class UsersController {
   @EJB
   private BbcGroupFacade groupBean;
   @EJB
-  private UserLoginsFacade userLoginsBean;
+  private AuditManager am;
 
   @EJB
   private UserManager mgr;
   // To send the user the QR code image
   private byte[] qrCode;
 
-  // BiobankCloud prefix username prefix
-  private final String USERNAME_PREFIX = "meb";
-
-  public byte[] registerUser(UserDTO newUser, String url, String ip, String os, String browser, String mac) throws
-      AppException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
+  public byte[] registerUser(UserDTO newUser, HttpServletRequest req) throws
+          AppException, SocketException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
   {
     if (userValidator.isValidEmail(newUser.getEmail())
-        && userValidator.isValidPassword(newUser.getChosenPassword(),
-            newUser.getRepeatedPassword())
-        && userValidator.isValidsecurityQA(newUser.getSecurityQuestion(),
-            newUser.getSecurityAnswer())) {
+            && userValidator.isValidPassword(newUser.getChosenPassword(),
+                    newUser.getRepeatedPassword())
+            && userValidator.isValidsecurityQA(newUser.getSecurityQuestion(),
+                    newUser.getSecurityAnswer())) {
       if (newUser.getToS()) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-            ResponseMessages.TOS_NOT_AGREED);
+                ResponseMessages.TOS_NOT_AGREED);
       }
       if (userBean.findByEmail(newUser.getEmail()) != null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-            ResponseMessages.USER_EXIST);
+                ResponseMessages.USER_EXIST);
       }
 
       String otpSecret = SecurityUtils.calculateSecretKey();
-      String activationKey = SecurityUtils.getRandomString(64);
+      String activationKey = SecurityUtils.getRandomPassword(64);
 
       int uid = userBean.lastUserID() + 1;
 
-     // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
-      String uname = USERNAME_PREFIX + uid;
-     
+      // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
+      String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
+
       List<BbcGroup> groups = new ArrayList<>();
-     
+
       // add the guest default role so if a user can still browse the platform
       groups.add(groupBean.findByGroupName(BBCGroup.BBC_GUEST.name()));
-      
-      // add BBC  user default role so  a user can become data owner
-      groups.add(groupBean.findByGroupName(BBCGroup.BBC_USER.name()));
-      
+
       Users user = new Users(uid);
       user.setUsername(uname);
       user.setEmail(newUser.getEmail());
@@ -115,10 +107,10 @@ public class UsersController {
       user.setActivated(new Timestamp(new Date().getTime()));
       user.setPasswordChanged(new Timestamp(new Date().getTime()));
       user.setSecurityQuestion(SecurityQuestion.getQuestion(newUser.
-          getSecurityQuestion()));
+              getSecurityQuestion()));
       user.setPassword(DigestUtils.sha256Hex(newUser.getChosenPassword()));
       user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer().
-          toLowerCase()));
+              toLowerCase()));
       user.setBbcGroupCollection(groups);
       Address a = new Address();
       a.setUid(user);
@@ -147,18 +139,35 @@ public class UsersController {
       try {
         // Notify user about the request
         emailBean.sendEmail(newUser.getEmail(),
-            UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-            UserAccountsEmailMessages.buildMobileRequestMessage(
-                //getApplicationUri()
-                url, user.getUsername() + activationKey));
+                UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
+                UserAccountsEmailMessages.buildMobileRequestMessage(
+                        AuditUtil.getUserURL(req), user.getUsername()
+                        + activationKey));
         // Only register the user if i can send the email
         userBean.persist(user);
-        qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), CustomAuthentication.ISSUER,
-            otpSecret);
-      } catch (IOException | WriterException | MessagingException ex) {
-        Logger.getLogger(UsersController.class.getName()).log(Level.SEVERE, null, ex);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            "Cannot register now due to email service problems");
+        qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(),
+                AuthenticationConstants.ISSUER,
+                otpSecret);
+        am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+                AccountsAuditActions.SUCCESS.name(), "", user, req);
+        am.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
+                AccountsAuditActions.SUCCESS.name(), "", user, req);
+        am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(),
+                RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(),
+                user, req);
+      } catch (WriterException | MessagingException | IOException ex) {
+
+        am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+                AccountsAuditActions.FAILED.name(), "", user, req);
+        am.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
+                AccountsAuditActions.FAILED.name(), "", user, req);
+        am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(),
+                RolesAuditActions.FAILED.name(), BBCGroup.BBC_GUEST.name(), user,
+                req);
+
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "Cannot register now due to email service problems");
       }
       return qrCode;
     }
@@ -166,38 +175,35 @@ public class UsersController {
     return null;
   }
 
-  public boolean registerYubikeyUser(UserDTO newUser, String url, String ip, String os, String browser, String mac)
-      throws AppException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
+  public boolean registerYubikeyUser(UserDTO newUser, HttpServletRequest req)
+          throws AppException, SocketException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
   {
     if (userValidator.isValidEmail(newUser.getEmail())
-        && userValidator.isValidPassword(newUser.getChosenPassword(),
-            newUser.getRepeatedPassword())
-        && userValidator.isValidsecurityQA(newUser.getSecurityQuestion(),
-            newUser.getSecurityAnswer())) {
+            && userValidator.isValidPassword(newUser.getChosenPassword(),
+                    newUser.getRepeatedPassword())
+            && userValidator.isValidsecurityQA(newUser.getSecurityQuestion(),
+                    newUser.getSecurityAnswer())) {
       if (newUser.getToS()) {
+
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-            ResponseMessages.TOS_NOT_AGREED);
+                ResponseMessages.TOS_NOT_AGREED);
       }
       if (userBean.findByEmail(newUser.getEmail()) != null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-            ResponseMessages.USER_EXIST);
+                ResponseMessages.USER_EXIST);
       }
 
       String otpSecret = SecurityUtils.calculateSecretKey();
-      String activationKey = SecurityUtils.getRandomString(64);
+      String activationKey = SecurityUtils.getRandomPassword(64);
 
       int uid = userBean.lastUserID() + 1;
 
-     // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
-      String uname = USERNAME_PREFIX + uid;
+      // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
+      String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
       List<BbcGroup> groups = new ArrayList<>();
-      
+
       // add the guest default role so if a user can still browse the platform
       groups.add(groupBean.findByGroupName(BBCGroup.BBC_GUEST.name()));
-      
-      // add BBC  user default role so  a user can become data owner
-      groups.add(groupBean.findByGroupName(BBCGroup.BBC_USER.name()));
-      
 
       Users user = new Users(uid);
       user.setUsername(uname);
@@ -215,10 +221,10 @@ public class UsersController {
       user.setActivated(new Timestamp(new Date().getTime()));
       user.setPasswordChanged(new Timestamp(new Date().getTime()));
       user.setSecurityQuestion(SecurityQuestion.getQuestion(newUser.
-          getSecurityQuestion()));
+              getSecurityQuestion()));
       user.setPassword(DigestUtils.sha256Hex(newUser.getChosenPassword()));
       user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer().
-          toLowerCase()));
+              toLowerCase()));
       user.setBbcGroupCollection(groups);
 
       Address a = new Address();
@@ -248,20 +254,32 @@ public class UsersController {
       yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
       user.setYubikey(yk);
       user.setOrganization(org);
-      
+
       try {
         // Notify user about the request
         emailBean.sendEmail(newUser.getEmail(),
-            UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-            UserAccountsEmailMessages.buildYubikeyRequestMessage(
-                //getApplicationUri()
-                url, user.getUsername() + activationKey));
+                UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
+                UserAccountsEmailMessages.buildYubikeyRequestMessage(
+                         AuditUtil.getUserURL(req), user.getUsername()
+                        + activationKey));
         // only register the user if i can send the email to the user
         userBean.persist(user);
+        am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+                AccountsAuditActions.SUCCESS.name(), "", user, req);
+        am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(),
+                RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(),
+                user, req);
       } catch (MessagingException ex) {
-        Logger.getLogger(UsersController.class.getName()).log(Level.SEVERE, null, ex);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            "Cannot register now due to email service problems");
+
+        am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+                AccountsAuditActions.FAILED.name(), "", user, req);
+        am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(),
+                RolesAuditActions.FAILED.name(), BBCGroup.BBC_GUEST.name(), user,
+                req);
+
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "Cannot register now due to email service problems");
 
       }
       return true;
@@ -270,111 +288,119 @@ public class UsersController {
     return false;
   }
 
-  // fix this
-  public String getApplicationUri() {
-    try {
-      FacesContext ctxt = FacesContext.getCurrentInstance();
-      ExternalContext ext = ctxt.getExternalContext();
-      URI uri = new URI(ext.getRequestScheme(),
-          null, ext.getRequestServerName(), ext.getRequestServerPort(),
-          ext.getRequestContextPath(), null, null);
-      return uri.toASCIIString();
-    } catch (URISyntaxException e) {
-      throw new FacesException(e);
-    }
-  }
-
   public void recoverPassword(String email, String securityQuestion,
-      String securityAnswer, HttpServletRequest req) throws AppException {
+          String securityAnswer, HttpServletRequest req) throws AppException {
     if (userValidator.isValidEmail(email) && userValidator.isValidsecurityQA(
-        securityQuestion, securityAnswer)) {
+            securityQuestion, securityAnswer)) {
 
       Users user = userBean.findByEmail(email);
       if (user == null) {
         throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-            ResponseMessages.USER_DOES_NOT_EXIST);
+                ResponseMessages.USER_DOES_NOT_EXIST);
       }
       if (!user.getSecurityQuestion().getValue().equalsIgnoreCase(
-          securityQuestion)
-          || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(
-                  securityAnswer.toLowerCase()))) {
+              securityQuestion)
+              || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(
+                              securityAnswer.toLowerCase()))) {
         try {
           registerFalseLogin(user);
+          am.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(),
+                  UserAuditActions.FAILED.name(), "", user, req);
         } catch (MessagingException ex) {
           Logger.getLogger(UsersController.class.getName()).
                   log(Level.SEVERE, null, ex);
-        }
-        registerLoginInfo(user, "Recovery", "Failure", req);
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-            ResponseMessages.SEC_QA_INCORRECT);
-      }
+          am.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(),
+                  UserAuditActions.FAILED.name(), "", user, req);
 
-      String randomPassword = getRandomPassword(
-          UserValidator.PASSWORD_MIN_LENGTH);
-      try {
-        String message = UserAccountsEmailMessages.buildTempResetMessage(
-            randomPassword);
-        emailBean.sendEmail(email,
-            UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
-        user.setPassword(DigestUtils.sha256Hex(randomPassword));
-        //user.setStatus(PeopleAccountStatus.ACCOUNT_PENDING.getValue());
-        userBean.update(user);
-        resetFalseLogin(user);
-        registerLoginInfo(user, "Recovery", "SUCCESS", req);
-      } catch (MessagingException ex) {
-        Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE,
-            "Could not send email: ", ex);
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-            ResponseMessages.EMAIL_SENDING_FAILURE);
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  ResponseMessages.SEC_QA_INCORRECT);
+        }
+
+        String randomPassword = SecurityUtils.getRandomPassword(
+                UserValidator.PASSWORD_MIN_LENGTH);
+        try {
+          String message = UserAccountsEmailMessages.buildTempResetMessage(
+                  randomPassword);
+          emailBean.sendEmail(email,
+                  UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
+          user.setPassword(DigestUtils.sha256Hex(randomPassword));
+          //user.setStatus(PeopleAccountStatus.ACCOUNT_PENDING.getValue());
+          userBean.update(user);
+          resetFalseLogin(user);
+          am.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(),
+                  UserAuditActions.SUCCESS.name(), "", user, req);
+        } catch (MessagingException ex) {
+          Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE,
+                  "Could not send email: ", ex);
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  ResponseMessages.EMAIL_SENDING_FAILURE);
+
+        }
       }
     }
   }
 
   public void changePassword(String email, String oldPassword,
-      String newPassword, String confirmedPassword) throws AppException {
+          String newPassword, String confirmedPassword, HttpServletRequest req)
+          throws AppException {
     Users user = userBean.findByEmail(email);
 
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          ResponseMessages.USER_WAS_NOT_FOUND);
+              ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (!user.getPassword().equals(DigestUtils.sha256Hex(oldPassword))) {
+
+      am.registerAccountChange(user, AccountsAuditActions.PASSWORD.name(),
+              AccountsAuditActions.FAILED.name(), "", user, req);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PASSWORD_INCORRECT);
+              ResponseMessages.PASSWORD_INCORRECT);
+
     }
     if (userValidator.isValidPassword(newPassword, confirmedPassword)) {
       user.setPassword(DigestUtils.sha256Hex(newPassword));
       userBean.update(user);
+
+      am.registerAccountChange(user, AccountsAuditActions.PASSWORD.name(),
+              AccountsAuditActions.SUCCESS.name(), "", user, req);
     }
   }
 
   public void changeSecQA(String email, String oldPassword,
-      String securityQuestion, String securityAnswer) throws AppException {
+          String securityQuestion, String securityAnswer, HttpServletRequest req)
+          throws AppException {
     Users user = userBean.findByEmail(email);
 
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          ResponseMessages.USER_WAS_NOT_FOUND);
+              ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (!user.getPassword().equals(DigestUtils.sha256Hex(oldPassword))) {
+      am.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
+              AccountsAuditActions.FAILED.name(), "", user, req);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PASSWORD_INCORRECT);
+              ResponseMessages.PASSWORD_INCORRECT);
     }
 
     if (userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
       user.setSecurityQuestion(SecurityQuestion.getQuestion(securityQuestion));
-      user.setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer.toLowerCase()));
+      user.
+              setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer.
+                              toLowerCase()));
       userBean.update(user);
+      am.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
+              AccountsAuditActions.SUCCESS.name(),
+              "Changed Security Question to: " + securityQuestion, user, req);
     }
   }
 
   public UserDTO updateProfile(String email, String firstName, String lastName,
-      String telephoneNum) throws AppException {
+          String telephoneNum, HttpServletRequest req) throws AppException {
     Users user = userBean.findByEmail(email);
 
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          ResponseMessages.USER_WAS_NOT_FOUND);
+              ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (firstName != null) {
       user.setFname(firstName);
@@ -385,59 +411,26 @@ public class UsersController {
     if (telephoneNum != null) {
       user.setMobile(telephoneNum);
     }
+    am.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
+            AccountsAuditActions.SUCCESS.name(), "Update Profile Info", user,
+            req);
 
     userBean.update(user);
     return new UserDTO(user);
-  }
-
-  private String getRandomPassword(int length) {
-    String randomStr = UUID.randomUUID().toString();
-    while (randomStr.length() < length) {
-      randomStr += UUID.randomUUID().toString();
-    }
-    return randomStr.substring(0, length);
-  }
-
-  public void registerLoginInfo(Users user, String action, String outcome,
-      HttpServletRequest req) {
-    String ip = req.getRemoteAddr();
-    String userAgent = req.getHeader("User-Agent");
-    String browser = null;
-    Logger.getLogger(AuthService.class.getName()).log(Level.SEVERE,
-        "User agent --->>> {0}", userAgent);
-    if (userAgent.contains("MSIE")) {
-      browser = "Internet Explorer";
-    } else if (userAgent.contains("Firefox")) {
-      browser = "Firefox";
-    } else if (userAgent.contains("Chrome")) {
-      browser = "Chrome";
-    } else if (userAgent.contains("Opera")) {
-      browser = "Opera";
-    } else if (userAgent.contains("Safari")) {
-      browser = "Safari";
-    }
-    Userlogins login = new Userlogins();
-    login.setUid(user.getUid());
-    login.setBrowser(browser);
-    login.setIp(ip);
-    login.setAction(action);
-    login.setOutcome(outcome);
-    login.setLoginDate(new Date());
-    userLoginsBean.persist(login);
   }
 
   public void registerFalseLogin(Users user) throws MessagingException {
     if (user != null) {
       int count = user.getFalseLogin() + 1;
       user.setFalseLogin(count);
-      
+
       // block the user account if more than allowed false logins
-      if (count > Users.ALLOWED_FALSE_LOGINS) {
+      if (count > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         user.setStatus(UserAccountStatus.ACCOUNT_BLOCKED.getValue());
-        
-      emailBean.sendEmail(user.getEmail(),
-                  UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
-                  UserAccountsEmailMessages.accountBlockedMessage());
+
+        emailBean.sendEmail(user.getEmail(),
+                UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
+                UserAccountsEmailMessages.accountBlockedMessage());
 
       }
       // notify user about the false attempts

@@ -154,7 +154,7 @@ public class Inode implements Serializable {
   private long size;
   @ManyToMany(mappedBy = "inodes",
           cascade = CascadeType.PERSIST,
-          fetch = FetchType.EAGER)
+          fetch = FetchType.LAZY)
   private Collection<Template> templates;
 
   public Inode() {
