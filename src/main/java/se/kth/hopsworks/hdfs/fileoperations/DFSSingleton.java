@@ -54,6 +54,18 @@ public class DFSSingleton {
   }
 
   /**
+   * Removes the DfsOps object with key==username from the hash map
+   * @param username 
+   */
+  public void removeDfsOps (String username) {
+    if (username == null || username.isEmpty()) {
+      return;
+    }
+    synchronized (distributedFileSystems) {
+      distributedFileSystems.remove(username);
+    }
+  }
+  /**
    * creates a new distributed file system operations with the super user
    * <p>
    * @return DistributedFileSystemOps

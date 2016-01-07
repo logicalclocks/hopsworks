@@ -70,9 +70,7 @@ public final class SparkJob extends YarnJob {
     //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
     try {
       runner = runnerbuilder.getYarnRunner(jobDescription.getProject().getName(),
-          sparkUser,
-//          Utils.getProjectUsername(jobDescription.getProject().getName(), user.getUsername()),
-          hadoopDir, sparkDir);
+          sparkUser, hadoopDir, sparkDir);
 
     } catch (IOException e) {
       logger.log(Level.SEVERE,

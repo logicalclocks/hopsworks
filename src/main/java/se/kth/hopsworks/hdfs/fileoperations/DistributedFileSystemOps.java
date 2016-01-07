@@ -73,12 +73,13 @@ public class DistributedFileSystemOps {
     FileSystem fs = null;
     try {
       if (username != null) {
+        conf.set("fs.permissions.umask-mode", "000");
         fs = FileSystem.get(FileSystem.getDefaultUri(conf), conf,
                 username);
       } else {
         fs = FileSystem.get(conf);
       }
-      
+
     } catch (IOException | InterruptedException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
     }
@@ -113,8 +114,8 @@ public class DistributedFileSystemOps {
       return out.toString();
     }
   }
-  
-/**
+
+  /**
    * Get the contents of the file at the given path.
    * <p/>
    * @param file
@@ -135,7 +136,7 @@ public class DistributedFileSystemOps {
       return out.toString();
     }
   }
-  
+
   /**
    * Create a new folder on the given path only if the parent folders exist
    * <p/>
@@ -147,7 +148,7 @@ public class DistributedFileSystemOps {
    */
   public boolean mkdir(Path location, FsPermission filePermission) throws IOException {
     return dfs.mkdir(location, filePermission);
-  }
+    }
 
   /**
    * Create a new directory and its parent directory on the given path.
@@ -161,7 +162,7 @@ public class DistributedFileSystemOps {
   public boolean mkdirs(Path location, FsPermission filePermission) throws IOException {
     return dfs.mkdirs(location, filePermission);
   }
-  
+
   /**
    * Create a new directory and its parent directory on the given path.
    * <p/>
@@ -171,7 +172,7 @@ public class DistributedFileSystemOps {
   public void touchz(Path location) throws IOException {
     dfs.create(location);
   }
-  
+
   /**
    * Delete a file or directory from the file system.
    *
@@ -217,7 +218,7 @@ public class DistributedFileSystemOps {
           throws IOException {
     //Make sure the directories exist
     Path dirs = new Path(Utils.getDirectoryPart(destination));
-    mkdirs(dirs, FsPermission.getDirDefault());
+    mkdirs(dirs, getParentPermission(dirs));
     //Actually copy to HDFS
     Path destp = new Path(destination);
     Path srcp = new Path(src);
@@ -270,7 +271,7 @@ public class DistributedFileSystemOps {
     Path dst = new Path(destination);
     moveWithinHdfs(src, dst);
   }
-  
+
   /**
    * Check if the path exists in HDFS.
    * <p/>
@@ -299,7 +300,7 @@ public class DistributedFileSystemOps {
       FileUtil.copy(dfs, src1, dfs, dst, false, conf);
     }
   }
-  
+
   /**
    * Set permission for path.
    * <p>
@@ -327,24 +328,24 @@ public class DistributedFileSystemOps {
 
   //Set quota in GB
   public void setQuota(Path src, long diskspaceQuota) throws
-      IOException {
-    dfs.setQuota(src, HdfsConstants.QUOTA_DONT_SET, 1073741824*diskspaceQuota);
+          IOException {
+    dfs.setQuota(src, HdfsConstants.QUOTA_DONT_SET, 1073741824 * diskspaceQuota);
   }
 
   //Get quota in GB
   public long getQuota(Path path) throws IOException {
-    return dfs.getContentSummary(path).getSpaceQuota()/1073741824;
+    return dfs.getContentSummary(path).getSpaceQuota() / 1073741824;
   }
 
   //Get used disk space in GB
   public long getUsedQuota(Path path) throws IOException {
-    return dfs.getContentSummary(path).getSpaceConsumed()/1073741824;
+    return dfs.getContentSummary(path).getSpaceConsumed() / 1073741824;
   }
 
   public FSDataInputStream open(Path location) throws IOException {
     return this.dfs.open(location);
   }
-  
+
   public FSDataInputStream open(String location) throws IOException {
     Path path = new Path(location);
     return this.dfs.open(path);
@@ -357,7 +358,7 @@ public class DistributedFileSystemOps {
   public void setConf(Configuration conf) {
     this.conf = conf;
   }
-  
+
   /**
    * Compress a file from the given location
    * <p/>
@@ -401,7 +402,19 @@ public class DistributedFileSystemOps {
     return true;
   }
 
-  
+  /**
+   * Returns the parents permission
+   * @param path
+   * @return
+   * @throws IOException 
+   */
+  public FsPermission getParentPermission(Path path) throws IOException {
+    Path location = new Path(path.toUri());
+    while(!dfs.exists(location)){
+      location = location.getParent();
+    }
+    return dfs.getFileStatus(location).getPermission();
+  }
   /**
    * Closes the distributed file system.
    */

@@ -91,6 +91,8 @@ public class SparkController {
     } catch (InterruptedException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
+            user.asUser());
     return jh;
   }
 
@@ -106,8 +108,6 @@ public class SparkController {
               "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
-            user.asUser());
     return jh;
   }
 

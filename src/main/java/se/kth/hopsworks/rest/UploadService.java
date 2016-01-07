@@ -37,6 +37,7 @@ import se.kth.hopsworks.controller.FolderNameValidator;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.meta.db.InodeBasicMetadataFacade;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.InodeBasicMetadata;
@@ -46,10 +47,6 @@ import se.kth.hopsworks.meta.exception.DatabaseException;
 import se.kth.hopsworks.meta.wscomm.ResponseBuilder;
 import se.kth.hopsworks.meta.wscomm.message.UploadedTemplateMessage;
 
-/**
- *
- * @author ermiasg
- */
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UploadService {
@@ -111,12 +108,9 @@ public class UploadService {
         exist = false;
       }
     }
-
     if (exist) { //if the path exists check if the file exists.
       this.fileParent = parent;
     }
-    logger.log(Level.INFO, "Constructor end. by setting fileParent to {0}",
-            this.fileParent);
     this.path = uploadPath;
   }
 
@@ -171,7 +165,6 @@ public class UploadService {
           @Context HttpServletRequest request)
           throws AppException, IOException, AccessControlException {
     String fileName = request.getParameter("flowFilename");
-    logger.log(Level.INFO, "File parent. {0}", this.fileParent);
     Inode parent;
     JsonResponse json = new JsonResponse();
     int resumableChunkNumber = getResumableChunkNumber(request);
@@ -196,7 +189,6 @@ public class UploadService {
       }
     }
     ResumableInfo info = getResumableInfo(request, this.path, this.templateId);
-    logger.log(Level.INFO, "Resumable Chunk Number. {0}", resumableChunkNumber);
     if (info.isUploaded(new ResumableInfo.ResumableChunkNumber(
             resumableChunkNumber))) {
       json.setSuccessMessage("Uploaded");//This Chunk has been Uploaded.
@@ -301,17 +293,20 @@ public class UploadService {
         }
 
         this.path = Utils.ensurePathEndsInSlash(this.path);
+        DistributedFileSystemOps dfsOps;
         if (this.username != null) {
-          dfs.getDfsOps(username).copyToHDFSFromLocal(true, stagingManager.
-                  getStagingPath()
-                  + this.path + fileName, this.path
-                  + fileName);
+          dfsOps = dfs.getDfsOps(username);
         } else { // to accommodate previous implimentations  
-          fileOps.copyToHDFSFromLocal(true, stagingManager.getStagingPath()
-                  + this.path + fileName, this.path
-                  + fileName);
+          dfsOps = dfs.getDfsOps();
         }
-        logger.log(Level.INFO, "Copied to HDFS");
+        dfsOps.copyToHDFSFromLocal(true, stagingManager.
+                getStagingPath()
+                + this.path + fileName, this.path
+                + fileName);
+        org.apache.hadoop.fs.Path location = new org.apache.hadoop.fs.Path(
+                this.path + fileName);
+        dfsOps.setPermission(location, dfsOps.getParentPermission(location)); 
+       logger.log(Level.INFO, "Copied to HDFS");
 
         if (templateid != 0 && templateid != -1) {
           this.attachTemplateToInode(info, this.path + fileName);

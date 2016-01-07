@@ -54,8 +54,11 @@ public abstract class YarnJob extends HopsJob {
       hdfsUser = UserGroupInformation.getCurrentUser().getUserName();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
+      throw new IllegalArgumentException(
+              "Exception while trying to retrieve hadoop User Group Information: "
+              + ex.getMessage());
     }
-    logger.log(Level.SEVERE, "User inside yarnJob====> {0}",hdfsUser);
+    logger.log(Level.INFO, "Instantiating Yarn job as user: {0}", hdfsUser);
   }
 
   public final void setStdOutFinalDestination(String stdOutFinalDestination) {

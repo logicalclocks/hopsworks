@@ -88,8 +88,6 @@ public class ProjectController {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private DFSSingleton dfsSingleton;
-  @EJB
   private DFSSingleton dfs;
   @EJB
   private Settings settings;
@@ -189,9 +187,10 @@ public class ProjectController {
 
     try {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
-        boolean globallyVisible = ds.equals(Settings.DefaultDataset.RESOURCES);
+        boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
+                || ds.equals(Settings.DefaultDataset.LOGS));
         datasetController.createDataset(user, project, ds.getName(), ds.
-                getDescription(), -1, false, true, globallyVisible);
+                getDescription(), -1, false, globallyVisible);
       }
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
@@ -207,7 +206,7 @@ public class ProjectController {
 
     try {
       datasetController.createDataset(user, project, "consents",
-              "Biobanking consent forms", -1, false, true, false);
+              "Biobanking consent forms", -1, false, false);
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
               "Could not create project consents folder ", e);
@@ -773,25 +772,25 @@ public class ProjectController {
 
   public void setQuota(Path src, long diskspaceQuota)
           throws IOException {
-    dfsSingleton.getDfsOps().setQuota(src, diskspaceQuota);
+    dfs.getDfsOps().setQuota(src, diskspaceQuota);
   }
 
   public void setQuota(String projectname, long diskspaceQuota)
           throws IOException {
-    dfsSingleton.getDfsOps().setQuota(new Path(settings.getProjectPath(
+    dfs.getDfsOps().setQuota(new Path(settings.getProjectPath(
             projectname)),
             diskspaceQuota);
   }
 
   //Get quota in GB
   public long getQuota(String projectname) throws IOException {
-    return dfsSingleton.getDfsOps().getQuota(new Path(settings.getProjectPath(
+    return dfs.getDfsOps().getQuota(new Path(settings.getProjectPath(
             projectname)));
   }
 
   //Get used disk space in GB
   public long getUsedQuota(String projectname) throws IOException {
-    return dfsSingleton.getDfsOps().getUsedQuota(new Path(settings.
+    return dfs.getDfsOps().getUsedQuota(new Path(settings.
             getProjectPath(projectname)));
   }
 }

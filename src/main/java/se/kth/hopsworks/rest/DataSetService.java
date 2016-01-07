@@ -373,7 +373,7 @@ public class DataSetService {
     try {
       datasetController.createDataset(user, project, dataSet.getName(), dataSet.
               getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
-              false, false);
+              false);
     } catch (NullPointerException c) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), c.
               getLocalizedMessage());
@@ -494,8 +494,10 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + filePath);
     }
-    //remove the group associated with this dataset
-    hdfsUsersBean.deleteDatasetGroup(this.dataset);
+    //remove the group associated with this dataset if the dataset is toplevel ds 
+    if (filePath.endsWith(this.dataset.getInode().getInodePK().getName())) {
+        hdfsUsersBean.deleteDatasetGroup(this.dataset);
+    }
     json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
