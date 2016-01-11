@@ -15,7 +15,29 @@
 
           <div class="panel modal-title col-lg-3">
             <div class="panel-heading">
-              <h3 class="panel-title">Charon <div ng-show="charonCtrl.toHDFS"style=" float: right; ">(Source)</div><div ng-show="!charonCtrl.toHDFS"style=" float: right; ">(Destination)</div></h3>
+              <h3 class="panel-title"><div style="margin-right: 10px;float:
+              left">Charon
+              </div>
+                <div class="dropdown" style="display:inline-block;">
+                  <button style="padding: 0px 15px"
+                          class="btn btn-default btn-sm dropdown-toggle"
+                           type="button" data-toggle="dropdown">More Actions
+                    <span class="fa fa-caret-right"></span></button>
+                  <ul class="dropdown-menu" style="left: 100px;top:0%">
+                    <li><a ng-click=""><span class="glyphicon glyphicon-time"
+                                             style="padding-right: 10px"></span>Create repository</a></li>
+                    <li><a ng-click=""><span class="glyphicon glyphicon-edit"
+                                             style="padding-right: 10px"></span>Create shared repository (read only)</a></li>
+                    <li><a ng-click=""><span
+                      class="glyphicon glyphicon-list-alt"
+                      style="padding-right: 10px"></span>Create shared
+                      repository (read / write)</a></li>
+                    <li><a ng-click=""><span class="glyphicon glyphicon-hdd"
+                                             style="padding-right: 10px"></span>Add shared repository</a></li>
+                  </ul>
+                </div>
+                <div
+                ng-show="charonCtrl.toHDFS"style=" float: right; ">(Source)</div><div ng-show="!charonCtrl.toHDFS"style=" float: right; ">(Destination)</div></h3>
             </div>
             <div class="panel-body">
               <div class="row" ng-show="charonCtrl.toHDFS" >
@@ -62,7 +84,7 @@
                         <tbody ng-model="localFsCtrl.files">
                       <a href="selectLocalFile.html"></a>
                       <tr style="opacity: 0.6;"
-                        ng-repeat="file in localFsCtrl.projectFiles | orderBy: 'name'"
+                        ng-repeat="file in localFsCtrl.files | orderBy: 'name'"
                         ng-class="{ 'highlight': localFsCtrl.selected === {{ $index}}, 'expanded' : expanded }">
 
                         <td>
@@ -179,16 +201,14 @@
                   <md-tab label="Details">
                     <md-content>
                       <table id="mytable1" class="table table-bordred table-striped" style="margin-top: 16px;">
-
+                        <tr style="background-color: #fafafa">
+                          <td style="color: black;">My site ID</td>
+                          <td style="color: black;">1565486468484173</td>
+                        </tr>
                         <tr style="background-color: #fafafa">
                           <td style="color: grey;">Mount point</td>
                           <td style="color: grey;">/srv/Charon/charon_fs</td>
-                          <td style="color: grey;"><i class="fa fa-wrench"></i>
                           </td>
-                        </tr>
-                        <tr style="background-color: #fafafa">
-                          <td style="color: grey;">My site ID</td>
-                          <td style="color: grey;">1565486468484173</td>
                         </tr>
                       </table>
 
@@ -198,7 +218,8 @@
                       <div class="modal-header">
                                       <span class="modal-title"
                                             ng-model="columnName"><label
-                                              style="font-size: 15px">Site IDs</label></span>
+                                              style="font-size: 15px">Sites I can
+                                      share with</label></span>
                         <i class="fa fa-plus" style="float: right; color: green;"></i>
                       </div>
                       <div ng-show="charonCtrl.noIDs" style="padding-left: 10px">

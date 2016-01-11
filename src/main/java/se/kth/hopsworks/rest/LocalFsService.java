@@ -102,7 +102,7 @@ public class LocalFsService {
   public Response findFilesInCharonProjectID(
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
-    return dirListing(settings.getCharonMountDir());
+    return dirListing(settings.getCharonProjectDir(project.getName()));
   }
 
   /**
@@ -122,8 +122,7 @@ public class LocalFsService {
       @PathParam("path") String path,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
-    String dirName = path.contains("/") ? path.substring(path.lastIndexOf("/")+1) : path;
-    return dirListing(settings.getCharonProjectDir(dirName));
+    return dirListing(settings.getCharonProjectDir(project.getName()) + File.separator + path);
   }
 
   @POST

@@ -10,7 +10,6 @@ angular.module('hopsWorksApp')
         var charonService = CharonService(self.projectId);
 
         self.working = false;
-        self.selectedCharonPath = "";
         self.selectedHdfsPath = "";
         self.toHDFS = true;
         self.charonFilename = "";
@@ -20,7 +19,7 @@ angular.module('hopsWorksApp')
           self.selectedCharonPath = "";
           self.selectedHdfsPath = "";
           if (!self.toHDFS) {
-            self.selectedCharonPath = "/srv/charon_fs/" + projectName;
+            self.selectedCharonPath = "/srv/Charon/charon_fs/" + projectName;
           }
         }
         /**
