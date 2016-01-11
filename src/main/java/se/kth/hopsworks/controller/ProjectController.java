@@ -216,8 +216,7 @@ public class ProjectController {
 
   public void createProjectCharonFolder(Project project) throws
           ProjectInternalFoldersFailedException {
-    String charonDir = settings.getCharonDir();
-    ConfigFileGenerator.mkdirs(charonDir + File.separator + project.getName());
+    ConfigFileGenerator.mkdirs( settings.getCharonProjectDir(project.getName()));
   }
 
   /**

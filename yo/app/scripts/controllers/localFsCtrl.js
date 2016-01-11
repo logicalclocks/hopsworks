@@ -69,7 +69,8 @@ angular.module('hopsWorksApp')
                         self.files = success.data;
                         self.pathArray = newPathArray;
                         self.working = false;
-                        console.log(success);
+                        console.log("Success getting the contents of the path" +
+                          " " + getPath(newPathArray));
                       }, function (error) {
                         self.working = false;
                 console.log("Error getting the contents of the path " + getPath(newPathArray));
