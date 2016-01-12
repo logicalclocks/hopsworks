@@ -1,6 +1,6 @@
 package se.kth.hopsworks.hdfs.fileoperations;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,7 +18,7 @@ public class DFSSingleton {
   @EJB
   private Settings settings;
   private final Map<String, DistributedFileSystemOps> distributedFileSystems
-          = new LinkedHashMap<>();
+          = new HashMap<>();
   private DistributedFileSystemOps dfsOps;
 
   public DFSSingleton() {

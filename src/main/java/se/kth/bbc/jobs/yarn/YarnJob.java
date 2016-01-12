@@ -25,11 +25,10 @@ public abstract class YarnJob extends HopsJob {
   private static final int DEFAULT_POLL_TIMEOUT_INTERVAL = 1; //in seconds
 
   protected YarnRunner runner;
-  private YarnMonitor monitor = null;
+  protected YarnMonitor monitor = null;
 
   private String stdOutFinalDestination, stdErrFinalDestination;
   private boolean started = false;
-  private String hdfsUser = null;
 
   private JobState finalState = null;
 
@@ -49,14 +48,6 @@ public abstract class YarnJob extends HopsJob {
       throw new IllegalArgumentException(
               "JobDescription must contain a YarnJobConfiguration object. Received class: "
               + job.getJobConfig().getClass());
-    }
-    try {
-      hdfsUser = UserGroupInformation.getCurrentUser().getUserName();
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, null, ex);
-      throw new IllegalArgumentException(
-              "Exception while trying to retrieve hadoop User Group Information: "
-              + ex.getMessage());
     }
     logger.log(Level.INFO, "Instantiating Yarn job as user: {0}", hdfsUser);
   }
@@ -205,22 +196,22 @@ public abstract class YarnJob extends HopsJob {
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
-          services.getFileOperations(hdfsUser).copyToHDFSFromLocal(true, runner.
+          services.getFileOperations(hdfsUser.getUserName()).copyToHDFSFromLocal(true, runner.
                   getStdOutPath(),
                   stdOutFinalDestination);
         } else {
-          services.getFileOperations(hdfsUser).renameInHdfs(runner.
+          services.getFileOperations(hdfsUser.getUserName()).renameInHdfs(runner.
                   getStdOutPath(),
                   stdOutFinalDestination);
         }
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
-          services.getFileOperations(hdfsUser).copyToHDFSFromLocal(true, runner.
+          services.getFileOperations(hdfsUser.getUserName()).copyToHDFSFromLocal(true, runner.
                   getStdErrPath(),
                   stdErrFinalDestination);
         } else {
-          services.getFileOperations(hdfsUser).renameInHdfs(runner.
+          services.getFileOperations(hdfsUser.getUserName()).renameInHdfs(runner.
                   getStdErrPath(),
                   stdErrFinalDestination);
         }

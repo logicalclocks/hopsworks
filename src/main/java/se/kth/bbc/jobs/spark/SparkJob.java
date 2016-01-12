@@ -97,6 +97,9 @@ public final class SparkJob extends YarnJob {
   @Override
   protected void cleanup() {
     //No special tasks to be done here.
+    logger.log(Level.SEVERE,"Job finished need to cleanup!");
+    monitor.close();
+    monitor = null;
   }
 
 }

@@ -80,26 +80,22 @@ public class SparkController {
     UserGroupInformation proxyUser = UserGroupInformation.
             createProxyUser(username, UserGroupInformation.
                     getCurrentUser());
-    Execution jh = null;
+    SparkJob sparkjob = null;
     try {
-      jh = proxyUser.doAs(new PrivilegedExceptionAction<Execution>() {
+      sparkjob = proxyUser.doAs(new PrivilegedExceptionAction<SparkJob>() {
         @Override
-        public Execution run() throws Exception {
-          return startSparkJob(job, user);
+        public SparkJob run() throws Exception {           
+          return new SparkJob(job, submitter, user, settings.
+            getHadoopDir(), settings.getSparkDir(),
+            settings.getSparkUser());
         }
       });
     } catch (InterruptedException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
-            user.asUser());
-    return jh;
-  }
-
-  private Execution startSparkJob(JobDescription job, Users user) throws IOException {
-    SparkJob sparkjob = new SparkJob(job, submitter, user, settings.
-            getHadoopDir(), settings.getSparkDir(),
-            settings.getSparkUser());
+    if (sparkjob == null) {
+      throw new NullPointerException("Could not instantiate Sparkjob.");
+    }
     Execution jh = sparkjob.requestExecutionId();
     if (jh != null) {
       submitter.startExecution(sparkjob);
@@ -108,6 +104,8 @@ public class SparkController {
               "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
+            user.asUser());
     return jh;
   }
 

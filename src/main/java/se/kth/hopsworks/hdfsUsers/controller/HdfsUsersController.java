@@ -12,10 +12,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
-import se.kth.bbc.fileoperations.FileSystemOperations;
+import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.bbc.project.fb.Inode;
@@ -24,6 +27,7 @@ import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfsUsers.HdfsGroupsFacade;
 import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
 import se.kth.hopsworks.users.UserFacade;
@@ -32,6 +36,8 @@ import se.kth.hopsworks.util.Settings;
 @Stateless
 public class HdfsUsersController {
 
+  private static final Logger logger = Logger.getLogger(HdfsUsersController.class.
+          getName());
   public static final String USER_NAME_DELIMITER = "__";
 
   @EJB
@@ -248,6 +254,17 @@ public class HdfsUsersController {
     byte[] userId = UsersGroups.getUserID(userName);
     HdfsUsers hdfsUser = hdfsUsersFacade.findHdfsUser(userId);
     if (hdfsUser != null) {
+      DistributedFileSystemOps dfsOps = dfsSingleton.getDfsOps(userName);
+      if (dfsOps != null) {
+        dfsOps.close();
+        dfsSingleton.removeDfsOps(userName);
+      }
+      try {
+        FileSystem.closeAllForUGI(UserGroupInformation.
+                createRemoteUser(userName));
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, null, ex);
+      }
       hdfsUsersFacade.removeHdfsUser(hdfsUser);
     }
   }
@@ -383,11 +400,20 @@ public class HdfsUsersController {
       hdfsUsername = getHdfsUserName(project, member.getUser());
       userId = UsersGroups.getUserID(hdfsUsername);
       hdfsUser = hdfsUsersFacade.findHdfsUser(userId);
-      if (dfsSingleton.getDfsOps(hdfsUsername) != null) {
-        dfsSingleton.getDfsOps(hdfsUsername).close();
+      if (hdfsUser != null) {
+      DistributedFileSystemOps dfsOps = dfsSingleton.getDfsOps(hdfsUsername);
+      if (dfsOps != null) {
+        dfsOps.close();
         dfsSingleton.removeDfsOps(hdfsUsername);
       }
+      try {
+        FileSystem.closeAllForUGI(UserGroupInformation.
+                createRemoteUser(hdfsUsername));
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, null, ex);
+      }
       hdfsUsersFacade.removeHdfsUser(hdfsUser);
+    }
     }
   }
 
@@ -457,6 +483,8 @@ public class HdfsUsersController {
     if (project == null || user == null) {
       return null;
     }
+    logger.log(Level.SEVERE, "--------{0}" + USER_NAME_DELIMITER + "{1}", new Object[]{project.getName(),
+      user.getUsername()});
     return project.getName() + USER_NAME_DELIMITER + user.getUsername();
   }
 

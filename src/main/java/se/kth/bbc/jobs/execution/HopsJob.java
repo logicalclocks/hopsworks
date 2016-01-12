@@ -46,7 +46,7 @@ public abstract class HopsJob {
   protected final JobDescription jobDescription;
   protected final Users user;
   protected final String hadoopDir;
-  private UserGroupInformation hdfsUser = null;
+  protected final UserGroupInformation hdfsUser;
 
   /**
    * Create a HopsJob instance.
@@ -75,6 +75,8 @@ public abstract class HopsJob {
     this.user = user;
     this.hadoopDir = hadoopDir;
     try {
+      //if HopsJob is created in a doAs UserGroupInformation.getCurrentUser()
+      //will return the proxy user, if not it will return the superuser.  
       hdfsUser = UserGroupInformation.getCurrentUser();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);

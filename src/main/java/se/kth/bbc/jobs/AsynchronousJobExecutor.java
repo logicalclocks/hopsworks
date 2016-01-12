@@ -1,18 +1,12 @@
 package se.kth.bbc.jobs;
 
 import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.execution.HopsJob;
-import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
