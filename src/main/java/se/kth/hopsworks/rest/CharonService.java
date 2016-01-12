@@ -13,6 +13,8 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -24,6 +26,7 @@ import se.kth.bbc.project.fb.InodeFacade;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.util.CharonOperations;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -123,6 +126,22 @@ public class CharonService {
     json.setSuccessMessage("File copied successfully from Charon to HDFS.");
     Response.ResponseBuilder response = Response.ok();
     return response.entity(json).build();
+  }
+
+  @GET
+  @Path("/mySiteID")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getMySiteId(
+      @Context
+      SecurityContext sc,
+      @Context
+      HttpServletRequest req) throws Exception {
+
+    String siteID = CharonOperations.getMySiteId();
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        siteID).build();
   }
 
 }

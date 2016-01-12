@@ -60,13 +60,97 @@ angular.module('hopsWorksApp')
                     auth: ['$q', '$location', 'AuthService',
                       function ($q, $location, AuthService) {
                         return AuthService.session().then(
-                                function (success) {
-                                },
-                                function (err) {
-                                  $location.path('/login');
-                                  $location.replace();
-                                  return $q.reject(err);
-                                });
+                          function (success) {
+                          },
+                          function (err) {
+                            $location.path('/login');
+                            $location.replace();
+                            return $q.reject(err);
+                          });
+                      }]
+                  }
+                });
+                return modalInstance.result;
+              },
+              createRepository: function (size) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/repositoryModal.html',
+                  controller: 'ProjectCreatorCtrl as projectCreatorCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                          function (success) {
+                          },
+                          function (err) {
+                            $location.path('/login');
+                            $location.replace();
+                            return $q.reject(err);
+                          });
+                      }]
+                  }
+                });
+                return modalInstance.result;
+              },
+              remoteRepository: function (size) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/addRepositoryModal.html',
+                  controller: 'ProjectCreatorCtrl as projectCreatorCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                          function (success) {
+                          },
+                          function (err) {
+                            $location.path('/login');
+                            $location.replace();
+                            return $q.reject(err);
+                          });
+                      }]
+                  }
+                });
+                return modalInstance.result;
+              },
+              shareRepository: function (size) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/shareRepositoryModal.html',
+                  controller: 'ProjectCreatorCtrl as projectCreatorCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                          function (success) {
+                          },
+                          function (err) {
+                            $location.path('/login');
+                            $location.replace();
+                            return $q.reject(err);
+                          });
+                      }]
+                  }
+                });
+                return modalInstance.result;
+              },
+              addSite: function (size) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/addSiteModal.html',
+                  controller: 'ProjectCreatorCtrl as projectCreatorCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                          function (success) {
+                          },
+                          function (err) {
+                            $location.path('/login');
+                            $location.replace();
+                            return $q.reject(err);
+                          });
                       }]
                   }
                 });
