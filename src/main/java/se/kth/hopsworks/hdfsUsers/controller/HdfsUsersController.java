@@ -36,7 +36,8 @@ import se.kth.hopsworks.util.Settings;
 @Stateless
 public class HdfsUsersController {
 
-  private static final Logger logger = Logger.getLogger(HdfsUsersController.class.
+  private static final Logger logger = Logger.getLogger(
+          HdfsUsersController.class.
           getName());
   public static final String USER_NAME_DELIMITER = "__";
 
@@ -253,18 +254,12 @@ public class HdfsUsersController {
     String userName = getHdfsUserName(project, user);
     byte[] userId = UsersGroups.getUserID(userName);
     HdfsUsers hdfsUser = hdfsUsersFacade.findHdfsUser(userId);
+    DistributedFileSystemOps dfsOps = dfsSingleton.getDfsOps(userName);
+    if (dfsOps != null) {
+      dfsOps.close();
+      dfsSingleton.removeDfsOps(userName);
+    }    
     if (hdfsUser != null) {
-      DistributedFileSystemOps dfsOps = dfsSingleton.getDfsOps(userName);
-      if (dfsOps != null) {
-        dfsOps.close();
-        dfsSingleton.removeDfsOps(userName);
-      }
-      try {
-        FileSystem.closeAllForUGI(UserGroupInformation.
-                createRemoteUser(userName));
-      } catch (IOException ex) {
-        logger.log(Level.SEVERE, null, ex);
-      }
       hdfsUsersFacade.removeHdfsUser(hdfsUser);
     }
   }
@@ -400,20 +395,14 @@ public class HdfsUsersController {
       hdfsUsername = getHdfsUserName(project, member.getUser());
       userId = UsersGroups.getUserID(hdfsUsername);
       hdfsUser = hdfsUsersFacade.findHdfsUser(userId);
-      if (hdfsUser != null) {
       DistributedFileSystemOps dfsOps = dfsSingleton.getDfsOps(hdfsUsername);
       if (dfsOps != null) {
         dfsOps.close();
         dfsSingleton.removeDfsOps(hdfsUsername);
       }
-      try {
-        FileSystem.closeAllForUGI(UserGroupInformation.
-                createRemoteUser(hdfsUsername));
-      } catch (IOException ex) {
-        logger.log(Level.SEVERE, null, ex);
+      if (hdfsUser != null) {
+        hdfsUsersFacade.removeHdfsUser(hdfsUser);
       }
-      hdfsUsersFacade.removeHdfsUser(hdfsUser);
-    }
     }
   }
 
@@ -483,8 +472,6 @@ public class HdfsUsersController {
     if (project == null || user == null) {
       return null;
     }
-    logger.log(Level.SEVERE, "--------{0}" + USER_NAME_DELIMITER + "{1}", new Object[]{project.getName(),
-      user.getUsername()});
     return project.getName() + USER_NAME_DELIMITER + user.getUsername();
   }
 
