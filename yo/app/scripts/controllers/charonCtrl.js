@@ -13,6 +13,7 @@ angular.module('hopsWorksApp')
         self.selectedHdfsPath = "";
         self.toHDFS = true;
         self.charonFilename = "";
+        self.mySiteID = "";
 
         $scope.switchDirection = function (projectName) {
           self.toHDFS = !self.toHDFS;
@@ -114,9 +115,59 @@ angular.module('hopsWorksApp')
           });
         };
 
+        self.newRepository = function () {
+          ModalService.createRepository('lg').then(
+            function () {
+              //loadProjects();
+              //loadActivity();
+            }, function () {
+              growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+            });
+        };
 
+        self.addSite = function () {
+          ModalService.addSite('lg').then(
+            function () {
+              //loadProjects();
+              //loadActivity();
+            }, function () {
+              growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+            });
+        };
+
+        self.remoteRepository = function () {
+          ModalService.remoteRepository('lg').then(
+            function () {
+              //loadProjects();
+              //loadActivity();
+            }, function () {
+              growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+            });
+        };
+
+        self.shareRepository = function () {
+          ModalService.shareRepository('lg').then(
+            function () {
+              //loadProjects();
+              //loadActivity();
+            }, function () {
+              growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+            });
+        };
+
+        var getMySiteId = function () {
+          charonService.getMySiteId().then(
+            function (success) {
+              self.mySiteID = success.data;
+              console.log("Success getting my Site ID "+success);
+            }, function (error) {
+              console.log("Error getting my Site ID ");
+              console.log(error);
+            });
+        };
 
         self.init = function () {
+          getMySiteId();
         };
 
         self.init();

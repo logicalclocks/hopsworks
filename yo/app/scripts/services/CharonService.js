@@ -31,6 +31,9 @@ angular.module('hopsWorksApp')
 
               return $http(regReq);
             },
+            getMySiteId: function () {
+              return $http.get('/api/banner');
+            },
           };
           return services;
         };

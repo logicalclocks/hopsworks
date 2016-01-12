@@ -1,0 +1,46 @@
+<div class="modal-header">
+  <button class="close" ng-click="projectCreatorCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Add a Site ID</h2>
+</div>
+<div class="modal-body">
+  <div growl reference="1" class="pull-right" ></div>
+
+  <form role="form" name="projectForm" ng-submit="projectCreatorCtrl.createProject()" novalidate class="form-validate">
+    <div class="row">
+      <div class="col-md-8">
+        <fieldset>
+
+          <div class="control-group col-md-offset-1">
+            <label for="token" style="color: black;">Site ID</label>
+            <div class="controls" id="token">
+              <textarea class="form-control" style="resize:none;" ng-model="projectCreatorCtrl.projectDesc"
+                        rows="20" tabindex="2" required></textarea>
+            </div>
+
+            <span ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp;
+                  projectForm.project_name.$error.required"
+                  class="text-danger ng-hide">This field is required</span>
+            <p></p>
+
+          </div>
+        </fieldset>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+
+      <button class="btn btn-default" type="button" ng-click="projectCreatorCtrl.close()" tabindex="5">Cancel</button>
+      <button class="btn btn-primary" type="submit"
+              ng-disabled="projectForm.project_name.$error.required
+              || projectCreatorCtrl.working
+              || projectForm.project_name.$error.pattern" tabindex="6">
+        <i ng-if="projectCreatorCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+        Add
+      </button>
+
+    </div>
+  </form>
+
+</div>
+
