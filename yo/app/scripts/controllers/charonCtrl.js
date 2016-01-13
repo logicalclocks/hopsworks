@@ -2,8 +2,8 @@
 
 angular.module('hopsWorksApp')
     .controller('CharonCtrl', ['$scope', '$routeParams',
-      'growl', 'ModalService', 'CharonService',
-      function ($scope, $routeParams, growl, ModalService, CharonService) {
+      'growl', 'ModalService', 'CharonService','$modalStack',
+      function ($scope, $routeParams, growl, ModalService, CharonService, $modalStack) {
 
         var self = this;
         self.projectId = $routeParams.projectID;
@@ -14,6 +14,7 @@ angular.module('hopsWorksApp')
         self.toHDFS = true;
         self.charonFilename = "";
         self.mySiteID = "";
+        self.siteID = "";
 
         $scope.switchDirection = function (projectName) {
           self.toHDFS = !self.toHDFS;
@@ -48,6 +49,7 @@ angular.module('hopsWorksApp')
                 .then(function (success) {
                     self.working = false;
                   growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                  $scope.$broadcast("copyFromCharonToHdfs", {});
                 },
                     function (error) {
                       self.working = false;
@@ -62,6 +64,7 @@ angular.module('hopsWorksApp')
                 .then(function (success) {
                     self.working = false;
                   growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                  $scope.$broadcast("copyFromHdfsToCharon", {});
                 },
                     function (error) {
                       self.working = false;
@@ -164,6 +167,26 @@ angular.module('hopsWorksApp')
               console.log("Error getting my Site ID ");
               console.log(error);
             });
+        };
+
+        self.addSiteID = function () {
+            var op = {
+              "siteID": self.siteID
+            };
+            charonService.addSiteID(op)
+              .then(function (success) {
+                  self.working = false;
+                  growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                  $modalStack.getTop().key.close();
+                },
+                function (error) {
+                  self.working = false;
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                });
+        };
+
+        self.close = function () {
+          $modalStack.getTop().key.dismiss();
         };
 
         self.init = function () {

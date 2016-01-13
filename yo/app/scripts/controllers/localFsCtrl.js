@@ -43,6 +43,19 @@ angular.module('hopsWorksApp')
               });
             };
 
+            $scope.$on("copyFromHdfsToCharon", function (event, args) {
+              var path = getPath([]);
+              localFilesystemService.getContents(path).then(
+                function (success) {
+                  self.files = success.data;
+                  self.pathArray = [];
+                  console.log(success);
+                }, function (error) {
+                  console.log("Error getting all datasets in project " + self.projectId);
+                  console.log(error);
+                });
+            });
+
             /**
              * Get the contents of the directory at the path with the given path components and load it into the frontend.
              * @param {type} The array of path compontents to fetch. If empty, fetches the current path.

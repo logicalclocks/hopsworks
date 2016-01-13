@@ -241,7 +241,7 @@ public class CharonOperations {
    *
    * @param path - the path to the repository to be shared (the repository should be empty)
    * @param permissions - the desired permissions ('r' or 'rw')
-   * @param granteId - the id of the grantee
+   * @param granteeId - the id of the grantee
    * @return - a share_token to share with the grantees site_ids
    */
   public static String share(String path, String permissions, int granteeId) throws Exception{

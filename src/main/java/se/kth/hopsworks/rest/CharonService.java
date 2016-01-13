@@ -19,6 +19,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+
+import org.primefaces.component.log.Log;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.project.Project;
@@ -130,7 +132,6 @@ public class CharonService {
 
   @GET
   @Path("/mySiteID")
-  @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.ALL})
   public Response getMySiteId(
       @Context
@@ -142,6 +143,24 @@ public class CharonService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         siteID).build();
+  }
+
+  @POST
+  @Path("/addSiteID")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response addSiteId(@Context SecurityContext sc,
+      @Context HttpServletRequest req, CharonDTO charon)
+      throws Exception {
+    JsonResponse json = new JsonResponse();
+
+    String siteID = charon.getSiteID();
+
+    CharonOperations.addSiteId(siteID);
+
+    json.setSuccessMessage("Site added successfully.");
+    Response.ResponseBuilder response = Response.ok();
+    return response.entity(json).build();
   }
 
 }
