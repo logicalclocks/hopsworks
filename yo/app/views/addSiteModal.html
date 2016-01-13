@@ -1,0 +1,45 @@
+<div class="modal-header">
+  <button class="close" ng-click="charonCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Add a Site ID</h2>
+</div>
+<div class="modal-body">
+  <div growl reference="1" class="pull-right" ></div>
+
+  <form role="form" name="siteidForm" ng-submit="charonCtrl.addSiteID()" novalidate class="form-validate">
+    <div class="row">
+      <div class="col-md-8">
+        <fieldset>
+
+          <div class="control-group col-md-offset-1">
+            <label for="token" style="color: black;">Site ID</label>
+            <div class="controls" id="token">
+              <textarea class="form-control" style="resize:none;"
+                        name="site_id"
+                        ng-model="charonCtrl.siteID"
+                        rows="20" tabindex="2" required></textarea>
+            </div>
+
+            <span ng-show="(siteidForm.$submitted || siteidForm.site_id.$dirty) &amp;&amp;
+                  siteidForm.site_id.$error.required"
+                  class="text-danger ng-hide">This field is required</span>
+            <p></p>
+
+          </div>
+        </fieldset>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+
+      <button class="btn btn-default" type="button" ng-click="charonCtrl.close()" tabindex="5">Cancel</button>
+      <button class="btn btn-primary" type="submit"
+              ng-disabled="siteidForm.site_id.$error.required" tabindex="6">
+        Add
+      </button>
+
+    </div>
+  </form>
+
+</div>
+

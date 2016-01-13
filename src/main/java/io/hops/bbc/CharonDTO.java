@@ -13,10 +13,15 @@ public class CharonDTO implements Serializable {
 
   private String charonPath;
   private String hdfsPath;
+  private String siteID;
 
   public CharonDTO(String charonPath, String hdfsPath) {
     this.charonPath = charonPath;
     this.hdfsPath = hdfsPath;
+  }
+
+  public CharonDTO(String siteID) {
+    this.siteID = siteID;
   }
 
   public CharonDTO() {
@@ -30,8 +35,15 @@ public class CharonDTO implements Serializable {
     return hdfsPath;
   }
 
+  public String getSiteID() {
+    return siteID;
+  }
+
   public void setCharonPath(String charonPath) {
     this.charonPath = charonPath;
+  }
+  public void setSiteID(String siteID) {
+    this.siteID = siteID;
   }
 
   public void setHdfsPath(String hdfsPath) {

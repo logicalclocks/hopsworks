@@ -2,24 +2,26 @@
 
 angular.module('hopsWorksApp')
     .controller('CharonCtrl', ['$scope', '$routeParams',
-      'growl', 'ModalService', 'CharonService',
-      function ($scope, $routeParams, growl, ModalService, CharonService) {
+      'growl', 'ModalService', 'CharonService','$modalStack',
+      function ($scope, $routeParams, growl, ModalService, CharonService, $modalStack) {
 
         var self = this;
         self.projectId = $routeParams.projectID;
         var charonService = CharonService(self.projectId);
 
-        self.selectedFile = "";
-        self.selectedDir = "";
+        self.working = false;
+        self.selectedHdfsPath = "";
         self.toHDFS = true;
         self.charonFilename = "";
+        self.mySiteID = "";
+        self.siteID = "";
 
         $scope.switchDirection = function (projectName) {
           self.toHDFS = !self.toHDFS;
-          self.selectedFile = "";
-          self.selectedDir = "";
+          self.selectedCharonPath = "";
+          self.selectedHdfsPath = "";
           if (!self.toHDFS) {
-            self.selectedDir = "/srv/charon_fs/" + projectName;
+            self.selectedCharonPath = "/srv/Charon/charon_fs/" + projectName;
           }
         }
         /**
@@ -28,38 +30,44 @@ angular.module('hopsWorksApp')
          * @param {String} path
          * @returns {undefined}
          */
-        self.onFileSelected = function (path) {
-          self.selectedFile = path;
+        self.onCharonPathSelected = function (path) {
+          self.selectedCharonPath = path;
         };
 
-        self.onDirSelected = function (path) {
-          self.selectedDir = path;
+        self.onHdfsPathSelected = function (path) {
+          self.selectedHdfsPath = path;
         };
 
         self.copyFile = function () {
-
+          self.working = true;
           if (self.toHDFS === true) {
             var op = {
-              "charonPath": self.selectedFile,
-              "hdfsPath": self.selectedDir
+              "charonPath": self.selectedCharonPath,
+              "hdfsPath": self.selectedHdfsPath
             };
             charonService.copyFromCharonToHdfs(op)
                 .then(function (success) {
+                    self.working = false;
                   growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                  $scope.$broadcast("copyFromCharonToHdfs", {});
                 },
                     function (error) {
+                      self.working = false;
                       growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                     });
           } else {
             var op = {
-              "charonPath": self.selectedDir,
-              "hdfsPath": self.selectedFile
+              "charonPath": self.selectedCharonPath,
+              "hdfsPath": self.selectedHdfsPath
             };
             charonService.copyFromHdfsToCharon(op)
                 .then(function (success) {
+                    self.working = false;
                   growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                  $scope.$broadcast("copyFromHdfsToCharon", {});
                 },
                     function (error) {
+                      self.working = false;
                       growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                     });
           }
@@ -110,9 +118,79 @@ angular.module('hopsWorksApp')
           });
         };
 
+        self.newRepository = function () {
+          ModalService.createRepository('lg').then(
+            function () {
+              //loadProjects();
+              //loadActivity();
+            }, function () {
+              growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+            });
+        };
 
+        self.addSite = function () {
+          ModalService.addSite('lg').then(
+            function () {
+              //loadProjects();
+              //loadActivity();
+            }, function () {
+              growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+            });
+        };
+
+        self.remoteRepository = function () {
+          ModalService.remoteRepository('lg').then(
+            function () {
+              //loadProjects();
+              //loadActivity();
+            }, function () {
+              growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+            });
+        };
+
+        self.shareRepository = function () {
+          ModalService.shareRepository('lg').then(
+            function () {
+              //loadProjects();
+              //loadActivity();
+            }, function () {
+              growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+            });
+        };
+
+        var getMySiteId = function () {
+          charonService.getMySiteId().then(
+            function (success) {
+              self.mySiteID = success.data;
+              console.log("Success getting my Site ID "+success);
+            }, function (error) {
+              console.log("Error getting my Site ID ");
+              console.log(error);
+            });
+        };
+
+        self.addSiteID = function () {
+            var op = {
+              "siteID": self.siteID
+            };
+            charonService.addSiteID(op)
+              .then(function (success) {
+                  self.working = false;
+                  growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                  $modalStack.getTop().key.close();
+                },
+                function (error) {
+                  self.working = false;
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                });
+        };
+
+        self.close = function () {
+          $modalStack.getTop().key.dismiss();
+        };
 
         self.init = function () {
+          getMySiteId();
         };
 
         self.init();

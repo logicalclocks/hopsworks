@@ -88,7 +88,7 @@ public class ZeppelinResource {
       pidFiles = fsManager.resolveFile(filesystemRoot.toString() + "/").
               getChildren();
     } catch (FileSystemException ex) {
-      throw new FileSystemException("Not a folder", ex.getMessage());
+      throw new FileSystemException("Directory not found: " + filesystemRoot.getPath(), ex.getMessage());
     }
     return pidFiles;
   }

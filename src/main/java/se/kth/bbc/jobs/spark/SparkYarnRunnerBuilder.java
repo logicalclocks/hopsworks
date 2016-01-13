@@ -116,7 +116,11 @@ public class SparkYarnRunnerBuilder {
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
-    amargs.append(" --num-executors ").append(numberOfExecutors);
+    // https://fossies.org/diffs/spark/1.4.1_vs_1.5.0/
+    // yarn/src/main/scala/org/apache/spark/deploy/yarn/
+    // ApplicationMasterArguments.scala-diff.html
+    // spark 1.5.x removed --num-executors
+    // amargs.append(" --num-executors ").append(numberOfExecutors);
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);
     for (String s : jobArgs) {

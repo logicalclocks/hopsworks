@@ -1,7 +1,7 @@
 <div class="modal-header">
   <button class="close" ng-click="projectCreatorCtrl.close()" data-dismiss="modal" aria-hidden="true"
           type="button">&times;</button>
-  <h2 class="modal-title">New project</h2>
+  <h2 class="modal-title">Share repository</h2>
 </div>
 <div class="modal-body">
   <div growl reference="1" class="pull-right" ></div>
@@ -20,41 +20,39 @@
                      autofocus="autofocus"
                      ng-maxlength="24"
                      required
-                     >
+              >
             </md-input-container>
 
             <span ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.required"
-              class="text-danger ng-hide">This field is required</span>
+                  class="text-danger ng-hide">This field is required</span>
 
             <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.pattern"
-                    class="text-danger ng-hide">Invalid project name. Spaces
-              in project names and special characters such as __, /, \, ?,
+                  class="text-danger ng-hide">Invalid repository name. Spaces
+              in repository names and special characters such as __, /, \, ?,
               *, :, |, ', ", <, >, %, (, ), &, ;, #, are not allowed.</span>
 
             <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.maxlength"
-                  class="text-danger ng-hide">Project name shouldn't be longer than 24 characters.</span>
+                  class="text-danger ng-hide">Repository name shouldn't be
+              longer
+              than
+              24 characters.</span>
 
             <p></p>
 
-            <label for="projectname" class="control-label">Description</label>
-
-            <div class="controls">
-              <textarea class="form-control" style="resize:none;" ng-model="projectCreatorCtrl.projectDesc"
-                        rows="3" tabindex="2"></textarea>
-            </div>
-
-
-            <label style="margin-top:20px;" for="projectname" class="control-label">Members</label>
+            <label style="margin-top:20px;" for="projectname" class="control-label">Sites
+              available for sharing
+            </label>
 
             <div class="controls">
 
               <ui-select ng-model="projectCreatorCtrl.card.selected" theme="select2"
                          style="min-width: 300px;" tabindex="3">
 
-                <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
+                <ui-select-match placeholder="Add sites...">{{$select.selected
+                  .email}}</ui-select-match>
                 <ui-select-choices
                   repeat="card in projectCreatorCtrl.cards | cardFilter: {email: $select.search, firstname: $select.search, lastname: $select.search}">
 
@@ -86,15 +84,17 @@
       </div>
 
       <div class="col-md-4">
-        <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Services</h3>
+        <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Share</h3>
 
         <fieldset>
           <div class="control-group col-md-offset-2">
             <md-checkbox class="md-primary"
-                         ng-repeat="projectType in projectCreatorCtrl.projectTypes"
                          ng-click="projectCreatorCtrl.exists(projectType)" tabindex="4">
-              {{ projectType}}
-
+              Read only
+            </md-checkbox>
+            <md-checkbox class="md-primary"
+                         ng-click="projectCreatorCtrl.exists(projectType)" tabindex="4">
+              Read / Write
             </md-checkbox>
           </div>
 
@@ -106,13 +106,13 @@
     <div class="modal-footer">
 
       <button class="btn btn-default" type="button" ng-click="projectCreatorCtrl.close()" tabindex="5">Cancel</button>
-      <button class="btn btn-primary" type="submit" 
+      <button class="btn btn-primary" type="submit"
               ng-disabled="projectForm.project_name.$error.required
               || projectCreatorCtrl.working
               || projectForm.project_name.$error.pattern
               || projectForm.project_name.$error.maxlength" tabindex="6">
         <i ng-if="projectCreatorCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
-        Create
+        Share
       </button>
 
     </div>

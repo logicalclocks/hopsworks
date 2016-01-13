@@ -6,14 +6,14 @@
 package se.kth.bbc.security.audit;
 
  
-public enum StudyAuditActions {
+public enum ProjectAuditActions {
 
   // for detialed audit info
   AUDITTRAILS("AUDIT TRAILS");
 
   private final String value;
 
-  private StudyAuditActions(String value) {
+  private ProjectAuditActions(String value) {
     this.value = value;
   }
 
@@ -21,9 +21,9 @@ public enum StudyAuditActions {
     return value;
   }
 
-  public static StudyAuditActions getStudyAuditActions(String text) {
+  public static ProjectAuditActions getProjectAuditActions(String text) {
     if (text != null) {
-      for (StudyAuditActions b : StudyAuditActions.values()) {
+      for (ProjectAuditActions b : ProjectAuditActions.values()) {
         if (text.equalsIgnoreCase(b.value)) {
           return b;
         }

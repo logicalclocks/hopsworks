@@ -71,7 +71,7 @@ public class ProjectPrivacyManager {
     return true;
   }
 
-  public Consents getConsentByName(int cid) throws ParseException {
+  public Consents getConsentById(int cid) throws ParseException {
 
     TypedQuery<Consents> q = em.createNamedQuery("Consents.findById",
             Consents.class);
@@ -84,6 +84,19 @@ public class ProjectPrivacyManager {
 
   }
 
+  
+  public Consents getConsentByName(String name) throws ParseException {
+
+    TypedQuery<Consents> q = em.createNamedQuery("Consents.findByInodePK",
+            Consents.class);
+    q.setParameter("name", name);
+    List<Consents> consent = q.getResultList();
+    if (consent.size() > 0) {
+      return consent.get(0);
+    }
+    return null;
+
+  }
   public List<Consents> getAllConsets(int pid) {
     TypedQuery<Consents> q = em.createNamedQuery("Consents.findByProjectId",
             Consents.class);

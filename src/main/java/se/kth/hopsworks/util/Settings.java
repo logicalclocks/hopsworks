@@ -108,12 +108,21 @@ public class Settings {
     }
   }
 
-  private String CHARON_DIR = "/srv/charon_fs";
+  private String CHARON_DIR = "/srv/Charon";
 
   public synchronized String getCharonDir() {
     checkCache();
     return CHARON_DIR;
-  }  
+  }
+
+  public synchronized String getCharonMountDir() {
+    checkCache();
+    return CHARON_DIR + "/charon_fs";
+  }
+
+  public synchronized String getCharonProjectDir(String projectName) {
+    return getCharonMountDir() + "/" + projectName;
+  }
   
   /**
    * Default Directory locations

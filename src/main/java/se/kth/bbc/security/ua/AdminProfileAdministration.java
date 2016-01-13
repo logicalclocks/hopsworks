@@ -8,15 +8,20 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.audit.AccountsAuditActions;
+import se.kth.bbc.security.audit.AuditManager;
+import se.kth.bbc.security.audit.RolesAuditActions;
+import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.audit.model.Userlogins;
 import se.kth.hopsworks.user.model.Users;
-
 
 @ManagedBean
 @ViewScoped
@@ -26,6 +31,12 @@ public class AdminProfileAdministration implements Serializable {
 
   @EJB
   private UserManager userManager;
+
+  @EJB
+  private AuditManager am;
+
+  @ManagedProperty(value = "#{clientSessionState}")
+  private ClientSessionState sessionState;
 
   private Users user;
   // for modifying user roles and status
@@ -254,10 +265,17 @@ public class AdminProfileAdministration implements Serializable {
               getValue());
       userManager.updateStatus(editingUser, PeopleAccountStatus.valueOf(
               selectedStatus).getValue());
+      am.registerAccountChange(sessionState.getLoggedInUser(),
+              AccountsAuditActions.CHANGEDSTATUS.name(),
+              UserAuditActions.SUCCESS.
+              name(), selectedStatus, editingUser);
       MessagesController.addInfoMessage("Success",
               "Status updated successfully.");
-
     } else {
+      am.registerAccountChange(sessionState.getLoggedInUser(),
+              AccountsAuditActions.CHANGEDSTATUS.name(),
+              UserAuditActions.FAILED.
+              name(), selectedStatus, editingUser);
       MessagesController.addErrorMessage("Error", "No selection made!");
 
     }
@@ -270,9 +288,16 @@ public class AdminProfileAdministration implements Serializable {
     if (!"#".equals(newGroup)) {
       userManager.registerGroup(editingUser, BBCGroup.valueOf(newGroup).
               getValue());
+      am.registerRoleChange(sessionState.getLoggedInUser(),
+              RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.
+              name(), BBCGroup.valueOf(newGroup).name(), editingUser);
       MessagesController.addInfoMessage("Success", "Role updated successfully.");
 
     } else {
+      am.registerRoleChange(sessionState.getLoggedInUser(),
+              RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.
+              name(), BBCGroup.valueOf(newGroup).name(), editingUser);
+
       MessagesController.addErrorMessage("Error", "No selection made!!");
 
     }
@@ -284,23 +309,44 @@ public class AdminProfileAdministration implements Serializable {
     // Remove a group
     if (!"#".equals(selectedGroup)) {
       if (selectedGroup.equals(BBCGroup.BBC_GUEST.toString())) {
+        am.registerRoleChange(sessionState.getLoggedInUser(),
+                RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.FAILED.
+                name(), BBCGroup.valueOf(selectedGroup).name(), editingUser);
         MessagesController.addErrorMessage("Error", BBCGroup.BBC_GUEST.
                 toString() + " can not be removed.");
       } else {
+
         userManager.removeGroup(editingUser, BBCGroup.valueOf(selectedGroup).
                 getValue());
-        MessagesController.addInfoMessage("Success",
-                "User updated successfully.");
+
+        am.registerRoleChange(sessionState.getLoggedInUser(),
+                RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.SUCCESS.
+                name(), BBCGroup.valueOf(selectedGroup).name(), editingUser);
       }
+
+      MessagesController.addInfoMessage("Success",
+              "User updated successfully.");
     }
 
     if ("#".equals(selectedGroup)) {
 
       if (("#".equals(selectedStatus))
               || "#".equals(newGroup)) {
+        am.registerRoleChange(sessionState.getLoggedInUser(),
+                RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.FAILED.
+                name(), BBCGroup.valueOf(selectedGroup).name(), editingUser);
         MessagesController.addErrorMessage("Error", "No selection made!");
       }
     }
 
   }
+
+  public ClientSessionState getSessionState() {
+    return sessionState;
+  }
+
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
+  }
+
 }

@@ -27,6 +27,11 @@ angular.module('hopsWorksApp')
             self.availableTemplates = [];
             self.closeSlider = false;
 
+            $scope.sort = function(keyname){
+              $scope.sortKey = keyname;   //set the sortKey to the param passed
+              $scope.reverse = !$scope.reverse; //if true make it false and vice versa
+            }
+
             /**
              * watch for changes happening in service variables from the other controller
              */
@@ -67,6 +72,29 @@ angular.module('hopsWorksApp')
                 console.log(error);
               });
             };
+
+            $scope.$on("copyFromCharonToHdfs", function (event, args) {
+              var newPathArray = self.pathArray;
+              //Convert into a path
+              var newPath = getPath(newPathArray);
+              self.working = true;
+              //Get the contents and load them
+              dataSetService.getContents(newPath).then(
+                function (success) {
+                  //Reset the selected file
+                  self.selected = null;
+                  self.fileDetail = null;
+                  //Set the current files and path
+                  self.files = success.data;
+                  self.pathArray = newPathArray;
+                  self.working = false;
+                  console.log(success);
+                }, function (error) {
+                  self.working = false;
+                  console.log("Error getting the contents of the path " + getPath(newPathArray));
+                  console.log(error);
+                });
+            });
 
             /**
              * Get the contents of the directory at the path with the given path components and load it into the frontend.
