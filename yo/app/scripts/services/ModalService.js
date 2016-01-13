@@ -138,7 +138,7 @@ angular.module('hopsWorksApp')
               addSite: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/addSiteModal.html',
-                  controller: 'ProjectCreatorCtrl as projectCreatorCtrl',
+                  controller: 'CharonCtrl as charonCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',

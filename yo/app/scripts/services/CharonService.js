@@ -32,7 +32,19 @@ angular.module('hopsWorksApp')
               return $http(regReq);
             },
             getMySiteId: function () {
-              return $http.get('/api/banner');
+              return $http.get('/api/project/' + id + '/charon/mySiteID');
+            },
+            addSiteID: function (op) {
+              var regReq = {
+                method: 'POST',
+                url: '/api/project/' + id + '/charon/addSiteID',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                data: op
+              };
+
+              return $http(regReq);
             },
           };
           return services;
