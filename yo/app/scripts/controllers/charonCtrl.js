@@ -154,9 +154,25 @@ angular.module('hopsWorksApp')
 
         self.shareRepository = function () {
           ModalService.shareRepository('lg').then(
-            function () {
-              //loadProjects();
-              //loadActivity();
+            function (success) {
+              self.permission = success.permission;
+              self.granteeId = success.granteeId;
+
+              var string = (self.selectedCharonPath).replace("/srv/Charon/charon_fs", "");
+              var op = {
+                "string": string,
+                "permissions": self.permissions,
+                "granteeId": self.granteeId
+              };
+              charonService.share(op)
+                .then(function (success) {
+                    self.working = false;
+                    growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                  },
+                  function (error) {
+                    self.working = false;
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                  });
             }, function () {
               growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
             });
@@ -226,22 +242,11 @@ angular.module('hopsWorksApp')
 
         self.share = function () {
           self.getPermissions();
-          var string = self.selectedCharonPath.replace("/srv/Charon/charon_fs", "");
           var op = {
-            "string": string,
             "permissions": self.permissions,
             "granteeId": self.granteeId
           };
-          charonService.share(op)
-            .then(function (success) {
-                self.working = false;
-                growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
-                $modalStack.getTop().key.close();
-              },
-              function (error) {
-                self.working = false;
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-              });
+          $modalStack.getTop().key.close(op);
         };
 
         self.close = function () {
