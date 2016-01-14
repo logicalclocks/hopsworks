@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
+import java.util.Map;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import org.apache.commons.vfs2.FileObject;
@@ -129,6 +130,8 @@ public class ZeppelinResource {
       return false;
     }
     int exitValue;
+    Map<String, String> env = pb.environment();
+    env.put("SPARK_HOME","/srv/spark");
     try {
       Process p = pb.start();
       p.waitFor();
