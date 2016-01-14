@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -36,6 +38,8 @@ import java.io.RandomAccessFile;
  */
 public class CharonOperations {
 
+  private static final Logger logger = Logger.getLogger(CharonOperations.class.
+      getName());
 
   private static String CHARON_PATH = "/srv/Charon";
   private static String charonMountPointPath = "/srv/Charon/charon_fs";
