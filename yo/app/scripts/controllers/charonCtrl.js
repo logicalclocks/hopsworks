@@ -14,7 +14,12 @@ angular.module('hopsWorksApp')
         self.toHDFS = true;
         self.charonFilename = "";
         self.mySiteID = "";
-        self.siteID = "";
+        self.string = "";
+        self.isReadChecked = false;
+        self.isWriteChecked = false;
+        self.granteeId = "";
+        self.permissions = "";
+        self.regex = /^(?!.*?__|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#).*$/;
 
         $scope.switchDirection = function (projectName) {
           self.toHDFS = !self.toHDFS;
@@ -64,7 +69,7 @@ angular.module('hopsWorksApp')
                 .then(function (success) {
                     self.working = false;
                   growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
-                  $scope.$broadcast("copyFromHdfsToCharon", {});
+                  $scope.$broadcast("refreshCharon", {});
                 },
                     function (error) {
                       self.working = false;
@@ -121,8 +126,7 @@ angular.module('hopsWorksApp')
         self.newRepository = function () {
           ModalService.createRepository('lg').then(
             function () {
-              //loadProjects();
-              //loadActivity();
+              $scope.$broadcast("refreshCharon", {});
             }, function () {
               growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
             });
@@ -171,7 +175,7 @@ angular.module('hopsWorksApp')
 
         self.addSiteID = function () {
             var op = {
-              "siteID": self.siteID
+              "string": self.string
             };
             charonService.addSiteID(op)
               .then(function (success) {
@@ -185,8 +189,79 @@ angular.module('hopsWorksApp')
                 });
         };
 
+        self.mkdir = function () {
+          var op = {
+            "string": self.string
+          };
+          charonService.mkdir(op)
+            .then(function (success) {
+                self.working = false;
+                growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                $modalStack.getTop().key.close();
+              },
+              function (error) {
+                self.working = false;
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+              });
+        };
+
+        self.createSharedRepository = function () {
+          self.getPermissions();
+          var op = {
+            "string": self.string,
+            "permissions": self.permissions,
+            "granteeId": self.granteeId
+          };
+          charonService.createSharedRepository(op)
+            .then(function (success) {
+                self.working = false;
+                growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                $modalStack.getTop().key.close();
+              },
+              function (error) {
+                self.working = false;
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+              });
+        };
+
+        self.share = function () {
+          self.getPermissions();
+          var string = self.selectedCharonPath.replace("/srv/Charon/charon_fs", "");
+          var op = {
+            "string": string,
+            "permissions": self.permissions,
+            "granteeId": self.granteeId
+          };
+          charonService.share(op)
+            .then(function (success) {
+                self.working = false;
+                growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                $modalStack.getTop().key.close();
+              },
+              function (error) {
+                self.working = false;
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+              });
+        };
+
         self.close = function () {
           $modalStack.getTop().key.dismiss();
+        };
+
+        self.getPermissions = function () {
+          if (self.isReadChecked && !self.isWriteChecked){
+            self.permissions = "r";
+          } else {
+            self.permissions = "rw";
+          }
+        };
+
+        self.createRepo = function () {
+          if (!self.isReadChecked && !self.isWriteChecked){
+            self.mkdir();
+          } else {
+            self.createSharedRepository();
+          }
         };
 
         self.init = function () {

@@ -75,7 +75,7 @@ angular.module('hopsWorksApp')
               createRepository: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/repositoryModal.html',
-                  controller: 'ProjectCreatorCtrl as projectCreatorCtrl',
+                  controller: 'CharonCtrl as charonCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',

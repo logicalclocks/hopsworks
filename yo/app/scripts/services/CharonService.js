@@ -46,6 +46,42 @@ angular.module('hopsWorksApp')
 
               return $http(regReq);
             },
+            mkdir: function (op) {
+              var regReq = {
+                method: 'POST',
+                url: '/api/project/' + id + '/charon/mkdir',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                data: op
+              };
+
+              return $http(regReq);
+            },
+            createSharedRepository: function (op) {
+              var regReq = {
+                method: 'POST',
+                url: '/api/project/' + id + '/charon/createSharedRepository',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                data: op
+              };
+
+              return $http(regReq);
+            },
+            share: function (op) {
+              var regReq = {
+                method: 'POST',
+                url: '/api/project/' + id + '/charon/share',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                data: op
+              };
+
+              return $http(regReq);
+            },
           };
           return services;
         };
