@@ -3,6 +3,7 @@ package se.kth.hopsworks.rest;
 import io.hops.bbc.CharonDTO;
 import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -14,13 +15,11 @@ import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import org.primefaces.component.log.Log;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.project.Project;
@@ -154,11 +153,79 @@ public class CharonService {
       throws Exception {
     JsonResponse json = new JsonResponse();
 
-    String siteID = charon.getSiteID();
+    String siteID = charon.getString();
 
     CharonOperations.addSiteId(siteID);
 
     json.setSuccessMessage("Site added successfully.");
+    Response.ResponseBuilder response = Response.ok();
+    return response.entity(json).build();
+  }
+
+  @POST
+  @Path("/mkdir")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response mkdir(@Context SecurityContext sc,
+      @Context HttpServletRequest req, CharonDTO charon)
+      throws Exception {
+    JsonResponse json = new JsonResponse();
+
+    String path = project.getName() + File.separator + charon.getString();
+
+    CharonOperations.mkdir(path, null);
+
+    json.setSuccessMessage("Repository created successfully.");
+    Response.ResponseBuilder response = Response.ok();
+    return response.entity(json).build();
+  }
+
+  @POST
+  @Path("/createSharedRepository")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response createSharedRepository(@Context SecurityContext sc,
+      @Context HttpServletRequest req, CharonDTO charon)
+      throws Exception {
+    JsonResponse json = new JsonResponse();
+    String path;
+
+    if (!charon.getString().contains("/"+project.getName())) {
+       path = project.getName() + File.separator + charon.getString();
+    } else {
+       path = charon.getString();
+    }
+    String permissions = charon.getPermissions();
+    int granteeId = Integer.parseInt(charon.getGranteeId());
+
+    CharonOperations.createSharedRepository(granteeId,path,permissions);
+
+    json.setSuccessMessage("Repository created successfully.");
+    Response.ResponseBuilder response = Response.ok();
+    return response.entity(json).build();
+  }
+
+  @POST
+  @Path("/share")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response share(@Context SecurityContext sc,
+      @Context HttpServletRequest req, CharonDTO charon)
+      throws Exception {
+    JsonResponse json = new JsonResponse();
+    String path;
+
+    if (!charon.getString().contains("/"+project.getName())) {
+      path = project.getName() + File.separator + charon.getString();
+    } else {
+      path = charon.getString();
+    }
+    String permissions = charon.getPermissions();
+    int granteeId = Integer.parseInt(charon.getGranteeId());
+
+    CharonOperations.share(permissions,path,granteeId);
+
+    json.setSuccessMessage("Repository shared successfully.");
     Response.ResponseBuilder response = Response.ok();
     return response.entity(json).build();
   }
