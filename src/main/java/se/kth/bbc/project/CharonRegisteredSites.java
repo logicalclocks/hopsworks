@@ -26,7 +26,10 @@ public class CharonRegisteredSites implements Serializable {
     private static final long serialVersionUID = 1L;
     @EmbeddedId
     protected CharonRegisteredSitesPK charonRegisteredSitesPK;
-    @JoinColumn(name = "id", referencedColumnName = "id", insertable = false, updatable = false)
+    @JoinColumn(name = "project_id",
+        referencedColumnName = "id",
+        insertable = false,
+        updatable = false)
     @ManyToOne(optional = false)
     private Project project;
 

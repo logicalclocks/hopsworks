@@ -17,12 +17,24 @@
  */
 package se.kth.bbc.project;
 
+import se.kth.bbc.activity.ActivityFacade;
+import se.kth.bbc.project.fb.Inode;
+import se.kth.hopsworks.controller.FolderNameValidator;
+import se.kth.hopsworks.controller.ResponseMessages;
+import se.kth.hopsworks.dataset.Dataset;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.Settings;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.validation.ValidationException;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 @Stateless
@@ -44,5 +56,12 @@ public class CharonController {
 
   public List<CharonRepoShared> getAllCharonRepoShared() {
     return charonRepoSharedFacade.findAll();
+  }
+
+  public void addSiteId(int projectId, String siteId) throws IOException {
+
+    CharonRegisteredSitesPK stp = new CharonRegisteredSitesPK(projectId, siteId);
+    CharonRegisteredSites st = new CharonRegisteredSites(stp);
+    charonRegisteredSitesFacade.persistCharonRegisteredSite(st);
   }
 }

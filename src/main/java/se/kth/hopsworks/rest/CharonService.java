@@ -6,6 +6,7 @@ import io.hops.hdfs.HdfsLeDescriptorsFacade;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -15,13 +16,19 @@ import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.project.CharonController;
+import se.kth.bbc.project.CharonRegisteredSites;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.InodeFacade;
 import javax.ws.rs.POST;
@@ -54,6 +61,8 @@ public class CharonService {
   private FileOperations fileOps;
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
+  @EJB
+  private CharonController charonController;
 
   private Project project;
 
@@ -144,6 +153,28 @@ public class CharonService {
         siteID).build();
   }
 
+  @GET
+  @Path("/listSiteIds")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response listSiteIds(
+      @Context
+      SecurityContext sc,
+      @Context
+      HttpServletRequest req) throws Exception {
+
+//    String siteIDs = CharonOperations.listSiteIds();
+
+    List<CharonRegisteredSites> sites = charonController
+        .getAllCharonRegisteredSites();
+    GenericEntity<List<CharonRegisteredSites>> sitesList
+        = new GenericEntity<List<CharonRegisteredSites>>(sites) {
+    };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        sitesList).build();
+  }
+
   @POST
   @Path("/addSiteID")
   @Consumes(MediaType.APPLICATION_JSON)
@@ -156,6 +187,7 @@ public class CharonService {
     String siteID = charon.getString();
 
     CharonOperations.addSiteId(siteID);
+    charonController.addSiteId(project.getId(), siteID);
 
     json.setSuccessMessage("Site added successfully.");
     Response.ResponseBuilder response = Response.ok();

@@ -53,6 +53,8 @@
     <class>io.hops.bbc.Consents</class>
     <class>se.kth.bbc.project.ProjectsManagement</class>
     <class>se.kth.bbc.project.ProjectPaymentsHistory</class>
+    <class>se.kth.bbc.project.CharonRegisteredSites</class>
+    <class>se.kth.bbc.project.CharonRepoShared</class>
     <class>se.kth.bbc.project.YarnProjectsQuota</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
