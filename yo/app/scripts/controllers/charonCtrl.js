@@ -18,6 +18,7 @@ angular.module('hopsWorksApp')
         self.isReadChecked = false;
         self.isWriteChecked = false;
         self.granteeId = "";
+        self.availableSiteIDs = "";
         self.permissions = "";
         self.regex = /^(?!.*?__|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#).*$/;
 
@@ -189,6 +190,17 @@ angular.module('hopsWorksApp')
             });
         };
 
+        var listSiteIds = function () {
+          charonService.listSiteIds().then(
+            function (success) {
+              self.availableSiteIDs = success.data;
+              console.log("Success getting available Site IDs "+success);
+            }, function (error) {
+              console.log("Error getting available Site IDs ");
+              console.log(error);
+            });
+        };
+
         self.addSiteID = function () {
             var op = {
               "string": self.string
@@ -271,6 +283,7 @@ angular.module('hopsWorksApp')
 
         self.init = function () {
           getMySiteId();
+          listSiteIds();
         };
 
         self.init();

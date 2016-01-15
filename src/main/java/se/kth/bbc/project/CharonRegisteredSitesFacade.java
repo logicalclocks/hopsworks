@@ -19,11 +19,13 @@ package se.kth.bbc.project;
 
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
+import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.List;
 
+@Stateless
 public class CharonRegisteredSitesFacade extends AbstractFacade<CharonRegisteredSites> {
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -44,4 +46,10 @@ public class CharonRegisteredSitesFacade extends AbstractFacade<CharonRegistered
         CharonRegisteredSites.class);
     return query.getResultList();
   }
+
+  public void persistCharonRegisteredSite(CharonRegisteredSites
+      charonRegisteredSites) {
+    em.persist(charonRegisteredSites);
+  }
+
 }

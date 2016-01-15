@@ -20,11 +20,13 @@ package se.kth.bbc.project;
 import se.kth.bbc.project.CharonRepoShared;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
+import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.List;
 
+@Stateless
 public class CharonRepoSharedFacade extends AbstractFacade<CharonRepoShared> {
 
   @PersistenceContext(unitName = "kthfsPU")
