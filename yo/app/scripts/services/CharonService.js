@@ -34,6 +34,9 @@ angular.module('hopsWorksApp')
             getMySiteId: function () {
               return $http.get('/api/project/' + id + '/charon/mySiteID');
             },
+            listSiteIds: function () {
+              return $http.get('/api/project/' + id + '/charon/listSiteIds');
+            },
             addSiteID: function (op) {
               var regReq = {
                 method: 'POST',

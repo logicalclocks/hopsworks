@@ -77,6 +77,11 @@ public class CharonOperations {
    * @throws Exception
    */
   public static void addSiteId(String site_id) throws Exception{
+
+    if (site_id == null || site_id.isEmpty()) {
+      throw new Exception("Invalid or empty Site ID entered.");
+    }
+
     String site_id_filename = "site-id.charon";
     File siteIdFile_temp = new File(CHARON_PATH + File.separator + site_id_filename);
     try {

@@ -198,13 +198,13 @@
       </div>
       </div>
       <div class="col-lg-4" style="border-left: 1px dashed lightgrey;
-        padding-left: 0px; float: right; margin-top: -50px;">
+        padding-left: 0px; float: right; margin-top: -84px;">
         <div class="ibox float-e-margins" style="margin-bottom: -25px; height: 95%;">
           <div class="file-manager">
             <div>
               <md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">
                 <md-tabs md-dynamic-height md-border-bottom>
-                  <md-tab label="Info">
+                  <md-tab  label="">
                     <md-content>
                       <table id="mytable1" class="table table-bordred table-striped" style="margin-top: 16px;">
                         <tr style="background-color: #fafafa">
@@ -213,11 +213,6 @@
                             <textarea disabled class="form-control"
                                       style="resize:none;cursor: default"
                                                               rows="7">{{charonCtrl.mySiteID}}</textarea>
-                          </td>
-                        </tr>
-                        <tr style="background-color: #fafafa">
-                          <td style="color: grey;">Mount point</td>
-                          <td style="color: grey;">/srv/Charon/charon_fs</td>
                           </td>
                         </tr>
                       </table>
@@ -243,8 +238,43 @@
                         </div>
                       </div>
                       <div class="" height="80%" ng-hide="charonCtrl.noIDs">
-                        <div class="input-group-lg" align="left" style="height: 70%">
+                        <div class="input-group-lg" align="left"">
                           <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px;margin-top: 10px;">
+                            <label style="font-size: 16px;" class="ng-binding">(4)ricardo-127.0.0.1:11001</label>
+                            <button type="button" class="btn btn-default btn-xs pull-right" style="color: red;background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" data-toggle="collapse" data-target="#metadatadiv0"><i class="fa fa-minus"></i></button>
+                          </div>
+                          <div style="margin: 5px">
+                            <textarea disabled class="form-control"
+                                      style="resize:none;cursor: default"
+                                      rows="7">{{charonCtrl.availableSiteIDs}}</textarea>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="board" style="font-family: Times New Roman;">
+                      <div class="modal-header">
+                                      <span class="modal-title"
+                                            ng-model="columnName"><label
+                                        style="font-size: 17px">Sites I
+                                        have
+                                        shared with</label></span>
+
+                      </div>
+                      <div ng-show="charonCtrl.noIDs" style="padding-left: 10px">
+                        <div style="display: inline-block">
+                          <div style="display: inline-block"><h4>No site IDs added yet.</h4></div>
+                        </div>
+                      </div>
+                      <div class="" height="80%" ng-hide="charonCtrl.noIDs">
+                        <div class="input-group-lg" align="left">
+                          <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px;margin-top: 10px;">
+                            <label style="font-size: 16px;" class="ng-binding">(4)ricardo-127.0.0.1:11001</label>
+                          </div>
+                          <div style="margin: 5px">
+                            <textarea disabled class="form-control"
+                                      style="resize:none;cursor: default"
+                                      rows="7">{{charonCtrl.availableSiteIDs}}</textarea>
+                          </div>
                         </div>
                       </div>
                     </div>
