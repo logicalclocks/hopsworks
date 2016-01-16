@@ -13,13 +13,16 @@ angular.module('hopsWorksApp')
         self.selectedHdfsPath = "";
         self.toHDFS = true;
         self.charonFilename = "";
-        self.mySiteID = "";
+        self.mySiteID = "";availableSiteIDs
         self.string = "";
         self.isReadChecked = false;
         self.isWriteChecked = false;
         self.granteeId = "";
+        self.path = "";
         self.availableSiteIDs = "";
-        self.shares = "";
+        self.shareSiteID = "";
+        self.sharedRepos = "";
+        self.token = "";
         self.permissions = "";
         self.regex = /^(?!.*?__|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#).*$/;
 
@@ -128,6 +131,7 @@ angular.module('hopsWorksApp')
         self.newRepository = function () {
           ModalService.createRepository('lg').then(
             function () {
+			  self.shareRepository();
               $scope.$broadcast("refreshCharon", {});
             }, function () {
               growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
@@ -154,15 +158,21 @@ angular.module('hopsWorksApp')
             });
         };
 
+
+	
         self.shareRepository = function () {
           ModalService.shareRepository('lg').then(
             function (success) {
               self.permission = success.permission;
               self.granteeId = success.granteeId;
+			  
+			  if (self.selectedCharonPath === "") 
+				return;
 
               var string = (self.selectedCharonPath).replace("/srv/Charon/charon_fs", "");
               var op = {
-                "string": string,
+				"token" : "",
+                "path": string,
                 "permissions": self.permissions,
                 "granteeId": self.granteeId
               };
@@ -191,7 +201,7 @@ angular.module('hopsWorksApp')
             });
         };
 
-        var listSiteIds = function () {
+        self.listSiteIds = function () {
           charonService.listSiteIds().then(
             function (success) {
               self.availableSiteIDs = success.data;
@@ -205,7 +215,7 @@ angular.module('hopsWorksApp')
         self.listShares = function () {
           charonService.listShares().then(
             function (success) {
-              self.shares = success.data;
+              self.sharedRepos = success.data;
               console.log("Success getting available Site IDs "+success);
             }, function (error) {
               console.log("Error getting available Site IDs ");
@@ -261,7 +271,7 @@ angular.module('hopsWorksApp')
         self.createSharedRepository = function () {
           self.getPermissions();
           var op = {
-            "path": self.string,
+            "path": self.name,
             "token": "",
             "permissions": self.permissions,
             "granteeId": self.granteeId
@@ -277,6 +287,19 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
         };
+
+        self.importRepo = function () {
+          charonService.importRepo(self.token).then(
+            function (success) {
+              console.log("Success importing Repo. It will appear shortly."+success);
+            }, function (error) {
+              console.log("Error getting available Site IDs ");
+              console.log(error);
+            });
+        };
+		
+
+
 
         self.share = function () {
           self.getPermissions();

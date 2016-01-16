@@ -1,12 +1,12 @@
 <div class="modal-header">
-  <button class="close" ng-click="projectCreatorCtrl.close()" data-dismiss="modal" aria-hidden="true"
+  <button class="close" ng-click="CharonCtrl.close()" data-dismiss="modal" aria-hidden="true"
           type="button">&times;</button>
   <h2 class="modal-title">Add remote repository</h2>
 </div>
 <div class="modal-body">
   <div growl reference="1" class="pull-right" ></div>
 
-  <form role="form" name="projectForm" ng-submit="projectCreatorCtrl.createProject()" novalidate class="form-validate">
+  <form role="form" name="projectForm" ng-submit="charonCtrl.importRepo()" novalidate class="form-validate">
     <div class="row">
       <div class="col-md-8">
         <fieldset>
@@ -14,8 +14,8 @@
           <div class="control-group col-md-offset-1">
             <label for="token" style="color: black;">Token</label>
             <div class="controls" id="token">
-              <textarea class="form-control" style="resize:none;" ng-model="projectCreatorCtrl.projectDesc"
-                        rows="10" tabindex="2" required></textarea>
+              <textarea class="form-control" style="resize:none;" ng-model="CharonCtrl.token"
+                        rows="2" tabindex="2" required></textarea>
             </div>
 
             <span ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp;

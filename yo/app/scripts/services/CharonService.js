@@ -82,6 +82,9 @@ angular.module('hopsWorksApp')
 
               return $http(regReq);
             },
+	        importRepo: function (token) {
+              return $http.get('/api/project/' + id + '/charon/importRepo/' + token);
+            },			
             share: function (op) {
               var regReq = {
                 method: 'POST',

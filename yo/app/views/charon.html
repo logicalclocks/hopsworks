@@ -25,10 +25,10 @@
 						<span class="fa fa-caret-right"></span></button>
 					  <ul class="dropdown-menu" style="left: 100px;top:0%">
 						<li><a ng-click="charonCtrl.newRepository()"><span class="fa fa-plus"
-																		   style="padding-right: 10px"></span>Create / Share repository</a></li>
+																		   style="padding-right: 10px"></span>Share DataSet</a></li>
 						<li><a ng-click="charonCtrl.remoteRepository()"><span
 							  class="fa fa-plus-circle"
-							  style="padding-right: 10px"></span>Add shared repository</a></li>
+							  style="padding-right: 10px"></span>Import DataSet</a></li>
 					  </ul>
 					</div>
 					<div
@@ -69,6 +69,21 @@
 								   -3px;margin-left: -6px"></i>
 							  </button>
 							</td>
+                              <td>
+                                <div class="dropdown position-fixed" id="menu-{{ $index}}">
+                                  <ul class="dropdown-menu dropdown-amore" role="menu">
+                                    <li>
+                                      <a class="pointer"
+                                         role="menuitem"
+                                         tabindex="1"
+                                         ng-click="panel.highlight = true; charonCtrl.shareRepository(); $event.stopPropagation();">
+                                        <span><i class="fa fa-cloud-upload"></i>
+                                          Share</span>
+                                      </a>
+                                    </li>
+                                  </ul>
+                                </div>
+                              </td>
 						  </tr>
 						  </tbody>
 						</table>

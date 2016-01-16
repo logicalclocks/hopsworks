@@ -60,9 +60,9 @@ public class CharonController {
 	charonRegisteredSitesFacade.remove(pk);
   }
   
-  public void shareWithSite(int projectId, CharonSharedSiteDTO dto, String token) throws AppException {
-      CharonRepoSharedPK pk = new CharonRepoSharedPK(projectId, dto.getGranteeId(),
-      dto.getPath());
-      charonRepoSharedFacade.persist(new CharonRepoShared(pk, dto.getToken(), dto.getPermissions() ));
+  public void shareWithSite(int projectId, int granteeId, String path, String permissions, 
+		  String token) throws AppException {
+      CharonRepoSharedPK pk = new CharonRepoSharedPK(projectId, granteeId, path);
+      charonRepoSharedFacade.persist(new CharonRepoShared(pk, token, permissions));
   }  
 }

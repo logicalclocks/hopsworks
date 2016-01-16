@@ -96,7 +96,7 @@ angular.module('hopsWorksApp')
               remoteRepository: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/addRepositoryModal.html',
-                  controller: 'ProjectCreatorCtrl as projectCreatorCtrl',
+                  controller: 'CharonCtrl as charonCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',

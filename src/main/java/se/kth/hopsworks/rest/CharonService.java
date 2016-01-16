@@ -154,30 +154,7 @@ public class CharonService {
 			siteID).build();
   }
 
-  @POST
-  @Path("/createSharedRepository")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response createSharedRepository(@Context SecurityContext sc,
-		  @Context HttpServletRequest req, CharonSharedSiteDTO charon)
-		  throws Exception {
-	JsonResponse json = new JsonResponse();
-//    String path;
-//
-//    if (!charon.getString().contains("/"+project.getName())) {
-//       path = project.getName() + File.separator + charon.getString();
-//    } else {
-//       path = charon.getString();
-//    }
-	String token = CharonOperations.createSharedRepository(
-			charon.getGranteeId(), charon.getPath(),
-			charon.getPermissions());
-	charonController.shareWithSite(project.getId(), charon, token);
-
-	json.setSuccessMessage("Site added successfully.");
-	Response.ResponseBuilder response = Response.ok();
-	return response.entity(json).build();
-  }
+ 
 
   @GET
   @Path("/listSiteIds")
@@ -250,23 +227,6 @@ public class CharonService {
 	Response.ResponseBuilder response = Response.ok();
 	return response.entity(json).build();
   }
-  
-//  @GET
-//  @Path("removeShare/{token}")
-//  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-//  public Response removeShare(
-//		  @PathParam("token") Integer token,
-//		  @Context SecurityContext sc,
-//		  @Context HttpServletRequest req)
-//		  throws Exception {
-//	JsonResponse json = new JsonResponse();
-//
-//	charonController.removeSite(project.getId(), siteId);
-//
-//	json.setSuccessMessage("Site removed successfully.");
-//	Response.ResponseBuilder response = Response.ok();
-//	return response.entity(json).build();
-//  }  
 
   @POST
   @Path("/mkdir")
@@ -304,11 +264,50 @@ public class CharonService {
 	String permissions = charon.getPermissions();
 	int granteeId = Integer.parseInt(charon.getGranteeId());
 
-	CharonOperations.share(permissions, path, granteeId);
-
+	String token = CharonOperations.share(permissions, path, granteeId);
+	charonController.shareWithSite(project.getId(), granteeId, path, permissions, token);
+	
 	json.setSuccessMessage("Repository shared successfully.");
 	Response.ResponseBuilder response = Response.ok();
 	return response.entity(json).build();
   }
 
+  
+  @GET
+  @Path("importRepo/{token}")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response removeSiteId(
+		  @PathParam("token") String token,
+		  @Context SecurityContext sc,
+		  @Context HttpServletRequest req)
+		  throws Exception {
+	JsonResponse json = new JsonResponse();
+
+	CharonOperations.addSharedRepository(token);
+	
+	json.setSuccessMessage("Site removed successfully.");
+	Response.ResponseBuilder response = Response.ok();
+	return response.entity(json).build();
+  }  
+  
+ @POST
+  @Path("/createSharedRepository")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response createSharedRepository(@Context SecurityContext sc,
+		  @Context HttpServletRequest req, CharonSharedSiteDTO charon)
+		  throws Exception {
+	JsonResponse json = new JsonResponse();
+
+	String token = CharonOperations.createSharedRepository(
+			charon.getGranteeId(), charon.getPath(),
+			charon.getPermissions());
+	
+	charonController.shareWithSite(project.getId(), charon.getGranteeId(), charon.getPath(),
+			charon.getPermissions(), token);
+
+	json.setSuccessMessage("Site added successfully.");
+	Response.ResponseBuilder response = Response.ok();
+	return response.entity(json).build();
+  }  
 }
