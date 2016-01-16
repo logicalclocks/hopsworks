@@ -269,6 +269,7 @@ public class InterpreterRestApi {
     InterpreterSetting interpreterSetting = interpreterFactory.get(settingId);
     //wait until the peocess is stoped.
     while (zeppelinResource.isInterpreterRunning(interpreterSetting)) {
+      logger.info("Infinite loop???");
     }
 
     InterpreterDTO interpreter = new InterpreterDTO(interpreterSetting, true);

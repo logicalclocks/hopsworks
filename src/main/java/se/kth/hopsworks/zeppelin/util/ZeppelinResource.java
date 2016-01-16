@@ -86,7 +86,8 @@ public class ZeppelinResource {
     FileObject[] pidFiles = null;
     try {
       fsManager = VFS.getManager();
-      pidFiles = fsManager.resolveFile(filesystemRoot.toString() + "/").
+//      pidFiles = fsManager.resolveFile(filesystemRoot.toString() + "/").
+      pidFiles = fsManager.resolveFile(filesystemRoot.getPath()).
               getChildren();
     } catch (FileSystemException ex) {
       throw new FileSystemException("Directory not found: " + filesystemRoot.getPath(), ex.getMessage());
@@ -129,9 +130,11 @@ public class ZeppelinResource {
     if (pid == null) {
       return false;
     }
+    
+    //TODO: We should clear the environment variables before launching the 
+    // redirect stdout and stderr for child process to the zeppelin/project/logs file.
+    
     int exitValue;
-    Map<String, String> env = pb.environment();
-    env.put("SPARK_HOME","/srv/spark");
     try {
       Process p = pb.start();
       p.waitFor();
