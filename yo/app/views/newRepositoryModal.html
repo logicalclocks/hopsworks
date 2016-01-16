@@ -1,12 +1,12 @@
 <div class="modal-header">
   <button class="close" ng-click="charonCtrl.close()" data-dismiss="modal" aria-hidden="true"
           type="button">&times;</button>
-  <h2 class="modal-title">New repository</h2>
+  <h2 class="modal-title">Create and Share a New Repository</h2>
 </div>
 <div class="modal-body">
   <div growl reference="1" class="pull-right" ></div>
 
-  <form role="form" name="projectForm" ng-submit="charonCtrl.createRepo()" novalidate class="form-validate">
+  <form role="form" name="newRepoForm" ng-submit="charonCtrl.createRepo()" novalidate class="form-validate">
     <div class="row">
       <div class="col-md-8">
         <fieldset>
@@ -14,8 +14,8 @@
           <div class="control-group col-md-offset-1">
             <label for="projectname" style="color: black;">Name</label>
             <md-input-container style="height: 50px">
-              <input name="project_name" type="text" id="projectname"
-                     ng-model="charonCtrl.string" tabindex="1"
+              <input name="repo_name" type="text" id="projectname"
+                     ng-model="charonCtrl.selectedCharonPath" tabindex="1"
                      ng-pattern="charonCtrl.regex"
                      autofocus="autofocus"
                      ng-maxlength="24"
@@ -23,18 +23,18 @@
               >
             </md-input-container>
 
-            <span ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp;
-                  projectForm.project_name.$error.required"
+            <span ng-show="(newRepoForm.$submitted || newRepoForm.repo_name.$dirty) &amp;&amp;
+                  newRepoForm.repo_name.$error.required"
                   class="text-danger ng-hide">This field is required</span>
 
-            <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
-                  projectForm.project_name.$error.pattern"
+            <span ng-show="(newRepoForm.repo_name.$dirty) &amp;&amp;
+                  newRepoForm.repo_name.$error.pattern"
                   class="text-danger ng-hide">Invalid repository name. Spaces
               in repository names and special characters such as __, /, \, ?,
               *, :, |, ', ", <, >, %, (, ), &, ;, #, are not allowed.</span>
 
-            <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
-                  projectForm.project_name.$error.maxlength"
+            <span ng-show="(newRepoForm.repo_name.$dirty) &amp;&amp;
+                  newRepoForm.repo_name.$error.maxlength"
                   class="text-danger ng-hide">Repository name shouldn't be
               longer
               than
@@ -46,8 +46,8 @@
               available for sharing
             </label>-->
 
-      <select data-ng-model="granteeId"
-                data-ng-options="a.siteId for a in availableSiteIDs">                
+<select data-ng-model="charonCtrl.granteeId" 
+                data-ng-options="a.siteId for a in charonCtrl.availableSiteIds">                
         </select>	    
 	    
 	    
@@ -120,10 +120,10 @@
 
       <button class="btn btn-default" type="button" ng-click="charonCtrl.close()" tabindex="5">Cancel</button>
       <button class="btn btn-primary" type="submit"
-              ng-disabled="projectForm.project_name.$error.required
+              ng-disabled="newRepoForm.repo_name.$error.required
               || charonCtrl.working
-              || projectForm.project_name.$error.pattern
-              || projectForm.project_name.$error.maxlength" tabindex="6">
+              || newRepoForm.repo_name.$error.pattern
+              || newRepoForm.repo_name.$error.maxlength" tabindex="6">
         <i ng-if="charonCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
         Create
       </button>

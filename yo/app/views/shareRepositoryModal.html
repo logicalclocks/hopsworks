@@ -6,7 +6,7 @@
 <div class="modal-body">
   <div growl reference="1" class="pull-right" ></div>
 
-  <form role="form" name="projectForm" ng-submit="charonCtrl.share()" novalidate class="form-validate">
+  <form role="form" name="shareForm" ng-submit="charonCtrl.createSharedRepository()" validate class="form-validate">
     <div class="row">
       <div class="col-md-8">
         <fieldset>
@@ -16,20 +16,18 @@
             <p></p>
 
             <label style="margin-top:20px;"  class="control-label">
-			  Folder to be shared:
+			  Repository Name:
 			  <!--Sites available for sharing-->
             </label>
-								  {{charonCtrl.selectedCharonPath}}
-
-
-<!--			            <md-input-container style="height: 50px">
-						  <input name="siteid" type="text"
-								 ng-model="charonCtrl.name" tabindex="1"
+								  <!--{{charonCtrl.selectedCharonPath}}-->
+			            <md-input-container style="height: 50px">
+						  <input name="repoName" type="text"
+								 ng-model="charonCtrl.selectedCharonPath" tabindex="1"
 								 ng-pattern="charonCtrl.regex"
 								 autofocus="autofocus"
 								 required
 						  >
-						</md-input-container>-->
+						</md-input-container>
 
             <div class="controls">
 
@@ -96,12 +94,12 @@
 
       <button class="btn btn-default" type="button" ng-click="charonCtrl.close()" tabindex="5">Cancel</button>
       <button class="btn btn-primary" type="submit"
-              ng-disabled="projectForm.project_name.$error.required
+              ng-disabled="shareForm.repoName.$error.required
 						|| charonCtrl.working
-						|| projectForm.project_name.$error.pattern
-						|| projectForm.project_name.$error.maxlength" tabindex="6">
+						|| shareForm.repoName.$error.pattern
+						|| shareForm.repoName.$error.maxlength" tabindex="6">
         <i ng-if="charonCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
-        Share
+        Create
       </button>
 
     </div>

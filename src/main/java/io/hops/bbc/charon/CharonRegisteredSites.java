@@ -27,7 +27,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author jdowling
  */
 @Entity
-@Table(name = "charon_registered_sites")
+@Table(name = "hopsworks.charon_registered_sites")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "CharonRegisteredSites.findAll", query = "SELECT c FROM CharonRegisteredSites c"),

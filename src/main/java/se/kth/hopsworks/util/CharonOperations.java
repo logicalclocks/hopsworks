@@ -40,6 +40,7 @@ public class CharonOperations {
 
   private static final Logger logger = Logger.getLogger(CharonOperations.class.
       getName());
+  
 
   private static String CHARON_PATH = "/srv/Charon";
   private static String charonMountPointPath = "/srv/Charon/charon_fs";
@@ -205,7 +206,7 @@ public class CharonOperations {
     try {
       mkdir(repPath, null);
     } catch (Exception e) {
-      throw new Exception("Something went wrong!");
+      throw new Exception("Something went wrong creating dir at path: " + repPath);
     }
     if(!repPath.startsWith("/"))
       repPath = File.separator+repPath;
@@ -242,7 +243,7 @@ public class CharonOperations {
         count ++;
     }
     if(count >= 3)
-      throw new Exception("Something went wrong!");
+      throw new Exception("Could not create directory at: " + path);
   }
 
   /**
@@ -265,7 +266,7 @@ public class CharonOperations {
 
       File file = new File(CHARON_PATH);
       byte[] data = null;
-      for(File f : file.listFiles()){
+      for (File f : file.listFiles()){
         if(f.getName().startsWith("share")){
           RandomAccessFile rd = new RandomAccessFile(f, "rw");
           data = new byte[(int)f.length()];
@@ -278,6 +279,9 @@ public class CharonOperations {
           rd.close();
         }
       }
+	  if (data == null) {
+		return "";
+	  }
       return new String(data);
     } catch (IOException e) {
       throw new Exception("Something went wrong!");

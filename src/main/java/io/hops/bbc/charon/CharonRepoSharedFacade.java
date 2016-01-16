@@ -23,11 +23,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.List;
+import javax.ejb.Stateless;
 import javax.persistence.EntityExistsException;
 import javax.ws.rs.core.Response;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.rest.AppException;
 
+@Stateless
 public class CharonRepoSharedFacade extends AbstractFacade<CharonRepoShared> {
 
     @PersistenceContext(unitName = "kthfsPU")
@@ -58,4 +60,13 @@ public class CharonRepoSharedFacade extends AbstractFacade<CharonRepoShared> {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.CHARON_BAD_SITE);
         }
     }    
+	
+    public void remove(CharonRepoSharedPK pk) throws AppException {
+        try {
+            CharonRepoShared obj = em.find(CharonRepoShared.class, pk);
+			em.remove(obj);
+        } catch (IllegalArgumentException ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.CHARON_BAD_SITE);
+        }
+    }  	
 }
