@@ -162,14 +162,14 @@ public class BiobankingService {
 
       if (i == null) {
         json.setErrorMsg("Could not find file: " + consent.getPath());
-        am.registerConsnetInfo(consentBean.getProject().getOwner(), "REGISTER",
+        am.registerConsentInfo(consentBean.getProject().getOwner(), "REGISTER",
               "FAILED", consentBean, req);
         Response.ResponseBuilder response = Response.serverError();
         return response.entity(json).build();
       }
       if (ConsentType.create(consent.getConsentType()).equals(
               ConsentType.UNDEFINED)) {
-        am.registerConsnetInfo(consentBean.getProject().getOwner(), "REGISTER",
+        am.registerConsentInfo(consentBean.getProject().getOwner(), "REGISTER",
               "FAILED", consentBean, req);
         json.setErrorMsg(
                 "You need to change the Consent Type to register the consent form for: "
@@ -182,7 +182,7 @@ public class BiobankingService {
   //    ConsentStatus.PENDING, i, project);
 
       consentsFacade.persistConsent(consentBean);
-      am.registerConsnetInfo(consentBean.getProject().getOwner(), "REGISTER",
+      am.registerConsentInfo(consentBean.getProject().getOwner(), "REGISTER",
               "SUCCESS", consentBean, req);
       json.setSuccessMessage("Consent form successfully registered.");
     }

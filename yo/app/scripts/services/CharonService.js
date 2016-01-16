@@ -46,6 +46,10 @@ angular.module('hopsWorksApp')
 
               return $http(regReq);
             },
+            listRegisterdSites: function () {
+              return $http.get('/api/project/' + id + '/charon/mySiteID');
+            },
+
           };
           return services;
         };

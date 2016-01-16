@@ -1,10 +1,13 @@
 package se.kth.hopsworks.rest;
 
 import io.hops.bbc.CharonDTO;
+import io.hops.bbc.charon.CharonRegisteredSiteDTOs;
+import io.hops.bbc.charon.CharonSharedSiteDTO;
 import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
-import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -20,13 +23,17 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import org.primefaces.component.log.Log;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.InodeFacade;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import io.hops.bbc.charon.CharonController;
+import io.hops.bbc.charon.CharonRegisteredSiteDTO;
+import io.hops.bbc.charon.CharonRegisteredSites;
+import io.hops.bbc.charon.CharonRepoShared;
+import io.hops.bbc.charon.CharonSharedSiteDTOs;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.util.CharonOperations;
 
@@ -34,133 +41,187 @@ import se.kth.hopsworks.util.CharonOperations;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class CharonService {
 
-  private static final Logger logger = Logger.getLogger(CharonService.class.
-      getName());
+    private static final Logger logger = Logger.getLogger(CharonService.class.
+            getName());
 
 //  private final String CHARON_PATH = "/srv/Charon";
 //  private final String charonMountPointPath = "/srv/charon_fs";
 //  private final String addNewGranteePath = CHARON_PATH + File.separator + "NewSiteIds";
 //  private final String addNewSNSPath = CHARON_PATH + File.separator + "NewSNSs";
 //  private final String addedGrantees = CHARON_PATH + File.separator + "config/addedGrantees";
+    @EJB
+    private NoCacheResponse noCacheResponse;
+    @EJB
+    private FileOperations fops;
+    @EJB
+    private ActivityFacade activityFacade;
+    @EJB
+    private InodeFacade inodeFacade;
+    @EJB
+    private FileOperations fileOps;
+    @EJB
+    private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
+    @EJB
+    private CharonController charonController;
 
-  @EJB
-  private NoCacheResponse noCacheResponse;
-  @EJB
-  private FileOperations fops;
-  @EJB
-  private ActivityFacade activityFacade;
-  @EJB
-  private InodeFacade inodeFacade;
-  @EJB
-  private FileOperations fileOps;
-  @EJB
-  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
+    private Project project;
 
-  private Project project;
-
-  CharonService setProject(Project project) {
-    this.project = project;
-    return this;
-  }
-  
-  private String addNameNodeEndpoint(String str) {
-    HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
-    String ipPortEndpointNN = hdfsLeDescriptors.getHostname();
-    return str.replaceFirst("hdfs://", "hdfs://" + ipPortEndpointNN + "/");
-  }
-
-  @POST
-  @Path("/fromHDFS")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response copyFromHDFS(@Context SecurityContext sc,
-      @Context HttpServletRequest req, CharonDTO charon)
-      throws AppException {
-    JsonResponse json = new JsonResponse();
-
-    String src = charon.getHdfsPath();
-    String dest = charon.getCharonPath();
-  
-    if (src == null || dest == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Some of the paths 'from' and 'to' are set to null!");
-    }
-    src = addNameNodeEndpoint(src);
-
-    try {
-      fileOps.copyToLocal(src, dest);
-    } catch (IOException ex) {
-      Logger.getLogger(CharonService.class.getName()).log(Level.SEVERE, null, ex);
-      throw new AppException(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(),
-          "Could not copy file from HDFS to Charon.");
+    CharonService setProject(Project project) {
+        this.project = project;
+        return this;
     }
 
-    json.setSuccessMessage("File copied successfully from HDFS to Charon .");
-    Response.ResponseBuilder response = Response.ok();
-    return response.entity(json).build();
-  }
-
-  @POST
-  @Path("/toHDFS")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response copyToHDFS(@Context SecurityContext sc,
-      @Context HttpServletRequest req, CharonDTO charon)
-      throws AppException {
-    JsonResponse json = new JsonResponse();
-
-    String src = charon.getCharonPath();
-    String dest = charon.getHdfsPath();
-
-    if (src == null || dest == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Some of the paths 'from' and 'to' are set to null!");
-    }
-    dest = addNameNodeEndpoint(dest);
-    try {
-      fileOps.copyToHDFSFromLocal(false, src, dest);
-    } catch (IOException ex) {
-      Logger.getLogger(CharonService.class.getName()).log(Level.SEVERE, null, ex);
-      throw new AppException(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(),
-          "Could not copy file from Charon to HDFS.");
+    private String addNameNodeEndpoint(String str) {
+        HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
+        String ipPortEndpointNN = hdfsLeDescriptors.getHostname();
+        return str.replaceFirst("hdfs://", "hdfs://" + ipPortEndpointNN + "/");
     }
 
-    json.setSuccessMessage("File copied successfully from Charon to HDFS.");
-    Response.ResponseBuilder response = Response.ok();
-    return response.entity(json).build();
-  }
+    @POST
+    @Path("/fromHDFS")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response copyFromHDFS(@Context SecurityContext sc,
+            @Context HttpServletRequest req, CharonDTO charon)
+            throws AppException {
+        JsonResponse json = new JsonResponse();
 
-  @GET
-  @Path("/mySiteID")
-  @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response getMySiteId(
-      @Context
-      SecurityContext sc,
-      @Context
-      HttpServletRequest req) throws Exception {
+        String src = charon.getHdfsPath();
+        String dest = charon.getCharonPath();
 
-    String siteID = CharonOperations.getMySiteId();
+        if (src == null || dest == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Some of the paths 'from' and 'to' are set to null!");
+        }
+        src = addNameNodeEndpoint(src);
 
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        siteID).build();
-  }
+        try {
+            fileOps.copyToLocal(src, dest);
+        } catch (IOException ex) {
+            Logger.getLogger(CharonService.class.getName()).log(Level.SEVERE, null, ex);
+            throw new AppException(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(),
+                    "Could not copy file from HDFS to Charon.");
+        }
 
-  @POST
-  @Path("/addSiteID")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response addSiteId(@Context SecurityContext sc,
-      @Context HttpServletRequest req, CharonDTO charon)
-      throws Exception {
-    JsonResponse json = new JsonResponse();
+        json.setSuccessMessage("File copied successfully from HDFS to Charon .");
+        Response.ResponseBuilder response = Response.ok();
+        return response.entity(json).build();
+    }
 
-    String siteID = charon.getSiteID();
+    @POST
+    @Path("/toHDFS")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response copyToHDFS(@Context SecurityContext sc,
+            @Context HttpServletRequest req, CharonDTO charon)
+            throws AppException {
+        JsonResponse json = new JsonResponse();
 
-    CharonOperations.addSiteId(siteID);
+        String src = charon.getCharonPath();
+        String dest = charon.getHdfsPath();
 
-    json.setSuccessMessage("Site added successfully.");
-    Response.ResponseBuilder response = Response.ok();
-    return response.entity(json).build();
-  }
+        if (src == null || dest == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Some of the paths 'from' and 'to' are set to null!");
+        }
+        dest = addNameNodeEndpoint(dest);
+        try {
+            fileOps.copyToHDFSFromLocal(false, src, dest);
+        } catch (IOException ex) {
+            Logger.getLogger(CharonService.class.getName()).log(Level.SEVERE, null, ex);
+            throw new AppException(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(),
+                    "Could not copy file from Charon to HDFS.");
+        }
+
+        json.setSuccessMessage("File copied successfully from Charon to HDFS.");
+        Response.ResponseBuilder response = Response.ok();
+        return response.entity(json).build();
+    }
+
+    @GET
+    @Path("/mySiteID")
+    @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+    public Response getMySiteId(
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws Exception {
+
+        String siteID = CharonOperations.getMySiteId();
+
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                siteID).build();
+    }
+
+    @POST
+    @Path("/addSiteID")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response addSiteId(@Context SecurityContext sc,
+            @Context HttpServletRequest req, CharonDTO charon)
+            throws Exception {
+        JsonResponse json = new JsonResponse();
+
+        String siteID = charon.getSiteID();
+        CharonOperations.addSiteId(siteID);
+        charonController.registerSite(project.getId(), siteID);
+
+        json.setSuccessMessage("Site added successfully.");
+        Response.ResponseBuilder response = Response.ok();
+        return response.entity(json).build();
+    }
+
+    @POST
+    @Path("/shareWithSiteID")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response sharedWithSiteId(@Context SecurityContext sc,
+            @Context HttpServletRequest req, CharonSharedSiteDTO charon)
+            throws Exception {
+        JsonResponse json = new JsonResponse();
+
+        String token = CharonOperations.createSharedRepository(
+                charon.getGranteeID(), charon.getPath(), 
+                charon.getPermissions());
+        charonController.shareWithSite(project.getId(), charon, token);
+
+        json.setSuccessMessage("Site added successfully.");
+        Response.ResponseBuilder response = Response.ok();
+        return response.entity(json).build();
+    }
+
+    @GET
+    @Path("/registeredSiteIDs")
+    @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getRegisteredSiteIds(
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws Exception {
+
+        List<CharonRegisteredSiteDTO> sites = new ArrayList<>();
+        for (CharonRegisteredSites s : charonController.getCharonRegisteredSites(project.getId())) {
+            sites.add(new CharonRegisteredSiteDTO(s));
+        }
+        CharonRegisteredSiteDTOs sitesDTO = new CharonRegisteredSiteDTOs(sites);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                sitesDTO).build();
+    }
+
+    @GET
+    @Path("/sharedSiteIDs")
+    @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getSharedSiteIds(
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws Exception {
+
+        List<CharonSharedSiteDTO> sites = new ArrayList<>();
+        for (CharonRepoShared s : charonController.getCharonSharedSites(project.getId())) {
+            CharonSharedSiteDTO dto = new CharonSharedSiteDTO(s);
+            sites.add(dto);
+        }
+        CharonSharedSiteDTOs sitesDTO = new CharonSharedSiteDTOs(sites);
+
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                sitesDTO).build();
+    }
 
 }

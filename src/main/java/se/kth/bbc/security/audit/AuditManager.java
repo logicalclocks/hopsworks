@@ -551,7 +551,7 @@ public class AuditManager {
    * @param cons
    * @param req 
    */
-  public void registerConsnetInfo(Users user, String action, String outcome, Consents cons,
+  public void registerConsentInfo(Users user, String action, String outcome, Consents cons,
           HttpServletRequest req) {
 
     ConsentsAudit ca = new ConsentsAudit();
