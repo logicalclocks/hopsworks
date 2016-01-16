@@ -12,19 +12,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class CharonRegisteredSiteDTO implements Serializable {
 
     private String name;
-    private int siteID;
+    private int siteId;
     private String email;
     private String addr;
 
     public CharonRegisteredSiteDTO(CharonRegisteredSites site) {
-        this.siteID = site.getCharonRegisteredSitesPK().getSiteId();
+        this.siteId = site.getCharonRegisteredSitesPK().getSiteId();
         this.name = site.getName();
         this.email = site.getEmail();
         this.addr = site.getAddr();
     }
     public CharonRegisteredSiteDTO(String name, int siteID, String email, String addr) {
         this.name = name;
-        this.siteID = siteID;
+        this.siteId = siteID;
         this.email = email;
         this.addr = addr;
     }
@@ -32,12 +32,12 @@ public class CharonRegisteredSiteDTO implements Serializable {
     public CharonRegisteredSiteDTO() {
     }
 
-    public int getSiteID() {
-        return siteID;
+    public int getSiteId() {
+        return siteId;
     }
 
-    public void setSiteID(int siteID) {
-        this.siteID = siteID;
+    public void setSiteId(int siteID) {
+        this.siteId = siteID;
     }
 
     public String getAddr() {
@@ -66,7 +66,7 @@ public class CharonRegisteredSiteDTO implements Serializable {
 
     @Override
     public String toString() {
-        return "Name: " + name + " ; id: " + siteID;
+        return "Name: " + name + " ; id: " + siteId;
     }
 
 }

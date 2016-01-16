@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class CharonSharedSiteDTO implements Serializable {
 
-    private int granteeID;
+    private int granteeId;
     private String token;
     private String path;
     private String permissions;
@@ -20,7 +20,7 @@ public class CharonSharedSiteDTO implements Serializable {
     }
 
     public CharonSharedSiteDTO(CharonRepoShared crs) {
-        this.granteeID = crs.getCharonRepoSharedPK().getSiteId();
+        this.granteeId = crs.getCharonRepoSharedPK().getSiteId();
         this.path = crs.getCharonRepoSharedPK().getPath();
         this.permissions = crs.getPermissions();
         this.token = crs.getToken();
@@ -38,12 +38,12 @@ public class CharonSharedSiteDTO implements Serializable {
         return path;
     }
 
-    public int getGranteeID() {
-        return granteeID;
+    public int getGranteeId() {
+        return granteeId;
     }
 
-    public void setGranteeID(int granteeID) {
-        this.granteeID = granteeID;
+    public void setGranteeId(int granteeID) {
+        this.granteeId = granteeID;
     }
 
     
@@ -62,7 +62,7 @@ public class CharonSharedSiteDTO implements Serializable {
 
     @Override
     public String toString() {
-        return "siteId: " + granteeID + " ; path: " + path + "; token: " + token;
+        return "siteId: " + granteeId + " ; path: " + path + "; token: " + token;
     }
 
     

@@ -21,8 +21,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.util.List;
 import se.kth.hopsworks.rest.AppException;
 
@@ -57,9 +55,13 @@ public class CharonController {
               new CharonRegisteredSitesPK(projectId, siteID), email, name, addr);
       charonRegisteredSitesFacade.persist(registerSite);
   }
+  public void removeSite(int projectId, int siteId) throws AppException {  
+	CharonRegisteredSitesPK pk = new CharonRegisteredSitesPK(projectId, siteId);
+	charonRegisteredSitesFacade.remove(pk);
+  }
   
   public void shareWithSite(int projectId, CharonSharedSiteDTO dto, String token) throws AppException {
-      CharonRepoSharedPK pk = new CharonRepoSharedPK(projectId, dto.getGranteeID(),
+      CharonRepoSharedPK pk = new CharonRepoSharedPK(projectId, dto.getGranteeId(),
       dto.getPath());
       charonRepoSharedFacade.persist(new CharonRepoShared(pk, dto.getToken(), dto.getPermissions() ));
   }  

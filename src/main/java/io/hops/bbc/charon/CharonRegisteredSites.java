@@ -63,6 +63,11 @@ public class CharonRegisteredSites implements Serializable {
     public CharonRegisteredSites() {
     }
 
+    public CharonRegisteredSites(CharonRegisteredSitesPK charonRegisteredSitesPK) {
+        this.charonRegisteredSitesPK = charonRegisteredSitesPK;
+    }
+
+	
     public CharonRegisteredSites(CharonRegisteredSitesPK charonRegisteredSitesPK, String email, String name, String addr) {
         this.charonRegisteredSitesPK = charonRegisteredSitesPK;
         this.email = email;

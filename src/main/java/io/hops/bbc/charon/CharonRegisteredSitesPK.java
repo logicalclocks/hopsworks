@@ -11,10 +11,9 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 
-/**
- *
- * @author jdowling
- */
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
 @Embeddable
 public class CharonRegisteredSitesPK implements Serializable {
 
@@ -79,5 +78,5 @@ public class CharonRegisteredSitesPK implements Serializable {
     public String toString() {
         return "io.hops.bbc.charon.tmp.CharonRegisteredSitesPK[ projectId=" + projectId + ", siteId=" + siteId + " ]";
     }
-    
+
 }

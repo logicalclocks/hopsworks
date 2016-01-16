@@ -14,7 +14,14 @@ angular.module('hopsWorksApp')
         self.toHDFS = true;
         self.charonFilename = "";
         self.mySiteID = "";
-        self.siteID = "";
+        self.string = "";
+        self.isReadChecked = false;
+        self.isWriteChecked = false;
+        self.granteeId = "";
+        self.availableSiteIDs = "";
+        self.shares = "";
+        self.permissions = "";
+        self.regex = /^(?!.*?__|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#).*$/;
 
         $scope.switchDirection = function (projectName) {
           self.toHDFS = !self.toHDFS;
@@ -64,7 +71,7 @@ angular.module('hopsWorksApp')
                 .then(function (success) {
                     self.working = false;
                   growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
-                  $scope.$broadcast("copyFromHdfsToCharon", {});
+                  $scope.$broadcast("refreshCharon", {});
                 },
                     function (error) {
                       self.working = false;
@@ -121,8 +128,7 @@ angular.module('hopsWorksApp')
         self.newRepository = function () {
           ModalService.createRepository('lg').then(
             function () {
-              //loadProjects();
-              //loadActivity();
+              $scope.$broadcast("refreshCharon", {});
             }, function () {
               growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
             });
@@ -150,9 +156,25 @@ angular.module('hopsWorksApp')
 
         self.shareRepository = function () {
           ModalService.shareRepository('lg').then(
-            function () {
-              //loadProjects();
-              //loadActivity();
+            function (success) {
+              self.permission = success.permission;
+              self.granteeId = success.granteeId;
+
+              var string = (self.selectedCharonPath).replace("/srv/Charon/charon_fs", "");
+              var op = {
+                "string": string,
+                "permissions": self.permissions,
+                "granteeId": self.granteeId
+              };
+              charonService.share(op)
+                .then(function (success) {
+                    self.working = false;
+                    growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                  },
+                  function (error) {
+                    self.working = false;
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                  });
             }, function () {
               growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
             });
@@ -169,11 +191,33 @@ angular.module('hopsWorksApp')
             });
         };
 
-        self.addSiteID = function () {
+        var listSiteIds = function () {
+          charonService.listSiteIds().then(
+            function (success) {
+              self.availableSiteIDs = success.data;
+              console.log("Success getting available Site IDs "+success);
+            }, function (error) {
+              console.log("Error getting available Site IDs ");
+              console.log(error);
+            });
+        };
+		
+        self.listShares = function () {
+          charonService.listShares().then(
+            function (success) {
+              self.shares = success.data;
+              console.log("Success getting available Site IDs "+success);
+            }, function (error) {
+              console.log("Error getting available Site IDs ");
+              console.log(error);
+            });
+        };		
+
+        self.addSiteId = function () {
             var op = {
-              "siteID": self.siteID
+              "siteId": self.string
             };
-            charonService.addSiteID(op)
+            charonService.addSiteId(op)
               .then(function (success) {
                   self.working = false;
                   growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
@@ -184,13 +228,88 @@ angular.module('hopsWorksApp')
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                 });
         };
+		
+        self.removeSiteId = function (siteId) {
+            charonService.addSiteId(siteId)
+              .then(function (success) {
+                  self.working = false;
+                  growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                },
+                function (error) {
+                  self.working = false;
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                });
+        };		
+		
+
+        self.mkdir = function () {
+          var op = {
+            "string": self.string
+          };
+          charonService.mkdir(op)
+            .then(function (success) {
+                self.working = false;
+                growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                $modalStack.getTop().key.close();
+              },
+              function (error) {
+                self.working = false;
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+              });
+        };
+
+        self.createSharedRepository = function () {
+          self.getPermissions();
+          var op = {
+            "path": self.string,
+            "token": "",
+            "permissions": self.permissions,
+            "granteeId": self.granteeId
+          };
+          charonService.createSharedRepository(op)
+            .then(function (success) {
+                self.working = false;
+                growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+                $modalStack.getTop().key.close();
+              },
+              function (error) {
+                self.working = false;
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+              });
+        };
+
+        self.share = function () {
+          self.getPermissions();
+          var op = {
+            "permissions": self.permissions,
+            "granteeId": self.granteeId
+          };
+          $modalStack.getTop().key.close(op);
+        };
 
         self.close = function () {
           $modalStack.getTop().key.dismiss();
         };
 
+        self.getPermissions = function () {
+          if (self.isReadChecked && !self.isWriteChecked){
+            self.permissions = "r";
+          } else {
+            self.permissions = "rw";
+          }
+        };
+
+        self.createRepo = function () {
+          if (!self.isReadChecked && !self.isWriteChecked){
+            self.mkdir();
+          } else {
+            self.createSharedRepository();
+          }
+        };
+
         self.init = function () {
           getMySiteId();
+          listSiteIds();
         };
 
         self.init();

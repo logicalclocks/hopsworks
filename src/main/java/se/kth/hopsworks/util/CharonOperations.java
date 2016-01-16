@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -36,6 +38,8 @@ import java.io.RandomAccessFile;
  */
 public class CharonOperations {
 
+  private static final Logger logger = Logger.getLogger(CharonOperations.class.
+      getName());
 
   private static String CHARON_PATH = "/srv/Charon";
   private static String charonMountPointPath = "/srv/Charon/charon_fs";
@@ -73,6 +77,11 @@ public class CharonOperations {
    * @throws Exception
    */
   public static void addSiteId(String site_id) throws Exception{
+
+    if (site_id == null || site_id.isEmpty()) {
+      throw new Exception("Invalid or empty Site ID entered.");
+    }
+
     String site_id_filename = "site-id.charon";
     File siteIdFile_temp = new File(CHARON_PATH + File.separator + site_id_filename);
     try {

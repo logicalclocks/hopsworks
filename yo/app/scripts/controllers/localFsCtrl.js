@@ -43,17 +43,8 @@ angular.module('hopsWorksApp')
               });
             };
 
-            $scope.$on("copyFromHdfsToCharon", function (event, args) {
-              var path = getPath([]);
-              localFilesystemService.getContents(path).then(
-                function (success) {
-                  self.files = success.data;
-                  self.pathArray = [];
-                  console.log(success);
-                }, function (error) {
-                  console.log("Error getting all datasets in project " + self.projectId);
-                  console.log(error);
-                });
+            $scope.$on("refreshCharon", function (event, args) {
+              self.getAllDatasets();
             });
 
             /**
