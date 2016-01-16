@@ -28,6 +28,7 @@ import se.kth.hopsworks.rest.AppException;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class CharonController {
 
+  
   @EJB
   private CharonRegisteredSitesFacade charonRegisteredSitesFacade;
 

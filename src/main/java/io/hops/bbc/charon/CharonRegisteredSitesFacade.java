@@ -21,11 +21,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.List;
+import javax.ejb.Stateless;
 import javax.persistence.EntityExistsException;
 import javax.ws.rs.core.Response;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.rest.AppException;
 
+@Stateless
 public class CharonRegisteredSitesFacade extends AbstractFacade<CharonRegisteredSites> {
 
   @PersistenceContext(unitName = "kthfsPU")
