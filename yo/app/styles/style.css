@@ -267,3 +267,17 @@ div.scroll > ul > li > textarea {
   opacity: .5;
   pointer-events: none;
 }
+
+.vtop {
+    display: inline-block;
+    vertical-align: top;
+    float: none;
+	font-size: 12px;
+}
+
+.vbottom {
+	line-height: 1.2;
+    display: inline-block;
+    vertical-align: bottom;
+	font-size: 14px;
+}

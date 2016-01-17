@@ -65,6 +65,7 @@ public class CharonRegisteredSitesFacade extends AbstractFacade<CharonRegistered
   }
 
   public void remove(CharonRegisteredSitesPK pk)  {
-	  em.remove(new CharonRegisteredSites(pk));
+	 CharonRegisteredSites obj = em.find(CharonRegisteredSites.class, pk);
+	  em.remove(obj);
   }
 }

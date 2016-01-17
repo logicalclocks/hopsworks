@@ -74,7 +74,7 @@ angular.module('hopsWorksApp')
               },
               createRepository: function (size) {
                 var modalInstance = $modal.open({
-                  templateUrl: 'views/repositoryModal.html',
+                  templateUrl: 'views/newRepositoryModal.html',
                   controller: 'CharonCtrl as charonCtrl',
                   size: size,
                   resolve: {
@@ -95,7 +95,7 @@ angular.module('hopsWorksApp')
               },
               remoteRepository: function (size) {
                 var modalInstance = $modal.open({
-                  templateUrl: 'views/addRepositoryModal.html',
+                  templateUrl: 'views/importRepositoryModal.html',
                   controller: 'CharonCtrl as charonCtrl',
                   size: size,
                   resolve: {
@@ -145,6 +145,7 @@ angular.module('hopsWorksApp')
                       function ($q, $location, AuthService) {
                         return AuthService.session().then(
                           function (success) {
+							
                           },
                           function (err) {
                             $location.path('/login');

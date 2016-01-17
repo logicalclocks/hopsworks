@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author jdowling
  */
 @Entity
-@Table(name = "charon_repo_shared")
+@Table(name = "hopsworks.charon_repo_shared")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "CharonRepoShared.findAll", query = "SELECT c FROM CharonRepoShared c"),

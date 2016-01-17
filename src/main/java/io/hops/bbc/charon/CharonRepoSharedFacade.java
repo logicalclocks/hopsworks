@@ -60,4 +60,13 @@ public class CharonRepoSharedFacade extends AbstractFacade<CharonRepoShared> {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.CHARON_BAD_SITE);
         }
     }    
+	
+    public void remove(CharonRepoSharedPK pk) throws AppException {
+        try {
+            CharonRepoShared obj = em.find(CharonRepoShared.class, pk);
+			em.remove(obj);
+        } catch (IllegalArgumentException ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.CHARON_BAD_SITE);
+        }
+    }  	
 }

@@ -13,23 +13,17 @@ public class CharonDTO implements Serializable {
 
   private String charonPath;
   private String hdfsPath;
-  private String string;
   private String permissions;
-  private String granteeId;
+  private int granteeId;
 
   public CharonDTO(String charonPath, String hdfsPath) {
     this.charonPath = charonPath;
     this.hdfsPath = hdfsPath;
   }
 
-  public CharonDTO(String string, String permissions, String granteeId) {
-    this.string = string;
+  public CharonDTO(String permissions, int granteeId) {
     this.permissions = permissions;
     this.granteeId = granteeId;
-  }
-
-  public CharonDTO(String string) {
-    this.string = string;
   }
 
   public CharonDTO() {
@@ -51,25 +45,16 @@ public class CharonDTO implements Serializable {
     this.permissions = permissions;
   }
 
-  public String getGranteeId() {
+  public int getGranteeId() {
     return granteeId;
   }
 
-  public void setGranteeId(String granteeId) {
+  public void setGranteeId(int granteeId) {
     this.granteeId = granteeId;
-  }
-
-  public String getString() {
-
-    return string;
   }
 
   public void setCharonPath(String charonPath) {
     this.charonPath = charonPath;
-  }
-
-  public void setString(String string) {
-    this.string = string;
   }
 
   public void setHdfsPath(String hdfsPath) {

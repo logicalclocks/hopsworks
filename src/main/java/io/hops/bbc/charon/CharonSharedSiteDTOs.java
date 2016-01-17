@@ -12,21 +12,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class CharonSharedSiteDTOs implements Serializable {
 
-    private List<CharonSharedSiteDTO> registeredSites;
+    private List<CharonSharedSiteDTO> sharedRepos;
 
     public CharonSharedSiteDTOs() {
     }
 
-    public CharonSharedSiteDTOs(List<CharonSharedSiteDTO> registeredSites) {
-        this.registeredSites = registeredSites;
+    public CharonSharedSiteDTOs(List<CharonSharedSiteDTO> sharedRepos) {
+        this.sharedRepos = sharedRepos;
     }
 
-    public List<CharonSharedSiteDTO> getRegisteredSites() {
-        return registeredSites;
+    public List<CharonSharedSiteDTO> getSharedRepos() {
+        return sharedRepos;
     }
 
-    public void setRegisteredSites(List<CharonSharedSiteDTO> registeredSites) {
-        this.registeredSites = registeredSites;
+    public void setSharedRepos(List<CharonSharedSiteDTO> registeredSites) {
+        this.sharedRepos = registeredSites;
     }
 
 }

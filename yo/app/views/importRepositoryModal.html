@@ -14,16 +14,15 @@
           <div class="control-group col-md-offset-1">
             <label for="token" style="color: black;">Token</label>
             <div class="controls" id="token">
-              <textarea class="form-control" style="resize:none;" ng-model="CharonCtrl.token"
-                        rows="2" tabindex="2" required></textarea>
+			  <input type="text" name="token" ng-model="CharonCtrl.token" required ng-trim="true" size="64">			  
             </div>
 
             <span ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp;
-                  projectForm.project_name.$error.required"
+                  projectForm.token.$error.required"
                   class="text-danger ng-hide">This field is required</span>
 
-            <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
-                  projectForm.project_name.$error.pattern"
+            <span ng-show="(projectForm.token.$dirty) &amp;&amp;
+                  projectForm.token.$error.pattern"
                   class="text-danger ng-hide">Invalid token. Spaces are not allowed.</span>
 
             <p></p>
@@ -35,7 +34,7 @@
 
     <div class="modal-footer">
 
-      <button class="btn btn-default" type="button" ng-click="projectCreatorCtrl.close()" tabindex="5">Cancel</button>
+      <button class="btn btn-default" type="button" ng-click="charonCtrl.close()" tabindex="5">Cancel</button>
       <button class="btn btn-primary" type="submit"
               ng-disabled="projectForm.project_name.$error.required
               || projectCreatorCtrl.working
