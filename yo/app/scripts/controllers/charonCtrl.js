@@ -36,10 +36,7 @@ angular.module('hopsWorksApp')
 			  self.toHDFS = !self.toHDFS;
 			  self.selectedCharonPath = "";
 			  self.selectedHdfsPath = "";
-			  if (!self.toHDFS) {
-				self.selectedCharonPath = "/srv/Charon/charon_fs/" + projectName;
 			  }
-			}
 			/**
 			 * Callback for when the user selected a file.
 			 * @param {String} reason
