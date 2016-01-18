@@ -26,7 +26,6 @@ import java.util.Map;
  *
  */
 public class Message {
-
   /**
    * Representation of event type.
    *
@@ -34,63 +33,70 @@ public class Message {
    *
    */
   public static enum OP {
+    GET_HOME_NOTE, // [c-s] load note for home screen
 
     GET_NOTE, // [c-s] client load note
-    // @param id note id
+              // @param id note id
 
     NOTE, // [s-c] note info
-    // @param note serlialized Note object
+          // @param note serlialized Note object
 
     PARAGRAPH, // [s-c] paragraph info
-    // @param paragraph serialized paragraph object
+               // @param paragraph serialized paragraph object
 
     PROGRESS, // [s-c] progress update
-    // @param id paragraph id
-    // @param progress percentage progress
+              // @param id paragraph id
+              // @param progress percentage progress
 
     NEW_NOTE, // [c-s] create new notebook
     DEL_NOTE, // [c-s] delete notebook
-    // @param id note id
+              // @param id note id
+    CLONE_NOTE, // [c-s] clone new notebook
+                // @param id id of note to clone
+                // @param name name fpor the cloned note
+    IMPORT_NOTE,  // [c-s] import notebook
+                  // @param object notebook
     NOTE_UPDATE,
 
     RUN_PARAGRAPH, // [c-s] run paragraph
-    // @param id paragraph id
-    // @param paragraph paragraph content.ie. script
-    // @param config paragraph config
-    // @param params paragraph params
+                   // @param id paragraph id
+                  // @param paragraph paragraph content.ie. script
+                  // @param config paragraph config
+                  // @param params paragraph params
 
     COMMIT_PARAGRAPH, // [c-s] commit paragraph
-    // @param id paragraph id
-    // @param title paragraph title
-    // @param paragraph paragraph content.ie. script
-    // @param config paragraph config
-    // @param params paragraph params
+                      // @param id paragraph id
+                      // @param title paragraph title
+                      // @param paragraph paragraph content.ie. script
+                      // @param config paragraph config
+                      // @param params paragraph params
 
     CANCEL_PARAGRAPH, // [c-s] cancel paragraph run
-    // @param id paragraph id
+                      // @param id paragraph id
 
     MOVE_PARAGRAPH, // [c-s] move paragraph order
-    // @param id paragraph id
-    // @param index index the paragraph want to go
+                    // @param id paragraph id
+                    // @param index index the paragraph want to go
 
     INSERT_PARAGRAPH, // [c-s] create new paragraph below current paragraph
-    // @param target index
+                      // @param target index
 
     COMPLETION, // [c-s] ask completion candidates
-    // @param id
-    // @param buf current code
-    // @param cursor cursor position in code
+                // @param id
+                // @param buf current code
+                // @param cursor cursor position in code
 
     COMPLETION_LIST, // [s-c] send back completion candidates list
-    // @param id
-    // @param completions list of string
+                     // @param id
+                     // @param completions list of string
 
     LIST_NOTES, // [c-s] ask list of note
 
     NOTES_INFO, // [s-c] list of note infos
-    // @param notes serialized List<NoteInfo> object
+                // @param notes serialized List<NoteInfo> object
 
     PARAGRAPH_REMOVE,
+    PARAGRAPH_CLEAR_OUTPUT,
     PING,
 
     ANGULAR_OBJECT_UPDATE,  // [s-c] add/update angular object
@@ -100,7 +106,7 @@ public class Message {
   }
 
   public OP op;
-  public Map<String, Object> data = new HashMap<>();
+  public Map<String, Object> data = new HashMap<String, Object>();
 
   public Message(OP op) {
     this.op = op;

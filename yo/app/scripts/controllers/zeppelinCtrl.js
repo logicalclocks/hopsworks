@@ -127,13 +127,20 @@ angular.module('hopsWorksApp')
             };
 
             self.createNewNote = function () {
-              ZeppelinService.createNotebook(projectId).then(function (success) {
-                console.log(success);
-                self.notes.push(success.data.body);
-                growl.success("Notebook created successfully. To rename open it and double click on the name.", {title: 'Success', ttl: 5000, referenceId: 10});
-              }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
-              });
+              var noteName = '';
+              ModalService.noteName('md','','','').then(
+                        function (success) {
+                          noteName = success.val;
+                          ZeppelinService.createNotebook(projectId, noteName).then(function (success) {
+                            self.notes.push(success.data.body);
+                            growl.success("Notebook created successfully.", {title: 'Success', ttl: 5000, referenceId: 10});
+                          }, function (error) {
+                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+                          });
+                        },
+                        function(error) {
+                });
+              
             };
 
             var toggleForwardIndeterminate = function (index) {

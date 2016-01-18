@@ -14,28 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package se.kth.hopsworks.zeppelin.rest.message;
 
-import java.util.Properties;
-import org.apache.zeppelin.interpreter.InterpreterOption;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
+ *  NewNotebookRequest rest api request message
  *
  */
-public class UpdateInterpreterSettingRequest {
+@XmlRootElement
+public class NewNotebookRequest {
+  String name;
 
-  // option was deprecated
-  Properties properties;
+  public NewNotebookRequest (){
 
-  public UpdateInterpreterSettingRequest(InterpreterOption option,
-          Properties properties) {
-    super();
-    this.properties = properties;
   }
 
-  public Properties getProperties() {
-    return properties;
+  public String getName() {
+    return name;
   }
 
-
+  public void setName(String name) {
+    this.name = name;
+  }
+  
 }

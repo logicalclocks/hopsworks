@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
+import java.util.Map;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import org.apache.commons.vfs2.FileObject;
@@ -85,7 +86,8 @@ public class ZeppelinResource {
     FileObject[] pidFiles = null;
     try {
       fsManager = VFS.getManager();
-      pidFiles = fsManager.resolveFile(filesystemRoot.toString() + "/").
+//      pidFiles = fsManager.resolveFile(filesystemRoot.toString() + "/").
+      pidFiles = fsManager.resolveFile(filesystemRoot.getPath()).
               getChildren();
     } catch (FileSystemException ex) {
       throw new FileSystemException("Directory not found: " + filesystemRoot.getPath(), ex.getMessage());
@@ -128,6 +130,10 @@ public class ZeppelinResource {
     if (pid == null) {
       return false;
     }
+    
+    //TODO: We should clear the environment variables before launching the 
+    // redirect stdout and stderr for child process to the zeppelin/project/logs file.
+    
     int exitValue;
     try {
       Process p = pb.start();
