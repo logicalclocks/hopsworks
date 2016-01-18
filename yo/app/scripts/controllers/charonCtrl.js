@@ -354,10 +354,12 @@ angular.module('hopsWorksApp')
 				function (success) {
 				  growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
 				  console.log("Success importing Repo. It will appear shortly." + success);
+				  $modalStack.getTop().key.close();
 				}, function (error) {
-				console.log("Error importing repo with token: " + self.token);
-				console.log(error);
-				growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+				  console.log("Error importing repo with token: " + self.token);
+				  console.log(error);
+				  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+				  $modalStack.getTop().key.close();
 			  });
 			};
 
