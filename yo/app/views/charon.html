@@ -67,7 +67,6 @@
 					<div class="table-responsive" style="overflow: hidden;">
 					  <div  ng-controller="SelectFileCharonCtrl as selectFileCharonCtrl">
 						<div ng-controller="ProjectCtrl as projectCtrl" class="row">
-						  >> {{charonCtrl.selectedCharonPath}}
 						  <span
 							data-ng-repeat="path in localFsCtrl.pathArray track by $index"></span>
 						</div>
@@ -121,7 +120,6 @@
 					<div class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
 					  <div  ng-controller="SelectFileCharonCtrl as selectFileCharonCtrl">
 						<div ng-controller="ProjectCtrl as projectCtrl" class="row">
-						  >> {{charonCtrl.selectedHdfsPath}}
 						  <span data-ng-repeat="path in datasetsCtrl.pathArray track by $index"></span>
 						</div>
 						<table class="table table-hover" >
@@ -153,7 +151,6 @@
 					<div class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
 					  <div  ng-controller="SelectFileCharonCtrl as selectFileCharonCtrl">
 						<div ng-controller="ProjectCtrl as projectCtrl" class="row">
-						  >> {{charonCtrl.selectedHdfsPath}}
 						  <span data-ng-repeat="path in datasetsCtrl.pathArray track by $index"></span>
 						</div>
 						<table class="table table-hover" >
@@ -242,20 +239,23 @@
 						  </div>
 						</div>
 						<div class="" height="80%" ng-hide="charonCtrl.noIDs">
-						  <div class="input-group-lg" align="left"">
+						  <div class="input-group-lg" align="left">
 
 							<div ng-repeat="site in charonCtrl.availableSiteIds"
 								 style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
 
 
-							  <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px;margin-top: 10px;">
+							  <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px;">
 								<label style="font-size: 14px;" class="ng-binding">
 								  ({{site.siteId}}) {{site.name}} {{site.email}} {{site.addr}}
 								</label>
 								<button type="button" class="btn btn-default btn-xs pull-right" 
-										style="color: red;background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" 
-										data-toggle="collapse" data-target="#metadatadiv0"
-										<a ng-click="charonCtrl.removeSiteId(site.siteId)">><i class="fa fa-minus"></i></button>
+										style="background-color:#D8D8D8"
+										data-toggle="collapse"
+										data-target="#metadatadiv0">
+										<a
+											style="color: red;background-color:#D8D8D8;"
+											ng-click="charonCtrl.removeSiteId(site.siteId)">><i class="fa fa-minus"></i></a></button>
 							  </div>                                
 							</div>						  
 							<!--                          <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px;margin-top: 10px;">
@@ -297,7 +297,7 @@
 
 
 							  <div style="background-color:#D8D8D8;padding-left:5px;">
-								<div class="row">
+								<div class="row" style="padding: 5px;">
 								  <div class="col-md-3">Site ID </div>
 								  <div class="col-md-3">Path </div>
 								  <div class="col-md-2">Rights</div>
@@ -308,11 +308,14 @@
 											<a ng-click="charonCtrl.removeShare(share.granteeId,share.path)">><i class="fa fa-minus"></i></button>								
 								  </div>
 								</div>
-								<div class="row">
+								<div class="row" style="padding: 10px">
 								  <div class="col-md-3">{{share.granteeId}} </div>
-								  <div class="col-md-3">{{share.path}}  </div>
+								  <div class="col-md-3"><textarea disabled class="form-control"
+									  style="resize:none;cursor: default;background-color: #D8D8D8;border: none;color: black"rows="9">{{share.path}}  </textarea></div>
 								  <div class="col-md-2">{{share.permissions}}</div>
-								  <div class="col-md-4">{{share.token}}</div>
+								  <div class="col-md-4"><textarea disabled class="form-control"
+																  style="resize:none;cursor: default"rows="9">{{share
+									  .token}}</textarea></div>
 								  </div>
 								</div>                                
 							  </div>						  
