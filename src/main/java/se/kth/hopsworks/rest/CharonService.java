@@ -333,13 +333,14 @@ public class CharonService {
 
 	logger.log(Level.INFO, "Create new repo: {0}", fullPath);
 
-	String token = "secret";
-//	CharonOperations.createSharedRepository(
-//			charon.getGranteeId(), fullPath,
-//			charon.getPermissions());
-//	
+	String token = CharonOperations.createSharedRepository(
+			charon.getGranteeId(), fullPath,
+			charon.getPermissions());
 
-	charonController.shareWithSite(project.getId(), charon.getGranteeId(), fullPath,
+		logger.log(Level.INFO, "Token is: {0}", token);
+
+
+		charonController.shareWithSite(project.getId(), charon.getGranteeId(), fullPath,
 			charon.getPermissions(), token);
 
 	json.setSuccessMessage("Site added successfully.");
