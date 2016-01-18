@@ -37,10 +37,13 @@ angular.module('hopsWorksApp')
             listSiteIds: function () {
               return $http.get('/api/project/' + id + '/charon/listSiteIds');
             },
-            addSiteID: function (op) {
+            listShares: function () {
+              return $http.get('/api/project/' + id + '/charon/listSharedRepos');
+            },
+            addSiteId: function (op) {
               var regReq = {
                 method: 'POST',
-                url: '/api/project/' + id + '/charon/addSiteID',
+                url: '/api/project/' + id + '/charon/addSiteId',
                 headers: {
                   'Content-Type': 'application/json'
                 },
@@ -49,6 +52,20 @@ angular.module('hopsWorksApp')
 
               return $http(regReq);
             },
+	        removeSiteId: function (siteId) {
+              return $http.delete('/api/project/' + id + '/charon/removeSiteId/' + siteId);
+            },
+	        removeShare: function (op) {
+             var removeReq = {
+                method: 'POST',
+                url: '/api/project/' + id + '/charon/removeShare',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                data: op
+              };
+              return $http(removeReq);			  
+            },			
             mkdir: function (op) {
               var regReq = {
                 method: 'POST',
@@ -73,6 +90,9 @@ angular.module('hopsWorksApp')
 
               return $http(regReq);
             },
+	        importRepo: function (token) {
+              return $http.get('/api/project/' + id + '/charon/importRepo/' + token);
+            },			
             share: function (op) {
               var regReq = {
                 method: 'POST',

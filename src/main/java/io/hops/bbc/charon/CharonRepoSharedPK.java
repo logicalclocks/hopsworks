@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.bbc.project;
+package io.hops.bbc.charon;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
@@ -12,26 +12,31 @@ import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+/**
+ *
+ * @author jdowling
+ */
 @Embeddable
 public class CharonRepoSharedPK implements Serializable {
+
     @Basic(optional = false)
     @NotNull
     @Column(name = "project_id")
     private int projectId;
     @Basic(optional = false)
     @NotNull
-    @Size(min = 1, max = 255)
     @Column(name = "site_id")
-    private String siteId;
+    private int siteId;
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 255)
+    @Column(name = "path")
     private String path;
 
     public CharonRepoSharedPK() {
     }
 
-    public CharonRepoSharedPK(int projectId, String siteId, String path) {
+    public CharonRepoSharedPK(int projectId, int siteId, String path) {
         this.projectId = projectId;
         this.siteId = siteId;
         this.path = path;
@@ -45,11 +50,11 @@ public class CharonRepoSharedPK implements Serializable {
         this.projectId = projectId;
     }
 
-    public String getSiteId() {
+    public int getSiteId() {
         return siteId;
     }
 
-    public void setSiteId(String siteId) {
+    public void setSiteId(int siteId) {
         this.siteId = siteId;
     }
 
@@ -65,7 +70,7 @@ public class CharonRepoSharedPK implements Serializable {
     public int hashCode() {
         int hash = 0;
         hash += (int) projectId;
-        hash += (siteId != null ? siteId.hashCode() : 0);
+        hash += (int) siteId;
         hash += (path != null ? path.hashCode() : 0);
         return hash;
     }
@@ -80,7 +85,7 @@ public class CharonRepoSharedPK implements Serializable {
         if (this.projectId != other.projectId) {
             return false;
         }
-        if ((this.siteId == null && other.siteId != null) || (this.siteId != null && !this.siteId.equals(other.siteId))) {
+        if (this.siteId != other.siteId) {
             return false;
         }
         if ((this.path == null && other.path != null) || (this.path != null && !this.path.equals(other.path))) {
@@ -91,7 +96,7 @@ public class CharonRepoSharedPK implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.bbc.project.CharonRepoSharedPK[ projectId=" + projectId + ", siteId=" + siteId + ", path=" + path + " ]";
+        return "io.hops.bbc.charon.tmp.CharonRepoSharedPK[ projectId=" + projectId + ", siteId=" + siteId + ", path=" + path + " ]";
     }
     
 }

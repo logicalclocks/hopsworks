@@ -1,0 +1,49 @@
+<div class="modal-header">
+  <button class="close" ng-click="charonCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Import remote repository</h2>
+</div>
+<div class="modal-body">
+  <div growl reference="1" class="pull-right" ></div>
+
+  <form role="form" name="projectForm" ng-submit="charonCtrl.importRepo()" novalidate class="form-validate">
+    <div class="row">
+      <div class="col-md-8">
+        <fieldset>
+
+          <div class="control-group col-md-offset-1">
+            <label for="token" style="color: black;">Token</label>
+            <div class="controls" id="token">
+			  <input type="text" name="token" ng-model="charonCtrl.token" required ng-trim="true" size="64">			  
+            </div>
+
+            <span ng-show="(projectForm.$submitted || projectForm.token.$dirty) &amp;&amp;
+                  projectForm.token.$error.required"
+                  class="text-danger ng-hide">This field is required</span>
+
+            <span ng-show="(projectForm.token.$dirty) &amp;&amp;
+                  projectForm.token.$error.pattern"
+                  class="text-danger ng-hide">Invalid token. Spaces are not allowed.</span>
+            <p></p>
+
+          </div>
+        </fieldset>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+
+      <button class="btn btn-default" type="button" ng-click="charonCtrl.close()" tabindex="5">Cancel</button>
+      <button class="btn btn-primary" type="submit"
+              ng-disabled="projectForm.token.$error.required
+              || projectCreatorCtrl.working
+              || projectForm.token.$error.pattern" tabindex="6">
+        <i ng-if="projectCreatorCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+        Import
+      </button>
+
+    </div>
+  </form>
+
+</div>
+

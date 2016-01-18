@@ -3,35 +3,33 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.bbc.project;
+package io.hops.bbc.charon;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 @Embeddable
 public class CharonRegisteredSitesPK implements Serializable {
+
     @Basic(optional = false)
     @NotNull
     @Column(name = "project_id")
     private int projectId;
     @Basic(optional = false)
     @NotNull
-    @Size(min = 1, max = 255)
     @Column(name = "site_id")
-    private String siteId;
+    private int siteId;
 
     public CharonRegisteredSitesPK() {
     }
 
-    public CharonRegisteredSitesPK(int projectId, String siteId) {
+    public CharonRegisteredSitesPK(int projectId, int siteId) {
         this.projectId = projectId;
         this.siteId = siteId;
     }
@@ -44,11 +42,11 @@ public class CharonRegisteredSitesPK implements Serializable {
         this.projectId = projectId;
     }
 
-    public String getSiteId() {
+    public int getSiteId() {
         return siteId;
     }
 
-    public void setSiteId(String siteId) {
+    public void setSiteId(int siteId) {
         this.siteId = siteId;
     }
 
@@ -56,7 +54,7 @@ public class CharonRegisteredSitesPK implements Serializable {
     public int hashCode() {
         int hash = 0;
         hash += (int) projectId;
-        hash += (siteId != null ? siteId.hashCode() : 0);
+        hash += (int) siteId;
         return hash;
     }
 
@@ -70,7 +68,7 @@ public class CharonRegisteredSitesPK implements Serializable {
         if (this.projectId != other.projectId) {
             return false;
         }
-        if ((this.siteId == null && other.siteId != null) || (this.siteId != null && !this.siteId.equals(other.siteId))) {
+        if (this.siteId != other.siteId) {
             return false;
         }
         return true;
@@ -78,7 +76,7 @@ public class CharonRegisteredSitesPK implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.bbc.project.CharonRegisteredSitesPK[ projectId=" + projectId + ", siteId=" + siteId + " ]";
+        return "io.hops.bbc.charon.tmp.CharonRegisteredSitesPK[ projectId=" + projectId + ", siteId=" + siteId + " ]";
     }
-    
+
 }
