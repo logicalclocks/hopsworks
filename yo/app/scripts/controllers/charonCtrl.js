@@ -168,7 +168,7 @@ angular.module('hopsWorksApp')
 			};
 
 			self.importRepository = function () {
-			  ModalService.remoteRepository('lg').then(
+			  ModalService.importRepository('lg').then(
 					  function () {
 						//loadProjects();
 						//loadActivity();
@@ -342,21 +342,24 @@ angular.module('hopsWorksApp')
 						growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
 						self.listShares();
 					  },
-					  function (error) {
-						self.working = false;
-						growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-					  });
+							  function (error) {
+								self.working = false;
+								growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+							  });
 			};
 
 
 			self.importRepo = function () {
 			  charonService.importRepo(self.token).then(
-					  function (success) {
-						console.log("Success importing Repo. It will appear shortly." + success);
-						self.listSiteIds();
-					  }, function (error) {
-				console.log("Error importing repo with token: " + self.token);
-				console.log(error);
+				function (success) {
+				  growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
+				  console.log("Success importing Repo. It will appear shortly." + success);
+				  $modalStack.getTop().key.close();
+				}, function (error) {
+				  console.log("Error importing repo with token: " + self.token);
+				  console.log(error);
+				  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+				  $modalStack.getTop().key.close();
 			  });
 			};
 
