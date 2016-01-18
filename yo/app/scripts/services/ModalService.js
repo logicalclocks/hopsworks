@@ -93,7 +93,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              remoteRepository: function (size) {
+              importRepository: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/importRepositoryModal.html',
                   controller: 'CharonCtrl as charonCtrl',
