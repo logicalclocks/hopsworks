@@ -391,8 +391,8 @@ public class ProjectController {
     projectDirCreated = fileOps.mkDir(projectPath);
 
     //Set default space quota in GB
-    setQuota(new Path(projectPath), Integer.parseInt(settings
-            .getHdfsDefaultQuota()));
+//    setQuota(new Path(projectPath), Integer.parseInt(settings
+//            .getHdfsDefaultQuota()));
 
     //create the rest of the child folders if any
     if (projectDirCreated && !fullProjectPath.equals(projectPath)) {
