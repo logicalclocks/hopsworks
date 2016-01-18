@@ -14,7 +14,7 @@
           <div class="control-group col-md-offset-1">
             <label for="token" style="color: black;">Token</label>
             <div class="controls" id="token">
-			  <input type="text" name="token" ng-model="charonCtrl.token" required ng-trim="true" size="64">
+              <textarea class="form-control" style="resize:none;" ng-model="charonCtrl.token" rows="10" tabindex="2" required></textarea>
             </div>
 
             <span ng-show="(projectForm.$submitted || projectForm.token.$dirty) &amp;&amp;
