@@ -310,8 +310,7 @@
 								</div>
 								<div class="row" style="padding: 10px">
 								  <div class="col-md-3">{{share.granteeId}} </div>
-								  <div class="col-md-3"><textarea disabled class="form-control"
-									  style="resize:none;cursor: default;background-color: #D8D8D8;border: none;color: black"rows="9">{{share.path}}  </textarea></div>
+								  <div class="col-md-3">{{share.path | limitTo:10}} </div>
 								  <div class="col-md-2">{{share.permissions}}</div>
 								  <div class="col-md-4"><textarea disabled class="form-control"
 																  style="resize:none;cursor: default"rows="9">{{share
