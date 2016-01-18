@@ -122,8 +122,11 @@ public class ProjectController {
        * first create the folder structure in hdfs. If it is successful move on
        * to create the project in hopsworks database
        */
-      if (mkProjectDIR(newProject.getProjectName())) {
-
+      String projectPath = mkProjectDIR(newProject.getProjectName());
+      if (projectPath != null) {
+        
+        fileOps.setMetaEnabled(projectPath);
+        
         //Create a new project object
         Date now = new Date();
         Project project = new Project(newProject.getProjectName(), user, now);
@@ -350,7 +353,7 @@ public class ProjectController {
   }
 
   //create project in HDFS
-  private boolean mkProjectDIR(String projectName) throws IOException {
+  private String mkProjectDIR(String projectName) throws IOException {
 
     String rootDir = settings.DIR_ROOT;
 
@@ -383,10 +386,9 @@ public class ProjectController {
             + projectName;
     String project = this.extractProjectName(fullProjectPath + File.separator);
     String projectPath = File.separator + rootDir + File.separator + project;
-
+ 
     //Create first the projectPath
     projectDirCreated = fileOps.mkDir(projectPath);
-    fileOps.setMetaEnabled(projectPath);
 
     //Set default space quota in GB
     setQuota(new Path(projectPath), Integer.parseInt(settings
@@ -399,7 +401,10 @@ public class ProjectController {
       childDirCreated = true;
     }
 
-    return rootDirCreated && projectDirCreated && childDirCreated;
+    if(rootDirCreated && projectDirCreated && childDirCreated){
+      return projectPath;
+    }
+    return null;
   }
 
   /**
