@@ -17,6 +17,8 @@
  */
 package se.kth.hopsworks.util;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -216,6 +218,22 @@ public class CharonOperations {
         throw new Exception("The repository must be empty to be shared!");
 
     return share(repPath, permissions, granteeId);
+  }
+
+  /**
+   * Removes a shared repository
+   *
+   * @param repPath - the path to the repository to be deleted
+   * @throws Exception
+   */
+  public static void removeSharedRepository(String repPath) throws Exception{
+
+    try {
+      FileUtils.deleteDirectory(new File(charonMountPointPath+File.separator+repPath));
+    } catch (Exception e) {
+      throw new Exception("Something went wrong deleting dir at path: " +
+          repPath);
+    }
   }
 
   /**

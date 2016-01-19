@@ -295,7 +295,7 @@ public class CharonService {
 		  throws Exception {
 	JsonResponse json = new JsonResponse();
 
-//	CharonOperations.removeSiteId(siteId);
+	CharonOperations.removeSharedRepository(charon.getPath());
 	charonController.removeShare(project.getId(), charon.getGranteeId(), charon.getPath());
 
 	json.setSuccessMessage("Site removed successfully.");

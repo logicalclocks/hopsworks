@@ -338,7 +338,8 @@ angular.module('hopsWorksApp')
 						self.working = false;
 						growl.success(success.data.successMessage, {title: 'Success', ttl: 2000});
 						self.listShares();
-					  },
+						$scope.$broadcast("refreshCharon", {});
+						  },
 							  function (error) {
 								self.working = false;
 								growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});

@@ -210,19 +210,11 @@
 						<table id="mytable1" class="table table-bordred table-striped" style="margin-top: 16px;">
 						  <tr style="background-color: #fafafa">
 							<td style="color: black;">
-							  <div class="dropdown" style="display:inline-block;">
-								<button style="padding: 0px 15px"
-										class="btn btn-success btn-sm dropdown-toggle"
-										type="button" data-toggle="dropdown">Share
-								  <span class="fa fa-caret-down"></span></button>
-								<ul class="dropdown-menu" style="left: 100px;top:0%">
-								  <li><a ng-click="charonCtrl.newRepository()"><span class="fa fa-plus"
-																					 style="padding-right: 10px"></span>New repository</a></li>
-								  <li><a ng-click="charonCtrl.importRepository()"><span
-										class="fa fa-plus-circle"
-										style="padding-right: 10px"></span>Import repository</a></li>
-								</ul>
-							  </div>
+								<button class="btn btn-success"
+										style="width: available;margin-top: -2px"
+										ng-click="charonCtrl.importRepository()">
+							<span style="font-size: 11px;"><strong>Import repository</strong></span>
+									</button>
 							</td>
 							<td style="color: black;">
 							  <div style="text-align: center;">My site ID</div>
@@ -241,9 +233,9 @@
 								ng-model="columnName"><label
 							  style="font-size: 15px">Sites I can share with</label></span>
 						  <button class="btn btn-success"
-								  style="width: available;float: right;margin-top: -5px"
+								  style="width: available;float: right;margin-top: -2px"
 							ng-click="charonCtrl.addSite()">
-							<span style="font-size: 15px;"><strong>Add a Site
+							<span style="font-size: 11px;"><strong>Add a Site
 								Id</strong></span>
 						  </button>
 						</div>
@@ -290,9 +282,9 @@
 								ng-model="columnName"><label
 							  style="font-size: 15px">Repositories I am sharing with</label></span>
 						  <button class="btn btn-success"
-								  style="width: available;float: right;margin-top: -5px"
+								  style="width: available;float: right;margin-top: -2px"
 							ng-click="charonCtrl.newRepository()">
-							  <span style="font-size: 15px;"><strong>Add a
+							  <span style="font-size: 11px;"><strong>Add a
 								  repository</strong></span>
 						  </button>
 
