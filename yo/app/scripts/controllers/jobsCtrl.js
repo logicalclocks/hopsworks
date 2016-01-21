@@ -12,7 +12,7 @@ angular.module('hopsWorksApp')
             var self = this;
             this.projectId = $routeParams.projectID;
             this.jobs; // Will contain all the jobs.
-            this.running; //Will contain run information
+            this.runningInfo; //Will contain run information
             this.jobFilter = {
               "creator":{
                 "email":""
@@ -127,7 +127,7 @@ angular.module('hopsWorksApp')
             this.getRunStatus = function () {
               JobService.getRunStatus(self.projectId).then(
                       function (success) {
-                        self.running = success.data;
+                        self.runningInfo = success.data;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });

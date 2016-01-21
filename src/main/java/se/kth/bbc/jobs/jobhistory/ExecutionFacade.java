@@ -2,6 +2,8 @@ package se.kth.bbc.jobs.jobhistory;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -80,21 +82,26 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   }
 
   public Execution create(JobDescription job, Users user, String stdoutPath,
-          String stderrPath, Collection<JobInputFile> input) {
+          String stderrPath, Collection<JobInputFile> input, JobFinalStatus
+      finalStatus, float progress) {
     return create(job, user, JobState.INITIALIZING, stdoutPath, stderrPath,
-            input);
+            input, finalStatus, progress);
   }
 
   public Execution create(JobDescription job, Users user, JobState state,
           String stdoutPath,
-          String stderrPath, Collection<JobInputFile> input) {
+          String stderrPath, Collection<JobInputFile> input, JobFinalStatus
+      finalStatus, float progress) {
     //Check if state is ok
     if (state == null) {
       state = JobState.INITIALIZING;
     }
+    if (finalStatus == null) {
+      finalStatus = JobFinalStatus.UNDEFINED;
+    }
     //Create new object
     Execution exec = new Execution(state, job, user, stdoutPath, stderrPath,
-            input);
+            input, finalStatus, progress);
     //And persist it
     em.persist(exec);
     em.flush();
@@ -103,48 +110,59 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
 
   public Execution updateState(Execution exec, JobState newState) {
     return update(exec, newState, -1, null, null, null, null,
-            null);
+            null, null, 0);
+  }
+
+  public Execution updateFinalStatus(Execution exec, JobFinalStatus finalStatus) {
+    return update(exec, null, -1, null, null, null, null,
+        null, finalStatus, 0);
+  }
+
+  public Execution updateProgress(Execution exec, float progress) {
+    return update(exec, null, -1, null, null, null, null,
+        null, null, progress);
   }
 
   public Execution updateExecutionTime(Execution exec, long executionTime) {
-    return update(exec, null, executionTime, null, null, null, null, null);
+    return update(exec, null, executionTime, null, null, null, null, null, null, 0);
   }
 
   public Execution updateOutput(Execution exec,
           Collection<JobOutputFile> outputFiles) {
-    return update(exec, null, -1, null, null, null, outputFiles, null);
+    return update(exec, null, -1, null, null, null, outputFiles, null, null, 0);
   }
 
   public Execution updateStdOutPath(Execution exec, String stdOutPath) {
-    return update(exec, null, -1, stdOutPath, null, null, null, null);
+    return update(exec, null, -1, stdOutPath, null, null, null, null, null, 0);
   }
 
   public Execution updateStdErrPath(Execution exec, String stdErrPath) {
-    return update(exec, null, -1, null, stdErrPath, null, null, null);
+    return update(exec, null, -1, null, stdErrPath, null, null, null, null, 0);
   }
 
   public Execution updateAppId(Execution exec, String appId) {
-    return update(exec, null, -1, null, null, appId, null, null);
+    return update(exec, null, -1, null, null, appId, null, null, null, 0);
   }
 
   /**
    * Updates all given fields of <i>exec</i> to the given value, unless that
    * value is null for entities, or -1 for integers.
    * <p/>
-   * @param history
-   * @param name
+   * @param exec
    * @param state
    * @param executionDuration
    * @param stdoutPath
    * @param stderrPath
    * @param appId
-   * @param jobInputFileCollection
-   * @param jobOutputFileCollection
+   * @param output
+   * @param input
+   * @param finalStatus
    */
   private Execution update(
           Execution exec, JobState state, long executionDuration,
           String stdoutPath, String stderrPath, String appId,
-          Collection<JobOutputFile> output, Collection<JobInputFile> input) {
+          Collection<JobOutputFile> output, Collection<JobInputFile> input,
+      JobFinalStatus finalStatus, float progress) {
     //Find the updated execution object
     Execution obj = em.find(Execution.class, exec.getId());
     if (obj == null) {
@@ -173,6 +191,12 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     }
     if (output != null) {
       exec.setJobOutputFileCollection(output);
+    }
+    if (finalStatus != null) {
+      exec.setFinalStatus(finalStatus);
+    }
+    if (progress != 0) {
+      exec.setProgress(progress);
     }
     em.merge(exec);
     return exec;

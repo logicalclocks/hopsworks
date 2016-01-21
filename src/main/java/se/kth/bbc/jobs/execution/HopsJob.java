@@ -3,6 +3,7 @@ package se.kth.bbc.jobs.execution;
 import java.util.Collection;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;
@@ -89,6 +90,19 @@ public abstract class HopsJob {
   }
 
   /**
+   * Update the final status of the Execution entity to the given status.
+   * <p/>
+   * @param finalStatus
+   */
+  protected final void updateFinalStatus(JobFinalStatus finalStatus) {
+    execution = services.getExecutionFacade().updateFinalStatus(execution, finalStatus);
+  }
+
+  protected final void updateProgress(float progress) {
+    execution = services.getExecutionFacade().updateProgress(execution, progress);
+  }
+
+  /**
    * Update the current Execution entity with the given values.
    * <p/>
    * @param state
@@ -102,7 +116,7 @@ public abstract class HopsJob {
   protected final void updateExecution(JobState state,
           long executionDuration, String stdoutPath,
           String stderrPath, String appId, Collection<JobInputFile> inputFiles,
-          Collection<JobOutputFile> outputFiles) {
+          Collection<JobOutputFile> outputFiles, JobFinalStatus finalStatus, float progress) {
     Execution upd = services.getExecutionFacade().updateAppId(execution, appId);
     upd = services.getExecutionFacade().updateExecutionTime(upd,
             executionDuration);
@@ -110,6 +124,8 @@ public abstract class HopsJob {
     upd = services.getExecutionFacade().updateState(upd, state);
     upd = services.getExecutionFacade().updateStdErrPath(upd, stderrPath);
     upd = services.getExecutionFacade().updateStdOutPath(upd, stdoutPath);
+    upd = services.getExecutionFacade().updateFinalStatus(upd, finalStatus);
+    upd = services.getExecutionFacade().updateProgress(upd, progress);
     this.execution = upd;
   }
 
@@ -131,7 +147,7 @@ public abstract class HopsJob {
     if (!proceed) {
       long executiontime = System.currentTimeMillis() - starttime;
       updateExecution(JobState.INITIALIZATION_FAILED, executiontime, null, null,
-              null, null, null);
+              null, null, null, null, 0);
       cleanup();
       return;
     } else {
@@ -139,7 +155,7 @@ public abstract class HopsJob {
     }
     runJob();
     long executiontime = System.currentTimeMillis() - starttime;
-    updateExecution(null, executiontime, null, null, null, null, null);
+    updateExecution(null, executiontime, null, null, null, null, null, null, 0);
     cleanup();
   }
 
@@ -177,7 +193,7 @@ public abstract class HopsJob {
    */
   public final Execution requestExecutionId() {
     execution = services.getExecutionFacade().create(jobDescription, user, null,
-            null, null);
+            null, null, null, 0);
     initialized = (execution.getId() != null);
     return execution;
   }

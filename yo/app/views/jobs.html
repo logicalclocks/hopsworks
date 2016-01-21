@@ -16,77 +16,118 @@
 
 
         <!-- Page Content -->
-        <div>
-          <div class="row">
-            <div class="col-lg-2" style="max-width: 250px;">
-              <div class="ibox float-e-margins">
-                <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
-                  <div class="file-manager">
-                    <div class="btn-group"
-                         style="width: 100%;">
-                      <button style="width: 100%;"
-                              ng-click="jobsCtrl.newJob()"
-                              class="btn btn-warning">
-                        New job
-                      </button>
-                    </div>
-                  </div>
+        <div style="min-width: 1210px">
+          <div>
+              <div style="max-height: 50%;overflow-y: auto;padding-bottom:
+              200px;">
+                <div class="btn-group"
+                     style="float: left;width: 10%; margin-bottom: 20px;">
+                  <button style="width: 100%;"
+                          ng-click="jobsCtrl.newJob()"
+                          class="btn btn-warning">
+                    New job
+                  </button>
                 </div>
-                <div class="ibox-content"></div>
-              </div>
-            </div>
-
-              <div class="col-lg-10" style="max-height: 50%;overflow-y: auto;padding-bottom: 200px">
+                <div style="float: right;width: 89%;">
+                  <input type="text" ng-model="jobsCtrl.jobFilter.name"
+                         placeholder="Filter Jobs" class="form-control" autofocus/>
+                </div>
               <table class="table table-hover">
                 <thead>
+                <th style="width: 6%">
+                </th>
                 <th style="width: 12%">
                   Name
-                </th>
-                <th style="width: 13%">
-                  Owner
-                </th>
-                <th style="width: 10%">
-                  Type
                 </th>
                 <th style="width: 15%">
                   Created on
                 </th>
-                <th style="width: 20%">
-                 <input type="text" ng-model="jobsCtrl.jobFilter.name" placeholder="Filter Jobs" class="form-control"/>
+                <th style="width: 10%">
+                  Type
                 </th>
-                <th style="width: 30%"></th>
+                <th style="width: 10%">
+                  State
+                </th>
+                <th style="width: 10%">
+                  Final Status
+                </th>
+                <th style="width: 10%">
+                  Progress
+                </th>
+                <th style="width: 15%">
+                  Actions
+                </th>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="job in jobsCtrl.jobs| filter:jobsCtrl.jobFilter:false | orderBy : 'creationTime'" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.untoggle(job,$index);">
+                    <tr ng-repeat="job in jobsCtrl.jobs| filter:jobsCtrl.jobFilter:false | orderBy : '-creationTime'" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.untoggle(job,$index);">
+                    <td>
+                      <button style="border-color: #20AD28; min-width: 64px;"
+                              ng-click="jobsCtrl.runJob(job.id);$event.stopPropagation();" class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running"><span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"/> Run</button>
+                      <button ng-click="$event.stopPropagation();"
+                              class="btn btn-success btn-sm"
+                              ng-show="jobsCtrl.runningInfo['' + job.id].running">
+                        Running</button>
+                    </td>
                     <td>
                       {{job.name}}
                     </td>
                     <td>
-                      {{job.creator.fname}} {{job.creator.lname}}
+                      {{job.creationTime| date:'medium'}}
                     </td>
                     <td>
                       {{job.jobType}}
                     </td>
                     <td>
-                      {{job.creationTime| date:'mediumDate'}}
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
                     </td>
                     <td>
-                        <button ng-click="jobsCtrl.runJob(job.id);$event.stopPropagation();" class="btn btn-default btn-sm" ng-hide="jobsCtrl.running['' + job.id]"><span class="glyphicon glyphicon-play" aria-hidden="true"/>  Run</button>
-                      <button ng-click="$event.stopPropagation();" class="btn btn-success btn-sm" ng-show="jobsCtrl.running['' + job.id]">Running</button>
-                      <div class="dropdown" style="display:inline-block;">
-                            <button class="btn btn-default btn-sm dropdown-toggle"  type="button" data-toggle="dropdown">More Actions
-                            <span class="fa fa-caret-right"></span></button>
-                          <ul class="dropdown-menu" style="left: 100px;top:0%">
-                              <li><a ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"><span class="glyphicon glyphicon-time" style="padding-right: 10px"></span>Schedule</a></li>
-                                <li><a ng-click="jobsCtrl.editAsNew(job);$event.stopPropagation();"><span class="glyphicon glyphicon-edit" style="padding-right: 10px"></span>Edit as New</a></li>
-                                <li><a ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"><span class="glyphicon glyphicon-list-alt" style="padding-right: 10px"></span>Job Details</a></li>
-                                <li><a ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showLogs(job.id);$event.stopPropagation();"><span class="glyphicon glyphicon-hdd" style="padding-right: 10px"></span>Log Files</a></li>
-                                <li role="presentation" class="divider"></li>
-                                <li><a ng-click="jobsCtrl.deleteJob(job.id,job.name);$event.stopPropagation();"><span class="glyphicon glyphicon-trash" style="padding-right: 10px"></span>Delete</a></li>
-                            </ul>
-                      </div>
+                      {{jobsCtrl.runningInfo['' + job.id].finalStatus}}
                     </td>
-                    <td></td>
+                    <td>
+                      {{jobsCtrl.runningInfo['' + job.id].progress}}
+                    </td>
+                    <td>
+                      <span class="field-info" tooltip="Schedule"
+                            style="padding-top: 5px;padding-left:3px">
+                        <button style=""
+                                ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"
+                                class="btn btn-primary glyphicon glyphicon-time">
+                        </button>
+                      </span>
+                      <span class="field-info" tooltip="Edit"
+                            style="padding-top: 5px;padding-left:3px">
+                      <button style=""
+                              ng-click="jobsCtrl.editAsNew(job);$event.stopPropagation();"
+                              class="btn btn-warning glyphicon glyphicon-edit">
+                      </button>
+                      </span>
+                      <span class="field-info" tooltip="Details"
+                            style="padding-top: 5px;padding-left:3px">
+                      <button style=""
+                              ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"
+                              class="btn btn-info glyphicon glyphicon-list-alt">
+                      </button>
+                      </span>
+                      <span class="field-info" tooltip="Delete"
+                            style="padding-top: 5px;padding-left:3px">
+                      <button style="margin-left: 5px"
+                              ng-click="jobsCtrl.deleteJob(job.id,job.name);$event.stopPropagation();"
+                              class="btn btn-danger glyphicon glyphicon-trash">
+                      </button>
+                     </span>
+                       <!--<div class="dropdown" style="display:inline-block;">-->
+                            <!--<button class="btn btn-default btn-sm dropdown-toggle"  type="button" data-toggle="dropdown">More Actions-->
+                            <!--<span class="fa fa-caret-right"></span></button>-->
+                          <!--<ul class="dropdown-menu" style="left: 100px;top:0%">-->
+                              <!--<li><a ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"><span class="glyphicon glyphicon-time" style="padding-right: 10px"></span>Schedule</a></li>-->
+                                <!--<li><a ng-click="jobsCtrl.editAsNew(job);$event.stopPropagation();"><span class="glyphicon glyphicon-edit" style="padding-right: 10px"></span>Edit as New</a></li>-->
+                                <!--<li><a ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"><span class="glyphicon glyphicon-list-alt" style="padding-right: 10px"></span>Job Details</a></li>-->
+                                <!--<li><a ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showLogs(job.id);$event.stopPropagation();"><span class="glyphicon glyphicon-hdd" style="padding-right: 10px"></span>Log Files</a></li>-->
+                                <!--<li role="presentation" class="divider"></li>-->
+                                <!--<li><a ng-click="jobsCtrl.deleteJob(job.id,job.name);$event.stopPropagation();"><span class="glyphicon glyphicon-trash" style="padding-right: 10px"></span>Delete</a></li>-->
+                            <!--</ul>-->
+                      <!--</div>-->
+                    </td>
                   </tr>
                 </tbody>
               </table>
