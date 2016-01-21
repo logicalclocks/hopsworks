@@ -4,6 +4,7 @@ import com.google.zxing.WriterException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.SocketException;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -246,7 +247,7 @@ public class RecoverySelector implements Serializable {
 
         return "qrcode";
 
-      } catch (IOException | WriterException ex) {
+      } catch (IOException | WriterException | NoSuchAlgorithmException ex) {
         Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE,
                 null, ex);
       }
