@@ -7,6 +7,9 @@ import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.faces.FacesException;
@@ -386,6 +389,9 @@ public class UserRegistration implements Serializable {
 
       return ("");
 
+    } catch (NoSuchAlgorithmException ex) {
+      Logger.getLogger(UserRegistration.class.getName()).log(Level.SEVERE, null,
+              ex);
     }
 
     return ("qrcode");
