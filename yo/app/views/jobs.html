@@ -78,10 +78,93 @@
                       {{job.jobType}}
                     </td>
                     <td>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='Initializing'"
+                        style="color: #0066bb ">
                       {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='Initialization failed'"
+                        style="color: #880000 ">
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='Finished'"
+                        style="color: #00A000 ">
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='Running'"
+                        style="color: #0066bb ">
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='Accepted'"
+                        style="color: #0066bb ">
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='Failed'"
+                        style="color: #880000 ">
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='Killed'"
+                        style="color: #880000 ">
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='New'"
+                        style="color: #0066bb ">
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='New, saving'"
+                        style="color: #0066bb ">
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='Submitted'"
+                        style="color: #0066bb ">
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='Framework failure'"
+                        style="color: #880000 ">
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='Starting Application Master'"
+                        style="color: #880000 ">
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state=='Failed starting AM'"
+                        style="color: #880000 ">
+                      {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
                     </td>
                     <td>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].finalStatus=='Undefined'"
+                        style="color: #0066bb ">
                       {{jobsCtrl.runningInfo['' + job.id].finalStatus}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].finalStatus=='Succeeded'"
+                        style="color: #00A000 ">
+                      {{jobsCtrl.runningInfo['' + job.id].finalStatus}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].finalStatus=='Failed'"
+                        style="color: #880000 ">
+                      {{jobsCtrl.runningInfo['' + job.id].finalStatus}}
+                      </span>
+                      <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].finalStatus=='Killed'"
+                        style="color: #880000 ">
+                      {{jobsCtrl.runningInfo['' + job.id].finalStatus}}
+                      </span>
                     </td>
                     <td>
                       {{jobsCtrl.runningInfo['' + job.id].progress}}
