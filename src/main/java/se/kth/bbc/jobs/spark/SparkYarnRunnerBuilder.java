@@ -59,13 +59,14 @@ public class SparkYarnRunnerBuilder {
    * @return The YarnRunner instance to launch the Spark job on Yarn.
    * @throws IOException If creation failed.
    */
-  public YarnRunner getYarnRunner(String project, String sparkUser, final String hadoopDir,
-      final String sparkDir) 
-      throws IOException {
+  public YarnRunner getYarnRunner(String project, String sparkUser,
+          final String hadoopDir,
+          final String sparkDir)
+          throws IOException {
 
     String sparkClasspath = Settings.getSparkDefaultClasspath(sparkDir);
     String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
-    
+
     //TODO: include driver memory as am memory
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
@@ -74,12 +75,15 @@ public class SparkYarnRunnerBuilder {
 //    String stagingPath = File.separator + "user" + File.separator + Utils.
 //            getYarnUser() + File.separator + Settings.SPARK_STAGING_DIR
 //            + File.separator + YarnRunner.APPID_PLACEHOLDER;
-    String stagingPath = File.separator + "Projects" + File.separator + project + File.separator 
-        + Settings.PROJECT_STAGING_DIR + File.separator + YarnRunner.APPID_PLACEHOLDER;
+    String stagingPath = File.separator + "Projects" + File.separator + project
+            + File.separator
+            + Settings.PROJECT_STAGING_DIR + File.separator
+            + YarnRunner.APPID_PLACEHOLDER;
     builder.localResourcesBasePath(stagingPath);
 
     //Add Spark jar
-    builder.addLocalResource(Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath, false);
+    builder.addLocalResource(Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath,
+            false);
     //Add app jar
     builder.addLocalResource(Settings.SPARK_LOCRSC_APP_JAR, appJarPath,
             !appJarPath.startsWith("hdfs:"));
@@ -99,7 +103,8 @@ public class SparkYarnRunnerBuilder {
     if (classPath == null || classPath.isEmpty()) {
       builder.addToAppMasterEnvironment("CLASSPATH", sparkClasspath);
     } else {
-      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":" + sparkClasspath);
+      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
+              + sparkClasspath);
     }
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
@@ -116,10 +121,9 @@ public class SparkYarnRunnerBuilder {
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
+
+    // spark 1.5.x replaced --num-executors with --properties-file
     // https://fossies.org/diffs/spark/1.4.1_vs_1.5.0/
-    // yarn/src/main/scala/org/apache/spark/deploy/yarn/
-    // ApplicationMasterArguments.scala-diff.html
-    // spark 1.5.x removed --num-executors
     // amargs.append(" --num-executors ").append(numberOfExecutors);
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);

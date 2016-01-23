@@ -35,7 +35,7 @@ import se.kth.hopsworks.user.model.Users;
  */
 @Stateless
 public class DatasetController {
-  
+
   private static final Logger logger = Logger.getLogger(DatasetController.class.
           getName());
   @EJB
@@ -70,7 +70,7 @@ public class DatasetController {
    * this DataSet.
    * @param searchable Defines whether the dataset can be indexed or not (i.e.
    * whether it can be visible in the search results or not)
-   * @param stickbit dataset type
+   * @param globallyVisible
    * @throws NullPointerException If any of the given parameters is null.
    * @throws IllegalArgumentException If the given DataSetDTO contains invalid
    * folder names, or the folder already exists.
@@ -79,7 +79,7 @@ public class DatasetController {
    */
   public void createDataset(Users user, Project project, String dataSetName,
           String datasetDescription, int templateId, boolean searchable,
-          boolean stickbit, boolean globallyVisible)
+          boolean globallyVisible)
           throws IOException {
     //Parameter checking.
     if (user == null) {
@@ -104,30 +104,38 @@ public class DatasetController {
     dsPath = dsPath + File.separator + dataSetName;
     Inode parent = inodes.getProjectRoot(project.getName());
     Inode ds = inodes.findByParentAndName(parent, dataSetName);
-    
+
     if (ds != null) {
       throw new IllegalStateException(
               "Invalid folder name for DataSet creation. "
               + ResponseMessages.FOLDER_NAME_EXIST);
     }
-    success = createFolder(dsPath, globallyVisible, templateId, null);
-    
+    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    //Permission hdfs dfs -chmod 750 or 755
+    FsAction global = (globallyVisible ? FsAction.READ_EXECUTE
+            : FsAction.NONE);
+    FsAction group = (globallyVisible ? FsAction.ALL
+            : FsAction.READ_EXECUTE);
+    FsPermission fsPermission = new FsPermission(FsAction.ALL,
+            group, global, globallyVisible);
+    success = createFolder(dsPath, templateId, username, fsPermission);
+
     if (success) {
       //set the dataset meta enabled. Support 3 level indexing
       this.fileOps.setMetaEnabled(dsPath);
       try {
-        
+
         ds = inodes.findByParentAndName(parent, dataSetName);
         Dataset newDS = new Dataset(ds, project);
         newDS.setSearchable(searchable);
-        
+
         if (datasetDescription != null) {
           newDS.setDescription(datasetDescription);
         }
         datasetFacade.persistDataset(newDS);
         activityFacade.persistActivity(ActivityFacade.NEW_DATA, project, user);
         // creates a dataset and adds user as owner.
-        hdfsUsersBean.addDatasetUsersGroups(user, project, newDS, stickbit);
+        hdfsUsersBean.addDatasetUsersGroups(user, project, newDS);
       } catch (Exception e) {
         IOException failed = new IOException("Failed to create dataset at path "
                 + dsPath + ".", e);
@@ -145,7 +153,8 @@ public class DatasetController {
   }
 
   /**
-   * Create a directory under an existing DataSet.
+   * Create a directory under an existing DataSet. With the same permission as
+   * the parent.
    * <p/>
    * @param user creating the folder
    * @param project The project under which the directory is being created.
@@ -214,7 +223,7 @@ public class DatasetController {
     //Check if the given dataset exists.
     Inode projectRoot = inodes.getProjectRoot(project.getName());
     Inode parentDataset = inodes.findByParentAndName(projectRoot, datasetName);
-    
+
     if (parentDataset == null) {
       throw new IllegalArgumentException("DataSet does not exist: "
               + datasetName + " under " + project.getName());
@@ -226,7 +235,7 @@ public class DatasetController {
     }
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     //Now actually create the folder
-    boolean success = this.createFolder(fullPath, false, templateId, username);
+    boolean success = this.createFolder(fullPath, templateId, username, null);
 
     //if the folder was created successfully, persist basic metadata to it -
     //description and searchable attribute
@@ -260,15 +269,17 @@ public class DatasetController {
     success = dfsSingleton.getDfsOps(username).rm(location, true);
     return success;
   }
-  
+
   /**
-   * Change permission of the folder in path. This is performed with the username
+   * Change permission of the folder in path. This is performed with the
+   * username
    * of the user in the given project.
+   * <p>
    * @param path
    * @param user
    * @param project
    * @param pemission
-   * @throws IOException 
+   * @throws IOException
    */
   public void changePermission(String path, Users user, Project project,
           FsPermission pemission) throws IOException {
@@ -288,23 +299,24 @@ public class DatasetController {
    * @return
    * @throws IOException
    */
-  private boolean createFolder(String path, boolean globallyVisible,
-          int template, String username) throws IOException {
+  private boolean createFolder(String path, int template, String username,
+          FsPermission fsPermission) throws IOException {
     boolean success = false;
-        //Permission hdfs dfs -chmod 750 or 755
-        FsAction global = globallyVisible == true ? FsAction.NONE :
-                FsAction.READ_EXECUTE;
-        FsPermission fsPermission = new FsPermission(FsAction.ALL,
-                FsAction.READ_EXECUTE, global);
+    Path location = new Path(path);
+    DistributedFileSystemOps dfs;
+    if (fsPermission == null) {
+      fsPermission = dfsSingleton.getDfsOps().getParentPermission(location);
+    }
     try {
       //create the folder in the file system
       if (username == null) {
-        success = fileOps.mkDir(path);
+        dfs = dfsSingleton.getDfsOps();
       } else {
-        Path location = new Path(path);
-
-        DistributedFileSystemOps dfs = dfsSingleton.getDfsOps(username);
-        success = dfs.mkdir(location, fsPermission);
+        dfs = dfsSingleton.getDfsOps(username);
+      }
+      success = dfs.mkdir(location, fsPermission);
+      if (success) {
+        dfs.setPermission(location, fsPermission);
       }
       if (success && template != 0 && template != -1) {
         //Get the newly created Inode.

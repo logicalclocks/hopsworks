@@ -5,6 +5,19 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+/*
+   *  Client Code:
+   * 
+   * Settings settings = ...
+   * StringBuilder zeppelin_env = ConfigFileGenerator.instantiateFromTemplate( ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE, 
+   * "zeppelin_dir", settings.getZeppelinDir() + projectName,
+   * "spark_dir", settings.getSparkDir(),
+   * "hadoop_dir", settings.getHadoopDir()
+   * );
+   *
+   * ConfigFileGenerator.createConfigFile(settings.getZeppelinDir() + projectName + "/zeppelin_env.xml", zeppelin_env.toString());
+   *
+ */
 public class ConfigFileGenerator {
 
   public static final String TEMPLATE_ROOT = "io" + File.separator + "hops";
@@ -15,14 +28,6 @@ public class ConfigFileGenerator {
   public static final String INTERPRETER_TEMPLATE
       = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator + "interpreter_template.json";
   /**
-   *
-   * StringBuilder metadata_rb = ConfigFileGenerator.instantiateFromTemplate( Settings.CB_TEMPLATE_METADATA, "name",
-   * repoName, "user", experiment.getUser(), "email", email, "depends", "", "resolve_ips", "", "build_command",
-   * experiment.getMavenCommand(), "url_binary", experiment.getUrlBinary(), "url_gitclone", experiment.getUrlGitClone(),
-   * "build_command", experiment.getMavenCommand(), "ip_params", "", "more_recipes", recipeDescriptions.toString() );
-   *
-   *
-   *
    * @param filePath
    * @param pairs
    * @return

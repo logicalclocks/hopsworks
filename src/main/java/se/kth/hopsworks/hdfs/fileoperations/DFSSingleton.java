@@ -1,7 +1,8 @@
 package se.kth.hopsworks.hdfs.fileoperations;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
@@ -17,7 +18,7 @@ public class DFSSingleton {
   @EJB
   private Settings settings;
   private final Map<String, DistributedFileSystemOps> distributedFileSystems
-          = new LinkedHashMap<>();
+          = new HashMap<>();
   private DistributedFileSystemOps dfsOps;
 
   public DFSSingleton() {
@@ -39,15 +40,31 @@ public class DFSSingleton {
    */
   public DistributedFileSystemOps getDfsOps(String username) {
     DistributedFileSystemOps dfs;
+    if (username == null || username.isEmpty()) {
+      throw new NullPointerException("username not set.");
+    }
     synchronized (distributedFileSystems) {
       dfs = distributedFileSystems.get(username);
     }
     if (dfs == null) {
+      logger.log(Level.INFO, "No dfs object found for {0} creating new.", username);
       dfs = createDfs(username);
     }
     return dfs;
   }
 
+  /**
+   * Removes the DfsOps object with key==username from the hash map
+   * @param username 
+   */
+  public void removeDfsOps (String username) {
+    if (username == null || username.isEmpty()) {
+      return;
+    }
+    synchronized (distributedFileSystems) {
+      distributedFileSystems.remove(username);
+    }
+  }
   /**
    * creates a new distributed file system operations with the super user
    * <p>
@@ -55,6 +72,7 @@ public class DFSSingleton {
    */
   public DistributedFileSystemOps getDfsOps() {
     if (dfsOps == null){
+      logger.log(Level.INFO, "No dfs object found creating new.");
       dfsOps = new DistributedFileSystemOps(settings);
     }
     return dfsOps;
