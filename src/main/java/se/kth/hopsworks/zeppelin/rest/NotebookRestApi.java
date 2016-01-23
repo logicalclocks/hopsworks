@@ -5,12 +5,17 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import javax.ejb.EJB;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
@@ -27,6 +32,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.zeppelin.notebook.Notebook;
 import se.kth.hopsworks.zeppelin.rest.message.InterpreterSettingListForNoteBind;
+import se.kth.hopsworks.zeppelin.rest.message.NewNotebookRequest;
 import se.kth.hopsworks.zeppelin.server.JsonResponse;
 import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
 import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
@@ -123,6 +129,83 @@ public class NotebookRestApi {
     return new JsonResponse(Status.OK, "", settingList).build();
   }
 
+  @GET
+  public Response getNotebookList() throws IOException {
+    List<Map<String, String>> notesInfo = zeppelin.getNotebookServer().
+            generateNotebooksInfo();
+    return new JsonResponse(Status.OK, "", notesInfo).build();
+  }
+
+  /**
+   * Create new note REST API
+   * <p>
+   * @param message - JSON with new note name
+   * @return JSON with new note ID
+   * @throws IOException
+   */
+  @POST
+  public Response createNote(String message) throws IOException {
+    logger.info("Create new notebook by JSON {}", message);
+    NewNotebookRequest request = gson.fromJson(message,
+            NewNotebookRequest.class);
+    Note note = notebook.createNote();
+    note.addParagraph(); // it's an empty note. so add one paragraph
+    String noteName = request.getName();
+    if (noteName.isEmpty()) {
+      noteName = "Note " + note.getId();
+    }
+    note.setName(noteName);
+    note.persist();
+    zeppelin.getNotebookServer().broadcastNote(note);
+    zeppelin.getNotebookServer().broadcastNoteList();
+    return new JsonResponse(Status.CREATED, "", note.getId()).build();
+  }
+
+  /**
+   * Delete note REST API
+   * <p>
+   * @param notebookId@return JSON with status.OK
+   * @throws IOException
+   */
+  @DELETE
+  @Path("{notebookId}")
+  public Response deleteNote(@PathParam("notebookId") String notebookId) throws
+          IOException {
+    logger.info("Delete notebook {} ", notebookId);
+    if (!(notebookId.isEmpty())) {
+      Note note = notebook.getNote(notebookId);
+      if (note != null) {
+        notebook.removeNote(notebookId);
+      }
+    }
+    zeppelin.getNotebookServer().broadcastNoteList();
+    return new JsonResponse(Status.OK, "").build();
+  }
+
+  /**
+   * Clone note REST API@return JSON with status.CREATED
+   * <p>
+   * @param notebookId
+   * @param message
+   * @return
+   * @throws IOException
+   * @throws java.lang.CloneNotSupportedException
+   */
+  @POST
+  @Path("{notebookId}")
+  public Response cloneNote(@PathParam("notebookId") String notebookId,
+          String message) throws
+          IOException, CloneNotSupportedException, IllegalArgumentException {
+    logger.info("clone notebook by JSON {}", message);
+    NewNotebookRequest request = gson.fromJson(message,
+            NewNotebookRequest.class);
+    String newNoteName = request.getName();
+    Note newNote = notebook.cloneNote(notebookId, newNoteName);
+    zeppelin.getNotebookServer().broadcastNote(newNote);
+    zeppelin.getNotebookServer().broadcastNoteList();
+    return new JsonResponse(Status.CREATED, "", newNote.getId()).build();
+  }
+
   /**
    * List all Tutorial notes.
    * <p/>
@@ -130,6 +213,7 @@ public class NotebookRestApi {
    * @throws se.kth.hopsworks.rest.AppException
    */
   @GET
+  @Path("/tutorial")
   public Response getTutorialNotes() throws AppException {
     List<NoteInfo> noteInfo;
     try {
@@ -172,13 +256,16 @@ public class NotebookRestApi {
    * Create new note in a project
    * <p/>
    * @param id
+   * @param newNote
    * @return note info if successful.
    * @throws se.kth.hopsworks.rest.AppException
    */
-  @GET
+  @POST
   @Path("{id}/new")
+  @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response createNew(@PathParam("id") Integer id) throws
+  public Response createNew(@PathParam("id") Integer id,
+          NewNotebookRequest newNote) throws
           AppException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
@@ -193,6 +280,12 @@ public class NotebookRestApi {
       newNotebook = new Notebook(notebookRepo);
       note = newNotebook.createNote();
       note.addParagraph(); // it's an empty note. so add one paragraph
+      String noteName = newNote.getName();
+      
+      if (noteName == null || noteName.isEmpty()) {
+        noteName = "Note " + note.getId();
+      }
+      note.setName(noteName);
       note.persist();
       noteInfo = new NoteInfo(note);
     } catch (IOException | SchedulerException ex) {

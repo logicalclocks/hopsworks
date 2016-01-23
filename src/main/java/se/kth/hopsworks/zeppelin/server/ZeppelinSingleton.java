@@ -11,10 +11,6 @@ import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import se.kth.hopsworks.zeppelin.socket.NotebookServer;
 
-/**
- *
- * @author ermiasg
- */
 public enum ZeppelinSingleton {
 
   SINGLETON;

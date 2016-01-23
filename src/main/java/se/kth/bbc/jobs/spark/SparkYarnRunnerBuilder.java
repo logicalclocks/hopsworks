@@ -123,6 +123,7 @@ public class SparkYarnRunnerBuilder {
     amargs.append(mainClass);
 
     // spark 1.5.x replaced --num-executors with --properties-file
+    // https://fossies.org/diffs/spark/1.4.1_vs_1.5.0/
     // amargs.append(" --num-executors ").append(numberOfExecutors);
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);

@@ -1,15 +1,16 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ModalCtrl', ['$modalInstance', '$scope', 'title', 'msg',
-          function ($modalInstance, $scope, title, msg) {
+        .controller('ModalCtrl', ['$modalInstance', '$scope', 'title', 'msg','val',
+          function ($modalInstance, $scope, title, msg, val) {
 
             var self = this;
             self.title = title;
             self.msg = msg;
+            self.val = {name:''};
 
             self.ok = function () {
-              $modalInstance.close();
+              $modalInstance.close({val: self.val});
             };
 
             self.cancel = function () {
