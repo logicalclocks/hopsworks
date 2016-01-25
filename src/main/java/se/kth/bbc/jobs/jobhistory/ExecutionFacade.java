@@ -168,7 +168,6 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
       JobFinalStatus finalStatus, float progress) {
     //Find the updated execution object
     Execution obj = em.find(Execution.class, exec.getId());
-    logger.log(Level.INFO, "aaaaaaaaaaaaaaaaaaaaaa" +obj.getState().toString());
     if (obj == null) {
       throw new IllegalArgumentException(
               "Unable to find Execution object with id " + exec.getId());
@@ -203,7 +202,6 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
       exec.setProgress(progress);
     }
     em.merge(exec);
-    logger.log(Level.INFO, "bbbbbbbbbbbbbbbbbbbbb" +exec.getState().toString());
     return exec;
   }
 

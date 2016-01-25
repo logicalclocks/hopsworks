@@ -17,9 +17,8 @@
 
         <!-- Page Content -->
         <div style="min-width: 1315px">
-          <div>
-              <div style="max-height: 50%;overflow-y: auto;padding-bottom:
-              200px;">
+          <div style="height: 60%">
+              <div style="max-height: 95%;overflow-y: auto;">
                 <div class="btn-group"
                      style="float: left;width: 10%; margin-bottom: 20px;">
                   <button style="width: 100%;"
@@ -28,9 +27,15 @@
                     New job
                   </button>
                 </div>
-                <div style="float: right;width: 89%;">
-                  <input type="text" ng-model="jobsCtrl.jobFilter.name"
+                <div style="float: left;width: 90%;">
+                  <input style="float: left;width: 85%;margin: 0px 10px;"
+                         type="text"
+                         ng-model="jobsCtrl.jobFilter.name"
                          placeholder="Filter Jobs" class="form-control" autofocus/>
+                  <label style="float: left; margin-top: 5px;margin-right: 5px;">items per page:</label>
+                  <input style="float: left;width: 5%;" type="number" min="1"
+                         max="50"
+                         class="form-control" ng-model="pageSize">
                 </div>
               <table class="table table-hover">
                 <thead>
@@ -69,10 +74,11 @@
                 </th>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="job in jobsCtrl.jobs| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.untoggle(job,$index);">
+                    <tr
+                      dir-paginate="job in jobsCtrl.jobs| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:pageSize" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showLogs(job.id);$event.stopPropagation();">
                     <td>
                       <button style="border-color: #20AD28; min-width: 64px;"
-                              ng-click="jobsCtrl.runJob(job.id);$event.stopPropagation();" class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running"><span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"/> Run</button>
+                              ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.runJob(job.id);$event.stopPropagation();" class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running"><span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"/> Run</button>
                       <button ng-click="$event.stopPropagation();"
                               class="btn btn-success btn-sm"
                               ng-show="jobsCtrl.runningInfo['' + job.id].running">
@@ -189,28 +195,28 @@
                       <span class="field-info" tooltip="Schedule"
                             style="padding-top: 5px;padding-left:3px">
                         <button style=""
-                                ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"
+                                ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showDetails(job);$event.stopPropagation();"
                                 class="btn btn-primary glyphicon glyphicon-time">
                         </button>
                       </span>
-                      <span class="field-info" tooltip="Edit"
+                      <span class="field-info" tooltip="Edit as new"
                             style="padding-top: 5px;padding-left:3px">
                       <button style=""
-                              ng-click="jobsCtrl.editAsNew(job);$event.stopPropagation();"
+                              ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.editAsNew(job);$event.stopPropagation();"
                               class="btn btn-warning glyphicon glyphicon-edit">
                       </button>
                       </span>
                       <span class="field-info" tooltip="Details"
                             style="padding-top: 5px;padding-left:3px">
                       <button style=""
-                              ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"
+                              ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showDetails(job);$event.stopPropagation();"
                               class="btn btn-info glyphicon glyphicon-list-alt">
                       </button>
                       </span>
                       <span class="field-info" tooltip="Delete"
                             style="padding-top: 5px;padding-left:3px">
                       <button style="margin-left: 5px"
-                              ng-click="jobsCtrl.deleteJob(job.id,job.name);$event.stopPropagation();"
+                              ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.deleteJob(job.id,job.name);$event.stopPropagation();"
                               class="btn btn-danger glyphicon glyphicon-trash">
                       </button>
                      </span>
@@ -230,13 +236,17 @@
                   </tr>
                 </tbody>
               </table>
+                <dir-pagination-controls
+                  max-size="5"
+                  direction-links="true"
+                  boundary-links="true" >
+                </dir-pagination-controls>
             </div>
           </div>
 
           <!-- /#page-content-wrapper -->
-          <div class="row">
-              <div class="col-lg-2"  style="max-width: 250px"></div>
-              <div class="col-lg-10" style="max-height: 50%;padding-top: 10px" ng-show="jobsCtrl.hasSelectJob">
+          <div style="height: 40%">
+              <div style="max-height: 50%;padding-top: 10px" ng-show="jobsCtrl.hasSelectJob">
 
                 <ul class="nav nav-tabs">
                   <li class="active"><button class="btn btn-default"

@@ -26,6 +26,7 @@ angular.module('hopsWorksApp')
             self.currentjob=null;
             self.currentToggledIndex=-1;
 
+            $scope.pageSize = 10;
             $scope.sortKey = 'creationTime';
             $scope.reverse = true;
 
