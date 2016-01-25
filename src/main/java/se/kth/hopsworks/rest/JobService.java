@@ -199,20 +199,32 @@ public class JobService {
     List<JobDescription> allJobs = jobFacade.findForProject(project);
     JsonObjectBuilder builder = Json.createObjectBuilder();
     for (JobDescription desc : allJobs) {
-      Execution execution = exeFacade.findForJob(desc).get(0);
-      builder.add(desc.getId().toString(), Json.createObjectBuilder().add
-          ("running", false).add
-          ("state", execution.getState().toString()).add
-          ("finalStatus", execution.getFinalStatus().toString()).add
-          ("progress", execution.getProgress()));
+      try {
+        Execution execution = exeFacade.findForJob(desc).get(0);
+        builder.add(desc.getId().toString(), Json.createObjectBuilder().add
+            ("running", false).add
+            ("state", execution.getState().toString()).add
+            ("finalStatus", execution.getFinalStatus().toString()).add
+            ("progress", execution.getProgress()).add
+            ("duration", execution.getExecutionDuration()));
+      } catch (ArrayIndexOutOfBoundsException e) {
+        logger.log(Level.WARNING, "No execution was found: " + e
+            .getMessage());
+      }
     }
     for (JobDescription desc : running) {
-      Execution execution = exeFacade.findForJob(desc).get(0);
-      builder.add(desc.getId().toString(), Json.createObjectBuilder().add
-          ("running", true).add
-          ("state", execution.getState().toString()).add
-          ("finalStatus", execution.getFinalStatus().toString()).add
-          ("progress", execution.getProgress()));
+      try {
+        Execution execution = exeFacade.findForJob(desc).get(0);
+        builder.add(desc.getId().toString(), Json.createObjectBuilder().add
+            ("running", true).add
+            ("state", execution.getState().toString()).add
+            ("finalStatus", execution.getFinalStatus().toString()).add
+            ("progress", execution.getProgress()).add
+            ("duration", execution.getExecutionDuration()));
+      } catch (ArrayIndexOutOfBoundsException e) {
+        logger.log(Level.WARNING, "No execution was found: " + e
+            .getMessage());
+      }
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(builder.build()).build();

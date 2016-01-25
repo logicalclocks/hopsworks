@@ -16,7 +16,7 @@
 
 
         <!-- Page Content -->
-        <div style="min-width: 1210px">
+        <div style="min-width: 1315px">
           <div>
               <div style="max-height: 50%;overflow-y: auto;padding-bottom:
               200px;">
@@ -36,30 +36,40 @@
                 <thead>
                 <th style="width: 6%">
                 </th>
-                <th style="width: 12%">
+                <th ng-click="sort('name')" style="width: 12%">
                   Name
+                  <span class="glyphicon sort-icon" ng-show="sortKey=='name'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th style="width: 15%">
+                <th ng-click="sort('creationTime')" style="width: 15%">
                   Created on
+                  <span class="glyphicon sort-icon" ng-show="sortKey=='creationTime'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th style="width: 10%">
+                <th ng-click="sort('jobType')" style="width: 10%">
                   Type
+                  <span class="glyphicon sort-icon" ng-show="sortKey=='jobType'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th style="width: 10%">
+                <th ng-click="sort('state')" style="width: 10%">
                   State
+                  <span class="glyphicon sort-icon" ng-show="sortKey=='state'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th style="width: 10%">
+                <th ng-click="sort('finalStatus')" style="width: 10%">
                   Final Status
+                  <span class="glyphicon sort-icon" ng-show="sortKey=='finalStatus'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th style="width: 10%">
+                <th ng-click="sort('progress')" style="width: 10%">
                   Progress
+                  <span class="glyphicon sort-icon" ng-show="sortKey=='progress'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                </th>
+                <th ng-click="sort('duration')" style="width: 10%">
+                  Duration(min)
+                  <span class="glyphicon sort-icon" ng-show="sortKey=='duration'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
                 <th style="width: 15%">
                   Actions
                 </th>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="job in jobsCtrl.jobs| filter:jobsCtrl.jobFilter:false | orderBy : '-creationTime'" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.untoggle(job,$index);">
+                    <tr ng-repeat="job in jobsCtrl.jobs| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.untoggle(job,$index);">
                     <td>
                       <button style="border-color: #20AD28; min-width: 64px;"
                               ng-click="jobsCtrl.runJob(job.id);$event.stopPropagation();" class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running"><span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"/> Run</button>
@@ -167,7 +177,13 @@
                       </span>
                     </td>
                     <td>
-                      {{jobsCtrl.runningInfo['' + job.id].progress}}
+                      <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{jobsCtrl.runningInfo['' + job.id].progress * 100}}"
+                           aria-valuemin="0" aria-valuemax="100" style="width:{{jobsCtrl.runningInfo['' + job.id].progress * 80}}%">
+                        {{jobsCtrl.runningInfo['' + job.id].progress* 100}}%
+                      </div>
+                    </td>
+                    <td>
+                      {{jobsCtrl.runningInfo['' + job.id].duration*0.000016667 | number:2}}
                     </td>
                     <td>
                       <span class="field-info" tooltip="Schedule"

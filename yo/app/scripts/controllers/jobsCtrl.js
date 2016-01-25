@@ -25,6 +25,14 @@ angular.module('hopsWorksApp')
             
             self.currentjob=null;
             self.currentToggledIndex=-1;
+
+            $scope.sortKey = 'creationTime';
+            $scope.reverse = true;
+
+            $scope.sort = function(keyname){
+              $scope.sortKey = keyname;   //set the sortKey to the param passed
+              $scope.reverse = !$scope.reverse; //if true make it false and vice versa
+            }
             
             this. editAsNew = function (job) {   
               JobService.getConfiguration(self.projectId, job.id).then(
