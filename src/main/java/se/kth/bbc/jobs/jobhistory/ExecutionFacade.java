@@ -1,6 +1,7 @@
 package se.kth.bbc.jobs.jobhistory;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,6 +36,8 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   protected EntityManager getEntityManager() {
     return em;
   }
+
+  private HashMap<Integer, Execution> executions = new HashMap<>();
 
   /**
    * Find all the Execution entries for the given project and type.
@@ -202,7 +205,17 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
       exec.setProgress(progress);
     }
     em.merge(exec);
+    executions.put(exec.getJob().getId(),exec);
     return exec;
+  }
+
+  public Execution getExecution(int id) {
+    try {
+      return executions.get(id);
+    }
+    catch(Exception e) {
+      return null;
+    }
   }
 
 }

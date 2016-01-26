@@ -32,7 +32,8 @@
                          type="text"
                          ng-model="jobsCtrl.jobFilter.name"
                          placeholder="Filter Jobs" class="form-control" autofocus/>
-                  <label style="float: left; margin-top: 5px;margin-right: 5px;">items per page:</label>
+                  <label style="float: left; margin-top: 5px;margin-right:
+                  5px;">jobs per page:</label>
                   <input style="float: left;width: 5%;" type="number" min="1"
                          max="50"
                          class="form-control" ng-model="pageSize">
@@ -78,10 +79,10 @@
                       dir-paginate="job in jobsCtrl.jobs| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:pageSize" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showLogs(job.id);$event.stopPropagation();">
                     <td>
                       <button style="border-color: #20AD28; min-width: 64px;"
-                              ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.runJob(job.id);$event.stopPropagation();" class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running"><span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"/> Run</button>
+                              ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.runJob(job.id);$event.stopPropagation();jobsCtrl.buttonClickedToggle(job.id, true);" class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]"><span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"/> Run</button>
                       <button ng-click="$event.stopPropagation();"
                               class="btn btn-success btn-sm"
-                              ng-show="jobsCtrl.runningInfo['' + job.id].running">
+                              ng-show="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]">
                         Running</button>
                     </td>
                     <td>

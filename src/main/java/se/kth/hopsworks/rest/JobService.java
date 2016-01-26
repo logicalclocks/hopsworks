@@ -201,6 +201,10 @@ public class JobService {
     for (JobDescription desc : allJobs) {
       try {
         Execution execution = exeFacade.findForJob(desc).get(0);
+        Execution updatedExecution = exeFacade.getExecution(execution.getId());
+        if(updatedExecution!=null){
+          execution = updatedExecution;
+        }
         builder.add(desc.getId().toString(), Json.createObjectBuilder().add
             ("running", false).add
             ("state", execution.getState().toString()).add
@@ -215,6 +219,10 @@ public class JobService {
     for (JobDescription desc : running) {
       try {
         Execution execution = exeFacade.findForJob(desc).get(0);
+        Execution updatedExecution = exeFacade.getExecution(execution.getJob().getId());
+        if(updatedExecution!=null){
+          execution = updatedExecution;
+        }
         builder.add(desc.getId().toString(), Json.createObjectBuilder().add
             ("running", true).add
             ("state", execution.getState().toString()).add

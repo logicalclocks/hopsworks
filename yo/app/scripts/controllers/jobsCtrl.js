@@ -13,6 +13,7 @@ angular.module('hopsWorksApp')
             this.projectId = $routeParams.projectID;
             this.jobs; // Will contain all the jobs.
             this.runningInfo; //Will contain run information
+            this.buttonArray = [];
             this.jobFilter = {
               "creator":{
                 "email":""
@@ -45,6 +46,10 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error fetching job configuration.', ttl: 15000});
               });
             };
+
+            self.buttonClickedToggle = function (id, display){
+              self.buttonArray[id] = display;
+            }
             
             self.copy = function () {
               var jobType;
@@ -137,6 +142,10 @@ angular.module('hopsWorksApp')
               JobService.getRunStatus(self.projectId).then(
                       function (success) {
                         self.runningInfo = success.data;
+                        angular.forEach(self.jobs, function (temp, key) {
+                          if (!self.runningInfo['' + temp.id].running) {
+                            self.buttonArray[temp.id] = false;
+                          }});
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
