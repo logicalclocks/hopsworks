@@ -210,7 +210,8 @@ public class JobService {
             ("state", execution.getState().toString()).add
             ("finalStatus", execution.getFinalStatus().toString()).add
             ("progress", execution.getProgress()).add
-            ("duration", execution.getExecutionDuration()));
+            ("duration", execution.getExecutionDuration()).add
+            ("submissiontime", execution.getSubmissionTime().toString()));
       } catch (ArrayIndexOutOfBoundsException e) {
         logger.log(Level.WARNING, "No execution was found: " + e
             .getMessage());
@@ -228,7 +229,8 @@ public class JobService {
             ("state", execution.getState().toString()).add
             ("finalStatus", execution.getFinalStatus().toString()).add
             ("progress", execution.getProgress()).add
-            ("duration", execution.getExecutionDuration()));
+            ("duration", execution.getExecutionDuration()).add
+            ("submissiontime", execution.getSubmissionTime().toString()));
       } catch (ArrayIndexOutOfBoundsException e) {
         logger.log(Level.WARNING, "No execution was found: " + e
             .getMessage());

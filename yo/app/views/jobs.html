@@ -16,7 +16,7 @@
 
 
         <!-- Page Content -->
-        <div style="min-width: 1315px">
+        <div style="min-width: 1420px">
           <div style="height: 60%">
               <div style="max-height: 95%;overflow-y: auto;">
                 <div class="btn-group"
@@ -40,25 +40,33 @@
                 </div>
               <table class="table table-hover">
                 <thead>
-                <th style="width: 6%">
+                <th style="width: 5%">
                 </th>
-                <th ng-click="sort('name')" style="width: 12%">
+                <th ng-click="sort('name')" style="width: 10%">
                   Name
                   <span class="glyphicon sort-icon" ng-show="sortKey=='name'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th ng-click="sort('creationTime')" style="width: 15%">
+                <th ng-click="sort('creationTime')" style="width: 10%">
                   Created on
                   <span class="glyphicon sort-icon" ng-show="sortKey=='creationTime'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th ng-click="sort('jobType')" style="width: 10%">
+                <th ng-click="sort('jobType')" style="width: 5%">
                   Type
                   <span class="glyphicon sort-icon" ng-show="sortKey=='jobType'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th ng-click="sort('state')" style="width: 10%">
+                <th ng-click="sort('owner')" style="width: 10%">
+                  Owner
+                  <span class="glyphicon sort-icon" ng-show="sortKey=='owner'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                </th>
+                <th ng-click="sort('submissiontime')" style="width: 10%">
+                  Submission Time
+                  <span class="glyphicon sort-icon" ng-show="sortKey=='submissiontime'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                </th>
+                <th ng-click="sort('state')" style="width: 5%">
                   State
                   <span class="glyphicon sort-icon" ng-show="sortKey=='state'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th ng-click="sort('finalStatus')" style="width: 10%">
+                <th ng-click="sort('finalStatus')" style="width: 5%">
                   Final Status
                   <span class="glyphicon sort-icon" ng-show="sortKey=='finalStatus'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
@@ -66,11 +74,15 @@
                   Progress
                   <span class="glyphicon sort-icon" ng-show="sortKey=='progress'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th ng-click="sort('duration')" style="width: 10%">
+                <th ng-click="sort('duration')" style="width: 5%">
                   Duration(min)
                   <span class="glyphicon sort-icon" ng-show="sortKey=='duration'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th style="width: 15%">
+                <th ng-click="sort('quota')" style="width: 5%">
+                  Quota
+                  <span class="glyphicon sort-icon" ng-show="sortKey=='quota'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                </th>
+                <th style="width: 20%">
                   Actions
                 </th>
                 </thead>
@@ -93,6 +105,12 @@
                     </td>
                     <td>
                       {{job.jobType}}
+                    </td>
+                    <td>
+                      {{job.creator.fname}} {{job.creator.lname}}
+                    </td>
+                    <td>
+                      {{jobsCtrl.runningInfo['' + job.id].submissiontime}}
                     </td>
                     <td>
                       <span
@@ -193,6 +211,17 @@
                       {{jobsCtrl.runningInfo['' + job.id].duration*0.000016667 | number:2}}
                     </td>
                     <td>
+                      {{jobsCtrl.runningInfo['' + job.id].duration}}
+                    </td>
+                    <td>
+                      <span class="field-info" tooltip="Stop"
+                                                           style="padding-top: 5px;padding-left:3px">
+                      <button style=""
+                              ng-disabled="!jobsCtrl.runningInfo['' + job.id].running"
+                              ng-click="jobsCtrl.toggle(job,$index);$event.stopPropagation();"
+                              class="btn btn-danger glyphicon glyphicon-stop">
+                      </button>
+                      </span>
                       <span class="field-info" tooltip="Schedule"
                             style="padding-top: 5px;padding-left:3px">
                         <button style=""
@@ -216,7 +245,7 @@
                       </span>
                       <span class="field-info" tooltip="Delete"
                             style="padding-top: 5px;padding-left:3px">
-                      <button style="margin-left: 5px"
+                      <button style="margin-left: 10px"
                               ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.deleteJob(job.id,job.name);$event.stopPropagation();"
                               class="btn btn-danger glyphicon glyphicon-trash">
                       </button>
