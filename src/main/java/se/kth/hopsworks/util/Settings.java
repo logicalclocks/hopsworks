@@ -1,4 +1,3 @@
-
 package se.kth.hopsworks.util;
 
 import java.io.File;
@@ -43,6 +42,8 @@ public class Settings {
   private static final String VARIABLE_YARN_DEFAULT_QUOTA = "yarn_default_quota";
   private static final String VARIABLE_HDFS_DEFAULT_QUOTA = "hdfs_default_quota";
   private static final String VARIABLE_MAX_NUM_PROJ_PER_USER = "max_num_proj_per_user";
+  private static final String VARIABLE_ADAM_USER = "adam_user";
+  private static final String VARIABLE_ADAM_DIR = "adam_dir";
 
   private String setUserVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -84,11 +85,13 @@ public class Settings {
       HDFS_SUPERUSER = setUserVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setUserVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setUserVar(VARIABLE_SPARK_USER, SPARK_USER);
-      FLINK_USER = setUserVar(VARIABLE_FLINK_USER, FLINK_USER);
-      ZEPPELIN_USER = setUserVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
-      ZEPPELIN_DIR = setDirVar(VARIABLE_ZEPPELIN_DIR, ZEPPELIN_DIR);
+      FLINK_USER = setUserVar(VARIABLE_FLINK_USER, FLINK_USER);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
+      ZEPPELIN_USER = setUserVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
+      ZEPPELIN_DIR = setDirVar(VARIABLE_ZEPPELIN_DIR, ZEPPELIN_DIR);
+      ADAM_USER = setUserVar(VARIABLE_ADAM_USER, ADAM_USER);
+      ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
@@ -123,7 +126,7 @@ public class Settings {
   public synchronized String getCharonProjectDir(String projectName) {
     return getCharonMountDir() + "/" + projectName;
   }
-  
+
   /**
    * Default Directory locations
    */
@@ -132,6 +135,13 @@ public class Settings {
   public synchronized String getSparkDir() {
     checkCache();
     return SPARK_DIR;
+  }
+
+  private String ADAM_USER = "glassfish";
+
+  public synchronized String getAdamUser() {
+    checkCache();
+    return ADAM_USER;
   }
 
   private String FLINK_DIR = "/usr/local/flink";
@@ -159,6 +169,14 @@ public class Settings {
     return ZEPPELIN_DIR;
   }
 
+  private String ADAM_DIR = "/srv/adam";
+
+  public synchronized String getAdamDir() {
+    checkCache();
+    return ADAM_DIR;
+  }
+  
+  
   private String HADOOP_DIR = "/srv/hadoop";
 
   public synchronized String getHadoopDir() {
@@ -232,9 +250,6 @@ public class Settings {
 
   //Local path to the hiway jar
 //  public static final String HIWAY_JAR_PATH = "/home/glassfish/software/hiway";
-
-  
-  
   //Relative output path (within hdfs project folder) which to write cuneiform in-/output to
   public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Logs/Cuneiform/";
 
@@ -327,10 +342,14 @@ public class Settings {
    */
 //ADAM constants
   public static final String ADAM_MAINCLASS = "org.bdgenomics.adam.cli.ADAMMain";
-  public static final String ADAM_DEFAULT_JAR_HDFS_PATH = "hdfs:///user/adam/repo/adam-cli.jar";
+//  public static final String ADAM_DEFAULT_JAR_HDFS_PATH = "hdfs:///user/adam/repo/adam-cli.jar";
   //Or: "adam-cli/target/appassembler/repo/org/bdgenomics/adam/adam-cli/0.15.1-SNAPSHOT/adam-cli-0.15.1-SNAPSHOT.jar"
   public static final String ADAM_DEFAULT_OUTPUT_PATH = "Logs/Adam/";
   public static final String ADAM_DEFAULT_HDFS_REPO = "/user/adam/repo/";
+
+  public String getAdamJarHdfsPath() {
+    return "hdfs:///user/" + getAdamUser() + "/repo/adam-cli.jar";
+  }
 
   //Directory names in HDFS
   public static final String DIR_ROOT = "Projects";

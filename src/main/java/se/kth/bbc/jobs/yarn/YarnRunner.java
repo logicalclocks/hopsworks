@@ -841,9 +841,10 @@ public class YarnRunner {
       //If not found in environment variables: warn and use default
       if (hadoopConfDir == null) {
         logger.log(Level.WARNING,
-                "Environment variable " + Settings.ENV_KEY_HADOOP_CONF_DIR
-                + " not found, using default "
-                + (hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR));
+            "Environment variable "
+                + Settings.ENV_KEY_HADOOP_CONF_DIR
+                + " not found, using default {0}", 
+            (hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR));
         hadoopConfDir = hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR;
       }
       confPath = new Path(hadoopConfDir);

@@ -24,17 +24,20 @@ public class AdamJob extends YarnJob {
 
   private final AdamJobConfiguration jobconfig;
   private final String sparkDir;
+  private final String adamJarPath;
 
   public AdamJob(JobDescription job,
-          AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir) {
+      AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir,
+      String adamJarPath) {
     super(job, services, user, hadoopDir);
     if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {
       throw new IllegalArgumentException(
-              "JobDescription must contain a AdamJobConfiguration object. Received: "
-              + job.getJobConfig().getClass());
+          "JobDescription must contain a AdamJobConfiguration object. Received: "
+          + job.getJobConfig().getClass());
     }
     this.jobconfig = (AdamJobConfiguration) job.getJobConfig();
     this.sparkDir = sparkDir;
+    this.adamJarPath = adamJarPath;
   }
 
   @Override
@@ -56,36 +59,35 @@ public class AdamJob extends YarnJob {
   }
 
   /**
-   * For all the output files that were created, create an Inode for them and
-   * create entries in the DB.
+   * For all the output files that were created, create an Inode for them and create entries in the DB.
    */
   private void makeOutputAvailable() {
     for (AdamArgumentDTO arg : jobconfig.getSelectedCommand().getArguments()) {
       if (arg.isOutputPath() && !(arg.getValue() == null || arg.getValue().
-              isEmpty())) {
+          isEmpty())) {
         try {
           if (services.getFileOperations().exists(arg.getValue())) {
             services.getJobOutputFileFacade().create(getExecution(), Utils.
-                    getFileName(arg.getValue()), arg.getValue());
+                getFileName(arg.getValue()), arg.getValue());
           }
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
-                  + arg.getValue() + ".", e);
+              + arg.getValue() + ".", e);
         }
       }
     }
 
     for (AdamOptionDTO opt : jobconfig.getSelectedCommand().getOptions()) {
       if (opt.isOutputPath() && opt.getValue() != null && !opt.getValue().
-              isEmpty()) {
+          isEmpty()) {
         try {
           if (services.getFileOperations().exists(opt.getValue())) {
             services.getJobOutputFileFacade().create(getExecution(), Utils.
-                    getFileName(opt.getValue()), opt.getValue());
+                getFileName(opt.getValue()), opt.getValue());
           }
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
-                  + opt.getValue() + ".", e);
+              + opt.getValue() + ".", e);
         }
       }
     }
@@ -97,8 +99,8 @@ public class AdamJob extends YarnJob {
     List<String> missingArgs = checkIfRequiredPresent(jobconfig); //thows an IllegalArgumentException if not ok.
     if (!missingArgs.isEmpty()) {
       writeToLogs(
-              "Cannot execute ADAM command because some required arguments are missing: "
-              + missingArgs);
+          "Cannot execute ADAM command because some required arguments are missing: "
+          + missingArgs);
       return false;
     }
 
@@ -107,12 +109,12 @@ public class AdamJob extends YarnJob {
       jobconfig.setAppName("Untitled ADAM Job");
     }
     SparkYarnRunnerBuilder builder = new SparkYarnRunnerBuilder(
-            Settings.ADAM_DEFAULT_JAR_HDFS_PATH, Settings.ADAM_MAINCLASS);
+        adamJarPath, Settings.ADAM_MAINCLASS);
     //Set some ADAM-specific property values   
     builder.addSystemProperty("spark.serializer",
-            "org.apache.spark.serializer.KryoSerializer");
+        "org.apache.spark.serializer.KryoSerializer");
     builder.addSystemProperty("spark.kryo.registrator",
-            "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
+        "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
     builder.addSystemProperty("spark.kryoserializer.buffer", "4m");
     builder.addSystemProperty("spark.kryo.referenceTracking", "true");
     builder.setExecutorMemoryGB(1);
@@ -130,18 +132,18 @@ public class AdamJob extends YarnJob {
           hadoopDir, sparkDir);
     } catch (IOException e) {
       logger.log(Level.SEVERE,
-              "Failed to create YarnRunner.", e);
+          "Failed to create YarnRunner.", e);
       writeToLogs(new IOException("Failed to start Yarn client.", e));
       return false;
     }
 
     String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir, jobDescription.
-            getProject().
-            getName())
-            + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
-            + File.separator + "stdout.log";
+        getProject().
+        getName())
+        + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
+        + File.separator + "stdout.log";
     String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir, jobDescription.getProject().getName())
-            + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()+ File.separator + "stderr.log";
+        + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId() + File.separator + "stderr.log";
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
     return true;
@@ -150,16 +152,15 @@ public class AdamJob extends YarnJob {
   /**
    * Check if all required arguments have been filled in.
    * <p/>
-   * @return A list of missing argument names. If the list is empty, all
-   * required arguments are present.
+   * @return A list of missing argument names. If the list is empty, all required arguments are present.
    */
   private List<String> checkIfRequiredPresent(AdamJobConfiguration ajc) throws
-          IllegalArgumentException {
+      IllegalArgumentException {
     List<String> missing = new ArrayList<>();
 
     for (AdamArgumentDTO arg : ajc.getSelectedCommand().getArguments()) {
       if (arg.isRequired() && (arg.getValue() == null || arg.getValue().
-              isEmpty())) {
+          isEmpty())) {
         //Required argument is missing
         missing.add(arg.getName());
       }
@@ -197,10 +198,10 @@ public class AdamJob extends YarnJob {
    * @param builder
    */
   private void addAllAdamJarsToLocalResourcesAndClasspath(
-          SparkYarnRunnerBuilder builder) {
+      SparkYarnRunnerBuilder builder) {
     //Add all to local resources and to classpath
     List<String> jars = services.getFileOperations().getChildNames(
-            Settings.ADAM_DEFAULT_HDFS_REPO);
+        Settings.ADAM_DEFAULT_HDFS_REPO);
     for (String jarname : jars) {
       String sourcePath = "hdfs://" + Settings.ADAM_DEFAULT_HDFS_REPO + jarname;
       builder.addExtraFile(jarname, sourcePath);
