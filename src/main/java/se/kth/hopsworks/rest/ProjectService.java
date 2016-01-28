@@ -224,29 +224,29 @@ public class ProjectService {
         ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
         se.toString();
 
-        if (s.compareToIgnoreCase(ProjectServiceEnum.BIOBANKING.toString()) == 0) {
-          String owner = sc.getUserPrincipal().getName();
-          try {
-            projectController.createProjectConsentFolder(owner, project);
-          } catch (ProjectInternalFoldersFailedException ex) {
-            Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-                    null, ex);
-            json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
-                    + " 'consents' \n "
-                    + json.getErrorMsg());
-          }
-        }
-        if (s.compareToIgnoreCase(ProjectServiceEnum.CHARON.toString()) == 0) {
-          try {
-            projectController.createProjectCharonFolder(project);
-          } catch (ProjectInternalFoldersFailedException ex) {
-            Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-                    null, ex);
-            json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
-                    + " 'consents' \n "
-                    + json.getErrorMsg());
-          }
-        }
+        // if (s.compareToIgnoreCase(ProjectServiceEnum.BIOBANKING.toString()) == 0) {
+        //   String owner = sc.getUserPrincipal().getName();
+        //   try {
+        //     projectController.createProjectConsentFolder(owner, project);
+        //   } catch (ProjectInternalFoldersFailedException ex) {
+        //     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+        //             null, ex);
+        //     json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
+        //             + " 'consents' \n "
+        //             + json.getErrorMsg());
+        //   }
+        // }
+        // if (s.compareToIgnoreCase(ProjectServiceEnum.CHARON.toString()) == 0) {
+        //   try {
+        //     projectController.createProjectCharonFolder(project);
+        //   } catch (ProjectInternalFoldersFailedException ex) {
+        //     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+        //             null, ex);
+        //     json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
+        //             + " 'consents' \n "
+        //             + json.getErrorMsg());
+        //   }
+        // }
         projectServices.add(se);
       } catch (IllegalArgumentException iex) {
         logger.log(Level.SEVERE,
@@ -321,12 +321,12 @@ public class ProjectService {
       try {
         hdfsUsersBean.addProjectFolderOwner(project);
         projectController.createProjectLogResources(owner, project);
-        if (projectServices.contains(ProjectServiceEnum.BIOBANKING)) {
-          projectController.createProjectConsentFolder(owner, project);
-        }
-        if (projectServices.contains(ProjectServiceEnum.CHARON)) {
-          projectController.createProjectCharonFolder(project);
-        }
+        // if (projectServices.contains(ProjectServiceEnum.BIOBANKING)) {
+        //   projectController.createProjectConsentFolder(owner, project);
+        // }
+        // if (projectServices.contains(ProjectServiceEnum.CHARON)) {
+        //   projectController.createProjectCharonFolder(project);
+        // }
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.removeByID(project.getId(), owner, true);
