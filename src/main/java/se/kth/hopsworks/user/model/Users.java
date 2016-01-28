@@ -177,7 +177,7 @@ public class Users implements Serializable {
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "uid")
   private Organization organization;
-    
+        
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "uid")
   private Yubikey yubikey;

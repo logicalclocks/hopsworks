@@ -55,7 +55,7 @@ import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.dataset.DatasetRequest;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.Template;
@@ -102,7 +102,7 @@ public class DataSetService {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private DFSSingleton dfs;
+  private DistributedFsService dfs;
   @EJB
   private Settings settings;
   @Inject

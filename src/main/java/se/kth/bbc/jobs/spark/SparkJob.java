@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
@@ -105,11 +103,6 @@ public final class SparkJob extends YarnJob {
     logger.log(Level.INFO, "Job finished performing cleanup...");
     monitor.close();
     monitor = null;
-    try {
-      FileSystem.closeAllForUGI(UserGroupInformation.getCurrentUser());
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, null, ex);
-    }
   }
 
 }
