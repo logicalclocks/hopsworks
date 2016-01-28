@@ -122,9 +122,9 @@ public abstract class JobConfiguration implements JsonReduceable {
         case ADAM:
           conf = new AdamJobConfiguration();
           break;
-        case CUNEIFORM:
-          conf = new CuneiformJobConfiguration();
-          break;
+        // case CUNEIFORM:
+        //   conf = new CuneiformJobConfiguration();
+        //   break;
         case SPARK:
           conf = new SparkJobConfiguration();
           break;
@@ -155,9 +155,9 @@ public abstract class JobConfiguration implements JsonReduceable {
         case ADAM:
           conf = new AdamJobConfiguration();
           break;
-        case CUNEIFORM:
-          conf = new CuneiformJobConfiguration();
-          break;
+        // case CUNEIFORM:
+        //   conf = new CuneiformJobConfiguration();
+        //   break;
         case SPARK:
           conf = new SparkJobConfiguration();
           break;
@@ -175,7 +175,8 @@ public abstract class JobConfiguration implements JsonReduceable {
     }
 
     public static Set<JobType> getSupportedTypes() {
-      return EnumSet.of(JobType.ADAM, JobType.CUNEIFORM, JobType.SPARK,
+      return EnumSet.of(JobType.ADAM, JobType.SPARK,
+			//JobType.CUNEIFORM, 
               JobType.YARN, JobType.ERASURE_CODING);
     }
   }
