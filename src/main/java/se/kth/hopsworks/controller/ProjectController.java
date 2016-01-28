@@ -30,7 +30,6 @@ import se.kth.bbc.project.ProjectRoleTypes;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.bbc.project.ProjectTeamPK;
-import se.kth.bbc.project.ProjectsManagementFacade;
 import se.kth.bbc.project.YarnProjectsQuota;
 import se.kth.bbc.project.YarnProjectsQuotaFacade;
 import se.kth.bbc.project.fb.Inode;
@@ -38,12 +37,11 @@ import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
-import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
@@ -88,7 +86,7 @@ public class ProjectController {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private DFSSingleton dfs;
+  private DistributedFsService dfs;
   @EJB
   private Settings settings;
 

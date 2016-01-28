@@ -12,13 +12,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.bbc.project.fb.Inode;
@@ -26,7 +23,7 @@ import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfsUsers.HdfsGroupsFacade;
 import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
@@ -46,7 +43,7 @@ public class HdfsUsersController {
   @EJB
   private HdfsGroupsFacade hdfsGroupsFacade;
   @EJB
-  private DFSSingleton dfsSingleton;
+  private DistributedFsService dfsService;
   @EJB
   private InodeFacade inodes;
   @EJB
@@ -79,8 +76,8 @@ public class HdfsUsersController {
     //This means every body can see the content of a project.
     FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
             FsAction.READ_EXECUTE);// 775
-    dfsSingleton.getDfsOps().setOwner(location, owner, project.getName());
-    dfsSingleton.getDfsOps().setPermission(location, fsPermission);
+    dfsService.getDfsOps().setOwner(location, owner, project.getName());
+    dfsService.getDfsOps().setPermission(location, fsPermission);
   }
 
   /**
@@ -205,7 +202,7 @@ public class HdfsUsersController {
             + project.getName() + File.separator + dataset.getInode().
             getInodePK().getName();
     Path location = new Path(dsPath);
-    dfsSingleton.getDfsOps().setOwner(location, dsOwner, datasetGroup);
+    dfsService.getDfsOps().setOwner(location, dsOwner, datasetGroup);
 
     String hdfsUsername;
     HdfsUsers hdfsUser;
@@ -254,11 +251,7 @@ public class HdfsUsersController {
     String userName = getHdfsUserName(project, user);
     byte[] userId = UsersGroups.getUserID(userName);
     HdfsUsers hdfsUser = hdfsUsersFacade.findHdfsUser(userId);
-    DistributedFileSystemOps dfsOps = dfsSingleton.getDfsOps(userName);
-    if (dfsOps != null) {
-      dfsOps.close();
-      dfsSingleton.removeDfsOps(userName);
-    }    
+    dfsService.removeDfsOps(userName);
     if (hdfsUser != null) {
       hdfsUsersFacade.removeHdfsUser(hdfsUser);
     }
@@ -395,11 +388,7 @@ public class HdfsUsersController {
       hdfsUsername = getHdfsUserName(project, member.getUser());
       userId = UsersGroups.getUserID(hdfsUsername);
       hdfsUser = hdfsUsersFacade.findHdfsUser(userId);
-      DistributedFileSystemOps dfsOps = dfsSingleton.getDfsOps(hdfsUsername);
-      if (dfsOps != null) {
-        dfsOps.close();
-        dfsSingleton.removeDfsOps(hdfsUsername);
-      }
+      dfsService.removeDfsOps(hdfsUsername);
       if (hdfsUser != null) {
         hdfsUsersFacade.removeHdfsUser(hdfsUser);
       }

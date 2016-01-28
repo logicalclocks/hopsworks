@@ -36,7 +36,7 @@ import se.kth.bbc.upload.ResumableInfoStorage;
 import se.kth.hopsworks.controller.FolderNameValidator;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.meta.db.InodeBasicMetadataFacade;
 import se.kth.hopsworks.meta.db.TemplateFacade;
@@ -69,7 +69,7 @@ public class UploadService {
   @EJB
   private InodeBasicMetadataFacade basicMetaFacade;
   @EJB
-  private DFSSingleton dfs;
+  private DistributedFsService dfs;
 
   private String path;
   private String username;

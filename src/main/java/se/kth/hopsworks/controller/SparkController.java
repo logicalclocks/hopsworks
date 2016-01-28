@@ -21,7 +21,8 @@ import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
-import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
+import se.kth.hopsworks.hdfs.fileoperations.UserGroupInformationService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.Settings;
@@ -44,7 +45,9 @@ public class SparkController {
   @EJB
   private ActivityFacade activityFacade;
   @EJB
-  private DFSSingleton dfs;
+  private DistributedFsService dfs;
+  @EJB
+  private UserGroupInformationService ugiService;
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
@@ -77,9 +80,7 @@ public class SparkController {
       throw new IllegalStateException("Spark is not installed on this system.");
     }
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
-    UserGroupInformation proxyUser = UserGroupInformation.
-            createProxyUser(username, UserGroupInformation.
-                    getCurrentUser());
+    UserGroupInformation proxyUser = ugiService.getProxyUser(username);
     SparkJob sparkjob = null;
     try {
       sparkjob = proxyUser.doAs(new PrivilegedExceptionAction<SparkJob>() {

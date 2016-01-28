@@ -9,7 +9,7 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
-import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 
 /**
@@ -31,7 +31,7 @@ public class AsynchronousJobExecutor {
   @EJB
   private FileOperations fileOperations;
   @EJB
-  private DFSSingleton dfs;
+  private DistributedFsService dfs;
 
   @Asynchronous
   public void startExecution(HopsJob job) {
