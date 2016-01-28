@@ -24,7 +24,7 @@ import se.kth.hopsworks.util.Settings;
 public class AdamController {
 
   private static final Logger logger = Logger.getLogger(AdamController.class.
-          getName());
+      getName());
 
   @EJB
   private FileOperations fops;
@@ -44,14 +44,13 @@ public class AdamController {
    * @param user
    * @return
    * @throws IllegalStateException If Adam is not set up properly.
-   * @throws IllegalArgumentException If the JobDescription is not set up
-   * properly.
+   * @throws IllegalArgumentException If the JobDescription is not set up properly.
    * @throws IOException If starting the job fails.
    * @throws NullPointerException If job or user is null.
    */
   public Execution startJob(JobDescription job, Users user) throws
-          IllegalStateException,
-          IllegalArgumentException, IOException, NullPointerException {
+      IllegalStateException,
+      IllegalArgumentException, IOException, NullPointerException {
     //First: do some parameter checking.
     if (job == null) {
       throw new NullPointerException("Cannot run a null job.");
@@ -59,26 +58,26 @@ public class AdamController {
       throw new NullPointerException("Cannot run a job as a null user.");
     } else if (job.getJobType() != JobType.ADAM) {
       throw new IllegalArgumentException(
-              "The given job does not represent an Adam job.");
+          "The given job does not represent an Adam job.");
     } else if (!sparkController.isSparkJarAvailable()) {
       //Check if all the jars are available
       throw new IllegalStateException(
-              "Some ADAM jars are not in HDFS and could not be copied in from this host.");
+          "Some ADAM jars are not in HDFS and could not be copied in from this host.");
     }
     //Get to starting the job
-    AdamJob adamjob = new AdamJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir());
+    AdamJob adamjob = new AdamJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
+        settings.getAdamJarHdfsPath());
     Execution jh = adamjob.requestExecutionId();
     if (jh != null) {
       submitter.startExecution(adamjob);
     } else {
       logger.log(Level.SEVERE,
-              "Failed to persist JobHistory. Aborting execution.");
+          "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
     activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
-            user.asUser());
+        user.asUser());
     return jh;
   }
-
 
 }
