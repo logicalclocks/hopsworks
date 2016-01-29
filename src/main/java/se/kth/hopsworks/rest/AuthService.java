@@ -1,6 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import java.net.SocketException;
+import java.security.NoSuchAlgorithmException;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -176,7 +177,7 @@ public class AuthService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   public Response register(UserDTO newUser, @Context HttpServletRequest req)
-          throws AppException, SocketException {
+          throws AppException, SocketException, NoSuchAlgorithmException {
 
     byte[] qrCode = null;
 
@@ -201,7 +202,7 @@ public class AuthService {
   @Consumes(MediaType.APPLICATION_JSON)
   public Response registerYubikey(UserDTO newUser,
           @Context HttpServletRequest req)
-          throws AppException, SocketException {
+          throws AppException, SocketException, NoSuchAlgorithmException {
 
     JsonResponse json = new JsonResponse();
 

@@ -12,10 +12,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
-import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.bbc.project.fb.Inode;
@@ -23,6 +23,8 @@ import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfsUsers.HdfsGroupsFacade;
 import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
 import se.kth.hopsworks.users.UserFacade;
@@ -31,6 +33,9 @@ import se.kth.hopsworks.util.Settings;
 @Stateless
 public class HdfsUsersController {
 
+  private static final Logger logger = Logger.getLogger(
+          HdfsUsersController.class.
+          getName());
   public static final String USER_NAME_DELIMITER = "__";
 
   @EJB
@@ -38,7 +43,7 @@ public class HdfsUsersController {
   @EJB
   private HdfsGroupsFacade hdfsGroupsFacade;
   @EJB
-  private FileSystemOperations fsOps;
+  private DistributedFsService dfsService;
   @EJB
   private InodeFacade inodes;
   @EJB
@@ -71,8 +76,8 @@ public class HdfsUsersController {
     //This means every body can see the content of a project.
     FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
             FsAction.READ_EXECUTE);// 775
-    fsOps.setOwner(location, owner, project.getName());
-    fsOps.setPermission(location, fsPermission);
+    dfsService.getDfsOps().setOwner(location, owner, project.getName());
+    dfsService.getDfsOps().setPermission(location, fsPermission);
   }
 
   /**
@@ -183,11 +188,10 @@ public class HdfsUsersController {
    * @param owner
    * @param project
    * @param dataset
-   * @param stickyBit
    * @throws java.io.IOException
    */
   public void addDatasetUsersGroups(Users owner, Project project,
-          Dataset dataset, boolean stickyBit) throws IOException {
+          Dataset dataset) throws IOException {
     if (owner == null || project == null || project.getProjectTeamCollection()
             == null || dataset == null) {
       throw new IllegalArgumentException("One or more arguments are null.");
@@ -198,16 +202,7 @@ public class HdfsUsersController {
             + project.getName() + File.separator + dataset.getInode().
             getInodePK().getName();
     Path location = new Path(dsPath);
-    //FsPermission(FsAction u, FsAction g, FsAction o, boolean sb)
-    FsPermission fsPermission = new FsPermission(FsAction.ALL,
-            FsAction.READ_EXECUTE,
-            FsAction.NONE);//Permission hdfs dfs -chmod 750
-    if (stickyBit) {
-      fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
-              FsAction.READ_EXECUTE, stickyBit);//Permission hdfs dfs -chmod 1770
-    }
-    fsOps.setOwner(location, dsOwner, datasetGroup);
-    fsOps.setPermission(location, fsPermission);
+    dfsService.getDfsOps().setOwner(location, dsOwner, datasetGroup);
 
     String hdfsUsername;
     HdfsUsers hdfsUser;
@@ -256,6 +251,7 @@ public class HdfsUsersController {
     String userName = getHdfsUserName(project, user);
     byte[] userId = UsersGroups.getUserID(userName);
     HdfsUsers hdfsUser = hdfsUsersFacade.findHdfsUser(userId);
+    dfsService.removeDfsOps(userName);
     if (hdfsUser != null) {
       hdfsUsersFacade.removeHdfsUser(hdfsUser);
     }
@@ -392,7 +388,10 @@ public class HdfsUsersController {
       hdfsUsername = getHdfsUserName(project, member.getUser());
       userId = UsersGroups.getUserID(hdfsUsername);
       hdfsUser = hdfsUsersFacade.findHdfsUser(userId);
-      hdfsUsersFacade.removeHdfsUser(hdfsUser);
+      dfsService.removeDfsOps(hdfsUsername);
+      if (hdfsUser != null) {
+        hdfsUsersFacade.removeHdfsUser(hdfsUser);
+      }
     }
   }
 

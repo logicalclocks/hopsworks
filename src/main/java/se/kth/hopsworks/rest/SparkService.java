@@ -21,6 +21,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.hadoop.security.AccessControlException;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
@@ -30,6 +31,7 @@ import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.controller.SparkController;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 
@@ -57,6 +59,8 @@ public class SparkService {
   private ActivityFacade activityFacade;
   @EJB
   private JobController jobController;
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
 
   private Project project;
 
@@ -98,6 +102,7 @@ public class SparkService {
    * @param req
    * @return
    * @throws AppException
+   * @throws org.apache.hadoop.security.AccessControlException
    */
   @GET
   @Path("/inspect/{path: .+}")
@@ -105,11 +110,17 @@ public class SparkService {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response inspectJar(@PathParam("path") String path,
           @Context SecurityContext sc, @Context HttpServletRequest req) throws
-          AppException {
+          AppException, AccessControlException {
+    String email = sc.getUserPrincipal().getName();
+    Users user = userFacade.findByEmail(email);
+    String username = hdfsUsersBean.getHdfsUserName(project, user);
     try {
-      SparkJobConfiguration config = sparkController.inspectJar(path);
+      SparkJobConfiguration config = sparkController.inspectJar(path, username);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(config).build();
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You do not have access to the jar file.");
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Failed to inspect jar.", ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.

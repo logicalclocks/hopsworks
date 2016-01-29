@@ -25,8 +25,8 @@ public class ExecutionController {
 
   public Execution start(JobDescription job, Users user) throws IOException {
     switch (job.getJobType()) {
-      case CUNEIFORM:
-        return cuneiformController.startWorkflow(job, user);
+	//      case CUNEIFORM:
+	//        return cuneiformController.startWorkflow(job, user);
       case ADAM:
         return adamController.startJob(job, user);
       case SPARK:

@@ -3,13 +3,11 @@ package se.kth.bbc.jobs.yarn;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
+import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
-import org.apache.hadoop.yarn.api.records.YarnClusterMetrics;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.impl.YarnClientImpl;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -33,9 +31,9 @@ public abstract class YarnJob extends HopsJob {
   private static final int DEFAULT_POLL_TIMEOUT_INTERVAL = 1; //in seconds
 
   protected YarnRunner runner;
-  private YarnMonitor monitor = null;
-  private Configuration conf = new Configuration();
 
+  protected YarnMonitor monitor = null;
+  private Configuration conf = new Configuration();
 
   private String stdOutFinalDestination, stdErrFinalDestination;
   private boolean started = false;
@@ -51,13 +49,15 @@ public abstract class YarnJob extends HopsJob {
    * @throws IllegalArgumentException If the JobDescription does not contain a
    * YarnJobConfiguration object.
    */
-  public YarnJob(JobDescription job, AsynchronousJobExecutor services, Users user, String hadoopDir) {
+  public YarnJob(JobDescription job, AsynchronousJobExecutor services,
+          Users user, String hadoopDir) {
     super(job, services, user, hadoopDir);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain a YarnJobConfiguration object. Received class: "
               + job.getJobConfig().getClass());
     }
+    logger.log(Level.INFO, "Instantiating Yarn job as user: {0}", hdfsUser);
   }
 
   public final void setStdOutFinalDestination(String stdOutFinalDestination) {
@@ -105,6 +105,10 @@ public abstract class YarnJob extends HopsJob {
       updateExecution(null, -1, null, null, monitor.getApplicationId().
               toString(), null, null, null, 0);
       return true;
+    } catch (AccessControlException ex) {
+      logger.log(Level.SEVERE, "Permission denied:- {0}", ex.getMessage());
+      updateState(JobState.APP_MASTER_START_FAILED);
+      return false;
     } catch (YarnException | IOException e) {
       logger.log(Level.SEVERE,
               "Failed to start application master for execution "
@@ -212,21 +216,23 @@ public abstract class YarnJob extends HopsJob {
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
-          services.getFileOperations().copyToHDFSFromLocal(true, runner.
+          services.getFileOperations(hdfsUser.getUserName()).copyToHDFSFromLocal(true, runner.
                   getStdOutPath(),
                   stdOutFinalDestination);
         } else {
-          services.getFileOperations().renameInHdfs(runner.getStdOutPath(),
+          services.getFileOperations(hdfsUser.getUserName()).renameInHdfs(runner.
+                  getStdOutPath(),
                   stdOutFinalDestination);
         }
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
-          services.getFileOperations().copyToHDFSFromLocal(true, runner.
+          services.getFileOperations(hdfsUser.getUserName()).copyToHDFSFromLocal(true, runner.
                   getStdErrPath(),
                   stdErrFinalDestination);
         } else {
-          services.getFileOperations().renameInHdfs(runner.getStdErrPath(),
+          services.getFileOperations(hdfsUser.getUserName()).renameInHdfs(runner.
+                  getStdErrPath(),
                   stdErrFinalDestination);
         }
       }

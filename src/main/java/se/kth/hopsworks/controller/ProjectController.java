@@ -30,7 +30,6 @@ import se.kth.bbc.project.ProjectRoleTypes;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.bbc.project.ProjectTeamPK;
-import se.kth.bbc.project.ProjectsManagementFacade;
 import se.kth.bbc.project.YarnProjectsQuota;
 import se.kth.bbc.project.YarnProjectsQuotaFacade;
 import se.kth.bbc.project.fb.Inode;
@@ -38,12 +37,11 @@ import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
-import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
@@ -88,9 +86,7 @@ public class ProjectController {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private DFSSingleton dfsSingleton;
-  @EJB
-  private DFSSingleton dfs;
+  private DistributedFsService dfs;
   @EJB
   private Settings settings;
 
@@ -192,9 +188,10 @@ public class ProjectController {
 
     try {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
-        boolean globallyVisible = ds.equals(Settings.DefaultDataset.RESOURCES);
+        boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
+                || ds.equals(Settings.DefaultDataset.LOGS));
         datasetController.createDataset(user, project, ds.getName(), ds.
-                getDescription(), -1, false, true, globallyVisible);
+                getDescription(), -1, false, globallyVisible);
       }
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
@@ -210,7 +207,7 @@ public class ProjectController {
 
     try {
       datasetController.createDataset(user, project, "consents",
-              "Biobanking consent forms", -1, false, true, false);
+              "Biobanking consent forms", -1, false, false);
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
               "Could not create project consents folder ", e);
@@ -777,25 +774,25 @@ public class ProjectController {
 
   public void setQuota(Path src, long diskspaceQuota)
           throws IOException {
-    dfsSingleton.getDfsOps().setQuota(src, diskspaceQuota);
+    dfs.getDfsOps().setQuota(src, diskspaceQuota);
   }
 
   public void setQuota(String projectname, long diskspaceQuota)
           throws IOException {
-    dfsSingleton.getDfsOps().setQuota(new Path(settings.getProjectPath(
+    dfs.getDfsOps().setQuota(new Path(settings.getProjectPath(
             projectname)),
             diskspaceQuota);
   }
 
   //Get quota in GB
   public long getQuota(String projectname) throws IOException {
-    return dfsSingleton.getDfsOps().getQuota(new Path(settings.getProjectPath(
+    return dfs.getDfsOps().getQuota(new Path(settings.getProjectPath(
             projectname)));
   }
 
   //Get used disk space in GB
   public long getUsedQuota(String projectname) throws IOException {
-    return dfsSingleton.getDfsOps().getUsedQuota(new Path(settings.
+    return dfs.getDfsOps().getUsedQuota(new Path(settings.
             getProjectPath(projectname)));
   }
 }

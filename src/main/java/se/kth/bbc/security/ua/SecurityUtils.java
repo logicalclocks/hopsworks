@@ -1,6 +1,7 @@
  
 package se.kth.bbc.security.ua;
 
+import java.security.NoSuchAlgorithmException;
 import org.apache.commons.codec.binary.Base32;
 import java.security.SecureRandom;
 import java.util.UUID;
@@ -12,9 +13,10 @@ public class SecurityUtils {
    *
    * @return
    */
-  public static String calculateSecretKey() {
+  public static String calculateSecretKey() throws NoSuchAlgorithmException {
     byte[] secretKey = new byte[10];
-    new SecureRandom().nextBytes(secretKey);
+    SecureRandom sha1Prng = SecureRandom.getInstance("SHA1PRNG");
+    sha1Prng.nextBytes(secretKey);
     Base32 codec = new Base32();
     byte[] encodedKey = codec.encode(secretKey);
     return new String(encodedKey);
