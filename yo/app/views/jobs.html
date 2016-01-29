@@ -87,7 +87,7 @@
                       dir-paginate="job in jobsCtrl.jobs| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:pageSize" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showLogs(job.id);$event.stopPropagation();">
                     <td>
                       <button style="border-color: #20AD28; min-width: 64px;"
-                              ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showLogs(job.id);jobsCtrl.runJob(job.id);$event.stopPropagation();jobsCtrl.buttonClickedToggle(job.id, true);" class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]"><span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"/> Run</button>
+                              ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showLogs(job.id);jobsCtrl.runJob(job.id);$event.stopPropagation();jobsCtrl.buttonClickedToggle(job.id, true);jobsCtrl.stopbuttonClickedToggle(job.id, false);" class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]"><span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"/> Run</button>
                       <button ng-click="$event.stopPropagation();"
                               class="btn btn-success btn-sm"
                               ng-show="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]">
@@ -210,18 +210,18 @@
                       <span class="field-info" tooltip="Stop"
                                                            style="padding-top: 5px;padding-left:3px">
                       <button
-                              ng-if="!jobsCtrl.workingArray[job.id] || jobsCtrl.runningInfo['' + job.id].state=='Finished'
+                              ng-show="!jobsCtrl.workingArray[job.id] || jobsCtrl.runningInfo['' + job.id].state=='Finished'
                               || jobsCtrl.runningInfo['' + job.id].state=='Killed'"
                               style=""
                               ng-disabled="!jobsCtrl.runningInfo['' + job.id].running ||
                               jobsCtrl.runningInfo['' + job.id].state=='Starting Application Master' ||
                               jobsCtrl.runningInfo['' + job.id].state=='Initializing'"
-                                       ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.stopJob(job.id);$event.stopPropagation();"
+                                       ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.stopJob(job.id);jobsCtrl.showLogs(job.id);$event.stopPropagation();"
                                        class="btn btn-danger glyphicon glyphicon-stop">
                       </button>
                       <button
-                              ng-if="jobsCtrl.workingArray[job.id] || !jobsCtrl.runningInfo['' + job.id].state=='Finished'"
-                              ng-hide="jobsCtrl.runningInfo['' + job.id].state=='Killed'"
+                              ng-if="jobsCtrl.workingArray[job.id]"
+                              ng-hide="jobsCtrl.runningInfo['' + job.id].state=='Killed'|| jobsCtrl.runningInfo['' + job.id].state=='Finished'"
                               style="height: 35px;"
                               ng-disabled="true"
                               class="btn btn-danger">
@@ -281,7 +281,7 @@
           </div>
 
           <!-- /#page-content-wrapper -->
-          <div style="height: 40%">
+          <div style="height: 35%;overflow: auto;">
               <div style="max-height: 50%;padding-top: 10px" ng-show="jobsCtrl.hasSelectJob">
 
                 <ul class="nav nav-tabs">
@@ -296,10 +296,11 @@
 
                 </ul>
 
-                <div class="tab-content">
+                <div class="tab-content" >
                   <div id="logs" class="tab-pane fade in active">
-                        <accordion close-others="true">
-                            <accordion-group data-ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                        <accordion
+                          close-others="true"infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
+                            <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                               <div style="overflow-y: auto">
                                   <textarea class="form-control" rows="15" placeholer="No log information available" readonly>
                                       {{item.log}}
@@ -309,8 +310,9 @@
                         </accordion>
                   </div>
                   <div id="errs" class="tab-pane fade">
-                      <accordion close-others="true">
-                          <accordion-group data-ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                      <accordion
+                        close-others="true"infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
+                          <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                               <div style="overflow-y: auto">
                                   <textarea class="form-control" rows="15" placeholer="No error information available" readonly>
                                       {{item.err}}

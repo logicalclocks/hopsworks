@@ -148,9 +148,12 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.runningInfo = success.data;
                         angular.forEach(self.jobs, function (temp, key) {
-                          if (!self.runningInfo['' + temp.id].running) {
-                            self.buttonArray[temp.id] = false;
-                          }});
+                          if (typeof self.runningInfo['' + temp.id] !== "undefined"){
+                            if (!self.runningInfo['' + temp.id].running) {
+                              self.buttonArray[temp.id] = false;
+                            }
+                          }
+                        });
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
@@ -170,7 +173,6 @@ angular.module('hopsWorksApp')
 
             this.stopJob = function (jobId) {
               self.stopbuttonClickedToggle(jobId, true);
-              console.log(self.workingArray[jobId]);
               JobService.stopJob(self.projectId, jobId).then(
                 function (success) {
                   self.getRunStatus();

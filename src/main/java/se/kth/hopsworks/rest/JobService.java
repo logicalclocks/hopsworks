@@ -288,9 +288,9 @@ public class JobService {
           }
           else{
               arrayObjectBuilder=Json.createObjectBuilder();
-              arrayObjectBuilder.add("time", "Job is not executed yet");
-              arrayObjectBuilder.add("log", "Job is not executed yet");
-              arrayObjectBuilder.add("err", "Job is not executed yet");
+              arrayObjectBuilder.add("time", "No log available");
+              arrayObjectBuilder.add("log", "No log available");
+              arrayObjectBuilder.add("err", "No log available");
               arrayBuilder.add(arrayObjectBuilder);
           }
           builder.add("logset", arrayBuilder);
