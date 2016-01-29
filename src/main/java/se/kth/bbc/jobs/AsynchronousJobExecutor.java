@@ -12,6 +12,8 @@ import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 
+import java.io.IOException;
+
 /**
  * Utility class for executing a HopsJob asynchronously. Passing the Hopsjob to
  * the method startExecution() will start the HopsJob asynchronously. The
@@ -36,6 +38,10 @@ public class AsynchronousJobExecutor {
   @Asynchronous
   public void startExecution(HopsJob job) {
     job.execute();
+  }
+
+  public void stopExecution(HopsJob job, String appid) {
+//    job.stop(appid);
   }
 
   public ExecutionFacade getExecutionFacade() {

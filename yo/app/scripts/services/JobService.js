@@ -96,6 +96,9 @@ angular.module('hopsWorksApp')
               runJob: function (projectId, jobId) {
                 return $http.post('/api/project/' + projectId + '/jobs/' + jobId + '/executions', {});
               },
+              stopJob: function (projectId, jobId) {
+                return $http.post('/api/project/' + projectId + '/jobs/' + jobId + '/executions/stop', {});
+              },
               /**
                * Get the current status of the given execution.
                * @param {type} projectId

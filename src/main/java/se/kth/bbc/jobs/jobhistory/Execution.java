@@ -108,6 +108,17 @@ public class Execution implements Serializable {
   @Column(name = "app_id")
   private String appId;
 
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "finalStatus")
+  @Enumerated(EnumType.STRING)
+  private JobFinalStatus finalStatus;
+
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "progress")
+  private float progress;
+
   @JoinColumn(name = "job_id",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
@@ -152,8 +163,10 @@ public class Execution implements Serializable {
 
   public Execution(JobState state, JobDescription job, Users user,
           String stdoutPath,
-          String stderrPath, Collection<JobInputFile> input) {
-    this(state, job, user, new Date(), stdoutPath, stderrPath, input);
+          String stderrPath, Collection<JobInputFile> input, JobFinalStatus
+      finalStatus, float progress) {
+    this(state, job, user, new Date(), stdoutPath, stderrPath, input,
+        finalStatus, progress);
   }
 
   public Execution(Execution t) {
@@ -175,6 +188,21 @@ public class Execution implements Serializable {
     this.job = job;
     this.user = user;
     this.jobInputFileCollection = input;
+  }
+
+  public Execution(JobState state, JobDescription job, Users user,
+      Date submissionTime,
+      String stdoutPath, String stderrPath, Collection<JobInputFile> input,
+      JobFinalStatus finalStatus, float progress) {
+    this.submissionTime = submissionTime;
+    this.state = state;
+    this.stdoutPath = stdoutPath;
+    this.stderrPath = stderrPath;
+    this.job = job;
+    this.user = user;
+    this.jobInputFileCollection = input;
+    this.finalStatus = finalStatus;
+    this.progress = progress;
   }
 
   public Integer getId() {
@@ -199,6 +227,22 @@ public class Execution implements Serializable {
 
   public void setState(JobState state) {
     this.state = state;
+  }
+
+  public JobFinalStatus getFinalStatus() {
+    return finalStatus;
+  }
+
+  public void setFinalStatus(JobFinalStatus finalStatus) {
+    this.finalStatus = finalStatus;
+  }
+
+  public float getProgress() {
+    return progress;
+  }
+
+  public void setProgress(float progress) {
+    this.progress = progress;
   }
 
   public long getExecutionDuration() {

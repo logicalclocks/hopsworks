@@ -110,6 +110,28 @@ public class SparkController {
     return jh;
   }
 
+  public void stopJob(JobDescription job, Users user, String appid) throws
+      IllegalStateException,
+      IOException, NullPointerException, IllegalArgumentException {
+    //First: some parameter checking.
+    if (job == null) {
+      throw new NullPointerException("Cannot stop a null job.");
+    } else if (user == null) {
+      throw new NullPointerException("Cannot stop a job as a null user.");
+    } else if (job.getJobType() != JobType.SPARK) {
+      throw new IllegalArgumentException(
+          "Job configuration is not a Spark job configuration.");
+    } else if (!isSparkJarAvailable()) {
+      throw new IllegalStateException("Spark is not installed on this system.");
+    }
+
+    SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
+        settings.getSparkUser());
+
+    submitter.stopExecution(sparkjob, appid);
+
+  }
+
   /**
    * Check if the Spark jars are in HDFS. If it's not, try and copy it there
    * from the local filesystem. If it's still

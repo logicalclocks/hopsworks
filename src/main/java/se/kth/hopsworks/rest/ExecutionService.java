@@ -21,7 +21,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.hopsworks.controller.ExecutionController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
@@ -44,6 +46,10 @@ public class ExecutionService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private JobDescriptionFacade jobFacade;
+  @EJB
+  private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private ExecutionController executionController;
 
@@ -103,6 +109,40 @@ public class ExecutionService {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
               "An error occured while trying to start this job: " + ex.
+              getLocalizedMessage());
+    }
+  }
+
+  @POST
+  @Path("/stop")
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response stopExecution(@PathParam("jobId") int jobId,@Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
+    String loggedinemail = sc.getUserPrincipal().getName();
+    Users user = userFacade.findByEmail(loggedinemail);
+    if (user == null) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+          "You are not authorized for this invocation.");
+    }
+    JobDescription job = jobFacade.findById(jobId);
+    String appid = yarnApplicationstateFacade.findByAppname(job.getName())
+        .get(0)
+        .getApplicationid();
+    try {
+
+      //WORKS FOR NOW BUT SHOULD EVENTUALLY GO THROUGH THE YARN CLIENT API
+      Runtime rt = Runtime.getRuntime();
+      Process pr = rt.exec("/srv/hadoop/bin/yarn application -kill "+appid);
+
+//      executionController.stop(job, user, appid);
+
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+          entity("Job stopped").build();
+    } catch (IOException | IllegalArgumentException |
+        NullPointerException ex) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          getStatusCode(),
+          "An error occured while trying to start this job: " + ex.
               getLocalizedMessage());
     }
   }

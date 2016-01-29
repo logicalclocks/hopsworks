@@ -453,6 +453,11 @@ public class YarnRunner {
   public boolean areLogPathsHdfs() {
     return logPathsAreHdfs;
   }
+
+  public void cancelJob(String appid) throws YarnException, IOException {
+    ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
+    yarnClient.killApplication(applicationId);
+  }
   //---------------------------------------------------------------------------
   //-------------------------- BUILDER ----------------------------------------
   //---------------------------------------------------------------------------

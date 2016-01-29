@@ -131,7 +131,7 @@ public final class CuneiformJob extends YarnJob {
       services.getFileOperations().renameInHdfs(stdErrPath,
               getStdErrFinalDestination());
       updateExecution(null, -1, getStdOutFinalDestination(),
-              getStdErrFinalDestination(), null, null, null);
+              getStdErrFinalDestination(), null, null, null, null, 0);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Error while copying logs for job "
               + getExecution().getId() + ".", ex);

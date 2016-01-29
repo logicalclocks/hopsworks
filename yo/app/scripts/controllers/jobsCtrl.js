@@ -12,7 +12,9 @@ angular.module('hopsWorksApp')
             var self = this;
             this.projectId = $routeParams.projectID;
             this.jobs; // Will contain all the jobs.
-            this.running; //Will contain run information
+            this.runningInfo; //Will contain run information
+            this.buttonArray = [];
+            this.workingArray = [];
             this.jobFilter = {
               "creator":{
                 "email":""
@@ -25,6 +27,15 @@ angular.module('hopsWorksApp')
             
             self.currentjob=null;
             self.currentToggledIndex=-1;
+
+            $scope.pageSize = 10;
+            $scope.sortKey = 'creationTime';
+            $scope.reverse = true;
+
+            $scope.sort = function(keyname){
+              $scope.sortKey = keyname;   //set the sortKey to the param passed
+              $scope.reverse = !$scope.reverse; //if true make it false and vice versa
+            }
             
             this. editAsNew = function (job) {   
               JobService.getConfiguration(self.projectId, job.id).then(
@@ -36,6 +47,14 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error fetching job configuration.', ttl: 15000});
               });
             };
+
+            self.buttonClickedToggle = function (id, display){
+              self.buttonArray[id] = display;
+            }
+
+            self.stopbuttonClickedToggle = function (id, display){
+              self.workingArray[id] = display;
+            }
             
             self.copy = function () {
               var jobType;
@@ -127,14 +146,35 @@ angular.module('hopsWorksApp')
             this.getRunStatus = function () {
               JobService.getRunStatus(self.projectId).then(
                       function (success) {
-                        self.running = success.data;
+                        self.runningInfo = success.data;
+                        angular.forEach(self.jobs, function (temp, key) {
+                          if (typeof self.runningInfo['' + temp.id] !== "undefined"){
+                            if (!self.runningInfo['' + temp.id].running) {
+                              self.buttonArray[temp.id] = false;
+                            }
+                          }
+                        });
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
 
+            this.createAppReport = function () {
+              angular.forEach(self.jobs, function (temp, key) {
+                if (typeof self.runningInfo['' + temp.id] !== "undefined"){
+                  temp.duration = self.runningInfo['' + temp.id].duration;
+                  temp.finalStatus = self.runningInfo['' + temp.id].finalStatus;
+                  temp.progress = self.runningInfo['' + temp.id].progress;
+                  temp.running = self.runningInfo['' + temp.id].running;
+                  temp.state = self.runningInfo['' + temp.id].state;
+                  temp.submissiontime = self.runningInfo['' + temp.id].submissiontime;
+                }
+              })
+            };
+
             getAllJobs();
             self.getRunStatus();
+            self.createAppReport();
 
             this.runJob = function (jobId) {
               JobService.runJob(self.projectId, jobId).then(
@@ -143,6 +183,17 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to run job', ttl: 15000});
               });
+            };
+
+            this.stopJob = function (jobId) {
+              self.stopbuttonClickedToggle(jobId, true);
+              JobService.stopJob(self.projectId, jobId).then(
+                function (success) {
+                  self.getRunStatus();
+                }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Failed to stop' +
+                  ' job', ttl: 15000});
+                });
             };
 
             /**
@@ -238,6 +289,7 @@ angular.module('hopsWorksApp')
             var startPolling = function () {
               self.poller = $interval(function () {
                 self.getRunStatus();
+                self.createAppReport();
               }, 5000);
             };
             startPolling();
