@@ -159,8 +159,22 @@ angular.module('hopsWorksApp')
               });
             };
 
+            this.createAppReport = function () {
+              angular.forEach(self.jobs, function (temp, key) {
+                if (typeof self.runningInfo['' + temp.id] !== "undefined"){
+                  temp.duration = self.runningInfo['' + temp.id].duration;
+                  temp.finalStatus = self.runningInfo['' + temp.id].finalStatus;
+                  temp.progress = self.runningInfo['' + temp.id].progress;
+                  temp.running = self.runningInfo['' + temp.id].running;
+                  temp.state = self.runningInfo['' + temp.id].state;
+                  temp.submissiontime = self.runningInfo['' + temp.id].submissiontime;
+                }
+              })
+            };
+
             getAllJobs();
             self.getRunStatus();
+            self.createAppReport();
 
             this.runJob = function (jobId) {
               JobService.runJob(self.projectId, jobId).then(
@@ -275,6 +289,7 @@ angular.module('hopsWorksApp')
             var startPolling = function () {
               self.poller = $interval(function () {
                 self.getRunStatus();
+                self.createAppReport();
               }, 5000);
             };
             startPolling();
