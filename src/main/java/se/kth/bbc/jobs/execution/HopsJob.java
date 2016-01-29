@@ -159,6 +159,10 @@ public abstract class HopsJob {
     cleanup();
   }
 
+  public final void stop(String appid) throws IllegalStateException {
+    stopJob(appid);
+  }
+
   /**
    * Called before runJob, should setup the job environment to allow it to be
    * run.
@@ -176,6 +180,8 @@ public abstract class HopsJob {
    * jobs.
    */
   protected abstract void runJob();
+
+  protected abstract void stopJob(String appid);
 
   /**
    * Called after runJob() completes, allows the job to perform some cleanup, if

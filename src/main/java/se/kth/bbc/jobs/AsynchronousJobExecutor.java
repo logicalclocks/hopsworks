@@ -9,6 +9,8 @@ import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 
+import java.io.IOException;
+
 /**
  * Utility class for executing a HopsJob asynchronously. Passing the Hopsjob to
  * the method startExecution() will start the HopsJob asynchronously. The
@@ -31,6 +33,10 @@ public class AsynchronousJobExecutor {
   @Asynchronous
   public void startExecution(HopsJob job) {
     job.execute();
+  }
+
+  public void stopExecution(HopsJob job, String appid) {
+//    job.stop(appid);
   }
 
   public ExecutionFacade getExecutionFacade() {

@@ -2,6 +2,7 @@ package se.kth.hopsworks.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
 import java.util.jar.JarInputStream;
@@ -80,6 +81,28 @@ public class SparkController {
     activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
         user.asUser());
     return jh;
+  }
+
+  public void stopJob(JobDescription job, Users user, String appid) throws
+      IllegalStateException,
+      IOException, NullPointerException, IllegalArgumentException {
+    //First: some parameter checking.
+    if (job == null) {
+      throw new NullPointerException("Cannot stop a null job.");
+    } else if (user == null) {
+      throw new NullPointerException("Cannot stop a job as a null user.");
+    } else if (job.getJobType() != JobType.SPARK) {
+      throw new IllegalArgumentException(
+          "Job configuration is not a Spark job configuration.");
+    } else if (!isSparkJarAvailable()) {
+      throw new IllegalStateException("Spark is not installed on this system.");
+    }
+
+    SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
+        settings.getSparkUser());
+
+    submitter.stopExecution(sparkjob, appid);
+
   }
 
   /**

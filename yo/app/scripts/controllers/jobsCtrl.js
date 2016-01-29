@@ -14,6 +14,7 @@ angular.module('hopsWorksApp')
             this.jobs; // Will contain all the jobs.
             this.runningInfo; //Will contain run information
             this.buttonArray = [];
+            this.workingArray = [];
             this.jobFilter = {
               "creator":{
                 "email":""
@@ -49,6 +50,10 @@ angular.module('hopsWorksApp')
 
             self.buttonClickedToggle = function (id, display){
               self.buttonArray[id] = display;
+            }
+
+            self.stopbuttonClickedToggle = function (id, display){
+              self.workingArray[id] = display;
             }
             
             self.copy = function () {
@@ -161,6 +166,18 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to run job', ttl: 15000});
               });
+            };
+
+            this.stopJob = function (jobId) {
+              self.stopbuttonClickedToggle(jobId, true);
+              console.log(self.workingArray[jobId]);
+              JobService.stopJob(self.projectId, jobId).then(
+                function (success) {
+                  self.getRunStatus();
+                }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Failed to stop' +
+                  ' job', ttl: 15000});
+                });
             };
 
             /**

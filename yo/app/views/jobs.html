@@ -54,7 +54,7 @@
                   Type
                   <span class="glyphicon sort-icon" ng-show="sortKey=='jobType'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th ng-click="sort('owner')" style="width: 10%">
+                <th ng-click="sort('owner')" style="width: 8%">
                   Owner
                   <span class="glyphicon sort-icon" ng-show="sortKey=='owner'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
@@ -62,7 +62,7 @@
                   Submission Time
                   <span class="glyphicon sort-icon" ng-show="sortKey=='submissiontime'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th ng-click="sort('state')" style="width: 5%">
+                <th ng-click="sort('state')" style="width: 7%">
                   State
                   <span class="glyphicon sort-icon" ng-show="sortKey=='state'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
@@ -78,10 +78,6 @@
                   Duration(min)
                   <span class="glyphicon sort-icon" ng-show="sortKey=='duration'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th ng-click="sort('quota')" style="width: 5%">
-                  Quota
-                  <span class="glyphicon sort-icon" ng-show="sortKey=='quota'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
-                </th>
                 <th style="width: 20%">
                   Actions
                 </th>
@@ -91,7 +87,7 @@
                       dir-paginate="job in jobsCtrl.jobs| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:pageSize" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showLogs(job.id);$event.stopPropagation();">
                     <td>
                       <button style="border-color: #20AD28; min-width: 64px;"
-                              ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.runJob(job.id);$event.stopPropagation();jobsCtrl.buttonClickedToggle(job.id, true);" class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]"><span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"/> Run</button>
+                              ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showLogs(job.id);jobsCtrl.runJob(job.id);$event.stopPropagation();jobsCtrl.buttonClickedToggle(job.id, true);" class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]"><span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"/> Run</button>
                       <button ng-click="$event.stopPropagation();"
                               class="btn btn-success btn-sm"
                               ng-show="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]">
@@ -211,15 +207,25 @@
                       {{jobsCtrl.runningInfo['' + job.id].duration*0.000016667 | number:2}}
                     </td>
                     <td>
-                      {{jobsCtrl.runningInfo['' + job.id].duration}}
-                    </td>
-                    <td>
                       <span class="field-info" tooltip="Stop"
                                                            style="padding-top: 5px;padding-left:3px">
-                      <button style=""
-                              ng-disabled="!jobsCtrl.runningInfo['' + job.id].running"
-                              ng-click="jobsCtrl.toggle(job,$index);$event.stopPropagation();"
-                              class="btn btn-danger glyphicon glyphicon-stop">
+                      <button
+                              ng-if="!jobsCtrl.workingArray[job.id] || jobsCtrl.runningInfo['' + job.id].state=='Finished'
+                              || jobsCtrl.runningInfo['' + job.id].state=='Killed'"
+                              style=""
+                              ng-disabled="!jobsCtrl.runningInfo['' + job.id].running ||
+                              jobsCtrl.runningInfo['' + job.id].state=='Starting Application Master' ||
+                              jobsCtrl.runningInfo['' + job.id].state=='Initializing'"
+                                       ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.stopJob(job.id);$event.stopPropagation();"
+                                       class="btn btn-danger glyphicon glyphicon-stop">
+                      </button>
+                      <button
+                              ng-if="jobsCtrl.workingArray[job.id] || !jobsCtrl.runningInfo['' + job.id].state=='Finished'"
+                              ng-hide="jobsCtrl.runningInfo['' + job.id].state=='Killed'"
+                              style="height: 35px;"
+                              ng-disabled="true"
+                              class="btn btn-danger">
+                        <i class="fa fa-spinner fa-spin" ></i>
                       </button>
                       </span>
                       <span class="field-info" tooltip="Schedule"

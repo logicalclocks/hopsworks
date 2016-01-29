@@ -32,6 +32,7 @@
     <class>se.kth.bbc.project.fb.InodeOps</class>
     <class>se.kth.bbc.project.fb.Inode</class>
     <class>se.kth.bbc.jobs.jobhistory.Execution</class>
+    <class>se.kth.bbc.jobs.jobhistory.YarnApplicationstate</class>
     <class>se.kth.bbc.jobs.model.description.JobDescription</class>
     <class>se.kth.bbc.jobs.model.configuration.JsonReduceableConverter</class>
     <class>se.kth.hopsworks.user.model.SshKeys</class>
