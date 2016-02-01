@@ -292,37 +292,6 @@ public class UserManager {
   }
 
   /**
-   * Register Yubikey user's delivery address.
-   *
-   * @param uid
-   * @param address1
-   * @param address2
-   * @param address3
-   * @param city
-   * @param state
-   * @param country
-   * @param postalcode
-   * @return
-   */
-  public boolean registerAddress(Users uid, String address1, String address2,
-          String address3, String city, String state, String country,
-          String postalcode) {
-
-    Address add = new Address();
-    add.setUid(null);
-    add.setAddress1(checkDefaultValue(address1));
-    add.setAddress2(checkDefaultValue(address2));
-    add.setAddress3(checkDefaultValue(address3));
-    add.setState(checkDefaultValue(state));
-    add.setCity(checkDefaultValue(city));
-    add.setCountry(checkDefaultValue(country));
-    add.setPostalcode(checkDefaultValue(postalcode));
-    em.persist(add);
-
-    return true;
-  }
-
-  /**
    * Check the value and if empty set as '-'.
    *
    * @param var
@@ -335,56 +304,7 @@ public class UserManager {
     return "-";
   }
 
-  /**
-   * Register a new user and assign default group.
-   *
-   * @param fname
-   * @param lname
-   * @param email
-   * @param title
-   * @param tel
-   * @param orcid
-   * @param uid
-   * @param password
-   * @param otpSecret
-   * @param question
-   * @param answer
-   * @param status
-   * @param yubikey
-   * @param validationKey
-   * @return
-   */
-  public Users register(String fname, String lname, String email, String title,
-          String tel, String orcid, int uid, String password, String otpSecret,
-          SecurityQuestion question, String answer, int status, int yubikey,
-          String validationKey) {
-
-    // assigne a username
-    String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
-
-    Users user = new Users();
-    user.setUsername(uname);
-    user.setPassword(password);
-    user.setSecret(otpSecret);
-    user.setEmail(email);
-    user.setFname(fname);
-    user.setLname(lname);
-    user.setMobile(checkDefaultValue(tel));
-    user.setOrcid(checkDefaultValue(orcid));
-    user.setTitle(checkDefaultValue(title));
-    user.setActivated(new Timestamp(new Date().getTime()));
-    user.setStatus(status);
-    user.setValidationKey(validationKey);
-    user.setIsonline(AuthenticationConstants.IS_OFFLINE);
-    user.setSecurityQuestion(question);
-    user.setSecurityAnswer(answer);
-    user.setPasswordChanged(new Timestamp(new Date().getTime()));
-    user.setMode(yubikey);
-    em.persist(user);
-    em.flush();
-    return user;
-  }
-
+ 
   /**
    * Return the max uid in the table.
    *

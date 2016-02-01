@@ -20,7 +20,6 @@ import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.bbc.security.auth.AuthenticationConstants;
-import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.hopsworks.user.model.Users;
 
@@ -266,8 +265,7 @@ public class RecoverySelector implements Serializable {
                   UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                   UserAccountsEmailMessages.accountBlockedMessage());
         } catch (MessagingException ex1) {
-          Logger.getLogger(CustomAuthentication.class.getName()).log(
-                  Level.SEVERE, null, ex1);
+        
         }
       }
 
