@@ -219,22 +219,17 @@ angular.module('hopsWorksApp')
               });              
             };
             
-            self.deleteJob=function (jobId,jobName){
-                ModalService.confirm("sm", "Delete Job ("+jobName+")",
-                                  "Do you really want to delete this job?\n\
-                                This action cannot be undone.")
-                                  .then(function (success) {
-                                        JobService.deleteJob(self.projectId,jobId).then(
-                                            function (success) {  
-                                                 getAllJobs(); 
-                                                 self.hasSelectJob=false;
-                                                 growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
-                                            }, function (error) {
-                                      growl.error(error.data.errorMsg, {title: 'Failed to delete job', ttl: 15000});
-                                    }); 
-                                  }, function (cancelled) {
-                                    growl.info("Delete aborted", {title: 'Info', ttl: 5000});
-                                  });
+            self.deleteJob=function (jobId){
+
+                  JobService.deleteJob(self.projectId,jobId).then(
+                      function (success) {
+                           getAllJobs();
+                           self.hasSelectJob=false;
+                           growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Failed to delete job', ttl: 15000});
+              });
+
  
             };
             
