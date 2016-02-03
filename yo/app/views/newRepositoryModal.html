@@ -1,0 +1,135 @@
+<div class="modal-header">
+  <button class="close" ng-click="charonCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Create and Share a New Repository</h2>
+</div>
+<div class="modal-body">
+  <div growl reference="1" class="pull-right" ></div>
+
+  <form role="form" name="newRepoForm" ng-submit="charonCtrl.createRepo()" novalidate class="form-validate">
+    <div class="row">
+      <div class="col-md-8">
+        <fieldset>
+
+          <div class="control-group col-md-offset-1">
+            <label for="projectname" style="color: black;">Name</label>
+            <md-input-container style="height: 50px">
+              <input name="repo_name" type="text" id="projectname"
+                     ng-model="charonCtrl.selectedCharonPath" tabindex="1"
+                     ng-pattern="charonCtrl.regex"
+                     autofocus="autofocus"
+                     ng-maxlength="24"
+                     required
+              >
+            </md-input-container>
+
+            <span ng-show="(newRepoForm.$submitted || newRepoForm.repo_name.$dirty) &amp;&amp;
+                  newRepoForm.repo_name.$error.required"
+                  class="text-danger ng-hide">This field is required</span>
+
+            <span ng-show="(newRepoForm.repo_name.$dirty) &amp;&amp;
+                  newRepoForm.repo_name.$error.pattern"
+                  class="text-danger ng-hide">Invalid repository name. Spaces
+              in repository names and special characters such as __, /, \, ?,
+              *, :, |, ', ", <, >, %, (, ), &, ;, #, are not allowed.</span>
+
+            <span ng-show="(newRepoForm.repo_name.$dirty) &amp;&amp;
+                  newRepoForm.repo_name.$error.maxlength"
+                  class="text-danger ng-hide">Repository name shouldn't be
+              longer
+              than
+              24 characters.</span>
+
+            <p></p>
+
+            <label style="margin-top:20px;margin-right: 10px;" for="projectname"
+                   class="control-label">Sites available for sharing:
+            </label>
+
+            <select data-ng-model="charonCtrl.granteeId"
+                data-ng-options="a.siteId for a in charonCtrl.availableSiteIds">                
+            </select>
+	    
+	    
+<!--            <md-input-container style="height: 50px">
+              <input name="siteid" type="text"
+                     ng-model="charonCtrl.granteeId" tabindex="1"
+                     ng-pattern="charonCtrl.regex"
+                     autofocus="autofocus"
+              >
+            </md-input-container>-->
+
+<!--            <div class="controls">
+
+              <ui-select ng-model="charonCtrl.card.selected" theme="select2"
+                         style="min-width: 300px;" tabindex="3">
+
+                <ui-select-match placeholder="Add sites...">{{$select.selected
+                  .email}}</ui-select-match>
+                <ui-select-choices
+                  repeat="card in charonCtrl.cards | cardFilter: {email: $select.search, firstname: $select.search, lastname: $select.search}">
+
+                  <div ng-bind-html="charonCtrl.card.email | highlight: $select.search"></div>
+                  <small>
+                    <i class="fa fa-user-plus"></i>
+                    <span style="font-size: 14px;;"
+                          ng-bind-html="''+card.email | highlight: $select.search"></span>
+
+                    <br/>
+                    <span ng-bind-html="''+card.firstname | highlight: $select.search"></span>
+                    <span ng-bind-html="''+card.lastname | highlight: $select.search"></span>
+                  </small>
+                </ui-select-choices>
+              </ui-select>
+
+              <div style="margin-top:10px; min-height:50px;" class="thumbnail ui-droppable">
+
+                <button class="animate-repeat btn btn-info" style="margin: 3px;"
+                        ng-repeat="member in charonCtrl.projectMembers"
+                        ng-click="charonCtrl.removeMember(member)">
+                  <span style="margin-right:10px;"> {{member}}</span>
+                  <span class="close" style="float: none;">× </span>
+                </button>
+              </div>
+            </div>-->
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="col-md-4">
+        <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Share</h3>
+
+        <fieldset>
+          <div class="control-group col-md-offset-2">
+            <md-checkbox class="md-primary"
+                         ng-model="charonCtrl.isReadChecked" ng-init="charonCtrl.isReadChecked = true" tabindex="3">
+              Read
+            </md-checkbox>
+            <md-checkbox class="md-primary"
+                         ng-model="charonCtrl.isWriteChecked" tabindex="4">
+              Read / Write
+            </md-checkbox>
+          </div>
+
+
+        </fieldset>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+
+      <button class="btn btn-default" type="button" ng-click="charonCtrl.close()" tabindex="5">Cancel</button>
+      <button class="btn btn-primary" type="submit"
+              ng-disabled="newRepoForm.repo_name.$error.required
+              || charonCtrl.working
+              || newRepoForm.repo_name.$error.pattern
+              || newRepoForm.repo_name.$error.maxlength" tabindex="6">
+        <i ng-if="charonCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+        Create
+      </button>
+
+    </div>
+  </form>
+
+</div>
+

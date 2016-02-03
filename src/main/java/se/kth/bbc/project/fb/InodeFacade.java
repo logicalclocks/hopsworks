@@ -2,6 +2,7 @@ package se.kth.bbc.project.fb;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -53,6 +54,29 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return findByParent(parent);
   }
 
+  /**
+   * Get a list of the names of the child files (so no directories) of the given
+   * path.
+   * <p/>
+   * @param path
+   * @return A list of filenames, empty if the given path does not have
+   * children.
+   */
+  public List<String> getChildNames(String path) {
+    Inode inode = getInodeAtPath(path);
+    if (inode.isDir()) {
+      List<Inode> inodekids = getChildren(inode);
+      ArrayList<String> retList = new ArrayList<>(inodekids.size());
+      for (Inode i : inodekids) {
+        if (!i.isDir()) {
+          retList.add(i.getInodePK().getName());
+        }
+      }
+      return retList;
+    } else {
+      return Collections.EMPTY_LIST;
+    }
+  }
   /**
    * Find the parent of the given Inode. If the Inode has no parent, null is
    * returned.

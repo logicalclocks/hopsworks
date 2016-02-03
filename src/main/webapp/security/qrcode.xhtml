@@ -28,14 +28,12 @@
         <div align="center">
           <h:panelGrid columns="2" >                           
             <p:graphicImage value="#{recoverySelector.qrCode}" width="200" height="200" rendered="#{recoverySelector.qrEnabled ==1}"/>
-            <p:graphicImage value="#{userRegistration.qrCode}" width="200" height="200" rendered="#{userRegistration.qrEnabled ==1}"/>
           </h:panelGrid>
         </div>
         <br></br>
         <br></br>
         <br></br>
 
-        <p:commandLink value="Back to main page" action="#{userRegistration.returnMenu()}" rendered="#{userRegistration.qrEnabled ==1}" process="@this" ajax="false" />
         <p:commandLink value="Back to main page" action="#{recoverySelector.returnMenu()}" rendered="#{recoverySelector.qrEnabled ==1}" process="@this" ajax="false" />
       </div>
     </h:form>

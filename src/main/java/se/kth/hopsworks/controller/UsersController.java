@@ -3,6 +3,7 @@ package se.kth.hopsworks.controller;
 import com.google.zxing.WriterException;
 import java.io.IOException;
 import java.net.SocketException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Level;
@@ -62,7 +63,7 @@ public class UsersController {
   private byte[] qrCode;
 
   public byte[] registerUser(UserDTO newUser, HttpServletRequest req) throws
-          AppException, SocketException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
+          AppException, SocketException, NoSuchAlgorithmException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
   {
     if (userValidator.isValidEmail(newUser.getEmail())
             && userValidator.isValidPassword(newUser.getChosenPassword(),
@@ -176,7 +177,7 @@ public class UsersController {
   }
 
   public boolean registerYubikeyUser(UserDTO newUser, HttpServletRequest req)
-          throws AppException, SocketException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
+          throws AppException, SocketException, NoSuchAlgorithmException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
   {
     if (userValidator.isValidEmail(newUser.getEmail())
             && userValidator.isValidPassword(newUser.getChosenPassword(),

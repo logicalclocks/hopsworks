@@ -129,10 +129,10 @@ public class YarnRunner {
     //Set up container launch context
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
             localResources, env, amCommands, null, null, null);
-// TODO: implement this for real. doAs
-//    UserGroupInformation proxyUser = UserGroupInformation.
-//            createProxyUser("user", UserGroupInformation.
-//                    getCurrentUser());
+    // TODO: implement this for real. doAs
+    //    UserGroupInformation proxyUser = UserGroupInformation.
+    //            createProxyUser("user", UserGroupInformation.
+    //                    getCurrentUser());
 
     //Finally set up context
     appContext.setAMContainerSpec(amContainer); //container spec
@@ -453,6 +453,11 @@ public class YarnRunner {
   public boolean areLogPathsHdfs() {
     return logPathsAreHdfs;
   }
+
+  public void cancelJob(String appid) throws YarnException, IOException {
+    ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
+    yarnClient.killApplication(applicationId);
+  }
   //---------------------------------------------------------------------------
   //-------------------------- BUILDER ----------------------------------------
   //---------------------------------------------------------------------------
@@ -507,7 +512,7 @@ public class YarnRunner {
     private Configuration conf;
     //YarnClient
     private YarnClient yarnClient;
-    
+
     private String hadoopDir;
     private String sparkDir;
 
@@ -815,7 +820,7 @@ public class YarnRunner {
 //      If not found in environment variables: warn and use default,
       if (yarnConfDir == null) {
         logger.log(Level.WARNING,
-            "Environment variable "
+                "Environment variable "
                 + Settings.ENV_KEY_YARN_CONF_DIR +
                 " not found, using settings: {0}", Settings.getYarnConfDir(hadoopDir));
         yarnConfDir = Settings.getYarnConfDir(hadoopDir);
@@ -825,7 +830,7 @@ public class YarnRunner {
       //Get the configuration file at found path
       this.hadoopDir = hadoopDir;
       this.sparkDir = sparkDir;
-      
+
       Path confPath = new Path(yarnConfDir);
       File confFile = new File(confPath + File.separator
               + Settings.DEFAULT_YARN_CONFFILE_NAME);
@@ -841,9 +846,10 @@ public class YarnRunner {
       //If not found in environment variables: warn and use default
       if (hadoopConfDir == null) {
         logger.log(Level.WARNING,
-                "Environment variable " + Settings.ENV_KEY_HADOOP_CONF_DIR
-                + " not found, using default "
-                + (hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR));
+            "Environment variable "
+                + Settings.ENV_KEY_HADOOP_CONF_DIR
+                + " not found, using default {0}", 
+            (hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR));
         hadoopConfDir = hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR;
       }
       confPath = new Path(hadoopConfDir);

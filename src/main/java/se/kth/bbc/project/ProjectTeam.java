@@ -6,6 +6,7 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
@@ -72,7 +73,8 @@ public class ProjectTeam implements Serializable {
           insertable
           = false,
           updatable = false)
-  @ManyToOne(optional = false)
+  @ManyToOne(optional = false,
+          fetch = FetchType.EAGER)//needed to delete users from hdfs in HDFSUserController.deleteProjectUsers()
   private Users user;
 
   @EmbeddedId

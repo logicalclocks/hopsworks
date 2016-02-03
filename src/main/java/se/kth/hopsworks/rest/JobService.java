@@ -199,10 +199,38 @@ public class JobService {
     List<JobDescription> allJobs = jobFacade.findForProject(project);
     JsonObjectBuilder builder = Json.createObjectBuilder();
     for (JobDescription desc : allJobs) {
-      builder.add(desc.getId().toString(), false);
+      try {
+        Execution execution = exeFacade.findForJob(desc).get(0);
+        builder.add(desc.getId().toString(), Json.createObjectBuilder().add
+            ("running", false).add
+            ("state", execution.getState().toString()).add
+            ("finalStatus", execution.getFinalStatus().toString()).add
+            ("progress", execution.getProgress()).add
+            ("duration", execution.getExecutionDuration()).add
+            ("submissiontime", execution.getSubmissionTime().toString()));
+      } catch (ArrayIndexOutOfBoundsException e) {
+        logger.log(Level.WARNING, "No execution was found: " + e
+            .getMessage());
+      }
     }
     for (JobDescription desc : running) {
-      builder.add(desc.getId().toString(), true);
+      try {
+        Execution execution = exeFacade.findForJob(desc).get(0);
+        Execution updatedExecution = exeFacade.getExecution(execution.getJob().getId());
+        if(updatedExecution!=null){
+          execution = updatedExecution;
+        }
+        builder.add(desc.getId().toString(), Json.createObjectBuilder().add
+            ("running", true).add
+            ("state", execution.getState().toString()).add
+            ("finalStatus", execution.getFinalStatus().toString()).add
+            ("progress", execution.getProgress()).add
+            ("duration", execution.getExecutionDuration()).add
+            ("submissiontime", execution.getSubmissionTime().toString()));
+      } catch (ArrayIndexOutOfBoundsException e) {
+        logger.log(Level.WARNING, "No execution was found: " + e
+            .getMessage());
+      }
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(builder.build()).build();
@@ -260,9 +288,9 @@ public class JobService {
           }
           else{
               arrayObjectBuilder=Json.createObjectBuilder();
-              arrayObjectBuilder.add("time", "Job is not executed yet");
-              arrayObjectBuilder.add("log", "Job is not executed yet");
-              arrayObjectBuilder.add("err", "Job is not executed yet");
+              arrayObjectBuilder.add("time", "No log available");
+              arrayObjectBuilder.add("log", "No log available");
+              arrayObjectBuilder.add("err", "No log available");
               arrayBuilder.add(arrayObjectBuilder);
           }
           builder.add("logset", arrayBuilder);

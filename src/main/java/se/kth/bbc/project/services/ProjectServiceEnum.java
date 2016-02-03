@@ -8,8 +8,8 @@ public enum ProjectServiceEnum {
 
   ZEPPELIN("Zeppelin"),
   SSH("Ssh"),
-  BIOBANKING("Biobanking"),
-  CHARON("Charon"),
+  //  BIOBANKING("Biobanking"),
+  //  CHARON("Charon"),
   JOBS("Jobs");
 
   private final String readable;

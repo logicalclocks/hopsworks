@@ -29,7 +29,7 @@
                     <ul class="messages" >
                         <li ng-class="{'unread': msg.unread, 'highlight': messageCtrl.selectedMsg.id === msg.id}" ng-repeat="msg in messageCtrl.messages | filter: search">
                             <div class="message-preview-div">
-                                <img class="message-avatar pull-left" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(msg.from.email)}}?d=mm">
+                                <img class="message-avatar pull-left" src="https://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(msg.from.email)}}?d=mm">
                                 <button tooltip="Move to trash" class="close" ng-click="messageCtrl.moveToTrash(msg, $index)" aria-hidden="true" type="button">
                                     &times;
                                 </button>
@@ -68,7 +68,7 @@
                     <ul class="messages" >
                         <li ng-class="{'unread': msg.unread, 'highlight': messageCtrl.selectedMsg.id === msg.id}" ng-repeat="msg in messageCtrl.trash | filter: search">
                             <div class="message-preview-div">
-                                <img class="message-avatar pull-left" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(msg.from.email)}}?d=mm">
+                                <img class="message-avatar pull-left" src="https://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(msg.from.email)}}?d=mm">
                                 <button tooltip="Delete message" class="close" ng-click="messageCtrl.deleteMessage(msg, $index)" aria-hidden="true" type="button">
                                     &times;
                                 </button>
@@ -101,7 +101,7 @@
             <div ng-if="messageCtrl.selectedMsg.deleted" class="pull-right" ng-click="messageCtrl.restore(messageCtrl.selectedMsg)">
               <i class="fa fa-undo  text-muted"> Restore</i>
             </div>
-            <img class="message-avatar pull-left" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(messageCtrl.selectedMsg.from.email)}}?d=mm">
+            <img class="message-avatar pull-left" src="https://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(messageCtrl.selectedMsg.from.email)}}?d=mm">
             <div class="pull-left">
                <span>From: </span>
                     <span>{{messageCtrl.selectedMsg.from.fname}} {{messageCtrl.selectedMsg.from.lname}} &lt;{{messageCtrl.selectedMsg.from.email}}&gt;</span>
@@ -128,7 +128,7 @@
                 <p></p>
                 <div >
                     <a class="pull-left">
-                        <img class="my-avatar img-rounded" src="http://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(messageCtrl.email)}}?d=mm">
+                        <img class="my-avatar img-rounded" src="https://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(messageCtrl.email)}}?d=mm">
                     </a>
                     <div class="message-box-body">
                         <textarea

@@ -60,13 +60,98 @@ angular.module('hopsWorksApp')
                     auth: ['$q', '$location', 'AuthService',
                       function ($q, $location, AuthService) {
                         return AuthService.session().then(
-                                function (success) {
-                                },
-                                function (err) {
-                                  $location.path('/login');
-                                  $location.replace();
-                                  return $q.reject(err);
-                                });
+                          function (success) {
+                          },
+                          function (err) {
+                            $location.path('/login');
+                            $location.replace();
+                            return $q.reject(err);
+                          });
+                      }]
+                  }
+                });
+                return modalInstance.result;
+              },
+              createRepository: function (size) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/newRepositoryModal.html',
+                  controller: 'CharonCtrl as charonCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                          function (success) {
+                          },
+                          function (err) {
+                            $location.path('/login');
+                            $location.replace();
+                            return $q.reject(err);
+                          });
+                      }]
+                  }
+                });
+                return modalInstance.result;
+              },
+              importRepository: function (size) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/importRepositoryModal.html',
+                  controller: 'CharonCtrl as charonCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                          function (success) {
+                          },
+                          function (err) {
+                            $location.path('/login');
+                            $location.replace();
+                            return $q.reject(err);
+                          });
+                      }]
+                  }
+                });
+                return modalInstance.result;
+              },
+              shareRepository: function (size) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/shareRepositoryModal.html',
+                  controller: 'CharonCtrl as charonCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                          function (success) {
+                          },
+                          function (err) {
+                            $location.path('/login');
+                            $location.replace();
+                            return $q.reject(err);
+                          });
+                      }]
+                  }
+                });
+                return modalInstance.result;
+              },
+              addSite: function (size) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/addSiteModal.html',
+                  controller: 'CharonCtrl as charonCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                          function (success) {
+							
+                          },
+                          function (err) {
+                            $location.path('/login');
+                            $location.replace();
+                            return $q.reject(err);
+                          });
                       }]
                   }
                 });
