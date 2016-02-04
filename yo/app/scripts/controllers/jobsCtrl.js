@@ -162,6 +162,9 @@ angular.module('hopsWorksApp')
             this.createAppReport = function () {
               angular.forEach(self.jobs, function (temp, key) {
                 if (typeof self.runningInfo['' + temp.id] !== "undefined"){
+                  if (temp.state !== self.runningInfo['' + temp.id].state){
+                    self.showLogs(temp.id);
+                  }
                   temp.duration = self.runningInfo['' + temp.id].duration;
                   temp.finalStatus = self.runningInfo['' + temp.id].finalStatus;
                   temp.progress = self.runningInfo['' + temp.id].progress;
