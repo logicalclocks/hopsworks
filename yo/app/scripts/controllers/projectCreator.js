@@ -14,7 +14,7 @@ angular.module('hopsWorksApp')
             self.projectTypes = ['JOBS', 'ZEPPELIN']; 
 //            self.projectTypes = ['JOBS', 'ZEPPELIN', 'BIOBANKING', 'CHARON', 'SSH']; 
 
-            self.selectionProjectTypes = [];
+            self.selectionProjectTypes = ['JOBS', 'ZEPPELIN'];
             self.projectName = '';
             self.projectDesc = '';
 
