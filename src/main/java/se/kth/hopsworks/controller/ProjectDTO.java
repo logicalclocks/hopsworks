@@ -15,6 +15,8 @@ import se.kth.bbc.project.fb.InodeView;
 public class ProjectDTO {
 
   private Integer projectId;
+  private Long hdfsQuotaGB;
+  private Integer yarnQuotaMinutes;
   private String projectName;
   private String owner;
   private String description;
@@ -52,7 +54,8 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
-          List<ProjectTeam> projectTeam, List<InodeView> datasets) {
+          List<ProjectTeam> projectTeam, List<InodeView> datasets, Integer yarnQuota,
+          Long hdfsQuotaGB) {
     this.projectId = project.getId();
     //the inodeid of the current project comes from hops database
     this.inodeid = inodeid;
@@ -66,6 +69,8 @@ public class ProjectDTO {
     this.services = services;
     this.projectTeam = projectTeam;
     this.datasets = datasets;
+    this.yarnQuotaMinutes = yarnQuota;
+    this.hdfsQuotaGB = hdfsQuotaGB;
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
@@ -180,6 +185,23 @@ public class ProjectDTO {
   public void setDatasets(List<InodeView> datasets) {
     this.datasets = datasets;
   }
+
+  public Long getHdfsQuotaGB() {
+    return hdfsQuotaGB;
+  }
+
+  public Integer getYarnQuotaMinutes() {
+    return yarnQuotaMinutes;
+  }
+
+  public void setHdfsQuotaGB(Long hdfsQuotaGB) {
+    this.hdfsQuotaGB = hdfsQuotaGB;
+  }
+
+  public void setYarnQuotaMinutes(Integer yarnQuotaMinutes) {
+    this.yarnQuotaMinutes = yarnQuotaMinutes;
+  }
+  
 
   @Override
   public String toString() {

@@ -388,8 +388,8 @@ public class ProjectController {
     projectDirCreated = fileOps.mkDir(projectPath);
 
     //Set default space quota in GB
-//    setQuota(new Path(projectPath), Integer.parseInt(settings
-//            .getHdfsDefaultQuota()));
+    setQuota(new Path(projectPath), Integer.parseInt(settings
+            .getHdfsDefaultQuota()));
 
     //create the rest of the child folders if any
     if (projectDirCreated && !fullProjectPath.equals(projectPath)) {
@@ -601,8 +601,8 @@ public class ProjectController {
     Project project = projectFacade.findByName(name);
 
     //find the project as an inode from hops database
-    Inode inode = inodes.getInodeAtPath(File.separator + settings.DIR_ROOT
-            + File.separator + project.getName());
+    String path = File.separator + settings.DIR_ROOT + File.separator + project.getName();
+    Inode inode = inodes.getInodeAtPath(path);
 
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -624,9 +624,21 @@ public class ProjectController {
       parent = inodes.findParent(ds.getInode());
       kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode())));
     }
+    
+    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
+    Long hdfsQuota;
+    
+    try {
+      hdfsQuota = dfs.getDfsOps().getQuota(new Path(path));
+    } catch (IOException ex) {
+      logger.severe(ex.getMessage());
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), 
+          ". Cannot find quota for the project: " + path);
+    }
 
     //send the project back to client
-    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids);
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids, 
+        yarnQuota.getQuotaRemaining(), hdfsQuota);
   }
 
   /**

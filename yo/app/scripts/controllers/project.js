@@ -283,6 +283,14 @@ angular.module('hopsWorksApp')
         };
 
 
+        self.hdfsQuota = function () {
+
+        };
+
+        self.yarnQuota = function () {
+
+        };
+
 
         self.saveAllowed = function () {
           if (self.currentProject.projectName.length === 0) {
