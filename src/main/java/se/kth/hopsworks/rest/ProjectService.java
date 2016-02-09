@@ -89,8 +89,8 @@ public class ProjectService {
           @Context HttpServletRequest req) {
 
     // Get the user according to current session and then get all its projects
-    String eamil = sc.getUserPrincipal().getName();
-    List<ProjectTeam> list = projectController.findProjectByUser(eamil);
+    String email = sc.getUserPrincipal().getName();
+    List<ProjectTeam> list = projectController.findProjectByUser(email);
     GenericEntity<List<ProjectTeam>> projects
             = new GenericEntity<List<ProjectTeam>>(list) {
             };

@@ -56,6 +56,8 @@ angular.module('hopsWorksApp')
                 self.projectFile.path = "/Projects/"+self.currentProject.projectName;
                 self.projectFile.description = self.currentProject.description;
                 self.projectFile.retentionPeriod = self.currentProject.retentionPeriod;
+                self.projectFile.hdfsQuotaInGBs = self.currentProject.hdfsQuotaInGBs;
+                self.projectFile.yarnQuotaInMins = self.currentProject.yarnQuotaInMins;
                 $rootScope.$broadcast('setMetadata', { file:
                    {id : self.projectFile.id,
                     name : self.projectFile.name,
@@ -284,11 +286,11 @@ angular.module('hopsWorksApp')
 
 
         self.hdfsQuota = function () {
-
+          return self.projectFile.hdfsQuotaInGB;
         };
 
         self.yarnQuota = function () {
-
+          return self.projectFile.yarnQuotaInMins;
         };
 
 

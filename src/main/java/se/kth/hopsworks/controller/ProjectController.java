@@ -568,10 +568,11 @@ public class ProjectController {
    */
   public ProjectDTO getProjectByID(Integer projectID) throws AppException {
     Project project = projectFacade.find(projectID);
+    String name = project.getName();
 
     //find the project as an inode from hops database
     Inode inode = inodes.getInodeAtPath(File.separator + settings.DIR_ROOT
-            + File.separator + project.getName());
+            + File.separator + name);
 
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -585,7 +586,8 @@ public class ProjectController {
     for (ProjectServiceEnum s : projectServices) {
       services.add(s.toString());
     }
-    return new ProjectDTO(project, inode.getId(), services, projectTeam);
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, getYarnQuota(name),
+        getHdfsQuota(name));
   }
 
   /**
@@ -601,7 +603,7 @@ public class ProjectController {
     Project project = projectFacade.findByName(name);
 
     //find the project as an inode from hops database
-    String path = File.separator + settings.DIR_ROOT + File.separator + project.getName();
+    String path = File.separator + settings.DIR_ROOT + File.separator + name;
     Inode inode = inodes.getInodeAtPath(path);
 
     if (project == null) {
@@ -625,22 +627,30 @@ public class ProjectController {
       kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode())));
     }
     
-    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
-    Long hdfsQuota;
+    
+    //send the project back to client
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids, 
+        getYarnQuota(name), getHdfsQuota(name));
+  }
+
+  private Integer getYarnQuota(String name) {
+    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.findByProjectName(name);
+    return yarnQuota.getQuotaRemaining();
+  }
+  
+  private Long getHdfsQuota(String name) throws AppException{
+    String path = File.separator + Settings.DIR_ROOT + File.separator + name;
     
     try {
-      hdfsQuota = dfs.getDfsOps().getQuota(new Path(path));
+      return dfs.getDfsOps().getQuota(new Path(path));
     } catch (IOException ex) {
       logger.severe(ex.getMessage());
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), 
           ". Cannot find quota for the project: " + path);
     }
-
-    //send the project back to client
-    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids, 
-        yarnQuota.getQuotaRemaining(), hdfsQuota);
   }
-
+  
+  
   /**
    * Deletes a member from a project
    *

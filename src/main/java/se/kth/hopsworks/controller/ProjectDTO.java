@@ -15,8 +15,8 @@ import se.kth.bbc.project.fb.InodeView;
 public class ProjectDTO {
 
   private Integer projectId;
-  private Long hdfsQuotaGB;
-  private Integer yarnQuotaMinutes;
+  private Long hdfsQuotaInGBs;
+  private Integer yarnQuotaInMins;
   private String projectName;
   private String owner;
   private String description;
@@ -39,7 +39,8 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
-          List<ProjectTeam> projectTeam) {
+          List<ProjectTeam> projectTeam, Integer yarnQuota,
+          Long hdfsQuotaGB) {
     this.projectId = project.getId();
     this.inodeid = inodeid;
     this.projectName = project.getName();
@@ -51,6 +52,8 @@ public class ProjectDTO {
     this.description = project.getDescription();
     this.services = services;
     this.projectTeam = projectTeam;
+    this.yarnQuotaInMins = yarnQuota;
+    this.hdfsQuotaInGBs = hdfsQuotaGB;    
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
@@ -69,8 +72,8 @@ public class ProjectDTO {
     this.services = services;
     this.projectTeam = projectTeam;
     this.datasets = datasets;
-    this.yarnQuotaMinutes = yarnQuota;
-    this.hdfsQuotaGB = hdfsQuotaGB;
+    this.yarnQuotaInMins = yarnQuota;
+    this.hdfsQuotaInGBs = hdfsQuotaGB;
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
@@ -186,20 +189,20 @@ public class ProjectDTO {
     this.datasets = datasets;
   }
 
-  public Long getHdfsQuotaGB() {
-    return hdfsQuotaGB;
+  public Long getHdfsQuotaInGBs() {
+    return hdfsQuotaInGBs;
   }
 
-  public Integer getYarnQuotaMinutes() {
-    return yarnQuotaMinutes;
+  public Integer getYarnQuotaInMins() {
+    return yarnQuotaInMins;
   }
 
-  public void setHdfsQuotaGB(Long hdfsQuotaGB) {
-    this.hdfsQuotaGB = hdfsQuotaGB;
+  public void setHdfsQuotaInGBs(Long hdfsQuotaInGBs) {
+    this.hdfsQuotaInGBs = hdfsQuotaInGBs;
   }
 
-  public void setYarnQuotaMinutes(Integer yarnQuotaMinutes) {
-    this.yarnQuotaMinutes = yarnQuotaMinutes;
+  public void setYarnQuotaInMins(Integer yarnQuotaInMins) {
+    this.yarnQuotaInMins = yarnQuotaInMins;
   }
   
 
