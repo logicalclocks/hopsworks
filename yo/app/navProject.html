@@ -64,12 +64,10 @@
           class="sub_icon fa fa-edit fa-lg pull-right"></span>
         </a>
       </li>
-      <li >
-         {{projectCtrl.hdfsQuota()}}GB free space
-      </li>
-      <li >
-         {{projectCtrl.yarnQuota()}} CPU minutes
-      </li>
     </ul>
+    {{projectCtrl.hdfsQuota()}} GB free space
+    <br/>
+    {{projectCtrl.yarnQuota()}} CPU min left
+
   </nav>
 </aside>

@@ -225,14 +225,14 @@ public class Settings {
     return HIWAY_DIR;
   }
 
-  private String YARN_DEFAULT_QUOTA = "100";
+  private String YARN_DEFAULT_QUOTA = "1000";
 
   public synchronized String getYarnDefaultQuota() {
     checkCache();
     return YARN_DEFAULT_QUOTA;
   }
 
-  private String HDFS_DEFAULT_QUOTA = "100";
+  private String HDFS_DEFAULT_QUOTA = "300";
 
   public synchronized String getHdfsDefaultQuota() {
     checkCache();
@@ -241,9 +241,15 @@ public class Settings {
 
   private String MAX_NUM_PROJ_PER_USER = "10";
 
-  public synchronized String getMaxNumProjPerUser() {
+  public synchronized Integer getMaxNumProjPerUser() {
     checkCache();
-    return MAX_NUM_PROJ_PER_USER;
+    int num = 10;
+    try {
+      num = Integer.parseInt(MAX_NUM_PROJ_PER_USER);
+    } catch (NumberFormatException ex) {
+      // should print to log here
+    }
+    return num;
   }
 
   public static String HIWAY_REL_JAR_PATH = "software/hiway/hiway-core.jar";

@@ -110,9 +110,21 @@ public class ProjectController {
   public Project createProject(ProjectDTO newProject, String email) throws
           IOException {
     Users user = userBean.getUserByEmail(email);
-    //if there is no project by the same name in the system and project name is valid
-    if (FolderNameValidator.isValidName(newProject.getProjectName())
-            && !projectFacade.projectExists(newProject.getProjectName())) {
+//    //if there is no project by the same name in the system and project name is valid
+//    if (FolderNameValidator.isValidName(newProject.getProjectName())
+//            && !projectFacade.projectExists(newProject.getProjectName())) {
+
+    if (!FolderNameValidator.isValidName(newProject.getProjectName())) {
+      throw new IOException("Invalid project name: " + newProject.getProjectName());
+    } else if (projectFacade.numProjectsLimitReached(user)) {
+      logger.log(Level.SEVERE, "You have reached the maximum number of allowed projects.");
+      throw new IOException("You have reached the maximum number of allowed projects.");
+    } else if (projectFacade.projectExists(newProject.getProjectName())) {
+      logger.log(Level.SEVERE, "Project with name {0} already exists!",
+              newProject.getProjectName());
+      throw new IOException("Project with the same name already exists. ");
+    } else { // create the project!
+
 
       /*
        * first create the folder structure in hdfs. If it is successful move on
@@ -165,9 +177,6 @@ public class ProjectController {
         //Create default DataSets
         return project;
       }
-    } else {
-      logger.log(Level.SEVERE, "Project with name {0} already exists!",
-              newProject.getProjectName());
     }
     return null;
   }
