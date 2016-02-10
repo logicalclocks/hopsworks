@@ -27,6 +27,7 @@ public class UserDTO {
   private String city;
   private String postCode;
   private String country;
+  private int maxNumProjects;
   
 
   public UserDTO() {
@@ -43,7 +44,7 @@ public class UserDTO {
     this.city = user.getAddress().getCity();
     this.postCode = user.getAddress().getPostalcode();
     this.country = user.getAddress().getCountry();
-     
+    this.maxNumProjects = user.getMaxNumProjects();
   }
 
   public String getEmail() {
@@ -182,6 +183,13 @@ public class UserDTO {
     this.country = country;
   }
 
+  public int getMaxNumProjects() {
+    return maxNumProjects;
+  }
+
+  public void setMaxNumProjects(int maxNumProjects) {
+    this.maxNumProjects = maxNumProjects;
+  }
   
   @Override
   public String toString() {
@@ -192,7 +200,8 @@ public class UserDTO {
             + ", chosenPassword=" + chosenPassword + ", repeatedPassword="
             + repeatedPassword + ", ToS=" + ToS + ", orgName=" + orgName 
             + ", dep=" + dep+ ", street=" + street + ", city="+ city 
-            + ", postCode= "+ postCode + ", country=" + country+
+            + ", postCode= "+ postCode + ", country=" + country
+            + ", maxNumProjects= " + maxNumProjects +
             '}';
   }
 

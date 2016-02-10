@@ -305,7 +305,7 @@
 
         <br></br>
 
-        <h:panelGrid columns="3" cellpadding="10px;" cellspacing="10px;">
+        <h:panelGrid columns="4" cellpadding="10px;" cellspacing="10px;">
           <h:form id="add_role" >
             <h:panelGrid columns="2" >
 
@@ -361,6 +361,15 @@
                                 value="Update"
                                 update=":account_status :user_stat"
                                 action="#{adminProfileAdministration.updateStatusByAdmin()}"/> 
+            </h:panelGrid>
+          </h:form>
+          <h:form id="num_projs">
+            <h:panelGrid columns="2">
+              <h:inputText value="#{adminProfileAdministration.maxNumProjs}" id="maxNumProjs"/>
+              <p:commandButton  type="submit" 
+                                value="Update"
+                                update=":account_status :num_projs"
+                                action="#{adminProfileAdministration.setMaxNumProjs()}"/> 
             </h:panelGrid>
           </h:form>
         </h:panelGrid>

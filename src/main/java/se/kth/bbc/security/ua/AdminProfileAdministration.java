@@ -48,6 +48,9 @@ public class AdminProfileAdministration implements Serializable {
   // to assign a new stauts
   private String selectedStatus;
 
+  // maxNumProjs
+  private String maxNumProjs;
+
   // to assign a new group
   private String newGroup;
 
@@ -68,7 +71,7 @@ public class AdminProfileAdministration implements Serializable {
   private Userlogins login;
 
   private Address address;
-
+  
   public Address getAddress() {
     return address;
   }
@@ -255,6 +258,11 @@ public class AdminProfileAdministration implements Serializable {
     }
   }
 
+  
+  public void setMaxNumProjs() {
+    int num = Integer.parseInt(maxNumProjs);
+    userManager.updateMaxNumProjs(editingUser, num);
+  }
   /**
    * Update user roles from profile by admin.
    */
