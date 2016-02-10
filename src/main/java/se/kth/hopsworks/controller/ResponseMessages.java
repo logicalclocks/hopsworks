@@ -66,6 +66,9 @@ public class ResponseMessages {
           = "Your ssh keys were listed successfully.";
 
   //project error response
+  public final static String PROJECT_EXISTS = "Project with the same name already exists.";
+  public final static String NUM_PROJECTS_LIMIT_REACHED = "You have reached the maximum number of allowed projects.";
+  public final static String INVALID_PROJECT_NAME = "Invalid project name.";
   public final static String PROJECT_NOT_FOUND = "Project wasn't found.";
   public final static String PROJECT_NOT_ROOT_FOUND
           = "The project's root folder was not found in HDFS. You will not be unable to access its contents.";
