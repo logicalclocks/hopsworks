@@ -966,8 +966,8 @@ public class NotebookServer implements
               ZeppelinConfiguration.class, Project.class
       );
       notebookRepo = (NotebookRepo) constructor.newInstance(conf, project);
-
-      notebook = new Notebook(notebookRepo);
+     
+      notebook = new Notebook(notebookRepo, zeppelin.getNotebookIndex());
     } catch (Exception ex) {
       logger.log(Level.SEVERE, "Could not instantiate notebook", ex);
     }

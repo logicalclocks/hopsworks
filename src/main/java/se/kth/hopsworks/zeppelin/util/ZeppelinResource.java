@@ -8,7 +8,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
-import java.util.Map;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import org.apache.commons.vfs2.FileObject;
@@ -40,8 +39,6 @@ public class ZeppelinResource {
    * @return
    */
   public boolean isInterpreterRunning(InterpreterSetting interpreter) {
-    ZeppelinConfiguration conf = this.zeppelin.getConf();
-    String binPath = conf.getRelativeDir("bin");
     FileObject[] pidFiles;
     try {
       pidFiles = getPidFiles();
@@ -53,7 +50,7 @@ public class ZeppelinResource {
 
     for (FileObject file : pidFiles) {
       if (file.getName().toString().contains(interpreter.getGroup())) {
-        running = isProccessAlive(binPath + "/alive.sh", readPid(file));
+        running = isProccessAlive(readPid(file));
         //in the rare case were there are more that one pid files for the same 
         //interpreter break only when we find running one
         if (running) { 
@@ -87,8 +84,7 @@ public class ZeppelinResource {
     try {
       fsManager = VFS.getManager();
 //      pidFiles = fsManager.resolveFile(filesystemRoot.toString() + "/").
-      pidFiles = fsManager.resolveFile(filesystemRoot.getPath()).
-              getChildren();
+      pidFiles = fsManager.resolveFile(filesystemRoot.getPath()).getChildren();
     } catch (FileSystemException ex) {
       throw new FileSystemException("Directory not found: " + filesystemRoot.getPath(), ex.getMessage());
     }
@@ -122,11 +118,11 @@ public class ZeppelinResource {
     return repo;
   }
 
-  private boolean isProccessAlive(String bashPath, String pid) {
+  private boolean isProccessAlive(String pid) {
     
-    logger.log(Level.INFO, "Checking if Zeppelin Interpreter alive at: " + bashPath + "   with PID: " +  pid);
-    
-    ProcessBuilder pb = new ProcessBuilder(bashPath, pid);
+    logger.log(Level.INFO, "Checking if Zeppelin Interpreter alive with PID: {1}", pid);
+    String[] command = {"kill -0 ","$"+pid};
+    ProcessBuilder pb = new ProcessBuilder(command);
     if (pid == null) {
       return false;
     }
@@ -141,7 +137,7 @@ public class ZeppelinResource {
       exitValue = p.exitValue();
     } catch (IOException | InterruptedException ex) {
 
-      logger.warning("Problem starting Zeppelin Interpreter: " + ex.toString());
+      logger.log(Level.WARNING, "Problem starting Zeppelin Interpreter: {0}", ex.toString());
       //if the pid file exists but we can not test if it is alive then
       //we answer true, b/c pid files are deleted when a process is killed.
       return true;

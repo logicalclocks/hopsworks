@@ -71,8 +71,9 @@ public class InterpreterRestApi {
   private ProjectController projectController;
   @EJB
   private ZeppelinResource zeppelinResource;
-  private final InterpreterFactory interpreterFactory;
   private final ZeppelinSingleton zeppelin = ZeppelinSingleton.SINGLETON;
+  private InterpreterFactory interpreterFactory = zeppelin.getReplFactory();
+  
 
   Gson gson = new Gson();
 
@@ -224,7 +225,7 @@ public class InterpreterRestApi {
     Note note;
     try {
       notebookRepo = zeppelinResource.setupNotebookRepo(project);
-      newNotebook = new Notebook(notebookRepo);
+      newNotebook = new Notebook(notebookRepo, zeppelin.getNotebookIndex());
       note = newNotebook.createNote();
     } catch (IOException | SchedulerException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

@@ -277,7 +277,7 @@ public class NotebookRestApi {
     NoteInfo noteInfo;
     try {
       notebookRepo = zeppelinResource.setupNotebookRepo(project);
-      newNotebook = new Notebook(notebookRepo);
+      newNotebook = new Notebook(notebookRepo, zeppelin.getNotebookIndex());
       note = newNotebook.createNote();
       note.addParagraph(); // it's an empty note. so add one paragraph
       String noteName = newNote.getName();

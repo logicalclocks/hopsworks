@@ -16,8 +16,6 @@
  */
 package se.kth.hopsworks.zeppelin.notebook.repo;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -113,9 +111,8 @@ public class FSNotebookRepo implements NotebookRepo {
     FileObject projectDir = null;
     if (this.project != null) {
       projectDir = rootDir.resolveFile(this.project.getName(),
-            NameScope.CHILD);
+              NameScope.CHILD);
     }
-    
 
     LinkedList<FileObject> children = getNotes(rootDir, projectDir);
 
@@ -195,7 +192,7 @@ public class FSNotebookRepo implements NotebookRepo {
     FileObject projectDir = rootDir.resolveFile(this.project.getName(),
             NameScope.CHILD);
     FileObject noteDir = projectDir.resolveFile(noteId, NameScope.CHILD);
-           
+
     if (noteDir.exists() && isDirectory(noteDir)) {
       return getNote(noteDir);
     }
@@ -278,6 +275,14 @@ public class FSNotebookRepo implements NotebookRepo {
     noteDir.delete(Selectors.SELECT_SELF_AND_CHILDREN);
   }
 
+  @Override
+  public void close() {
+    //no-op    
+  }
+
+  /**
+   * project releted methods    ************************
+   */
   private LinkedList<FileObject> getNotes(FileObject root, FileObject proj)
           throws IOException {
     FileObject[] rootchildren = root.getChildren();
@@ -299,16 +304,17 @@ public class FSNotebookRepo implements NotebookRepo {
         }
       }
     }
-    
+
     return children;
   }
-  
-  private boolean listContainsNote(List<FileObject> list, FileObject note){
-    for (FileObject fileObj: list){
-      if (fileObj.getName().getBaseName().equals(note.getName().getBaseName())){
+
+  private boolean listContainsNote(List<FileObject> list, FileObject note) {
+    for (FileObject fileObj : list) {
+      if (fileObj.getName().getBaseName().equals(note.getName().getBaseName())) {
         return true;
       }
     }
     return false;
   }
+
 }

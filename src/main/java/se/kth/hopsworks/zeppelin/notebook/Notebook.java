@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
 import org.apache.zeppelin.display.AngularObject;
@@ -40,7 +41,9 @@ import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.notebook.NoteInterpreterLoader;
 import org.apache.zeppelin.notebook.Paragraph;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
+import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
+import org.apache.zeppelin.search.SearchService;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
 import org.quartz.JobBuilder;
@@ -77,20 +80,29 @@ public class Notebook {
   private JobListenerFactory jobListenerFactory = zeppelin.
           getNotebookServer();
   private NotebookRepo notebookRepo;
+  private SearchService notebookIndex;
 
   public Notebook() {
   }
 
-  public Notebook(NotebookRepo notebookRepo) throws IOException,
+  public Notebook(NotebookRepo notebookRepo, SearchService notebookIndex) throws IOException,
           SchedulerException {
 
     this.notebookRepo = notebookRepo;
+    this.notebookIndex = notebookIndex;
     quertzSchedFact = new org.quartz.impl.StdSchedulerFactory();
     quartzSched = quertzSchedFact.getScheduler();
     quartzSched.start();
     CronJob.notebook = this;
 
     loadAllNotes();
+    if (this.notebookIndex != null) {
+      long start = System.nanoTime();
+      logger.info("Notebook indexing started...");
+      notebookIndex.addIndexDocs(notes.values());
+      logger.info("Notebook indexing finished: {} indexed in {}s", notes.size(),
+              TimeUnit.NANOSECONDS.toSeconds(start - System.nanoTime()));
+    }
   }
 
   /**
@@ -116,7 +128,8 @@ public class Notebook {
    */
   public Note createNote(List<String> interpreterIds) throws IOException {
     NoteInterpreterLoader intpLoader = new NoteInterpreterLoader(replFactory);
-    Note note = new Note(notebookRepo, intpLoader, jobListenerFactory);
+    Note note = new Note(notebookRepo, intpLoader, jobListenerFactory,
+            notebookIndex);
     intpLoader.setNoteId(note.id());
     notesInProject.put(note.id(), note);
     synchronized (notes) {
@@ -158,6 +171,8 @@ public class Notebook {
     for (Paragraph p : paragraphs) {
       newNote.addCloneParagraph(p);
     }
+
+    notebookIndex.addIndexDoc(newNote);
     newNote.persist();
     return newNote;
   }
@@ -327,6 +342,14 @@ public class Notebook {
     synchronized (notes) {
       notes.clear();
     }
+
+    if (notebookRepo instanceof NotebookRepoSync) {
+      NotebookRepoSync mainRepo = (NotebookRepoSync) notebookRepo;
+      if (mainRepo.getRepoCount() > 1) {
+        mainRepo.sync();
+      }
+    }
+
     List<NoteInfo> noteInfos = notebookRepo.list();
     for (NoteInfo info : noteInfos) {
       loadNoteFromRepo(info.getId());
@@ -361,21 +384,11 @@ public class Notebook {
   }
 
   public List<Note> getAllNotes() {
-    if (conf.getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_RELOAD_FROM_STORAGE)) {
-      try {
-        reloadAllNotes();
-      } catch (IOException e) {
-        logger.error("Cannot reload notes from storage", e);
-      }
-    }
     synchronized (notes) {
       List<Note> noteList = new ArrayList<>(notesInProject.values());
-      Collections.sort(noteList, new Comparator() {
+      Collections.sort(noteList, new Comparator<Note>() {
         @Override
-        public int compare(Object one, Object two) {
-          Note note1 = (Note) one;
-          Note note2 = (Note) two;
-
+        public int compare(Note note1, Note note2) {
           String name1 = note1.id();
           if (note1.getName() != null) {
             name1 = note1.getName();
@@ -384,7 +397,6 @@ public class Notebook {
           if (note2.getName() != null) {
             name2 = note2.getName();
           }
-          ((Note) one).getName();
           return name1.compareTo(name2);
         }
       });
@@ -402,9 +414,6 @@ public class Notebook {
 
   /**
    * Cron task for the note.
-   *
-   * @author Leemoonsoo
-   *
    */
   public static class CronJob implements org.quartz.Job {
 
@@ -417,6 +426,27 @@ public class Notebook {
       String noteId = context.getJobDetail().getJobDataMap().getString("noteId");
       Note note = notebook.getNote(noteId);
       note.runAll();
+
+      while (!note.getLastParagraph().isTerminated()) {
+        try {
+          Thread.sleep(1000);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+
+      boolean releaseResource = false;
+      try {
+        releaseResource = (boolean) note.getConfig().get("releaseresource");
+      } catch (java.lang.ClassCastException e) {
+        e.printStackTrace();
+      }
+      if (releaseResource) {
+        for (InterpreterSetting setting : note.getNoteReplLoader().
+                getInterpreterSettings()) {
+          notebook.getInterpreterFactory().restart(setting.id());
+        }
+      }
     }
   }
 
@@ -483,8 +513,13 @@ public class Notebook {
   public void setNotebookRepo(NotebookRepo notebookRepo) {
     this.notebookRepo = notebookRepo;
   }
-  
+
   public ZeppelinConfiguration getConf() {
     return conf;
+  }
+
+  public void close() {
+    this.notebookRepo.close();
+    this.notebookIndex.close();
   }
 }
