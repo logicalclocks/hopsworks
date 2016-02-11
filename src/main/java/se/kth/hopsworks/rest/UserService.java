@@ -2,6 +2,7 @@ package se.kth.hopsworks.rest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -31,6 +32,7 @@ import se.kth.hopsworks.users.UserProjectDTO;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserService {
+  private final static Logger logger = Logger.getLogger(UserService.class.getName());
 
   @EJB
   private UserFacade userBean;
@@ -206,6 +208,8 @@ public class UserService {
     List<ProjectTeam> list = projectController.findProjectTeamById(projectId);
 
     for (ProjectTeam pt : list) {
+      logger.info(pt.getProjectTeamPK().getTeamMember() + " (" + pt.getProjectTeamPK().getProjectId()
+      + ") -  " + pt.getTeamRole());
       if (pt.getProjectTeamPK().getTeamMember().compareToIgnoreCase(email) == 0) {
         userDTO.setRole(pt.getTeamRole());
       }

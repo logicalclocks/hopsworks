@@ -289,7 +289,7 @@ angular.module('hopsWorksApp')
               function (success) {
                   self.role = success.data.role;
               }, function (error) {
-                  self.role = "DATA_OWNER";
+                  self.role = "";
           });
         }
 
@@ -305,7 +305,7 @@ angular.module('hopsWorksApp')
 
 
         self.hdfsQuota = function () {
-          return convertSize(self.projectFile.hdfsQuotaInGB);
+          return convertSize(self.projectFile.hdfsQuotaInGBs);
         };
 
         self.yarnQuota = function () {

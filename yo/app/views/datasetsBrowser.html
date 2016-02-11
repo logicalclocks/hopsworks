@@ -36,7 +36,7 @@
                     </thead>
                   </table>
                   <p></p>
-                  <div class="btn-group" ng-show="projectCtrl.teamRole == 'Data owner'"
+                  <div class="btn-group" ng-show="projectCtrl.role == 'Data owner'"
                        style="width: 100%;">
                     <button style="width: 100%;"
                             ng-click="datasetsCtrl.newDataSetModal()"
@@ -44,7 +44,7 @@
                       New Folder
                     </button>
                   </div>
-                  <div class="btn-group" ng-show="projectCtrl.teamRole == 'Data owner'"
+                  <div class="btn-group" ng-show="projectCtrl.role == 'Data owner'"
                        style="width: 100%; margin-top: 10px;">
                     <button style="width: 100%;"
                             ng-click="datasetsCtrl.uploadFile()"
