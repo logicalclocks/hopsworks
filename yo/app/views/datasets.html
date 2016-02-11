@@ -34,6 +34,7 @@
                         <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false" class="file-control">Pending</a>
 
                         <div class="hr-line-dashed"></div>
+                        My Role: {{projectCtrl.teamRole}}
                         <div class="btn-group"
                              style="width: 100%;" ng-show="projectCtrl.teamRole == 'Data owner'">
                           <button style="width: 100%;"
