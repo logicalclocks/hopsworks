@@ -59,6 +59,10 @@ function getLocationBase() {
   return location.protocol + "//" + location.hostname +":" + port + skipTrailingSlash(location.pathname);
 };
 
+function getWsProtocol() {
+  return location.protocol === 'https:' ? 'wss:' : 'ws:';
+};
+
 function skipTrailingSlash(path) {
   return path.slice(-1) === "/" ? path.substring(0, path.length-1) : path;
 }
