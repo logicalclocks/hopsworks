@@ -305,7 +305,7 @@ angular.module('hopsWorksApp')
 
 
         self.hdfsQuota = function () {
-          return self.projectFile.hdfsQuotaInGB;
+          return convertSize(self.projectFile.hdfsQuotaInGB);
         };
 
         self.yarnQuota = function () {
