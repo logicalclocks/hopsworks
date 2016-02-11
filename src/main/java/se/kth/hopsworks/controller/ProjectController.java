@@ -55,7 +55,6 @@ import se.kth.hopsworks.util.Settings;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectController {
 
-  public static long GB_IN_BYTES=1024*1024*1024;
   private final static Logger logger = Logger.getLogger(ProjectController.class.
       getName());
   @EJB
