@@ -37,6 +37,7 @@ import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
 import se.kth.hopsworks.users.*;
+import se.kth.hopsworks.util.Settings;
 
 @Stateless
 //the operations in this method does not need any transaction
@@ -56,6 +57,8 @@ public class UsersController {
   private BbcGroupFacade groupBean;
   @EJB
   private AuditManager am;
+  @EJB
+  private Settings settings;
 
   @EJB
   private UserManager mgr;
@@ -113,6 +116,7 @@ public class UsersController {
       user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer().
               toLowerCase()));
       user.setBbcGroupCollection(groups);
+      user.setMaxNumProjects(settings.getMaxNumProjPerUser());
       Address a = new Address();
       a.setUid(user);
       // default '-' in sql file did not add these values!
@@ -227,7 +231,8 @@ public class UsersController {
       user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer().
               toLowerCase()));
       user.setBbcGroupCollection(groups);
-
+      user.setMaxNumProjects(settings.getMaxNumProjPerUser());
+      
       Address a = new Address();
       a.setUid(user);
       // default '-' in sql file did not add these values!

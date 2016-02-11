@@ -54,16 +54,34 @@ public class ProjectsManagementController {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  public long getHdfsQuota(String projectname) throws IOException {
-    return projectController.getQuota(projectname);
+  /**
+   * 
+   * @param projectname
+   * @return size of quota for project subtree in HDFS in GBs
+   * @throws IOException 
+   */
+  public long getHdfsSpaceQuota(String projectname) throws IOException {
+    return projectController.getHdfsSpaceQuota(projectname);
   }
 
-  public long getHDFSUsedQuota(String projectname) throws IOException {
-    return projectController.getUsedQuota(projectname);
+  /**
+   * 
+   * @param projectname
+   * @return size of quota for project subtree in HDFS in GBs
+   * @throws IOException 
+   */
+  public long getHDFSUsedSpaceQuota(String projectname) throws IOException {
+    return projectController.getUsedSpaceQuota(projectname);
   }
 
-  public void setHdfsQuota(String projectname, long quota) throws IOException {
-    projectController.setQuota(projectname, quota);
+  /**
+   * 
+   * @param projectname
+   * @param quotaInGBs size of quota for project subtree in HDFS in GBs
+   * @throws IOException 
+   */
+  public void setHdfsSpaceQuota(String projectname, long quotaInGBs) throws IOException {
+    projectController.setHdfsSpaceQuota(projectname, quotaInGBs);
   }
 
   public List<ProjectsManagement> getAllProjects() {

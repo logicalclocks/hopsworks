@@ -160,6 +160,10 @@ public class Users implements Serializable {
   @Size(max = 15)
   @Column(name = "mobile")
   private String mobile;
+  @Basic(optional = false)
+  @Column(name = "max_num_projects")
+  private Integer maxNumProjects;
+
   @JoinTable(name = "hopsworks.people_group",
           joinColumns = {
             @JoinColumn(name = "uid",
@@ -187,7 +191,7 @@ public class Users implements Serializable {
   }
   
    public Users(Integer uid, String username, String password, Date activated,
-          int falseLogin, int status, int isonline ) {
+          int falseLogin, int status, int isonline, int maxNumProjects ) {
     this.uid = uid;
     this.username = username;
     this.password = password;
@@ -195,6 +199,7 @@ public class Users implements Serializable {
     this.falseLogin = falseLogin;
     this.isonline = isonline;
     this.status = status;
+    this.maxNumProjects = maxNumProjects;
   }
    
 
@@ -204,7 +209,7 @@ public class Users implements Serializable {
 
   public Users(Integer uid, String username, String password, Date activated,
           int falseLogin, int isonline, int mode,
-          Date passwordChanged, int status) {
+          Date passwordChanged, int status, int maxNumProjects) {
     this.uid = uid;
     this.username = username;
     this.password = password;
@@ -214,6 +219,7 @@ public class Users implements Serializable {
     this.mode = mode;
     this.passwordChanged = passwordChanged;
     this.status = status;
+    this.maxNumProjects = maxNumProjects;
   }
 
   public Yubikey getYubikey() {
@@ -430,6 +436,15 @@ public class Users implements Serializable {
     this.bbcGroupCollection = bbcGroupCollection;
   }
 
+  public void setMaxNumProjects(Integer maxNumProjects) {
+    this.maxNumProjects = maxNumProjects;
+  }
+
+  public Integer getMaxNumProjects() {
+    return maxNumProjects;
+  }
+  
+
   @Override
   public int hashCode() {
     int hash = 0;
@@ -458,6 +473,6 @@ public class Users implements Serializable {
   }
 
   public Users asUser() {
-    return new Users(uid, username, password, activated, falseLogin, status,isonline);
+    return new Users(uid, username, password, activated, falseLogin, status, isonline, maxNumProjects);
   }
 }
