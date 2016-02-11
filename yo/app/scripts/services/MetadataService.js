@@ -19,7 +19,7 @@ angular.module('hopsWorksApp')
                  isopen=false;
              }
              if(!isopen) {                 
-                ws = $websocket("ws://" + $location.host() + ":" + $location.port() + "/hopsworks/wspoint/" + projectID);
+                ws = $websocket("wss://" + $location.host() + ":" + $location.port() + "/hopsworks/wspoint/" + projectID);
                 ws.onMessage(function (event) {
                   processMessage(JSON.parse(event.data));
                 });
