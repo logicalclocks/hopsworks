@@ -66,6 +66,9 @@ public class ResponseMessages {
           = "Your ssh keys were listed successfully.";
 
   //project error response
+  public final static String PROJECT_EXISTS = "Project with the same name already exists.";
+  public final static String NUM_PROJECTS_LIMIT_REACHED = "You have reached the maximum number of allowed projects.";
+  public final static String INVALID_PROJECT_NAME = "Invalid project name.";
   public final static String PROJECT_NOT_FOUND = "Project wasn't found.";
   public final static String PROJECT_NOT_ROOT_FOUND
           = "The project's root folder was not found in HDFS. You will not be unable to access its contents.";
@@ -102,6 +105,10 @@ public class ResponseMessages {
           = " The selected user is not a team member in this project.";
   public final static String ROLE_NOT_SET = "Role cannot be empty.";
   public final static String CONSENT_ALREADY_EXISTS = "Duplicate error. There is already a consent form in the Project with the same name";
+  
+  public final static String CHARON_SITE_ALREADY_EXISTS = "Duplicate error. This site is already registered in the Project.";
+  public final static String CHARON_BAD_SITE = "Bad site name.";
+  public final static String CHARON_SHARE_ALREADY_EXISTS = "Duplicate error. This shared path is already registered in the Project.";
 
   //project success messages
   public final static String PROJECT_CREATED = "Project created successfully.";

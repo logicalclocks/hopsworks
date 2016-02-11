@@ -32,7 +32,6 @@ import org.apache.zeppelin.interpreter.InterpreterSerializer;
  * @param <T>
  */
 public class JsonResponse<T> {
-
   private javax.ws.rs.core.Response.Status status;
   private String message;
   private T body;
@@ -78,7 +77,7 @@ public class JsonResponse<T> {
    */
   public JsonResponse<T> addCookie(NewCookie newCookie) {
     if (cookies == null) {
-      cookies = new ArrayList<NewCookie>();
+      cookies = new ArrayList<>();
     }
     cookies.add(newCookie);
 
@@ -103,6 +102,7 @@ public class JsonResponse<T> {
     if (pretty) {
       gsonBuilder.setPrettyPrinting();
     }
+    gsonBuilder.setExclusionStrategies(new JsonExclusionStrategy());
     Gson gson = gsonBuilder.create();
     return gson.toJson(this);
   }

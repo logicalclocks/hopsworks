@@ -90,7 +90,7 @@
 
         <fieldset>
           <div class="control-group col-md-offset-2">
-            <md-checkbox class="md-primary"
+              <md-checkbox class="md-primary" ng-checked="true"
                          ng-repeat="projectType in projectCreatorCtrl.projectTypes"
                          ng-click="projectCreatorCtrl.exists(projectType)" tabindex="4">
               {{ projectType}}

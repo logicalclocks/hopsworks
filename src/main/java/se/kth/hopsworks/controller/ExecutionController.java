@@ -25,8 +25,8 @@ public class ExecutionController {
 
   public Execution start(JobDescription job, Users user) throws IOException {
     switch (job.getJobType()) {
-      case CUNEIFORM:
-        return cuneiformController.startWorkflow(job, user);
+	//      case CUNEIFORM:
+	//        return cuneiformController.startWorkflow(job, user);
       case ADAM:
         return adamController.startJob(job, user);
       case SPARK:
@@ -34,6 +34,21 @@ public class ExecutionController {
       default:
         throw new IllegalArgumentException("Unsupported job type: " + job.
                 getJobType());
+    }
+  }
+
+  public void stop(JobDescription job, Users user, String appid) throws
+      IOException {
+    switch (job.getJobType()) {
+      case CUNEIFORM:
+        //cuneiformController.stopWorkflow(job, user);
+      case ADAM:
+        //adamController.stopJob(job, user);
+      case SPARK:
+        //sparkController.stopJob(job, user, appid);
+      default:
+        throw new IllegalArgumentException("Unsupported job type: " + job.
+            getJobType());
     }
   }
 }

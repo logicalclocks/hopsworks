@@ -7,10 +7,6 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import se.kth.hopsworks.zeppelin.notebook.Notebook;
 
-/**
- *
- * @author ermiasg
- */
 @Startup
 @Singleton
 public class ReleaseZeppelinResources {

@@ -13,37 +13,10 @@
       <to-view-id>/security/protected/admin/adminIndex.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-    <navigation-case>
-      <from-outcome>user_auth</from-outcome>
-      <to-view-id>/security/login.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-    <navigation-case>
-      <from-outcome>user_guides</from-outcome>
-      <to-view-id>/security/user_guides.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-    <navigation-case>
-      <from-outcome>register_mobile</from-outcome>
-      <to-view-id>/security/register_mobile.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-
-    <navigation-case>
-      <from-outcome>register_yubico</from-outcome>
-      <to-view-id>/security/register_yubico.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
 
     <navigation-case>
       <from-outcome>activate_yubikey</from-outcome>
       <to-view-id>/security/protected/admin/activate_yubikey.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-
-    <navigation-case>
-      <from-outcome>yubico</from-outcome>
-      <to-view-id>/security/yubico.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 
@@ -56,27 +29,6 @@
     <navigation-case>
       <from-outcome>qrcode</from-outcome>
       <to-view-id>/security/qrcode.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-    <navigation-case>
-      <from-outcome>login</from-outcome>
-      <to-view-id>/security/login.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-    <navigation-case>
-      <from-outcome>yubikeylogin</from-outcome>
-      <to-view-id>/security/yubikeylogin.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-    <navigation-case>
-      <from-outcome>logout</from-outcome>
-      <to-view-id>/index.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-
-    <navigation-case>
-      <from-outcome>login_error</from-outcome>
-      <to-view-id>/security/loginError.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>

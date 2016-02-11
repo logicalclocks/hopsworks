@@ -46,6 +46,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.bbc.project.Project;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 /**
  *
  */
@@ -102,40 +105,6 @@ public class FSNotebookRepo implements NotebookRepo {
     } else {
       return false;
     }
-  }
-
-  private LinkedList<FileObject> getNotes(FileObject root, FileObject proj)
-          throws IOException {
-    FileObject[] rootchildren = root.getChildren();
-    FileObject[] projChildren;
-    LinkedList<FileObject> children = new LinkedList<>();
-    if (isDirectory(proj)) {
-      projChildren = proj.getChildren();
-      if (projChildren != null) {
-        children = new LinkedList<>(Arrays.asList(
-                projChildren));
-      }
-    }
-    // add notes in the root dir that are not project specific ex. tutorials
-    for (FileObject f : rootchildren) {
-      if (isDirectory(f)) {
-        FileObject noteJson = f.resolveFile("note.json", NameScope.CHILD);
-        if (noteJson.exists() && !listContainsNote(children, f)) {
-          children.add(f);
-        }
-      }
-    }
-    
-    return children;
-  }
-  
-  private boolean listContainsNote(List<FileObject> list, FileObject note){
-    for (FileObject fileObj: list){
-      if (fileObj.getName().getBaseName().equals(note.getName().getBaseName())){
-        return true;
-      }
-    }
-    return false;
   }
 
   @Override
@@ -282,6 +251,7 @@ public class FSNotebookRepo implements NotebookRepo {
     OutputStream out = noteJson.getContent().getOutputStream(false);
     out.write(json.getBytes(conf.getString(ConfVars.ZEPPELIN_ENCODING)));
     out.close();
+    noteJson.moveTo(noteDir.resolveFile("note.json", NameScope.CHILD));
   }
 
   @Override
@@ -308,4 +278,37 @@ public class FSNotebookRepo implements NotebookRepo {
     noteDir.delete(Selectors.SELECT_SELF_AND_CHILDREN);
   }
 
+  private LinkedList<FileObject> getNotes(FileObject root, FileObject proj)
+          throws IOException {
+    FileObject[] rootchildren = root.getChildren();
+    FileObject[] projChildren;
+    LinkedList<FileObject> children = new LinkedList<>();
+    if (isDirectory(proj)) {
+      projChildren = proj.getChildren();
+      if (projChildren != null) {
+        children = new LinkedList<>(Arrays.asList(
+                projChildren));
+      }
+    }
+    // add notes in the root dir that are not project specific ex. tutorials
+    for (FileObject f : rootchildren) {
+      if (isDirectory(f)) {
+        FileObject noteJson = f.resolveFile("note.json", NameScope.CHILD);
+        if (noteJson.exists() && !listContainsNote(children, f)) {
+          children.add(f);
+        }
+      }
+    }
+    
+    return children;
+  }
+  
+  private boolean listContainsNote(List<FileObject> list, FileObject note){
+    for (FileObject fileObj: list){
+      if (fileObj.getName().getBaseName().equals(note.getName().getBaseName())){
+        return true;
+      }
+    }
+    return false;
+  }
 }

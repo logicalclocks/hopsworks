@@ -34,7 +34,8 @@ public final class SparkJob extends YarnJob {
    * @param sparkDir
    * @param sparkUser
    */
-  public SparkJob(JobDescription job, AsynchronousJobExecutor services, Users user, final String hadoopDir,
+  public SparkJob(JobDescription job, AsynchronousJobExecutor services,
+      Users user, final String hadoopDir,
       final String sparkDir, String sparkUser) {
     super(job, services, user, hadoopDir);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
@@ -69,10 +70,9 @@ public final class SparkJob extends YarnJob {
 
     //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
     try {
-      runner = runnerbuilder.getYarnRunner(jobDescription.getProject().getName(),
-          sparkUser,
-//          Utils.getProjectUsername(jobDescription.getProject().getName(), user.getUsername()),
-          hadoopDir, sparkDir);
+      runner = runnerbuilder.
+          getYarnRunner(jobDescription.getProject().getName(),
+              sparkUser, hadoopDir, sparkDir);
 
     } catch (IOException e) {
       logger.log(Level.SEVERE,
@@ -81,12 +81,14 @@ public final class SparkJob extends YarnJob {
       return false;
     }
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir, jobDescription.
+    String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
+        jobDescription.
         getProject().
         getName())
         + Settings.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
         + File.separator + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir, jobDescription.
+    String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
+        jobDescription.
         getProject().
         getName())
         + Settings.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
@@ -98,7 +100,11 @@ public final class SparkJob extends YarnJob {
 
   @Override
   protected void cleanup() {
-    //No special tasks to be done here.
+    logger.log(Level.INFO, "Job finished performing cleanup...");
+    if (monitor != null) {
+      monitor.close();
+      monitor = null;
+    }
   }
 
 }

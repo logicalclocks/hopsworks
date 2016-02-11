@@ -6,7 +6,9 @@
 angular.module('hopsWorksApp')
     .controller('ProjectCtrl', ['$scope', '$rootScope','$modalStack', '$location', '$routeParams', 'UtilsService',
       'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
-      function ($scope, $rootScope,$modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService, $cookies, DataSetService, EndpointService) {
+      'UserService',
+      function ($scope, $rootScope,$modalStack, $location, $routeParams, UtilsService, growl, ProjectService, 
+      ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService) {
 
         var self = this;
         self.working = false;
@@ -17,10 +19,13 @@ angular.module('hopsWorksApp')
         self.cards = [];
         self.projectMembers = [];
 
+        self.role = "";
+        
         self.endpoint = '...';
 
         // We could instead implement a service to get all the available types but this will do it for now
-        self.projectTypes = ['JOBS', 'ZEPPELIN', 'BIOBANKING', 'CHARON'];
+//        self.projectTypes = ['JOBS', 'ZEPPELIN', 'BIOBANKING', 'CHARON'];
+        self.projectTypes = ['JOBS', 'ZEPPELIN'];
         self.alreadyChoosenServices = [];
         self.selectionProjectTypes = [];
         self.pId = $routeParams.projectID;
@@ -31,6 +36,8 @@ angular.module('hopsWorksApp')
           name : null,
           parentId : null,
           path : null,
+          hdfsQuotaInGBs: null,
+          yarnQuotaInMins: null,
         };
 
         var getEndpoint = function () {
@@ -55,6 +62,8 @@ angular.module('hopsWorksApp')
                 self.projectFile.path = "/Projects/"+self.currentProject.projectName;
                 self.projectFile.description = self.currentProject.description;
                 self.projectFile.retentionPeriod = self.currentProject.retentionPeriod;
+                self.projectFile.hdfsQuotaInGBs = self.currentProject.hdfsQuotaInGBs;
+                self.projectFile.yarnQuotaInMins = self.currentProject.yarnQuotaInMins;
                 $rootScope.$broadcast('setMetadata', { file:
                    {id : self.projectFile.id,
                     name : self.projectFile.name,
@@ -76,6 +85,7 @@ angular.module('hopsWorksApp')
                 $cookies.projectID = self.pId;
                 //set the project name under which the search is performed
                 UtilsService.setProjectName(self.currentProject.projectName);
+                self.getRole();
 
               }, function (error) {
             $location.path('/');
@@ -102,6 +112,7 @@ angular.module('hopsWorksApp')
         }
 
         getCurrentProject();
+        
 
 
         // Check if the service exists and otherwise add it or remove it depending on the previous choice
@@ -130,6 +141,7 @@ angular.module('hopsWorksApp')
                     self.selectionProjectTypes.push(projectType);
                   }
                 };
+
               });
         };
 
@@ -149,6 +161,7 @@ angular.module('hopsWorksApp')
               }, function (error) {
           });
         };
+
 
         self.saveProject = function () {
           self.working = true;
@@ -270,6 +283,15 @@ angular.module('hopsWorksApp')
         self.showBiobanking = function () {
           return showService("Biobanking");
         };
+        
+        self.getRole = function () {
+          UserService.getRole(self.pId).then(
+              function (success) {
+                  self.role = success.data.role;
+              }, function (error) {
+                  self.role = "";
+          });
+        }
 
         var showService = function (serviceName) {
           var len = self.alreadyChoosenServices.length;
@@ -281,6 +303,14 @@ angular.module('hopsWorksApp')
           return false;
         };
 
+
+        self.hdfsQuota = function () {
+          return convertSize(self.projectFile.hdfsQuotaInGBs);
+        };
+
+        self.yarnQuota = function () {
+          return self.projectFile.yarnQuotaInMins;
+        };
 
 
         self.saveAllowed = function () {

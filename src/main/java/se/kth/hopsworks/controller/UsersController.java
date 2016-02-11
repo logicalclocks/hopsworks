@@ -3,6 +3,7 @@ package se.kth.hopsworks.controller;
 import com.google.zxing.WriterException;
 import java.io.IOException;
 import java.net.SocketException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Level;
@@ -36,6 +37,7 @@ import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
 import se.kth.hopsworks.users.*;
+import se.kth.hopsworks.util.Settings;
 
 @Stateless
 //the operations in this method does not need any transaction
@@ -55,6 +57,8 @@ public class UsersController {
   private BbcGroupFacade groupBean;
   @EJB
   private AuditManager am;
+  @EJB
+  private Settings settings;
 
   @EJB
   private UserManager mgr;
@@ -62,7 +66,7 @@ public class UsersController {
   private byte[] qrCode;
 
   public byte[] registerUser(UserDTO newUser, HttpServletRequest req) throws
-          AppException, SocketException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
+          AppException, SocketException, NoSuchAlgorithmException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
   {
     if (userValidator.isValidEmail(newUser.getEmail())
             && userValidator.isValidPassword(newUser.getChosenPassword(),
@@ -112,6 +116,7 @@ public class UsersController {
       user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer().
               toLowerCase()));
       user.setBbcGroupCollection(groups);
+      user.setMaxNumProjects(settings.getMaxNumProjPerUser());
       Address a = new Address();
       a.setUid(user);
       // default '-' in sql file did not add these values!
@@ -176,7 +181,7 @@ public class UsersController {
   }
 
   public boolean registerYubikeyUser(UserDTO newUser, HttpServletRequest req)
-          throws AppException, SocketException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
+          throws AppException, SocketException, NoSuchAlgorithmException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
   {
     if (userValidator.isValidEmail(newUser.getEmail())
             && userValidator.isValidPassword(newUser.getChosenPassword(),
@@ -226,7 +231,8 @@ public class UsersController {
       user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer().
               toLowerCase()));
       user.setBbcGroupCollection(groups);
-
+      user.setMaxNumProjects(settings.getMaxNumProjPerUser());
+      
       Address a = new Address();
       a.setUid(user);
       // default '-' in sql file did not add these values!

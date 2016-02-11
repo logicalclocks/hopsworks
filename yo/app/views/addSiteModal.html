@@ -1,0 +1,66 @@
+<div class="modal-header">
+  <button class="close" ng-click="charonCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Add a Site ID</h2>
+</div>
+<div class="modal-body">
+  <div growl reference="1" class="pull-right" ></div>
+
+  <form role="form" name="siteidForm" ng-submit="charonCtrl.addSiteId()" novalidate class="form-validate">
+    <div class="row">
+      <div class="col-md-8">
+        <fieldset>
+
+          <div class="control-group col-md-offset-1">
+
+            <label for="name" style="color: black;">Name</label>
+            <div class="controls" id="name">
+			  <input type="text" name="name" ng-model="charonCtrl.name" size="48">			  
+            </div>
+            <span ng-show="(siteidForm.$submitted || siteidForm.name.$dirty) &amp;&amp;
+                  siteidForm.name.$error.required"
+                  class="text-danger ng-hide">This field is required</span>
+            <p></p>
+            <label for="siteId" style="color: black;">Site Id</label>
+            <div class="controls" id="siteId">
+			  <input type="number" name="siteId" ng-model="charonCtrl.id" size="48">
+            </div>
+            <span ng-show="(siteidForm.$submitted || siteidForm.siteId.$dirty) &amp;&amp;
+                  siteidForm.siteId.$error.required"
+                  class="text-danger ng-hide">This field is required</span>
+            <p></p>
+            <label for="email" style="color: black;">Email</label>
+            <div class="controls" id="email">
+			  <input type="text" name="email" ng-model="charonCtrl.email" size="48">			  
+            </div>
+            <span ng-show="(siteidForm.$submitted || siteidForm.email.$dirty) &amp;&amp;
+                  siteidForm.email.$error.required"
+                  class="text-danger ng-hide">This field is required</span>
+            <p></p>
+            <label for="addr" style="color: black;">Addr</label>
+            <div class="controls" id="addr">
+			  <input type="text" name="addr" ng-model="charonCtrl.addr" size="48">			  
+            </div>
+            <span ng-show="(siteidForm.$submitted || siteidForm.addr.$dirty) &amp;&amp;
+                  siteidForm.addr.$error.required"
+                  class="text-danger ng-hide">This field is required</span>
+            <p></p>
+
+
+          </div>
+        </fieldset>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+
+      <button class="btn btn-default" type="button" ng-click="charonCtrl.close()" tabindex="5">Cancel</button>
+      <button class="btn btn-primary" type="submit" tabindex="6" ng-disabled="siteidForm.site_id.$error.required">
+        Add
+      </button>
+<!----> 
+    </div>
+  </form>
+
+</div>
+

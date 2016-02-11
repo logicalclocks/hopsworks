@@ -3,10 +3,18 @@ package se.kth.bbc.jobs.yarn;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
+import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
+import org.apache.hadoop.yarn.client.api.impl.YarnClientImpl;
 import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.util.ConverterUtils;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.execution.HopsJob;
+import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.hopsworks.user.model.Users;
@@ -23,7 +31,9 @@ public abstract class YarnJob extends HopsJob {
   private static final int DEFAULT_POLL_TIMEOUT_INTERVAL = 1; //in seconds
 
   protected YarnRunner runner;
-  private YarnMonitor monitor = null;
+
+  protected YarnMonitor monitor = null;
+  private Configuration conf = new Configuration();
 
   private String stdOutFinalDestination, stdErrFinalDestination;
   private boolean started = false;
@@ -39,13 +49,15 @@ public abstract class YarnJob extends HopsJob {
    * @throws IllegalArgumentException If the JobDescription does not contain a
    * YarnJobConfiguration object.
    */
-  public YarnJob(JobDescription job, AsynchronousJobExecutor services, Users user, String hadoopDir) {
+  public YarnJob(JobDescription job, AsynchronousJobExecutor services,
+          Users user, String hadoopDir) {
     super(job, services, user, hadoopDir);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain a YarnJobConfiguration object. Received class: "
               + job.getJobConfig().getClass());
     }
+    logger.log(Level.INFO, "Instantiating Yarn job as user: {0}", hdfsUser);
   }
 
   public final void setStdOutFinalDestination(String stdOutFinalDestination) {
@@ -91,8 +103,12 @@ public abstract class YarnJob extends HopsJob {
       monitor = runner.startAppMaster();
       started = true;
       updateExecution(null, -1, null, null, monitor.getApplicationId().
-              toString(), null, null);
+              toString(), null, null, null, 0);
       return true;
+    } catch (AccessControlException ex) {
+      logger.log(Level.SEVERE, "Permission denied:- {0}", ex.getMessage());
+      updateState(JobState.APP_MASTER_START_FAILED);
+      return false;
     } catch (YarnException | IOException e) {
       logger.log(Level.SEVERE,
               "Failed to start application master for execution "
@@ -111,16 +127,22 @@ public abstract class YarnJob extends HopsJob {
    * between.
    */
   protected final boolean monitor() {
-    try (YarnMonitor r = monitor.start()) {
+      try (YarnMonitor r = monitor.start()) {
       if (!started) {
         throw new IllegalStateException(
                 "Trying to monitor a job that has not been started!");
       }
       YarnApplicationState appState;
+      FinalApplicationStatus finalAppStatus;
+      float progress;
       int failures;
       try {
         appState = r.getApplicationState();
+        finalAppStatus = r.getFinalApplicationStatus();
+        progress = r.getProgress();
+        updateProgress(progress);
         updateState(JobState.getJobState(appState));
+        updateFinalStatus(JobFinalStatus.getJobFinalStatus(finalAppStatus));
         //count how many consecutive times the state could not be polled. Cancel if too much.
         failures = 0;
       } catch (YarnException | IOException ex) {
@@ -149,7 +171,11 @@ public abstract class YarnJob extends HopsJob {
 
         try {
           appState = r.getApplicationState();
+          finalAppStatus = r.getFinalApplicationStatus();
+          progress = r.getProgress();
+          updateProgress(progress);
           updateState(JobState.getJobState(appState));
+          updateFinalStatus(JobFinalStatus.getJobFinalStatus(finalAppStatus));
           failures = 0;
         } catch (YarnException | IOException ex) {
           failures++;
@@ -164,8 +190,10 @@ public abstract class YarnJob extends HopsJob {
           logger.log(Level.SEVERE,
                   "Killing application, {0}, because unable to poll for status.",
                   getExecution());
-          r.cancelJob();
+          r.cancelJob(r.getApplicationId().toString());
           updateState(JobState.KILLED);
+          updateFinalStatus(JobFinalStatus.KILLED);
+          updateProgress(0);
           finalState = JobState.KILLED;
         } catch (YarnException | IOException ex) {
           logger.log(Level.SEVERE,
@@ -188,26 +216,28 @@ public abstract class YarnJob extends HopsJob {
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
-          services.getFileOperations().copyToHDFSFromLocal(true, runner.
+          services.getFileOperations(hdfsUser.getUserName()).copyToHDFSFromLocal(true, runner.
                   getStdOutPath(),
                   stdOutFinalDestination);
         } else {
-          services.getFileOperations().renameInHdfs(runner.getStdOutPath(),
+          services.getFileOperations(hdfsUser.getUserName()).renameInHdfs(runner.
+                  getStdOutPath(),
                   stdOutFinalDestination);
         }
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
-          services.getFileOperations().copyToHDFSFromLocal(true, runner.
+          services.getFileOperations(hdfsUser.getUserName()).copyToHDFSFromLocal(true, runner.
                   getStdErrPath(),
                   stdErrFinalDestination);
         } else {
-          services.getFileOperations().renameInHdfs(runner.getStdErrPath(),
+          services.getFileOperations(hdfsUser.getUserName()).renameInHdfs(runner.
+                  getStdErrPath(),
                   stdErrFinalDestination);
         }
       }
       updateExecution(null, -1, stdOutFinalDestination, stdErrFinalDestination,
-              null, null, null);
+              null, null, null, null, 0);
     } catch (IOException e) {
       logger.log(Level.SEVERE,
               "Exception while trying to write logs for execution "
@@ -231,4 +261,23 @@ public abstract class YarnJob extends HopsJob {
     copyLogs();
     updateState(getFinalState());
   }
+
+  @Override
+  //DOESN'T WORK FOR NOW
+  protected void stopJob(String appid) {
+      try {
+        YarnClient yarnClient = new YarnClientImpl();
+        yarnClient.init(conf);
+        yarnClient.start();
+        ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
+        yarnClient.killApplication(applicationId);
+      } catch (YarnException e) {
+        e.printStackTrace();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+
+
+
 }

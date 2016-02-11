@@ -4,6 +4,7 @@ import com.google.zxing.WriterException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.SocketException;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -19,7 +20,6 @@ import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.bbc.security.auth.AuthenticationConstants;
-import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.hopsworks.user.model.Users;
 
@@ -246,7 +246,7 @@ public class RecoverySelector implements Serializable {
 
         return "qrcode";
 
-      } catch (IOException | WriterException ex) {
+      } catch (IOException | WriterException | NoSuchAlgorithmException ex) {
         Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE,
                 null, ex);
       }
@@ -265,8 +265,7 @@ public class RecoverySelector implements Serializable {
                   UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                   UserAccountsEmailMessages.accountBlockedMessage());
         } catch (MessagingException ex1) {
-          Logger.getLogger(CustomAuthentication.class.getName()).log(
-                  Level.SEVERE, null, ex1);
+        
         }
       }
 

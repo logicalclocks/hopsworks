@@ -25,7 +25,7 @@ import io.hops.bbc.Consents;
 import java.util.logging.Logger;
 import org.apache.hadoop.fs.FSDataInputStream;
 import se.kth.bbc.project.fb.InodeFacade;
-import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.util.Settings;
 
 @Stateless
@@ -36,7 +36,7 @@ public class ProjectPrivacyManager {
           getName());
   
   @EJB
-  private DFSSingleton dfs;
+  private DistributedFsService dfs;
 
 
   @PersistenceContext(unitName = "kthfsPU")

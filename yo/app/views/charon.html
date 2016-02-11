@@ -4,232 +4,349 @@
     <div class="overlay"></div>
 
     <div ng-include="'navProject.html'"></div>
+    <div  ng-controller="CharonCtrl as charonCtrl">
+	  <section>
+		<div class="content-wrapper" ng-controller="DatasetsCtrl as datasetsCtrl">
+		  <div  ng-controller="LocalFsCtrl as localFsCtrl" >
+			<h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Consent Forms</h3>
+			<div growl reference="10" class="pull-right" ></div>
+			<div style="margin: 10px">
 
-    <section>
-      <div class="content-wrapper"  ng-controller="CharonCtrl as charonCtrl">
-        <div  ng-controller="LocalFsCtrl as localFsCtrl">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Consent Forms</h3>
-        <div growl reference="10" class="pull-right" ></div>
-        <div style="margin: 10px">
+
+			  <div class="panel modal-title col-lg-3">
+				<div class="panel-heading" style="border-radius: 10px; margin-top: 15px">
+				  <h3 class="panel-title"><div style="margin-right: 10px;float:
+											   left">Charon
+					</div>
+					<div
+					  ng-show="charonCtrl.toHDFS"style=" float: right; ">(From)</div><div ng-show="!charonCtrl.toHDFS"style=" float: right; ">(To)</div>
+					<div class="row"></div>		
+				  </h3>
+				</div>
+				<div class="panel-body">
+				  <div class="row" ng-show="charonCtrl.toHDFS" >
+					<div class="table-responsive" style="overflow: hidden;">
+					  <div  ng-controller="SelectFileCharonCtrl as selectFileCharonCtrl">
+						<div ng-controller="ProjectCtrl as projectCtrl" class="row">
+						  <span data-ng-repeat="path in localFsCtrl.pathArray track by $index"></span>
+						</div>
+						<table class="table table-hover" >
+						  <tbody ng-model="localFsCtrl.files">
+							<tr ng-click="selectFileCharonCtrl.back(localFsCtrl)">
+							  <td style="padding: 0px">&nbsp &nbsp
+								<a style="font-size:25px">..</a>
+							  </td>
+							</tr>
+						  <a href="selectLocalFile.html"></a>
+						  <tr ng-repeat="file in localFsCtrl.files| orderBy: 'name'"
+							  ng-class="{ 'highlight': localFsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
+							  ng-dblclick="selectFileCharonCtrl.dblClick(localFsCtrl, file)"
+							  class="list-group-item"
+							  ng-click="selectFileCharonCtrl.select(file.path, file.dir); localFsCtrl.select($index, file);
+								charonCtrl.onCharonPathSelected(file.path);">
+
+							<td style="border-top: hidden">
+							  <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
+							  <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
+							  {{file.name}}
+<!--							  <button
+								style="float: left;margin-right: 10px;height: 20px;width: 0px"
+								ng-click="charonCtrl.shareRepository()"
+								class="btn btn-primary">
+								<i class="fa fa-share-square-o" style="margin-top:
+								   -3px;margin-left: -6px"></i>
+							  </button>-->
+							</td>
+						  </tr>
+						  </tbody>
+						</table>
+					  </div>
+					</div>
+				  </div>
+				  <div class="row" ng-show="!charonCtrl.toHDFS" >
+					<div class="table-responsive" style="overflow: hidden;">
+					  <div  ng-controller="SelectFileCharonCtrl as selectFileCharonCtrl">
+						<div ng-controller="ProjectCtrl as projectCtrl" class="row">
+						  <span
+							data-ng-repeat="path in localFsCtrl.pathArray track by $index"></span>
+						</div>
+						  <table class="table table-hover" >
+							  <tbody ng-model="localFsCtrl.files">
+							  <tr ng-click="selectFileCharonCtrl.back(localFsCtrl)">
+								  <td style="padding: 0px">&nbsp &nbsp
+									  <a style="font-size:25px">..</a>
+								  </td>
+							  </tr>
+							  <a href="selectLocalFile.html"></a>
+							  <tr ng-repeat="file in localFsCtrl.files| orderBy: 'name'"
+								  ng-class="{ 'highlight': localFsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
+								  ng-dblclick="selectFileCharonCtrl.dblClick(localFsCtrl, file)"
+								  class="list-group-item"
+								  ng-click="selectFileCharonCtrl.select(file.path, file.dir); localFsCtrl.select($index, file);
+								charonCtrl.onCharonPathSelected(file.path);">
+
+								  <td style="border-top: hidden">
+									  <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
+									  <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
+									  {{file.name}}
+									  <!--							  <button
+                                                                      style="float: left;margin-right: 10px;height: 20px;width: 0px"
+                                                                      ng-click="charonCtrl.shareRepository()"
+                                                                      class="btn btn-primary">
+                                                                      <i class="fa fa-share-square-o" style="margin-top:
+                                                                         -3px;margin-left: -6px"></i>
+                                                                    </button>-->
+								  </td>
+							  </tr>
+							  </tbody>
+						  </table>
+					  </div>
+					</div>
+				  </div>
+				</div>
+			  </div>
+			  <div class="col-lg-2 row-centered">
+				<div class="row " style="margin-top: -20px;">
+				  <span class="fa fa-long-arrow-right fa-5x" ng-show="charonCtrl.toHDFS"></span>
+				  <span class="fa fa-long-arrow-left fa-5x" ng-show="!charonCtrl.toHDFS"></span>
+				</div>
+				<div class="row ">
+				  <button class="btn btn-default" type="button"
+						  style="margin-bottom: 10px; margin-top: -10px;" ng-click="switchDirection(projectCtrl.currentProject.projectName);">
+					Switch Direction <span class="fa fa-exchange "></span>
+				  </button>
+				</div>
+				<div class="row">
+				  <button class="btn btn-success" ng-click="charonCtrl.copyFile()" style="width: available">
+					<span>Copy <i ng-if="charonCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" > </i></span>
+				  </button>
+				</div>
+			  </div>
+			  <div class="panel modal-title col-lg-3">
+				<div class="panel-heading" style="border-radius: 10px;
+					 margin-top: 15px">
+				  <h3 class="panel-title">HDFS <div ng-show="!charonCtrl.toHDFS"style=" float: right; ">(From)</div><div ng-show="charonCtrl.toHDFS"style=" float: right; ">(To)</div></h3>
+
+				</div>
+				<h3 class="panel-title"></h3>
+				<div class="panel-body">
+				  <div class="row " ng-show="!charonCtrl.toHDFS">
+					<div class="table-responsive" style="overflow: hidden;" >
+					  <div  ng-controller="SelectFileCharonCtrl as selectFileCharonCtrl">
+						<div ng-controller="ProjectCtrl as projectCtrl" class="row">
+						  <span data-ng-repeat="path in datasetsCtrl.pathArray track by $index"></span>
+						</div>
+						<table class="table table-hover" >
+						  <tbody ng-model="datasetsCtrl.files">
+							<tr ng-click="selectFileCharonCtrl.back(datasetsCtrl)">
+							  <td style="padding: 0px">&nbsp &nbsp
+								<a style="font-size:25px">..</a>
+							  </td>
+							</tr>
+						  <a href="selectFile.html"></a>
+						  <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'"
+							  ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
+							  ng-dblclick="selectFileCharonCtrl.dblClick(datasetsCtrl, file)"
+							  class="list-group-item"
+							  ng-click="selectFileCharonCtrl.select(file.path, file.dir); datasetsCtrl.select($index, file);
+								charonCtrl.onHdfsPathSelected(file.path);">
+							<td style="border-top: hidden">
+							  <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
+							  <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
+							  {{file.name}}
+							</td>
+						  </tr>
+						  </tbody>
+						</table>
+					  </div>
+					</div>
+				  </div>
+				  <div class="row" ng-show="charonCtrl.toHDFS">
+					<div class="table-responsive" style="overflow: hidden;" >
+					  <div  ng-controller="SelectFileCharonCtrl as selectFileCharonCtrl">
+						<div ng-controller="ProjectCtrl as projectCtrl" class="row">
+						  <span data-ng-repeat="path in datasetsCtrl.pathArray track by $index"></span>
+						</div>
+						  <table class="table table-hover" >
+							  <tbody ng-model="datasetsCtrl.files">
+							  <tr ng-click="selectFileCharonCtrl.back(datasetsCtrl)">
+								  <td style="padding: 0px">&nbsp &nbsp
+									  <a style="font-size:25px">..</a>
+								  </td>
+							  </tr>
+							  <a href="selectFile.html"></a>
+							  <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'"
+								  ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
+								  ng-dblclick="selectFileCharonCtrl.dblClick(datasetsCtrl, file)"
+								  class="list-group-item"
+								  ng-click="selectFileCharonCtrl.select(file.path, file.dir); datasetsCtrl.select($index, file);
+								charonCtrl.onHdfsPathSelected(file.path);">
+								  <td style="border-top: hidden">
+									  <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
+									  <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
+									  {{file.name}}
+								  </td>
+							  </tr>
+							  </tbody>
+						  </table>
+					  </div>
+					</div>
+				  </div>
+				</div>
+			  </div>
+
+			</div>
+		  </div>
+		</div>
+		<div class="col-lg-4" style="border-left: 1px dashed lightgrey;
+			 padding-left: 0px; float: right; margin-top: -84px;">
+		  <div class="ibox float-e-margins" style="margin-bottom: -25px; height: 95%;">
+			<div class="file-manager">
+			  <div>
+				<md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">
+				  <md-tabs md-dynamic-height md-border-bottom>
+					<md-tab  label="">
+					  <md-content>
+						<table id="mytable1" class="table table-bordred table-striped" style="margin-top: 16px;">
+						  <tr style="background-color: #fafafa">
+							<td style="color: black;">
+								<button class="btn btn-success"
+										style="width: available;margin-top: -2px"
+										ng-click="charonCtrl.importRepository()">
+							<span style="font-size: 11px;"><strong>Import repository</strong></span>
+									</button>
+							</td>
+							<td style="color: black;">
+							  <div style="text-align: center;">My site ID</div>
+							  <textarea disabled class="form-control"
+										style="resize:none;cursor: default"
+										rows="5">{{charonCtrl.mySiteID}}</textarea>
+							</td>
+						  </tr>
+						</table>
+
+					  </md-content>
+
+					  <div id="board" style="font-family: Times New Roman;">
+						<div class="modal-header">
+						  <span class="modal-title"
+								ng-model="columnName"><label
+							  style="font-size: 15px">Sites I can share with</label></span>
+						  <button class="btn btn-success"
+								  style="width: available;float: right;margin-top: -2px"
+							ng-click="charonCtrl.addSite()">
+							<span style="font-size: 11px;"><strong>Add a Site
+								Id</strong></span>
+						  </button>
+						</div>
+						<div ng-show="charonCtrl.noIDs" style="padding-left: 10px">
+						  <div style="display: inline-block">
+							<div style="display: inline-block"><h4>No site IDs added yet.</h4></div>
+						  </div>
+						</div>
+						<div class="" height="80%" ng-hide="charonCtrl.noIDs">
+						  <div class="input-group-lg" align="left">
+
+							<div ng-repeat="site in charonCtrl.availableSiteIds"
+								 style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
 
 
-          <div class="panel modal-title col-lg-3">
-            <div class="panel-heading">
-              <h3 class="panel-title">Charon <div ng-show="charonCtrl.toHDFS"style=" float: right; ">(Source)</div><div ng-show="!charonCtrl.toHDFS"style=" float: right; ">(Destination)</div></h3>
-            </div>
-            <div class="panel-body">
-              <div class="row" ng-show="charonCtrl.toHDFS" >
-                <div class="table-responsive" style="overflow: hidden;">
-                  <div  ng-controller="SelectFileCharonCtrl as selectFileCharonCtrl">
-                  <div ng-controller="ProjectCtrl as projectCtrl" class="row">
-                    >> {{charonCtrl.selectedCharonPath}}
-                  <span data-ng-repeat="path in localFsCtrl.pathArray track by $index"></span>
-                  </div>
-                  <table class="table table-hover" >
-                    <tbody ng-model="localFsCtrl.files">
-                    <tr ng-click="selectFileCharonCtrl.back(localFsCtrl)">
-                      <td style="padding: 0px">&nbsp &nbsp
-                        <a style="font-size:25px">..</a>
-                      </td>
-                    </tr>
-                    <a href="selectLocalFile.html"></a>
-                    <tr ng-repeat="file in localFsCtrl.files | orderBy: 'name'"
-                        ng-class="{ 'highlight': localFsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
-                        ng-dblclick="selectFileCharonCtrl.dblClick(localFsCtrl, file)"
-                        ng-click="selectFileCharonCtrl.select(file.path, file.dir); localFsCtrl.select($index, file);
-                        charonCtrl.onCharonPathSelected(file.path);">
+							  <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px;">
+								<label style="font-size: 14px;" class="ng-binding">
+								  ({{site.siteId}}) {{site.name}} {{site.email}} {{site.addr}}
+								</label>
+								<button type="button" class="btn btn-default btn-xs pull-right" 
+										style="background-color:#D8D8D8"
+										data-toggle="collapse"
+										data-target="#metadatadiv0">
+										<a
+											style="color: red;background-color:#D8D8D8;"
+											ng-click="charonCtrl.removeSiteId(site.siteId)">><i class="fa fa-minus"></i></a></button>
+							  </div>                                
+							</div>						  
+							<!--                          <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px;margin-top: 10px;">
+														<label style="font-size: 16px;" class="ng-binding">(4)ricardo-127.0.0.1:11001</label>
+														<button type="button" class="btn btn-default btn-xs pull-right" style="color: red;background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" data-toggle="collapse" data-target="#metadatadiv0"><i class="fa fa-minus"></i></button>
+													  </div>
+													  <div style="margin: 5px">
+														<textarea disabled class="form-control"
+																  style="resize:none;cursor: default"
+																  rows="7">{{charonCtrl.availableSiteIds}}</textarea>
+													  </div>-->
+						  </div>
+						</div>
+					  </div>
+					  <div id="board" style="font-family: Times New Roman;">
+						<div class="modal-header">
+						  <span class="modal-title"
+								ng-model="columnName"><label
+							  style="font-size: 15px">Repositories I am sharing with</label></span>
+						  <button class="btn btn-success"
+								  style="width: available;float: right;margin-top: -2px"
+							ng-click="charonCtrl.newRepository()">
+							  <span style="font-size: 11px;"><strong>Add a
+								  repository</strong></span>
+						  </button>
 
-                      <td>
-                        <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
-                        <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
-                        {{file.name}}
-                      </td>
-                    </tr>
-                    </tbody>
-                  </table>
-                </div>
-                </div>
-              </div>
-              <div class="row" ng-show="!charonCtrl.toHDFS" >
-                <div class="table-responsive" style="overflow: hidden;">
-                  <div  ng-controller="SelectFileCharonCtrl as selectFileCharonCtrl">
-                    <div ng-controller="ProjectCtrl as projectCtrl" class="row">
-                      >> {{charonCtrl.selectedCharonPath}}
-                      <span
-                        data-ng-repeat="path in localFsCtrl.pathArray track by $index"></span>
-                    </div>
-                    <table class="table table-hover" >
-                        <tbody ng-model="localFsCtrl.files">
-                      <a href="selectLocalFile.html"></a>
-                      <tr style="opacity: 0.6;"
-                        ng-repeat="file in localFsCtrl.projectFiles | orderBy: 'name'"
-                        ng-class="{ 'highlight': localFsCtrl.selected === {{ $index}}, 'expanded' : expanded }">
+						</div>
+						<div ng-show="charonCtrl.noIDs" style="padding-left: 10px">
+						  <div style="display: inline-block">
+							<div style="display: inline-block"><h4>No shared repositories added yet.</h4></div>
+						  </div>
+						</div>
+						<div class="" height="80%" ng-hide="charonCtrl.noIDs">
+						  <div class="input-group-lg" align="left">
 
-                        <td>
-                          <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
-                          <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
-                          {{file.name}}
-                        </td>
-                      </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-2 row-centered">
-            <div class="row " style="margin-top: -20px;">
-              <span class="fa fa-long-arrow-right fa-5x" ng-show="charonCtrl.toHDFS"></span>
-              <span class="fa fa-long-arrow-left fa-5x" ng-show="!charonCtrl.toHDFS"></span>
-            </div>
-            <div class="row ">
-              <button class="btn btn-default" type="button"
-                      style="margin-bottom: 10px; margin-top: -10px;" ng-click="switchDirection(projectCtrl.currentProject.projectName);
-                      localFsCtrl.getProjectContents(projectCtrl.currentProject.projectName);">
-                Switch Direction <span class="fa fa-exchange "></span>
-              </button>
-            </div>
-            <div class="row">
-              <button class="btn btn-success" ng-click="charonCtrl.copyFile()" style="width: available">
-                <span>Copy <i ng-if="charonCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i></span>
-              </button>
-            </div>
-          </div>
-          <div class="panel modal-title col-lg-3">
-            <div class="panel-heading">
-              <h3 class="panel-title">HDFS <div ng-show="!charonCtrl.toHDFS"style=" float: right; ">(Source)</div><div ng-show="charonCtrl.toHDFS"style=" float: right; ">(Destination)</div></h3>
-            </div>
-            <h3 class="panel-title"></h3>
-            <div class="panel-body">
-              <div class="row " ng-show="!charonCtrl.toHDFS">
-                <div class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
-                  <div  ng-controller="SelectFileCharonCtrl as selectFileCharonCtrl">
-                  <div ng-controller="ProjectCtrl as projectCtrl" class="row">
-                    >> {{charonCtrl.selectedHdfsPath}}
-      <span data-ng-repeat="path in datasetsCtrl.pathArray track by $index"></span>
-                  </div>
-                  <table class="table table-hover" >
-                    <tbody ng-model="datasetsCtrl.files">
-                    <tr ng-click="selectFileCharonCtrl.back(datasetsCtrl)">
-                      <td style="padding: 0px">&nbsp &nbsp
-                        <a style="font-size:25px">..</a>
-                      </td>
-                    </tr>
-                    <a href="selectFile.html"></a>
-                    <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'"
-                        ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
-                        ng-dblclick="selectFileCharonCtrl.dblClick(datasetsCtrl, file)"
-                        ng-click="selectFileCharonCtrl.select(file.path, file.dir); datasetsCtrl.select($index, file);
-                        charonCtrl.onHdfsPathSelected(file.path);">
-                      <td>
-                        <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
-                        <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
-                        {{file.name}}
-                      </td>
-                    </tr>
-                    </tbody>
-                  </table>
-                  </div>
-                </div>
-              </div>
-              <div class="row" ng-show="charonCtrl.toHDFS">
-                <div class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
-                  <div  ng-controller="SelectFileCharonCtrl as selectFileCharonCtrl">
-                  <div ng-controller="ProjectCtrl as projectCtrl" class="row">
-                    >> {{charonCtrl.selectedHdfsPath}}
-      <span data-ng-repeat="path in datasetsCtrl.pathArray track by $index"></span>
-                  </div>
-                  <table class="table table-hover" >
-                    <tbody ng-model="datasetsCtrl.files">
-                    <tr ng-click="selectFileCharonCtrl.back(datasetsCtrl)">
-                      <td style="padding: 0px">&nbsp &nbsp
-                        <a style="font-size:25px">..</a>
-                      </td>
-                    </tr>
-                    <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'"
-                        ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
-                        ng-dblclick="selectFileCharonCtrl.dblClick(datasetsCtrl, file)"
-                        ng-click="selectFileCharonCtrl.select(file.path, file.dir); datasetsCtrl.select($index, file);
-                        charonCtrl.onHdfsPathSelected(file.path);">
-                      <td>
-                        <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
-                        <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
-                        {{file.name}}
-                      </td>
-                    </tr>
-                    </tbody>
-                  </table>
-                </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-        </div>
-      </div>
-      </div>
-      <div class="col-lg-4" style="border-left: 1px dashed lightgrey;
-        padding-left: 0px; float: right; margin-top: -50px;">
-        <div class="ibox float-e-margins" style="margin-bottom: -25px; height: 95%;">
-          <div class="file-manager">
-            <div>
-              <md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">
-                <md-tabs md-dynamic-height md-border-bottom>
-                  <md-tab label="Details">
-                    <md-content>
-                      <table id="mytable1" class="table table-bordred table-striped" style="margin-top: 16px;">
+							<div ng-repeat="share in charonCtrl.sharedRepos"
+								 style="background-color:#FAFAFA;padding-bottom:5px;padding-top: 5px; border-bottom: dashed #d5d5d5 thin;">
 
-                        <tr style="background-color: #fafafa">
-                          <td style="color: grey;">Mount point</td>
-                          <td style="color: grey;">/srv/Charon/charon_fs</td>
-                          <td style="color: grey;"><i class="fa fa-wrench"></i>
-                          </td>
-                        </tr>
-                        <tr style="background-color: #fafafa">
-                          <td style="color: grey;">My site ID</td>
-                          <td style="color: grey;">1565486468484173</td>
-                        </tr>
-                      </table>
 
-                    </md-content>
+							  <div style="background-color:#D8D8D8;padding-left:5px;">
+								<div class="row" style="padding: 5px;">
+								  <div class="col-md-3">Site ID </div>
+								  <div class="col-md-3">Path </div>
+								  <div class="col-md-2">Rights</div>
+								  <div class="col-md-4">Token
+									<button type="button" class="btn btn-default btn-xs pull-right" 
+											style="color: red;background-color:#D8D8D8;margin-right: 10px;
+											data-toggle="collapse" data-target="#metadatadiv0"
+											<a ng-click="charonCtrl.removeShare(share.granteeId,share.path)">><i class="fa fa-minus"></i></button>								
+								  </div>
+								</div>
+								<div class="row" style="padding: 10px">
+								  <div class="col-md-3">{{share.granteeId}} </div>
+								  <div class="col-md-3">{{share.path.replace(projectCtrl.currentProject.projectName + '/', '') |
+									  limitTo:10}} </div>
+								  <div class="col-md-2">{{share.permissions}}</div>
+								  <div class="col-md-4"><textarea disabled class="form-control"
+																  style="resize:none;cursor: default"rows="9">{{share
+									  .token}}</textarea></div>
+								  </div>
+								</div>                                
+							  </div>						  
 
-                    <div id="board" style="font-family: Times New Roman;">
-                      <div class="modal-header">
-                                      <span class="modal-title"
-                                            ng-model="columnName"><label
-                                              style="font-size: 15px">Site IDs</label></span>
-                        <i class="fa fa-plus" style="float: right; color: green;"></i>
-                      </div>
-                      <div ng-show="charonCtrl.noIDs" style="padding-left: 10px">
-                        <div style="display: inline-block">
-                          <div style="display: inline-block"><h4>No site IDs added yet.</h4></div>
-                        </div>
-                      </div>
-                      <div class="" height="80%" ng-hide="charonCtrl.noIDs">
-                        <div class="input-group-lg" align="left" style="height: 70%">
-                          <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px;margin-top: 10px;">
-                            <label style="font-size: 16px;" class="ng-binding">TestSite</label>
-                            <i class="fa fa-minus" style="margin-left:5px;color: red;"></i>
-                            <button type="button" class="btn btn-default btn-xs pull-right" style="background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" data-toggle="collapse" data-target="#metadatadiv0"><i class="fa fa-ellipsis-v"></i></button>
-                          </div>
-                          <div style="margin: 5px">
-                            <label class="ng-binding">ID: 484646846468848</label><br>
-                            <label class="ng-binding">IP: 193.125.69.48</label><br>
-                            <label class="ng-binding">Port: 5489</label><br>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </md-tab>
-                  <md-tab ng-hide="true" label="">
-                  </md-tab>
-                </md-tabs>
-              </md-content>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-   </div>
-</div>
+							  <!--                          <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px;margin-top: 10px;">
+														  <label style="font-size: 16px;" class="ng-binding">(4)ricardo-127.0.0.1:11001</label>
+														</div>
+														<div style="margin: 5px">
+														  <textarea disabled class="form-control"
+																	style="resize:none;cursor: default"
+																	rows="7">{{charonCtrl.availableSiteIds}}</textarea>
+														</div>
+													  </div>-->
+							</div>
+						  </div>
+						  </md-tab>
+						  <md-tab ng-hide="true" label="">
+						  </md-tab>
+						  </md-tabs>
+						  </md-content>
+						</div>
+					  </div>
+					  </div>
+					  </div>
+					  </section>
+					  </div>
+					  </div>
+					  </div>

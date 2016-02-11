@@ -15,7 +15,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.hdfs.fileoperations.DFSSingleton;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -25,7 +25,7 @@ public class DownloadService {
           = Logger.getLogger(DownloadService.class.getName());
 
   @EJB
-  private DFSSingleton dfs;
+  private DistributedFsService dfs;
 
   private String path;
   private String username;

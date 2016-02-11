@@ -32,6 +32,7 @@
     <class>se.kth.bbc.project.fb.InodeOps</class>
     <class>se.kth.bbc.project.fb.Inode</class>
     <class>se.kth.bbc.jobs.jobhistory.Execution</class>
+    <class>se.kth.bbc.jobs.jobhistory.YarnApplicationstate</class>
     <class>se.kth.bbc.jobs.model.description.JobDescription</class>
     <class>se.kth.bbc.jobs.model.configuration.JsonReduceableConverter</class>
     <class>se.kth.hopsworks.user.model.SshKeys</class>
@@ -53,7 +54,11 @@
     <class>io.hops.bbc.Consents</class>
     <class>se.kth.bbc.project.ProjectsManagement</class>
     <class>se.kth.bbc.project.ProjectPaymentsHistory</class>
+    <class>se.kth.bbc.project.CharonRegisteredSites</class>
+    <class>se.kth.bbc.project.CharonRepoShared</class>
     <class>se.kth.bbc.project.YarnProjectsQuota</class>
+    <class>io.hops.bbc.charon.CharonRepoShared</class>
+    <class>io.hops.bbc.charon.CharonRegisteredSites</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

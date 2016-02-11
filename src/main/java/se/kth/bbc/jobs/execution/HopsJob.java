@@ -1,8 +1,14 @@
 package se.kth.bbc.jobs.execution;
 
+import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;
@@ -32,6 +38,7 @@ import se.kth.hopsworks.user.model.Users;
  */
 public abstract class HopsJob {
 
+  private static final Logger logger = Logger.getLogger(HopsJob.class.getName());
   private Execution execution;
   private boolean initialized = false;
 
@@ -40,6 +47,7 @@ public abstract class HopsJob {
   protected final JobDescription jobDescription;
   protected final Users user;
   protected final String hadoopDir;
+  protected final UserGroupInformation hdfsUser;
 
   /**
    * Create a HopsJob instance.
@@ -67,6 +75,17 @@ public abstract class HopsJob {
     this.services = services;
     this.user = user;
     this.hadoopDir = hadoopDir;
+    try {
+      //if HopsJob is created in a doAs UserGroupInformation.getCurrentUser()
+      //will return the proxy user, if not it will return the superuser.  
+      hdfsUser = UserGroupInformation.getCurrentUser();
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+      throw new IllegalArgumentException(
+              "Exception while trying to retrieve hadoop User Group Information: "
+              + ex.getMessage());
+    }
+    logger.log(Level.INFO, "Instantiating Hops job as user: {0}", hdfsUser);
   }
 
   /**
@@ -89,6 +108,19 @@ public abstract class HopsJob {
   }
 
   /**
+   * Update the final status of the Execution entity to the given status.
+   * <p/>
+   * @param finalStatus
+   */
+  protected final void updateFinalStatus(JobFinalStatus finalStatus) {
+    execution = services.getExecutionFacade().updateFinalStatus(execution, finalStatus);
+  }
+
+  protected final void updateProgress(float progress) {
+    execution = services.getExecutionFacade().updateProgress(execution, progress);
+  }
+
+  /**
    * Update the current Execution entity with the given values.
    * <p/>
    * @param state
@@ -102,7 +134,7 @@ public abstract class HopsJob {
   protected final void updateExecution(JobState state,
           long executionDuration, String stdoutPath,
           String stderrPath, String appId, Collection<JobInputFile> inputFiles,
-          Collection<JobOutputFile> outputFiles) {
+          Collection<JobOutputFile> outputFiles, JobFinalStatus finalStatus, float progress) {
     Execution upd = services.getExecutionFacade().updateAppId(execution, appId);
     upd = services.getExecutionFacade().updateExecutionTime(upd,
             executionDuration);
@@ -110,6 +142,8 @@ public abstract class HopsJob {
     upd = services.getExecutionFacade().updateState(upd, state);
     upd = services.getExecutionFacade().updateStdErrPath(upd, stderrPath);
     upd = services.getExecutionFacade().updateStdOutPath(upd, stdoutPath);
+    upd = services.getExecutionFacade().updateFinalStatus(upd, finalStatus);
+    upd = services.getExecutionFacade().updateProgress(upd, progress);
     this.execution = upd;
   }
 
@@ -126,21 +160,35 @@ public abstract class HopsJob {
       throw new IllegalStateException(
               "Cannot execute before acquiring an Execution id.");
     }
-    long starttime = System.currentTimeMillis();
-    boolean proceed = setupJob();
-    if (!proceed) {
-      long executiontime = System.currentTimeMillis() - starttime;
-      updateExecution(JobState.INITIALIZATION_FAILED, executiontime, null, null,
-              null, null, null);
-      cleanup();
-      return;
-    } else {
-      updateState(JobState.STARTING_APP_MASTER);
+    try {
+      this.hdfsUser.doAs(new PrivilegedExceptionAction<Void>() {
+        @Override
+        public Void run() {
+          long starttime = System.currentTimeMillis();
+          boolean proceed = setupJob();
+          if (!proceed) {
+            long executiontime = System.currentTimeMillis() - starttime;
+            updateExecution(JobState.INITIALIZATION_FAILED, executiontime, null, null,
+                null, null, null, null, 0);
+            cleanup();
+            return null;
+          } else {
+            updateState(JobState.STARTING_APP_MASTER);
+          }
+          runJob();
+          long executiontime = System.currentTimeMillis() - starttime;
+          updateExecution(null, executiontime, null, null, null, null, null, null, 0);
+          cleanup();
+          return null;
+        }
+      });
+    } catch (IOException | InterruptedException ex) {
+      logger.log(Level.SEVERE, null, ex);
     }
-    runJob();
-    long executiontime = System.currentTimeMillis() - starttime;
-    updateExecution(null, executiontime, null, null, null, null, null);
-    cleanup();
+  }
+
+  public final void stop(String appid) throws IllegalStateException {
+    stopJob(appid);
   }
 
   /**
@@ -161,6 +209,8 @@ public abstract class HopsJob {
    */
   protected abstract void runJob();
 
+  protected abstract void stopJob(String appid);
+
   /**
    * Called after runJob() completes, allows the job to perform some cleanup, if
    * necessary.
@@ -177,7 +227,7 @@ public abstract class HopsJob {
    */
   public final Execution requestExecutionId() {
     execution = services.getExecutionFacade().create(jobDescription, user, null,
-            null, null);
+            null, null, null, 0);
     initialized = (execution.getId() != null);
     return execution;
   }

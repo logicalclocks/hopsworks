@@ -32,10 +32,13 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.zeppelin.interpreter.Interpreter;
 import org.apache.zeppelin.interpreter.Interpreter.RegisteredInterpreter;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
+import org.apache.zeppelin.interpreter.InterpreterGroup;
+import org.apache.zeppelin.interpreter.InterpreterOption;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Paragraph;
@@ -110,9 +113,14 @@ public class InterpreterRestApi {
             NewInterpreterSettingRequest.class);
     Properties p = new Properties();
     p.putAll(request.getProperties());
-    interpreterFactory.add(request.getName(), request.getGroup(), request.
-            getOption(), p);
-    return new JsonResponse(Status.CREATED, "").build();
+    // Option is deprecated from API, always use remote = true
+    InterpreterGroup interpreterGroup = interpreterFactory.
+            add(request.getName(),
+                    request.getGroup(), new InterpreterOption(true), p);
+    InterpreterSetting setting = interpreterFactory.
+            get(interpreterGroup.getId());
+    logger.info("new setting created with " + setting.id());
+    return new JsonResponse(Status.CREATED, "", setting).build();
   }
 
   @PUT
@@ -124,13 +132,17 @@ public class InterpreterRestApi {
     try {
       UpdateInterpreterSettingRequest p = gson.fromJson(message,
               UpdateInterpreterSettingRequest.class);
-      interpreterFactory.setPropertyAndRestart(settingId, p.getOption(), p.
-              getProperties());
+      // Option is deprecated from API, always use remote = true
+      interpreterFactory.setPropertyAndRestart(settingId,
+              new InterpreterOption(true), p.getProperties());
     } catch (InterpreterException e) {
-      return new JsonResponse(Status.NOT_FOUND, e.getMessage(), e).build();
-    } catch (IOException e) {
-      return new JsonResponse(Status.INTERNAL_SERVER_ERROR, e.getMessage(), e).
+      return new JsonResponse(
+              Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e)).
               build();
+    } catch (IOException e) {
+      return new JsonResponse(
+              Status.INTERNAL_SERVER_ERROR, e.getMessage(), ExceptionUtils.
+              getStackTrace(e)).build();
     }
     InterpreterSetting setting = interpreterFactory.get(settingId);
     if (setting == null) {
@@ -139,6 +151,12 @@ public class InterpreterRestApi {
     return new JsonResponse(Status.OK, "", setting).build();
   }
 
+  /**
+   * Remove interpreter setting
+   * @param settingId
+   * @return 
+   * @throws java.io.IOException 
+   */
   @DELETE
   @Path("setting/{settingId}")
   public Response removeSetting(@PathParam("settingId") String settingId) throws
@@ -148,6 +166,11 @@ public class InterpreterRestApi {
     return new JsonResponse(Status.OK).build();
   }
 
+  /**
+   * Restart interpreter setting
+   * @param settingId
+   * @return 
+   */
   @PUT
   @Path("setting/restart/{settingId}")
   public Response restartSetting(@PathParam("settingId") String settingId) {
@@ -246,6 +269,7 @@ public class InterpreterRestApi {
     InterpreterSetting interpreterSetting = interpreterFactory.get(settingId);
     //wait until the peocess is stoped.
     while (zeppelinResource.isInterpreterRunning(interpreterSetting)) {
+      logger.info("Infinite loop???");
     }
 
     InterpreterDTO interpreter = new InterpreterDTO(interpreterSetting, true);
