@@ -802,7 +802,7 @@ public class ProjectController {
 
   public void setHdfsSpaceQuota(String projectname, long diskspaceQuotaInGB)
       throws IOException {
-    long diskspaceQuotaInBytes = diskspaceQuotaInGB*GB_IN_BYTES;
+    long diskspaceQuotaInBytes = diskspaceQuotaInGB;
     dfs.getDfsOps().setQuota(new Path(settings.getProjectPath(
         projectname)), diskspaceQuotaInBytes);
   }
@@ -810,12 +810,12 @@ public class ProjectController {
   //Get quota in GB_IN_BYTES
   public long getHdfsSpaceQuota(String projectname) throws IOException {
     return dfs.getDfsOps().getQuota(new Path(settings.getProjectPath(
-        projectname))) / GB_IN_BYTES;
+        projectname)));
   }
 
   //Get used disk space in GB_IN_BYTES
   public long getUsedSpaceQuota(String projectname) throws IOException {
     return dfs.getDfsOps().getUsedQuota(new Path(settings.
-        getProjectPath(projectname))) / GB_IN_BYTES;
+        getProjectPath(projectname)));
   }
 }
