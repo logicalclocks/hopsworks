@@ -35,7 +35,7 @@
 
                         <div class="hr-line-dashed"></div>
                         <div class="btn-group"
-                             style="width: 100%;" ng-hide="projectCtrl.teamRole === 'Data owner'">
+                             style="width: 100%;" ng-show="projectCtrl.teamRole == 'Data owner'">
                           <button style="width: 100%;"
                                   ng-click="datasetsCtrl.newDataSetModal()"
                                   class="btn btn-warning">
@@ -90,7 +90,7 @@
                               Compress</span>
                           </a>
                         </li>
-                        <li>
+                        <li ng-show="projectCtrl.teamRole == 'Data owner'">
                           <a class="pointer"
                              role="menuitem"
                              tabindex="2"
@@ -117,7 +117,7 @@
                               Remove metadata template</span>
                           </a>
                         </li>
-                        <li>
+                        <li ng-show="projectCtrl.teamRole == 'Data owner'">
                           <a class="pointer"
                              role="menuitem"
                              tabindex="5"
