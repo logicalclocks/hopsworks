@@ -174,10 +174,10 @@
       <role-name>SYS_ADMIN</role-name>		
       <role-name>BBC_USER</role-name>		
     </auth-constraint>		
-    <user-data-constraint>		
+    <!--user-data-constraint>		
         <description>WSS required</description>		
         <transport-guarantee>CONFIDENTIAL</transport-guarantee>		
-    </user-data-constraint>		
+    </user-data-constraint-->		
   </security-constraint>		
     		
   <security-constraint>		
