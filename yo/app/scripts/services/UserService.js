@@ -18,6 +18,9 @@ angular.module('hopsWorksApp')
               createProject: function (newProject) {
                 return $http.post('/api/user/newProject', newProject);
               },
+              getRole: function (projectId) {
+                return $http.post('/api/user/getRole', projectId);
+              },
               addSshKey: function (sshKey) {
               //addSshKey: function (name, sshKey) {
                 return $http({

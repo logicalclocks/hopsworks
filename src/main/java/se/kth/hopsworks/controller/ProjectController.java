@@ -55,6 +55,7 @@ import se.kth.hopsworks.util.Settings;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectController {
 
+  public static long GB_IN_BYTES=1024*1024*1024;
   private final static Logger logger = Logger.getLogger(ProjectController.class.
       getName());
   @EJB
@@ -393,8 +394,8 @@ public class ProjectController {
     //Create first the projectPath
     projectDirCreated = fileOps.mkDir(projectPath);
 
-    //Set default space quota in GB
-    setQuota(new Path(projectPath), Integer.parseInt(settings
+    //Set default space quota in GB_IN_BYTES
+    ProjectController.this.setHdfsSpaceQuota(new Path(projectPath), Integer.parseInt(settings
         .getHdfsDefaultQuota()));
 
     //create the rest of the child folders if any
@@ -589,7 +590,7 @@ public class ProjectController {
       services.add(s.toString());
     }
     return new ProjectDTO(project, inode.getId(), services, projectTeam, getYarnQuota(name),
-        getHdfsQuota(name));
+        getHdfsSpaceQuotaInGBs(name));
   }
 
   /**
@@ -631,7 +632,7 @@ public class ProjectController {
 
     //send the project back to client
     return new ProjectDTO(project, inode.getId(), services, projectTeam, kids,
-        getYarnQuota(name), getHdfsQuota(name));
+        getYarnQuota(name), getHdfsSpaceQuotaInGBs(name));
   }
 
   private Integer getYarnQuota(String name) {
@@ -639,11 +640,13 @@ public class ProjectController {
     return yarnQuota.getQuotaRemaining();
   }
 
-  private Long getHdfsQuota(String name) throws AppException {
+  private Long getHdfsSpaceQuotaInGBs(String name) throws AppException {
     String path = File.separator + Settings.DIR_ROOT + File.separator + name;
 
     try {
-      return dfs.getDfsOps().getQuota(new Path(path));
+      long quota = dfs.getDfsOps().getQuota(new Path(path));
+      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, quota});
+      return quota;
     } catch (IOException ex) {
       logger.severe(ex.getMessage());
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -793,27 +796,27 @@ public class ProjectController {
     return path.substring(startIndex + 1, endIndex);
   }
 
-  public void setQuota(Path src, long diskspaceQuota)
+  private void setHdfsSpaceQuota(Path src, long diskspaceQuotaInBytes)
       throws IOException {
-    dfs.getDfsOps().setQuota(src, diskspaceQuota);
+    dfs.getDfsOps().setQuota(src, diskspaceQuotaInBytes);
   }
 
-  public void setQuota(String projectname, long diskspaceQuota)
+  public void setHdfsSpaceQuota(String projectname, long diskspaceQuotaInGB)
       throws IOException {
+    long diskspaceQuotaInBytes = diskspaceQuotaInGB*GB_IN_BYTES;
     dfs.getDfsOps().setQuota(new Path(settings.getProjectPath(
-        projectname)),
-        diskspaceQuota);
+        projectname)), diskspaceQuotaInBytes);
   }
 
-  //Get quota in GB
-  public long getQuota(String projectname) throws IOException {
+  //Get quota in GB_IN_BYTES
+  public long getHdfsSpaceQuota(String projectname) throws IOException {
     return dfs.getDfsOps().getQuota(new Path(settings.getProjectPath(
-        projectname)));
+        projectname))) / GB_IN_BYTES;
   }
 
-  //Get used disk space in GB
-  public long getUsedQuota(String projectname) throws IOException {
+  //Get used disk space in GB_IN_BYTES
+  public long getUsedSpaceQuota(String projectname) throws IOException {
     return dfs.getDfsOps().getUsedQuota(new Path(settings.
-        getProjectPath(projectname)));
+        getProjectPath(projectname))) / GB_IN_BYTES;
   }
 }

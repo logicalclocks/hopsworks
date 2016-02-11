@@ -39,8 +39,8 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
-          List<ProjectTeam> projectTeam, Integer yarnQuota,
-          Long hdfsQuotaGB) {
+          List<ProjectTeam> projectTeam, Integer yarnQuotaInMins,
+          Long hdfsQuotaInGBs) {
     this.projectId = project.getId();
     this.inodeid = inodeid;
     this.projectName = project.getName();
@@ -52,8 +52,8 @@ public class ProjectDTO {
     this.description = project.getDescription();
     this.services = services;
     this.projectTeam = projectTeam;
-    this.yarnQuotaInMins = yarnQuota;
-    this.hdfsQuotaInGBs = hdfsQuotaGB;    
+    this.yarnQuotaInMins = yarnQuotaInMins;
+    this.hdfsQuotaInGBs = hdfsQuotaInGBs;    
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
