@@ -24,7 +24,7 @@
           <div class="ibox float-e-margins">
             <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
               <div class="file-manager">
-                <div class="btn-group"
+                <div class="btn-group" ng-show="projectCtrl.role == 'Data owner'"
                      style="width: 100%; margin-left: 5px; margin-right: 5px;">
                   <button style="width: 100%;"
                           ng-click="metadataCtrl.attachTemplate(projectCtrl.projectFile); $event.stopPropagation();"
@@ -32,7 +32,7 @@
                     Add metadata template
                   </button>
                 </div>
-                <div class="btn-group"
+                <div class="btn-group" ng-show="projectCtrl.role == 'Data owner'"
                      style="width: 100%; margin-top: 10px; margin-left: 5px; margin-right: 5px;">
                   <button style="width: 100%;"
                           ng-click="metadataCtrl.detachTemplate(projectCtrl.projectFile); $event.stopPropagation();"
