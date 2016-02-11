@@ -35,7 +35,7 @@
 
                         <div class="hr-line-dashed"></div>
                         <div class="btn-group"
-                             style="width: 100%;" ng-hide="projectCtrl.role != 'DATA_OWNER'">
+                             style="width: 100%;" ng-hide="projectCtrl.teamRole === 'Data owner'">
                           <button style="width: 100%;"
                                   ng-click="datasetsCtrl.newDataSetModal()"
                                   class="btn btn-warning">
