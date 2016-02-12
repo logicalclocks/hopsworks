@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('InPutModalCtrl', ['$modalInstance',  'title', 'msg','val',
+        .controller('InputModalCtrl', ['$modalInstance', 'title', 'msg','val',
           function ($modalInstance, title, msg, val) {
 
             var self = this;

@@ -649,7 +649,7 @@ angular.module('hopsWorksApp')
               noteName: function (size, title, msg, val ) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/noteNameModal.html',
-                  controller: 'InPutModalCtrl as ctrl',
+                  controller: 'InputModalCtrl as ctrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',
