@@ -37,6 +37,7 @@ import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
 import se.kth.hopsworks.users.*;
+import se.kth.hopsworks.util.LocalhostServices;
 import se.kth.hopsworks.util.Settings;
 
 @Stateless
@@ -85,17 +86,14 @@ public class UsersController {
       String otpSecret = SecurityUtils.calculateSecretKey();
       String activationKey = SecurityUtils.getRandomPassword(64);
 
-      int uid = userBean.lastUserID() + 1;
-
-      // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
-      String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
+      String uname = generateUsername(newUser.getEmail());
 
       List<BbcGroup> groups = new ArrayList<>();
 
       // add the guest default role so if a user can still browse the platform
       groups.add(groupBean.findByGroupName(BBCGroup.BBC_GUEST.name()));
 
-      Users user = new Users(uid);
+      Users user = new Users();
       user.setUsername(uname);
       user.setEmail(newUser.getEmail());
       user.setFname(newUser.getFirstName());
@@ -104,7 +102,7 @@ public class UsersController {
       user.setStatus(PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue());
       user.setSecret(otpSecret);
       user.setOrcid("-");
-      user.setMobile("-");
+      user.setMobile(newUser.getTelephoneNum());
       user.setTitle("-");
       user.setMode(PeopleAccountStatus.MOBILE_USER.getValue());
       user.setValidationKey(activationKey);
@@ -201,16 +199,13 @@ public class UsersController {
       String otpSecret = SecurityUtils.calculateSecretKey();
       String activationKey = SecurityUtils.getRandomPassword(64);
 
-      int uid = userBean.lastUserID() + 1;
-
-      // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
-      String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
+      String uname = generateUsername(newUser.getEmail());
       List<BbcGroup> groups = new ArrayList<>();
 
       // add the guest default role so if a user can still browse the platform
       groups.add(groupBean.findByGroupName(BBCGroup.BBC_GUEST.name()));
 
-      Users user = new Users(uid);
+      Users user = new Users();
       user.setUsername(uname);
       user.setEmail(newUser.getEmail());
       user.setFname(newUser.getFirstName());
@@ -219,7 +214,7 @@ public class UsersController {
       user.setStatus(PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue());
       user.setSecret(otpSecret);
       user.setOrcid("-");
-      user.setMobile("-");
+      user.setMobile(newUser.getTelephoneNum());
       user.setTitle("-");
       user.setMode(PeopleAccountStatus.YUBIKEY_USER.getValue());
       user.setValidationKey(activationKey);
@@ -470,6 +465,48 @@ public class UsersController {
       dtos.add(new SshKeyDTO(sshKey));
     }
     return dtos;
+  }
+  
+  public String generateUsername(String email) {
+    int count = 0;
+    int digit = 0;
+    String uname = getUsernameFromEmail(email);
+    Users user = userBean.findByUsername(uname);
+    String suffix = "";
+    Random r = new Random();
+    if (user == null) {
+      return uname;
+    }
+
+    while (user != null) {
+      if (count > 100) {
+        digit++;
+        count = 0;
+      }      
+      suffix = ""+r.nextInt(Settings.MAX_USERNAME_SUFFIX + digit);
+      uname = uname.substring(0, (Settings.MAX_USERNAME_LEN - suffix.length()));
+      user = userBean.findByUsername(uname + suffix);
+      count++;
+    }
+    return uname + suffix;
+  }
+  
+  private String getUsernameFromEmail(String email) {
+        String username = email.substring(0, email.lastIndexOf("@"));
+    if (username.contains(".")) {
+      username = username.replace(".", "_");
+    }
+    if (username.contains("__")) {
+      username = username.replace("__", "_");
+    }
+    if (username.length() > Settings.MAX_USERNAME_LEN) {
+      username = username.substring(0,Settings.MAX_USERNAME_LEN-1);
+    } else if (username.length() < Settings.MAX_USERNAME_LEN) {
+      while (username.length() < Settings.MAX_USERNAME_LEN) {
+        username += "0";
+      }
+    }
+    return username;
   }
 
 }
