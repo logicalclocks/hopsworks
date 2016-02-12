@@ -11,7 +11,7 @@
       <label class="control-label" for="newFieldTitle">Field title</label>
       <div form-group has-feedback>
         <input type="text" id="newfield_name" name="newFieldName" placeholder="Name of the field" ng-model="newFieldCtrl.name" 
-               required
+               required autofocus="autofocus"   
                focus-me class="cardInputs form-control" ng-keyup="newFieldCtrl.hitEnter($event)"/>
 
 <!--        <span

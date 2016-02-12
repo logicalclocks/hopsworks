@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ModalCtrl', ['$modalInstance', '$scope', 'title', 'msg','val',
-          function ($modalInstance, $scope, title, msg, val) {
+        .controller('ModalCtrl', ['$modalInstance',  'title', 'msg','val',
+          function ($modalInstance, title, msg, val) {
 
             var self = this;
             self.title = title;

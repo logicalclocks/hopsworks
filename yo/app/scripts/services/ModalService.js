@@ -6,7 +6,7 @@ angular.module('hopsWorksApp')
               confirm: function (size, title, msg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/confirmModal.html',
-                  controller: 'ModalCtrl as ctrl',
+                  controller: 'ModalCtrl as modalCtrl',
                   size: size,
                   resolve: {
                     title: function () {
@@ -22,7 +22,7 @@ angular.module('hopsWorksApp')
               alert: function (size, title, msg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/alertModal.html',
-                  controller: 'AlertCtrl as ctrl',
+                  controller: 'AlertCtrl as alertCtrl',
                   size: size,
                   resolve: {
                     title: function () {
@@ -38,7 +38,7 @@ angular.module('hopsWorksApp')
               confirmShare: function (size, title, msg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/confirmShareModal.html',
-                  controller: 'ModalCtrl as ctrl',
+                  controller: 'ModalCtrl as modalCtrl',
                   size: size,
                   resolve: {
                     title: function () {

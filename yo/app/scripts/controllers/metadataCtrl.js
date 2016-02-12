@@ -1,8 +1,4 @@
-/*jshint undef: false, unused: false, indent: 2*/
-/*global angular: false */
-
 'use strict';
-
 
 angular.module('hopsWorksApp')
         .controller('MetadataCtrl', ['$cookies', '$modal', '$scope', '$rootScope', '$routeParams',
@@ -123,7 +119,7 @@ angular.module('hopsWorksApp')
                       parseInt(self.currentFile.parentId), self.currentFile.name, tableId, tempInput)
                       .then(function (response) {
                        self.metaData[metadataId]='';
-                       growl.success("Created new metadata", {title: 'Success', ttl: 3000});
+//                       growl.success("Created new metadata", {title: 'Success', ttl: 2000});
                        self.fetchMetadataForTemplate();
                       });
             };
@@ -344,7 +340,7 @@ angular.module('hopsWorksApp')
 
                         dataSetService.attachTemplate(data).then(
                                 function (success) {
-                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                                   self.setMetadataTemplate(file);
                                 }, function (error) {
                           growl.info("Could not attach template to file " + file.name + ".",
@@ -367,7 +363,7 @@ angular.module('hopsWorksApp')
 
                         dataSetService.detachTemplate(success.fileId, success.templateId)
                                 .then(function (success) {
-                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                                   self.setMetadataTemplate(file);
                                 });
                       });
@@ -413,8 +409,7 @@ angular.module('hopsWorksApp')
                                   .then(function (success) {
                                     self.deleteTable(column);
                                   }, function (cancelled) {
-                                    //console.log("CANCELED " + JSON.stringify(cancelled));
-                                    growl.info("Delete aborted", {title: 'Info', ttl: 5000});
+                                    growl.info("Not Deleted", {title: 'Info', ttl: 2000});
                                   });
 
                           return;
@@ -435,7 +430,7 @@ angular.module('hopsWorksApp')
                       .then(function (success) {
                         self.fetchTemplate(self.currentTemplateID);
                         growl.success("Table " + column.name + " deleted successfully.",
-                                {title: 'Success', ttl: 5000});
+                                {title: 'Success', ttl: 2000});
                       }, function (error) {
                         console.log(error);
                         growl.info("Could not delete table " + column.name +
@@ -521,7 +516,8 @@ angular.module('hopsWorksApp')
 
                         MetadataActionService.storeCard($cookies['email'], self.currentTemplateID, column, field)
                                 .then(function (success) {
-                                  growl.success("Field " + field.title + " saved successfully", {title: 'Success', ttl: 5000});
+//                                  growl.success("Field " + field.title 
+//                                  + " saved successfully", {title: 'Success', ttl: 1000});
                                   self.fetchTemplate(self.currentTemplateID);
                                 }, function (error) {
                                   console.log(error);
@@ -683,7 +679,7 @@ angular.module('hopsWorksApp')
                 
                 MetadataActionService.updateMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
                       .then(function (response) {
-                        growl.success("Metadata updated successfully", {title: 'Success', ttl: 2000});
+//                        growl.success("Metadata updated successfully", {title: 'Success', ttl: 1000});
                         self.setMetadataTemplate(self.currentFile);
                       }, function (dialogResponse) {
                         growl.info("Could not update metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
@@ -698,7 +694,7 @@ angular.module('hopsWorksApp')
                 
                 MetadataActionService.removeMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
                       .then(function (response) {
-                        growl.success("Metadata deleted successfully", {title: 'Success', ttl: 2000});
+//                        growl.success("Metadata deleted successfully", {title: 'Success', ttl: 1000});
                         self.setMetadataTemplate(self.currentFile);
                       }, function (dialogResponse) {
                         growl.info("Could not delete metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
@@ -904,7 +900,7 @@ angular.module('hopsWorksApp')
                          * window closed automatically
                          */
                         growl.success("The template was uploaded successfully",
-                                {title: 'Success', ttl: 15000});
+                                {title: 'Success', ttl: 2000});
                       },
                               function (closed) {
                                 //trigger the necessary variable change in the service
