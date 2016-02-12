@@ -17,28 +17,18 @@
 
 package se.kth.hopsworks.zeppelin.rest.message;
 
-import java.util.List;
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
- *  NewNotebookRequest rest api request message
+ *  CronRequest rest api request message
  *
  */
-@XmlRootElement
-public class NewNotebookRequest {
-  String name;
-  List<NewParagraphRequest> paragraphs;
+public class CronRequest {
+  String cron;
 
-  public NewNotebookRequest (){
+  public CronRequest (){
 
   }
 
-  public String getName() {
-    return name;
+  public String getCronString() {
+    return cron;
   }
-
-  public List<NewParagraphRequest> getParagraphs() {
-    return paragraphs;
-  }
-  
 }

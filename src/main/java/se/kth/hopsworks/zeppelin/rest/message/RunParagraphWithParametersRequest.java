@@ -17,28 +17,19 @@
 
 package se.kth.hopsworks.zeppelin.rest.message;
 
-import java.util.List;
-import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Map;
 
 /**
- *  NewNotebookRequest rest api request message
- *
+ * RunParagraphWithParametersRequest rest api request message
  */
-@XmlRootElement
-public class NewNotebookRequest {
-  String name;
-  List<NewParagraphRequest> paragraphs;
+public class RunParagraphWithParametersRequest {
+  Map<String, Object> params;
 
-  public NewNotebookRequest (){
+  public RunParagraphWithParametersRequest() {
 
   }
 
-  public String getName() {
-    return name;
+  public Map<String, Object> getParams() {
+    return params;
   }
-
-  public List<NewParagraphRequest> getParagraphs() {
-    return paragraphs;
-  }
-  
 }

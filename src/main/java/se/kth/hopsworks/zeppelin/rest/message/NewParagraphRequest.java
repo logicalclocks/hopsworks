@@ -14,31 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package se.kth.hopsworks.zeppelin.rest.message;
 
-import java.util.List;
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
- *  NewNotebookRequest rest api request message
+ * NewParagraphRequest rest api request message
  *
+ * index field will be ignored when it's used to provide initial paragraphs
  */
-@XmlRootElement
-public class NewNotebookRequest {
-  String name;
-  List<NewParagraphRequest> paragraphs;
+public class NewParagraphRequest {
+  String title;
+  String text;
+  Double index;
 
-  public NewNotebookRequest (){
+  public NewParagraphRequest() {
 
   }
 
-  public String getName() {
-    return name;
+  public String getTitle() {
+    return title;
   }
 
-  public List<NewParagraphRequest> getParagraphs() {
-    return paragraphs;
+  public String getText() {
+    return text;
   }
-  
+
+  public Double getIndex() {
+    return index;
+  }
 }

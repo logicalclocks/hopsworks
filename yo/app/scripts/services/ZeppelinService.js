@@ -13,7 +13,7 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/interpreter/stop/' + settingId);
             },
             notebooks: function (projectId) {
-                return $http.get('/api/notebook/'+ projectId);
+                return $http.get('/api/notebook/'+ projectId +'notebooks');
             },
             tutorialNotebooks: function () {
                 return $http.get('/api/notebook/tutorial');
