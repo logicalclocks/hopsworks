@@ -407,4 +407,10 @@ public class UserManager {
     return query.getResultList();
   }
 
+    public boolean updateMaxNumProjs(Users id, int maxNumProjs) {
+    id.setMaxNumProjects(maxNumProjs);
+    em.merge(id);
+    return true;
+  }
+  
 }

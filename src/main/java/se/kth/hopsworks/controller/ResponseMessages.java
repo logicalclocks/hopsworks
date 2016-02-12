@@ -36,7 +36,7 @@ public class ResponseMessages {
   public final static String PASSWORD_TOO_LONG = "Password too long.";
   public final static String PASSWORD_INCORRECT = "Password incorrect";
   public final static String PASSWORD_PATTERN_NOT_CORRECT
-          = "Password should including one uppercase letter,\n"
+          = "Password should include one uppercase letter,\n"
           + "one special character and/or alphanumeric characters.";
   public final static String INCORRECT_PASSWORD
           = "The password is incorrect. Please try again";
@@ -66,6 +66,9 @@ public class ResponseMessages {
           = "Your ssh keys were listed successfully.";
 
   //project error response
+  public final static String PROJECT_EXISTS = "Project with the same name already exists.";
+  public final static String NUM_PROJECTS_LIMIT_REACHED = "You have reached the maximum number of allowed projects.";
+  public final static String INVALID_PROJECT_NAME = "Invalid project name.";
   public final static String PROJECT_NOT_FOUND = "Project wasn't found.";
   public final static String PROJECT_NOT_ROOT_FOUND
           = "The project's root folder was not found in HDFS. You will not be unable to access its contents.";
@@ -118,7 +121,7 @@ public class ResponseMessages {
   public final static String PROJECT_REMOVED
           = "The project and all related files were removed successfully.";
   public final static String PROJECT_REMOVED_NOT_FOLDER
-          = "The project was removed successfully. But datasets are priserved.";
+          = "The project was removed successfully. But its datasets have not been deleted.";
   public final static String PROJECT_MEMBER_REMOVED
           = "Member removed successfully";
   public final static String PROJECT_MEMBERS_ADDED
@@ -135,7 +138,7 @@ public class ResponseMessages {
   public final static String DATASET_REMOVED_FROM_HDFS
           = "DataSet removed from hdfs.";
   public final static String SHARED_DATASET_REMOVED
-          = "The shared dataset is removed from this project.";
+          = "The shared dataset has been removed from this project.";
   public final static String DATASET_NOT_FOUND
           = "DataSet not found.";
 
@@ -147,11 +150,11 @@ public class ResponseMessages {
   public final static String UPLOAD_PATH_NOT_SPECIFIED
           = "The path to upload the template was not specified";
   public final static String ELASTIC_SERVER_NOT_FOUND
-          = "Problem when reaching the elastic server";
+          = "Problem when reaching the Elasticsearch server";
   public final static String ELASTIC_INDEX_NOT_FOUND
-          = "Elastic indices do not exist";
+          = "Elasticsearch indices do not exist";
   public final static String ELASTIC_TYPE_NOT_FOUND
-          = "Elastic type does not exist";
+          = "Elasticsearch type does not exist";
   public final static String ELASTIC_SERVER_NOT_AVAILABLE
-          = "Elasticsearch Server is either down or misconfigured.";
+          = "The Elasticsearch Server is either down or misconfigured.";
 }

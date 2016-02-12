@@ -20,11 +20,11 @@
           </div>
         </div>
       <div ng-show="mainCtrl.searchReturned === ''">
-        <div class="col-lg-2" style="max-width: 250px">
+<!--        <div class="col-lg-2" style="max-width: 250px">
           <div class="ibox float-e-margins">
             <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
               <div class="file-manager">
-                <div class="btn-group"
+                <div class="btn-group" ng-show="projectCtrl.role == 'Data owner'"
                      style="width: 100%; margin-left: 5px; margin-right: 5px;">
                   <button style="width: 100%;"
                           ng-click="metadataCtrl.attachTemplate(projectCtrl.projectFile); $event.stopPropagation();"
@@ -32,7 +32,7 @@
                     Add metadata template
                   </button>
                 </div>
-                <div class="btn-group"
+                <div class="btn-group" ng-show="projectCtrl.role == 'Data owner'"
                      style="width: 100%; margin-top: 10px; margin-left: 5px; margin-right: 5px;">
                   <button style="width: 100%;"
                           ng-click="metadataCtrl.detachTemplate(projectCtrl.projectFile); $event.stopPropagation();"
@@ -44,8 +44,8 @@
             </div>
             <div class="ibox-content"></div>
           </div>
-        </div>
-        <div class="widget-body col-md-6">
+        </div>-->
+        <div class="widget-body col-md-10">
           <div class="timeline clearfix">
             <div class="mid-line"></div>
 
@@ -81,7 +81,7 @@
         <!-- /#page-content-wrapper -->
       </div>
       </div>
-      <div class="col-lg-4" style="border-left: 1px dashed lightgrey;
+<!--      <div class="col-lg-4" style="border-left: 1px dashed lightgrey;
         padding-left: 0px; float: right; margin-top: -40px;">
         <div class="ibox float-e-margins" style="margin-bottom: -25px; height: 95%;">
           <div class="file-manager">
@@ -111,11 +111,11 @@
                     </md-content>
 
 
-                    <!--div class="ibox-content" id="hoverable" ng-click="datasetsCtrl.toggleRight()">
+                    div class="ibox-content" id="hoverable" ng-click="datasetsCtrl.toggleRight()">
                       <span class="pull-left" style="font-size: 16px; margin-top:-2px;">Add metadata</span> <i
                         class="fa fa-pencil-square-o pull-right" style="font-size: 20px;"></i>
-                    </div-->
-                    <!--METADATA PRESENTATION SECTION-->
+                    </div
+                    METADATA PRESENTATION SECTION
                     <div id="board" style="font-family: Times New Roman;">
                       <div class="modal-header">
                                       <span class="modal-title"
@@ -159,7 +159,7 @@
 
                                 <div  class="pull-left " style="padding-bottom: 0;">
                                   <div ng-repeat="card in table.inputcontent">
-                                    <!--text input field type-->
+                                    text input field type
                                     <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[table.id+'-'+field.tagName]">
                                       <input value="" class="fillInMetadataInput" id="sizeFieldInput"
                                              tooltips title="{{card.description}}"
@@ -172,12 +172,12 @@
 
                                     </div>
 
-                                    <!--single select list input type-->
+                                    single select list input type
                                     <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 150px;" ng-show="metadataCtrl.visibilityInfo[table.id+'-'+field.tagName]">
                                       <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
                                         <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
                                         <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
-                                          <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                          <div ng-bind-html="item.value | highlight: $select.search"></div>
                                           <small>
                                             <span ng-bind-html="''+item.value | highlight: $select.search"></span>
                                           </small>
@@ -187,7 +187,7 @@
                                       <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id+'-'+field.tagName,false);"><span class="glyphicon glyphicon-remove"></span></button>
                                     </div>
 
-                                    <!--multi select list input type-->
+                                    multi select list input type
                                     <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[table.id+'-'+field.tagName]">
                                       <div
                                         isteven-multi-select
@@ -226,7 +226,7 @@
 
                                   <div  class="pull-left " style="padding-bottom: 0;">
                                     <div ng-repeat="card in table.inputcontent">
-                                      <!--text input field type-->
+                                      text input field type
                                       <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[value.id]">
                                         <input placeholder="{{value.data}}" class="fillInMetadataInput" id="sizeFieldInput"
                                                tooltips title="{{card.description}}"
@@ -238,12 +238,12 @@
 
                                       </div>
 
-                                      <!--single select list input type-->
+                                      single select list input type
                                       <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 125px;" ng-show="metadataCtrl.visibilityInfo[value.id]">
                                         <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
                                           <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
                                           <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
-                                            <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                            <div ng-bind-html="item.value | highlight: $select.search"></div>
                                             <small>
                                               <span ng-bind-html="''+item.value | highlight: $select.search"></span>
                                             </small>
@@ -253,12 +253,12 @@
                                         <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id,false);"><span class="glyphicon glyphicon-remove"></span></button>
                                       </div>
 
-                                      <!--multi select list input type-->
+                                      multi select list input type
                                       <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[value.id]">
                                         <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
                                           <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
                                           <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
-                                            <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                            <div ng-bind-html="item.value | highlight: $select.search"></div>
                                             <small>
                                               <span ng-bind-html="''+item.value | highlight: $select.search"></span>
                                             </small>
@@ -282,7 +282,7 @@
                   </md-tab>
                 </md-tabs>
               </md-content>
-            </div>
+            </div>-->
           </div>
         </div>
       </div>

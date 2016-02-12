@@ -58,12 +58,13 @@
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToMetadataDesigner()">
+      <li ng-click="projectCtrl.goToMetadataDesigner()" ng-show="projectCtrl.role == 'Data owner'">
         <a>
           Metadata Designer <span
           class="sub_icon fa fa-edit fa-lg pull-right"></span>
         </a>
       </li>
     </ul>
+
   </nav>
 </aside>

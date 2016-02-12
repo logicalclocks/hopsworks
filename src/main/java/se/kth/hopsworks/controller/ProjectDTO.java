@@ -15,6 +15,8 @@ import se.kth.bbc.project.fb.InodeView;
 public class ProjectDTO {
 
   private Integer projectId;
+  private Long hdfsQuotaInGBs;
+  private Integer yarnQuotaInMins;
   private String projectName;
   private String owner;
   private String description;
@@ -37,7 +39,8 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
-          List<ProjectTeam> projectTeam) {
+          List<ProjectTeam> projectTeam, Integer yarnQuotaInMins,
+          Long hdfsQuotaInGBs) {
     this.projectId = project.getId();
     this.inodeid = inodeid;
     this.projectName = project.getName();
@@ -49,10 +52,13 @@ public class ProjectDTO {
     this.description = project.getDescription();
     this.services = services;
     this.projectTeam = projectTeam;
+    this.yarnQuotaInMins = yarnQuotaInMins;
+    this.hdfsQuotaInGBs = hdfsQuotaInGBs;    
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
-          List<ProjectTeam> projectTeam, List<InodeView> datasets) {
+          List<ProjectTeam> projectTeam, List<InodeView> datasets, Integer yarnQuota,
+          Long hdfsQuotaGB) {
     this.projectId = project.getId();
     //the inodeid of the current project comes from hops database
     this.inodeid = inodeid;
@@ -66,6 +72,8 @@ public class ProjectDTO {
     this.services = services;
     this.projectTeam = projectTeam;
     this.datasets = datasets;
+    this.yarnQuotaInMins = yarnQuota;
+    this.hdfsQuotaInGBs = hdfsQuotaGB;
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
@@ -180,6 +188,23 @@ public class ProjectDTO {
   public void setDatasets(List<InodeView> datasets) {
     this.datasets = datasets;
   }
+
+  public Long getHdfsQuotaInGBs() {
+    return hdfsQuotaInGBs;
+  }
+
+  public Integer getYarnQuotaInMins() {
+    return yarnQuotaInMins;
+  }
+
+  public void setHdfsQuotaInGBs(Long hdfsQuotaInGBs) {
+    this.hdfsQuotaInGBs = hdfsQuotaInGBs;
+  }
+
+  public void setYarnQuotaInMins(Integer yarnQuotaInMins) {
+    this.yarnQuotaInMins = yarnQuotaInMins;
+  }
+  
 
   @Override
   public String toString() {

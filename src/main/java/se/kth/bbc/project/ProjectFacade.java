@@ -336,4 +336,12 @@ public class ProjectFacade extends AbstractFacade<Project> {
     }
     return false;
   }
+
+  public boolean numProjectsLimitReached(Users user) {
+    int count = countOwnedStudies(user);
+    if (count >= user.getMaxNumProjects()) {
+      return true;
+    }
+    return false;
+  }
 }

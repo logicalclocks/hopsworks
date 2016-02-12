@@ -68,13 +68,13 @@ public class ProjectsManagementBean {
   }
 
   public int getHdfsQuota(String projectname) throws IOException {
-    long quota = projectsManagementController.getHdfsQuota(projectname);
+    long quota = projectsManagementController.getHdfsSpaceQuota(projectname);
     this.hdfsquota = String.valueOf(quota);
     return (int) quota;
   }
 
   public int getHDFSUsedQuota(String projectname) throws IOException {
-    return (int) projectsManagementController.getHDFSUsedQuota(projectname);
+    return (int) projectsManagementController.getHDFSUsedSpaceQuota(projectname);
   }
 
   public String getAction() {
@@ -109,7 +109,7 @@ public class ProjectsManagementBean {
     }
     projectsManagementController.changeYarnQuota(row.getProjectname(), row
         .getYarnQuotaRemaining());
-    projectsManagementController.setHdfsQuota(row.getProjectname(),
+    projectsManagementController.setHdfsSpaceQuota(row.getProjectname(),
         Long.parseLong(hdfsquota));
   }
 
