@@ -2,7 +2,7 @@
 
   <button class="close" ng-click="datasetCreatorCtrl.close()" data-dismiss="modal" aria-hidden="true"
           type="button">&times;</button>
-  <h2 class="modal-title">New DataSet folder</h2>
+  <h2 class="modal-title">New Folder</h2>
 </div>
 <div class="modal-body">
 
@@ -15,8 +15,8 @@
           <md-input-container style="height: 50px;">
             <input name="dataSet_name" type="text" id="dataSetName"
                    ng-model="datasetCreatorCtrl.dataSet.name"
-                   ng-pattern="datasetCreatorCtrl.regex"
-                   ng-maxlength="24"
+                   <!--ng-pattern="datasetCreatorCtrl.regex"-->
+                   ng-maxlength="48"
                    required autofocus>
           </md-input-container>
 
