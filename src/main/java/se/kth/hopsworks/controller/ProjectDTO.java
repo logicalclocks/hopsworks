@@ -15,7 +15,8 @@ import se.kth.bbc.project.fb.InodeView;
 public class ProjectDTO {
 
   private Integer projectId;
-  private Long hdfsQuotaInGBs;
+  private Long hdfsUsageInBytes;
+  private Long hdfsQuotaInBytes;
   private Integer yarnQuotaInMins;
   private String projectName;
   private String owner;
@@ -40,7 +41,7 @@ public class ProjectDTO {
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
           List<ProjectTeam> projectTeam, Integer yarnQuotaInMins,
-          Long hdfsQuotaInGBs) {
+          Long hdfsQuotaInBytes, Long hdfsUsageInBytes) {
     this.projectId = project.getId();
     this.inodeid = inodeid;
     this.projectName = project.getName();
@@ -53,7 +54,7 @@ public class ProjectDTO {
     this.services = services;
     this.projectTeam = projectTeam;
     this.yarnQuotaInMins = yarnQuotaInMins;
-    this.hdfsQuotaInGBs = hdfsQuotaInGBs;    
+    this.hdfsQuotaInBytes = hdfsQuotaInBytes;    
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
@@ -73,7 +74,7 @@ public class ProjectDTO {
     this.projectTeam = projectTeam;
     this.datasets = datasets;
     this.yarnQuotaInMins = yarnQuota;
-    this.hdfsQuotaInGBs = hdfsQuotaGB;
+    this.hdfsQuotaInBytes = hdfsQuotaGB;
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
@@ -189,23 +190,33 @@ public class ProjectDTO {
     this.datasets = datasets;
   }
 
-  public Long getHdfsQuotaInGBs() {
-    return hdfsQuotaInGBs;
+  public Long getHdfsQuotaInBytes() {
+    return hdfsQuotaInBytes;
   }
 
   public Integer getYarnQuotaInMins() {
     return yarnQuotaInMins;
   }
 
-  public void setHdfsQuotaInGBs(Long hdfsQuotaInGBs) {
-    this.hdfsQuotaInGBs = hdfsQuotaInGBs;
+  public void setHdfsQuotaInBytes(Long hdfsQuotaInBytes) {
+    this.hdfsQuotaInBytes = hdfsQuotaInBytes;
   }
 
   public void setYarnQuotaInMins(Integer yarnQuotaInMins) {
     this.yarnQuotaInMins = yarnQuotaInMins;
   }
+
+  public Long getHdfsUsageInBytes() {
+    return hdfsUsageInBytes;
+  }
+
+  public void setHdfsUsageInBytes(Long hdfsUsageInBytes) {
+    this.hdfsUsageInBytes = hdfsUsageInBytes;
+  }
   
 
+  
+  
   @Override
   public String toString() {
     return "ProjectDTO{" + "projectName=" + projectName + ", owner=" + owner

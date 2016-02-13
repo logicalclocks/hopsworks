@@ -589,7 +589,7 @@ public class ProjectController {
       services.add(s.toString());
     }
     return new ProjectDTO(project, inode.getId(), services, projectTeam, getYarnQuota(name),
-        getHdfsSpaceQuotaInGBs(name));
+        getHdfsSpaceQuotaInBytes(name), getHdfsSpaceUsageInBytes(name));
   }
 
   /**
@@ -631,7 +631,7 @@ public class ProjectController {
 
     //send the project back to client
     return new ProjectDTO(project, inode.getId(), services, projectTeam, kids,
-        getYarnQuota(name), getHdfsSpaceQuotaInGBs(name));
+        getYarnQuota(name), getHdfsSpaceQuotaInBytes(name));
   }
 
   private Integer getYarnQuota(String name) {
@@ -639,7 +639,7 @@ public class ProjectController {
     return yarnQuota.getQuotaRemaining();
   }
 
-  private Long getHdfsSpaceQuotaInGBs(String name) throws AppException {
+  private Long getHdfsSpaceQuotaInBytes(String name) throws AppException {
     String path = File.separator + Settings.DIR_ROOT + File.separator + name;
 
     try {
@@ -652,6 +652,21 @@ public class ProjectController {
           ". Cannot find quota for the project: " + path);
     }
   }
+  
+  
+  private Long getHdfsSpaceUsageInBytes(String name) throws AppException {
+    String path = File.separator + Settings.DIR_ROOT + File.separator + name;
+
+    try {
+      long usedQuota = dfs.getDfsOps().getUsedQuota(new Path(path));
+      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, usedQuota});
+      return usedQuota;
+    } catch (IOException ex) {
+      logger.severe(ex.getMessage());
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ". Cannot find quota for the project: " + path);
+    }
+  }  
 
   /**
    * Deletes a member from a project
