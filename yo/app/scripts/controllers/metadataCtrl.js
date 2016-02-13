@@ -206,7 +206,7 @@ angular.module('hopsWorksApp')
                                                         self.availableTemplates = JSON.parse(response.board).templates;
                                                         //console.log("AVAILABLE TEMPLATES " + JSON.stringify(self.availableTemplates));
                                                       });
-
+												template.showing = true;
                                               self.toExtend = -1;
                                               //console.log('Response from extending template: ');
                                               //console.log(data);
