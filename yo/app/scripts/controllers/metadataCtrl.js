@@ -182,6 +182,7 @@ angular.module('hopsWorksApp')
 				  return;
 				}
 
+				var templateName = self.extendedTemplateName;
 				//store the new template name
 				MetadataActionService.addNewTemplate($cookies['email'], self.extendedTemplateName)
 						.then(function (data) {
@@ -204,9 +205,14 @@ angular.module('hopsWorksApp')
 											  MetadataHelperService.fetchAvailableTemplates()
 													  .then(function (response) {
 														self.availableTemplates = JSON.parse(response.board).templates;
-														//console.log("AVAILABLE TEMPLATES " + JSON.stringify(self.availableTemplates));
+														angular.forEach(self.availableTemplates, function (template, key) {
+														  if (template.name.trim().toLowerCase() === templateName.trim().toLowerCase()) {
+															self.toggleTemplate(template);
+															self.fetchTemplate(template.id)
+														  }
+														});
 													  });
-											  template.showing = true;
+//											  template.showing = true;
 											  self.toExtend = -1;
 											  //console.log('Response from extending template: ');
 											  //console.log(data);
@@ -276,7 +282,7 @@ angular.module('hopsWorksApp')
 			 */
 			self.addNewTemplate = function () {
 
-              var templateName = self.newTemplateName;
+			  var templateName = self.newTemplateName;
 			  if (self.checkTemplateAvailability(self.newTemplateName)) {
 
 				MetadataActionService.addNewTemplate($cookies['email'], self.newTemplateName)
