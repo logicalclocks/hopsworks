@@ -306,13 +306,10 @@ angular.module('hopsWorksApp')
         };
 
 
-        self.diskUsage = function () {
-          return convertSize(self.projectFile.diskUsage);
+        self.hdfsUsage = function () {
+          return convertSize(self.projectFile.hdfsUsageInBytes);
         };
 
-        self.hdfsSize = function () {
-          return convertSize(self.projectFile.hdfsSizeInBytes);
-        };
         self.hdfsQuota = function () {
           return convertSize(self.projectFile.hdfsQuotaInBytes);
         };

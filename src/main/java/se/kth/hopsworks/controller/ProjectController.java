@@ -631,7 +631,7 @@ public class ProjectController {
 
     //send the project back to client
     return new ProjectDTO(project, inode.getId(), services, projectTeam, kids,
-        getYarnQuota(name), getHdfsSpaceQuotaInBytes(name));
+        getYarnQuota(name), getHdfsSpaceQuotaInBytes(name), getHdfsSpaceUsageInBytes(name));
   }
 
   private Integer getYarnQuota(String name) {

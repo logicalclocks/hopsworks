@@ -291,18 +291,33 @@ public class DistributedFileSystemOps {
     dfs.setOwner(path, username, groupname);
   }
 
-  //Set quota in GB
-  public void setQuota(Path src, long diskspaceQuota) throws
+  /**
+   * 
+   * @param src
+   * @param diskspaceQuotaInBytes hdfs quota size in bytes
+   * @throws IOException 
+   */
+  public void setQuota(Path src, long diskspaceQuotaInBytes) throws
           IOException {
-    dfs.setQuota(src, HdfsConstants.QUOTA_DONT_SET, 1073741824 * diskspaceQuota);
+    dfs.setQuota(src, HdfsConstants.QUOTA_DONT_SET, 1073741824 * diskspaceQuotaInBytes);
   }
 
-  //Get quota in GB
+  /**
+   * 
+   * @param path
+   * @return hdfs quota size in bytes
+   * @throws IOException 
+   */
   public long getQuota(Path path) throws IOException {
     return dfs.getContentSummary(path).getSpaceQuota() / 1073741824;
   }
 
-  //Get used disk space in GB
+  /**
+   * 
+   * @param path
+   * @return number of bytes stored in this subtree in bytes
+   * @throws IOException 
+   */
   public long getUsedQuota(Path path) throws IOException {
     return dfs.getContentSummary(path).getSpaceConsumed() / 1073741824;
   }

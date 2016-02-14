@@ -55,11 +55,12 @@ public class ProjectDTO {
     this.projectTeam = projectTeam;
     this.yarnQuotaInMins = yarnQuotaInMins;
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;    
+    this.hdfsUsageInBytes = hdfsUsageInBytes;
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
           List<ProjectTeam> projectTeam, List<InodeView> datasets, Integer yarnQuota,
-          Long hdfsQuotaGB) {
+          Long hdfsQuotaGB, Long hdfsUsageInBytes) {
     this.projectId = project.getId();
     //the inodeid of the current project comes from hops database
     this.inodeid = inodeid;
@@ -75,6 +76,7 @@ public class ProjectDTO {
     this.datasets = datasets;
     this.yarnQuotaInMins = yarnQuota;
     this.hdfsQuotaInBytes = hdfsQuotaGB;
+    this.hdfsUsageInBytes = hdfsUsageInBytes;
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
