@@ -34,7 +34,7 @@ public class UserAccountsEmailMessages {
    * Subject of blocked acouunt
    */
   public final static String BIOBANKCLOUD_SUPPORT_EMAIL
-          = "support@biobankcloud.com";
+          = "support@hops.io";
 
   /*
    * Subject of profile update
@@ -103,8 +103,8 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received a mobile account request for HopsWorks in your behalf.\n\n";
-    String l2 = "Please click on the following link to verify your email address. Afterwards we will activate your account within "
+            + "We received a mobile account request for HopsWorks on your behalf.\n\n";
+    String l2 = "Please click on the following link to verify your email address. We will activate your account within "
             + ACCOUNT_ACITVATION_PERIOD
             + " hours after validating your email address.\n\n\n";
 
@@ -123,9 +123,9 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "Your account in the Biobankcloud has been blocked.\n\n";
+            + "Your HopsWorks account has been blocked.\n\n";
     String l2
-            = "If you have any questions please contact support@biobankcloud.com";
+            = "If you have any questions please contact support@hops.io";
     String l3 = "If you have any questions please contact "
             + BIOBANKCLOUD_SUPPORT_EMAIL;
 
