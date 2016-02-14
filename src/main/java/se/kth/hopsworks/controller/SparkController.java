@@ -189,11 +189,11 @@ public class SparkController {
 	if (!path.endsWith(".jar")) {
 	  throw new IllegalArgumentException("Path does not point to a jar file.");
 	}
-	if (path.startsWith("hdfs:/Projects")) {
-	  HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
-	  path = path.replaceFirst("hdfs:/Projects", 
-			  "hdfs://" + hdfsLeDescriptors.getHostname() + ":8020" + "/Projects");
-	}  
+	HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
+	// If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
+	path = path.replaceFirst("hdfs:/*Projects",
+			"hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
+	logger.log(Level.INFO, "Really executing Spark job by {0} at path: {1}", new Object[]{username, path});
 	
 	JarInputStream jis = new JarInputStream(dfs.getDfsOps(username).open(path));
 	Manifest mf = jis.getManifest();
