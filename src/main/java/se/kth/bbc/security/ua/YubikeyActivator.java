@@ -146,12 +146,12 @@ public class YubikeyActivator implements Serializable {
               && this.selectedYubikyUser.getYubikey().getStatus()
               != PeopleAccountStatus.YUBIKEY_LOST.getValue()) {
         // Set stauts to active
-        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVEATED.getValue());
+        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVATED.getValue());
 
         userManager.updateYubikey(yubi);
 
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-                PeopleAccountStatus.ACCOUNT_ACTIVEATED.name(),
+                PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
                 UserAuditActions.SUCCESS.name(), "", yubi.getUid());
 
         if (!"#".equals(this.sgroup.trim()) && (this.sgroup != null
@@ -181,7 +181,7 @@ public class YubikeyActivator implements Serializable {
               == PeopleAccountStatus.YUBIKEY_LOST.getValue()) {
 
         // Set stauts to active
-        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVEATED.getValue());
+        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVATED.getValue());
         userManager.updateYubikey(yubi);
         
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
@@ -191,11 +191,11 @@ public class YubikeyActivator implements Serializable {
       }
 
       userManager.updateStatus(this.selectedYubikyUser,
-              PeopleAccountStatus.ACCOUNT_ACTIVEATED.getValue());
+              PeopleAccountStatus.ACCOUNT_ACTIVATED.getValue());
       userTransaction.commit();
 
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-                PeopleAccountStatus.ACCOUNT_ACTIVEATED.name(),
+                PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
                 UserAuditActions.SUCCESS.name(), "", yubi.getUid());
       
       emailBean.sendEmail(this.selectedYubikyUser.getEmail(),

@@ -432,18 +432,18 @@ public class PeopleAdministration implements Serializable {
           
       } else {
           auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              PeopleAccountStatus.ACCOUNT_ACTIVEATED.name(),
+              PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
               RolesAuditActions.FAILED.name(), "Role could not be granted.", user1);
         MessagesController.addSecurityErrorMessage("Role could not be granted.");
         return;
       }
 
-      userManager.updateStatus(user1, PeopleAccountStatus.ACCOUNT_ACTIVEATED.
+      userManager.updateStatus(user1, PeopleAccountStatus.ACCOUNT_ACTIVATED.
               getValue());
       userTransaction.commit();
 
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              PeopleAccountStatus.ACCOUNT_ACTIVEATED.name(),
+              PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
               UserAuditActions.SUCCESS.name(), "", user1);
       emailBean.sendEmail(user1.getEmail(),
               UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
@@ -455,7 +455,7 @@ public class PeopleAdministration implements Serializable {
             HeuristicRollbackException | SecurityException |
             IllegalStateException e) {
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              PeopleAccountStatus.ACCOUNT_ACTIVEATED.name(),
+              PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
               UserAuditActions.FAILED.name(), "", user1);
       return;
     }
