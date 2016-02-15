@@ -49,7 +49,7 @@ public class AdminProfileAdministration implements Serializable {
   private String selectedStatus;
 
   // maxNumProjs
-  private String maxNumProjs;
+//  private String maxNumProjs;
 
   // to assign a new group
   private String newGroup;
@@ -259,10 +259,6 @@ public class AdminProfileAdministration implements Serializable {
   }
 
   
-  public void setMaxNumProjs() {
-    int num = Integer.parseInt(maxNumProjs);
-    userManager.updateMaxNumProjs(editingUser, num);
-  }
   /**
    * Update user roles from profile by admin.
    */
@@ -355,6 +351,15 @@ public class AdminProfileAdministration implements Serializable {
 
   public void setSessionState(ClientSessionState sessionState) {
     this.sessionState = sessionState;
+  }
+
+  public String getMaxNumProjs() {
+    return userManager.findByEmail(editingUser.getEmail()).getMaxNumProjects().toString();
+  }
+
+  public void setMaxNumProjs(String maxNumProjs) {
+    int num = Integer.parseInt(maxNumProjs);
+    userManager.updateMaxNumProjs(editingUser, num);
   }
 
 }

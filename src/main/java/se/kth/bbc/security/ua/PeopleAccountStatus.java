@@ -9,6 +9,8 @@ public enum PeopleAccountStatus {
 
   // Status of new Yubikey users requests
 // Status of new Yubikey users requests
+// Status of new Yubikey users requests
+// Status of new Yubikey users requests
   YUBIKEY_ACCOUNT_INACTIVE(1),
 
   // Status of new Mobile users requests
@@ -20,7 +22,7 @@ public enum PeopleAccountStatus {
   ACCOUNT_PENDING(3),
 
   // When user is approved to use the platform
-  ACCOUNT_ACTIVEATED(4),
+  ACCOUNT_ACTIVATED(4),
 
   // Blocked users can not user the resources. This can be due to suspicious behaviour of users. 
   // For example. multiple false logings

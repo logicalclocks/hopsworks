@@ -5,6 +5,7 @@
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
       xmlns:p="http://primefaces.org/ui"
       >
   <h:head>
@@ -268,6 +269,19 @@
             </p:dataGrid>
 
           </p:column>   
+    
+            
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="Max Number of Projects allowed" />
+            </h3> 
+          </p:column>
+
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">#{adminProfileAdministration.maxNumProjs}</h3>
+
+          </p:column>            
 
           <p:column>
             <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
@@ -369,6 +383,7 @@
               <p:commandButton  type="submit" 
                                 value="Update"
                                 update=":account_status :num_projs"
+                                pt:placeholder="Max Number of Projects"
                                 action="#{adminProfileAdministration.setMaxNumProjs()}"/> 
             </h:panelGrid>
           </h:form>

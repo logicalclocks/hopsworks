@@ -1,5 +1,7 @@
 package se.kth.hopsworks.controller;
 
+import io.hops.hdfs.HdfsLeDescriptors;
+import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
@@ -36,7 +38,7 @@ import se.kth.hopsworks.util.Settings;
 public class SparkController {
 
   private static final Logger logger = Logger.getLogger(SparkController.class.
-          getName());
+		  getName());
 
   @EJB
   private FileOperations fops;
@@ -52,6 +54,8 @@ public class SparkController {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private Settings settings;
+  @EJB
+  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
 
   /**
    * Start the Spark job as the given user.
@@ -62,117 +66,114 @@ public class SparkController {
    * @throws IllegalStateException If Spark is not set up properly.
    * @throws IOException If starting the job fails.
    * @throws NullPointerException If job or user is null.
-   * @throws IllegalArgumentException If the given job does not represent a
-   * Spark job.
+   * @throws IllegalArgumentException If the given job does not represent a Spark job.
    */
   public Execution startJob(final JobDescription job, final Users user) throws
-          IllegalStateException,
-          IOException, NullPointerException, IllegalArgumentException {
-    //First: some parameter checking.
-    if (job == null) {
-      throw new NullPointerException("Cannot run a null job.");
-    } else if (user == null) {
-      throw new NullPointerException("Cannot run a job as a null user.");
-    } else if (job.getJobType() != JobType.SPARK) {
-      throw new IllegalArgumentException(
-              "Job configuration is not a Spark job configuration.");
-    } else if (!isSparkJarAvailable()) {
-      throw new IllegalStateException("Spark is not installed on this system.");
-    }
-    String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
-    UserGroupInformation proxyUser = ugiService.getProxyUser(username);
-    SparkJob sparkjob = null;
-    try {
-      sparkjob = proxyUser.doAs(new PrivilegedExceptionAction<SparkJob>() {
-        @Override
-        public SparkJob run() throws Exception {           
-          return new SparkJob(job, submitter, user, settings.
-            getHadoopDir(), settings.getSparkDir(),
-            settings.getSparkUser());
-        }
-      });
-    } catch (InterruptedException ex) {
-      logger.log(Level.SEVERE, null, ex);
-    }
-    if (sparkjob == null) {
-      throw new NullPointerException("Could not instantiate Sparkjob.");
-    }
-    Execution jh = sparkjob.requestExecutionId();
-    if (jh != null) {
-      submitter.startExecution(sparkjob);
-    } else {
-      logger.log(Level.SEVERE,
-              "Failed to persist JobHistory. Aborting execution.");
-      throw new IOException("Failed to persist JobHistory.");
-    }
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
-            user.asUser());
-    return jh;
+		  IllegalStateException,
+		  IOException, NullPointerException, IllegalArgumentException {
+	//First: some parameter checking.
+	if (job == null) {
+	  throw new NullPointerException("Cannot run a null job.");
+	} else if (user == null) {
+	  throw new NullPointerException("Cannot run a job as a null user.");
+	} else if (job.getJobType() != JobType.SPARK) {
+	  throw new IllegalArgumentException(
+			  "Job configuration is not a Spark job configuration.");
+	} else if (!isSparkJarAvailable()) {
+	  throw new IllegalStateException("Spark is not installed on this system.");
+	}
+	String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
+	UserGroupInformation proxyUser = ugiService.getProxyUser(username);
+	SparkJob sparkjob = null;
+	try {
+	  sparkjob = proxyUser.doAs(new PrivilegedExceptionAction<SparkJob>() {
+		@Override
+		public SparkJob run() throws Exception {
+		  return new SparkJob(job, submitter, user, settings.
+				  getHadoopDir(), settings.getSparkDir(),
+				  settings.getSparkUser());
+		}
+	  });
+	} catch (InterruptedException ex) {
+	  logger.log(Level.SEVERE, null, ex);
+	}
+	if (sparkjob == null) {
+	  throw new NullPointerException("Could not instantiate Sparkjob.");
+	}
+	Execution jh = sparkjob.requestExecutionId();
+	if (jh != null) {
+	  submitter.startExecution(sparkjob);
+	} else {
+	  logger.log(Level.SEVERE,
+			  "Failed to persist JobHistory. Aborting execution.");
+	  throw new IOException("Failed to persist JobHistory.");
+	}
+	activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
+			user.asUser());
+	return jh;
   }
 
   public void stopJob(JobDescription job, Users user, String appid) throws
-      IllegalStateException,
-      IOException, NullPointerException, IllegalArgumentException {
-    //First: some parameter checking.
-    if (job == null) {
-      throw new NullPointerException("Cannot stop a null job.");
-    } else if (user == null) {
-      throw new NullPointerException("Cannot stop a job as a null user.");
-    } else if (job.getJobType() != JobType.SPARK) {
-      throw new IllegalArgumentException(
-          "Job configuration is not a Spark job configuration.");
-    } else if (!isSparkJarAvailable()) {
-      throw new IllegalStateException("Spark is not installed on this system.");
-    }
+		  IllegalStateException,
+		  IOException, NullPointerException, IllegalArgumentException {
+	//First: some parameter checking.
+	if (job == null) {
+	  throw new NullPointerException("Cannot stop a null job.");
+	} else if (user == null) {
+	  throw new NullPointerException("Cannot stop a job as a null user.");
+	} else if (job.getJobType() != JobType.SPARK) {
+	  throw new IllegalArgumentException(
+			  "Job configuration is not a Spark job configuration.");
+	} else if (!isSparkJarAvailable()) {
+	  throw new IllegalStateException("Spark is not installed on this system.");
+	}
 
-    SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
-        settings.getSparkUser());
+	SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
+			settings.getSparkUser());
 
-    submitter.stopExecution(sparkjob, appid);
+	submitter.stopExecution(sparkjob, appid);
 
   }
 
   /**
-   * Check if the Spark jars are in HDFS. If it's not, try and copy it there
-   * from the local filesystem. If it's still
+   * Check if the Spark jars are in HDFS. If it's not, try and copy it there from the local filesystem. If it's still
    * not there, then return false.
    * <p/>
    * @return
    */
   public boolean isSparkJarAvailable() {
-    boolean isInHdfs;
-    try {
-      isInHdfs = fops.exists(settings.getHdfsSparkJarPath());
-    } catch (IOException e) {
-      logger.log(Level.WARNING, "Cannot get Spark jar file from HDFS: {0}",
-              settings.getHdfsSparkJarPath());
-      //Can't connect to HDFS: return false
-      return false;
-    }
-    if (isInHdfs) {
-      return true;
-    }
+	boolean isInHdfs;
+	try {
+	  isInHdfs = fops.exists(settings.getHdfsSparkJarPath());
+	} catch (IOException e) {
+	  logger.log(Level.WARNING, "Cannot get Spark jar file from HDFS: {0}",
+			  settings.getHdfsSparkJarPath());
+	  //Can't connect to HDFS: return false
+	  return false;
+	}
+	if (isInHdfs) {
+	  return true;
+	}
 
-    File localSparkJar = new File(settings.getLocalSparkJarPath());
-    if (localSparkJar.exists()) {
-      try {
-        String hdfsJarPath = settings.getHdfsSparkJarPath();
-        fops.copyToHDFSFromLocal(false, settings.getLocalSparkJarPath(),
-                hdfsJarPath);
-      } catch (IOException e) {
-        return false;
-      }
-    } else {
-      logger.log(Level.WARNING, "Cannot find Spark jar file locally: {0}",
-              settings.getLocalSparkJarPath());
-      return false;
-    }
-    return true;
+	File localSparkJar = new File(settings.getLocalSparkJarPath());
+	if (localSparkJar.exists()) {
+	  try {
+		String hdfsJarPath = settings.getHdfsSparkJarPath();
+		fops.copyToHDFSFromLocal(false, settings.getLocalSparkJarPath(),
+				hdfsJarPath);
+	  } catch (IOException e) {
+		return false;
+	  }
+	} else {
+	  logger.log(Level.WARNING, "Cannot find Spark jar file locally: {0}",
+			  settings.getLocalSparkJarPath());
+	  return false;
+	}
+	return true;
   }
 
   /**
-   * Inspect the jar on the given path for execution. Returns a
-   * SparkJobConfiguration object with a default
+   * Inspect the jar on the given path for execution. Returns a SparkJobConfiguration object with a default
    * configuration for this job.
    * <p/>
    * @param path
@@ -182,20 +183,27 @@ public class SparkController {
    * @throws IOException
    */
   public SparkJobConfiguration inspectJar(String path, String username) throws
-          AccessControlException, IOException,
-          IllegalArgumentException {
-    if (!path.endsWith(".jar")) {
-      throw new IllegalArgumentException("Path does not point to a jar file.");
-    }
-    JarInputStream jis = new JarInputStream(dfs.getDfsOps(username).open(path));
-    Manifest mf = jis.getManifest();
-    Attributes atts = mf.getMainAttributes();
-    SparkJobConfiguration config = new SparkJobConfiguration();
-    if (atts.containsKey(Name.MAIN_CLASS)) {
-      config.setMainClass(atts.getValue(Name.MAIN_CLASS));
-    }
-    config.setJarPath(path);
-    return config;
+		  AccessControlException, IOException,
+		  IllegalArgumentException {
+	logger.log(Level.INFO, "Executing Spark job by {0} at path: {1}", new Object[]{username, path});
+	if (!path.endsWith(".jar")) {
+	  throw new IllegalArgumentException("Path does not point to a jar file.");
+	}
+	HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
+	// If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
+	path = path.replaceFirst("hdfs:/*Projects",
+			"hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
+	logger.log(Level.INFO, "Really executing Spark job by {0} at path: {1}", new Object[]{username, path});
+	
+	JarInputStream jis = new JarInputStream(dfs.getDfsOps(username).open(path));
+	Manifest mf = jis.getManifest();
+	Attributes atts = mf.getMainAttributes();
+	SparkJobConfiguration config = new SparkJobConfiguration();
+	if (atts.containsKey(Name.MAIN_CLASS)) {
+	  config.setMainClass(atts.getValue(Name.MAIN_CLASS));
+	}
+	config.setJarPath(path);
+	return config;
   }
 
 }
