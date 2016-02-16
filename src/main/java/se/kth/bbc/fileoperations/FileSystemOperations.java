@@ -291,12 +291,12 @@ public class FileSystemOperations {
 
     //add the erasure coding configuration file
     File erasureCodingConfFile
-            = new File(hadoopConfDir, "erasure-coding-site.xml");
+            = new File(hadoopConfDir, Settings.ERASURE_CODING_CONFIG);
     if (!erasureCodingConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               erasureCodingConfFile);
       throw new IllegalStateException(
-              "No erasure coding conf file: erasure-coding-site.xml");
+              "No erasure coding conf file: " + Settings.ERASURE_CODING_CONFIG);
     }
 
     this.conf.addResource(new Path(erasureCodingConfFile.getAbsolutePath()));

@@ -665,7 +665,7 @@ public class DataSetService {
             = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
             getJobConfigurationTemplate(JobType.ERASURE_CODING);
     ecConfig.setFilePath(path);
-    System.out.println("PREparing for erasure coding");
+    System.out.println("Preparing for erasure coding");
 
     //persist the job in the database
     JobDescription jobdesc = this.jobcontroller.createJob(user, project,
