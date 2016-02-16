@@ -82,7 +82,11 @@
       <groupId>io.hops</groupId>
       <artifactId>hadoop-client</artifactId>
       <version>2.4.0</version>
-      <type>jar</type>
+    </dependency>
+    <dependency>
+     <groupId>io.hops</groupId>
+     <artifactId>erasure-coding</artifactId>
+     <version>2.4.0</version>
     </dependency>
     <!--end of io.hops -->
     <dependency>
