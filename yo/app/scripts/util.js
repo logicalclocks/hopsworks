@@ -30,7 +30,31 @@ var convertSize = function (fileSizeInBytes) {
 
   return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
 };
-  
+
+/**
+ * Change time in seconds to minutes, hours
+ * @param {long} time in seconds
+ */
+var convertSeconds = function (timeInSeconds) {
+  if (timeInSeconds === 0) {
+    return 0;
+  }
+  var mins = timeInSeconds / 60;
+  mins = Math.floor(mins);
+  if (mins > 60) {
+    var hours = mins / 60;
+    hours = Math.floor(hours);
+    mins = mins - (hours * 60);
+    return hours + "hrs " + mins + "mins";
+  } else {
+    timeInSeconds = timeInSeconds - (mins * 60);
+    return mins + "mins " + timeInSeconds + "secs";    
+  }
+
+};
+
+
+
 /**
  * Sorts an object (a list) based on a predicate
  * 

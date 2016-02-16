@@ -45,25 +45,25 @@
 
         <div class="col-md-4">
 
-          <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Status</h3>
+          <h3 style="margin-top: 40px; margin-left:10px; margin-bottom:0px">Status</h3>
 
           <div class="row" style="margin-top: 10px; margin-left:5px; margin-bottom:0px">
             <fieldset>
-              <span style="margin-top: 40px; margin-left:40px; margin-bottom:0px">
+              <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
                 {{projectSettingsCtrl.hdfsUsage()}} of {{projectSettingsCtrl.hdfsQuota()}} used
               </span>          
             </fieldset>
           </div>
           <div class="row" style="margin-top: 10px; margin-left:5px; margin-bottom:0px">
             <fieldset>
-              <span style="margin-top: 40px; margin-left:40px; margin-bottom:0px">
-                {{projectSettingsCtrl.yarnQuota()}} CPU min left
+              <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                {{projectSettingsCtrl.yarnQuota()}} CPU 
               </span>          
             </fieldset>    
           </div>
 
           <h3 ng-hide="projectCtrl.selectionProjectTypes.length" 
-              style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Services</h3>
+              style="margin-top: 40px; margin-left:10px; margin-bottom:0px">Services</h3>
 
           <fieldset>
             <div class="control-group col-md-offset-2">

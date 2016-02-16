@@ -24,15 +24,15 @@ angular.module('hopsWorksApp')
             self.getQuotas();
 
             self.hdfsUsage = function (id) {
-              return convertSize(self.quotas.hdfsUsageInBytes);
+                return convertSize(self.quotas.hdfsUsageInBytes);
             };
 
             self.hdfsQuota = function (id) {
-              return convertSize(self.quotas.hdfsQuotaInBytes);
+                return convertSize(self.quotas.hdfsQuotaInBytes);
             };
 
             self.yarnQuota = function (id) {
-              return self.quotas.yarnQuotaInMins;
+                return convertSeconds(self.quotas.yarnQuotaInMins);
             };
 
             self.ok = function () {

@@ -225,7 +225,7 @@ public class Settings {
     return HIWAY_DIR;
   }
 
-  private String YARN_DEFAULT_QUOTA = "1000";
+  private String YARN_DEFAULT_QUOTA = "60000";
 
   public synchronized String getYarnDefaultQuota() {
     checkCache();
