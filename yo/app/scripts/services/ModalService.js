@@ -157,24 +157,17 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              projectSettings: function (size) {
+              projectSettings: function (size, projectId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/projectSettingsModal.html',
-                  controller: 'ProjectCtrl as projectCtrl',
-                  size: size,
+                  controller: 'ProjectSettingsCtrl as projectSettingsCtrl',
+                  size: size, 
                   resolve: {
-                    auth: ['$q', '$location', 'AuthService',
-                      function ($q, $location, AuthService) {
-                        return AuthService.session().then(
-                                function (success) {
-                                },
-                                function (err) {
-                                  $location.path('/login');
-                                  $location.replace();
-                                  return $q.reject(err);
-                                });
-                      }]
-                  }
+                    projectId: function () {
+                      return projectId;
+                    }
+                  }                  
+                  
                 });
                 return modalInstance.result;
               },

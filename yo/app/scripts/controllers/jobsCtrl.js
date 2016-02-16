@@ -224,7 +224,7 @@ angular.module('hopsWorksApp')
             
             self.deleteJob=function (jobId){
 
-                  JobService.deleteJob(self.projectId,jobId).then(
+                  JobService.deleteJob(self.projectId, jobId).then(
                       function (success) {
                            getAllJobs();
                            self.hasSelectJob=false;
