@@ -37,6 +37,7 @@ import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ProjectDTO;
+import se.kth.hopsworks.controller.QuotasDTO;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
@@ -490,4 +491,23 @@ public class ProjectService {
     return this.charon.setProject(project);
   }
 
+  
+  @GET
+  @Path("{id}/quotas")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response quotasByProjectID(
+          @PathParam("id") Integer id,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    ProjectDTO proj = projectController.getProjectByID(id);
+    int yarnQuota = projectController.getYarnQuota(proj.getProjectName());
+    Long hdfsQuota = projectController.getHdfsSpaceQuotaInBytes(proj.getProjectName());
+    Long hdfsUsage = projectController.getHdfsSpaceUsageInBytes(proj.getProjectName());
+    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage);
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            quotas).build();
+  }  
 }

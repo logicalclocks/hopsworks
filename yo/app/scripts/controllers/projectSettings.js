@@ -1,0 +1,42 @@
+/*jshint undef: false, unused: false, indent: 2*/
+/*global angular: false */
+
+'use strict';
+
+angular.module('hopsWorksApp')
+        .controller('ProjectSettingsCtrl', ['$modalInstance', '$scope', 'ProjectService', 'growl', 'projectId',
+          function ($modalInstance, $scope, ProjectService, growl, projectId) {
+
+            var self = this;
+            self.projectId = projectId;
+            self.quotas = {};
+
+            self.getQuotas = function () {
+              ProjectService.getQuotas({id: self.projectId}).$promise.then(
+                      function (response) {
+                        self.quotas = response;
+                      }, function (error) {
+                growl.error(error.errorMsg, {title: 'Error', ttl: 2000});
+              });
+
+            };
+
+            self.getQuotas();
+
+            self.hdfsUsage = function (id) {
+              return convertSize(self.quotas.hdfsUsageInBytes);
+            };
+
+            self.hdfsQuota = function (id) {
+              return convertSize(self.quotas.hdfsQuotaInBytes);
+            };
+
+            self.yarnQuota = function (id) {
+              return self.quotas.yarnQuotaInMins;
+            };
+
+            self.ok = function () {
+              $modalInstance.close();
+            };
+
+          }]);

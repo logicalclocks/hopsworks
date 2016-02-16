@@ -588,8 +588,8 @@ public class ProjectController {
     for (ProjectServiceEnum s : projectServices) {
       services.add(s.toString());
     }
-    return new ProjectDTO(project, inode.getId(), services, projectTeam, getYarnQuota(name),
-        getHdfsSpaceQuotaInBytes(name), getHdfsSpaceUsageInBytes(name));
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, getYarnQuota(name));
+//    ,getHdfsSpaceQuotaInBytes(name), getHdfsSpaceUsageInBytes(name));
   }
 
   /**
@@ -630,18 +630,17 @@ public class ProjectController {
     }
 
     //send the project back to client
-    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids,
-        getYarnQuota(name), getHdfsSpaceQuotaInBytes(name), getHdfsSpaceUsageInBytes(name));
+//    getYarnQuota(name)
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids, 0);
   }
 
-  private Integer getYarnQuota(String name) {
+  public Integer getYarnQuota(String name) {
     YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.findByProjectName(name);
     return yarnQuota.getQuotaRemaining();
   }
 
-  private Long getHdfsSpaceQuotaInBytes(String name) throws AppException {
-    String path = File.separator + Settings.DIR_ROOT + File.separator + name;
-
+  public Long getHdfsSpaceQuotaInBytes(String name) throws AppException {
+    String path = settings.getProjectPath(name);
     try {
       long quota = dfs.getDfsOps().getQuota(new Path(path));
       logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, quota});
@@ -654,8 +653,8 @@ public class ProjectController {
   }
   
   
-  private Long getHdfsSpaceUsageInBytes(String name) throws AppException {
-    String path = File.separator + Settings.DIR_ROOT + File.separator + name;
+  public Long getHdfsSpaceUsageInBytes(String name) throws AppException {
+    String path = settings.getProjectPath(name);
 
     try {
       long usedQuota = dfs.getDfsOps().getUsedQuota(new Path(path));
@@ -817,20 +816,9 @@ public class ProjectController {
 
   public void setHdfsSpaceQuota(String projectname, long diskspaceQuotaInGB)
       throws IOException {
-    long diskspaceQuotaInBytes = diskspaceQuotaInGB;
+    long diskspaceQuotaInBytes = diskspaceQuotaInGB * 1024 * 1024 * 1024;
     dfs.getDfsOps().setQuota(new Path(settings.getProjectPath(
         projectname)), diskspaceQuotaInBytes);
   }
 
-  //Get quota in GB_IN_BYTES
-  public long getHdfsSpaceQuota(String projectname) throws IOException {
-    return dfs.getDfsOps().getQuota(new Path(settings.getProjectPath(
-        projectname)));
-  }
-
-  //Get used disk space in GB_IN_BYTES
-  public long getUsedSpaceQuota(String projectname) throws IOException {
-    return dfs.getDfsOps().getUsedQuota(new Path(settings.
-        getProjectPath(projectname)));
-  }
 }

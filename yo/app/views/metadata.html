@@ -176,8 +176,7 @@
                 </ul>
 
                 <div style="background-color: #f5f5f5"
-                     ng-if="metadataCtrl.currentTemplateID !== - 1  || metadataCtrl.currentTemplateID === undefined 
-							   && !metadataCtrl.editingTemplate">
+                     ng-show="metadataCtrl.hideAddTable()">
                   <div style="width: 100%;border-radius: 0px; padding:10px; margin-top:10px;"
                        ng-click="metadataCtrl.addNewList()">
 
