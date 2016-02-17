@@ -99,7 +99,7 @@ public class Notebook {
     if (this.notebookIndex != null) {
       long start = System.nanoTime();
       logger.info("Notebook indexing started...");
-      notebookIndex.addIndexDocs(notes.values());
+      this.notebookIndex.addIndexDocs(notes.values());
       logger.info("Notebook indexing finished: {} indexed in {}s", notes.size(),
               TimeUnit.NANOSECONDS.toSeconds(start - System.nanoTime()));
     }
@@ -150,6 +150,7 @@ public class Notebook {
    * @param newNoteName - the name of the new note
    * @return noteId
    * @throws IOException, CloneNotSupportedException, IllegalArgumentException
+   * @throws java.lang.CloneNotSupportedException
    */
   public Note cloneNote(String sourceNoteID, String newNoteName) throws
           IOException, CloneNotSupportedException, IllegalArgumentException {
@@ -211,7 +212,10 @@ public class Notebook {
   }
 
   public Note getNoteInProject(String id) {
-    return notesInProject.get(id);
+    Note note = notesInProject.get(id);
+    //TODO: get project specific index
+    note.setIndex(zeppelin.getNotebookIndex());
+    return note;
   }
 
   public void removeNote(String id) {

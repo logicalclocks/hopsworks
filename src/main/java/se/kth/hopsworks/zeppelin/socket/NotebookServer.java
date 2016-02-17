@@ -781,8 +781,7 @@ public class NotebookServer implements
   }
 
   private void runParagraph(Session conn, Notebook notebook,
-          Message fromMessage)
-          throws IOException {
+          Message fromMessage) throws IOException {
     final String paragraphId = (String) fromMessage.get("id");
     if (paragraphId == null) {
       return;

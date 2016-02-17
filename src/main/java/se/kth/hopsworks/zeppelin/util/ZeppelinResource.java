@@ -120,8 +120,8 @@ public class ZeppelinResource {
 
   private boolean isProccessAlive(String pid) {
     
-    logger.log(Level.INFO, "Checking if Zeppelin Interpreter alive with PID: {1}", pid);
-    String[] command = {"kill -0 ","$"+pid};
+    logger.log(Level.INFO, "Checking if Zeppelin Interpreter alive with PID: {0}", pid);
+    String[] command = {"kill","-0", pid};
     ProcessBuilder pb = new ProcessBuilder(command);
     if (pid == null) {
       return false;
@@ -137,7 +137,7 @@ public class ZeppelinResource {
       exitValue = p.exitValue();
     } catch (IOException | InterruptedException ex) {
 
-      logger.log(Level.WARNING, "Problem starting Zeppelin Interpreter: {0}", ex.toString());
+      logger.log(Level.WARNING, "Problem testing Zeppelin Interpreter: {0}", ex.toString());
       //if the pid file exists but we can not test if it is alive then
       //we answer true, b/c pid files are deleted when a process is killed.
       return true;
