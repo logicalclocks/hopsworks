@@ -42,6 +42,7 @@ import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 
 @Path("/project")
@@ -503,9 +504,13 @@ public class ProjectService {
 
     ProjectDTO proj = projectController.getProjectByID(id);
     int yarnQuota = projectController.getYarnQuota(proj.getProjectName());
-    Long hdfsQuota = projectController.getHdfsSpaceQuotaInBytes(proj.getProjectName());
-    Long hdfsUsage = projectController.getHdfsSpaceUsageInBytes(proj.getProjectName());
-    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage);
+    HdfsInodeAttributes inodeAttrs = projectController.getHdfsQuotas(proj.getInodeid());
+    
+    Long hdfsQuota = inodeAttrs.getDsquota().longValue();
+    Long hdfsUsage = inodeAttrs.getDiskspace().longValue();
+    Long hdfsNsQuota = inodeAttrs.getNsquota().longValue();
+    Long hdfsNsCount = inodeAttrs.getNscount().longValue();
+    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             quotas).build();

@@ -16,7 +16,7 @@
 
       <div class="row">
 
-        <div class="col-md-8">
+        <div class="col-md-7">
           <fieldset>
             <div class="control-group col-md-offset-1">
               <label for="projectname" style="color: black;">Name</label>
@@ -43,7 +43,7 @@
           </fieldset>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-5">
 
           <h3 style="margin-top: 40px; margin-left:10px; margin-bottom:0px">Status</h3>
 
@@ -57,12 +57,19 @@
           <div class="row" style="margin-top: 10px; margin-left:5px; margin-bottom:0px">
             <fieldset>
               <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                {{projectSettingsCtrl.hdfsNsCount()}} files of {{projectSettingsCtrl.hdfsNsQuota()}} used
+              </span>          
+            </fieldset>
+          </div>
+          <div class="row" style="margin-top: 10px; margin-left:5px; margin-bottom:0px">
+            <fieldset>
+              <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
                 {{projectSettingsCtrl.yarnQuota()}} CPU 
               </span>          
             </fieldset>    
           </div>
 
-          <h3 ng-hide="projectCtrl.selectionProjectTypes.length" 
+          <h3 ng-hide="projectCtrl.allServicesSelected()" 
               style="margin-top: 40px; margin-left:10px; margin-bottom:0px">Services</h3>
 
           <fieldset>

@@ -31,6 +31,14 @@ angular.module('hopsWorksApp')
                 return convertSize(self.quotas.hdfsQuotaInBytes);
             };
 
+            self.hdfsNsCount = function (id) {
+                return convertNs(self.quotas.hdfsNsCount);
+            };
+
+            self.hdfsNsQuota = function (id) {
+                return convertNs(self.quotas.hdfsNsQuota);
+            };
+
             self.yarnQuota = function (id) {
                 return convertSeconds(self.quotas.yarnQuotaInMins);
             };

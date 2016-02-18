@@ -44,6 +44,8 @@ public class FileSystemOperations {
   public void init() {
     try {
       hadoopConfDir = System.getenv("HADOOP_CONF_DIR");
+
+
       dfs = getDfs();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
@@ -149,6 +151,10 @@ public class FileSystemOperations {
     //TODO: here we could use .get(Configuration conf, String user). 
     //FileSystem then will have to be instantiated, opened and closed on every 
     //method call. Now it's just done on EJB instance creation.
+
+// TODO - erasure coding is causing a problem here...    
+    conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+    
     FileSystem fs = FileSystem.get(conf);
     // FileSystem.get(FileSystem.getDefaultUri(conf), conf, )
     return (DistributedFileSystem) fs;

@@ -45,7 +45,7 @@ public class Settings {
   private static final String VARIABLE_ADAM_USER = "adam_user";
   private static final String VARIABLE_ADAM_DIR = "adam_dir";
 
-  public static final String ERASURE_CODING_CONFIG = "erasure-coding.xml";
+  public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
 
   private String setUserVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
