@@ -126,6 +126,11 @@ angular.module('hopsWorksApp')
         };
 
 
+        self.allServicesSelected = function () {
+                  return self.projectTypes.length > 0;
+        };
+        
+        
         self.projectSettingModal = function () {
           ModalService.projectSettings('md', self.pId).then(
               function (success) {

@@ -14,6 +14,9 @@ import javax.ejb.*;
 import javax.ws.rs.core.Response;
 
 import io.hops.bbc.ProjectPaymentAction;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -42,6 +45,7 @@ import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
+import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
@@ -90,6 +94,10 @@ public class ProjectController {
   @EJB
   private Settings settings;
 
+  @PersistenceContext(unitName = "kthfsPU")
+  private EntityManager em;
+  
+  
   /**
    * Creates a new project(project), the related DIR, the different services in the project, and the master of the
    * project.
@@ -639,33 +647,40 @@ public class ProjectController {
     return yarnQuota.getQuotaRemaining();
   }
 
-  public Long getHdfsSpaceQuotaInBytes(String name) throws AppException {
-    String path = settings.getProjectPath(name);
-    try {
-      long quota = dfs.getDfsOps().getQuota(new Path(path));
-      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, quota});
-      return quota;
-    } catch (IOException ex) {
-      logger.severe(ex.getMessage());
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ". Cannot find quota for the project: " + path);
+//  public Long getHdfsSpaceQuotaInBytes(String name) throws AppException {
+//    String path = settings.getProjectPath(name);
+//    try {
+//      long quota = dfs.getDfsOps().getQuota(new Path(path));
+//      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, quota});
+//      return quota;
+//    } catch (IOException ex) {
+//      logger.severe(ex.getMessage());
+//      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+//          ". Cannot find quota for the project: " + path);
+//    }
+  public HdfsInodeAttributes getHdfsQuotas(int inodeId) throws AppException {
+
+    HdfsInodeAttributes res = em.find(HdfsInodeAttributes.class, inodeId);
+    if (res == null ) {
+      return new HdfsInodeAttributes(inodeId);
     }
+    return res;
   }
   
   
-  public Long getHdfsSpaceUsageInBytes(String name) throws AppException {
-    String path = settings.getProjectPath(name);
-
-    try {
-      long usedQuota = dfs.getDfsOps().getUsedQuota(new Path(path));
-      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, usedQuota});
-      return usedQuota;
-    } catch (IOException ex) {
-      logger.severe(ex.getMessage());
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ". Cannot find quota for the project: " + path);
-    }
-  }  
+//  public Long getHdfsSpaceUsageInBytes(String name) throws AppException {
+//    String path = settings.getProjectPath(name);
+//
+//    try {
+//      long usedQuota = dfs.getDfsOps().getUsedQuota(new Path(path));
+//      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, usedQuota});
+//      return usedQuota;
+//    } catch (IOException ex) {
+//      logger.severe(ex.getMessage());
+//      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+//          ". Cannot find quota for the project: " + path);
+//    }
+//  }  
 
   /**
    * Deletes a member from a project

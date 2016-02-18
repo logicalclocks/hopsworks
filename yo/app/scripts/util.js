@@ -18,6 +18,9 @@ var getFileName = function (path) {
  * @param {long} size in bytes
  */
 var convertSize = function (fileSizeInBytes) {
+  if (fileSizeInBytes === -1) {
+    return "unlimited";
+  }
   if (fileSizeInBytes === 0) {
     return 0;
   }
@@ -29,6 +32,24 @@ var convertSize = function (fileSizeInBytes) {
   } while (fileSizeInBytes > 1024);
 
   return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
+};
+
+
+var convertNs = function (numFiles) {
+  if (numFiles === -1) {
+    return "unlimited";
+  }
+  if (numFiles === 0) {
+    return 0;
+  }
+  var i = -1;
+  var byteUnits = ['K', ' M'];
+  do {
+    numFiles = numFiles / 1000;
+    i++;
+  } while (numFiles > 1000);
+
+  return Math.max(numFiles, 0.1).toFixed(1) + byteUnits[i];
 };
 
 /**

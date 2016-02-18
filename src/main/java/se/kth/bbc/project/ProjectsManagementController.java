@@ -15,7 +15,6 @@
  */
 package se.kth.bbc.project;
 
-import org.apache.hadoop.fs.Path;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.util.Settings;
 
@@ -23,12 +22,11 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import se.kth.bbc.project.fb.Inode;
+import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.rest.AppException;
 
 @Stateless
@@ -53,8 +51,23 @@ public class ProjectsManagementController {
   @EJB
   private Settings settings;
 
-  @PersistenceContext(unitName = "kthfsPU")
-  private EntityManager em;
+  @EJB
+  private InodeFacade inodes;
+  
+  /**
+   *
+   * @param projectname
+   * @return size of quota for project subtree in HDFS in GBs
+   * @throws IOException
+   */
+//  public long getHdfsSpaceQuota(String projectname) throws IOException {
+//    try {
+//      long numBytes = projectController.getHdfsSpaceQuotaInBytes(projectname);
+//      return numBytes / (1024*1024*1024);
+//    } catch (AppException ex) {
+//      throw new IOException(ex);
+//    }
+//  }
 
   /**
    *
@@ -62,28 +75,20 @@ public class ProjectsManagementController {
    * @return size of quota for project subtree in HDFS in GBs
    * @throws IOException
    */
-  public long getHdfsSpaceQuota(String projectname) throws IOException {
-    try {
-      long numBytes = projectController.getHdfsSpaceQuotaInBytes(projectname);
-      return numBytes / (1024*1024*1024);
-    } catch (AppException ex) {
-      throw new IOException(ex);
-    }
-  }
-
-  /**
-   *
-   * @param projectname
-   * @return size of quota for project subtree in HDFS in GBs
-   * @throws IOException
-   */
-  public long getHDFSUsedSpaceQuota(String projectname) throws IOException {
-    try {
-      return projectController.getHdfsSpaceQuotaInBytes(projectname);
-    } catch (AppException ex) {
-      throw new IOException(ex);
-    }
-  }
+//  public long getHDFSUsedSpaceQuota(String projectname) throws IOException {
+//    try {
+//      return projectController.getHdfsSpaceQuotaInBytes(projectname);
+//    } catch (AppException ex) {
+//      throw new IOException(ex);
+//    }
+//  }
+  
+  public HdfsInodeAttributes getHDFSQuotas(String name) throws AppException {
+    String pathname = settings.getProjectPath(name);
+    Inode inode = inodes.getInodeAtPath(pathname);
+    return projectController.getHdfsQuotas(inode.getId());
+  }  
+  
 
   /**
    *

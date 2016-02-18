@@ -207,12 +207,12 @@ public class DataSetService {
       kids.add(inodeView);
     }
 
-    GenericEntity<List<InodeView>> inodViews
+    GenericEntity<List<InodeView>> inodeViews
             = new GenericEntity<List<InodeView>>(kids) {
             };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            inodViews).build();
+            inodeViews).build();
   }
 
   @POST
@@ -507,7 +507,7 @@ public class DataSetService {
   @Path("fileExists/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response checkFileExist(@PathParam("path") String path,
+  public Response checkFileExists(@PathParam("path") String path,
           @Context SecurityContext sc) throws
           AppException, AccessControlException {
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
@@ -537,7 +537,8 @@ public class DataSetService {
     Response.ResponseBuilder response = Response.ok();
     return response.build();
   }
-
+  
+  
   @GET
   @Path("isDir/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -594,10 +595,9 @@ public class DataSetService {
     try {
 
       String blocks = this.fileOps.getFileBlocks(path);
-      String response = blocks;
 
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(response).build();
+              entity(blocks).build();
 
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
@@ -665,7 +665,7 @@ public class DataSetService {
             = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
             getJobConfigurationTemplate(JobType.ERASURE_CODING);
     ecConfig.setFilePath(path);
-    System.out.println("PREparing for erasure coding");
+    System.out.println("Preparing for erasure coding");
 
     //persist the job in the database
     JobDescription jobdesc = this.jobcontroller.createJob(user, project,
