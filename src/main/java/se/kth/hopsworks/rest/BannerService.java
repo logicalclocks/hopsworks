@@ -15,6 +15,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.hopsworks.util.Settings;
 
 @Path("/banner")
 @RequestScoped
@@ -27,6 +28,8 @@ public class BannerService {
     @EJB
     private MaintenanceController maintenanceController;
     @EJB
+    private Settings settings;
+    @EJB
     private NoCacheResponse noCacheResponse;
 
     @GET
@@ -37,7 +40,7 @@ public class BannerService {
             @Context HttpServletRequest req) throws AppException {
 
         Maintenance maintenance = maintenanceController.getMaintenance();
-
+        maintenance.setOtp(settings.getTwoFactorAuth());
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 maintenance).build();
     }
