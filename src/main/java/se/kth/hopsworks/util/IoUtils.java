@@ -11,7 +11,7 @@ import java.util.List;
 public class IoUtils {
 
   public static String readContentFromClasspath(String path) throws IOException {
-    URL url = Resources.getResource(path);
+    URL url = IoUtils.class.getResource(path);// Resources.getResource(path);
     if (url == null) {
       throw new IOException("No config.props file found in cookbook");
     }
