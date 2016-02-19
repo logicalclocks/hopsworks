@@ -37,10 +37,12 @@ import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ProjectDTO;
+import se.kth.hopsworks.controller.QuotasDTO;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 
 @Path("/project")
@@ -490,4 +492,27 @@ public class ProjectService {
     return this.charon.setProject(project);
   }
 
+  
+  @GET
+  @Path("{id}/quotas")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response quotasByProjectID(
+          @PathParam("id") Integer id,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    ProjectDTO proj = projectController.getProjectByID(id);
+    int yarnQuota = projectController.getYarnQuota(proj.getProjectName());
+    HdfsInodeAttributes inodeAttrs = projectController.getHdfsQuotas(proj.getInodeid());
+    
+    Long hdfsQuota = inodeAttrs.getDsquota().longValue();
+    Long hdfsUsage = inodeAttrs.getDiskspace().longValue();
+    Long hdfsNsQuota = inodeAttrs.getNsquota().longValue();
+    Long hdfsNsCount = inodeAttrs.getNscount().longValue();
+    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount);
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            quotas).build();
+  }  
 }

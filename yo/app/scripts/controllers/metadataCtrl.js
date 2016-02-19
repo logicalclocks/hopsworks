@@ -103,6 +103,11 @@ angular.module('hopsWorksApp')
 			};
 
 
+            self.hideAddTable = function() {
+              return self.currentTemplateID !== - 1  && self.currentTemplateID !== undefined && 
+                      !self.editingTemplate
+            };
+
 			self.createMetadata = function (tableId, metadataId) {
 			  if (!self.metaData) {
 				return;
@@ -147,7 +152,8 @@ angular.module('hopsWorksApp')
 			  template.showing = !template.showing;
 			  self.currentTemplateID = template.id;
 
-			  //if all templates are deselected hide the add new table button
+			  //if all templates are deselected hide the add new table button t
+              // TODO - this is broken
 			  if (!template.showing) {
 				self.currentTemplateID = -1;
 				self.currentBoard = {};

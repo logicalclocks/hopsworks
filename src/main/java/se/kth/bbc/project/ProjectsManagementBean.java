@@ -24,6 +24,8 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import java.io.IOException;
 import java.util.List;
+import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
+import se.kth.hopsworks.rest.AppException;
 
 @ManagedBean(name = "projectsmanagement")
 @ViewScoped
@@ -67,14 +69,18 @@ public class ProjectsManagementBean {
     return allProjects;
   }
 
-  public int getHdfsQuota(String projectname) throws IOException {
-    long quota = projectsManagementController.getHdfsSpaceQuota(projectname);
-    this.hdfsquota = String.valueOf(quota);
-    return (int) quota;
-  }
+//  public int getHdfsQuota(String projectname) throws IOException {
+//    long quota = projectsManagementController.getHdfsSpaceQuota(projectname);
+//    this.hdfsquota = String.valueOf(quota);
+//    return (int) quota;
+//  }
 
-  public int getHDFSUsedQuota(String projectname) throws IOException {
-    return (int) projectsManagementController.getHDFSUsedSpaceQuota(projectname);
+//  public int getHDFSUsedQuota(String projectname) throws IOException {
+//    return (int) projectsManagementController.getHDFSUsedSpaceQuota(projectname);
+//  }
+  public HdfsInodeAttributes getHDFSQuotas(String projectname) throws AppException {
+//    return (int) projectsManagementController.getHDFSUsedSpaceQuota(projectname);
+    return projectsManagementController.getHDFSQuotas(projectname);
   }
 
   public String getAction() {

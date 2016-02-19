@@ -46,6 +46,7 @@ import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.util.Ip;
 import se.kth.hopsworks.util.Settings;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
 /**
  *

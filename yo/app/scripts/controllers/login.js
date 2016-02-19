@@ -21,6 +21,7 @@ angular.module('hopsWorksApp')
                     function (success) {
                         console.log(success);
                         if (success.data.status === 1){
+                            self.otp = success.data.otp;
                             self.announcement = success.data.message;
                         }
                     }, function (error) {
@@ -28,11 +29,11 @@ angular.module('hopsWorksApp')
                     });
             };
 
-            getAnnouncement();
 
             self.working = false;
             self.otp = $cookies['otp'];
             self.user = {email: '', password: '', otp:''};
+            getAnnouncement();
 
             self.login = function () {
               self.working = true;

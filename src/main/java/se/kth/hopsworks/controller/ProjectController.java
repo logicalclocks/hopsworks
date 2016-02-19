@@ -14,6 +14,9 @@ import javax.ejb.*;
 import javax.ws.rs.core.Response;
 
 import io.hops.bbc.ProjectPaymentAction;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -42,6 +45,7 @@ import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
+import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
@@ -90,6 +94,10 @@ public class ProjectController {
   @EJB
   private Settings settings;
 
+  @PersistenceContext(unitName = "kthfsPU")
+  private EntityManager em;
+  
+  
   /**
    * Creates a new project(project), the related DIR, the different services in the project, and the master of the
    * project.
@@ -588,8 +596,8 @@ public class ProjectController {
     for (ProjectServiceEnum s : projectServices) {
       services.add(s.toString());
     }
-    return new ProjectDTO(project, inode.getId(), services, projectTeam, getYarnQuota(name),
-        getHdfsSpaceQuotaInBytes(name), getHdfsSpaceUsageInBytes(name));
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, getYarnQuota(name));
+//    ,getHdfsSpaceQuotaInBytes(name), getHdfsSpaceUsageInBytes(name));
   }
 
   /**
@@ -630,43 +638,49 @@ public class ProjectController {
     }
 
     //send the project back to client
-    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids,
-        getYarnQuota(name), getHdfsSpaceQuotaInBytes(name), getHdfsSpaceUsageInBytes(name));
+//    getYarnQuota(name)
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids, 0);
   }
 
-  private Integer getYarnQuota(String name) {
+  public Integer getYarnQuota(String name) {
     YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.findByProjectName(name);
     return yarnQuota.getQuotaRemaining();
   }
 
-  private Long getHdfsSpaceQuotaInBytes(String name) throws AppException {
-    String path = File.separator + Settings.DIR_ROOT + File.separator + name;
+//  public Long getHdfsSpaceQuotaInBytes(String name) throws AppException {
+//    String path = settings.getProjectPath(name);
+//    try {
+//      long quota = dfs.getDfsOps().getQuota(new Path(path));
+//      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, quota});
+//      return quota;
+//    } catch (IOException ex) {
+//      logger.severe(ex.getMessage());
+//      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+//          ". Cannot find quota for the project: " + path);
+//    }
+  public HdfsInodeAttributes getHdfsQuotas(int inodeId) throws AppException {
 
-    try {
-      long quota = dfs.getDfsOps().getQuota(new Path(path));
-      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, quota});
-      return quota;
-    } catch (IOException ex) {
-      logger.severe(ex.getMessage());
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ". Cannot find quota for the project: " + path);
+    HdfsInodeAttributes res = em.find(HdfsInodeAttributes.class, inodeId);
+    if (res == null ) {
+      return new HdfsInodeAttributes(inodeId);
     }
+    return res;
   }
   
   
-  private Long getHdfsSpaceUsageInBytes(String name) throws AppException {
-    String path = File.separator + Settings.DIR_ROOT + File.separator + name;
-
-    try {
-      long usedQuota = dfs.getDfsOps().getUsedQuota(new Path(path));
-      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, usedQuota});
-      return usedQuota;
-    } catch (IOException ex) {
-      logger.severe(ex.getMessage());
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ". Cannot find quota for the project: " + path);
-    }
-  }  
+//  public Long getHdfsSpaceUsageInBytes(String name) throws AppException {
+//    String path = settings.getProjectPath(name);
+//
+//    try {
+//      long usedQuota = dfs.getDfsOps().getUsedQuota(new Path(path));
+//      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, usedQuota});
+//      return usedQuota;
+//    } catch (IOException ex) {
+//      logger.severe(ex.getMessage());
+//      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+//          ". Cannot find quota for the project: " + path);
+//    }
+//  }  
 
   /**
    * Deletes a member from a project
@@ -817,20 +831,9 @@ public class ProjectController {
 
   public void setHdfsSpaceQuota(String projectname, long diskspaceQuotaInGB)
       throws IOException {
-    long diskspaceQuotaInBytes = diskspaceQuotaInGB;
+    long diskspaceQuotaInBytes = diskspaceQuotaInGB * 1024 * 1024 * 1024;
     dfs.getDfsOps().setQuota(new Path(settings.getProjectPath(
         projectname)), diskspaceQuotaInBytes);
   }
 
-  //Get quota in GB_IN_BYTES
-  public long getHdfsSpaceQuota(String projectname) throws IOException {
-    return dfs.getDfsOps().getQuota(new Path(settings.getProjectPath(
-        projectname)));
-  }
-
-  //Get used disk space in GB_IN_BYTES
-  public long getUsedSpaceQuota(String projectname) throws IOException {
-    return dfs.getDfsOps().getUsedQuota(new Path(settings.
-        getProjectPath(projectname)));
-  }
 }

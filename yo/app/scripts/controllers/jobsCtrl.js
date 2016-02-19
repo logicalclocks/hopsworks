@@ -6,8 +6,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval','StorageService','$mdSidenav',
-          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval,StorageService,$mdSidenav) {
+        .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval', 'StorageService', '$mdSidenav',
+          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval, StorageService, $mdSidenav) {
 
             var self = this;
             this.projectId = $routeParams.projectID;
@@ -16,31 +16,31 @@ angular.module('hopsWorksApp')
             this.buttonArray = [];
             this.workingArray = [];
             this.jobFilter = {
-              "creator":{
-                "email":""
+              "creator": {
+                "email": ""
               },
-              "jobType":"",
-              "name":""
+              "jobType": "",
+              "name": ""
             };
-            
-            this.hasSelectJob=false;
-            
-            self.currentjob=null;
-            self.currentToggledIndex=-1;
+
+            this.hasSelectJob = false;
+
+            self.currentjob = null;
+            self.currentToggledIndex = -1;
 
             $scope.pageSize = 10;
             $scope.sortKey = 'creationTime';
             $scope.reverse = true;
 
-            $scope.sort = function(keyname){
+            $scope.sort = function (keyname) {
               $scope.sortKey = keyname;   //set the sortKey to the param passed
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
             }
-            
-            this. editAsNew = function (job) {   
+
+            this.editAsNew = function (job) {
               JobService.getConfiguration(self.projectId, job.id).then(
                       function (success) {
-                        self.currentjob=job;
+                        self.currentjob = job;
                         self.currentjob.runConfig = success.data;
                         self.copy();
                       }, function (error) {
@@ -48,14 +48,14 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.buttonClickedToggle = function (id, display){
+            self.buttonClickedToggle = function (id, display) {
               self.buttonArray[id] = display;
             }
 
-            self.stopbuttonClickedToggle = function (id, display){
+            self.stopbuttonClickedToggle = function (id, display) {
               self.workingArray[id] = display;
             }
-            
+
             self.copy = function () {
               var jobType;
               switch (self.currentjob.jobType.toUpperCase()) {
@@ -125,19 +125,19 @@ angular.module('hopsWorksApp')
                   "value": "",
                   "title": "Configure and create"}
               };
-              StorageService.store(self.projectId + "newjob", state);              
+              StorageService.store(self.projectId + "newjob", state);
               $location.path('project/' + self.projectId + '/newjob');
             };
-            
-            
+
+
 
             var getAllJobs = function () {
               JobService.getAllJobsInProject(self.projectId).then(
                       function (success) {
                         self.jobs = success.data;
                         angular.forEach(self.jobs, function (job, key) {
-                        job.showing = false;
-                      });
+                          job.showing = false;
+                        });
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
@@ -148,7 +148,7 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.runningInfo = success.data;
                         angular.forEach(self.jobs, function (temp, key) {
-                          if (typeof self.runningInfo['' + temp.id] !== "undefined"){
+                          if (typeof self.runningInfo['' + temp.id] !== "undefined") {
                             if (!self.runningInfo['' + temp.id].running) {
                               self.buttonArray[temp.id] = false;
                             }
@@ -161,8 +161,8 @@ angular.module('hopsWorksApp')
 
             this.createAppReport = function () {
               angular.forEach(self.jobs, function (temp, key) {
-                if (typeof self.runningInfo['' + temp.id] !== "undefined"){
-                  if (temp.state !== self.runningInfo['' + temp.id].state){
+                if (typeof self.runningInfo['' + temp.id] !== "undefined") {
+                  if (temp.state !== self.runningInfo['' + temp.id].state) {
                     self.showLogs(temp.id);
                   }
                   temp.duration = self.runningInfo['' + temp.id].duration;
@@ -191,12 +191,12 @@ angular.module('hopsWorksApp')
             this.stopJob = function (jobId) {
               self.stopbuttonClickedToggle(jobId, true);
               JobService.stopJob(self.projectId, jobId).then(
-                function (success) {
-                  self.getRunStatus();
-                }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Failed to stop' +
-                  ' job', ttl: 15000});
-                });
+                      function (success) {
+                        self.getRunStatus();
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Failed to stop' +
+                          ' job', ttl: 15000});
+              });
             };
 
             /**
@@ -211,33 +211,47 @@ angular.module('hopsWorksApp')
             self.showDetails = function (job) {
               ModalService.jobDetails('lg', job, self.projectId);
             };
-            
-            
+
+
             self.showLogs = function (jobId) {
-              JobService.showLog(self.projectId,jobId).then(
-                      function (success) {                          
-                          self.logset=success.data.logset;                         
+              JobService.showLog(self.projectId, jobId).then(
+                      function (success) {
+                        self.logset = success.data.logset;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to show logs', ttl: 15000});
-              });              
-            };
-            
-            self.deleteJob=function (jobId){
-
-                  JobService.deleteJob(self.projectId,jobId).then(
-                      function (success) {
-                           getAllJobs();
-                           self.hasSelectJob=false;
-                           growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to delete job', ttl: 15000});
               });
-
- 
             };
-            
-           
-            self.toggle = function (job,index) {
+
+//            self.deleteJob=function (jobId){
+//
+//                  JobService.deleteJob(self.projectId, jobId).then(
+//                      function (success) {
+//                           getAllJobs();
+//                           self.hasSelectJob=false;
+//                           growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+//                      }, function (error) {
+//                growl.error(error.data.errorMsg, {title: 'Failed to delete job', ttl: 15000});
+//              });
+//            };
+            self.deleteJob = function (jobId, jobName) {
+              ModalService.confirm("sm", "Delete Job (" + jobName + ")",
+                      "Do you really want to delete this job?\n\
+                                This action cannot be undone.")
+                      .then(function (success) {
+                        JobService.deleteJob(self.projectId, jobId).then(
+                                function (success) {
+                                  getAllJobs();
+                                  self.hasSelectJob = false;
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Failed to delete job', ttl: 15000});
+                        });
+                      }, function (cancelled) {
+                        growl.info("Delete aborted", {title: 'Info', ttl: 5000});
+                      });
+            };
+
+            self.toggle = function (job, index) {
               //reset all jobs showing flag
               angular.forEach(self.jobs, function (temp, key) {
                 if (job.id !== temp.id) {
@@ -247,32 +261,32 @@ angular.module('hopsWorksApp')
 
               //handle the clicked job accordingly
               job.showing = true;
-              self.hasSelectJob=true;
-              $scope.selectedIndex=index;
-              self.currentToggledIndex=index;
+              self.hasSelectJob = true;
+              $scope.selectedIndex = index;
+              self.currentToggledIndex = index;
 
             };
-            self.untoggle = function (job,index) {
+            self.untoggle = function (job, index) {
               //reset all jobs showing flag
               angular.forEach(self.jobs, function (temp, key) {
-                   temp.showing = false;
+                temp.showing = false;
               });
-              
-              if(self.currentToggledIndex !== index){
-                  self.hasSelectJob=false;
-                  $scope.selectedIndex=-1;
-                  self.currentToggledIndex=-1;
-              }else{
-                  job.showing = true;
+
+              if (self.currentToggledIndex !== index) {
+                self.hasSelectJob = false;
+                $scope.selectedIndex = -1;
+                self.currentToggledIndex = -1;
+              } else {
+                job.showing = true;
               }
             };
-            
+
             /**
              * Check if the jobType filter is null, and set to empty string if it is.
              * @returns {undefined}
              */
-            this.checkJobTypeFilter = function(){
-              if(self.jobFilter.jobType == null){
+            this.checkJobTypeFilter = function () {
+              if (self.jobFilter.jobType == null) {
                 self.jobFilter.jobType = "";
               }
             };

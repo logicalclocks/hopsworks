@@ -118,7 +118,8 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
   public void removeJob(JobDescription job) throws DatabaseException{
       try{
           JobDescription managedJob = em.find(JobDescription.class, job.getId());
-          this.em.remove(managedJob);          
+          em.remove(em.merge(managedJob));
+          em.flush();
       }catch(SecurityException | IllegalStateException ex){
           throw new DatabaseException("Could not delete job " + job.getName(), ex);
       }

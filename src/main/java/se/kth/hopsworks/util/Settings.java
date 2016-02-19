@@ -44,6 +44,9 @@ public class Settings {
   private static final String VARIABLE_MAX_NUM_PROJ_PER_USER = "max_num_proj_per_user";
   private static final String VARIABLE_ADAM_USER = "adam_user";
   private static final String VARIABLE_ADAM_DIR = "adam_dir";
+  private static final String VARIABLE_TWOFACTOR_AUTH = "twofactor_auth";
+
+  public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
 
   private String setUserVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -82,6 +85,7 @@ public class Settings {
 
   private void populateCache() {
     if (!cached) {
+      TWOFACTOR_AUTH = setUserVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
       HDFS_SUPERUSER = setUserVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setUserVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setUserVar(VARIABLE_SPARK_USER, SPARK_USER);
@@ -126,6 +130,16 @@ public class Settings {
   public synchronized String getCharonProjectDir(String projectName) {
     return getCharonMountDir() + "/" + projectName;
   }
+
+  
+  
+  private String TWOFACTOR_AUTH = "false";
+
+  public synchronized String getTwoFactorAuth() {
+    checkCache();
+    return TWOFACTOR_AUTH;
+  }
+
 
   /**
    * Default Directory locations
@@ -225,7 +239,7 @@ public class Settings {
     return HIWAY_DIR;
   }
 
-  private String YARN_DEFAULT_QUOTA = "1000";
+  private String YARN_DEFAULT_QUOTA = "60000";
 
   public synchronized String getYarnDefaultQuota() {
     checkCache();

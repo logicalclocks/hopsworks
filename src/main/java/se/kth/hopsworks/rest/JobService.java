@@ -331,15 +331,15 @@ public class JobService {
               getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
     } else {
         try{
-            logger.log(Level.INFO, "Request to delete job name ="+job.getName()+" job id ="+job.getId());
+            logger.log(Level.INFO, "Request to delete job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
             jobFacade.removeJob(job);
-            logger.log(Level.INFO, "Deleted job name ="+job.getName()+" job id ="+job.getId());
+            logger.log(Level.INFO, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
             JsonResponse json = new JsonResponse();
             json.setSuccessMessage("Deleted job "+job.getName()+" successfully");
             activityFacade.persistActivity(ActivityFacade.DELETED_JOB, project, sc.getUserPrincipal().getName());
             return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
         }catch(DatabaseException ex){
-            logger.log(Level.WARNING, "Job cannot be deleted  job name ="+job.getName()+" job id ="+job.getId());
+            logger.log(Level.WARNING, "Job cannot be deleted  job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
             throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.getMessage());
         }
     }

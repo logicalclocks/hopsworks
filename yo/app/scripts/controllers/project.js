@@ -63,8 +63,6 @@ angular.module('hopsWorksApp')
                 self.projectFile.path = "/Projects/"+self.currentProject.projectName;
                 self.projectFile.description = self.currentProject.description;
                 self.projectFile.retentionPeriod = self.currentProject.retentionPeriod;
-                self.projectFile.hdfsUsageInBytes = self.currentProject.hdfsUsageInBytes;
-                self.projectFile.hdfsQuotaInBytes = self.currentProject.hdfsQuotaInBytes;
                 self.projectFile.yarnQuotaInMins = self.currentProject.yarnQuotaInMins;
                 $rootScope.$broadcast('setMetadata', { file:
                    {id : self.projectFile.id,
@@ -128,8 +126,13 @@ angular.module('hopsWorksApp')
         };
 
 
+        self.allServicesSelected = function () {
+                  return self.projectTypes.length > 0;
+        };
+        
+        
         self.projectSettingModal = function () {
-          ModalService.projectSettings('md').then(
+          ModalService.projectSettings('md', self.pId).then(
               function (success) {
                 getAllActivities();
                 getCurrentProject();
@@ -147,15 +150,15 @@ angular.module('hopsWorksApp')
               });
         };
 
-        self.projectSettingModal = function () {
-          ModalService.projectSettings('md').then(
-              function (success) {
-                getAllActivities();
-                getCurrentProject();
-              }, function (error) {
-            growl.info("You closed without saving.", {title: 'Info', ttl: 5000});
-          });
-        };
+//        self.projectSettingModal = function () {
+//          ModalService.projectSettings('md').then(
+//              function (success) {
+//                getAllActivities();
+//                getCurrentProject();
+//              }, function (error) {
+//            growl.info("You closed without saving.", {title: 'Info', ttl: 5000});
+//          });
+//        };
 
         self.membersModal = function () {
           ModalService.projectMembers('lg', self.pId).then(
