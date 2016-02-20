@@ -9,30 +9,30 @@ angular.module('hopsWorksApp')
             self.announcement = "";
 
             self.showAnnouncement = function () {
-                if (self.announcement === ""){
-                    return false;
-                } else {
-                    return true;
-                }
+              if (self.announcement === "") {
+                return false;
+              } else {
+                return true;
+              }
             };
 
             var getAnnouncement = function () {
-                BannerService.findBanner().then(
-                    function (success) {
+              BannerService.findBanner().then(
+                      function (success) {
                         console.log(success);
-                        if (success.data.status === 1){
-                            self.otp = success.data.otp;
-                            self.announcement = success.data.message;
+                        self.otp = success.data.otp;
+                        if (success.data.status === 1) {
+                          self.announcement = success.data.message;
                         }
-                    }, function (error) {
-                        self.announcement = '';
-                    });
+                      }, function (error) {
+                self.announcement = '';
+              });
             };
 
 
             self.working = false;
             self.otp = $cookies['otp'];
-            self.user = {email: '', password: '', otp:''};
+            self.user = {email: '', password: '', otp: ''};
             getAnnouncement();
 
             self.login = function () {
@@ -42,11 +42,11 @@ angular.module('hopsWorksApp')
                         self.working = false;
                         $cookies.email = self.user.email;
                         $location.path('/');
-			
+
                       }, function (error) {
-                        self.working = false;
-                        self.errorMessage = error.data.errorMsg;
-                        console.log(self.errorMessage);
+                self.working = false;
+                self.errorMessage = error.data.errorMsg;
+                console.log(self.errorMessage);
               });
             };
 
