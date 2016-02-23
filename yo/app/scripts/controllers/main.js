@@ -96,7 +96,9 @@ angular.module('hopsWorksApp')
             var getUnreadCount = function () {
                 MessageService.getUnreadCount().then(
                     function (success) {
-                      self.unreadMessages = success.data.data.value;
+                      if (success.data !== undefined && success.data.data !== undefined && success.data.data.value != undefined) {
+                        self.unreadMessages = success.data.data.value;
+                      }
                     }, function (error) {
 
                     });

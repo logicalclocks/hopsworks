@@ -108,17 +108,17 @@ public class InterpreterRestApi {
   @POST
   @Path("setting")
   public Response newSettings(String message) throws InterpreterException,
-          IOException {
+      IOException {
     NewInterpreterSettingRequest request = gson.fromJson(message,
-            NewInterpreterSettingRequest.class);
+        NewInterpreterSettingRequest.class);
     Properties p = new Properties();
     p.putAll(request.getProperties());
     // Option is deprecated from API, always use remote = true
     InterpreterGroup interpreterGroup = interpreterFactory.
-            add(request.getName(),
-                    request.getGroup(), new InterpreterOption(true), p);
+        add(request.getName(),
+            request.getGroup(), new InterpreterOption(true), p);
     InterpreterSetting setting = interpreterFactory.
-            get(interpreterGroup.getId());
+        get(interpreterGroup.getId());
     logger.info("new setting created with " + setting.id());
     return new JsonResponse(Status.CREATED, "", setting).build();
   }
@@ -126,23 +126,23 @@ public class InterpreterRestApi {
   @PUT
   @Path("setting/{settingId}")
   public Response updateSetting(String message,
-          @PathParam("settingId") String settingId) {
+      @PathParam("settingId") String settingId) {
     logger.info("Update interpreterSetting {}", settingId);
 
     try {
       UpdateInterpreterSettingRequest p = gson.fromJson(message,
-              UpdateInterpreterSettingRequest.class);
+          UpdateInterpreterSettingRequest.class);
       // Option is deprecated from API, always use remote = true
       interpreterFactory.setPropertyAndRestart(settingId,
-              new InterpreterOption(true), p.getProperties());
+          new InterpreterOption(true), p.getProperties());
     } catch (InterpreterException e) {
       return new JsonResponse(
-              Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e)).
-              build();
+          Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e)).
+          build();
     } catch (IOException e) {
       return new JsonResponse(
-              Status.INTERNAL_SERVER_ERROR, e.getMessage(), ExceptionUtils.
-              getStackTrace(e)).build();
+          Status.INTERNAL_SERVER_ERROR, e.getMessage(), ExceptionUtils.
+          getStackTrace(e)).build();
     }
     InterpreterSetting setting = interpreterFactory.get(settingId);
     if (setting == null) {
@@ -153,14 +153,15 @@ public class InterpreterRestApi {
 
   /**
    * Remove interpreter setting
+   *
    * @param settingId
-   * @return 
-   * @throws java.io.IOException 
+   * @return
+   * @throws java.io.IOException
    */
   @DELETE
   @Path("setting/{settingId}")
   public Response removeSetting(@PathParam("settingId") String settingId) throws
-          IOException {
+      IOException {
     logger.info("Remove interpreterSetting {}", settingId);
     interpreterFactory.remove(settingId);
     return new JsonResponse(Status.OK).build();
@@ -168,8 +169,9 @@ public class InterpreterRestApi {
 
   /**
    * Restart interpreter setting
+   *
    * @param settingId
-   * @return 
+   * @return
    */
   @PUT
   @Path("setting/restart/{settingId}")
@@ -210,14 +212,14 @@ public class InterpreterRestApi {
   @Path("{id}/start/{settingId}")
   @AllowedRoles(roles = {AllowedRoles.ALL})
   public Response start(@PathParam("id") Integer id,
-          @PathParam("settingId") String settingId) throws
-          AppException {
+      @PathParam("settingId") String settingId) throws
+      AppException {
     logger.info("Starting interpreterSetting {}", settingId);
     InterpreterSetting interpreterSetting = interpreterFactory.get(settingId);
     Project project = projectController.findProjectById(id);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_NOT_FOUND);
+          ResponseMessages.PROJECT_NOT_FOUND);
     }
     NotebookRepo notebookRepo;
     Notebook newNotebook;
@@ -228,7 +230,7 @@ public class InterpreterRestApi {
       note = newNotebook.createNote();
     } catch (IOException | SchedulerException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not create notebook" + ex.getMessage());
+          "Could not create notebook" + ex.getMessage());
     }
     Paragraph p = note.addParagraph(); // it's an empty note. so add one paragraph
     if (interpreterSetting.getGroup().equalsIgnoreCase("spark")) {
@@ -244,7 +246,7 @@ public class InterpreterRestApi {
     newNotebook.removeNote(note.id());
 
     InterpreterDTO interpreterDTO
-            = new InterpreterDTO(interpreterSetting, false);
+        = new InterpreterDTO(interpreterSetting, false);
     return new JsonResponse(Status.OK, "", interpreterDTO).build();
   }
 
@@ -258,7 +260,7 @@ public class InterpreterRestApi {
   @GET
   @Path("stop/{settingId}")
   public Response stop(@PathParam("settingId") String settingId) throws
-          AppException {
+      AppException {
     logger.info("Stoping interpreterSetting {}", settingId);
     try {
       interpreterFactory.restart(settingId);
@@ -295,8 +297,12 @@ public class InterpreterRestApi {
     List<InterpreterSetting> interpreterSettings;
     interpreterSettings = interpreterFactory.get();
     for (InterpreterSetting interpreter : interpreterSettings) {
-      interpreterDTO.put(interpreter.getGroup(), new InterpreterDTO(interpreter,
-              !zeppelinResource.isInterpreterRunning(interpreter)));
+
+      if (interpreter.getGroup().contains("spark") || interpreter.getGroup().contains("angular")
+          || interpreter.getGroup().contains("md")) {
+        interpreterDTO.put(interpreter.getGroup(), new InterpreterDTO(interpreter,
+            !zeppelinResource.isInterpreterRunning(interpreter)));
+      }
     }
     return interpreterDTO;
   }
