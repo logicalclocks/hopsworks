@@ -246,7 +246,7 @@ public class Settings {
     return YARN_DEFAULT_QUOTA;
   }
 
-  private String HDFS_DEFAULT_QUOTA = "300";
+  private String HDFS_DEFAULT_QUOTA = "200";
 
   public synchronized String getHdfsDefaultQuota() {
     checkCache();
