@@ -253,11 +253,11 @@ public class Settings {
     return HDFS_DEFAULT_QUOTA;
   }
 
-  private String MAX_NUM_PROJ_PER_USER = "10";
+  private String MAX_NUM_PROJ_PER_USER = "5";
 
   public synchronized Integer getMaxNumProjPerUser() {
     checkCache();
-    int num = 10;
+    int num = 5;
     try {
       num = Integer.parseInt(MAX_NUM_PROJ_PER_USER);
     } catch (NumberFormatException ex) {
