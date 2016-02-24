@@ -21,6 +21,10 @@ angular.module('hopsWorksApp')
             else {
               self.searchType = "global";
             }
+
+            self.getEmailHash = function(email) {
+              return md5.createHash(email || '');
+            };
             
             self.logout = function () {
               AuthService.logout(self.user).then(
