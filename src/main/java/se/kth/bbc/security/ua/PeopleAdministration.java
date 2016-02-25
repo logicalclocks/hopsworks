@@ -418,8 +418,9 @@ public class PeopleAdministration implements Serializable {
 
       userTransaction.begin();
 
-      if (!"#".equals(sgroup) && (!sgroup.isEmpty() || sgroup != null)) {
-        userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
+//      if (!"#".equals(sgroup) && (!sgroup.isEmpty() || sgroup != null)) {
+//        userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
+        userManager.registerGroup(user1, BBCGroup.BBC_RESEARCHER.getValue());
         userManager.registerGroup(user1, BBCGroup.BBC_USER.getValue());
         
         auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
@@ -430,13 +431,13 @@ public class PeopleAdministration implements Serializable {
                 RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(),
                 user1);
           
-      } else {
-          auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
-              RolesAuditActions.FAILED.name(), "Role could not be granted.", user1);
-        MessagesController.addSecurityErrorMessage("Role could not be granted.");
-        return;
-      }
+//      } else {
+//          auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+//              PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
+//              RolesAuditActions.FAILED.name(), "Role could not be granted.", user1);
+//        MessagesController.addSecurityErrorMessage("Role could not be granted.");
+//        return;
+//      }
 
       userManager.updateStatus(user1, PeopleAccountStatus.ACCOUNT_ACTIVATED.
               getValue());
