@@ -110,8 +110,9 @@
                                 <i ng-click="datasetsCtrl.openDir(file)"
                                    ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
                                 <div ng-click="datasetsCtrl.openDir(file)">{{file.name}}</div></td>
-                              <td ng-click="datasetsCtrl.openDir(file)">{{file.owner}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">
-                                {{file.email}}</span></td>
+                              <td ng-click="datasetsCtrl.openDir(file)">{{file.owner}} 
+<!--                                <span style=" color: #757575; font-size: 12px; padding-left: 5px;">{{file.email}}</span>-->
+                              </td>
                               <td ng-click="datasetsCtrl.openDir(file)">{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
                               </td>
                               <td ng-click="datasetsCtrl.openDir(file)" style="width: 12%;">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
@@ -162,13 +163,13 @@
                                   </ul>
                                 </div>
                               </td>
-
+                              
                               <td style="margin:0px;width:25px;">
-                                  <i ng-if="$index >= 5 && (!file.underConstruction && !datasetsCtrl.working)"
+<!--                                  <i ng-if="$index >= 5 && (!file.underConstruction && !datasetsCtrl.working)"
                                      title="This file is compressed"
                                      style="color: lightgrey; margin-top:3px;"
                                      class="glyphicon glyphicon-compressed">
-                                  </i>
+                                  </i>-->
                                   <i ng-if="file.underConstruction && !datasetsCtrl.working"
                                      title="File under construction"
                                      style="color: lightgrey; margin-top:3px;"
@@ -403,7 +404,7 @@
                               </div>
 
                             </md-tab>
-                            <md-tab label="Activity">
+<!--                            <md-tab label="Activity">
                               <md-content class="md-padding" style="padding-left: 20px;padding-right: 20px;">
 
                                 <div class="row">
@@ -470,7 +471,7 @@
                                   </md-whiteframe>
                                 </div>
                               </md-content>
-                            </md-tab>
+                            </md-tab>-->
                           </md-tabs>
                         </md-content>
                       </div>

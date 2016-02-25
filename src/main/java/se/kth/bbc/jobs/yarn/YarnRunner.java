@@ -265,7 +265,10 @@ public class YarnRunner {
     //For all local resources with hdfs path: add local resource
     for (Entry<String, String> entry : amLocalResourcesOnHDFS.entrySet()) {
       String key = entry.getKey();
-      Path src = new Path(entry.getValue());
+      String pathToResource = entry.getValue();
+	    pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
+			"hdfs://10.33.67.25:8020/Projects");      
+      Path src = new Path(pathToResource);
       FileStatus scFileStat = fs.getFileStatus(src);
       LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
               getYarnUrlFromPath(src),
