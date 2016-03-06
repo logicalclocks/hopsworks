@@ -44,5 +44,16 @@ public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
             return null;
         }
     }
+    /**
+     * 
+     * @return "ip:port" for the first namenode found in the table.
+     */
+    public String getSingleEndpoint() {
+      HdfsLeDescriptors hdfs = findEndpoint();
+      if (hdfs == null) {
+        return "";
+      }
+      return hdfs.getHostname();
+    }
     
 }
