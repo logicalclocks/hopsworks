@@ -113,3 +113,29 @@ ul.dropdown-messages a:hover  {
   color: #006190;
 }
 
+
+
+.ds-content {
+  transition: all 0.2s ease-in-out;
+  -webkit-transition: all 0.2s ease-in-out;
+}
+.ds-content.sidenav-open {
+  padding-right: 330px;
+}
+.ds-sidenav {
+  width: 0;
+  overflow: hidden;
+  position: fixed;
+  left: 0;
+  top: 65px;
+  bottom: 0;
+  transition: all 0.2s ease-in-out;
+  -webkit-transition: all 0.2s ease-in-out;
+  box-shadow: 0 8px 17px rgba(0,0,0,.2);
+  -webkit-box-shadow: 0 8px 17px rgba(0,0,0,.2);
+  background: #fff;
+  z-index: 10;
+}
+.ds-sidenav.open {
+  width: 300px;
+}

@@ -21,13 +21,15 @@ angular.module('hopsWorksApp')
             self.selected; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
 
+            $scope.tgState = false;
+
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
             self.metadataView = {};
             self.availableTemplates = [];
             self.closeSlider = false;
 
-            $scope.sort = function(keyname){
+            $scope.sort = function (keyname) {
               $scope.sortKey = keyname;   //set the sortKey to the param passed
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
             }
@@ -80,20 +82,20 @@ angular.module('hopsWorksApp')
               self.working = true;
               //Get the contents and load them
               dataSetService.getContents(newPath).then(
-                function (success) {
-                  //Reset the selected file
-                  self.selected = null;
-                  self.fileDetail = null;
-                  //Set the current files and path
-                  self.files = success.data;
-                  self.pathArray = newPathArray;
-                  self.working = false;
-                  console.log(success);
-                }, function (error) {
-                  self.working = false;
-                  console.log("Error getting the contents of the path " + getPath(newPathArray));
-                  console.log(error);
-                });
+                      function (success) {
+                        //Reset the selected file
+                        self.selected = null;
+                        self.fileDetail = null;
+                        //Set the current files and path
+                        self.files = success.data;
+                        self.pathArray = newPathArray;
+                        self.working = false;
+                        console.log(success);
+                      }, function (error) {
+                self.working = false;
+                console.log("Error getting the contents of the path " + getPath(newPathArray));
+                console.log(error);
+              });
             });
 
             /**
@@ -124,7 +126,7 @@ angular.module('hopsWorksApp')
                         self.working = false;
                         console.log(success);
                       }, function (error) {
-                        self.working = false;
+                self.working = false;
                 console.log("Error getting the contents of the path " + getPath(newPathArray));
                 console.log(error);
               });
@@ -216,7 +218,7 @@ angular.module('hopsWorksApp')
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                         getDirContents();
                       }, function (error) {
-                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+//                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
                 getDirContents();
               });
             };
