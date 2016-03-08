@@ -114,6 +114,10 @@ ul.dropdown-messages a:hover  {
 }
 
 
+.ds-namenode {
+  font-weight: normal; 
+  font-size: 14px;
+}
 
 .ds-content {
   transition: all 0.2s ease-in-out;
@@ -126,12 +130,12 @@ ul.dropdown-messages a:hover  {
   width: 0;
   overflow: hidden;
   position: fixed;
-  left: 0;
-  top: 65px;
+  left: 1330px;
+  top: 125px;
   bottom: 0;
   transition: all 0.2s ease-in-out;
   -webkit-transition: all 0.2s ease-in-out;
-  box-shadow: 0 8px 17px rgba(0,0,0,.2);
+  box-shadow: 0 4px 8px rgba(0,0,0,.2);
   -webkit-box-shadow: 0 8px 17px rgba(0,0,0,.2);
   background: #fff;
   z-index: 10;
