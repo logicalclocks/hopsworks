@@ -21,15 +21,13 @@ angular.module('hopsWorksApp')
             $scope.selected; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
 
-            $scope.tgState = false;
-
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
+            $scope.tgState = false;
 
             $scope.status = {
               isopen: false
             };
-//             $scope.appendToEl = angular.element(document.querySelector('#dropdown-long-content'));
 
             $scope.toggleDropdown = function($event) {
               $event.preventDefault();

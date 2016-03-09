@@ -124,13 +124,15 @@ ul.dropdown-messages a:hover  {
   -webkit-transition: all 0.2s ease-in-out;
 }
 .ds-content.sidenav-open {
-  padding-right: 330px;
+  /*padding-right: 330px;*/
+  width: 80%;
 }
 .ds-sidenav {
   width: 0;
   overflow: hidden;
   position: fixed;
-  left: 1535px;
+  /*left: 1535px;*/
+  left: 80%;
   top: 125px;
   bottom: 0;
   transition: all 0.2s ease-in-out;
@@ -141,9 +143,37 @@ ul.dropdown-messages a:hover  {
   z-index: 10;
 }
 .ds-sidenav.open {
-  width: 300px;
+  /*width: 300px;*/
+    width: 20%;
 }
 
 .row-no-margin-left {
   margin-left: 0px;
 }
+
+
+.ds-container {
+      position: relative;
+      width: 100%;
+   }
+
+ .ds-bg {
+      position:relative;
+      z-index: 1;
+      height: 100%;
+      min-width: 1000px;
+      max-width: 2800px;
+      margin: 0 auto;
+   }
+
+.ds-nebula {
+      width: 100%;
+   }
+
+@media screen and (max-width: 1000px) {
+      .ds-nebula {
+         width: 100%;
+         overflow: hidden;
+         margin: 0 -150px 0 -150px;
+      }
+   }
