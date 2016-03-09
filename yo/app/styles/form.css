@@ -143,8 +143,8 @@ textarea.form-control {
   line-height: 0;
   font-size: 16px;
   color: #929292;
-  margin: -23px -23px 23px;
-  padding: 27px 23px 22px;
+  margin: -23px -23px 5px;
+  padding: 35px 23px 22px;
   font-weight: 400;
   background-color: #fafbfc;
   border-bottom: 1px solid #cfdbe2;

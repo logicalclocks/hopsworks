@@ -18,7 +18,7 @@ angular.module('hopsWorksApp')
             self.files = []; //A list of files currently displayed to the user.
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
-            self.selected; //The index of the selected file in the files array.
+            $scope.selected; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
 
             $scope.tgState = false;
@@ -101,7 +101,7 @@ angular.module('hopsWorksApp')
               dataSetService.getContents(newPath).then(
                       function (success) {
                         //Reset the selected file
-                        self.selected = null;
+                        $scope.selected = null;
                         self.fileDetail = null;
                         //Set the current files and path
                         self.files = success.data;
@@ -135,7 +135,7 @@ angular.module('hopsWorksApp')
               dataSetService.getContents(newPath).then(
                       function (success) {
                         //Reset the selected file
-                        self.selected = null;
+                        $scope.selected = null;
                         self.fileDetail = null;
                         //Set the current files and path
                         self.files = success.data;
@@ -370,7 +370,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.select = function (selectedIndex, file) {
-              self.selected = selectedIndex;
+              $scope.selected = selectedIndex;
               self.fileDetail = file;
             };
 

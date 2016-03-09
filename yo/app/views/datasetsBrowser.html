@@ -7,7 +7,7 @@
        ng-controller="DatasetsCtrl as datasetsCtrl">
 
     <div ng-controller="MetadataCtrl as metadataCtrl">
- 
+
       <div class="overlay"></div>
       <section layout="row" flex="">
 
@@ -22,35 +22,37 @@
             </div>
 
             <div class="content-wrapper" ng-show="mainCtrl.searchReturned === ''">
-              <div class="col-md-2 col-lg-2">
-                <div class="dropdown"  dropdown>
-                  <button class="btn btn-default"  dropdown-toggle type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                    <i class="glyphicon glyphicon-folder-open" style="padding-right: 10px;"></i>
-                    {{datasetsCtrl.pathArray[0]| limitTo: 17 }}{{datasetsCtrl.pathArray[0].length > 17 ? '...' : ''}}
-                    <span class="caret"></span>
-                  </button>
-                  <ul class="dropdown-menu" dropdown-menu aria-labelledby="dropdownMenu1">
-                    <li><a ng-click="datasetsCtrl.newDataSetModal()">New Folder</a></li>
-                    <li><a ng-click="datasetsCtrl.uploadFile()">Upload File</a></li>
-                  </ul>
-                </div>                
-                
-              </div>
-              <div class="col-md-3 col-lg-3">
-                                      <form class="form-inline">
-                        <div class="form-group">
-                          <label style="margin-top: 5px;">Filter:</label>
-                          <input type="text" ng-model="search"
-                                 class="form-control" placeholder="Search" style="float: right; margin-left: 10px;">
-                        </div>
-                      </form>
-              </div>
-              <div class="col-md-6 col-lg-6" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
-                hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>
-              </div>
-              <div class="col-md-1 col-lg-1 pull-right">
-                <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle"></hamburger-toggle>
-              </div>
+              <h3>
+                <div class="col-md-2 col-lg-2" style="margin-top: -17px;">
+                  <div class="dropdown"  dropdown>
+                    <button class="btn btn-default"  dropdown-toggle type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                      <i class="glyphicon glyphicon-folder-open" style="padding-right: 10px;"></i>
+                      {{datasetsCtrl.pathArray[0]| limitTo: 17 }}{{datasetsCtrl.pathArray[0].length > 17 ? '...' : ''}}
+                      <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" dropdown-menu aria-labelledby="dropdownMenu1">
+                      <li><a ng-click="datasetsCtrl.newDataSetModal()">New Folder</a></li>
+                      <li><a ng-click="datasetsCtrl.uploadFile()">Upload File</a></li>
+                    </ul>
+                  </div>                
+
+                </div>
+                <!--              <div class="col-md-3 col-lg-3">
+                                                      <form class="form-inline">
+                                        <div class="form-group">
+                                          <label style="margin-top: 5px;">Filter:</label>
+                                          <input type="text" ng-model="search"
+                                                 class="form-control" placeholder="Search" style="float: right; margin-left: 10px;">
+                                        </div>
+                                      </form>
+                              </div>-->
+                <div class="col-md-8 col-lg-8" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
+                  hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>
+                </div>
+                <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
+                  <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle"></hamburger-toggle>
+                </div>
+              </h3>
             </div>
             <div class="row row-no-margin-left">
               <div class="col-lg-12">
@@ -196,8 +198,17 @@
                             <!--<hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle"></hamburger-toggle>-->
                             <md-tabs md-dynamic-height md-border-bottom>
                               <md-tab label="Details">
+                                <div ng-show="selected === null">
+
+                                  <div class="file">
+                                    <div class="icon">
+                                      <i class="glyphicon glyphicon-folder-open"></i>
+                                    </div>  
+                                    Select a file or folder to view its details.
+                                  </div>           
+                                </div>
                                 <md-content>
-                                  <table id="mytable1" ng-show="datasetsCtrl.selected > -1 && datasetsCtrl.selected != undefined" class="table table-bordred table-striped" style="margin-top: 16px;">
+                                  <table id="mytable1" ng-show="selected > -1 && selected != undefined" class="table table-bordred table-striped" style="margin-top: 16px;">
                                     <tr style="background-color: #fafafa">
                                       <td style="color:lightgrey;">Size</td>
                                       <td style="color: grey;">{{(datasetsCtrl.fileDetail.size == 0? '_': projectCtrl.sizeOnDisk(datasetsCtrl.fileDetail.size))}}</td>
@@ -233,7 +244,6 @@
 
                                 </md-content>
 
-
                                 <!--div class="ibox-content" id="hoverable" ng-click="datasetsCtrl.toggleRight()">
                                   <span class="pull-left" style="font-size: 16px; margin-top:-2px;">Add metadata</span> <i
                                     class="fa fa-pencil-square-o pull-right" style="font-size: 20px;"></i>
@@ -246,7 +256,7 @@
                                                                     </div>-->
                                   <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px">
                                     <div style="display: inline-block">
-                                      <div style="display: inline-block"><h4>No metadata template attached.</h4></div>
+                                      <div style="display: inline-block"><h4>No extended metadata available.</h4></div>
                                       <span class="field-info" tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
                                         <i class="fa fa-exclamation-circle"></i>
                                       </span>
