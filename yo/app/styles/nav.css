@@ -136,10 +136,14 @@ ul.dropdown-messages a:hover  {
   transition: all 0.2s ease-in-out;
   -webkit-transition: all 0.2s ease-in-out;
   box-shadow: 0 4px 8px rgba(0,0,0,.2);
-  -webkit-box-shadow: 0 8px 17px rgba(0,0,0,.2);
+  -webkit-box-shadow: 0 4px 8px rgba(0,0,0,.2);
   background: #fff;
   z-index: 10;
 }
 .ds-sidenav.open {
   width: 300px;
+}
+
+.row-no-margin-left {
+  margin-left: 0px;
 }
