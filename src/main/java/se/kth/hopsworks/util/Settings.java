@@ -408,10 +408,10 @@ public class Settings {
   public static final String META_DATA_FIELD = "EXTENDED_METADATA";
   public static final String META_PROJECT_INDEX = "project";
   public static final String META_DATASET_INDEX = "dataset";
-  public static final String META_PROJECT_PARENT_TYPE = "parent";
-  public static final String META_PROJECT_CHILD_TYPE = "child";
-  public static final String META_DATASET_PARENT_TYPE = "parent";
-  public static final String META_DATASET_CHILD_TYPE = "child";
+  public static final String META_PROJECT_PARENT_TYPE = "site";
+  public static final String META_PROJECT_CHILD_TYPE = "proj";
+  public static final String META_DATASET_PARENT_TYPE = "ds";
+  public static final String META_DATASET_CHILD_TYPE = "inode";
   public static final String META_INODE_SEARCHABLE_FIELD = "searchable";
   public static final String META_INODE_OPERATION_FIELD = "operation";
 

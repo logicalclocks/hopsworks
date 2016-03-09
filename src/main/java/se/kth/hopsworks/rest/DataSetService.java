@@ -1,5 +1,6 @@
 package se.kth.hopsworks.rest;
 
+import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -107,6 +108,8 @@ public class DataSetService {
   private Settings settings;
   @Inject
   private DownloadService downloader;
+  @EJB
+  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
 
   
   private Integer projectId;
@@ -673,7 +676,7 @@ public class DataSetService {
     System.out.println("job persisted in the database");
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
-            settings.getHadoopDir());
+            settings.getHadoopDir(), hdfsLeDescriptorsFacade.getSingleEndpoint());
     //persist a job execution instance in the database and get its id
     Execution exec = encodeJob.requestExecutionId();
     System.out.println("\nSTarting the erasure coding job\n");

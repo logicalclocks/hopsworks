@@ -58,8 +58,9 @@ public final class CuneiformJob extends YarnJob {
    * contain a CuneiformJobConfiguration object.
    */
   public CuneiformJob(JobDescription job,
-          AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir, String hiwayDir) {
-    super(job, services, user, hadoopDir);
+          AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir, String hiwayDir,
+          String nameNodeIpPort) {
+    super(job, services, user, hadoopDir, nameNodeIpPort);
     if (!(job.getJobConfig() instanceof CuneiformJobConfiguration)) {
       throw new IllegalArgumentException(
               "The jobconfiguration in JobDescription must be of type CuneiformJobDescription. Received: "
@@ -192,7 +193,7 @@ public final class CuneiformJob extends YarnJob {
 
     try {
       //Get the YarnRunner instance
-      runner = b.build(hadoopDir, sparkDir);
+      runner = b.build(hadoopDir, sparkDir, nameNodeIpPort);
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               "Unable to create temp directory for logs.",
