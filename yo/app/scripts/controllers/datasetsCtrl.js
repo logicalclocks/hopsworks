@@ -25,6 +25,19 @@ angular.module('hopsWorksApp')
 
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
+
+            $scope.status = {
+              isopen: false
+            };
+//             $scope.appendToEl = angular.element(document.querySelector('#dropdown-long-content'));
+
+            $scope.toggleDropdown = function($event) {
+              $event.preventDefault();
+              $event.stopPropagation();
+              $scope.status.isopen = !$scope.status.isopen;
+            };
+
+
             self.metadataView = {};
             self.availableTemplates = [];
             self.closeSlider = false;
