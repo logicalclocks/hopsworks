@@ -24,18 +24,24 @@ angular.module('hopsWorksApp')
 
             UserService.profile().then(
                     function (success) {
-                      self.myCard.email = success.data.user.email;
-                      self.myCard.firstname = success.data.user.firstName;
-                      self.myCard.lastname = success.data.user.lastName;
-                      UserService.allcards().then(
-                              function (success) {
-                                self.cards = success.data;
-                                // remove my own 'card' from the list of members
-                                self.cards.splice(self.cards.indexOf(self.myCard), 1);
-                              }, function (error) {
-                        self.errorMsg = error.data.msg;
+                      if (success.data.email != undefined) {
+                        self.myCard.email = success.data.email;
+                        if (success.data.firstName != undefined) {
+                          self.myCard.firstname = success.data.firstName;
+                          if (success.data.email != undefined) {
+                            self.myCard.lastname = success.data.lastName;
+                            UserService.allcards().then(
+                                    function (success) {
+                                      self.cards = success.data;
+                                      // remove my own 'card' from the list of members
+                                      self.cards.splice(self.cards.indexOf(self.myCard), 1);
+                                    }, function (error) {
+                              self.errorMsg = error.data.msg;
+                            });
+                          }
+                        }
                       }
-                      );
+
                     },
                     function (error) {
                       self.errorMsg = error.data.errorMsg;

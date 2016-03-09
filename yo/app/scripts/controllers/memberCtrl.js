@@ -68,9 +68,9 @@ angular.module('hopsWorksApp')
             var getCard = function () {
               UserService.profile().then(
                       function (success) {
-                        self.myCard.email = success.data.user.email;
-                        self.myCard.firstname = success.data.user.firstName;
-                        self.myCard.lastname = success.data.user.lastName;
+                        self.myCard.email = success.data.email;
+                        self.myCard.firstname = success.data.firstName;
+                        self.myCard.lastname = success.data.lastName;
                       },
                       function (error) {
                         self.errorMsg = error.data.errorMsg;
