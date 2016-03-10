@@ -37,16 +37,17 @@
                   </div>                
 
                 </div>
-                <!--              <div class="col-md-3 col-lg-3">
-                                                      <form class="form-inline">
-                                        <div class="form-group">
-                                          <label style="margin-top: 5px;">Filter:</label>
-                                          <input type="text" ng-model="search"
-                                                 class="form-control" placeholder="Search" style="float: right; margin-left: 10px;">
-                                        </div>
-                                      </form>
-                              </div>-->
-                <div class="col-md-8 col-lg-8" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
+                <div class="col-md-3 col-lg-3">
+                  <form class="form-inline">
+                    <div class="form-group">
+                      <label>Filter:</label>
+                      <input type="text" ng-model="search" 
+                             class="form-control" placeholder="Search" 
+                             style="float: right; margin-top: -17px; margin-left: 10px;">
+                    </div>
+                  </form>
+                </div>
+                <div class="col-md-7 col-lg-7" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
                   hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>
                 </div>
                 <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
@@ -80,50 +81,86 @@
 
                           <tr ng-click="datasetsCtrl.back()">
                             <td style="padding: 0px" colspan="5">&nbsp &nbsp
-                              <a style="font-size:25px">..</a>
+                              <a style="font-size:30px">..</a> 
+                              <!--<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>-->
                             </td>
                             <td>
                               <i ng-if="datasetsCtrl.working"
-                                 title="Fetching files in this dir"
+                                 title="Fetching files in this folder"
                                  style="color: lightgrey; margin-top:3px;"
                                  class="fa fa-spinner fa-spin pull-right" >
                               </i>
                             </td>
                           </tr>
                           <tr
-                            dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:20"
+                            dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:50"
                             context-menu
+                            ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); " 
+                            ng-dblclick="datasetsCtrl.openDir(file)"
                             data-target="menu-{{ $index}}"
                             ng-class="{ 'highlight': datasetsCtrl.selected === $index, 'expanded': expanded }"
                             id="table-{{ $index}}">
                             <td>
-                              <i
-                                ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.toggleState();" class="glyphicon glyphicon-search" style="margin-top: 4px;padding-right: 5px; color: #5bc0de; float: left;"></i>
-                              <i ng-click="datasetsCtrl.openDir(file)"
-                                 ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
-                              <i ng-click="datasetsCtrl.openDir(file)"
-                                 ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
-                              <div ng-click="datasetsCtrl.openDir(file)">{{file.name}}</div></td>
-                            <td ng-click="datasetsCtrl.openDir(file)">{{file.owner}} 
-                              <!--                                <span style=" color: #757575; font-size: 12px; padding-left: 5px;">{{file.email}}</span>-->
+<!--                              <i
+                                class="glyphicon glyphicon-search" style="margin-top: 4px;padding-right: 5px; color: #5bc0de; float: left;"></i>-->
+                              <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" 
+                                 style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
+                              <i ng-show="!file.dir" class="glyphicon glyphicon-file" 
+                                 style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
+                              <div>{{file.name}}</div></td>
+                            <td>{{file.owner}} 
                             </td>
-                            <td ng-click="datasetsCtrl.openDir(file)">{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
+                            <td>{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
                             </td>
-                            <td ng-click="datasetsCtrl.openDir(file)" style="width: 12%;">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
+                            <td style="width: 12%;">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
 
                             <td>
                               <div class="dropdown position-fixed" id="menu-{{ $index}}">
                                 <ul class="dropdown-menu dropdown-amore" role="menu">
-                                  <!--                                    <li>
-                                                                        <a class="pointer"
-                                                                           role="menuitem"
-                                                                           tabindex="1"
-                                                                           ng-click="panel.highlight = true; datasetsCtrl.compress(file); $event.stopPropagation();">
-                                                                          <span><i class="fa fa-file-archive-o"></i>
-                                                                            Compress</span>
-                                                                        </a>
-                                                                      </li>-->
 
+                                  <li>
+                                    <a class="pointer"
+                                       role="menuitem"
+                                       tabindex="5"
+                                       ng-click="datasetsCtrl.rename(file.name)">
+                                      <span><i class="fa fa-trash"></i>
+                                        Rename</span>
+                                    </a>
+                                  </li>
+                                  <li>
+                                    <a class="pointer"
+                                       role="menuitem"
+                                       tabindex="5"
+                                       ng-click="datasetsCtrl.deleteFile(file.name)">
+                                      <span><i class="fa fa-trash"></i>
+                                        Remove</span>
+                                    </a>
+                                  </li>
+
+                                  <li>
+                                    <a class="pointer"
+                                       role="menuitem"
+                                       tabindex="5"
+                                       ng-click="datasetsCtrl.moveFile(file.id)">
+                                      <span><i class="fa fa-trash"></i>
+                                        Move</span>
+                                    </a>
+                                  </li>
+
+                                  <li class="divider"></li>
+
+                                  <li>
+                                    <a class="pointer"
+                                       role="menuitem"
+                                       tabindex="1"
+                                       ng-click="panel.highlight = true; datasetsCtrl.compress(file); $event.stopPropagation();">
+                                      <span><i class="fa fa-file-archive-o"></i>
+                                        Compress</span>
+                                    </a>
+                                  </li>
+
+                                  <li class="divider"></li>
+                                  datasetsCtrl.openDir(file)
                                   <li>
                                     <a class="pointer"
                                        role="menuitem"
@@ -144,26 +181,17 @@
                                     </a>
                                   </li>
 
-                                  <li>
-                                    <a class="pointer"
-                                       role="menuitem"
-                                       tabindex="5"
-                                       ng-click="datasetsCtrl.deleteFile(file.name)">
-                                      <span><i class="fa fa-trash"></i>
-                                        Remove</span>
-                                    </a>
-                                  </li>
-
+                                  
                                 </ul>
                               </div>
                             </td>
 
                             <td style="margin:0px;width:25px;">
-                              <!--                                  <i ng-if="$index >= 5 && (!file.underConstruction && !datasetsCtrl.working)"
-                                                                   title="This file is compressed"
-                                                                   style="color: lightgrey; margin-top:3px;"
-                                                                   class="glyphicon glyphicon-compressed">
-                                                                </i>-->
+                              <i ng-if="$index >= 5 && (!file.underConstruction && !datasetsCtrl.working)"
+                                 title="This file is compressed"
+                                 style="color: lightgrey; margin-top:3px;"
+                                 class="glyphicon glyphicon-compressed">
+                              </i>
                               <i ng-if="file.underConstruction && !datasetsCtrl.working"
                                  title="File under construction"
                                  style="color: lightgrey; margin-top:3px;"
@@ -193,9 +221,8 @@
                       <div class="file-manager">
                         <div>
                           <!--<md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">-->
-                          <md-content class="md-padding" style="padding-top: 0px;">
+                          <md-content class="md-padding" style="padding-top: 0px; min-width: 250px;">
                             <!--<div class="row"><svg x="0px" y="0px" width="14px" height="14px" viewBox="0 0 10 10" focusable="false"><polygon class="a-pa-wd-At1hV-Ff" fill="#000000" points="10,1.01 8.99,0 5,3.99 1.01,0 0,1.01 3.99,5 0,8.99 1.01,10 5,6.01 8.99,10 10,8.99 6.01,5 "></polygon></svg></div>-->                          
-                            <!--<hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle"></hamburger-toggle>-->
                             <md-tabs md-dynamic-height md-border-bottom>
                               <md-tab label="Details">
                                 <div ng-show="datasetsCtrl.selected === null">

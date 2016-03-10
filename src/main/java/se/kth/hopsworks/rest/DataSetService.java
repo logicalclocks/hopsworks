@@ -70,7 +70,7 @@ import se.kth.hopsworks.util.Settings;
 public class DataSetService {
 
   private final static Logger logger = Logger.getLogger(DataSetService.class.
-          getName());
+      getName());
 
   @EJB
   private ProjectFacade projectFacade;
@@ -111,7 +111,6 @@ public class DataSetService {
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
 
-  
   private Integer projectId;
   private Project project;
   private String path;
@@ -135,8 +134,8 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response findDataSetsInProjectID(
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
 
     Inode parent;
     InodeView inodeView;
@@ -159,11 +158,11 @@ public class DataSetService {
     }
 
     GenericEntity<List<InodeView>> inodViews
-            = new GenericEntity<List<InodeView>>(kids) {
-            };
+        = new GenericEntity<List<InodeView>>(kids) {
+    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            inodViews).build();
+        inodViews).build();
   }
 
   /**
@@ -180,9 +179,9 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response getDirContent(
-          @PathParam("path") String path,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      @PathParam("path") String path,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
     String fullpath = getFullPath(path);
     List<Inode> cwdChildren;
     try {
@@ -190,11 +189,11 @@ public class DataSetService {
     } catch (IllegalArgumentException ex) {
       logger.log(Level.WARNING, "Trying to access children of file.", ex);
       throw new AppException(Response.Status.NO_CONTENT.getStatusCode(),
-              "Cannot list the directory contents of a regular file.");
+          "Cannot list the directory contents of a regular file.");
     } catch (FileNotFoundException ex) {
       logger.log(Level.WARNING, "Trying to access non-existent path.", ex);
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              "Path not found.");
+          "Path not found.");
     }
     List<InodeView> kids = new ArrayList<>();
     InodeView inodeView;
@@ -211,11 +210,11 @@ public class DataSetService {
     }
 
     GenericEntity<List<InodeView>> inodeViews
-            = new GenericEntity<List<InodeView>>(kids) {
-            };
+        = new GenericEntity<List<InodeView>>(kids) {
+    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            inodeViews).build();
+        inodeViews).build();
   }
 
   @POST
@@ -223,39 +222,39 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response shareDataSet(
-          DataSetDTO dataSet,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException,
-          AccessControlException {
+      DataSetDTO dataSet,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException,
+      AccessControlException {
 
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     JsonResponse json = new JsonResponse();
     Inode parent = inodes.getProjectRoot(this.project.getName());
     if (dataSet == null || dataSet.getName() == null || dataSet.getName().
-            isEmpty()) {
+        isEmpty()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_NAME_EMPTY);
+          ResponseMessages.DATASET_NAME_EMPTY);
     }
     if (dataSet.getProjectId() == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "No project selected.");
+          "No project selected.");
     }
     Project proj = projectFacade.find(dataSet.getProjectId());
     if (proj == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_NOT_FOUND);
+          ResponseMessages.PROJECT_NOT_FOUND);
     }
     Inode inode = inodes.findByParentAndName(parent, dataSet.getName());
     Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
     if (ds == null) {//if parent id and project are not the same it is a shared ds.
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "You can not share this dataset you are not the owner.");
+          "You can not share this dataset you are not the owner.");
     }
 
     Dataset dst = datasetFacade.findByProjectAndInode(proj, inode);
     if (dst != null) {//proj already have the dataset.
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Dataset already in " + proj.getName());
+          "Dataset already in " + proj.getName());
     }
 
     DatasetRequest dsReq = datasetRequest.findByProjectAndDataset(proj, ds);
@@ -270,7 +269,7 @@ public class DataSetService {
     // if the dataset is not requested or is requested by a data scientist
     // set status to pending. 
     if (dsReq == null || dsReq.getProjectTeam().getTeamRole().equals(
-            AllowedRoles.DATA_SCIENTIST)) {
+        AllowedRoles.DATA_SCIENTIST)) {
       newDS.setStatus(Dataset.PENDING);
     }
     datasetFacade.persistDataset(newDS);
@@ -280,24 +279,24 @@ public class DataSetService {
     if (newDS.isEditable()) {
       try {
         FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
-                FsAction.NONE, true);
+            FsAction.NONE, true);
         datasetController.changePermission(inodes.getPath(newDS.getInode()),
-                user, project, fsPermission);
+            user, project, fsPermission);
       } catch (AccessControlException ex) {
         throw new AccessControlException(
-                "Permission denied: Can not change the permission of this file.");
+            "Permission denied: Can not change the permission of this file.");
       } catch (IOException e) {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(), "Error while creating directory: " + e.
-                getLocalizedMessage());
+            getStatusCode(), "Error while creating directory: " + e.
+            getLocalizedMessage());
       }
     }
     activityFacade.persistActivity(ActivityFacade.SHARED_DATA + dataSet.
-            getName() + " with project " + proj.getName(), project, user);
+        getName() + " with project " + proj.getName(), project, user);
 
     json.setSuccessMessage("The Dataset was successfully shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+        json).build();
   }
 
   @GET
@@ -305,30 +304,30 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response acceptRequest(@PathParam("inodeId") Integer inodeId,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
     if (inodeId == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+          "Incomplete request!");
     }
     Inode inode = inodes.findById(inodeId);
     if (inode == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_NOT_FOUND);
+          ResponseMessages.DATASET_NOT_FOUND);
     }
 
     Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_NOT_FOUND);
+          ResponseMessages.DATASET_NOT_FOUND);
     }
     hdfsUsersBean.shareDataset(this.project, ds);
     ds.setStatus(Dataset.ACCEPTED);
     datasetFacade.merge(ds);
     json.setSuccessMessage("The Dataset is now accessable.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+        json).build();
   }
 
   @GET
@@ -336,30 +335,30 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response rejectRequest(@PathParam("inodeId") Integer inodeId,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
     if (inodeId == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+          "Incomplete request!");
     }
     Inode inode = inodes.findById(inodeId);
     if (inode == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_NOT_FOUND);
+          ResponseMessages.DATASET_NOT_FOUND);
     }
 
     Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
 
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_NOT_FOUND);
+          ResponseMessages.DATASET_NOT_FOUND);
     }
 
     datasetFacade.remove(ds);
     json.setSuccessMessage("The Dataset has been removed.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+        json).build();
   }
 
   @POST
@@ -367,32 +366,32 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response createTopLevelDataSet(
-          DataSetDTO dataSet,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      DataSetDTO dataSet,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
 
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
 
     try {
       datasetController.createDataset(user, project, dataSet.getName(), dataSet.
-              getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
-              false);
+          getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
+          false);
     } catch (NullPointerException c) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), c.
-              getLocalizedMessage());
+          getLocalizedMessage());
     } catch (IllegalArgumentException e) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Failed to create dataset: " + e.getLocalizedMessage());
+          "Failed to create dataset: " + e.getLocalizedMessage());
     } catch (IOException e) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Failed to create dataset: " + e.
-              getLocalizedMessage());
+          getStatusCode(), "Failed to create dataset: " + e.
+          getLocalizedMessage());
     }
 
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage("The Dataset was created successfully.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+        json).build();
   }
 
   //TODO: put this in DatasetController.
@@ -400,10 +399,10 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response createDataSetDir(
-          DataSetDTO dataSetName,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException,
-          AccessControlException {
+      DataSetDTO dataSetName,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException,
+      AccessControlException {
     JsonResponse json = new JsonResponse();
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     String newPath = getFullPath(dataSetName.getName());
@@ -412,14 +411,14 @@ public class DataSetService {
     }
     String[] fullPathArray = newPath.split(File.separator);
     String[] datasetRelativePathArray = Arrays.copyOfRange(fullPathArray, 3,
-            fullPathArray.length);
+        fullPathArray.length);
     String dsPath = File.separator + Settings.DIR_ROOT + File.separator
-            + fullPathArray[1];
+        + fullPathArray[1];
     //Check if the DataSet is writeable.
     if (!fullPathArray[1].equals(this.project.getName())) {
       if (!this.dataset.isEditable()) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "You can not create a folder inside a shared dataset.");
+            "You can not create a folder inside a shared dataset.");
       }
     }
     StringBuilder dsRelativePath = new StringBuilder();
@@ -429,23 +428,23 @@ public class DataSetService {
 
     try {
       datasetController.createSubDirectory(user, project, fullPathArray[2],
-              dsRelativePath.toString(), dataSetName.getTemplate(), dataSetName.
-              getDescription(), dataSetName.isSearchable());
+          dsRelativePath.toString(), dataSetName.getTemplate(), dataSetName.
+          getDescription(), dataSetName.isSearchable());
     } catch (AccessControlException ex) {
       throw new AccessControlException(
-              "Permission denied: You can not create a folder in "
-              + fullPathArray[2]);
+          "Permission denied: You can not create a folder in "
+          + fullPathArray[2]);
     } catch (IOException e) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error while creating directory: " + e.
-              getLocalizedMessage());
+          getStatusCode(), "Error while creating directory: " + e.
+          getLocalizedMessage());
     } catch (IllegalArgumentException | NullPointerException e) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Invalid directory: " + e.getLocalizedMessage());
+          "Invalid directory: " + e.getLocalizedMessage());
     }
     json.setSuccessMessage("A directory was created at " + dsPath);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+        json).build();
   }
 
   @DELETE
@@ -453,16 +452,16 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response removedataSetdir(
-          @PathParam("fileName") String fileName,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException,
-          AccessControlException {
+      @PathParam("fileName") String fileName,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException,
+      AccessControlException {
     boolean success = false;
     JsonResponse json = new JsonResponse();
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     if (fileName == null || fileName.isEmpty()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_NAME_EMPTY);
+          ResponseMessages.DATASET_NAME_EMPTY);
     }
     String filePath = getFullPath(fileName);
     String[] pathArray = filePath.split(File.separator);
@@ -471,7 +470,7 @@ public class DataSetService {
 
       if (pathArray.length > 4 && !this.dataset.isEditable()) {// a folder in the dataset
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "You can not perform this action on a shard dataset.");
+            "You can not perform this action on a shard dataset.");
       }
       if (!this.dataset.isEditable()) {
         //remove the entry in the table that represents shared ds
@@ -480,7 +479,7 @@ public class DataSetService {
         datasetFacade.removeDataset(this.dataset);
         json.setSuccessMessage(ResponseMessages.SHARED_DATASET_REMOVED);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-                entity(json).build();
+            entity(json).build();
       }
     }
 
@@ -488,22 +487,80 @@ public class DataSetService {
       success = datasetController.deleteDataset(filePath, user, project);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
-              "Permission denied: You can not delete the file " + filePath);
+          "Permission denied: You can not delete the file " + filePath);
     } catch (IOException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not delete the file at " + filePath);
+          "Could not delete the file at " + filePath);
     }
     if (!success) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not delete the file at " + filePath);
+          "Could not delete the file at " + filePath);
     }
     //remove the group associated with this dataset if the dataset is toplevel ds 
     if (filePath.endsWith(this.dataset.getInode().getInodePK().getName())) {
-        hdfsUsersBean.deleteDatasetGroup(this.dataset);
+      hdfsUsersBean.deleteDatasetGroup(this.dataset);
     }
     json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+        json).build();
+  }
+
+  /**
+   * Move and Rename operations handled here
+   *
+   * @param inodeId
+   * @param path
+   * @param sc
+   * @return
+   * @throws AppException
+   * @throws AccessControlException
+   */
+  @GET
+  @Path("move/{inodeId}/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response moveFile(@PathParam("inodeId") Integer inodeId,
+      @PathParam("path") String path, @Context SecurityContext sc) throws
+      AppException, AccessControlException {
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    if (path == null) {
+      path = "";
+    }
+    path = getFullPath(path);
+    
+    try {
+      boolean exists = this.fileOps.exists(path);
+      
+      Inode sourceInode = inodes.findById(inodeId);
+
+      if (sourceInode == null) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+            "Cannot find file/folder you are trying to move. Has it been deleted?");        
+      }
+      dfs.getDfsOps(username).moveWithinHdfs(new Path(inodes.getPath(sourceInode)), 
+          new Path(path));
+
+      String message = "";
+      JsonResponse response = new JsonResponse();
+
+      //if it exists and it's not a dir, it must be a file
+      if (exists) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+            "Destination already exists - cannot move there.");
+      }
+      
+      message = "Moved";
+      response.setSuccessMessage(message);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+          entity(response).build();
+
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "The parent folders for the destination do not exist. Create them first.");
+    }
+
   }
 
   @GET
@@ -511,8 +568,8 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response checkFileExists(@PathParam("path") String path,
-          @Context SecurityContext sc) throws
-          AppException, AccessControlException {
+      @Context SecurityContext sc) throws
+      AppException, AccessControlException {
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     if (path == null) {
@@ -531,23 +588,22 @@ public class DataSetService {
       dfs.getDfsOps(username).open(path);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
-              "Permission denied: You can not download the file ");
+          "Permission denied: You can not download the file ");
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "File does not exist: " + path);
+          "File does not exist: " + path);
     }
     Response.ResponseBuilder response = Response.ok();
     return response.build();
   }
-  
-  
+
   @GET
   @Path("isDir/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response isDir(@PathParam("path") String path) throws
-          AppException {
+      AppException {
 
     if (path == null) {
       path = "";
@@ -566,21 +622,21 @@ public class DataSetService {
         message = "FILE";
         response.setSuccessMessage(message);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-                entity(response).build();
+            entity(response).build();
       } else if (exists && isDir) {
         message = "DIR";
         response.setSuccessMessage(message);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-                entity(response).build();
+            entity(response).build();
       }
 
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "File does not exist: " + path);
+          "File does not exist: " + path);
     }
     throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-            "The requested path does not resolve to a valid dir");
+        "The requested path does not resolve to a valid dir");
   }
 
   @GET
@@ -588,7 +644,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response countFileBlocks(@PathParam("path") String path) throws
-          AppException {
+      AppException {
 
     if (path == null) {
       path = "";
@@ -600,20 +656,20 @@ public class DataSetService {
       String blocks = this.fileOps.getFileBlocks(path);
 
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(blocks).build();
+          entity(blocks).build();
 
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "File does not exist: " + path);
+          "File does not exist: " + path);
     }
   }
 
   @Path("fileDownload/{path: .+}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public DownloadService downloadDS(@PathParam("path") String path,
-          @Context SecurityContext sc) throws
-          AppException {
+      @Context SecurityContext sc) throws
+      AppException {
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     if (path == null) {
@@ -624,7 +680,7 @@ public class DataSetService {
     if (!pathArray[2].equals(this.project.getName())) {
       if (!this.dataset.isEditable()) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "You can not download a shared dataset.");
+            "You can not download a shared dataset.");
       }
     }
     if (!path.endsWith(File.separator)) {
@@ -639,12 +695,12 @@ public class DataSetService {
   @Path("compressFile/{path: .+}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response compressFile(@PathParam("path") String path,
-          @Context SecurityContext context) throws
-          AppException {
+      @Context SecurityContext context) throws
+      AppException {
 
     if (path == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "File not found");
+          "File not found");
     }
 
     path = this.getFullPath(path);
@@ -653,7 +709,7 @@ public class DataSetService {
     if (!parts[2].equals(this.project.getName())) {
       if (!this.dataset.isEditable()) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "You can not compress files in a shared dataset.");
+            "You can not compress files in a shared dataset.");
       }
     }
 
@@ -662,21 +718,21 @@ public class DataSetService {
     }
 
     Users user = this.userfacade.findByEmail(context.getUserPrincipal().
-            getName());
+        getName());
 
     ErasureCodeJobConfiguration ecConfig
-            = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
-            getJobConfigurationTemplate(JobType.ERASURE_CODING);
+        = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
+        getJobConfigurationTemplate(JobType.ERASURE_CODING);
     ecConfig.setFilePath(path);
     System.out.println("Preparing for erasure coding");
 
     //persist the job in the database
     JobDescription jobdesc = this.jobcontroller.createJob(user, project,
-            ecConfig);
+        ecConfig);
     System.out.println("job persisted in the database");
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
-            settings.getHadoopDir(), hdfsLeDescriptorsFacade.getSingleEndpoint());
+        settings.getHadoopDir(), hdfsLeDescriptorsFacade.getSingleEndpoint());
     //persist a job execution instance in the database and get its id
     Execution exec = encodeJob.requestExecutionId();
     System.out.println("\nSTarting the erasure coding job\n");
@@ -685,24 +741,24 @@ public class DataSetService {
       this.async.startExecution(encodeJob);
     } else {
       logger.log(Level.SEVERE,
-              "Failed to persist JobHistory. Aborting execution.");
+          "Failed to persist JobHistory. Aborting execution.");
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Failed to persist JobHistory. File compression aborted");
+          getStatusCode(),
+          "Failed to persist JobHistory. File compression aborted");
     }
 
     String response = "File compression runs in background";
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage(response);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+        json).build();
   }
 
   @Path("upload/{path: .+}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public UploadService upload(
-          @PathParam("path") String path, @Context SecurityContext sc,
-          @QueryParam("templateId") int templateId) throws AppException {
+      @PathParam("path") String path, @Context SecurityContext sc,
+      @QueryParam("templateId") int templateId) throws AppException {
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     if (path == null) {
@@ -713,7 +769,7 @@ public class DataSetService {
     if (!pathArray[2].equals(this.project.getName())) {
       if (!this.dataset.isEditable()) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "You can not upload to a shared dataset.");
+            "You can not upload to a shared dataset.");
       }
     }
     if (!path.endsWith(File.separator)) {
@@ -735,12 +791,12 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response attachTemplate(FileTemplateDTO filetemplateData) throws
-          AppException {
+      AppException {
 
     if (filetemplateData == null || filetemplateData.getInodePath() == null
-            || filetemplateData.getInodePath().equals("")) {
+        || filetemplateData.getInodePath().equals("")) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.TEMPLATE_INODEID_EMPTY);
+          ResponseMessages.TEMPLATE_INODEID_EMPTY);
     }
 
     String inodePath = filetemplateData.getInodePath();
@@ -755,15 +811,15 @@ public class DataSetService {
       this.template.updateTemplatesInodesMxN(temp);
     } catch (DatabaseException e) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              ResponseMessages.TEMPLATE_NOT_ATTACHED);
+          getStatusCode(),
+          ResponseMessages.TEMPLATE_NOT_ATTACHED);
     }
 
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage("The template was attached to file "
-            + inode.getId());
+        + inode.getId());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+        json).build();
   }
 
   private String getFullPath(String path) throws AppException {
@@ -780,7 +836,7 @@ public class DataSetService {
       String[] shardDS = parts[0].split(Settings.SHARED_FILE_SEPARATOR);
       if (shardDS.length < 2) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.DATASET_NOT_FOUND);
+            ResponseMessages.DATASET_NOT_FOUND);
       }
       projectName = shardDS[0];
       dsName = shardDS[1];
@@ -789,15 +845,15 @@ public class DataSetService {
       this.dataset = datasetFacade.findByProjectAndInode(this.project, dsInode);
       if (this.dataset == null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.DATASET_NOT_FOUND);
+            ResponseMessages.DATASET_NOT_FOUND);
       }
       if (this.dataset.getStatus() == Dataset.PENDING) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "Dataset is not yet accessible. Accept the share requst to access it.");
+            "Dataset is not yet accessible. Accept the share requst to access it.");
       }
       path = path.replaceFirst(projectName + Settings.SHARED_FILE_SEPARATOR
-              + dsName, projectName
-              + File.separator + dsName);
+          + dsName, projectName
+          + File.separator + dsName);
     } else if (parts != null) {
       dsName = parts[0];
       Inode parent = inodes.getProjectRoot(this.project.getName());
@@ -805,12 +861,12 @@ public class DataSetService {
       this.dataset = datasetFacade.findByProjectAndInode(this.project, dsInode);
       if (this.dataset == null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.DATASET_NOT_FOUND);
+            ResponseMessages.DATASET_NOT_FOUND);
       }
       return this.path + path;
     }
     return File.separator + Settings.DIR_ROOT + File.separator
-            + path;
+        + path;
   }
 
 }

@@ -14,6 +14,7 @@ angular.module('hopsWorksApp')
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
             self.selected = null; //The index of the selected file in the files array.
+            self.selectedList = []; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
 
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
@@ -25,7 +26,7 @@ angular.module('hopsWorksApp')
             };
 
 
-            $scope.toggleDropdown = function($event) {
+            $scope.toggleDropdown = function ($event) {
               $event.preventDefault();
               $event.stopPropagation();
               $scope.status.isopen = !$scope.status.isopen;
@@ -37,11 +38,20 @@ angular.module('hopsWorksApp')
             self.closeSlider = false;
 
             $scope.toggleState = function () {
-                $scope.tgState = !$scope.tgState;
+              $scope.tgState = !$scope.tgState;
             }
-            
+
             self.openMetadata = function (tgState) {
-                $scope.tgState = true;
+              $scope.tgState = true;
+            }
+
+            self.selectInode = function (inode) {
+              // add to selectedList
+
+            }
+
+            self.selectInode = function (inode) {
+              // splice
             }
 
             $scope.sort = function (keyname) {
@@ -58,12 +68,12 @@ angular.module('hopsWorksApp')
               }
             });
 
-            $scope.$watch(MetadataHelperService.getCloseSlider, function (response) {
-              if (response === "true") {
-                self.close();
-                MetadataHelperService.setCloseSlider("false");
-              }
-            });
+//            $scope.$watch(MetadataHelperService.getCloseSlider, function (response) {
+//              if (response === "true") {
+//                self.close();
+//                MetadataHelperService.setCloseSlider("false");
+//              }
+//            });
 
             $scope.$watch(MetadataHelperService.getDirContents, function (response) {
               if (response === "true") {
@@ -221,6 +231,30 @@ angular.module('hopsWorksApp')
               removeInode(getPath(removePathArray));
             };
 
+
+            self.moveInode = function (inodeId) {
+
+              ModalService.selectDir('lg', self.selectFileRegexes[reason],
+                      self.selectFileErrorMsgs[reason]).then(
+                      function (success) {
+                        var destPath = "hdfs://" + success;
+
+                        dataSetService.moveInode(inodeId, destPath).then(
+                                function (success) {
+                                  self.openDir(destPath);
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                        });
+
+
+                      }, function (error) {
+                //The user changed their mind.
+              });
+
+            };
+
+
             /**
              * Opens a modal dialog for file upload.
              * @returns {undefined}
@@ -371,7 +405,7 @@ angular.module('hopsWorksApp')
               self.selected = selectedIndex;
               self.fileDetail = file;
             };
-            
+
             self.deselect = function () {
               self.selected = null;
               self.fileDetail = null;
