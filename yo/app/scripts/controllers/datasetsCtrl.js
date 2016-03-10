@@ -253,8 +253,19 @@ angular.module('hopsWorksApp')
               });
 
             };
+            
+            
+            self.renameInode = function (inodeId, filename) {
+              
+                        dataSetService.moveInode(inodeId, destPath).then(
+                                function (success) {
+                                  self.openDir(destPath);
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                        });
 
-
+            };
             /**
              * Opens a modal dialog for file upload.
              * @returns {undefined}
