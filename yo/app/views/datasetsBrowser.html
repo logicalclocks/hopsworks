@@ -1,4 +1,4 @@
-<div ng-controller="MainCtrl as mainCtrl">
+<div ng-controller="MainCtrl as mainCtrl">sel
   <div ng-include="'nav.html'"></div>
 
 
@@ -50,7 +50,7 @@
                   hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>
                 </div>
                 <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
-                  <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle"></hamburger-toggle>
+                  <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()"></hamburger-toggle>
                 </div>
               </h3>
             </div>
@@ -198,7 +198,7 @@
                             <!--<hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle"></hamburger-toggle>-->
                             <md-tabs md-dynamic-height md-border-bottom>
                               <md-tab label="Details">
-                                <div ng-show="selected === null">
+                                <div ng-show="datasetsCtrl.selected === null">
                                   <div class="file">
                                     <div class="icon">
                                       <i class="glyphicon glyphicon-folder-open"></i>
@@ -207,7 +207,7 @@
                                   </div>           
                                 </div>
                                 <md-content>
-                                  <table id="mytable1" ng-show="selected > -1 && selected != undefined" class="table table-bordred table-striped" style="margin-top: 16px;">
+                                  <table id="mytable1" ng-show="datasetsCtrl.selected > -1 && datasetsCtrl.selected != undefined" class="table table-bordred table-striped" style="margin-top: 16px;">
                                     <tr style="background-color: #fafafa">
                                       <td style="color:lightgrey;">Size</td>
                                       <td style="color: grey;">{{(datasetsCtrl.fileDetail.size == 0? '_': projectCtrl.sizeOnDisk(datasetsCtrl.fileDetail.size))}}</td>
