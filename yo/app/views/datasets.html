@@ -41,7 +41,8 @@
                   <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false" class="file-control">Pending</a>
                 </div>
                 <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
-                  <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle"></hamburger-toggle>
+                  <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()">
+                            </hamburger-toggle>
                 </div>
               </h3>
 
@@ -50,35 +51,56 @@
                 <div class="row row-no-margin-left" style="margin-top: 15px;">
 
                   <div class="col-lg-12">
+
+
                     <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared:datasetsCtrl.shared, status: datasetsCtrl.status} | orderBy: 'name'">
-                      <div ng-init="(iscollapsed$index) = true"
+                      <div ng-dblclick="projectCtrl.browseDataset(dataset)"
+                           ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.openMetadata();"
+                           ng-init="(iscollapsed$index) = true"
                            class="file-box"
                            context-menu
                            data-target="menu-{{ $index}}">
-                        <div  class="file">
-                          <div ng-click="projectCtrl.browseDataset(dataset)">
-                            <a>
-                              <span class="corner"></span>
-
-                              <div class="icon">
-                                <i class="glyphicon glyphicon-folder-open"></i>
-                              </div>
-                            </a>
-                          </div>
-                          <div class="file-name">
-                            {{dataset.name}}
-                            <br/>
-                            <small><b>Owner: </b> {{dataset.owner}}</small>
-                            <br/>
-                            <button
-                              style="font-size:15px;height:28px;color:white;padding-top: 3px; margin-left: 20px; margin-top: -40px;"
-                              ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset)"
-                              class="btn btn-info">
-                              <i class="fa fa-search"></i>
-                            </button>
-                          </div>
+                        <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === $index}">
+                          <a>
+                            <span class="corner"></span>
+                            <div class="icon">
+                              <i class="glyphicon" ng-class="{'glyphicon-folder-close': datasetsCtrl.selected === $index, 'glyphicon-folder-open' : datasetsCtrl.selected !== $index}"></i>
+                            </div>
+                            <div class="file-name">
+                              {{dataset.name}}
+                              <br/>
+                              <small><b>Owner:</b> {{dataset.owner}}</small>
+                            </div>
+                          </a>
                         </div>
-                      </div>
+                      </div>  
+                      <!--                      <div ng-init="(iscollapsed$index) = true"
+                                                 class="file-box"
+                                                 context-menu
+                                                 data-target="menu-{{ $index}}">
+                                              <div  class="file">
+                                                <div ng-click="projectCtrl.browseDataset(dataset)">
+                                                  <a>
+                                                    <span class="corner"></span>
+                                                    <div class="icon">
+                                                      <i class="glyphicon glyphicon-folder-open"></i>
+                                                    </div>
+                                                  </a>
+                                                </div>
+                                                <div class="file-name">
+                                                  {{dataset.name}}
+                                                  <br/>
+                                                  <small><b>Owner: </b> {{dataset.owner}}</small>
+                                                  <br/>
+                                                  <button
+                                                    style="font-size:15px;height:28px;color:white;padding-top: 3px; margin-left: 20px; margin-top: -40px;"
+                                                    ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset)"
+                                                    class="btn btn-info">
+                                                    <i class="fa fa-search"></i>
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            </div>-->
                       <div class="dropdown position-fixed" id="menu-{{$index}}">
                         <ul class="dropdown-menu dropdown-amore">
                           <!--                        <li>
@@ -130,7 +152,7 @@
                       </div>
                     </div> <!-- end repeat -->
 
-                    <div ng-init="(iscollapsed$index) = true"
+                    <div ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;"
                          ng-show="datasetsCtrl.files.length < 20"
                          class="file-box"
                          context-menu
@@ -162,8 +184,17 @@
                 <md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">
                   <md-tabs md-dynamic-height md-border-bottom>
                     <md-tab label="Details">
+                      <div ng-show="datasetsCtrl.selected === null || datasetsCtrl.selected < 0">
+                        <br>
+                        <div class="file" style="text-align: center;">
+                          <div class="icon">
+                            <i class="glyphicon glyphicon-folder-open"></i>
+                          </div>  
+                          Select a DataSet to view its details.
+                        </div>           
+                      </div>
                       <md-content>
-                        <table id="mytable1" ng-show="datasetsCtrl.selected > -1 && datasetsCtrl.selected != undefined" class="table table-bordred table-striped" style="margin-top: 16px;">
+                        <table id="mytable1" ng-show="datasetsCtrl.selected !== undefined && datasetsCtrl.selected > -1" class="table table-bordred table-striped" style="margin-top: 16px;">
 
                           <tr style="background-color: #fafafa">
                             <td style="color:lightgrey;">Description</td>
@@ -188,6 +219,75 @@
 
                       </md-content>
                     </md-tab>
+                    <md-tab label="Activity">
+                      <md-content class="md-padding" style="padding-left: 20px;padding-right: 20px;">
+
+                        <div class="row">
+                          <span
+                            style="color: #444;font-size: 11px; margin-bottom: 10px;padding: 16px 6px 6px;text-transform: uppercase;">
+                            LAST WEEK
+                          </span>
+
+                          <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center"
+                                         style="border-radius: 3px; margin-top:10px;">
+                            <div class="col-md-2" style="margin-top: -45px;">
+                              <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;"
+                                   src="https://gravatar.com/avatar/4b43f0e86b038f246887dde7f399a5a3?d=mm">
+                            </div>
+                            <div class="col-md-10" style="margin-top: 12px;padding-left:20px;">
+                              <b>You</b> uploaded an item
+                              </br>
+                              <span style="color:#444; font-size: 11px;">Apr 30</span>
+
+                              <p style="margin-top: 20px; color:#444;">
+                                SICSEngineering.pdf
+                              </p>
+                            </div>
+                          </md-whiteframe>
+
+                          <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center"
+                                         style="border-radius: 3px; margin-top:20px; margin-bottom: 20px;">
+                            <div class="col-md-2" style="margin-top: -45px;">
+                              <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;"
+                                   src="https://gravatar.com/avatar/4b43f0e86b038f246887dde7f399a5a3?d=mm">
+                            </div>
+                            <div class="col-md-10" style="margin-top: 12px;padding-left:20px;">
+                              <b>André</b> uploaded an item
+                              </br>
+                              <span style="color:#444; font-size: 11px;">Apr 11</span>
+
+                              <p style="margin-top: 20px; color:#444;">
+                                AndreSecretFile.rsa
+                              </p>
+                            </div>
+                          </md-whiteframe>
+
+                          <span
+                            style="color: #444;font-size: 11px; margin-bottom: 10px;padding: 16px 6px 6px;text-transform: uppercase;">
+                            EARLIER THIS MONTH
+                          </span>
+
+
+                          <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center"
+                                         style="border-radius: 3px; margin-top:10px;">
+                            <div class="col-md-2" style="margin-top: -45px;">
+                              <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;"
+                                   src="https://gravatar.com/avatar/f7b87f83afcba880c6300e1e4e4a8790?d=mm">
+                            </div>
+                            <div class="col-md-10" style="margin-top: 12px;padding-left:20px;">
+                              <b>Ermias</b> uploaded an item
+                              </br>
+                              <span style="color:#444; font-size: 11px;">Apr 07</span>
+
+                              <p style="margin-top: 20px; color:#444;">
+                                happy_birthday.cake
+                              </p>
+                            </div>
+                          </md-whiteframe>
+                        </div>
+                      </md-content>
+                    </md-tab>
+
                   </md-tabs>
                 </md-content>
               </div>

@@ -1,9 +1,4 @@
-/**
- * Created by AMore on 2015-04-24.
- */
-
 'use strict';
-
 
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
@@ -18,16 +13,17 @@ angular.module('hopsWorksApp')
             self.files = []; //A list of files currently displayed to the user.
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
-            $scope.selected; //The index of the selected file in the files array.
+            self.selected = null; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
 
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
-            $scope.tgState = false;
+            $scope.tgState = true;
 
             $scope.status = {
               isopen: false
             };
+
 
             $scope.toggleDropdown = function($event) {
               $event.preventDefault();
@@ -42,6 +38,10 @@ angular.module('hopsWorksApp')
 
             $scope.toggleState = function () {
                 $scope.tgState = !$scope.tgState;
+            }
+            
+            self.openMetadata = function (tgState) {
+                $scope.tgState = true;
             }
 
             $scope.sort = function (keyname) {
@@ -99,7 +99,7 @@ angular.module('hopsWorksApp')
               dataSetService.getContents(newPath).then(
                       function (success) {
                         //Reset the selected file
-                        $scope.selected = null;
+                        self.selected = null;
                         self.fileDetail = null;
                         //Set the current files and path
                         self.files = success.data;
@@ -133,7 +133,7 @@ angular.module('hopsWorksApp')
               dataSetService.getContents(newPath).then(
                       function (success) {
                         //Reset the selected file
-                        $scope.selected = null;
+                        self.selected = null;
                         self.fileDetail = null;
                         //Set the current files and path
                         self.files = success.data;
@@ -368,8 +368,13 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.select = function (selectedIndex, file) {
-              $scope.selected = selectedIndex;
+              self.selected = selectedIndex;
               self.fileDetail = file;
+            };
+            
+            self.deselect = function () {
+              self.selected = null;
+              self.fileDetail = null;
             };
 
             self.toggleLeft = buildToggler('left');

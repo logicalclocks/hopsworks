@@ -23,7 +23,7 @@
 
             <div class="content-wrapper" ng-show="mainCtrl.searchReturned === ''">
               <h3>
-                <div class="col-md-2 col-lg-2" style="margin-top: -17px;">
+                <div class="col-md-2 col-lg-2" style="margin-top: -17px;" ng-init="datasetsCtrl.tgState = true;">
                   <div class="dropdown"  dropdown>
                     <button class="btn btn-default"  dropdown-toggle type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                       <i class="glyphicon glyphicon-folder-open" style="padding-right: 10px;"></i>
@@ -199,7 +199,6 @@
                             <md-tabs md-dynamic-height md-border-bottom>
                               <md-tab label="Details">
                                 <div ng-show="selected === null">
-
                                   <div class="file">
                                     <div class="icon">
                                       <i class="glyphicon glyphicon-folder-open"></i>
