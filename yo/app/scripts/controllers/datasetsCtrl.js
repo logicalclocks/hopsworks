@@ -253,17 +253,26 @@ angular.module('hopsWorksApp')
               });
 
             };
-            
-            
-            self.renameInode = function (inodeId, filename) {
+
+
+            self.renameInode = function (inodeId) {
+
+              var pathComponents = self.pathArray.slice(0);
+              var newPath = getPath(pathComponents);
+              var destPath = newPath + '/' ;
               
-                        dataSetService.moveInode(inodeId, destPath).then(
-                                function (success) {
-                                  self.openDir(destPath);
-                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
-                                }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                        });
+              ModalService.renameInode('lg', self.projectId, destPath).then(
+                      function (success) {
+                        var fullPath = destPath + success.newName;
+              dataSetService.moveInode(inodeId, fullPath).then(
+                      function (success) {
+                        // select the newly named file
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+              });
+
+              });              
+              
 
             };
             /**

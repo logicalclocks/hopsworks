@@ -512,10 +512,10 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              renameInode: function (scope) {
+              renameInode: function (scope, newName) {
                 var modalInstance = $modal.open({
-                  templateUrl: 'views/metadata/modifyFieldDialog.html',
-                  controller: 'ModifyFieldCtrl as modifyFieldCtrl',
+                  templateUrl: 'views/RenameInodeModal.html',
+                  controller: 'RenameInodeCtrl as renameInodeCtrl',
                   scope: scope,
                   size: 'md',
                   backdrop: 'static',
@@ -531,6 +531,9 @@ angular.module('hopsWorksApp')
                                   return $q.reject(err);
                                 });
                       }],
+                    newName: function () {
+                      return newName;
+                    },                    
                     scope: function () {
                       return scope;
                     }
