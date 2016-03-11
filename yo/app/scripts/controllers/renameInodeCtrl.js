@@ -5,21 +5,18 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('RenameInodeCtrl', ['$scope', '$modalInstance',
-          function ($scope, $modalInstance) {
+        .controller('RenameInodeCtrl', ['$scope', '$modalInstance', 'newName',
+          function ($scope, $modalInstance, newName) {
 
             var self = this;
 
-            self.inode = {};
-            self.newName = '';
+            self.newName = newName;
 
             self.cancel = function () {
               $modalInstance.dismiss('Canceled');
             };
 
             self.renameInode = function () {
-
-
               $modalInstance.close({
               });
             };

@@ -538,8 +538,8 @@ public class DataSetService {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             "Cannot find file/folder you are trying to move. Has it been deleted?");        
       }
-      dfs.getDfsOps(username).moveWithinHdfs(new Path(inodes.getPath(sourceInode)), 
-          new Path(path));
+      dfs.getDfsOps(username).moveWithinHdfs(new org.apache.hadoop.fs.Path(inodes.getPath(sourceInode)), 
+          new org.apache.hadoop.fs.Path(path));
 
       String message = "";
       JsonResponse response = new JsonResponse();

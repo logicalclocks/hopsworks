@@ -512,11 +512,10 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              renameInode: function (scope, newName) {
+              renameInode: function (newName) {
                 var modalInstance = $modal.open({
-                  templateUrl: 'views/RenameInodeModal.html',
+                  templateUrl: 'views/renameInodeModal.html',
                   controller: 'RenameInodeCtrl as renameInodeCtrl',
-                  scope: scope,
                   size: 'md',
                   backdrop: 'static',
                   resolve: {
@@ -533,9 +532,6 @@ angular.module('hopsWorksApp')
                       }],
                     newName: function () {
                       return newName;
-                    },                    
-                    scope: function () {
-                      return scope;
                     }
                   }
                 });

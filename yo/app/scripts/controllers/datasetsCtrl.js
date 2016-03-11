@@ -232,12 +232,18 @@ angular.module('hopsWorksApp')
             };
 
 
-            self.moveInode = function (inodeId) {
-
-              ModalService.selectDir('lg', self.selectFileRegexes[reason],
-                      self.selectFileErrorMsgs[reason]).then(
+            self.parentPathArray = function () {
+              var newPathArray = self.pathArray.slice(0);
+              var clippedPath = newPathArray.splice(1, newPathArray.length - 1);
+              return clippedPath;
+            };
+            
+            self.move = function (inodeId) {
+              ModalService.selectDir('lg', "/[^]*/",
+                      "problem selecting file").then(
                       function (success) {
-                        var destPath = "hdfs://" + success;
+//                        var destPath = "hdfs://" + success;
+                        var destPath = success;
 
                         dataSetService.moveInode(inodeId, destPath).then(
                                 function (success) {
@@ -255,25 +261,22 @@ angular.module('hopsWorksApp')
             };
 
 
-            self.renameInode = function (inodeId) {
+            self.rename = function (inodeId) {
 
               var pathComponents = self.pathArray.slice(0);
               var newPath = getPath(pathComponents);
-              var destPath = newPath + '/' ;
-              
-              ModalService.renameInode('lg', self.projectId, destPath).then(
+              var destPath = newPath + '/';
+              ModalService.renameInode("").then(
                       function (success) {
                         var fullPath = destPath + success.newName;
-              dataSetService.moveInode(inodeId, fullPath).then(
-                      function (success) {
-                        // select the newly named file
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-              });
+                        dataSetService.moveInode(inodeId, fullPath).then(
+                                function (success) {
+                                  getDirContents();
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                        });
 
-              });              
-              
-
+                      });
             };
             /**
              * Opens a modal dialog for file upload.

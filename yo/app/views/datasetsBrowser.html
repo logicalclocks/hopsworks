@@ -23,7 +23,7 @@
 
             <div class="content-wrapper" ng-show="mainCtrl.searchReturned === ''">
               <h3>
-                <div class="col-md-2 col-lg-2" style="margin-top: -17px;" ng-init="datasetsCtrl.tgState = true;">
+                <div class="col-md-2 col-lg-2" style="margin-top: -17px;" ng-init="datasestsCtrl.tgState = true;">
                   <div class="dropdown"  dropdown>
                     <button class="btn btn-default"  dropdown-toggle type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                       <i class="glyphicon glyphicon-folder-open" style="padding-right: 10px;"></i>
@@ -43,12 +43,12 @@
                       <label>Filter:</label>
                       <input type="text" ng-model="search" 
                              class="form-control" placeholder="Search" 
-                             style="float: right; margin-top: -17px; margin-left: 10px;">
+                             style="float: right; margin-top: -17px; margin-left: 1px;">
                     </div>
                   </form>
                 </div>
-                <div class="col-md-7 col-lg-7" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
-                  hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>
+                <div class="col-md-7 col-lg-7" ng-controller="ProjectCtrl as projectCtrl">
+                  <span>hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a>/<a ng-show="datasetsCtrl.fileDetail !== null">{{datasetsCtrl.fileDetail.name}}</a></span>
                 </div>
                 <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
                   <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()"></hamburger-toggle>
@@ -57,10 +57,7 @@
             </div>
             <div class="row row-no-margin-left">
               <div class="col-lg-12">
-                <div class="row row-no-margin-left">
-
                   <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: 5px;">
-
                     <div class="table-responsive" style="overflow: hidden;">
                       <table class="table table-bordred table-hover" >
 
@@ -79,10 +76,10 @@
 
                         <tbody ng-model="datasetsCtrl.files">
 
-                          <tr ng-click="datasetsCtrl.back()">
-                            <td style="padding: 0px" colspan="5">&nbsp &nbsp
-                              <a style="font-size:30px">..</a> 
-                              <!--<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>-->
+                          <tr>
+                            <td style="padding: 0px" colspan="5">
+                              <i class="glyphicon glyphicon-level-up" style="margin-left:10px;" ng-click="datasetsCtrl.back()"></i>
+                              &nbsp;&nbsp;<span data-ng-repeat="path in datasetsCtrl.parentPathArray() track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a>
                             </td>
                             <td>
                               <i ng-if="datasetsCtrl.working"
@@ -122,27 +119,18 @@
                                     <a class="pointer"
                                        role="menuitem"
                                        tabindex="5"
-                                       ng-click="datasetsCtrl.rename(file.name)">
-                                      <span><i class="fa fa-trash"></i>
-                                        Rename</span>
-                                    </a>
-                                  </li>
-                                  <li>
-                                    <a class="pointer"
-                                       role="menuitem"
-                                       tabindex="5"
                                        ng-click="datasetsCtrl.deleteFile(file.name)">
                                       <span><i class="fa fa-trash"></i>
                                         Remove</span>
                                     </a>
                                   </li>
-
+                                  <li class="divider"></li>
                                   <li>
                                     <a class="pointer"
                                        role="menuitem"
                                        tabindex="5"
-                                       ng-click="datasetsCtrl.moveFile(file.id)">
-                                      <span><i class="fa fa-trash"></i>
+                                       ng-click="datasetsCtrl.move(file.id)">
+                                      <span><i class="fa fa-arrows"></i>
                                         Move</span>
                                     </a>
                                   </li>
@@ -150,9 +138,9 @@
                                     <a class="pointer"
                                        role="menuitem"
                                        tabindex="5"
-                                       ng-click="datasetsCtrl.renameFile(file.id)">
-                                      <span><i class="fa fa-trash"></i>
-                                        Move</span>
+                                       ng-click="datasetsCtrl.rename(file.id)">
+                                      <span><i class="fa fa-edit"></i>
+                                        Rename</span>
                                     </a>
                                   </li>                                  
 
@@ -169,14 +157,13 @@
                                   </li>
 
                                   <li class="divider"></li>
-                                  datasetsCtrl.openDir(file)
                                   <li>
                                     <a class="pointer"
                                        role="menuitem"
                                        tabindex="3"
                                        ng-click="metadataCtrl.attachTemplate(file); $event.stopPropagation();">
                                       <span><i class="fa fa-upload"></i>
-                                        Add metadata template</span>
+                                        Add metadata</span>
                                     </a>
                                   </li>
 
@@ -186,7 +173,7 @@
                                        tabindex="4"
                                        ng-click="metadataCtrl.detachTemplate(file); $event.stopPropagation();">
                                       <span><i class="fa fa-download"></i>
-                                        Remove metadata template</span>
+                                        Remove metadata</span>
                                     </a>
                                   </li>
 
@@ -518,7 +505,6 @@
                       </div>
                     </div>
                   </div> <!-- end of col-lg-4 - metadata -->
-                </div>
 
 
 
