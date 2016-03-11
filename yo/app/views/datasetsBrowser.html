@@ -48,7 +48,7 @@
                   </form>
                 </div>
                 <div class="col-md-7 col-lg-7" ng-controller="ProjectCtrl as projectCtrl">
-                  <span>hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a>/<a ng-show="datasetsCtrl.fileDetail !== null">{{datasetsCtrl.fileDetail.name}}</a></span>
+                  <span>hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a><a ng-show="datasetsCtrl.fileDetail !== null">{{datasetsCtrl.fileDetail.name}}</a></span>
                 </div>
                 <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
                   <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()"></hamburger-toggle>
