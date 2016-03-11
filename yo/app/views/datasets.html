@@ -21,11 +21,9 @@
             </div>
 
             <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
-              <h3 id="projectBread" style="display: none; margin-top: -17px;"> {{projectCtrl.currentProject.projectName}} /{{datasetsCtrl.pathArray[0]}}</h3>
-
               <h3>
-                <div class="col-lg-3" style="margin-top: -17px;">
-                  <button class="btn btn-success" ng-click="datasetsCtrl.newDataSetModal()" dropdown-toggle type="button" id="newDataSet" aria-haspopup="true" aria-expanded="true">
+                <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
+                  <button class="btn btn-success" ng-click="data  setsCtrl.newDataSetModal()" dropdown-toggle type="button" id="newDataSet" aria-haspopup="true" aria-expanded="true">
                     Create New DataSet
                   </button>
                 </div>

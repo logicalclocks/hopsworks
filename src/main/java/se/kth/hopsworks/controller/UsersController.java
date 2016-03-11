@@ -37,7 +37,6 @@ import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.AuthService;
 import se.kth.hopsworks.user.model.*;
 import se.kth.hopsworks.users.*;
-import se.kth.hopsworks.util.LocalhostServices;
 import se.kth.hopsworks.util.Settings;
 
 @Stateless
@@ -467,7 +466,7 @@ public class UsersController {
     return dtos;
   }
   
-  public String generateUsername(String email) {
+  public  String generateUsername(String email) {
     int count = 0;
     int digit = 0;
     String uname = getUsernameFromEmail(email);
