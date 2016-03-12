@@ -512,11 +512,11 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              renameInode: function (newName) {
+              enterName: function (size, title, msg, newName) {
                 var modalInstance = $modal.open({
-                  templateUrl: 'views/renameInodeModal.html',
-                  controller: 'RenameInodeCtrl as renameInodeCtrl',
-                  size: 'md',
+                  templateUrl: 'views/enterNameModal.html',
+                  controller: 'EnterNameCtrl as enterNameCtrl',
+                  size: size,
                   backdrop: 'static',
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',
@@ -530,6 +530,12 @@ angular.module('hopsWorksApp')
                                   return $q.reject(err);
                                 });
                       }],
+                    title: function () {
+                      return title;
+                    },
+                    msg: function () {
+                      return msg;
+                    },                    
                     newName: function () {
                       return newName;
                     }

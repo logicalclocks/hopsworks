@@ -266,7 +266,7 @@ angular.module('hopsWorksApp')
               var pathComponents = self.pathArray.slice(0);
               var newPath = getPath(pathComponents);
               var destPath = newPath + '/';
-              ModalService.renameInode("").then(
+              ModalService.enterName('lg', "Rename File or Directory", "New Name").then(
                       function (success) {
                         var fullPath = destPath + success.newName;
                         dataSetService.moveInode(inodeId, fullPath).then(
