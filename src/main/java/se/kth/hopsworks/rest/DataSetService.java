@@ -16,6 +16,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -57,6 +58,7 @@ import se.kth.hopsworks.dataset.DatasetRequest;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
+import se.kth.hopsworks.hdfs.fileoperations.MoveDTO;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.Template;
@@ -441,7 +443,7 @@ public class DataSetService {
     } catch (IllegalArgumentException | NullPointerException e) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Invalid directory: " + e.getLocalizedMessage());
-    }
+    } 
     json.setSuccessMessage("A directory was created at " + dsPath);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         json).build();
@@ -508,25 +510,38 @@ public class DataSetService {
   /**
    * Move and Rename operations handled here
    *
-   * @param inodeId
-   * @param path
+   * @param path - the relative path from the project directory (excluding the project directory). Not the full path
+   * @param dto
    * @param sc
    * @return
    * @throws AppException
    * @throws AccessControlException
    */
-  @GET
-  @Path("move/{inodeId}/{path: .+}")
+//  @Path("move/{inodeId}/{path: .+}")
+  @POST
+  @Path("move")
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response moveFile(@PathParam("inodeId") Integer inodeId,
-      @PathParam("path") String path, @Context SecurityContext sc) throws
+  public Response moveFile(
+//      @PathParam("inodeId") Integer inodeId,
+//      @PathParam("path") String path, 
+      @Context SecurityContext sc, @Context HttpServletRequest req, 
+      MoveDTO dto) throws
       AppException, AccessControlException {
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
+    
+    int inodeId = dto.getInodeId();
+    String path = dto.getDestPath();
     if (path == null) {
       path = "";
     }
+    
+    if (path.startsWith("/Projects/" + this.project.getName())) {
+      path = path.replaceFirst("/Projects/" + this.project.getName(), "");
+    }
+    
     path = getFullPath(path);
     
     try {
@@ -827,6 +842,7 @@ public class DataSetService {
     while (path.startsWith("/")) {
       path = path.substring(1);
     }
+
     String dsName;
     String projectName;
     String[] parts = path.split(File.separator);

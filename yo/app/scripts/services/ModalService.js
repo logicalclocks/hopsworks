@@ -512,7 +512,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              enterName: function (size, title, msg, newName) {
+              enterName: function (size, title, newName) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/enterNameModal.html',
                   controller: 'EnterNameCtrl as enterNameCtrl',
@@ -533,9 +533,6 @@ angular.module('hopsWorksApp')
                     title: function () {
                       return title;
                     },
-                    msg: function () {
-                      return msg;
-                    },                    
                     newName: function () {
                       return newName;
                     }

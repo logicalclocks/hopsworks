@@ -25,6 +25,10 @@ angular.module('hopsWorksApp')
               isopen: false
             };
 
+            self.onSuccess = function (e) {
+              growl.success("Copied to clipboard", {title: '', ttl: 1000});
+              e.clearSelection();
+            };
 
             $scope.toggleDropdown = function ($event) {
               $event.preventDefault();
@@ -37,17 +41,14 @@ angular.module('hopsWorksApp')
             self.availableTemplates = [];
             self.closeSlider = false;
 
-            $scope.toggleState = function () {
-              $scope.tgState = !$scope.tgState;
-            }
-
-            self.openMetadata = function (tgState) {
+            self.openMetadata = function () {
               $scope.tgState = true;
             }
+            
+            self.openMetadata();
 
             self.selectInode = function (inode) {
               // add to selectedList
-
             }
 
             self.selectInode = function (inode) {
@@ -237,18 +238,22 @@ angular.module('hopsWorksApp')
               var clippedPath = newPathArray.splice(1, newPathArray.length - 1);
               return clippedPath;
             };
-            
-            self.move = function (inodeId) {
+
+            self.move = function (inodeId, name) {
               ModalService.selectDir('lg', "/[^]*/",
                       "problem selecting file").then(
                       function (success) {
-//                        var destPath = "hdfs://" + success;
                         var destPath = success;
+                        // Get the relative path of this DataSet, relative to the project home directory
+                        // replace only first occurrence 
+                        var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
+                        var finalPath = relPath + "/" + name;
 
-                        dataSetService.moveInode(inodeId, destPath).then(
+                        dataSetService.move(inodeId, finalPath).then(
                                 function (success) {
-                                  self.openDir(destPath);
-                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
+//                                  self.openDir(relPath);
+                                  getDirContents();
+                                  growl.success(success.data.successMessage, {title: 'Moved successfully. Opened dest dir: ' + relPath, ttl: 2000});
                                 }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
@@ -266,10 +271,11 @@ angular.module('hopsWorksApp')
               var pathComponents = self.pathArray.slice(0);
               var newPath = getPath(pathComponents);
               var destPath = newPath + '/';
-              ModalService.enterName('lg', "Rename File or Directory", "New Name").then(
+              var newName = "New Name";
+              ModalService.enterName('lg', "Rename File or Directory", newName).then(
                       function (success) {
                         var fullPath = destPath + success.newName;
-                        dataSetService.moveInode(inodeId, fullPath).then(
+                        dataSetService.move(inodeId, fullPath).then(
                                 function (success) {
                                   getDirContents();
                                 }, function (error) {
@@ -427,6 +433,7 @@ angular.module('hopsWorksApp')
             self.select = function (selectedIndex, file) {
               self.selected = selectedIndex;
               self.fileDetail = file;
+              
             };
 
             self.deselect = function () {

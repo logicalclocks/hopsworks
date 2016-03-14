@@ -23,6 +23,7 @@ angular.module('hopsWorksApp', [
   'ngMessages',
   'as.sortable',
   'ngHamburger',
+  'ngclipboard',    
   'isteven-multi-select',
   'angularUtils.directives.dirPagination'
 ])

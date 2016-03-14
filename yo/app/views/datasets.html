@@ -23,7 +23,7 @@
             <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
               <h3>
                 <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
-                  <button class="btn btn-success" ng-click="data  setsCtrl.newDataSetModal()" dropdown-toggle type="button" id="newDataSet" aria-haspopup="true" aria-expanded="true">
+                  <button class="btn btn-success" ng-click="datasetsCtrl.newDataSetModal()" dropdown-toggle type="button" id="newDataSet" aria-haspopup="true" aria-expanded="true">
                     Create New DataSet
                   </button>
                 </div>
@@ -40,7 +40,7 @@
                 </div>
                 <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
                   <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()">
-                            </hamburger-toggle>
+                  </hamburger-toggle>
                 </div>
               </h3>
 
@@ -159,8 +159,11 @@
                         <div class="icon">
                           <i class="glyphicon glyphicon-plus"></i>
                         </div>
-                        <div style="text-align: center; color: green;">
-                          Create New DataSet
+                        <div class="file-name ng-binding">
+                          <div style="text-align: center; color: green;">
+                            Create New DataSet
+                          </div>
+                          <div class="row"><br></div>
                         </div>
                       </div>
                     </div>                  

@@ -5,15 +5,15 @@
   </div>
   <div class="modal-body">
     <div class="form-group">
-      <label class="control-label" for="newFieldTitle">{{enterNameCtrl.msg}}</label>
+      <label class="control-label" for="newFieldName">Enter new name: </label>
       <div form-group has-feedback>
-        <input type="text" id="newfield_name" name="newFieldName" placeholder="New Name" ng-model="enterNameCtrl.newName" 
+        <input type="text" id="newfield_name" name="newFieldName" placeholder="" ng-model="enterNameCtrl.newName" 
                required autofocus="autofocus"   
                focus-me class="cardInputs form-control"/>
-        <!--        <div class="alert alert-danger fade in" ng-if="newFieldForm.$submitted &amp;&amp; newFieldForm.newFieldName.$error.required">
-                  <a class="close" data-dismiss="alert">&times;</a>
-                  <strong>A new name</strong> is required.
-                </div>-->
+        <div class="alert alert-danger fade in" ng-if="newFieldForm.$submitted && newFieldForm.newFieldName.$error.required">
+          <a class="close" data-dismiss="alert">&times;</a>
+          <strong>A new name</strong> is required.
+        </div>
       </div>
     </div>
   </div>
