@@ -8,12 +8,10 @@ package se.kth.hopsworks.rest;
 public enum Index {
   
   PROJECT,
-  //
   DATASET,
-  //
-  PARENT,
-  //
-  CHILD,
-  //
+  SITE,
+  PROJ,
+  DS,
+  INODE,
   UNKNOWN
 }

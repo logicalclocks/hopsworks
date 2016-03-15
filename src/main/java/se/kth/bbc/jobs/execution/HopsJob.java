@@ -47,6 +47,7 @@ public abstract class HopsJob {
   protected final JobDescription jobDescription;
   protected final Users user;
   protected final String hadoopDir;
+  protected final String nameNodeIpPort;
   protected final UserGroupInformation hdfsUser;
 
   /**
@@ -60,7 +61,8 @@ public abstract class HopsJob {
    * @throws NullPointerException If either of the given arguments is null.
    */
   protected HopsJob(JobDescription jobDescription,
-          AsynchronousJobExecutor services, Users user, String hadoopDir) throws
+          AsynchronousJobExecutor services, Users user, String hadoopDir,
+          String nameNodeIpPort) throws
           NullPointerException {
     //Check validity
     if (jobDescription == null) {
@@ -75,6 +77,7 @@ public abstract class HopsJob {
     this.services = services;
     this.user = user;
     this.hadoopDir = hadoopDir;
+    this.nameNodeIpPort = nameNodeIpPort;
     try {
       //if HopsJob is created in a doAs UserGroupInformation.getCurrentUser()
       //will return the proxy user, if not it will return the superuser.  

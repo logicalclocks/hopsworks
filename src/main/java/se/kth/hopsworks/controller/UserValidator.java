@@ -15,7 +15,7 @@ import se.kth.hopsworks.rest.AppException;
 public class UserValidator {
 
   public static final int PASSWORD_MIN_LENGTH = 6;
-  public static final int PASSWORD_MAX_LENGTH = 10;
+  public static final int PASSWORD_MAX_LENGTH = 255;
   private static final String PASSWORD_PATTERN
           = "(?=.*[a-z])(?=.*[A-Z])(?=.*[\\d\\W]).*$";
   private static final String EMAIL_PATTERN

@@ -246,18 +246,18 @@ public class Settings {
     return YARN_DEFAULT_QUOTA;
   }
 
-  private String HDFS_DEFAULT_QUOTA = "300000000000";
+  private String HDFS_DEFAULT_QUOTA = "200";
 
   public synchronized String getHdfsDefaultQuota() {
     checkCache();
     return HDFS_DEFAULT_QUOTA;
   }
 
-  private String MAX_NUM_PROJ_PER_USER = "10";
+  private String MAX_NUM_PROJ_PER_USER = "5";
 
   public synchronized Integer getMaxNumProjPerUser() {
     checkCache();
-    int num = 10;
+    int num = 5;
     try {
       num = Integer.parseInt(MAX_NUM_PROJ_PER_USER);
     } catch (NumberFormatException ex) {
@@ -408,10 +408,10 @@ public class Settings {
   public static final String META_DATA_FIELD = "EXTENDED_METADATA";
   public static final String META_PROJECT_INDEX = "project";
   public static final String META_DATASET_INDEX = "dataset";
-  public static final String META_PROJECT_PARENT_TYPE = "parent";
-  public static final String META_PROJECT_CHILD_TYPE = "child";
-  public static final String META_DATASET_PARENT_TYPE = "parent";
-  public static final String META_DATASET_CHILD_TYPE = "child";
+  public static final String META_PROJECT_PARENT_TYPE = "site";
+  public static final String META_PROJECT_CHILD_TYPE = "proj";
+  public static final String META_DATASET_PARENT_TYPE = "ds";
+  public static final String META_DATASET_CHILD_TYPE = "inode";
   public static final String META_INODE_SEARCHABLE_FIELD = "searchable";
   public static final String META_INODE_OPERATION_FIELD = "operation";
 

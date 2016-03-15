@@ -4,6 +4,7 @@ import se.kth.bbc.security.ua.Maintenance;
 import se.kth.hopsworks.controller.MaintenanceController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;

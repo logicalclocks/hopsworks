@@ -90,7 +90,7 @@ public class SparkController {
 		@Override
 		public SparkJob run() throws Exception {
 		  return new SparkJob(job, submitter, user, settings.
-				  getHadoopDir(), settings.getSparkDir(),
+				  getHadoopDir(), settings.getSparkDir(), hdfsLeDescriptorsFacade.getSingleEndpoint(),
 				  settings.getSparkUser());
 		}
 	  });
@@ -129,7 +129,7 @@ public class SparkController {
 	}
 
 	SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
-			settings.getSparkUser());
+      hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser());
 
 	submitter.stopExecution(sparkjob, appid);
 

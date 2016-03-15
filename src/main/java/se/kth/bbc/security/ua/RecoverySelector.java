@@ -368,9 +368,12 @@ public class RecoverySelector implements Serializable {
   public String returnMenu() {
 
     FacesContext ctx = FacesContext.getCurrentInstance();
-    HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
+    HttpSession sess = null;
+    if (ctx != null) {
+      sess = (HttpSession) ctx.getExternalContext().getSession(false);
+    }
 
-    if (null != sess) {
+    if (sess != null) {
       sess.invalidate();
     }
     qrCode = null;

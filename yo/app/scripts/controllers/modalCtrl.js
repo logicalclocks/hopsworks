@@ -2,7 +2,7 @@
 
 angular.module('hopsWorksApp')
         .controller('ModalCtrl', ['$modalInstance',  'title', 'msg',
-          function ($modalInstance, title, msg, val) {
+          function ($modalInstance, title, msg) {
 
             var self = this;
             self.title = title;
