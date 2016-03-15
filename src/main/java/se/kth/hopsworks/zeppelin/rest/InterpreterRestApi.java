@@ -102,25 +102,17 @@ public class InterpreterRestApi {
   @POST
   @Path("setting")
   public Response newSettings(String message) throws InterpreterException,
-      IOException {
+          IOException {
     NewInterpreterSettingRequest request = gson.fromJson(message,
-        NewInterpreterSettingRequest.class);
+            NewInterpreterSettingRequest.class);
     Properties p = new Properties();
     p.putAll(request.getProperties());
     // Option is deprecated from API, always use remote = true
-<<<<<<< HEAD
     InterpreterGroup interpreterGroup = zeppelinConf.getReplFactory().
             add(request.getName(),
                     request.getGroup(), new InterpreterOption(true), p);
     InterpreterSetting setting = zeppelinConf.getReplFactory().
             get(interpreterGroup.getId());
-=======
-    InterpreterGroup interpreterGroup = interpreterFactory.
-        add(request.getName(),
-            request.getGroup(), new InterpreterOption(true), p);
-    InterpreterSetting setting = interpreterFactory.
-        get(interpreterGroup.getId());
->>>>>>> 139546ccb4249bb2a35f665ad5087e4a4bcd0f2b
     logger.info("new setting created with " + setting.id());
     return new JsonResponse(Status.CREATED, "", setting).build();
   }
@@ -128,27 +120,22 @@ public class InterpreterRestApi {
   @PUT
   @Path("setting/{settingId}")
   public Response updateSetting(String message,
-      @PathParam("settingId") String settingId) {
+          @PathParam("settingId") String settingId) {
     logger.info("Update interpreterSetting {}", settingId);
     try {
       UpdateInterpreterSettingRequest p = gson.fromJson(message,
-          UpdateInterpreterSettingRequest.class);
+              UpdateInterpreterSettingRequest.class);
       // Option is deprecated from API, always use remote = true
-<<<<<<< HEAD
       zeppelinConf.getReplFactory().setPropertyAndRestart(settingId,
               new InterpreterOption(true), p.getProperties());
-=======
-      interpreterFactory.setPropertyAndRestart(settingId,
-          new InterpreterOption(true), p.getProperties());
->>>>>>> 139546ccb4249bb2a35f665ad5087e4a4bcd0f2b
     } catch (InterpreterException e) {
       return new JsonResponse(
-          Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e)).
-          build();
+              Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e)).
+              build();
     } catch (IOException e) {
       return new JsonResponse(
-          Status.INTERNAL_SERVER_ERROR, e.getMessage(), ExceptionUtils.
-          getStackTrace(e)).build();
+              Status.INTERNAL_SERVER_ERROR, e.getMessage(), ExceptionUtils.
+              getStackTrace(e)).build();
     }
     InterpreterSetting setting = zeppelinConf.getReplFactory().get(settingId);
     if (setting == null) {
@@ -167,7 +154,7 @@ public class InterpreterRestApi {
   @DELETE
   @Path("setting/{settingId}")
   public Response removeSetting(@PathParam("settingId") String settingId) throws
-      IOException {
+          IOException {
     logger.info("Remove interpreterSetting {}", settingId);
     zeppelinConf.getReplFactory().remove(settingId);
     return new JsonResponse(Status.OK).build();
@@ -224,87 +211,6 @@ public class InterpreterRestApi {
   }
 
   /**
-<<<<<<< HEAD
-=======
-   * Start an interpreter
-   * <p/>
-   * @param id
-   * @param settingId
-   * @return
-   * @throws se.kth.hopsworks.rest.AppException
-   */
-  @GET
-  @Path("{id}/start/{settingId}")
-  @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response start(@PathParam("id") Integer id,
-      @PathParam("settingId") String settingId) throws
-      AppException {
-    logger.info("Starting interpreterSetting {}", settingId);
-    InterpreterSetting interpreterSetting = interpreterFactory.get(settingId);
-    Project project = projectController.findProjectById(id);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
-    }
-    NotebookRepo notebookRepo;
-    Notebook newNotebook;
-    Note note;
-    try {
-      notebookRepo = zeppelinResource.setupNotebookRepo(project);
-      newNotebook = new Notebook(notebookRepo);
-      note = newNotebook.createNote();
-    } catch (IOException | SchedulerException ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Could not create notebook" + ex.getMessage());
-    }
-    Paragraph p = note.addParagraph(); // it's an empty note. so add one paragraph
-    if (interpreterSetting.getGroup().equalsIgnoreCase("spark")) {
-      p.setText(" ");
-    } else {
-      p.setText("%" + interpreterSetting.getGroup() + " ");
-    }
-
-    note.run(p.getId());
-    //wait until starting job terminates
-    while (!note.getParagraph(p.getId()).isTerminated()) {
-    }
-    newNotebook.removeNote(note.id());
-
-    InterpreterDTO interpreterDTO
-        = new InterpreterDTO(interpreterSetting, false);
-    return new JsonResponse(Status.OK, "", interpreterDTO).build();
-  }
-
-  /**
-   * stop an interpreter
-   * <p/>
-   * @param settingId
-   * @return nothing if successful.
-   * @throws se.kth.hopsworks.rest.AppException
-   */
-  @GET
-  @Path("stop/{settingId}")
-  public Response stop(@PathParam("settingId") String settingId) throws
-      AppException {
-    logger.info("Stoping interpreterSetting {}", settingId);
-    try {
-      interpreterFactory.restart(settingId);
-    } catch (InterpreterException e) {
-      return new JsonResponse(Status.BAD_REQUEST, e.getMessage(), e).build();
-    }
-
-    InterpreterSetting interpreterSetting = interpreterFactory.get(settingId);
-    //wait until the peocess is stoped.
-    while (zeppelinResource.isInterpreterRunning(interpreterSetting)) {
-      logger.info("Infinite loop???");
-    }
-
-    InterpreterDTO interpreter = new InterpreterDTO(interpreterSetting, true);
-    return new JsonResponse(Status.OK, "", interpreter).build();
-  }
-
-  /**
->>>>>>> 139546ccb4249bb2a35f665ad5087e4a4bcd0f2b
    * list interpreters with status(running or not).
    * <p/>
    * @return nothing if successful.
@@ -324,17 +230,8 @@ public class InterpreterRestApi {
     List<InterpreterSetting> interpreterSettings;
     interpreterSettings = zeppelinConf.getReplFactory().get();
     for (InterpreterSetting interpreter : interpreterSettings) {
-<<<<<<< HEAD
       interpreterDTO.put(interpreter.getGroup(), new InterpreterDTO(interpreter,
               !zeppelinResource.isInterpreterRunning(interpreter, project)));
-=======
-
-      if (interpreter.getGroup().contains("spark") || interpreter.getGroup().contains("angular")
-          || interpreter.getGroup().contains("md")) {
-        interpreterDTO.put(interpreter.getGroup(), new InterpreterDTO(interpreter,
-            !zeppelinResource.isInterpreterRunning(interpreter)));
-      }
->>>>>>> 139546ccb4249bb2a35f665ad5087e4a4bcd0f2b
     }
     return interpreterDTO;
   }
