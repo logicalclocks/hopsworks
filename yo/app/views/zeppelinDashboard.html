@@ -37,14 +37,6 @@
                                     {{note.name || 'Note ' + note.id}}</a>
                                 </li>
                             </ul>
-                            <h3><b>Tutorial Notebooks</b></h3>
-                            <ul style="list-style-type: none">
-                                <li ng-repeat="note in zeppelinCtrl.tutorialNotes track by $index">
-                                    <a ng-click="zeppelinCtrl.openNote(note)" style="text-decoration: none">
-                                    <i class="glyphicon glyphicon-file" style="font-size: 10px"></i>
-                                    {{note.name || 'Note ' + note.id}}</a>
-                                </li>
-                            </ul>
                         </div>
                     </div>
 
@@ -63,19 +55,11 @@
                                 <tr ng-repeat="interpreter in zeppelinCtrl.interpreters track by $index">
                                     <td><span>{{interpreter.interpreter.group}} Interpreter </span></td>
                                     <td class="text-muted">{{interpreter.statusMsg}}</td>
-                                    <td style="text-align: right">
-                                        <input type="checkbox"
-                                               id="switch-{{$index}}"
-                                               name="switch-{{$index}}"
-                                               data-size="mini"
-                                               data-on-text="Start"
-                                               data-off-text="Stop"
-                                               data-on-color="success"
-                                               data-off-color="danger"
-                                               ng-model="interpreter.interpreter.notRunning"
-                                               data-indeterminate="false"
-                                               ng-change="zeppelinCtrl.changeState(interpreter, 'switch-'+ $index)"
-                                               hopsworks-switch>
+                                    <td style="text-align: right">                                      
+                                        <button ng-click="zeppelinCtrl.stopInterpreter(interpreter)"
+                                                type="button" class="btn btn-danger btn-sm" 
+                                                ng-disabled="interpreter.interpreter.notRunning">
+                                          <span class="glyphicon glyphicon-off" ></span></button>
                                     </td>
                                 </tr>
                             </table>

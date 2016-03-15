@@ -6,17 +6,14 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import javax.ejb.EJB;
-import javax.servlet.http.HttpServletRequest;
+import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +24,9 @@ import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.bbc.project.Project;
+import se.kth.hopsworks.controller.ResponseMessages;
+import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.zeppelin.rest.message.CronRequest;
 import se.kth.hopsworks.zeppelin.rest.message.InterpreterSettingListForNoteBind;
 import se.kth.hopsworks.zeppelin.rest.message.NewNotebookRequest;
@@ -34,24 +34,28 @@ import se.kth.hopsworks.zeppelin.server.JsonResponse;
 import se.kth.hopsworks.zeppelin.rest.message.NewParagraphRequest;
 import se.kth.hopsworks.zeppelin.rest.message.RunParagraphWithParametersRequest;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
-import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
-import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 /**
  * Rest api endpoint for the noteBook.
  */
-@Path("/notebook")
-@Produces("application/json")
+//@Path("/notebook")
+//@Produces("application/json")
+@RequestScoped
 public class NotebookRestApi {
 
   Logger logger = LoggerFactory.getLogger(NotebookRestApi.class);
   Gson gson = new Gson();
-  @EJB
-  private ZeppelinResource zeppelinResource;
-  @EJB
-  private ZeppelinConfigFactory zeppelinConfFactory;
+  Project project;
+  ZeppelinConfig zeppelinConf;
+  String roleInProject;
 
   public NotebookRestApi() {
+  }
+  
+  public NotebookRestApi(Project project, String role, ZeppelinConfig zeppelinConf) {
+    this.project = project;
+    this.zeppelinConf = zeppelinConf;
+    this.roleInProject = role;
   }
 
   /**
@@ -59,17 +63,12 @@ public class NotebookRestApi {
    * <p/>
    * @param noteId
    * @param req
-   * @param httpReq
    * @return
    * @throws IOException
    */
   @PUT
   @Path("interpreter/bind/{noteId}")
-  public Response bind(@PathParam("noteId") String noteId, String req,
-          @Context HttpServletRequest httpReq) throws IOException {
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
+  public Response bind(@PathParam("noteId") String noteId, String req) throws IOException {
     List<String> settingIdList = gson.fromJson(req,
             new TypeToken<List<String>>() {
     }.getType());
@@ -81,16 +80,11 @@ public class NotebookRestApi {
    * list binded setting
    * <p/>
    * @param noteId
-   * @param httpReq
    * @return
    */
   @GET
   @Path("interpreter/bind/{noteId}")
-  public Response bind(@PathParam("noteId") String noteId,
-          @Context HttpServletRequest httpReq) {
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
+  public Response bind(@PathParam("noteId") String noteId) {
     List<InterpreterSettingListForNoteBind> settingList;
     settingList = new LinkedList<>();
 
@@ -131,11 +125,8 @@ public class NotebookRestApi {
   }
 
   @GET
-  public Response getNotebookList(@Context HttpServletRequest httpReq) throws
+  public Response getNotebookList() throws
           IOException {
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     List<Map<String, String>> notesInfo = zeppelinConf.getNotebookServer().
             generateNotebooksInfo(false);
     return new JsonResponse(Status.OK, "", notesInfo).build();
@@ -143,12 +134,8 @@ public class NotebookRestApi {
 
   @GET
   @Path("{notebookId}")
-  public Response getNotebook(@PathParam("notebookId") String notebookId,
-          @Context HttpServletRequest httpReq) throws
+  public Response getNotebook(@PathParam("notebookId") String notebookId) throws
           IOException {
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
       return new JsonResponse<>(Status.NOT_FOUND, "note not found.").build();
@@ -161,16 +148,12 @@ public class NotebookRestApi {
    * Create new note REST API
    *
    * @param message - JSON with new note name
-   * @param httpReq
    * @return JSON with new note ID
    * @throws IOException
    */
   @POST
-  public Response createNote(String message, @Context HttpServletRequest httpReq)
+  public Response createNote(String message)
           throws IOException {
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     logger.info("Create new notebook by JSON {}", message);
     NewNotebookRequest request = gson.fromJson(message,
             NewNotebookRequest.class);
@@ -199,16 +182,11 @@ public class NotebookRestApi {
    * Delete note REST API
    * <p>
    * @param notebookId
-   * @param httpReq@return JSON with status.OK
    * @throws IOException
    */
   @DELETE
   @Path("{notebookId}")
-  public Response deleteNote(@PathParam("notebookId") String notebookId,
-          @Context HttpServletRequest httpReq) throws IOException {
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
+  public Response deleteNote(@PathParam("notebookId") String notebookId) throws IOException {
     logger.info("Delete notebook {} ", notebookId);
     if (!(notebookId.isEmpty())) {
       Note note = zeppelinConf.getNotebook().getNote(notebookId);
@@ -225,7 +203,6 @@ public class NotebookRestApi {
    * <p>
    * @param notebookId
    * @param message
-   * @param httpReq
    * @return
    * @throws IOException
    * @throws java.lang.CloneNotSupportedException
@@ -233,11 +210,8 @@ public class NotebookRestApi {
   @POST
   @Path("{notebookId}")
   public Response cloneNote(@PathParam("notebookId") String notebookId,
-          String message, @Context HttpServletRequest httpReq) throws
+          String message) throws
           IOException, CloneNotSupportedException, IllegalArgumentException {
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     logger.info("clone notebook by JSON {}", message);
     NewNotebookRequest request = gson.fromJson(message,
             NewNotebookRequest.class);
@@ -253,19 +227,15 @@ public class NotebookRestApi {
    *
    * @param notebookId
    * @param message - JSON containing paragraph's information
-   * @param httpReq
    * @return JSON with status.OK
    * @throws IOException
    */
   @POST
   @Path("{notebookId}/paragraph")
   public Response insertParagraph(@PathParam("notebookId") String notebookId,
-          String message, @Context HttpServletRequest httpReq)
+          String message)
           throws IOException {
     logger.info("insert paragraph {} {}", notebookId, message);
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
       return new JsonResponse(Status.NOT_FOUND, "note not found.").build();
@@ -294,19 +264,14 @@ public class NotebookRestApi {
    *
    * @param notebookId
    * @param paragraphId
-   * @param httpReq
    * @return JSON with information of the paragraph
    * @throws IOException
    */
   @GET
   @Path("{notebookId}/paragraph/{paragraphId}")
   public Response getParagraph(@PathParam("notebookId") String notebookId,
-          @PathParam("paragraphId") String paragraphId,
-          @Context HttpServletRequest httpReq) throws IOException {
+          @PathParam("paragraphId") String paragraphId) throws IOException {
     logger.info("get paragraph {} {}", notebookId, paragraphId);
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
       return new JsonResponse(Status.NOT_FOUND, "note not found.").build();
@@ -326,7 +291,7 @@ public class NotebookRestApi {
    * @param notebookId
    * @param paragraphId
    * @param newIndex - new index to move
-   * @param httpReq
+
    * @return JSON with status.OK
    * @throws IOException
    */
@@ -334,12 +299,9 @@ public class NotebookRestApi {
   @Path("{notebookId}/paragraph/{paragraphId}/move/{newIndex}")
   public Response moveParagraph(@PathParam("notebookId") String notebookId,
           @PathParam("paragraphId") String paragraphId,
-          @PathParam("newIndex") String newIndex,
-          @Context HttpServletRequest httpReq) throws IOException {
+          @PathParam("newIndex") String newIndex) throws IOException {
     logger.info("move paragraph {} {} {}", notebookId, paragraphId, newIndex);
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
+
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
       return new JsonResponse(Status.NOT_FOUND, "note not found.").build();
@@ -367,19 +329,14 @@ public class NotebookRestApi {
    *
    * @param notebookId
    * @param paragraphId
-   * @param httpReq
    * @return
    * @throws IOException
    */
   @DELETE
   @Path("{notebookId}/paragraph/{paragraphId}")
   public Response deleteParagraph(@PathParam("notebookId") String notebookId,
-          @PathParam("paragraphId") String paragraphId,
-          @Context HttpServletRequest httpReq) throws IOException {
+          @PathParam("paragraphId") String paragraphId) throws IOException {
     logger.info("delete paragraph {} {}", notebookId, paragraphId);
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
       return new JsonResponse(Status.NOT_FOUND, "note not found.").build();
@@ -401,19 +358,14 @@ public class NotebookRestApi {
    * Run notebook jobs REST API
    *
    * @param notebookId
-   * @param httpReq
    * @return JSON with status.OK
    * @throws IOException, IllegalArgumentException
    */
   @POST
   @Path("job/{notebookId}")
-  public Response runNoteJobs(@PathParam("notebookId") String notebookId,
-          @Context HttpServletRequest httpReq) throws
+  public Response runNoteJobs(@PathParam("notebookId") String notebookId) throws
           IOException, IllegalArgumentException {
     logger.info("run notebook jobs {} ", notebookId);
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
       return new JsonResponse<>(Status.NOT_FOUND, "note not found.").build();
@@ -427,19 +379,14 @@ public class NotebookRestApi {
    * Stop(delete) notebook jobs REST API
    *
    * @param notebookId
-   * @param httpReq
    * @return JSON with status.OK
    * @throws IOException, IllegalArgumentException
    */
   @DELETE
   @Path("job/{notebookId}")
-  public Response stopNoteJobs(@PathParam("notebookId") String notebookId,
-          @Context HttpServletRequest httpReq) throws IOException,
+  public Response stopNoteJobs(@PathParam("notebookId") String notebookId) throws IOException,
           IllegalArgumentException {
     logger.info("stop notebook jobs {} ", notebookId);
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
       return new JsonResponse<>(Status.NOT_FOUND, "note not found.").build();
@@ -457,19 +404,14 @@ public class NotebookRestApi {
    * Get notebook job status REST API
    *
    * @param notebookId
-   * @param httpReq
    * @return JSON with status.OK
    * @throws IOException, IllegalArgumentException
    */
   @GET
   @Path("job/{notebookId}")
-  public Response getNoteJobStatus(@PathParam("notebookId") String notebookId,
-          @Context HttpServletRequest httpReq) throws IOException,
+  public Response getNoteJobStatus(@PathParam("notebookId") String notebookId) throws IOException,
           IllegalArgumentException {
     logger.info("get notebook job status.");
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
       return new JsonResponse<>(Status.NOT_FOUND, "note not found.").build();
@@ -487,8 +429,6 @@ public class NotebookRestApi {
    * value
    * null, empty string, empty json if user doesn't want to update
    * @param paragraphId
-   * @param httpReq
-   *
    * @return JSON with status.OK
    * @throws IOException, IllegalArgumentException
    */
@@ -496,12 +436,9 @@ public class NotebookRestApi {
   @Path("job/{notebookId}/{paragraphId}")
   public Response runParagraph(@PathParam("notebookId") String notebookId,
           @PathParam("paragraphId") String paragraphId,
-          String message, @Context HttpServletRequest httpReq) throws
+          String message) throws
           IOException, IllegalArgumentException {
     logger.info("run paragraph job {} {} {}", notebookId, paragraphId, message);
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
       return new JsonResponse<>(Status.NOT_FOUND, "note not found.").build();
@@ -532,20 +469,15 @@ public class NotebookRestApi {
    * Stop(delete) paragraph job REST API
    *
    * @param notebookId
-   * @param paragraphId
-   * @param httpReq@return JSON with status.OK
+   * @param paragraphId@return JSON with status.OK
    * @throws IOException, IllegalArgumentException
    */
   @DELETE
   @Path("job/{notebookId}/{paragraphId}")
   public Response stopParagraph(@PathParam("notebookId") String notebookId,
-          @PathParam("paragraphId") String paragraphId,
-          @Context HttpServletRequest httpReq) throws
+          @PathParam("paragraphId") String paragraphId) throws
           IOException, IllegalArgumentException {
     logger.info("stop paragraph job {} ", notebookId);
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
       return new JsonResponse<>(Status.NOT_FOUND, "note not found.").build();
@@ -565,20 +497,16 @@ public class NotebookRestApi {
    *
    * @param notebookId
    * @param message - JSON with cron expressions.
-   * @param httpReq
    * @return JSON with status.OK
    * @throws IOException, IllegalArgumentException
    */
   @POST
   @Path("cron/{notebookId}")
   public Response registerCronJob(@PathParam("notebookId") String notebookId,
-          String message, @Context HttpServletRequest httpReq) throws
+          String message) throws
           IOException, IllegalArgumentException {
     logger.info("Register cron job note={} request cron msg={}", notebookId,
             message);
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     CronRequest request = gson.fromJson(message,
             CronRequest.class);
 
@@ -604,19 +532,14 @@ public class NotebookRestApi {
    * Remove cron job REST API
    *
    * @param notebookId
-   * @param httpReq
    * @return JSON with status.OK
    * @throws IOException, IllegalArgumentException
    */
   @DELETE
   @Path("cron/{notebookId}")
-  public Response removeCronJob(@PathParam("notebookId") String notebookId,
-          @Context HttpServletRequest httpReq)
+  public Response removeCronJob(@PathParam("notebookId") String notebookId)
           throws IOException, IllegalArgumentException {
     logger.info("Remove cron job note {}", notebookId);
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
       return new JsonResponse<>(Status.NOT_FOUND, "note not found.").build();
@@ -634,19 +557,14 @@ public class NotebookRestApi {
    * Get cron job REST API
    *
    * @param notebookId
-   * @param httpReq
    * @return JSON with status.OK
    * @throws IOException, IllegalArgumentException
    */
   @GET
   @Path("cron/{notebookId}")
-  public Response getCronJob(@PathParam("notebookId") String notebookId,
-          @Context HttpServletRequest httpReq) throws
+  public Response getCronJob(@PathParam("notebookId") String notebookId) throws
           IOException, IllegalArgumentException {
     logger.info("Get cron job note {}", notebookId);
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
       return new JsonResponse<>(Status.NOT_FOUND, "note not found.").build();
@@ -659,21 +577,40 @@ public class NotebookRestApi {
    * Search for a Notes
    *
    * @param queryTerm
-   * @param httpReq
    * @return
    */
   @GET
   @Path("search")
-  public Response search(@QueryParam("q") String queryTerm,
-          @Context HttpServletRequest httpReq) {
+  public Response search(@QueryParam("q") String queryTerm) {
     logger.info("Searching notebooks for: {}", queryTerm);
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
     List<Map<String, String>> notebooksFound = zeppelinConf.getNotebookIndex().
             query(queryTerm);
     logger.info("{} notbooks found", notebooksFound.size());
     return new JsonResponse<>(Status.OK, notebooksFound).build();
   }
 
+  /**
+   * * Hopsworks *************************************************************************
+   */
+  
+  /**
+   * List all notes in a project
+   * <p/>
+   * @param id
+   * @return note info if successful.
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  @GET
+  @Path("{id}/notbooks")
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getAllNotesInProject(@PathParam("id") Integer id) throws
+          AppException {
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    List<Map<String, String>> notesInfo = zeppelinConf.getNotebookServer().
+            generateNotebooksInfo(false);
+    return new JsonResponse(Status.OK, "", notesInfo).build();
+  }
 }

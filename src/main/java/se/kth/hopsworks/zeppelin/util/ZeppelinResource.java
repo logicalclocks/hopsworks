@@ -66,6 +66,26 @@ public class ZeppelinResource {
     return running;
   }
 
+  public void forceKillInterpreter(InterpreterSetting interpreter, Project project) {
+    FileObject[] pidFiles;
+    try {
+      pidFiles = getPidFiles(project);
+    } catch (URISyntaxException | FileSystemException ex) {
+      logger.log(Level.SEVERE, "Could not read pid files ", ex);
+      return;
+    }
+    boolean running = false;
+    for (FileObject file : pidFiles) {
+      if (file.getName().toString().contains(interpreter.getGroup())) {
+        running = isProccessAlive(readPid(file));
+        if (running) {
+          forceKillProccess(readPid(file));
+          break;
+        }
+      }
+    }
+  }
+
   private FileObject[] getPidFiles(Project project) throws URISyntaxException,
           FileSystemException {
     ZeppelinConfiguration conf = zeppelinConfFactory.getZeppelinConfig(
@@ -153,6 +173,22 @@ public class ZeppelinResource {
     return exitValue == 0;
   }
 
+  private void forceKillProccess(String pid) {
+    String[] command = {"kill", "-9", pid};
+    ProcessBuilder pb = new ProcessBuilder(command);
+    if (pid == null) {
+      return;
+    }
+    try {
+      Process p = pb.start();
+      p.waitFor();
+      p.exitValue();
+    } catch (IOException | InterruptedException ex) {
+      logger.log(Level.WARNING, "Problem killing Zeppelin Interpreter: {0}", ex.
+              toString());
+    }
+  }
+  
   private String readPid(FileObject file) {
     //pid value can only be extended up to a theoretical maximum of 
     //32768 for 32 bit systems or 4194304 for 64 bit:

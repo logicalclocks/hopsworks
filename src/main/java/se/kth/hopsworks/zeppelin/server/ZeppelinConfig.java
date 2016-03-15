@@ -30,12 +30,6 @@ public class ZeppelinConfig {
           getName());
   private static final String ZEPPELIN_SITE_XML = "/zeppelin-site.xml";
   private static final String ZEPPELIN_ENV_SH = "/zeppelin_env.sh";
-  
-  /**
-   * Severe:   ls: cannot access /srv/zeppelin/Projects/project1/lib/zeppelin-interpreter*.jar: No such file or directory
-   * Info:   Log dir doesn't exist, create /srv/zeppelin/Projects/project1/logs
-   * Severe:   Error: Could not find or load main class org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer
-   */
 
   /**
    * A configuration that is common for all projects.
@@ -58,6 +52,8 @@ public class ZeppelinConfig {
   private final String runDirPath;
   private final String binDirPath;
   private final String logDirPath;
+  private final String interpreterDirPath;
+  private final String libDirPath;
 
   public ZeppelinConfig(String projectName, Settings settings) {
     this.projectName = projectName;
@@ -82,9 +78,16 @@ public class ZeppelinConfig {
     logDirPath = settings.getZeppelinDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName
             + File.separator + "logs";
+    interpreterDirPath = settings.getZeppelinDir() + File.separator
+            + Settings.DIR_ROOT + File.separator + this.projectName
+            + File.separator + "interpreter";
+    libDirPath = settings.getZeppelinDir() + File.separator
+            + Settings.DIR_ROOT + File.separator + this.projectName
+            + File.separator + "lib";
     try {
       newDir = createZeppelinDirs();//creates the necessary folders for the project in /srv/zeppelin
       newBinDir = copyBinDir();
+      createSymLinks();//interpreter and lib
       newFile = createZeppelinConfFiles();//create project specific configurations for zeppelin 
       this.conf = loadConfig();
       this.notebookServer = setupNotebookServer();
@@ -197,6 +200,22 @@ public class ZeppelinConfig {
     }
     return binDir.list().length == sourceDir.list().length;
   }
+  
+  //creates sym link to interpreters and libs
+  private void createSymLinks() throws IOException {
+    File target = new File(settings.getZeppelinDir() + File.separator
+            + "interpreter");
+    File newLink = new File(interpreterDirPath);
+    if (!newLink.exists()) {
+      Files.createSymbolicLink(newLink.toPath(), target.toPath());
+    }
+    target = new File(settings.getZeppelinDir() + File.separator + "lib");
+    newLink = new File(libDirPath);
+    if (!newLink.exists()) {
+      Files.createSymbolicLink(newLink.toPath(), target.toPath());
+    }
+  }
+
 
   // returns true if one of the conf files were created anew 
   private boolean createZeppelinConfFiles() throws IOException {
@@ -255,7 +274,7 @@ public class ZeppelinConfig {
    * Closes all resources and deletes project dir
    * /srv/zeppelin/Projects/this.projectName recursive.
    *
-   * @return
+   * @return true if the dir is deleted
    */
   public boolean cleanAndRemoveConfDirs() {
     clean();
