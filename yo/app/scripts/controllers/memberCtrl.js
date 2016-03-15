@@ -20,12 +20,15 @@ angular.module('hopsWorksApp')
 
             self.newMembers = {'projectTeam': []};
             self.card = {};
+            self.myCard = {};
             self.cards = [];
 
 
             UserService.allcards().then(
                     function (success) {
                       self.cards = success.data;
+                      // remove my own 'card' from the list of members
+                      self.cards.splice(self.cards.indexOf(self.myCard), 1);
                     }, function (error) {
               self.errorMsg = error.data.msg;
             }
@@ -61,6 +64,21 @@ angular.module('hopsWorksApp')
             }
 
             getMembers();
+
+            var getCard = function () {
+              UserService.profile().then(
+                      function (success) {
+                        self.myCard.email = success.data.email;
+                        self.myCard.firstname = success.data.firstName;
+                        self.myCard.lastname = success.data.lastName;
+                      },
+                      function (error) {
+                        self.errorMsg = error.data.errorMsg;
+                      });
+            };
+
+            getCard();
+
 
             self.addNewMember = function (user, role) {
               self.newMembers.projectTeam.push(

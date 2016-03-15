@@ -7,11 +7,12 @@ angular.module('hopsWorksApp')
             var self = this;
             self.working = false;
             self.card = {};
+            self.myCard = {};
             self.cards = [];
 
             self.projectMembers = [];
             self.projectTeam = [];
-            self.projectTypes = ['JOBS', 'ZEPPELIN']; 
+            self.projectTypes = ['JOBS', 'ZEPPELIN'];
 //            self.projectTypes = ['JOBS', 'ZEPPELIN', 'BIOBANKING', 'CHARON', 'SSH']; 
 
             self.selectionProjectTypes = ['JOBS', 'ZEPPELIN'];
@@ -20,13 +21,31 @@ angular.module('hopsWorksApp')
 
             self.regex = /^(?!.*?__|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#).*$/;
 
-            UserService.allcards().then(
+
+            UserService.profile().then(
                     function (success) {
-                      self.cards = success.data;
-                    }, function (error) {
-              self.errorMsg = error.data.msg;
-            }
-            );
+                      if (success.data.email != undefined) {
+                        self.myCard.email = success.data.email;
+                        if (success.data.firstName != undefined) {
+                          self.myCard.firstname = success.data.firstName;
+                          if (success.data.email != undefined) {
+                            self.myCard.lastname = success.data.lastName;
+                            UserService.allcards().then(
+                                    function (success) {
+                                      self.cards = success.data;
+                                      // remove my own 'card' from the list of members
+                                      self.cards.splice(self.cards.indexOf(self.myCard), 1);
+                                    }, function (error) {
+                              self.errorMsg = error.data.msg;
+                            });
+                          }
+                        }
+                      }
+
+                    },
+                    function (error) {
+                      self.errorMsg = error.data.errorMsg;
+                    });
 
 
             $scope.$watch('projectCreatorCtrl.card.selected', function (selected) {
@@ -85,7 +104,7 @@ angular.module('hopsWorksApp')
                         }
                         $modalInstance.close($scope.newProject);
                       }, function (error) {
-                        self.working = false;                        
+                self.working = false;
               }
               );
             };
