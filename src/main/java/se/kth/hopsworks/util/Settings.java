@@ -158,7 +158,7 @@ public class Settings {
     return ADAM_USER;
   }
 
-  private String FLINK_DIR = "/usr/local/flink";
+  private String FLINK_DIR = "/srv/flink";
 
   public synchronized String getFlinkDir() {
     checkCache();
@@ -218,7 +218,7 @@ public class Settings {
     return SPARK_USER;
   }
 
-  private String FLINK_USER = "flink";
+  private String FLINK_USER = "glassfish";
 
   public synchronized String getFlinkUser() {
     checkCache();
