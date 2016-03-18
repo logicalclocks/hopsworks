@@ -89,6 +89,10 @@ public class AuthService {
     JsonResponse json = new JsonResponse();
     Users user = userBean.findByEmail(email);
     String newPassword = null;
+    if (user == null) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+                ResponseMessages.AUTHENTICATION_FAILURE);
+    }
     // Add padding if custom realm is disabled
     if (otp == null || otp.isEmpty() && user.getMode() == PeopleAccountStatus.MOBILE_USER.getValue()) {
       otp = AuthenticationConstants.MOBILE_OTP_PADDING;

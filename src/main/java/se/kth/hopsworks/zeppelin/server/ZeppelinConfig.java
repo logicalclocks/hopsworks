@@ -18,8 +18,6 @@ import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
-import org.apache.zeppelin.search.LuceneSearch;
-import org.apache.zeppelin.search.SearchService;
 import se.kth.hopsworks.util.ConfigFileGenerator;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.socket.NotebookServer;
@@ -42,7 +40,6 @@ public class ZeppelinConfig {
   private NotebookServer notebookServer;
   private InterpreterFactory replFactory;
   private NotebookRepo notebookRepo;
-  private SearchService notebookIndex;
   private final Settings settings;
   private final String projectName;
 
@@ -94,9 +91,8 @@ public class ZeppelinConfig {
       this.schedulerFactory = new SchedulerFactory();
       this.replFactory = new InterpreterFactory(conf, notebookServer);
       this.notebookRepo = new NotebookRepoSync(conf);
-      this.notebookIndex = new LuceneSearch();
       this.notebook = new Notebook(conf, notebookRepo, schedulerFactory,
-              replFactory, notebookServer, notebookIndex);
+              replFactory, notebookServer);
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectDirRecursive();
@@ -137,10 +133,6 @@ public class ZeppelinConfig {
 
   public InterpreterFactory getReplFactory() {
     return this.replFactory;
-  }
-
-  public SearchService getNotebookIndex() {
-    return notebookIndex;
   }
 
   public String getProjectName() {
@@ -314,15 +306,6 @@ public class ZeppelinConfig {
   public void clean() {
     LOGGGER.log(Level.INFO, "Cleanup of zeppelin resources for project ==> {0}",
             this.projectName);
-    if (notebook != null) {
-      notebook.close();
-    }
-    if (this.notebookIndex != null) {
-      this.notebookIndex.close();
-    }
-    if (this.notebookRepo != null) {
-      this.notebookRepo.close();
-    }
     if (this.replFactory != null) {
       this.replFactory.close();
     }

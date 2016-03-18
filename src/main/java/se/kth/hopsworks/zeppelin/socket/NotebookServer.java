@@ -19,6 +19,7 @@ package se.kth.hopsworks.zeppelin.socket;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -61,7 +62,7 @@ import se.kth.hopsworks.zeppelin.socket.Message.OP;
 
 /**
  * Zeppelin websocket service.
- * <p>
+ *
  */
 @ServerEndpoint(value = "/zeppelin/ws",
         configurator = ZeppelinEndpointConfig.class)
@@ -131,9 +132,6 @@ public class NotebookServer implements
           broadcastNoteList();
           //sendNoteList(conn);
           break;
-        case RELOAD_NOTES_FROM_REPO:
-          broadcastReloadedNoteList();
-          break;
         case GET_HOME_NOTE:
           sendHomeNote(conn, notebook);
           break;
@@ -180,7 +178,8 @@ public class NotebookServer implements
           completion(conn, notebook, messagereceived);
           break;
         case PING:
-          break; //do nothing
+          pong();
+          break;
         case ANGULAR_OBJECT_UPDATED:
           angularObjectUpdated(conn, notebook, messagereceived);
           break;
@@ -352,14 +351,6 @@ public class NotebookServer implements
     boolean hideHomeScreenNotebookFromList = conf
             .getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN_HIDE);
 
-    if (needsReload) {
-      try {
-        notebook.reloadAllNotes();
-      } catch (IOException e) {
-        logger.log(Level.SEVERE, "Fail to reload notes from repository");
-      }
-    }
-
     List<Note> notes = notebook.getAllNotes();
     List<Map<String, String>> notesInfo = new LinkedList<>();
     for (Note note : notes) {
@@ -382,38 +373,6 @@ public class NotebookServer implements
     broadcast(note.id(), new Message(OP.NOTE).put("note", note));
   }
 
-  public void broadcastNoteList() {
-    List<Map<String, String>> notesInfo = generateNotebooksInfo(false);
-    broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
-  }
-
-  public void broadcastReloadedNoteList() {
-    List<Map<String, String>> notesInfo = generateNotebooksInfo(true);
-    broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
-  }
-
-  private void sendNote(Session conn, Notebook notebook, Message fromMessage)
-          throws IOException {
-    String noteId = (String) fromMessage.get("id");
-    if (noteId == null) {
-      return;
-    }
-
-    Note note = notebook.getNote(noteId);
-    if (note != null) {
-      addConnectionToNote(note.id(), conn);
-      try {
-        conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).
-                put("note", note)));
-      } catch (IOException ex) {
-        logger.log(Level.SEVERE, "Unable to send message " + new Message(
-                Message.OP.NOTE).put("note",
-                note), ex);
-      }
-      sendAllAngularObjects(note, conn);
-    }
-  }
-
   private void sendHomeNote(Session conn, Notebook notebook) throws IOException {
     String noteId = notebook.getConf().getString(
             ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN);
@@ -432,6 +391,40 @@ public class NotebookServer implements
       removeConnectionFromAllNote(conn);
       conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).put(
               "note", null)));
+    }
+  }
+
+  public void broadcastNoteList() {
+    Notebook notebook = notebook();
+    List<Note> notes = notebook.getAllNotes();//returns notes in project
+    List<Map<String, String>> notesInfo = new LinkedList<>();
+    for (Note note : notes) {
+      Map<String, String> info = new HashMap<>();
+      info.put("id", note.id());
+      info.put("name", note.getName());
+      notesInfo.add(info);
+    }
+    broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
+  }
+
+  private void sendNote(Session conn, Notebook notebook, Message fromMessage) {
+    String noteId = (String) fromMessage.get("id");
+    if (noteId == null) {
+      return;
+    }
+
+    Note note = notebook.getNote(noteId);
+    if (note != null) {
+      addConnectionToNote(note.id(), conn);
+      try {
+        conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).
+                put("note", note)));
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, "Unable to send message " + new Message(
+                Message.OP.NOTE).put("note",
+                        note), ex);
+      }
+      sendAllAngularObjects(note, conn);
     }
   }
 
@@ -536,7 +529,7 @@ public class NotebookServer implements
     String name = (String) fromMessage.get("name");
     Note newNote = notebook.cloneNote(noteId, name);
     addConnectionToNote(newNote.id(), conn);
-    broadcastNote(newNote);//change to conn.send(serializeMessage(new Message(OP.NEW_NOTE).put("note", newNote)));
+    broadcastNote(newNote);
     broadcastNoteList();
   }
 
@@ -808,7 +801,7 @@ public class NotebookServer implements
 
   /**
    * Need description here.
-   * <p>
+   *
    */
   public static class ParagraphJobListener implements JobListener {
 
@@ -824,7 +817,7 @@ public class NotebookServer implements
     public void onProgressUpdate(Job job, int progress) {
       notebookServer.broadcast(note.id(),
               new Message(OP.PROGRESS).put("id", job.getId()).put("progress",
-              job.progress()));
+                      job.progress()));
     }
 
     @Override
@@ -856,7 +849,10 @@ public class NotebookServer implements
     return new ParagraphJobListener(this, note);
   }
 
-  private void sendAllAngularObjects(Note note, Session conn) throws IOException {
+  private void pong() {
+  }
+
+  private void sendAllAngularObjects(Note note, Session conn) {
     List<InterpreterSetting> settings = note.getNoteReplLoader().
             getInterpreterSettings();
     if (settings == null || settings.isEmpty()) {
@@ -868,12 +864,18 @@ public class NotebookServer implements
               .getAngularObjectRegistry();
       List<AngularObject> objects = registry.getAllWithGlobal(note.id());
       for (AngularObject object : objects) {
-        conn.getBasicRemote().sendText(serializeMessage(new Message(
-                OP.ANGULAR_OBJECT_UPDATE)
-                .put("angularObject", object)
-                .put("interpreterGroupId", intpSetting.getInterpreterGroup().
-                        getId())
-                .put("noteId", note.id())));
+        try {
+          conn.getBasicRemote().sendText(serializeMessage(new Message(
+                  OP.ANGULAR_OBJECT_UPDATE)
+                  .put("angularObject", object)
+                  .put("interpreterGroupId", intpSetting.getInterpreterGroup().
+                          getId())
+                  .put("noteId", note.id())));
+        } catch (IOException ex) {
+          logger.log(Level.SEVERE, "Unable to send message " + new Message(
+                  Message.OP.NOTE).put("note",
+                          note), ex);
+        }
       }
     }
   }
@@ -928,7 +930,7 @@ public class NotebookServer implements
           broadcast(
                   note.id(),
                   new Message(OP.ANGULAR_OBJECT_REMOVE).put("name", name).put(
-                  "noteId", noteId));
+                          "noteId", noteId));
         }
       }
     }

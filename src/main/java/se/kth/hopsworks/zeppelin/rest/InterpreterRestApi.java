@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Properties;
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -54,8 +55,6 @@ import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
  * Interpreter Rest API
  * <p>
  */
-//@Path("/interpreter")
-//@Produces("application/json")
 @RequestScoped
 public class InterpreterRestApi {
 
@@ -71,13 +70,13 @@ public class InterpreterRestApi {
 
   public InterpreterRestApi() {
   }
-
-  public InterpreterRestApi(Project project, String role,ZeppelinConfig zeppelinConf) {
+  
+  public void setParms(Project project, String userRole, ZeppelinConfig zeppelinConf) {
     this.project = project;
     this.zeppelinConf = zeppelinConf;
-    this.roleInProject = role;
+    this.roleInProject = userRole;
   }
-
+  
   /**
    * List all interpreter settings
    * <p/>
@@ -184,10 +183,10 @@ public class InterpreterRestApi {
     long startTime = System.currentTimeMillis();
     long endTime;
     while (zeppelinResource.isInterpreterRunning(setting, project)) {
-       endTime = System.currentTimeMillis();
-       if (endTime - startTime > timeout) {
-         break;
-       }
+      endTime = System.currentTimeMillis();
+      if (endTime - startTime > timeout) {
+        break;
+      }
     }
 
     if (zeppelinResource.isInterpreterRunning(setting, project)) {

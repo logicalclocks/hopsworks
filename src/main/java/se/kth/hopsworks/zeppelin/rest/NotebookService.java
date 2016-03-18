@@ -3,6 +3,7 @@ package se.kth.hopsworks.zeppelin.rest;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -33,6 +34,8 @@ public class NotebookService {
   private UserFacade userBean;
   @EJB
   private ProjectTeamFacade projectTeamBean;
+  @Inject
+  private NotebookRestApi notebookRestApi;
 
   @Path("/")
   public NotebookRestApi interpreter(@Context HttpServletRequest httpReq)
@@ -47,7 +50,8 @@ public class NotebookService {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
                             "You curently have no role in this project!");
     }
-    return new NotebookRestApi(project, userRole, zeppelinConf);
+    notebookRestApi.setParms(project, userRole, zeppelinConf);
+    return notebookRestApi;
   }
   
 }

@@ -33,6 +33,7 @@ import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.QueryBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
@@ -76,7 +77,6 @@ public class ElasticService {
    * @param req
    * @return
    * @throws AppException
-   * @throws java.net.UnknownHostException
    */
   @GET
   @Path("globalsearch/{searchTerm}")
@@ -85,7 +85,7 @@ public class ElasticService {
   public Response globalSearch(
       @PathParam("searchTerm") String searchTerm,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException, UnknownHostException {
+      @Context HttpServletRequest req) throws AppException {
 
     if (searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -93,17 +93,15 @@ public class ElasticService {
     }
 
     //some necessary client settings
-    final org.elasticsearch.common.settings.Settings settings = 
-            org.elasticsearch.common.settings.Settings.settingsBuilder()
+    final org.elasticsearch.common.settings.Settings settings = ImmutableSettings.settingsBuilder()
         .put("client.transport.sniff", true) //being able to inspect other nodes 
         .put("cluster.name", "hops")
         .build();
 
     String addr = getElasticIpAsString();
     //initialize the client
-    Client client = TransportClient.builder().settings(settings).build()
-        .addTransportAddress(new InetSocketTransportAddress(
-        InetAddress.getByName(addr), Settings.ELASTIC_PORT));
+    Client client = new TransportClient(settings)
+        .addTransportAddress(new InetSocketTransportAddress(addr, Settings.ELASTIC_PORT));
 
 
     //check if the indices are up and running
@@ -171,7 +169,6 @@ public class ElasticService {
    * @param req
    * @return
    * @throws AppException
-   * @throws java.net.UnknownHostException
    */
   @GET
   @Path("projectsearch/{projectName}/{searchTerm}")
@@ -181,23 +178,21 @@ public class ElasticService {
       @PathParam("projectName") String projectName,
       @PathParam("searchTerm") String searchTerm,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException, UnknownHostException {
+      @Context HttpServletRequest req) throws AppException {
 
     if (projectName == null || searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Incomplete request!");
     }
 
-    final org.elasticsearch.common.settings.Settings settings = 
-            org.elasticsearch.common.settings.Settings.settingsBuilder()
+    final org.elasticsearch.common.settings.Settings settings = ImmutableSettings.settingsBuilder()
         .put("client.transport.sniff", true) //being able to retrieve other nodes 
         .put("cluster.name", "hops").build();
 
 
     //initialize the client
-    Client client = TransportClient.builder().settings(settings).build()
-        .addTransportAddress(new InetSocketTransportAddress(
-        InetAddress.getByName(getElasticIpAsString()), Settings.ELASTIC_PORT));
+    Client client = new TransportClient(settings)
+        .addTransportAddress(new InetSocketTransportAddress(getElasticIpAsString(), Settings.ELASTIC_PORT));
 
     //check if the indices are up and running
     if (!this.indexExists(client, Settings.META_PROJECT_INDEX)) {
@@ -257,7 +252,6 @@ public class ElasticService {
    * @param req
    * @return
    * @throws AppException
-   * @throws java.net.UnknownHostException
    */
   @GET
   @Path("datasetsearch/{datasetName}/{searchTerm}")
@@ -267,22 +261,20 @@ public class ElasticService {
       @PathParam("datasetName") String datasetName,
       @PathParam("searchTerm") String searchTerm,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException, UnknownHostException {
+      @Context HttpServletRequest req) throws AppException {
 
     if (datasetName == null || searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Incomplete request!");
     }
 
-    final org.elasticsearch.common.settings.Settings settings = 
-            org.elasticsearch.common.settings.Settings.settingsBuilder()
+    final org.elasticsearch.common.settings.Settings settings = ImmutableSettings.settingsBuilder()
         .put("client.transport.sniff", true) //being able to retrieve other nodes 
         .put("cluster.name", "hops").build();
 
     //initialize the client
-    Client client = TransportClient.builder().settings(settings).build()
-        .addTransportAddress(new InetSocketTransportAddress(
-         InetAddress.getByName(getElasticIpAsString()), Settings.ELASTIC_PORT));
+    Client client = new TransportClient(settings)
+        .addTransportAddress(new InetSocketTransportAddress(getElasticIpAsString(), Settings.ELASTIC_PORT));
 
     //check if the indices are up and running
     if (!this.indexExists(client, Settings.META_DATASET_INDEX)) {

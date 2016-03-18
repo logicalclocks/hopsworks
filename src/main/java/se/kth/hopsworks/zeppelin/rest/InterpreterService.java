@@ -2,6 +2,7 @@ package se.kth.hopsworks.zeppelin.rest;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -32,6 +33,8 @@ public class InterpreterService {
   private UserFacade userBean;
   @EJB
   private ProjectTeamFacade projectTeamBean;
+  @Inject
+  private InterpreterRestApi interpreterRestApi;
 
   @Path("/")
   public InterpreterRestApi interpreter(@Context HttpServletRequest httpReq)
@@ -46,7 +49,8 @@ public class InterpreterService {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
                             "You curently have no role in this project!");
     }
-    return new InterpreterRestApi(project, userRole, zeppelinConf);
+    interpreterRestApi.setParms(project, userRole, zeppelinConf);
+    return interpreterRestApi;
   }
 
 }
