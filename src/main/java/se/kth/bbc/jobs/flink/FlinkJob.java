@@ -6,8 +6,8 @@ import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.hopsworks.user.model.Users;
 
 /**
- *
- * @author teo
+ * Orchestrates the execution of a Flink job: run job, update history object.
+ * 
  */
 public class FlinkJob extends YarnJob {
 
@@ -15,18 +15,28 @@ public class FlinkJob extends YarnJob {
     private final String flinkDir;
     private final String flinkUser;
 
+    /**
+     * 
+     * @param job
+     * @param services
+     * @param user
+     * @param hadoopDir
+     * @param flinkDir
+     * @param nameNodeIpPort
+     * @param flinkUser 
+     */
     public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
             Users user, final String hadoopDir,
-            final String sparkDir, final String nameNodeIpPort, String sparkUser) {
+            final String flinkDir, final String nameNodeIpPort, String flinkUser) {
         super(job, services, user, hadoopDir, nameNodeIpPort);
         if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
             throw new IllegalArgumentException(
-                    "JobDescription must contain a SparkJobConfiguration object. Received: "
+                    "JobDescription must contain a FlinkJobConfiguration object. Received: "
                     + job.getJobConfig().getClass());
         }
         this.jobconfig = (FlinkJobConfiguration) job.getJobConfig();
-        this.flinkDir = sparkDir;
-        this.flinkUser = sparkUser;
+        this.flinkDir = flinkDir;
+        this.flinkUser = flinkUser;
     }
 
     @Override

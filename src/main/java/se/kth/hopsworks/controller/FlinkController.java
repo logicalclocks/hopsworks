@@ -1,17 +1,23 @@
 package se.kth.hopsworks.controller;
 
+import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
+import java.util.jar.Attributes;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
+import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.flink.FlinkJob;
+import se.kth.bbc.jobs.flink.FlinkJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
@@ -53,11 +59,11 @@ public class FlinkController {
      * @param job
      * @param user
      * @return
-     * @throws IllegalStateException If Spark is not set up properly.
+     * @throws IllegalStateException If Flink is not set up properly.
      * @throws IOException If starting the job fails.
      * @throws NullPointerException If job or user is null.
      * @throws IllegalArgumentException If the given job does not represent a
-     * Spark job.
+     * Flink job.
      */
     public Execution startJob(final JobDescription job, final Users user) throws
             IllegalStateException,
@@ -69,9 +75,9 @@ public class FlinkController {
             throw new NullPointerException("Cannot run a job as a null user.");
         } else if (job.getJobType() != JobType.FLINK) {
             throw new IllegalArgumentException(
-                    "Job configuration is not a Spark job configuration.");
+                    "Job configuration is not a Flink job configuration.");
         } else if (!isFlinkJarAvailable()) {
-            throw new IllegalStateException("Spark is not installed on this system.");
+            throw new IllegalStateException("Flink is not installed on this system.");
         }
         String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
         UserGroupInformation proxyUser = ugiService.getProxyUser(username);
@@ -119,10 +125,10 @@ public class FlinkController {
             throw new IllegalStateException("Flink is not installed on this system.");
         }
 
-        FlinkJob sparkjob = new FlinkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
-                hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser());
+        FlinkJob flinkJob = new FlinkJob(job, submitter, user, settings.getHadoopDir(), settings.getFlinkDir(),
+                hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getFlinkUser());
 
-        submitter.stopExecution(sparkjob, appid);
+        submitter.stopExecution(flinkJob, appid);
 
     }
 
@@ -134,11 +140,11 @@ public class FlinkController {
      */
     public boolean isFlinkJarAvailable() {
         boolean isInHdfs;
-        try {
-            isInHdfs = fops.exists(settings.getHdfsSparkJarPath());
+        /*try {
+            isInHdfs = fops.exists(settings.getHdfsFlinkJarPath());
         } catch (IOException e) {
             logger.log(Level.WARNING, "Cannot get Flink jar file from HDFS: {0}",
-                    settings.getHdfsSparkJarPath());
+                    settings.getHdfsFlinkJarPath());
             //Can't connect to HDFS: return false
             return false;
         }
@@ -146,20 +152,54 @@ public class FlinkController {
             return true;
         }
 
-        File localSparkJar = new File(settings.getLocalSparkJarPath());
-        if (localSparkJar.exists()) {
+        File localFlinkJar = new File(settings.getLocalFlinkJarPath());
+        if (localFlinkJar.exists()) {
             try {
-                String hdfsJarPath = settings.getHdfsSparkJarPath();
-                fops.copyToHDFSFromLocal(false, settings.getLocalSparkJarPath(),
+                String hdfsJarPath = settings.getHdfsFlinkJarPath();
+                fops.copyToHDFSFromLocal(false, settings.getLocalFlinkJarPath(),
                         hdfsJarPath);
             } catch (IOException e) {
                 return false;
             }
         } else {
             logger.log(Level.WARNING, "Cannot find Flink jar file locally: {0}",
-                    settings.getLocalSparkJarPath());
+                    settings.getLocalFlinkJarPath());
             return false;
-        }
+        }*/
         return true;
     }
+    
+    /**
+   * Inspect the jar on the given path for execution. Returns a FlinkJobConfiguration object with a default
+   * configuration for this job.
+   * <p/>
+   * @param path
+   * @param username the user name in a project (projectName__username)
+   * @return
+   * @throws org.apache.hadoop.security.AccessControlException
+   * @throws IOException
+   */
+  public FlinkJobConfiguration inspectJar(String path, String username) throws
+		  AccessControlException, IOException,
+		  IllegalArgumentException {
+	logger.log(Level.INFO, "Executing Flink job by {0} at path: {1}", new Object[]{username, path});
+	if (!path.endsWith(".jar")) {
+	  throw new IllegalArgumentException("Path does not point to a jar file.");
+	}
+	HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
+	// If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
+	path = path.replaceFirst("hdfs:/*Projects",
+			"hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
+	logger.log(Level.INFO, "Really executing Flink job by {0} at path: {1}", new Object[]{username, path});
+	
+	JarInputStream jis = new JarInputStream(dfs.getDfsOps(username).open(path));
+	Manifest mf = jis.getManifest();
+	Attributes atts = mf.getMainAttributes();
+	FlinkJobConfiguration config = new FlinkJobConfiguration();
+	if (atts.containsKey(Attributes.Name.MAIN_CLASS)) {
+	  config.setMainClass(atts.getValue(Attributes.Name.MAIN_CLASS));
+	}
+	config.setJarPath(path);
+	return config;
+  }
 }

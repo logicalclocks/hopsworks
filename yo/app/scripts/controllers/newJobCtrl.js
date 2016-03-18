@@ -12,10 +12,10 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'CuneiformService', 'AdamService',
+          'CuneiformService', 'AdamService', 'FlinkService',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,
-                  CuneiformService, AdamService) {
+                  CuneiformService, AdamService, FlinkService) {
 
             var self = this;
             //Set services as attributes 
@@ -25,12 +25,14 @@ angular.module('hopsWorksApp')
             //Set some (semi-)constants
             this.selectFileRegexes = {
               "SPARK": /.jar\b/,
+              "FLINK": /.jar\b/,
               "LIBRARY": /.jar\b/,
               "CUNEIFORM": /.cf\b/,
               "ADAM": /[^]*/
             };
             this.selectFileErrorMsgs = {
               "SPARK": "Please select a JAR file.",
+              "FLINK": "Please select a JAR file.",
               "LIBRARY": "Please select a JAR file.",
               "CUNEIFORM": "Please select a Cuneiform workflow. The file should have the extension '.cf'.",
               "ADAM": "Please select a file or folder."
@@ -44,6 +46,9 @@ angular.module('hopsWorksApp')
             this.phase = 0; //The phase of creation we are in.
             this.runConfig; //Will hold the job configuration
             this.sparkState = {//Will hold spark-specific state
+              "selectedJar": null //The path to the selected jar
+            };
+            this.flinkState = {//Will hold flink-specific state
               "selectedJar": null //The path to the selected jar
             };
             this.adamState = {//Will hold ADAM-specific state
@@ -93,6 +98,7 @@ angular.module('hopsWorksApp')
                 "phase": self.phase,
                 "runConfig": self.runConfig,
                 "sparkState": self.sparkState,
+                "flinkState":self.flinkState,
                 "adamState": self.adamState,
                 "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5],
               };
@@ -104,6 +110,9 @@ angular.module('hopsWorksApp')
               self.phase = 0;
               self.runConfig = null;
               self.sparkState = {
+                "selectedJar": null //The path to the selected jar
+              };
+              self.flinkState = {
                 "selectedJar": null //The path to the selected jar
               };
               self.adamState = {//Will hold ADAM-specific state
@@ -147,6 +156,7 @@ angular.module('hopsWorksApp')
                 self.phase = self.undoneState.phase;
                 self.runConfig = self.undoneState.runConfig;
                 self.sparkState = self.undoneState.sparkState;
+                self.flinkState= self.undoneState.flinkState;
                 self.adamState = self.undoneState.adamState;
                 self.accordion1 = self.undoneState.accordions[0];
                 self.accordion2 = self.undoneState.accordions[1];
@@ -219,6 +229,11 @@ angular.module('hopsWorksApp')
                   self.accordion4.title = "Job arguments";
                   type = "ADAM";
                   break;
+                case 3:
+                  self.accordion3.title = "JAR file";
+                  self.accordion4.title = "Job details";
+                  type = "Flink";
+                  break;
               }
               self.accordion1.isOpen = false; //Close job name panel
               self.accordion1.value = " - " + self.jobname; //Set job name panel title
@@ -243,6 +258,8 @@ angular.module('hopsWorksApp')
                   return "SPARK";
                 case 2:
                   return "ADAM";
+                case 3:
+                  return "FLINK";
                 default:
                   return null;
               }
@@ -324,6 +341,16 @@ angular.module('hopsWorksApp')
                 case "ADAM":
                   self.adamState.processparameter.value = path;
                   break;
+                case "FLINK":
+                  self.flinkState.selectedJar = filename;
+                  FlinkService.inspectJar(self.projectId, path).then(
+                          function (success) {
+                            self.runConfig = success.data;
+                            self.mainFileSelected(filename);
+                          }, function (error) {
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                  });
+                  break;
               }
             };
 
@@ -373,6 +400,8 @@ angular.module('hopsWorksApp')
                   self.sparkState = stored.sparkState;
                 } else if (self.jobtype == 2) {
                   self.adamState = stored.adamState;
+                } else  if (self.jobtype == 3) {
+                  self.flinkState = stored.flinkState;
                 }
                 //GUI state
                 self.accordion1 = stored.accordion1;
@@ -421,6 +450,7 @@ angular.module('hopsWorksApp')
                 "runConfig": self.runConfig,
                 "sparkState": self.sparkState,
                 "adamState": self.adamState,
+                "flinkState": self.flinkState,
                 "accordion1": self.accordion1,
                 "accordion2": self.accordion2,
                 "accordion3": self.accordion3,

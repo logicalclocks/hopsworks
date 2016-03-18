@@ -23,6 +23,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.ProjectService.class);
     register(se.kth.hopsworks.rest.RequestService.class);
     register(se.kth.hopsworks.rest.SparkService.class);
+    register(se.kth.hopsworks.rest.FlinkService.class);
     register(se.kth.hopsworks.rest.ThrowableExceptionMapper.class);
     register(se.kth.hopsworks.rest.TransactionExceptionMapper.class);
     register(se.kth.hopsworks.rest.AccessControlExceptionMapper.class);

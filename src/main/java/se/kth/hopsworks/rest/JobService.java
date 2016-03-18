@@ -65,6 +65,8 @@ public class JobService {
   private SparkService spark;
   @Inject
   private AdamService adam;
+  @Inject
+  private FlinkService flink;
   @EJB
   private FileOperations fops;
   @EJB
@@ -429,5 +431,11 @@ public class JobService {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public AdamService adam() {
     return this.adam.setProject(project);
+  }
+  
+  @Path("/flink")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public FlinkService flink() {
+    return this.flink.setProject(project);
   }
 }
