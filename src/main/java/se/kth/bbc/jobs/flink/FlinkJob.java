@@ -1,33 +1,41 @@
 package se.kth.bbc.jobs.flink;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import org.apache.flink.configuration.Configuration;
+import org.apache.hadoop.fs.Path;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
+import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Orchestrates the execution of a Flink job: run job, update history object.
- * 
+ *
  */
 public class FlinkJob extends YarnJob {
 
-    private final FlinkJobConfiguration jobconfig; //Just for convenience
+    private final FlinkJobConfiguration jobconfig;
     private final String flinkDir;
     private final String flinkUser;
-
+    
     /**
-     * 
+     *
      * @param job
      * @param services
      * @param user
      * @param hadoopDir
      * @param flinkDir
      * @param nameNodeIpPort
-     * @param flinkUser 
+     * @param flinkUser
      */
     public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
             Users user, final String hadoopDir,
-            final String flinkDir, final String nameNodeIpPort, String flinkUser) {
+            final String flinkDir, final String nameNodeIpPort, 
+            String flinkUser) {
         super(job, services, user, hadoopDir, nameNodeIpPort);
         if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
             throw new IllegalArgumentException(
@@ -41,7 +49,57 @@ public class FlinkJob extends YarnJob {
 
     @Override
     protected boolean setupJob() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //Then: actually get to running.
+        if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
+            jobconfig.setAppName("Untitled Flink Job");
+        }
+
+        FlinkYarnRunnerBuilder flinkBuilder = new FlinkYarnRunnerBuilder(hadoopDir, flinkDir);
+        //https://ci.apache.org/projects/flink/flink-docs-release-0.10/setup/yarn_setup.html
+        /*If you do not want to keep the Flink YARN client running all the time, 
+         its also possible to start a detached YARN session. The parameter for
+         that is called -d or --detached. In that case, the Flink YARN client 
+         will only submit Flink to the cluster and then close itself.
+         */
+        flinkBuilder.setDetachedMode(false);
+        flinkBuilder.setName(jobconfig.getAppName());
+        flinkBuilder.setConfigurationDirectory(jobconfig.getFlinkConfDir());
+        flinkBuilder.setConfigurationFilePath(new Path(flinkDir + jobconfig.getFlinkConfDir() + jobconfig.getFlinkConfFile()));
+        //Flink specific conf object
+        //TODO: Check if needs to be initialized
+        flinkBuilder.setFlinkConfigurationObject(new Configuration());
+        //TODO: Check if Path is correct
+        flinkBuilder.setFlinkLoggingConfigurationPath(new Path(flinkDir + jobconfig.getFlinkConfDir() + jobconfig.getFlinkConfFile()));
+        flinkBuilder.setLocalJarPath(new Path(flinkDir+"/flink.jar"));
+        
+       /* 
+        try {
+        runner = flinkBuilder.
+            getYarnRunner(jobDescription.getProject().getName(),
+                flinkUser, hadoopDir, flinkDir, nameNodeIpPort);
+
+        } catch (IOException e) {
+          logger.log(Level.SEVERE,
+              "Failed to create YarnRunner.", e);
+          writeToLogs(new IOException("Failed to start Yarn client.", e));
+          return false;
+        }*/
+
+        String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
+                jobDescription.
+                getProject().
+                getName())
+                + Settings.FLINK_DEFAULT_OUTPUT_PATH + getExecution().getId()
+                + File.separator + "stdout.log";
+        String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
+                jobDescription.
+                getProject().
+                getName())
+                + Settings.FLINK_DEFAULT_OUTPUT_PATH + getExecution().getId()
+                + File.separator + "stderr.log";
+        setStdOutFinalDestination(stdOutFinalDestination);
+        setStdErrFinalDestination(stdErrFinalDestination);
+        return true;
     }
 
     @Override

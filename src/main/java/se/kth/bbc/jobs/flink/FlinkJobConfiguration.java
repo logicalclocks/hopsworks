@@ -6,7 +6,7 @@ import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 
 /**
- * Contains Spark-specific run information for a Spark job, on top of Yarn
+ * Contains Flink-specific run information for a Flink job, on top of Yarn
  * configuration.
  */
 public class FlinkJobConfiguration extends YarnJobConfiguration {
@@ -14,17 +14,21 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
     private String jarPath;
     private String mainClass;
     private String args;
+    private String flinkConfDir;
+    private String flinkConfFile;
 
     private int numberOfTaskManagers = 1;
-    private int processes = 1;
-    private int taskManagerMemory = 768;
+    private int slots = 5;
+    private int taskManagerMemory = 1024;
 
     protected static final String KEY_JARPATH = "JARPATH";
     protected static final String KEY_MAINCLASS = "MAINCLASS";
     protected static final String KEY_ARGS = "ARGS";
     //Number of TaskManagers
     protected static final String KEY_NUMTMS = "NUMTMS";
-    protected static final String KEY_PROCS = "PROCS";
+    //Number of slots per task
+    protected static final String KEY_SLOTS = "SLOTS";
+    //TaskManager memory
     protected static final String KEY_TMMEM = "TMMEM";
 
     public FlinkJobConfiguration() {
@@ -75,8 +79,8 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
     }
 
     /**
-     * Set the number of task managers to be requested for this job. This should be
-     * greater than or equal to 1.
+     * Set the number of task managers to be requested for this job. This should
+     * be greater than or equal to 1.
      * <p/>
      * @param numberOfTaskManagers
      * @throws IllegalArgumentException If the argument is smaller than 1.
@@ -90,24 +94,24 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         this.numberOfTaskManagers = numberOfTaskManagers;
     }
 
-    public int getProcesses() {
-        return processes;
+    public int getSlots() {
+        return slots;
     }
 
     /**
-     * Set the number of processes to be requested for each task manager.
+     * Set the number of slots to be requested for each task manager.
      * <p/>
-     * @param processes
-     * @throws IllegalArgumentException If the number of processes is smaller than
+     * @param slots
+     * @throws IllegalArgumentException If the number of slots is smaller than
      * 1.
      */
-    public void setProcesses(int processes) throws
+    public void setSlots(int slots) throws
             IllegalArgumentException {
-        if (processes < 1) {
+        if (slots < 1) {
             throw new IllegalArgumentException(
-                    "Number of task manager processes has to be greater than or equal to 1.");
+                    "Number of task manager slots has to be greater than or equal to 1.");
         }
-        this.processes = processes;
+        this.slots = slots;
     }
 
     public int getTaskManagerMemory() {
@@ -130,6 +134,38 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         this.taskManagerMemory = taskManagerMemory;
     }
 
+    /**
+     * Get Flink Configuration Directory
+     * @return 
+     */
+    public String getFlinkConfDir() {
+        return flinkConfDir;
+    }
+
+    /**
+     * Set Flink Configuration Directory
+     * @param flinkConfDir 
+     */
+    public void setFlinkConfDir(String flinkConfDir) {
+        this.flinkConfDir = flinkConfDir;
+    }
+
+    /**
+     * Get Flink Configuration file path
+     * @return 
+     */
+    public String getFlinkConfFile() {
+        return flinkConfFile;
+    }
+
+    /**
+     * Set Flink Configuration file path 
+     * @param flinkConfFile
+     */
+    public void setFlinkConfFile(String flinkConfFile) {
+        this.flinkConfFile = flinkConfFile;
+    }
+
     @Override
     public JobType getType() {
         return JobType.FLINK;
@@ -149,10 +185,10 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
             obj.set(KEY_JARPATH, jarPath);
         }
         //Then: fields that can never be null or emtpy.
-        obj.set(KEY_PROCS, "" + processes);
+        obj.set(KEY_SLOTS, "" + slots);
         obj.set(KEY_TMMEM, "" + taskManagerMemory);
         obj.set(KEY_NUMTMS, "" + numberOfTaskManagers);
-        obj.set(KEY_TYPE, JobType.SPARK.name());
+        obj.set(KEY_TYPE, JobType.FLINK.name());
         return obj;
     }
 
@@ -174,7 +210,7 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
             jsonJarpath = json.getString(KEY_JARPATH, null);
             jsonMainclass = json.getString(KEY_MAINCLASS, null);
             //Then: fields that cannot be null or emtpy.
-            jsonExeccors = Integer.parseInt(json.getString(KEY_PROCS));
+            jsonExeccors = Integer.parseInt(json.getString(KEY_SLOTS));
             jsonExecmem = Integer.parseInt(json.getString(KEY_TMMEM));
             jsonNumexecs = json.getString(KEY_NUMTMS);
         } catch (Exception e) {
@@ -186,7 +222,7 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         super.updateFromJson(json);
         //Third: we're now sure everything is valid: actually update the state
         this.args = jsonArgs;
-        this.processes = jsonExeccors;
+        this.slots = jsonExeccors;
         this.taskManagerMemory = jsonExecmem;
         this.jarPath = jsonJarpath;
         this.mainClass = jsonMainclass;

@@ -8,6 +8,7 @@ import se.kth.bbc.fileoperations.ErasureCodeJobConfiguration;
 import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
+import se.kth.bbc.jobs.flink.FlinkJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.JsonReduceable;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
@@ -131,6 +132,8 @@ public abstract class JobConfiguration implements JsonReduceable {
         case YARN:
           conf = new YarnJobConfiguration();
           break;
+        case FLINK:
+            conf = new FlinkJobConfiguration();
         case ERASURE_CODING:
           conf = new ErasureCodeJobConfiguration();
           break;
@@ -164,6 +167,8 @@ public abstract class JobConfiguration implements JsonReduceable {
         case YARN:
           conf = new YarnJobConfiguration();
           break;
+        case FLINK:
+          conf = new FlinkJobConfiguration();
         case ERASURE_CODING:
           conf = new ErasureCodeJobConfiguration();
           break;
@@ -175,9 +180,12 @@ public abstract class JobConfiguration implements JsonReduceable {
     }
 
     public static Set<JobType> getSupportedTypes() {
-      return EnumSet.of(JobType.ADAM, JobType.SPARK,
+      return EnumSet.of(JobType.ADAM, 
+                        JobType.SPARK,
 			//JobType.CUNEIFORM, 
-              JobType.YARN, JobType.ERASURE_CODING);
+                        JobType.FLINK,
+                        JobType.YARN, 
+                        JobType.ERASURE_CODING);
     }
   }
 }

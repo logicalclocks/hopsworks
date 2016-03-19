@@ -22,6 +22,8 @@ public class ExecutionController {
   private SparkController sparkController;
   @EJB
   private AdamController adamController;
+  @EJB
+  private FlinkController flinkController;
 
   public Execution start(JobDescription job, Users user) throws IOException {
     switch (job.getJobType()) {
@@ -31,6 +33,8 @@ public class ExecutionController {
         return adamController.startJob(job, user);
       case SPARK:
         return sparkController.startJob(job, user);
+      case FLINK:
+        return flinkController.startJob(job, user);
       default:
         throw new IllegalArgumentException("Unsupported job type: " + job.
                 getJobType());

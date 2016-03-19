@@ -40,7 +40,7 @@ import se.kth.hopsworks.users.UserFacade;
 /**
  * Service offering functionality to run a Flink fatjar job.
  * <p/>
- * @author stig
+ * 
  */
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)

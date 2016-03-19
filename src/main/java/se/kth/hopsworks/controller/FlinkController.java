@@ -140,7 +140,7 @@ public class FlinkController {
      */
     public boolean isFlinkJarAvailable() {
         boolean isInHdfs;
-        /*try {
+        try {
             isInHdfs = fops.exists(settings.getHdfsFlinkJarPath());
         } catch (IOException e) {
             logger.log(Level.WARNING, "Cannot get Flink jar file from HDFS: {0}",
@@ -165,7 +165,7 @@ public class FlinkController {
             logger.log(Level.WARNING, "Cannot find Flink jar file locally: {0}",
                     settings.getLocalFlinkJarPath());
             return false;
-        }*/
+        }
         return true;
     }
     

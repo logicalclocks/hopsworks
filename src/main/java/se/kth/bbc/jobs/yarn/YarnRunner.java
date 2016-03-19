@@ -748,7 +748,7 @@ public class YarnRunner {
       javaOptions.add(option);
       return this;
     }
-
+    
     /**
      * Build the YarnRunner instance
      * <p/>
@@ -766,10 +766,12 @@ public class YarnRunner {
         throw new IllegalStateException("Failed to load configuration", e);
       }
 
-      //Set YarnClient
-      yarnClient = YarnClient.createYarnClient();
-      yarnClient.init(conf);
-
+      /*//Client passed by Flink is already set up.
+      if(yarnClient == null){
+        //Set YarnClient
+        yarnClient = YarnClient.createYarnClient();
+        yarnClient.init(conf);
+      } */
       //Set main class
       if (amMainClass == null) {
         amMainClass = getMainClassNameFromJar();
