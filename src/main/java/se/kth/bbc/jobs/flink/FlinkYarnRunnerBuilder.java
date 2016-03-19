@@ -3,28 +3,21 @@ package se.kth.bbc.jobs.flink;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.client.CliFrontend;
 import org.apache.flink.client.FlinkYarnSessionCli;
-import org.apache.flink.runtime.akka.AkkaUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.LocalResource;
-import org.apache.hadoop.yarn.api.records.NodeReport;
-import org.apache.hadoop.yarn.api.records.NodeState;
-import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.Records;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import org.apache.flink.yarn.ApplicationMaster;
 import org.apache.flink.yarn.FlinkYarnClient;
 import se.kth.bbc.jobs.yarn.YarnRunner;
@@ -111,22 +104,6 @@ public class FlinkYarnRunnerBuilder {
         this.appJarPath = appJarPath;
         this.mainClass = mainClass;
         
-//        conf = new YarnConfiguration();
-//        if (this.yarnClient == null) {
-//            // Create yarnClient
-//            yarnClient = YarnClient.createYarnClient();
-//            yarnClient.init(conf);
-//            yarnClient.start();
-//        }
-
-        // for unit tests only
-        /*if (System.getenv("IN_TESTS") != null) {
-            try {
-                conf.addResource(new File(System.getenv("YARN_CONF_DIR") + "/yarn-site.xml").toURI().toURL());
-            } catch (Throwable t) {
-                throw new RuntimeException("Error", t);
-            }
-        }*/
     }
 
     protected Class<?> getApplicationMasterClass() {
@@ -234,6 +211,14 @@ public class FlinkYarnRunnerBuilder {
         return this.dynamicPropertiesEncoded;
     }
 
+    //@Override
+    public void setName(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("The passed name is null");
+        }
+        customName = name;
+    }
+    
     public void isReadyForDeployment() throws YarnDeploymentException {
         if (taskManagerCount <= 0) {
             throw new YarnDeploymentException("Taskmanager count must be positive");
@@ -280,28 +265,7 @@ public class FlinkYarnRunnerBuilder {
         return detached;
     }
 
-    /*
-    public AbstractFlinkYarnCluster deploy() throws Exception {
-
-        UserGroupInformation.setConfiguration(conf);
-        UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
-
-        if (UserGroupInformation.isSecurityEnabled()) {
-            if (!ugi.hasKerberosCredentials()) {
-                throw new YarnDeploymentException("In secure mode. Please provide Kerberos credentials in order to authenticate. "
-                        + "You may use kinit to authenticate and request a TGT from the Kerberos server.");
-            }
-            return ugi.doAs(new PrivilegedExceptionAction<AbstractFlinkYarnCluster>() {
-                @Override
-                public AbstractFlinkYarnCluster run() throws Exception {
-                    return getYarnRunner(); //getYarnRunner
-                }
-            });
-        } else {
-            return getYarnRunner();
-        }
-    }*/
-
+    
     /**
      * This method will block until the ApplicationMaster/JobManager have been
      * deployed on YARN.
@@ -313,7 +277,8 @@ public class FlinkYarnRunnerBuilder {
      * @throws java.lang.Exception 
      */
     protected YarnRunner getYarnRunner(String project, String hadoopDir, 
-            String flinkUser, String flinkDir) throws Exception {
+            final String flinkUser, final String flinkDir, 
+            final String nameNodeIpPort) throws IOException {
         isReadyForDeployment();
 
         //Create the YarnRunner builder for Flink, proceed with setting values
@@ -337,47 +302,13 @@ public class FlinkYarnRunnerBuilder {
             !appJarPath.startsWith("hdfs:"));
     
     
-        
-        // Create application via yarnClient
-        
-//         yarnApplication = yarnClient.createApplication();
-//         GetNewApplicationResponse appResponse = yarnApplication.getNewApplicationResponse();
-        
-		// ------------------ Add dynamic properties to local flinkConfiguraton ------
+    	// ------------------ Add dynamic properties to local flinkConfiguraton ------
         List<Tuple2<String, String>> dynProperties = CliFrontend.getDynamicProperties(dynamicPropertiesEncoded);
         for (Tuple2<String, String> dynProperty : dynProperties) {
             flinkConfiguration.setString(dynProperty.f0, dynProperty.f1);
         }
 
-		// ------------------ Check if the specified queue exists --------------
-//        try {
-//            List<QueueInfo> queues = yarnClient.getAllQueues();
-//            if (queues.size() > 0 && this.yarnQueue != null) {
-//                // check only if there are queues configured in yarn and for this session.
-//                boolean queueFound = false;
-//                for (QueueInfo queue : queues) {
-//                    if (queue.getQueueName().equals(this.yarnQueue)) {
-//                        queueFound = true;
-//                        break;
-//                    }
-//                }
-//                if (!queueFound) {
-//                    String queueNames = "";
-//                    for (QueueInfo queue : queues) {
-//                        queueNames += queue.getQueueName() + ", ";
-//                    }
-//                    LOG.warn("The specified queue '" + this.yarnQueue + "' does not exist. "
-//                            + "Available queues: " + queueNames);
-//                }
-//            } else {
-//                LOG.debug("The YARN cluster does not have any queues configured");
-//            }
-//        } catch (Throwable e) {
-//            LOG.warn("Error while getting queue information from YARN: " + e.getMessage());
-//            if (LOG.isDebugEnabled()) {
-//                LOG.debug("Error details", e);
-//            }
-//        }
+	
 
 		// ------------------ Check if the YARN Cluster has the requested resources --------------
 		// the yarnMinAllocationMB specifies the smallest possible container allocation size.
@@ -398,63 +329,6 @@ public class FlinkYarnRunnerBuilder {
             taskManagerMemoryMb = yarnMinAllocationMB;
         }
 
-//        Resource maxRes = appResponse.getMaximumResourceCapability();
-//        final String NOTE = "Please check the 'yarn.scheduler.maximum-allocation-mb' and the 'yarn.nodemanager.resource.memory-mb' configuration values\n";
-//        if (jobManagerMemoryMb > maxRes.getMemory()) {
-//            failSessionDuringDeployment();
-//            throw new YarnDeploymentException("The cluster does not have the requested resources for the JobManager available!\n"
-//                    + "Maximum Memory: " + maxRes.getMemory() + "MB Requested: " + jobManagerMemoryMb + "MB. " + NOTE);
-//        }
-//
-//        if (taskManagerMemoryMb > maxRes.getMemory()) {
-//            failSessionDuringDeployment();
-//            throw new YarnDeploymentException("The cluster does not have the requested resources for the TaskManagers available!\n"
-//                    + "Maximum Memory: " + maxRes.getMemory() + " Requested: " + taskManagerMemoryMb + "MB. " + NOTE);
-//        }
-
-        final String NOTE_RSC = "\nThe Flink YARN client will try to allocate the YARN session, but maybe not all TaskManagers are "
-                + "connecting from the beginning because the resources are currently not available in the cluster. "
-                + "The allocation might take more time than usual because the Flink YARN client needs to wait until "
-                + "the resources become available.";
-//        int totalMemoryRequired = jobManagerMemoryMb + taskManagerMemoryMb * taskManagerCount;
-//        ClusterResourceDescription freeClusterMem = getCurrentFreeClusterResources(yarnClient);
-//        if (freeClusterMem.totalFreeMemory < totalMemoryRequired) {
-//            LOG.warn("This YARN session requires " + totalMemoryRequired + "MB of memory in the cluster. "
-//                    + "There are currently only " + freeClusterMem.totalFreeMemory + "MB available." + NOTE_RSC);
-//
-//        }
-//        if (taskManagerMemoryMb > freeClusterMem.containerLimit) {
-//            LOG.warn("The requested amount of memory for the TaskManagers (" + taskManagerMemoryMb + "MB) is more than "
-//                    + "the largest possible YARN container: " + freeClusterMem.containerLimit + NOTE_RSC);
-//        }
-//        if (jobManagerMemoryMb > freeClusterMem.containerLimit) {
-//            LOG.warn("The requested amount of memory for the JobManager (" + jobManagerMemoryMb + "MB) is more than "
-//                    + "the largest possible YARN container: " + freeClusterMem.containerLimit + NOTE_RSC);
-//        }
-
-		// ----------------- check if the requested containers fit into the cluster.
-//        int[] nmFree = Arrays.copyOf(freeClusterMem.nodeManagersFree, freeClusterMem.nodeManagersFree.length);
-//        // first, allocate the jobManager somewhere.
-//        if (!allocateResource(nmFree, jobManagerMemoryMb)) {
-//            LOG.warn("Unable to find a NodeManager that can fit the JobManager/Application master. "
-//                    + "The JobManager requires " + jobManagerMemoryMb + "MB. NodeManagers available: "
-//                    + Arrays.toString(freeClusterMem.nodeManagersFree) + NOTE_RSC);
-//        }
-//        // allocate TaskManagers
-//        for (int i = 0; i < taskManagerCount; i++) {
-//            if (!allocateResource(nmFree, taskManagerMemoryMb)) {
-//                LOG.warn("There is not enough memory available in the YARN cluster. "
-//                        + "The TaskManager(s) require " + taskManagerMemoryMb + "MB each. "
-//                        + "NodeManagers available: " + Arrays.toString(freeClusterMem.nodeManagersFree) + "\n"
-//                        + "After allocating the JobManager (" + jobManagerMemoryMb + "MB) and (" + i + "/" + taskManagerCount + ") TaskManagers, "
-//                        + "the following NodeManagers are available: " + Arrays.toString(nmFree) + NOTE_RSC);
-//            }
-//        }
-
-		// ------------------ Prepare Application Master Container  ------------------------------
-        // respect custom JVM options in the YAML file
-        //final String javaOpts = flinkConfiguration.getString(ConfigConstants.FLINK_JVM_OPTIONS, "");
-
         String logbackFile = configurationDirectory + File.separator + FlinkYarnSessionCli.CONFIG_FILE_LOGBACK_NAME;
         boolean hasLogback = new File(logbackFile).exists();
         String log4jFile = configurationDirectory + File.separator + FlinkYarnSessionCli.CONFIG_FILE_LOG4J_NAME;
@@ -467,131 +341,33 @@ public class FlinkYarnRunnerBuilder {
             shipFiles.add(new File(log4jFile));
         }
 
-        // Set up the container launch context for the application master
-        //ContainerLaunchContext amContainer = Records.newRecord(ContainerLaunchContext.class);
-
-//        String amCommand = "$JAVA_HOME/bin/java"
-//                + " -Xmx" + Utils.calculateHeapSize(jobManagerMemoryMb, flinkConfiguration) + "M " + javaOpts;
-//
-//        if (hasLogback || hasLog4j) {
-//            amCommand += " -Dlog.file=\"" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/jobmanager.log\"";
-//
-//            if (hasLogback) {
-//                amCommand += " -Dlogback.configurationFile=file:" + FlinkYarnSessionCli.CONFIG_FILE_LOGBACK_NAME;
-//            }
-//
-//            if (hasLog4j) {
-//                amCommand += " -Dlog4j.configuration=file:" + FlinkYarnSessionCli.CONFIG_FILE_LOG4J_NAME;
-//            }
-//        }
-//
-//        amCommand += " " + getApplicationMasterClass().getName() + " "
-//                + " 1>"
-//                + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/jobmanager.out"
-//                + " 2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/jobmanager.err";
-//        amContainer.setCommands(Collections.singletonList(amCommand));
-//
-//        LOG.debug("Application Master start command: " + amCommand);
-
-		// intialize HDFS
-        // Copy the application master jar to the filesystem
-        // Create a local resource to point to the destination jar path
-//        final FileSystem fs = FileSystem.get(conf);
-//
-//        // hard coded check for the GoogleHDFS client because its not overriding the getScheme() method.
-//        if (!fs.getClass().getSimpleName().equals("GoogleHadoopFileSystem")
-//                && fs.getScheme().startsWith("file")) {
-//            LOG.warn("The file system scheme is '" + fs.getScheme() + "'. This indicates that the "
-//                    + "specified Hadoop configuration path is wrong and the system is using the default Hadoop configuration values."
-//                    + "The Flink YARN client needs to store its files in a distributed file system");
-//        }
-
-        // Set-up ApplicationSubmissionContext for the application
-//        ApplicationSubmissionContext appContext = yarnApplication.getApplicationSubmissionContext();
-//
-//        if (RecoveryMode.isHighAvailabilityModeActivated(flinkConfiguration)) {
-//            // activate re-execution of failed applications
-//            appContext.setMaxAppAttempts(
-//                    flinkConfiguration.getInteger(
-//                            ConfigConstants.YARN_APPLICATION_ATTEMPTS,
-//                            YarnConfiguration.DEFAULT_RM_AM_MAX_ATTEMPTS));
-//
-//            activateHighAvailabilitySupport(appContext);
-//        } else {
-//            // set number of application retries to 1 in the default case
-//            appContext.setMaxAppAttempts(
-//                    flinkConfiguration.getInteger(
-//                            ConfigConstants.YARN_APPLICATION_ATTEMPTS,
-//                            1));
-//        }
-//
-//        final ApplicationId appId = appContext.getApplicationId();
 
         // Setup jar for ApplicationMaster
         LocalResource appMasterJar = Records.newRecord(LocalResource.class);
         LocalResource flinkConf = Records.newRecord(LocalResource.class);
-        //Path remotePathJar = Utils.setupLocalResource(conf, fs, appId.toString(), flinkJarPath, appMasterJar, fs.getHomeDirectory());
-        //Path remotePathConf = Utils.setupLocalResource(conf, fs, appId.toString(), flinkConfigurationPath, flinkConf, fs.getHomeDirectory());
         Map<String, LocalResource> localResources = new HashMap<String, LocalResource>(2);
         localResources.put("flink.jar", appMasterJar);
         localResources.put("flink-conf.yaml", flinkConf);
 
-        // setup security tokens (code from apache storm)
-        final Path[] paths = new Path[2 + shipFiles.size()];
+               
         StringBuilder envShipFileList = new StringBuilder();
         // upload ship files
         for (int i = 0; i < shipFiles.size(); i++) {
             File shipFile = shipFiles.get(i);
-            //HOPS YarnRunner
             //TODO: Check if we need absolute or relative path of shipFile
             builder.addLocalResource(shipFile.getName(), shipFile.getAbsolutePath());
-//            LocalResource shipResources = Records.newRecord(LocalResource.class);
-//            Path shipLocalPath = new Path("file://" + shipFile.getAbsolutePath());
-//            paths[2 + i] = Utils.setupLocalResource(conf, fs, appId.toString(),
-//                    shipLocalPath, shipResources, fs.getHomeDirectory());
-//            localResources.put(shipFile.getName(), shipResources);
-//            
-//            
-//
-//            envShipFileList.append(paths[2 + i]);
-//            if (i + 1 < shipFiles.size()) {
-//                envShipFileList.append(',');
-//            }
         }
 
-//        paths[0] = remotePathJar;
-//        paths[1] = remotePathConf;
-//        sessionFilesDir = new Path(fs.getHomeDirectory(), ".flink/" + appId.toString() + "/");
-//
-//        FsPermission permission = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
-//        fs.setPermission(sessionFilesDir, permission); // set permission for path.
-//
-//        Utils.setTokensFor(amContainer, paths, conf);
-//
-//        amContainer.setLocalResources(localResources);
-//        
-//        fs.close();
-        
-        // Setup CLASSPATH for ApplicationMaster
-//        Map<String, String> appMasterEnv = new HashMap<String, String>();
-//        Utils.setupEnv(conf, appMasterEnv);
-//        // set configuration values
-//        appMasterEnv.put(FlinkYarnClient.ENV_TM_COUNT, String.valueOf(taskManagerCount));
-//        appMasterEnv.put(FlinkYarnClient.ENV_TM_MEMORY, String.valueOf(taskManagerMemoryMb));
-//        appMasterEnv.put(FlinkYarnClient.FLINK_JAR_PATH, remotePathJar.toString());
-//        appMasterEnv.put(FlinkYarnClient.ENV_APP_ID, appId.toString());
-//        appMasterEnv.put(FlinkYarnClient.ENV_CLIENT_HOME_DIR, fs.getHomeDirectory().toString());
-//        appMasterEnv.put(FlinkYarnClient.ENV_CLIENT_SHIP_FILES, envShipFileList.toString());
-//        appMasterEnv.put(FlinkYarnClient.ENV_CLIENT_USERNAME, UserGroupInformation.getCurrentUser().getShortUserName());
-//        appMasterEnv.put(FlinkYarnClient.ENV_SLOTS, String.valueOf(slots));
-//        appMasterEnv.put(FlinkYarnClient.ENV_DETACHED, String.valueOf(detached));
-//        appMasterEnv.put(FlinkYarnClient.ENV_STREAMING_MODE, String.valueOf(streamingMode));
 
         builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_TM_COUNT, String.valueOf(taskManagerCount));
         builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_TM_MEMORY, String.valueOf(taskManagerMemoryMb));
         builder.addToAppMasterEnvironment(FlinkYarnClient.FLINK_JAR_PATH, flinkJarPath.toString());
         builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_CLIENT_SHIP_FILES, envShipFileList.toString());
-        builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_CLIENT_USERNAME, UserGroupInformation.getCurrentUser().getShortUserName());
+        try {
+            builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_CLIENT_USERNAME, UserGroupInformation.getCurrentUser().getShortUserName());
+        } catch (IOException ex) {
+            LOG.error("Error while getting Flink client username", ex);
+        }
         builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_SLOTS, String.valueOf(slots));
         builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_DETACHED, String.valueOf(detached));
         builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_STREAMING_MODE, String.valueOf(streamingMode));
@@ -600,14 +376,8 @@ public class FlinkYarnRunnerBuilder {
             builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_DYNAMIC_PROPERTIES, dynamicPropertiesEncoded);
         }
 
-        //amContainer.setEnvironment(appMasterEnv);
-
         // Set up resource type requirements for ApplicationMaster
-//        Resource capability = Records.newRecord(Resource.class);
-//        capability.setMemory(jobManagerMemoryMb);
-//        capability.setVirtualCores(1);
 
-        //HOPS YarnRunner 
         builder.amMemory(jobManagerMemoryMb);
         builder.amVCores(1);
         
@@ -623,196 +393,11 @@ public class FlinkYarnRunnerBuilder {
         
         //HOPS YarnRunner 
         builder.appName(name);
-        
-//        appContext.setApplicationName(name); // application name
-//        appContext.setApplicationType("Apache Flink");
-//        appContext.setAMContainerSpec(amContainer);
-//        appContext.setResource(capability);
-//        if (yarnQueue != null) {
-//            appContext.setQueue(yarnQueue);
-//        }
 
-//        LOG.info("Submitting application master " + appId);
-//        yarnClient.submitApplication(appContext);
-//
-//        LOG.info("Waiting for the cluster to be allocated");
-//        int waittime = 0;
-//        loop:
-//        while (true) {
-//            ApplicationReport report = yarnClient.getApplicationReport(appId);
-//            YarnApplicationState appState = report.getYarnApplicationState();
-//            switch (appState) {
-//                case FAILED:
-//                case FINISHED:
-//                case KILLED:
-//                    throw new YarnDeploymentException("The YARN application unexpectedly switched to state "
-//                            + appState + " during deployment. \n"
-//                            + "Diagnostics from YARN: " + report.getDiagnostics() + "\n"
-//                            + "If log aggregation is enabled on your cluster, use this command to further investigate the issue:\n"
-//                            + "yarn logs -applicationId " + appId);
-//                //break ..
-//                case RUNNING:
-//                    LOG.info("YARN application has been deployed successfully.");
-//                    break loop;
-//                default:
-//                    LOG.info("Deploying cluster, current state " + appState);
-//                    if (waittime > 60000) {
-//                        LOG.info("Deployment took more than 60 seconds. Please check if the requested resources are available in the YARN cluster");
-//                    }
-//
-//            }
-//            waittime += 1000;
-//            Thread.sleep(1000);
-//        }
-        // the Flink cluster is deployed in YARN. Represent cluster
-//        return new FlinkYarnCluster(yarnClient, appId, conf, flinkConfiguration, sessionFilesDir, detached);
-        return builder.build(hadoopDir, flinkDir, name);
+        return builder.build(hadoopDir, flinkDir, nameNodeIpPort);
     }
     
    
-    private static class ClusterResourceDescription {
-
-        final public int totalFreeMemory;
-        final public int containerLimit;
-        final public int[] nodeManagersFree;
-
-        public ClusterResourceDescription(int totalFreeMemory, int containerLimit, int[] nodeManagersFree) {
-            this.totalFreeMemory = totalFreeMemory;
-            this.containerLimit = containerLimit;
-            this.nodeManagersFree = nodeManagersFree;
-        }
-    }
-
-    private ClusterResourceDescription getCurrentFreeClusterResources(YarnClient yarnClient) throws YarnException, IOException {
-        List<NodeReport> nodes = yarnClient.getNodeReports(NodeState.RUNNING);
-
-        int totalFreeMemory = 0;
-        int containerLimit = 0;
-        int[] nodeManagersFree = new int[nodes.size()];
-
-        for (int i = 0; i < nodes.size(); i++) {
-            NodeReport rep = nodes.get(i);
-            int free = rep.getCapability().getMemory() - (rep.getUsed() != null ? rep.getUsed().getMemory() : 0);
-            nodeManagersFree[i] = free;
-            totalFreeMemory += free;
-            if (free > containerLimit) {
-                containerLimit = free;
-            }
-        }
-        return new ClusterResourceDescription(totalFreeMemory, containerLimit, nodeManagersFree);
-    }
-
-    
-
-    public String getSessionFilesDir() {
-        return sessionFilesDir.toString();
-    }
-
-    //@Override
-    public void setStreamingMode(boolean streamingMode) {
-        this.streamingMode = streamingMode;
-    }
-
-    //@Override
-    public void setName(String name) {
-        if (name == null) {
-            throw new IllegalArgumentException("The passed name is null");
-        }
-        customName = name;
-    }
-
-    private void activateHighAvailabilitySupport(ApplicationSubmissionContext appContext) throws InvocationTargetException, IllegalAccessException {
-        ApplicationSubmissionContextReflector reflector = ApplicationSubmissionContextReflector.getInstance();
-
-        reflector.setKeepContainersAcrossApplicationAttempts(appContext, true);
-        reflector.setAttemptFailuresValidityInterval(appContext, AkkaUtils.getTimeout(flinkConfiguration).toMillis());
-    }
-
-    /**
-     * Singleton object which uses reflection to determine whether the
-     * {@link ApplicationSubmissionContext} supports the
-     * setKeepContainersAcrossApplicationAttempts and the
-     * setAttemptFailuresValidityInterval methods. Depending on the Hadoop
-     * version these methods are supported or not. If the methods are not
-     * supported, then nothing happens when
-     * setKeepContainersAcrossApplicationAttempts or
-     * setAttemptFailuresValidityInterval are called.
-     */
-    private static class ApplicationSubmissionContextReflector {
-
-        private static final Logger LOG = LoggerFactory.getLogger(ApplicationSubmissionContextReflector.class);
-
-        private static final ApplicationSubmissionContextReflector instance = new ApplicationSubmissionContextReflector(ApplicationSubmissionContext.class);
-
-        public static ApplicationSubmissionContextReflector getInstance() {
-            return instance;
-        }
-
-        private static final String keepContainersMethodName = "setKeepContainersAcrossApplicationAttempts";
-        private static final String attemptsFailuresValidityIntervalMethodName = "setAttemptFailuresValidityInterval";
-
-        private final Method keepContainersMethod;
-        private final Method attemptFailuresValidityIntervalMethod;
-
-        private ApplicationSubmissionContextReflector(Class<ApplicationSubmissionContext> clazz) {
-            Method keepContainersMethod;
-            Method attemptFailuresValidityIntervalMethod;
-
-            try {
-                // this method is only supported by Hadoop 2.4.0 onwards
-                keepContainersMethod = clazz.getMethod(keepContainersMethodName, boolean.class);
-                LOG.debug("{} supports method {}.", clazz.getCanonicalName(), keepContainersMethodName);
-            } catch (NoSuchMethodException e) {
-                LOG.debug("{} does not support method {}.", clazz.getCanonicalName(), keepContainersMethodName);
-                // assign null because the Hadoop version apparently does not support this call.
-                keepContainersMethod = null;
-            }
-
-            this.keepContainersMethod = keepContainersMethod;
-
-            try {
-                // this method is only supported by Hadoop 2.6.0 onwards
-                attemptFailuresValidityIntervalMethod = clazz.getMethod(attemptsFailuresValidityIntervalMethodName, long.class);
-                LOG.debug("{} supports method {}.", clazz.getCanonicalName(), attemptsFailuresValidityIntervalMethodName);
-            } catch (NoSuchMethodException e) {
-                LOG.debug("{} does not support method {}.", clazz.getCanonicalName(), attemptsFailuresValidityIntervalMethodName);
-                // assign null because the Hadoop version apparently does not support this call.
-                attemptFailuresValidityIntervalMethod = null;
-            }
-
-            this.attemptFailuresValidityIntervalMethod = attemptFailuresValidityIntervalMethod;
-        }
-
-        public void setKeepContainersAcrossApplicationAttempts(
-                ApplicationSubmissionContext appContext,
-                boolean keepContainers) throws InvocationTargetException, IllegalAccessException {
-
-            if (keepContainersMethod != null) {
-                LOG.debug("Calling method {} of {}.", keepContainersMethod.getName(),
-                        appContext.getClass().getCanonicalName());
-                keepContainersMethod.invoke(appContext, keepContainers);
-            } else {
-                LOG.debug("{} does not support method {}. Doing nothing.",
-                        appContext.getClass().getCanonicalName(), keepContainersMethodName);
-            }
-        }
-
-        public void setAttemptFailuresValidityInterval(
-                ApplicationSubmissionContext appContext,
-                long validityInterval) throws InvocationTargetException, IllegalAccessException {
-            if (attemptFailuresValidityIntervalMethod != null) {
-                LOG.debug("Calling method {} of {}.",
-                        attemptFailuresValidityIntervalMethod.getName(),
-                        appContext.getClass().getCanonicalName());
-                attemptFailuresValidityIntervalMethod.invoke(appContext, validityInterval);
-            } else {
-                LOG.debug("{} does not support method {}. Doing nothing.",
-                        appContext.getClass().getCanonicalName(),
-                        attemptsFailuresValidityIntervalMethodName);
-            }
-        }
-    }
-
     public static class YarnDeploymentException extends RuntimeException {
 
         private static final long serialVersionUID = -812040641215388943L;

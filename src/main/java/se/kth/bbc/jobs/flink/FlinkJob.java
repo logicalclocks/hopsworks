@@ -3,6 +3,7 @@ package se.kth.bbc.jobs.flink;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.flink.configuration.Configuration;
 import org.apache.hadoop.fs.Path;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
@@ -18,6 +19,8 @@ import se.kth.hopsworks.util.Settings;
  */
 public class FlinkJob extends YarnJob {
 
+     private static final Logger logger = Logger.getLogger(
+             FlinkJob.class.getName());
     private final FlinkJobConfiguration jobconfig;
     private final String flinkDir;
     private final String flinkUser;
@@ -72,18 +75,18 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setFlinkLoggingConfigurationPath(new Path(flinkDir + jobconfig.getFlinkConfDir() + jobconfig.getFlinkConfFile()));
         flinkBuilder.setLocalJarPath(new Path(flinkDir+"/flink.jar"));
         
-       /* 
         try {
-        runner = flinkBuilder.
-            getYarnRunner(jobDescription.getProject().getName(),
-                flinkUser, hadoopDir, flinkDir, nameNodeIpPort);
+            runner = flinkBuilder.
+           getYarnRunner(jobDescription.getProject().getName(),
+               flinkUser, hadoopDir, flinkDir, nameNodeIpPort);
 
         } catch (IOException e) {
           logger.log(Level.SEVERE,
               "Failed to create YarnRunner.", e);
           writeToLogs(new IOException("Failed to start Yarn client.", e));
           return false;
-        }*/
+        } 
+
 
         String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
                 jobDescription.
