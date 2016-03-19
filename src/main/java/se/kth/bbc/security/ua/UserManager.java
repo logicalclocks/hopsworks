@@ -142,7 +142,7 @@ public class UserManager {
   public List<Users> findInactivateUsers() {
     Query query = em.createNativeQuery(
             "SELECT * FROM hopsworks.users p WHERE p.active = "
-            + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
+            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
     List<Users> people = query.getResultList();
     return people;
   }
@@ -150,7 +150,7 @@ public class UserManager {
   public boolean registerYubikey(Users uid) {
     Yubikey yk = new Yubikey();
     yk.setUid(uid);
-    yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+    yk.setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue());
     em.persist(yk);
     return true;
   }
@@ -195,7 +195,7 @@ public class UserManager {
   public boolean findYubikeyUsersByStatus(int status) {
     List existing = em.createQuery(
             "SELECT p FROM hopsworks.users p WHERE p.status ='"
-            + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()
+            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
             + "' AND p.mode = " + status)
             .getResultList();
     return (existing.size() > 0);
@@ -212,11 +212,11 @@ public class UserManager {
   public List<Users> findAllUsers() {
     List<Users> query = em.createQuery(
             "SELECT p FROM Users p WHERE p.status !='"
-            + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()
+            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
             + "' AND p.status!='"
-            + PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()
+            + PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
             + "' AND p.status!='" + PeopleAccountStatus.SPAM_ACCOUNT.getValue()
-            + "' AND p.status!='" + PeopleAccountStatus.ACCOUNT_VERIFICATION.
+            + "' AND p.status!='" + PeopleAccountStatus.VERIFIED_ACCOUNT.
             getValue()
             + "'")
             .getResultList();
@@ -234,7 +234,7 @@ public class UserManager {
   public List<Users> findAllSPAMAccounts() {
     List<Users> query = em.createQuery(
             "SELECT p FROM Users p WHERE (p.status ='"
-            + PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()
+            + PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
             + "' OR p.status ='" + PeopleAccountStatus.SPAM_ACCOUNT.
             getValue()
             + "')")

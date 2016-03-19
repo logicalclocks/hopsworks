@@ -90,13 +90,13 @@ public class AuthService {
     Users user = userBean.findByEmail(email);
     String newPassword = null;
     // Add padding if custom realm is disabled
-    if (otp == null || otp.isEmpty() && user.getMode() == PeopleAccountStatus.MOBILE_USER.getValue()) {
+    if (otp == null || otp.isEmpty() && user.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
       otp = AuthenticationConstants.MOBILE_OTP_PADDING;
     } 
 
-    if (otp.length() == AuthenticationConstants.MOBILE_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.MOBILE_USER.getValue()) {
+    if (otp.length() == AuthenticationConstants.MOBILE_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
       newPassword = password + otp;
-    } else if (otp.length() == AuthenticationConstants.YUBIKEY_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+    } else if (otp.length() == AuthenticationConstants.YUBIKEY_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue()) {
         newPassword = password + otp + AuthenticationConstants.YUBIKEY_USER_MARKER;
     }
     

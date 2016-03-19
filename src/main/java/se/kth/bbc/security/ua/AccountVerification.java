@@ -65,7 +65,7 @@ public class AccountVerification {
 
     Users user = mgr.getUserByUsername(username);
 
-    if (user.getStatus() != PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()) {
+    if (user.getStatus() != PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()) {
        am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
               AccountsAuditActions.FAILED.name(), "Could not verify the account due to wrnong status.", user);
 
@@ -73,17 +73,17 @@ public class AccountVerification {
     }
 
     if (key.equals(user.getValidationKey())) {
-      if (user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+      if (user.getMode() == PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue()) {
 
         mgr.changeAccountStatus(user.getUid(), "",
-                PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+                PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue());
 
-      } else if (user.getMode() == PeopleAccountStatus.MOBILE_USER.
+      } else if (user.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.
               getValue()) {
          
 
         mgr.changeAccountStatus(user.getUid(), "",
-                PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
+                PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
       }
               
        am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
