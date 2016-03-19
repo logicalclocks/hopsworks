@@ -11,6 +11,7 @@ import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.activity.ActivityFacade;
@@ -31,6 +32,7 @@ import se.kth.hopsworks.util.Settings;
  * Interaction point between the Flink front- and backend.
  *
  */
+@Stateless
 public class FlinkController {
 
     private static final Logger logger = Logger.getLogger(FlinkController.class.
