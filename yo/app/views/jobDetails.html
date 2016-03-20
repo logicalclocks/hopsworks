@@ -171,11 +171,11 @@
           </div>
         </div>
         <div class="row">
-          <div class="text-right col-md-4">Number of executors <i class="fa fa-info-circle" tooltip="The number of Flink TaskManagersSpark that should be requested for this job." style="margin-left: 10px"></i></div>
+          <div class="text-right col-md-4">Number of TaskManagers <i class="fa fa-info-circle" tooltip="The number of Flink TaskManagersSpark that should be requested for this job." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numberOfTaskManagers}}</div>
         </div>
         <div class="row">
-          <div class="text-right col-md-4">Number of slots <i class="fa fa-info-circle" tooltip="The number of slots that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
+          <div class="text-right col-md-4">Number of slots <i class="fa fa-info-circle" tooltip="The number of slots that should be requested for each Flink TaskManager in this job." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.slots}}</div>
         </div>
         <div class="row">
