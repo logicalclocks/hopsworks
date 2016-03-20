@@ -197,8 +197,8 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
             IllegalArgumentException {
         //First: make sure the given object is valid by getting the type and AdamCommandDTO
         JobType type;
-        String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs;
-        int jsonExecmem, jsonExeccors;
+        String jsonArgs, jsonJarpath, jsonMainclass, jsonNumtms;
+        int jsonTMmem, jsonSlots;
         try {
             String jsonType = json.getString(KEY_TYPE);
             type = JobType.valueOf(jsonType);
@@ -210,9 +210,9 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
             jsonJarpath = json.getString(KEY_JARPATH, null);
             jsonMainclass = json.getString(KEY_MAINCLASS, null);
             //Then: fields that cannot be null or emtpy.
-            jsonExeccors = Integer.parseInt(json.getString(KEY_SLOTS));
-            jsonExecmem = Integer.parseInt(json.getString(KEY_TMMEM));
-            jsonNumexecs = json.getString(KEY_NUMTMS);
+            jsonSlots = Integer.parseInt(json.getString(KEY_SLOTS));
+            jsonTMmem = Integer.parseInt(json.getString(KEY_TMMEM));
+            jsonNumtms = json.getString(KEY_NUMTMS);
         } catch (Exception e) {
             throw new IllegalArgumentException(
                     "Cannot convert object into FlinkJobConfiguration.", e);
@@ -222,10 +222,10 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         super.updateFromJson(json);
         //Third: we're now sure everything is valid: actually update the state
         this.args = jsonArgs;
-        this.slots = jsonExeccors;
-        this.taskManagerMemory = jsonExecmem;
+        this.slots = jsonSlots;
+        this.taskManagerMemory = jsonTMmem;
         this.jarPath = jsonJarpath;
         this.mainClass = jsonMainclass;
-        this.numberOfTaskManagers = Integer.parseInt(jsonNumexecs);
+        this.numberOfTaskManagers = Integer.parseInt(jsonNumtms);
     }
 }
