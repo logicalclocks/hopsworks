@@ -107,7 +107,8 @@ public class AuthService {
     } else if (otp.length() == AuthenticationConstants.YUBIKEY_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue()) {
       newPassword = password + otp + AuthenticationConstants.YUBIKEY_USER_MARKER;
     } else {
-      newPassword = password;
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+              "Could not recognize the account type. Report a bug.");
     }
 
     //only login if not already logged in...
