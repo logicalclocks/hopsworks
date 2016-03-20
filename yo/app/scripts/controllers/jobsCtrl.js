@@ -69,7 +69,7 @@ angular.module('hopsWorksApp')
                   jobType = 2;
                   break;
               }
-              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState;
+              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
               if (jobType == 0) {
                 mainFileTxt = "Workflow file";
                 mainFileVal = self.currentjob.runConfig.wf.name;
@@ -90,7 +90,14 @@ angular.module('hopsWorksApp')
                 mainFileTxt = "ADAM command";
                 mainFileVal = adamState.selectedCommand;
                 jobDetailsTxt = "Job arguments";
-              }
+              } else if (jobType == 3) {
+                flinkState = {
+                  "selectedJar": getFileName(self.currentjob.runConfig.jarPath)
+                };
+                mainFileTxt = "JAR file";
+                mainFileVal = flinkState.selectedJar;
+                jobDetailsTxt = "Job details";
+              } 
               var state = {
                 "jobtype": jobType,
                 "jobname": self.currentjob.name,
@@ -99,6 +106,7 @@ angular.module('hopsWorksApp')
                 "runConfig": self.currentjob.runConfig,
                 "sparkState": sparkState,
                 "adamState": adamState,
+                "flinkState": flinkState,
                 "accordion1": {//Contains the job name
                   "isOpen": false,
                   "visible": true,
