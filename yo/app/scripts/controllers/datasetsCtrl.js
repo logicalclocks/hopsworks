@@ -1,9 +1,4 @@
-/**
- * Created by AMore on 2015-04-24.
- */
-
 'use strict';
-
 
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
@@ -18,16 +13,49 @@ angular.module('hopsWorksApp')
             self.files = []; //A list of files currently displayed to the user.
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
-            self.selected; //The index of the selected file in the files array.
+            self.selected = null; //The index of the selected file in the files array.
+            self.selectedList = []; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
 
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
+
+            $scope.tgState = true;
+
+            $scope.status = {
+              isopen: false
+            };
+
+            self.onSuccess = function (e) {
+              growl.success("Copied to clipboard", {title: '', ttl: 1000});
+              e.clearSelection();
+            };
+
+            $scope.toggleDropdown = function ($event) {
+              $event.preventDefault();
+              $event.stopPropagation();
+              $scope.status.isopen = !$scope.status.isopen;
+            };
+
 
             self.metadataView = {};
             self.availableTemplates = [];
             self.closeSlider = false;
 
-            $scope.sort = function(keyname){
+            self.openMetadata = function () {
+              $scope.tgState = true;
+            }
+            
+            self.openMetadata();
+
+            self.selectInode = function (inode) {
+              // add to selectedList
+            }
+
+            self.selectInode = function (inode) {
+              // splice
+            }
+
+            $scope.sort = function (keyname) {
               $scope.sortKey = keyname;   //set the sortKey to the param passed
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
             }
@@ -41,12 +69,12 @@ angular.module('hopsWorksApp')
               }
             });
 
-            $scope.$watch(MetadataHelperService.getCloseSlider, function (response) {
-              if (response === "true") {
-                self.close();
-                MetadataHelperService.setCloseSlider("false");
-              }
-            });
+//            $scope.$watch(MetadataHelperService.getCloseSlider, function (response) {
+//              if (response === "true") {
+//                self.close();
+//                MetadataHelperService.setCloseSlider("false");
+//              }
+//            });
 
             $scope.$watch(MetadataHelperService.getDirContents, function (response) {
               if (response === "true") {
@@ -80,20 +108,20 @@ angular.module('hopsWorksApp')
               self.working = true;
               //Get the contents and load them
               dataSetService.getContents(newPath).then(
-                function (success) {
-                  //Reset the selected file
-                  self.selected = null;
-                  self.fileDetail = null;
-                  //Set the current files and path
-                  self.files = success.data;
-                  self.pathArray = newPathArray;
-                  self.working = false;
-                  console.log(success);
-                }, function (error) {
-                  self.working = false;
-                  console.log("Error getting the contents of the path " + getPath(newPathArray));
-                  console.log(error);
-                });
+                      function (success) {
+                        //Reset the selected file
+                        self.selected = null;
+                        self.fileDetail = null;
+                        //Set the current files and path
+                        self.files = success.data;
+                        self.pathArray = newPathArray;
+                        self.working = false;
+                        console.log(success);
+                      }, function (error) {
+                self.working = false;
+                console.log("Error getting the contents of the path " + getPath(newPathArray));
+                console.log(error);
+              });
             });
 
             /**
@@ -124,7 +152,7 @@ angular.module('hopsWorksApp')
                         self.working = false;
                         console.log(success);
                       }, function (error) {
-                        self.working = false;
+                self.working = false;
                 console.log("Error getting the contents of the path " + getPath(newPathArray));
                 console.log(error);
               });
@@ -204,6 +232,58 @@ angular.module('hopsWorksApp')
               removeInode(getPath(removePathArray));
             };
 
+
+            self.parentPathArray = function () {
+              var newPathArray = self.pathArray.slice(0);
+              var clippedPath = newPathArray.splice(1, newPathArray.length - 1);
+              return clippedPath;
+            };
+
+            self.move = function (inodeId, name) {
+              ModalService.selectDir('lg', "/[^]*/",
+                      "problem selecting file").then(
+                      function (success) {
+                        var destPath = success;
+                        // Get the relative path of this DataSet, relative to the project home directory
+                        // replace only first occurrence 
+                        var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
+                        var finalPath = relPath + "/" + name;
+
+                        dataSetService.move(inodeId, finalPath).then(
+                                function (success) {
+//                                  self.openDir(relPath);
+                                  getDirContents();
+                                  growl.success(success.data.successMessage, {title: 'Moved successfully. Opened dest dir: ' + relPath, ttl: 2000});
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                        });
+
+
+                      }, function (error) {
+                //The user changed their mind.
+              });
+
+            };
+
+
+            self.rename = function (inodeId) {
+
+              var pathComponents = self.pathArray.slice(0);
+              var newPath = getPath(pathComponents);
+              var destPath = newPath + '/';
+              var newName = "New Name";
+              ModalService.enterName('lg', "Rename File or Directory", newName).then(
+                      function (success) {
+                        var fullPath = destPath + success.newName;
+                        dataSetService.move(inodeId, fullPath).then(
+                                function (success) {
+                                  getDirContents();
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                        });
+
+                      });
+            };
             /**
              * Opens a modal dialog for file upload.
              * @returns {undefined}
@@ -216,7 +296,7 @@ angular.module('hopsWorksApp')
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                         getDirContents();
                       }, function (error) {
-                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+//                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
                 getDirContents();
               });
             };
@@ -353,6 +433,12 @@ angular.module('hopsWorksApp')
             self.select = function (selectedIndex, file) {
               self.selected = selectedIndex;
               self.fileDetail = file;
+              
+            };
+
+            self.deselect = function () {
+              self.selected = null;
+              self.fileDetail = null;
             };
 
             self.toggleLeft = buildToggler('left');

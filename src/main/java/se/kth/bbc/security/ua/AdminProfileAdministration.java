@@ -209,8 +209,8 @@ public class AdminProfileAdministration implements Serializable {
     }
 
     // Remove the inactive users
-    status.remove(PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.name());
-    status.remove(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.name());
+    status.remove(PeopleAccountStatus.NEW_MOBILE_ACCOUNT.name());
+    status.remove(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.name());
 
     return status;
   }
