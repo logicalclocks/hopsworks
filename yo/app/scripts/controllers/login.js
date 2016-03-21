@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('LoginCtrl', ['$location', '$cookies', 'AuthService', 'BannerService',
-          function ($location, $cookies, AuthService, BannerService) {
+        .controller('LoginCtrl', ['$location', '$cookies', 'growl' 'AuthService', 'BannerService',
+          function ($location, $cookies, $growl, AuthService, BannerService) {
 
             var self = this;
 
@@ -45,8 +45,12 @@ angular.module('hopsWorksApp')
 
                       }, function (error) {
                 self.working = false;
-                self.errorMessage = error.data.errorMsg;
-                console.log(self.errorMessage);
+                growl.error(error.data.errorMsg, {title: 'Cannot Login at this moment. Does your Internet work?', ttl: 4000});
+                if (error.data !== undefined && error.data != null && error.data.errorMsg !== undefined &&
+                      error.data.errorMsg !== null  ) {
+                  self.errorMessage = error.data.errorMsg;
+                  console.log(self.errorMessage);
+                }
               });
             };
 

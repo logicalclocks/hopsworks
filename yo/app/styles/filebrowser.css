@@ -115,6 +115,7 @@
 .file-name small {
   color: #676a6c;
 }
+
 .corner {
   -moz-border-bottom-colors: none;
   -moz-border-left-colors: none;
@@ -131,6 +132,11 @@
   position: absolute;
   right: 0;
   width: 0;
+}
+
+.publicDS {
+  padding-bottom: 0;
+  padding-top: 15px;
 }
 
 
