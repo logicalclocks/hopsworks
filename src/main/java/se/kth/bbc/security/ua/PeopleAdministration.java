@@ -376,14 +376,13 @@ public class PeopleAdministration implements Serializable {
   }
 
   /**
-   * Get all open user requests.
+   * Get all open user requests (mobile or simple accounts).
    *
    * @return
    */
   public List<Users> getAllRequests() {
     if (requests == null) {
-      requests = userManager.findAllByStatus(
-              PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
+      requests = userManager.findMobileRequests();
     }
     return requests;
   }
@@ -395,8 +394,7 @@ public class PeopleAdministration implements Serializable {
    */
   public List<Users> getAllYubikeyRequests() {
     if (yRequests == null) {
-      yRequests = userManager.findAllByStatus(
-              PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue());
+      yRequests = userManager.findYubikeyRequests();
     }
     return yRequests;
   }
@@ -418,9 +416,7 @@ public class PeopleAdministration implements Serializable {
 
       userTransaction.begin();
 
-//      if (!"#".equals(sgroup) && (!sgroup.isEmpty() || sgroup != null)) {
-//        userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
-        userManager.registerGroup(user1, BBCGroup.BBC_RESEARCHER.getValue());
+        userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
         userManager.registerGroup(user1, BBCGroup.BBC_USER.getValue());
         
         auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
@@ -428,16 +424,9 @@ public class PeopleAdministration implements Serializable {
                 user1);
         
         auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
-                RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(),
+                RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_USER.name(),
                 user1);
           
-//      } else {
-//          auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-//              PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
-//              RolesAuditActions.FAILED.name(), "Role could not be granted.", user1);
-//        MessagesController.addSecurityErrorMessage("Role could not be granted.");
-//        return;
-//      }
 
       userManager.updateStatus(user1, PeopleAccountStatus.ACTIVATED_ACCOUNT.
               getValue());
@@ -478,8 +467,7 @@ public class PeopleAdministration implements Serializable {
   }
 
   public List<Users> getSpamUsers() {
-
-    return spamUsers = userManager.findAllSPAMAccounts();
+    return spamUsers = userManager.findAllByStatus(PeopleAccountStatus.SPAM_ACCOUNT.getValue());
   }
 
   public void setSpamUsers(List<Users> spamUsers) {
