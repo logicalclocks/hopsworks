@@ -49,7 +49,7 @@ angular.module('hopsWorksApp')
             self.getHostname = function () {
               return $location.host();
             };
-
+            
             self.getUser = function () {
               return self.email.substring(0, self.email.indexOf("@"));
             };

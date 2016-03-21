@@ -14,6 +14,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.project.fb.Inode;
 
 @Entity
 @Table(name = "hopsworks.executions_inputfiles")
@@ -29,8 +30,8 @@ public class ExecutionsInputfiles implements Serializable {
   private static final long serialVersionUID = 1L;
   @EmbeddedId
   protected ExecutionsInputfilesPK executionsInputfilesPK;
-
- @JoinColumn(name = "executionId",
+  
+  @JoinColumn(name = "executionId",
           referencedColumnName = "id",
           insertable = false,
           updatable
@@ -38,6 +39,21 @@ public class ExecutionsInputfiles implements Serializable {
   @ManyToOne(optional = false)
   private Execution execution;
   
+  @JoinColumn(name = "inode_pid",
+          referencedColumnName = "parent_id",
+          insertable = false,
+          updatable
+          = false)
+  @ManyToOne(optional = false)
+  private Inode inode_pid;
+  
+  @JoinColumn(name = "inode_name",
+          referencedColumnName = "name",
+          insertable = false,
+          updatable
+          = false)
+  @ManyToOne(optional = false)
+  private Inode inode_name;
   
   public ExecutionsInputfiles() {
   }
@@ -46,7 +62,7 @@ public class ExecutionsInputfiles implements Serializable {
     this.executionsInputfilesPK = executionsInputfilesPK;
   }
 
-  public ExecutionsInputfiles(int executionId, int inodePid, String inodeName) {
+  public ExecutionsInputfiles(Execution executionId, Inode inodePid, Inode inodeName) {
     this.executionsInputfilesPK = new ExecutionsInputfilesPK(executionId, inodePid, inodeName);
   }
 

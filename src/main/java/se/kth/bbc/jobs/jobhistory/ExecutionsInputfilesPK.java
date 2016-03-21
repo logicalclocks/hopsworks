@@ -11,6 +11,7 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import se.kth.bbc.project.fb.Inode;
 
 @Embeddable
 public class ExecutionsInputfilesPK implements Serializable {
@@ -18,55 +19,55 @@ public class ExecutionsInputfilesPK implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "execution_id")
-  private int executionId;
+  private Execution executionId;
   @Basic(optional = false)
   @NotNull
   @Column(name = "inode_pid")
-  private int inodePid;
+  private Inode inodePid;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1, max = 255)
   @Column(name = "inode_name")
-  private String inodeName;
+  private Inode inodeName;
 
   public ExecutionsInputfilesPK() {
   }
 
-  public ExecutionsInputfilesPK(int executionId, int inodePid, String inodeName) {
+  public ExecutionsInputfilesPK(Execution executionId, Inode inodePid, Inode inodeName) {
     this.executionId = executionId;
     this.inodePid = inodePid;
     this.inodeName = inodeName;
   }
 
-  public int getExecutionId() {
+  public Execution getExecutionId() {
     return executionId;
   }
 
-  public void setExecutionId(int executionId) {
+  public void setExecutionId(Execution executionId) {
     this.executionId = executionId;
   }
 
-  public int getInodePid() {
+  public Inode getInodePid() {
     return inodePid;
   }
 
-  public void setInodePid(int inodePid) {
+  public void setInodePid(Inode inodePid) {
     this.inodePid = inodePid;
   }
 
-  public String getInodeName() {
+  public Inode getInodeName() {
     return inodeName;
   }
 
-  public void setInodeName(String inodeName) {
+  public void setInodeName(Inode inodeName) {
     this.inodeName = inodeName;
   }
 
   @Override
   public int hashCode() {
     int hash = 0;
-    hash += (int) executionId;
-    hash += (int) inodePid;
+    hash += (int) executionId.getId();
+    hash += (int) inodePid.getId();
     hash += (inodeName != null ? inodeName.hashCode() : 0);
     return hash;
   }
