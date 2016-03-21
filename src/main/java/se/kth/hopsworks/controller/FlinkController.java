@@ -201,6 +201,10 @@ public class FlinkController {
 	if (atts.containsKey(Attributes.Name.MAIN_CLASS)) {
 	  config.setMainClass(atts.getValue(Attributes.Name.MAIN_CLASS));
 	}
+        //Set Flink config params
+        config.setFlinkConfDir(settings.getFlinkConfDir());
+        config.setFlinkConfFile(settings.getFlinkConfFile());
+        
 	config.setJarPath(path);
 	return config;
   }

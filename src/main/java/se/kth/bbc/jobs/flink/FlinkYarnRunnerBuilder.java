@@ -273,8 +273,9 @@ public class FlinkYarnRunnerBuilder {
      * @param hadoopDir
      * @param flinkUser
      * @param flinkDir
+     * @param nameNodeIpPort
      * @return 
-     * @throws java.lang.Exception 
+     * @throws java.io.IOException 
      */
     protected YarnRunner getYarnRunner(String project, String hadoopDir, 
             final String flinkUser, final String flinkDir, 
