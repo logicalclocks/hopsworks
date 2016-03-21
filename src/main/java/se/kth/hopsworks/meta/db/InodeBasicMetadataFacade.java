@@ -2,6 +2,8 @@ package se.kth.hopsworks.meta.db;
 
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import se.kth.hopsworks.meta.entity.InodeBasicMetadata;
@@ -29,6 +31,7 @@ public class InodeBasicMetadataFacade extends AbstractFacade<InodeBasicMetadata>
     super(InodeBasicMetadata.class);
   }
 
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public int addBasicMetadata(InodeBasicMetadata meta) {
 
     this.em.persist(meta);

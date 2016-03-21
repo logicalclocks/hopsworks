@@ -44,8 +44,20 @@ angular.module('hopsWorksApp')
             self.openMetadata = function () {
               $scope.tgState = true;
             }
-            
+
             self.openMetadata();
+
+
+            self.breadcrumbLen = function () {
+              if (self.pathArray === undefined || self.pathArray === null) {
+                return 0;
+              }
+              var displayPathLen = 4;
+              if (self.pathArray.length <= displayPathLen) {
+                return self.pathArray.length -1;
+              }
+              return displayPathLen;
+            }
 
             self.selectInode = function (inode) {
               // add to selectedList
@@ -230,6 +242,38 @@ angular.module('hopsWorksApp')
               var removePathArray = self.pathArray.slice(0);
               removePathArray.push(fileName);
               removeInode(getPath(removePathArray));
+            };
+
+            /**
+             * Makes the dataset public for anybody within the local cluster or any outside cluster.
+             * @param id inodeId
+             */
+            self.makePublic = function (id) {
+
+              ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet public? \n\
+This will make all its files available for any registered user to download and process.').then(
+                      function (success) {
+                        dataSetService.makePublic(id).then(
+                                function (success) {
+                                  growl.success(success.data.successMessage, {title: 'The DataSet is now Public.', ttl: 1500});
+                                  getDirContents();
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 1000});
+                        });
+
+                      }
+              );
+
+
+            };
+
+
+            self.isPublic = function (id) {
+              dataSetService.isPublic(id).then(
+                      function (success) {
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 1000});
+              });
             };
 
 
@@ -433,7 +477,7 @@ angular.module('hopsWorksApp')
             self.select = function (selectedIndex, file) {
               self.selected = selectedIndex;
               self.fileDetail = file;
-              
+
             };
 
             self.deselect = function () {

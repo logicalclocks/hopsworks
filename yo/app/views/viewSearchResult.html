@@ -7,7 +7,16 @@
 <div growl reference="21" class="pull-right"></div>
 <div class="modal-body" ng-init="viewSearchResultCtrl.initProjectsList()">
 
-    <form role="form" name="dataSetForm" ng-submit="viewSearchResultCtrl.sendRequest()" novalidate
+   <form role="form" ng-show="viewSearchResultCtrl.result.dataset.public === true" name="publicDataSetForm" ng-submit="viewSearchResultCtrl.sendRequest()" novalidate
+          class="form-validate">
+        <div class="view-info">
+
+        </div>
+   </form>
+  
+  
+    <form role="form" name="dataSetForm" ng-show="viewSearchResultCtrl.result.dataset.public === false" 
+          ng-submit="viewSearchResultCtrl.sendRequest()" novalidate
           class="form-validate">
         <div class="view-info">
             <div ng-show="viewSearchResultCtrl.type === 'Project'" class="row">

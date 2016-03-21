@@ -7,6 +7,7 @@ export key=private_key
 
 
 scp jdowling@snurran.sics.se:/home/jdowling/NetBeansProjects/hopsworks-chef/.kitchen/kitchen-vagrant/default-ubuntu-1404/.vagrant/machines/default/virtualbox/private_key .
+chmod 600 private_key
 #scp jdowling@snurran.sics.se:/home/jdowling/NetBeansProjects/hopsworks-chef/vagrant/machines/default/virtualbox/private_key
 
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $key -p $PORT vagrant@${SERVER} "cd /srv/glassfish/domain1 && sudo chown -R glassfish:vagrant docroot && sudo chmod -R 775 *"
