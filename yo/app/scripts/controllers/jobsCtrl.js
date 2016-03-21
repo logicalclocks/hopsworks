@@ -68,6 +68,8 @@ angular.module('hopsWorksApp')
                 case "ADAM":
                   jobType = 2;
                   break;
+                case "FLINK":
+                  jobType = 3;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
               if (jobType == 0) {
