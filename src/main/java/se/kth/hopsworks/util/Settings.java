@@ -164,13 +164,13 @@ public class Settings {
     //checkCache();
     return FLINK_DIR;
   }
-  private String FLINK_CONF_DIR = getFlinkDir() + "/conf";
+  private String FLINK_CONF_DIR = FLINK_DIR + "/conf";
 
   public synchronized String getFlinkConfDir() {
     //checkCache();
     return FLINK_CONF_DIR;
   }
-  private String FLINK_CONF_FILE = getFlinkConfDir() + "/flink-conf.yaml";
+  private String FLINK_CONF_FILE = FLINK_CONF_DIR + "/flink-conf.yaml";
  
   public synchronized String getFlinkConfFile() {
     //checkCache();
