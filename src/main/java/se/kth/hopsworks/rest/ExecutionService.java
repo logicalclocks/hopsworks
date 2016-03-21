@@ -21,9 +21,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
+import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.hopsworks.controller.ExecutionController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
@@ -101,6 +103,17 @@ public class ExecutionService {
               "You are not authorized for this invocation.");
     }
     try {
+      
+      if (job.getJobType() == JobType.SPARK) {
+        SparkJobConfiguration sjb = (SparkJobConfiguration) job.getJobConfig();
+        String inputArgs = sjb.getArgs();
+        
+        // Parse inputArgs and extract any hdfs files. Use a Regex expression
+        // 'hdfs:\/\/*/*
+        // Get Inode from hdfs reference
+        //     Inode i = inodes.getInodeAtPath(path);
+        //myFacade.add(executionId, inode)
+      }
       Execution exec = executionController.start(job, user);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(exec).build();
