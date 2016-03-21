@@ -161,19 +161,19 @@ public class Settings {
   private String FLINK_DIR = "/srv/flink";
 
   public synchronized String getFlinkDir() {
-    checkCache();
+    //checkCache();
     return FLINK_DIR;
   }
   private String FLINK_CONF_DIR = getFlinkDir() + "/conf";
 
   public synchronized String getFlinkConfDir() {
-    checkCache();
+    //checkCache();
     return FLINK_CONF_DIR;
   }
   private String FLINK_CONF_FILE = getFlinkConfDir() + "/flink-conf.yaml";
  
   public synchronized String getFlinkConfFile() {
-    checkCache();
+    //checkCache();
     return FLINK_CONF_FILE;
   }
   private String MYSQL_DIR = "/usr/local/mysql";
