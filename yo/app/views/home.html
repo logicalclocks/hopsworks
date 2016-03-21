@@ -7,50 +7,54 @@
   </div>
   <div ng-show="mainCtrl.searchReturned === ''" class="row" style="min-width: 1200px">
     <div class="col-sm-8 col-md-8 col-lg-8" style="padding-left:56px; min-width: 500px">
-      <div>
-        <div class="widget-body">
-          <div class="timeline clearfix">
-            <div class="mid-line"></div>
 
-            <div
-              ng-repeat="historyObject in homeCtrl.histories| startFrom:(homeCtrl.currentPage - 1) * homeCtrl.pageSize | limitTo:homeCtrl.pageSize">
-
-              <div class="time-header info" ng-if="historyObject.flag == 'older'">Older</div>
-              <div class="time-header error" ng-if="historyObject.flag == 'lastweek'">Last week</div>
-              <div class="time-header error" ng-if="historyObject.flag == 'thisweek'">This week</div>
-              <div class="time-header completed" ng-if="historyObject.flag == 'yesterday'">Yesterday</div>
-              <div class="time-header info" ng-if="historyObject.flag == 'today'">Today</div>
-
-              <div class="right">
-                <div class="r-arrow"></div>
-                <div class="about-task">
-                  <div class="header">{{historyObject.project.name}}
-                    <small class="muted">{{historyObject.timestamp|
-                      date:'medium'}}
-                    </small>
+<!--      <div class="parallax-container">
+        <div parallax><img src="images/parallax1.jpg"></div>
+      </div>-->
+      <!--      <div>
+              <div class="widget-body">
+                <div class="timeline clearfix">
+                  <div class="mid-line"></div>
+      
+                  <div
+                    ng-repeat="historyObject in homeCtrl.histories| startFrom:(homeCtrl.currentPage - 1) * homeCtrl.pageSize | limitTo:homeCtrl.pageSize">
+      
+                    <div class="time-header info" ng-if="historyObject.flag == 'older'">Older</div>
+                    <div class="time-header error" ng-if="historyObject.flag == 'lastweek'">Last week</div>
+                    <div class="time-header error" ng-if="historyObject.flag == 'thisweek'">This week</div>
+                    <div class="time-header completed" ng-if="historyObject.flag == 'yesterday'">Yesterday</div>
+                    <div class="time-header info" ng-if="historyObject.flag == 'today'">Today</div>
+      
+                    <div class="right">
+                      <div class="r-arrow"></div>
+                      <div class="about-task">
+                        <div class="header">{{historyObject.project.name}}
+                          <small class="muted">{{historyObject.timestamp|
+                            date:'medium'}}
+                          </small>
+                        </div>
+                        <p class="no-margin">
+                          {{historyObject.user.fname}} {{historyObject.activity}}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <p class="no-margin">
-                    {{historyObject.user.fname}} {{historyObject.activity}}
-                  </p>
+      
+                  <pagination ng-show="homeCtrl.totalPages > 1"
+                              total-items="homeCtrl.totalItems"
+                              ng-model="homeCtrl.currentPage"
+                              max-size="homeCtrl.pageSize"
+                              class="pagination-sm"
+                              boundary-links="true"
+                              rotate="false"
+                              style="margin-left: 170px"
+                              num-pages="homeCtrl.totalPages">
+                  </pagination>
+      
+      
                 </div>
               </div>
-            </div>
-
-            <pagination ng-show="homeCtrl.totalPages > 1"
-                        total-items="homeCtrl.totalItems"
-                        ng-model="homeCtrl.currentPage"
-                        max-size="homeCtrl.pageSize"
-                        class="pagination-sm"
-                        boundary-links="true"
-                        rotate="false"
-                        style="margin-left: 170px"
-                        num-pages="homeCtrl.totalPages">
-            </pagination>
-
-
-          </div>
-        </div>
-      </div>
+            </div>-->
     </div>
     <div class="col-sm-4 col-md-4 col-lg-4 sidebar" style="min-width: 390px; max-width: 390px">
 
@@ -96,12 +100,12 @@
         </span>
       </div>
       <div ng-repeat="project in homeCtrl.projects| filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects - 1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
-          <a
-           ng-class="{disabled: project.project.archived}"
-           href="#/project/{{project.project.id}}"
-           class="list-group-item"
-           context-menu
-           data-target="menu-{{$index}}">
+        <a
+          ng-class="{disabled: project.project.archived}"
+          href="#/project/{{project.project.id}}"
+          class="list-group-item"
+          context-menu
+          data-target="menu-{{$index}}">
           <div ng-if="project.teamRole == 'Data scientist'">
             <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"></i>
           </div>

@@ -512,6 +512,34 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              enterName: function (size, title, newName) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/enterNameModal.html',
+                  controller: 'EnterNameCtrl as enterNameCtrl',
+                  size: size,
+                  backdrop: 'static',
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    title: function () {
+                      return title;
+                    },
+                    newName: function () {
+                      return newName;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },              
               importTemplate: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/importTemplate.html',

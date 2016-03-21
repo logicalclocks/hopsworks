@@ -46,6 +46,7 @@ public abstract class YarnJob extends HopsJob {
    * @param user
    * @param services
    * @param hadoopDir
+   * @param nameNodeIpPort
    * @throws IllegalArgumentException If the JobDescription does not contain a
    * YarnJobConfiguration object.
    */

@@ -1,52 +1,43 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.ua;
  
 public enum PeopleAccountStatus {
 
+// Status of new Mobile users requests
+// Status of new Mobile users requests
+  NEW_MOBILE_ACCOUNT(1),
+
   // Status of new Yubikey users requests
-// Status of new Yubikey users requests
-// Status of new Yubikey users requests
-// Status of new Yubikey users requests
-  YUBIKEY_ACCOUNT_INACTIVE(1),
+  NEW_YUBIKEY_ACCOUNT(2),
 
-  // Status of new Mobile users requests
-  MOBILE_ACCOUNT_INACTIVE(2),
-
-  // Upon successful reset of passwords status of blocked will be changed to pending 
-  // User will be able to reset the remporary password using the status
-  // When user changed the password, pending state changes to active
-  ACCOUNT_PENDING(3),
+  // For new account requestes where users should validate their account request
+  VERIFIED_ACCOUNT(3),
 
   // When user is approved to use the platform
-  ACCOUNT_ACTIVATED(4),
-
-  // Blocked users can not user the resources. This can be due to suspicious behaviour of users. 
-  // For example. multiple false logings
-  ACCOUNT_BLOCKED(5),
-
-  // For scenrios where mobile device is compromised/lost
-  MOBILE_LOST(6),
-
-  // For scenarios where Yubikey device is compromised/lost
-  YUBIKEY_LOST(7),
+  ACTIVATED_ACCOUNT(4),
 
   // Users that are no longer granted to access the platform.
   // Users with this state, can not login, change password even as guest users
-  ACCOUNT_DEACTIVATED(8),
+  DEACTIVATED_ACCOUNT(5),
 
-  // For new account requestes where users should validate their account request
-  ACCOUNT_VERIFICATION(9),
+  // Blocked users can not user the resources. This can be due to suspicious behaviour of users. 
+  // For example. multiple false logings
+  BLOCKED_ACCOUNT(6),
+  
+  // For scenrios where mobile device is compromised/lost
+  LOST_MOBILE(7),
 
-  // To mark an account as spam
-  SPAM_ACCOUNT(10),
+  // For scenarios where Yubikey device is compromised/lost
+  LOST_YUBIKEY(8),
 
-  YUBIKEY_USER(11),
+  // Mark account as SPAM
 
-  MOBILE_USER(12);
+  SPAM_ACCOUNT(9),
+  
+  // For mobile account types classification
+  M_ACCOUNT_TYPE(10),
+
+  // For Yubikey account types classification
+  Y_ACCOUNT_TYPE(11);
 
   private final int value;
 
