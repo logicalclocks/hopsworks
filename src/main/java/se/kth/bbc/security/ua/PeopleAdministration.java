@@ -416,6 +416,9 @@ public class PeopleAdministration implements Serializable {
 
        userTransaction.begin();
 
+    if (!"#".equals(sgroup) && (!sgroup.isEmpty() || sgroup != null)) {
+       userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
+
         userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
         userManager.registerGroup(user1, BBCGroup.BBC_USER.getValue());
         
@@ -426,11 +429,18 @@ public class PeopleAdministration implements Serializable {
         auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
                 RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_USER.name(),
                 user1);
-          
+     } else {
+          auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+              PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
+              RolesAuditActions.FAILED.name(), "Role could not be granted.", user1);
+        MessagesController.addSecurityErrorMessage("Role could not be granted.");
+        return;
+    }
+      
       userManager.updateStatus(user1, PeopleAccountStatus.ACTIVATED_ACCOUNT.
               getValue());
       userTransaction.commit();
-
+    
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
               PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
               UserAuditActions.SUCCESS.name(), "", user1);
