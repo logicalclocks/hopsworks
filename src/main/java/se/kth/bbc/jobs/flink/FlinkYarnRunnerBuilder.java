@@ -277,8 +277,8 @@ public class FlinkYarnRunnerBuilder {
      * @return 
      * @throws java.io.IOException 
      */
-    protected YarnRunner getYarnRunner(String project, String hadoopDir, 
-            final String flinkUser, final String flinkDir, 
+    protected YarnRunner getYarnRunner(String project, final String flinkUser,
+            String hadoopDir, final String flinkDir, 
             final String nameNodeIpPort) throws IOException {
         isReadyForDeployment();
 
