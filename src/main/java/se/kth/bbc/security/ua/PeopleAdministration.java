@@ -414,7 +414,7 @@ public class PeopleAdministration implements Serializable {
     }
     try {
 
-      userTransaction.begin();
+       userTransaction.begin();
 
         userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
         userManager.registerGroup(user1, BBCGroup.BBC_USER.getValue());
@@ -427,7 +427,6 @@ public class PeopleAdministration implements Serializable {
                 RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_USER.name(),
                 user1);
           
-
       userManager.updateStatus(user1, PeopleAccountStatus.ACTIVATED_ACCOUNT.
               getValue());
       userTransaction.commit();
@@ -467,7 +466,7 @@ public class PeopleAdministration implements Serializable {
   }
 
   public List<Users> getSpamUsers() {
-    return spamUsers = userManager.findAllByStatus(PeopleAccountStatus.SPAM_ACCOUNT.getValue());
+    return spamUsers = userManager.findSPAMAccounts();
   }
 
   public void setSpamUsers(List<Users> spamUsers) {

@@ -187,23 +187,21 @@ public class UserManager {
   
     public List<Users> findMobileRequests() {
     
-    TypedQuery<Users> existing  = em.createQuery(
-            "SELECT p FROM Users p WHERE (p.status ="
-            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
-            + " OR p.status = " + PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
-                    + " ) AND p.mode = " + PeopleAccountStatus.M_ACCOUNT_TYPE.getValue(), Users.class);
-    return existing.getResultList();
+    TypedQuery<Users> query  = em.createQuery(
+            "SELECT p FROM Users p WHERE (p.status ="+ 
+                    PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.M_ACCOUNT_TYPE.getValue() + " )", Users.class);
+    return query.getResultList();
   }
     
   
   public  List<Users>  findYubikeyRequests() {
-    TypedQuery<Users> existing = em.createQuery(
+    TypedQuery<Users> query = em.createQuery(
             "SELECT p FROM Users p WHERE (p.status = "
-            + PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
-            + " OR p.status = " + PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
-                    + " ) AND p.mode = " + PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue(), Users.class);
+            + PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue() +" )", Users.class);
 
-    return existing.getResultList();
+    return query.getResultList();
   }
 
   public Yubikey findYubikey(int uid) {
@@ -221,7 +219,7 @@ public class UserManager {
    */
   public List<Users> findAllUsers() {
     List<Users> query = em.createQuery(
-            "SELECT p FROM Users p WHERE p.status!='" + PeopleAccountStatus.SPAM_ACCOUNT.getValue() + "'")
+            "SELECT p FROM Users p WHERE p.status!=" + PeopleAccountStatus.SPAM_ACCOUNT.getValue(), Users.class)
             .getResultList();
 
     return query;
@@ -232,6 +230,23 @@ public class UserManager {
             createNamedQuery("Users.findByStatus", Users.class);
     query.setParameter("status", status);
     return query.getResultList();
+  }
+
+  
+  /**
+   * Get a list of accounts that are not validated or marked as spam.
+   * @return 
+   */
+  public List<Users> findSPAMAccounts() {
+     TypedQuery<Users> query = em.createQuery(
+            "SELECT p FROM Users p WHERE ( p.status = "
+            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
+            + " OR p.status = " + PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
+                    + " OR p.status = " + PeopleAccountStatus.SPAM_ACCOUNT.getValue() + " )", Users.class);
+             
+
+    return query.getResultList();
+      
   }
 
   
