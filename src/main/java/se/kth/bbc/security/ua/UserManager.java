@@ -147,14 +147,6 @@ public class UserManager {
     return people;
   }
 
-  public boolean registerYubikey(Users uid) {
-    Yubikey yk = new Yubikey();
-    yk.setUid(uid);
-    yk.setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue());
-    em.persist(yk);
-    return true;
-  }
-
   /**
    * Find a user through email.
    *
@@ -192,13 +184,24 @@ public class UserManager {
     return (getUserByEmail(username) != null);
   }
 
-  public boolean findYubikeyUsersByStatus(int status) {
-    List existing = em.createQuery(
-            "SELECT p FROM hopsworks.users p WHERE p.status ='"
-            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
-            + "' AND p.mode = " + status)
-            .getResultList();
-    return (existing.size() > 0);
+  
+    public List<Users> findMobileRequests() {
+    
+    TypedQuery<Users> query  = em.createQuery(
+            "SELECT p FROM Users p WHERE (p.status ="+ 
+                    PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.M_ACCOUNT_TYPE.getValue() + " )", Users.class);
+    return query.getResultList();
+  }
+    
+  
+  public  List<Users>  findYubikeyRequests() {
+    TypedQuery<Users> query = em.createQuery(
+            "SELECT p FROM Users p WHERE (p.status = "
+            + PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue() +" )", Users.class);
+
+    return query.getResultList();
   }
 
   public Yubikey findYubikey(int uid) {
@@ -209,16 +212,14 @@ public class UserManager {
 
   }
 
+  
+  /**
+   * Get all users except spam accounts.
+   * @return 
+   */
   public List<Users> findAllUsers() {
     List<Users> query = em.createQuery(
-            "SELECT p FROM Users p WHERE p.status !='"
-            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
-            + "' AND p.status!='"
-            + PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
-            + "' AND p.status!='" + PeopleAccountStatus.SPAM_ACCOUNT.getValue()
-            + "' AND p.status!='" + PeopleAccountStatus.VERIFIED_ACCOUNT.
-            getValue()
-            + "'")
+            "SELECT p FROM Users p WHERE p.status!=" + PeopleAccountStatus.SPAM_ACCOUNT.getValue(), Users.class)
             .getResultList();
 
     return query;
@@ -231,17 +232,24 @@ public class UserManager {
     return query.getResultList();
   }
 
-  public List<Users> findAllSPAMAccounts() {
-    List<Users> query = em.createQuery(
-            "SELECT p FROM Users p WHERE (p.status ='"
-            + PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
-            + "' OR p.status ='" + PeopleAccountStatus.SPAM_ACCOUNT.
-            getValue()
-            + "')")
-            .getResultList();
+  
+  /**
+   * Get a list of accounts that are not validated or marked as spam.
+   * @return 
+   */
+  public List<Users> findSPAMAccounts() {
+     TypedQuery<Users> query = em.createQuery(
+            "SELECT p FROM Users p WHERE ( p.status = "
+            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
+            + " OR p.status = " + PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
+                    + " OR p.status = " + PeopleAccountStatus.SPAM_ACCOUNT.getValue() + " )", Users.class);
+             
 
-    return query;
+    return query.getResultList();
+      
   }
+
+  
 
   public Users findByEmail(String email) {
     TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
@@ -412,5 +420,6 @@ public class UserManager {
     em.merge(id);
     return true;
   }
+
   
 }

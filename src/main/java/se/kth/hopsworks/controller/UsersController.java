@@ -85,6 +85,7 @@ public class UsersController {
       String otpSecret = SecurityUtils.calculateSecretKey();
       String activationKey = SecurityUtils.getRandomPassword(64);
 
+      // 
       String uname = generateUsername(newUser.getEmail());
 
       List<BbcGroup> groups = new ArrayList<>();
@@ -98,7 +99,7 @@ public class UsersController {
       user.setFname(newUser.getFirstName());
       user.setLname(newUser.getLastName());
       user.setMobile(newUser.getTelephoneNum());
-      user.setStatus(PeopleAccountStatus.VERIFIED_ACCOUNT.getValue());
+      user.setStatus(PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
       user.setSecret(otpSecret);
       user.setOrcid("-");
       user.setMobile(newUser.getTelephoneNum());
@@ -210,7 +211,7 @@ public class UsersController {
       user.setFname(newUser.getFirstName());
       user.setLname(newUser.getLastName());
       user.setMobile(newUser.getTelephoneNum());
-      user.setStatus(PeopleAccountStatus.VERIFIED_ACCOUNT.getValue());
+      user.setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue());
       user.setSecret(otpSecret);
       user.setOrcid("-");
       user.setMobile(newUser.getTelephoneNum());

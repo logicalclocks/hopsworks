@@ -146,11 +146,15 @@ public class RoleEnforcementPoint implements Serializable {
   
   public String openRequests() {
     this.tabIndex = 1;
-    if (!userManager.findAllByStatus(
-            PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()).isEmpty()) {
+    if (!userManager.findMobileRequests().isEmpty()) {
       return "mobUsers";
+    }else if (!userManager.findYubikeyRequests().isEmpty()) {
+      return "yubikeyUsers";
+    } else if (!userManager.findSPAMAccounts().isEmpty()){
+      return "spamUsers";
     }
-    return "yubikeyUsers";
+   
+    return "mobUsers";
   }
 
   
