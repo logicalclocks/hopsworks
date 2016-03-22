@@ -184,7 +184,7 @@ public class InterpreterRestApi {
     long endTime;
     while (zeppelinResource.isInterpreterRunning(setting, project)) {
       endTime = System.currentTimeMillis();
-      if (endTime - startTime > timeout) {
+      if (endTime - startTime > timeout*2) {
         break;
       }
     }
