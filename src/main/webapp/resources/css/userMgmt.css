@@ -121,7 +121,7 @@ and open the template in the editor.
 
 .ui-datatable .ui-column-filter {
 
-  width: 150px !important;
+  width: 100px !important;
 }
 
 .ui-datatable th, .ui-datatable tfoot td {
