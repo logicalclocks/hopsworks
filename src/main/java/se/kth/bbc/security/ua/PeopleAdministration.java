@@ -244,8 +244,8 @@ public class PeopleAdministration implements Serializable {
     }
 
     // remove the inactive users
-    status.remove(PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.name());
-    status.remove(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.name());
+    status.remove(PeopleAccountStatus.NEW_MOBILE_ACCOUNT.name());
+    status.remove(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.name());
     return status;
   }
 
@@ -309,14 +309,14 @@ public class PeopleAdministration implements Serializable {
       // update the user request table
       if (removeByEmail) {
 
-        if (user1.getStatus() == PeopleAccountStatus.ACCOUNT_VERIFICATION.
+        if (user1.getStatus() == PeopleAccountStatus.VERIFIED_ACCOUNT.
                 getValue()) {
           spamUsers.remove(user1);
 
-        } else if (user1.getMode() == PeopleAccountStatus.YUBIKEY_USER.
+        } else if (user1.getMode() == PeopleAccountStatus.Y_ACCOUNT_TYPE.
                 getValue()) {
           yRequests.remove(user1);
-        } else if (user1.getMode() == PeopleAccountStatus.MOBILE_USER.
+        } else if (user1.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.
                 getValue()) {
           requests.remove(user1);
         }
@@ -376,14 +376,13 @@ public class PeopleAdministration implements Serializable {
   }
 
   /**
-   * Get all open user requests.
+   * Get all open user requests (mobile or simple accounts).
    *
    * @return
    */
   public List<Users> getAllRequests() {
     if (requests == null) {
-      requests = userManager.findAllByStatus(
-              PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
+      requests = userManager.findMobileRequests();
     }
     return requests;
   }
@@ -395,8 +394,7 @@ public class PeopleAdministration implements Serializable {
    */
   public List<Users> getAllYubikeyRequests() {
     if (yRequests == null) {
-      yRequests = userManager.findAllByStatus(
-              PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+      yRequests = userManager.findYubikeyRequests();
     }
     return yRequests;
   }
@@ -416,11 +414,12 @@ public class PeopleAdministration implements Serializable {
     }
     try {
 
-      userTransaction.begin();
+       userTransaction.begin();
 
-//      if (!"#".equals(sgroup) && (!sgroup.isEmpty() || sgroup != null)) {
-//        userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
-        userManager.registerGroup(user1, BBCGroup.BBC_RESEARCHER.getValue());
+    if (!"#".equals(sgroup) && (!sgroup.isEmpty() || sgroup != null)) {
+       userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
+
+        userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
         userManager.registerGroup(user1, BBCGroup.BBC_USER.getValue());
         
         auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
@@ -428,23 +427,22 @@ public class PeopleAdministration implements Serializable {
                 user1);
         
         auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
-                RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(),
+                RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_USER.name(),
                 user1);
-          
-//      } else {
-//          auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-//              PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
-//              RolesAuditActions.FAILED.name(), "Role could not be granted.", user1);
-//        MessagesController.addSecurityErrorMessage("Role could not be granted.");
-//        return;
-//      }
-
-      userManager.updateStatus(user1, PeopleAccountStatus.ACCOUNT_ACTIVATED.
+     } else {
+          auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+              PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
+              RolesAuditActions.FAILED.name(), "Role could not be granted.", user1);
+        MessagesController.addSecurityErrorMessage("Role could not be granted.");
+        return;
+    }
+      
+      userManager.updateStatus(user1, PeopleAccountStatus.ACTIVATED_ACCOUNT.
               getValue());
       userTransaction.commit();
-
+    
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
+              PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
               UserAuditActions.SUCCESS.name(), "", user1);
       emailBean.sendEmail(user1.getEmail(),
               UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
@@ -456,7 +454,7 @@ public class PeopleAdministration implements Serializable {
             HeuristicRollbackException | SecurityException |
             IllegalStateException e) {
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
+              PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
               UserAuditActions.FAILED.name(), "", user1);
       return;
     }
@@ -478,8 +476,7 @@ public class PeopleAdministration implements Serializable {
   }
 
   public List<Users> getSpamUsers() {
-
-    return spamUsers = userManager.findAllSPAMAccounts();
+    return spamUsers = userManager.findSPAMAccounts();
   }
 
   public void setSpamUsers(List<Users> spamUsers) {

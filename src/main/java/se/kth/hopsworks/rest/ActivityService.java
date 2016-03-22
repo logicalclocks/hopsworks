@@ -51,8 +51,9 @@ public class ActivityService {
             = new GenericEntity<List<Activity>>(activityDetails) {
             };
 
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+    Response r = noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projectActivities).build();
+    return r;
   }
 
   @GET

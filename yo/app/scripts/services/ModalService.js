@@ -19,6 +19,25 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              uberPrice: function (size, title, msg, price) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/uberModal.html',
+                  controller: 'UberCtrl as uberCtrl',
+                  size: size,
+                  resolve: {
+                    title: function () {
+                      return title;
+                    },
+                    msg: function () {
+                      return msg;
+                    },
+                    price: function () {
+                      return msg;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
               alert: function (size, title, msg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/alertModal.html',

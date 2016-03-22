@@ -141,6 +141,8 @@ public class ResponseMessages {
           = "The shared dataset has been removed from this project.";
   public final static String DATASET_NOT_FOUND
           = "DataSet not found.";
+  public final static String DATASET_ALREADY_PUBLIC
+          = "DataSet is already public.";
 
   //Metadata
   public final static String TEMPLATE_INODEID_EMPTY

@@ -85,6 +85,7 @@ public class UsersController {
       String otpSecret = SecurityUtils.calculateSecretKey();
       String activationKey = SecurityUtils.getRandomPassword(64);
 
+      // 
       String uname = generateUsername(newUser.getEmail());
 
       List<BbcGroup> groups = new ArrayList<>();
@@ -98,12 +99,12 @@ public class UsersController {
       user.setFname(newUser.getFirstName());
       user.setLname(newUser.getLastName());
       user.setMobile(newUser.getTelephoneNum());
-      user.setStatus(PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue());
+      user.setStatus(PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
       user.setSecret(otpSecret);
       user.setOrcid("-");
       user.setMobile(newUser.getTelephoneNum());
       user.setTitle("-");
-      user.setMode(PeopleAccountStatus.MOBILE_USER.getValue());
+      user.setMode(PeopleAccountStatus.M_ACCOUNT_TYPE.getValue());
       user.setValidationKey(activationKey);
       user.setActivated(new Timestamp(new Date().getTime()));
       user.setPasswordChanged(new Timestamp(new Date().getTime()));
@@ -210,12 +211,12 @@ public class UsersController {
       user.setFname(newUser.getFirstName());
       user.setLname(newUser.getLastName());
       user.setMobile(newUser.getTelephoneNum());
-      user.setStatus(PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue());
+      user.setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue());
       user.setSecret(otpSecret);
       user.setOrcid("-");
       user.setMobile(newUser.getTelephoneNum());
       user.setTitle("-");
-      user.setMode(PeopleAccountStatus.YUBIKEY_USER.getValue());
+      user.setMode(PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue());
       user.setValidationKey(activationKey);
       user.setActivated(new Timestamp(new Date().getTime()));
       user.setPasswordChanged(new Timestamp(new Date().getTime()));
@@ -251,7 +252,7 @@ public class UsersController {
 
       Yubikey yk = new Yubikey();
       yk.setUid(user);
-      yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+      yk.setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue());
       user.setYubikey(yk);
       user.setOrganization(org);
 

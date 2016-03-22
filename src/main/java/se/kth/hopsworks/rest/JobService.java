@@ -336,7 +336,7 @@ public class JobService {
             logger.log(Level.INFO, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
             JsonResponse json = new JsonResponse();
             json.setSuccessMessage("Deleted job "+job.getName()+" successfully");
-            activityFacade.persistActivity(ActivityFacade.DELETED_JOB, project, sc.getUserPrincipal().getName());
+            activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.getName(), project, sc.getUserPrincipal().getName());
             return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
         }catch(DatabaseException ex){
             logger.log(Level.WARNING, "Job cannot be deleted  job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
@@ -395,7 +395,7 @@ public class JobService {
                 if(status){
                     JsonResponse json = new JsonResponse();
                     json.setSuccessMessage("Scheduled job "+job.getName()+" successfully");
-                    activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB, project, sc.getUserPrincipal().getName());
+                    activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + job.getName(), project, sc.getUserPrincipal().getName());
                     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
                 }else{
                     logger.log(Level.WARNING, "Schedule is not created in the scheduler for the jobid "+jobId);

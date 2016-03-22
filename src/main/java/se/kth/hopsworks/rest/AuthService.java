@@ -87,26 +87,37 @@ public class AuthService {
     req.getServletContext().log("SecurityContext in user role: " + sc.isUserInRole("BBC_USER"));
     req.getServletContext().log("SecurityContext in sysadmin role: " + sc.isUserInRole("SYS_ADMIN"));
     JsonResponse json = new JsonResponse();
+    if (email == null || email.isEmpty()) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+              "Email address field cannot be empty");
+    }
     Users user = userBean.findByEmail(email);
+    if (user == null) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+              "Unrecognized email address. Have you registered yet?");
+    }
     String newPassword = null;
     if (user == null) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                 ResponseMessages.AUTHENTICATION_FAILURE);
     }
     // Add padding if custom realm is disabled
-    if (otp == null || otp.isEmpty() && user.getMode() == PeopleAccountStatus.MOBILE_USER.getValue()) {
+    if (otp == null || otp.isEmpty() && user.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
       otp = AuthenticationConstants.MOBILE_OTP_PADDING;
-    } 
-
-    if (otp.length() == AuthenticationConstants.MOBILE_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.MOBILE_USER.getValue()) {
-      newPassword = password + otp;
-    } else if (otp.length() == AuthenticationConstants.YUBIKEY_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
-        newPassword = password + otp + AuthenticationConstants.YUBIKEY_USER_MARKER;
     }
-    
+
+    if (otp.length() == AuthenticationConstants.MOBILE_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
+      newPassword = password + otp;
+    } else if (otp.length() == AuthenticationConstants.YUBIKEY_OTP_PADDING.length() && user.getMode() == PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue()) {
+      newPassword = password + otp + AuthenticationConstants.YUBIKEY_USER_MARKER;
+    } else {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+              "Could not recognize the account type. Report a bug.");
+    }
+
     //only login if not already logged in...
     if (sc.getUserPrincipal() == null) {
-      if (user != null && statusValidator.checkStatus(user.getStatus())) {
+      if (statusValidator.checkStatus(user.getStatus())) {
         try {
 
           req.getServletContext().log("going to login. User status: " + user.
@@ -115,7 +126,7 @@ public class AuthService {
           req.getServletContext().log("3 step: " + email);
           userController.resetFalseLogin(user);
           am.registerLoginInfo(user, UserAuditActions.LOGIN.name(),
-                  UserAuditActions.SUCCESS.name(), req);         
+                  UserAuditActions.SUCCESS.name(), req);
           //if the logedin user has no supported role logout
           if (!sc.isUserInRole(BBCGroup.BBC_USER.name()) && !sc.isUserInRole(BBCGroup.SYS_ADMIN.name())) {
             am.registerLoginInfo(user, UserAuditActions.UNAUTHORIZED.getValue(),

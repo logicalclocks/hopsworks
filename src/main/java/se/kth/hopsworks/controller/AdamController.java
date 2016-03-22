@@ -79,7 +79,7 @@ public class AdamController {
           "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.getProject(),
         user.asUser());
     return jh;
   }
