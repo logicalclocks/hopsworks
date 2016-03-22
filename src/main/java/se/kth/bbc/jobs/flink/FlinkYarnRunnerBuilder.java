@@ -314,21 +314,21 @@ public class FlinkYarnRunnerBuilder {
 		// ------------------ Check if the YARN Cluster has the requested resources --------------
 		// the yarnMinAllocationMB specifies the smallest possible container allocation size.
         // all allocations below this value are automatically set to this value.
-        final int yarnMinAllocationMB = conf.getInt("yarn.scheduler.minimum-allocation-mb", 0);
-        if (jobManagerMemoryMb < yarnMinAllocationMB || taskManagerMemoryMb < yarnMinAllocationMB) {
-            LOG.warn("The JobManager or TaskManager memory is below the smallest possible YARN Container size. "
-                    + "The value of 'yarn.scheduler.minimum-allocation-mb' is '" + yarnMinAllocationMB + "'. Please increase the memory size."
-                    + "YARN will allocate the smaller containers but the scheduler will account for the minimum-allocation-mb, maybe not all instances "
-                    + "you requested will start.");
-        }
-
-        // set the memory to minAllocationMB to do the next checks correctly
-        if (jobManagerMemoryMb < yarnMinAllocationMB) {
-            jobManagerMemoryMb = yarnMinAllocationMB;
-        }
-        if (taskManagerMemoryMb < yarnMinAllocationMB) {
-            taskManagerMemoryMb = yarnMinAllocationMB;
-        }
+//        final int yarnMinAllocationMB = conf.getInt("yarn.scheduler.minimum-allocation-mb", 0);
+//        if (jobManagerMemoryMb < yarnMinAllocationMB || taskManagerMemoryMb < yarnMinAllocationMB) {
+//            LOG.warn("The JobManager or TaskManager memory is below the smallest possible YARN Container size. "
+//                    + "The value of 'yarn.scheduler.minimum-allocation-mb' is '" + yarnMinAllocationMB + "'. Please increase the memory size."
+//                    + "YARN will allocate the smaller containers but the scheduler will account for the minimum-allocation-mb, maybe not all instances "
+//                    + "you requested will start.");
+//        }
+//
+//        // set the memory to minAllocationMB to do the next checks correctly
+//        if (jobManagerMemoryMb < yarnMinAllocationMB) {
+//            jobManagerMemoryMb = yarnMinAllocationMB;
+//        }
+//        if (taskManagerMemoryMb < yarnMinAllocationMB) {
+//            taskManagerMemoryMb = yarnMinAllocationMB;
+//        }
 
         String logbackFile = configurationDirectory + File.separator + FlinkYarnSessionCli.CONFIG_FILE_LOGBACK_NAME;
         boolean hasLogback = new File(logbackFile).exists();
