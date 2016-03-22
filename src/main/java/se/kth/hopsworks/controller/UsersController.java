@@ -446,6 +446,13 @@ public class UsersController {
     }
   }
 
+   public void setUserIsOnline(Users user , int status) {
+    if (user != null) {
+      user.setIsonline(status);
+      userBean.update(user);
+    }
+  }
+    
   public SshKeyDTO addSshKey(int id, String name, String sshKey) {
     SshKeys key = new SshKeys();
     key.setSshKeysPK(new SshKeysPK(id, name));
