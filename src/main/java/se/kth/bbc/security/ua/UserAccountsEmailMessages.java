@@ -7,28 +7,23 @@ public class UserAccountsEmailMessages {
   /*
    * Subject of account request
    */
-  public final static String ACCOUNT_REQUEST_SUBJECT = "account verification email";
+  public final static String ACCOUNT_REQUEST_SUBJECT = "Your Hops account needs verification";
 
   /*
-   * Subject of account confirmation
+   * Subject of account activation email
    */
   public final static String ACCOUNT_CONFIRMATION_SUBJECT
-          = "Account Confirmation";
-
-  /*
-   * Subject of password reset
-   */
-  public final static String ACCOUNT_PASSWORD_SUBJECT = "Password Reset";
+          = "Welcome to Hops!";
 
   /*
    * Subject of device lost
    */
-  public final static String DEVICE_LOST_SUBJECT = "Login Issue";
+  public final static String DEVICE_LOST_SUBJECT = "Hops Login issue";
 
   /*
    * Subject of blocked acouunt
    */
-  public final static String ACCOUNT_BLOCKED__SUBJECT = "Account Locked";
+  public final static String ACCOUNT_BLOCKED__SUBJECT = "Your Hops account is bloked";
 
   /*
    * Subject of blocked acouunt
@@ -39,17 +34,17 @@ public class UserAccountsEmailMessages {
   /*
    * Subject of profile update
    */
-  public final static String ACCOUNT_PROFILE_UPDATE = "Profile Update";
+  public final static String ACCOUNT_PROFILE_UPDATE = "Your Hops Profile updated";
 
   /*
    * Subject of password rest
    */
-  public final static String ACCOUNT_PASSWORD_RESET = "Password Reset";
+  public final static String ACCOUNT_PASSWORD_RESET = "Hops Forgotten Password reset";
 
   /*
    * Subject of rejected accounts
    */
-  public final static String ACCOUNT_REJECT = "Account Rejected";
+  public final static String ACCOUNT_REJECT = "Your Hops Account Request rejected";
 
   /*
    * Default accpount acitvation period
@@ -61,7 +56,7 @@ public class UserAccountsEmailMessages {
   /*
    * Account deactivation
    */
-  public final static String ACCOUNT_DEACTIVATED = "Account Deactivated";
+  public final static String ACCOUNT_DEACTIVATED = "Your Hops Account expired";
 
   /**
    * Build an email message for Yubikey users upon registration.
