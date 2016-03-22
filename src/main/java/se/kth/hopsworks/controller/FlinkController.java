@@ -88,8 +88,11 @@ public class FlinkController {
             flinkjob = proxyUser.doAs(new PrivilegedExceptionAction<FlinkJob>() {
                 @Override
                 public FlinkJob run() throws Exception {
-                    return new FlinkJob(job, submitter, user, settings.
-                            getHadoopDir(), settings.getFlinkDir(), hdfsLeDescriptorsFacade.getSingleEndpoint(),
+                    return new FlinkJob(job, submitter, user,
+                            settings.getHadoopDir(), settings.getFlinkDir(), 
+                            settings.getFlinkConfDir(), 
+                            settings.getFlinkConfFile(),
+                            hdfsLeDescriptorsFacade.getSingleEndpoint(),
                             settings.getFlinkUser());
                 }
             });
@@ -127,8 +130,11 @@ public class FlinkController {
             throw new IllegalStateException("Flink is not installed on this system.");
         }
 
-        FlinkJob flinkJob = new FlinkJob(job, submitter, user, settings.getHadoopDir(), settings.getFlinkDir(),
-                hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getFlinkUser());
+        FlinkJob flinkJob = new FlinkJob(job, submitter, user, 
+                settings.getHadoopDir(), settings.getFlinkDir(),
+                settings.getFlinkConfDir(), settings.getFlinkConfFile(),
+                hdfsLeDescriptorsFacade.getSingleEndpoint(), 
+                settings.getFlinkUser());
 
         submitter.stopExecution(flinkJob, appid);
 

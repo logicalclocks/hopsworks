@@ -37,7 +37,8 @@ public class FlinkJob extends YarnJob {
      */
     public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
             Users user, final String hadoopDir,
-            final String flinkDir, final String nameNodeIpPort, 
+            final String flinkDir, final String flinkConfDir, 
+            final String flinkConfFile,final String nameNodeIpPort, 
             String flinkUser) {
         super(job, services, user, hadoopDir, nameNodeIpPort);
         if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
@@ -46,6 +47,8 @@ public class FlinkJob extends YarnJob {
                     + job.getJobConfig().getClass());
         }
         this.jobconfig = (FlinkJobConfiguration) job.getJobConfig();
+        this.jobconfig.setFlinkConfDir(flinkConfDir);
+        this.jobconfig.setFlinkConfFile(flinkConfFile);
         this.flinkDir = flinkDir;
         this.flinkUser = flinkUser;
     }
