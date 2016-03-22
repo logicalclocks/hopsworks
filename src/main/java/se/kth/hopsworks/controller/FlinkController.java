@@ -206,7 +206,10 @@ public class FlinkController {
 	FlinkJobConfiguration config = new FlinkJobConfiguration();
 	if (atts.containsKey(Attributes.Name.MAIN_CLASS)) {
 	  config.setMainClass(atts.getValue(Attributes.Name.MAIN_CLASS));
-	}
+	} else {
+            //set default main_class
+            config.setMainClass("org.apache.flink.yarn.ApplicationMaster");
+        }
         //Set Flink config params
         config.setFlinkConfDir(settings.getFlinkConfDir());
         config.setFlinkConfFile(settings.getFlinkConfFile());
