@@ -394,6 +394,7 @@ public class FlinkYarnRunnerBuilder {
         
         //HOPS YarnRunner 
         builder.appName(name);
+        //TODO: Confirm this is the correct AM class
         builder.amMainClass("org.apache.flink.yarn.ApplicationMaster");
         //Set up command
         StringBuilder amargs = new StringBuilder("-m yarn-cluster");
