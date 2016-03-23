@@ -394,10 +394,11 @@ public class FlinkYarnRunnerBuilder {
         
         //HOPS YarnRunner 
         builder.appName(name);
-        builder.amMainClass(mainClass);
+        builder.amMainClass("org.apache.flink.yarn.ApplicationMaster");
         //Set up command
         StringBuilder amargs = new StringBuilder("-m yarn-cluster");
         amargs.append(" -yn ").append(taskManagerCount);
+        //TODO: Pass arguments according to flink 
         for (String s : jobArgs) {
           amargs.append(" --arg ").append(s);
         }

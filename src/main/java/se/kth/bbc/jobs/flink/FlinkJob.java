@@ -60,7 +60,7 @@ public class FlinkJob extends YarnJob {
             jobconfig.setAppName("Untitled Flink Job");
         }
 
-        FlinkYarnRunnerBuilder flinkBuilder = new FlinkYarnRunnerBuilder(hadoopDir, flinkDir);
+        FlinkYarnRunnerBuilder flinkBuilder = new FlinkYarnRunnerBuilder(jobconfig.getJarPath(), jobconfig.getMainClass());
         //https://ci.apache.org/projects/flink/flink-docs-release-0.10/setup/yarn_setup.html
         /*If you do not want to keep the Flink YARN client running all the time, 
          its also possible to start a detached YARN session. The parameter for
