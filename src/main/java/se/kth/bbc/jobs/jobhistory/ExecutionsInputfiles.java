@@ -37,7 +37,7 @@ public class ExecutionsInputfiles implements Serializable {
           updatable
           = false)
   @ManyToOne(optional = false)
-  private Execution execution;
+  private int execution;
   
   @JoinColumn(name = "inode_pid",
           referencedColumnName = "parent_id",
@@ -45,7 +45,7 @@ public class ExecutionsInputfiles implements Serializable {
           updatable
           = false)
   @ManyToOne(optional = false)
-  private Inode inode_pid;
+  private int inode_pid;
   
   @JoinColumn(name = "inode_name",
           referencedColumnName = "name",
@@ -53,7 +53,7 @@ public class ExecutionsInputfiles implements Serializable {
           updatable
           = false)
   @ManyToOne(optional = false)
-  private Inode inode_name;
+  private String inode_name;
   
   public ExecutionsInputfiles() {
   }
@@ -62,7 +62,7 @@ public class ExecutionsInputfiles implements Serializable {
     this.executionsInputfilesPK = executionsInputfilesPK;
   }
 
-  public ExecutionsInputfiles(Execution executionId, Inode inodePid, Inode inodeName) {
+  public ExecutionsInputfiles(int executionId, int inodePid, String inodeName) {
     this.executionsInputfilesPK = new ExecutionsInputfilesPK(executionId, inodePid, inodeName);
   }
 
@@ -74,7 +74,7 @@ public class ExecutionsInputfiles implements Serializable {
     this.executionsInputfilesPK = executionsInputfilesPK;
   }
 
-  public Execution getExecution() {
+  public int getExecution() {
     return execution;
   }
   

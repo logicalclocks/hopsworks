@@ -19,55 +19,55 @@ public class ExecutionsInputfilesPK implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "execution_id")
-  private Execution executionId;
+  private int executionId;
   @Basic(optional = false)
   @NotNull
   @Column(name = "inode_pid")
-  private Inode inodePid;
+  private int inodePid;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1, max = 255)
   @Column(name = "inode_name")
-  private Inode inodeName;
+  private String inodeName;
 
   public ExecutionsInputfilesPK() {
   }
 
-  public ExecutionsInputfilesPK(Execution executionId, Inode inodePid, Inode inodeName) {
+  public ExecutionsInputfilesPK(int executionId, int inodePid, String inodeName) {
     this.executionId = executionId;
     this.inodePid = inodePid;
     this.inodeName = inodeName;
   }
 
-  public Execution getExecutionId() {
+  public int getExecutionId() {
     return executionId;
   }
 
-  public void setExecutionId(Execution executionId) {
+  public void setExecutionId(int executionId) {
     this.executionId = executionId;
   }
 
-  public Inode getInodePid() {
+  public int getInodePid() {
     return inodePid;
   }
 
-  public void setInodePid(Inode inodePid) {
+  public void setInodePid(int inodePid) {
     this.inodePid = inodePid;
   }
 
-  public Inode getInodeName() {
+  public String getInodeName() {
     return inodeName;
   }
 
-  public void setInodeName(Inode inodeName) {
+  public void setInodeName(String inodeName) {
     this.inodeName = inodeName;
   }
 
   @Override
   public int hashCode() {
     int hash = 0;
-    hash += (int) executionId.getId();
-    hash += (int) inodePid.getId();
+    hash += executionId;
+    hash += inodePid;
     hash += (inodeName != null ? inodeName.hashCode() : 0);
     return hash;
   }

@@ -6,20 +6,20 @@
 package se.kth.bbc.jobs.jobhistory;
 
 import java.util.List;
+import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.project.fb.Inode;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
-
+@Stateless
 public class ExecutionInputfilesFacade extends AbstractFacade<ExecutionsInputfiles>{
     
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
 
-    public ExecutionInputfilesFacade(Class<ExecutionsInputfiles> entityClass) {
-        super(entityClass);
+    public ExecutionInputfilesFacade() {
+        super(ExecutionsInputfiles.class);
     }
 
     @Override
@@ -27,7 +27,7 @@ public class ExecutionInputfilesFacade extends AbstractFacade<ExecutionsInputfil
         return em;
     }
     
-    public void create(Execution executionId, Inode inodeId, Inode inodeName){
+    public void create(int executionId, int inodeId, String inodeName){
         ExecutionsInputfiles file = new ExecutionsInputfiles(executionId, inodeId, inodeName);
         em.persist(file);
         em.flush();
