@@ -766,12 +766,10 @@ public class YarnRunner {
         throw new IllegalStateException("Failed to load configuration", e);
       }
 
-      /*//Client passed by Flink is already set up.
-      if(yarnClient == null){
-        //Set YarnClient
-        yarnClient = YarnClient.createYarnClient();
-        yarnClient.init(conf);
-      } */
+     
+      yarnClient = YarnClient.createYarnClient();
+      yarnClient.init(conf);
+     
       //Set main class
       if (amMainClass == null) {
         amMainClass = getMainClassNameFromJar();

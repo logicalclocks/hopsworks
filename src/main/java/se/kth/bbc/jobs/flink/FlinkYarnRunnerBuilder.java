@@ -394,7 +394,7 @@ public class FlinkYarnRunnerBuilder {
         
         //HOPS YarnRunner 
         builder.appName(name);
-
+        builder.amMainClass("org.apache.flink.yarn.ApplicationMaster");
         return builder.build(hadoopDir, flinkDir, nameNodeIpPort);
     }
     
