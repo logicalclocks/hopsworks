@@ -77,7 +77,8 @@ public class FlinkJob extends YarnJob {
         //TODO: Check if Path is correct
         flinkBuilder.setFlinkLoggingConfigurationPath(new Path(flinkDir + jobconfig.getFlinkConfDir() + jobconfig.getFlinkConfFile()));
         flinkBuilder.setLocalJarPath(new Path(flinkDir+"/flink.jar"));
-        
+        String[] jobArgs = jobconfig.getArgs().trim().split(" ");
+        flinkBuilder.addAllJobArgs(jobArgs);
         try {
             runner = flinkBuilder.
            getYarnRunner(jobDescription.getProject().getName(),

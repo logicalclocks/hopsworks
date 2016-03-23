@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,11 +63,10 @@ public class FlinkYarnRunnerBuilder {
     private static final int MIN_JM_MEMORY = 768; // the minimum memory should be higher than the min heap cutoff
     private static final int MIN_TM_MEMORY = 768;
 
-    private Configuration conf;
-//    private YarnClient yarnClient;
-//    private YarnClientApplication yarnApplication;
     //Jar paths for AM and app
      private final String appJarPath, mainClass;
+     //Optional parameters
+     private final List<String> jobArgs = new ArrayList<>();
     /**
      * Files (usually in a distributed file system) used for the YARN session of
      * Flink. Contains configuration files and jar files.
@@ -106,10 +106,10 @@ public class FlinkYarnRunnerBuilder {
         
     }
 
-    protected Class<?> getApplicationMasterClass() {
-		return ApplicationMaster.class;
+    public FlinkYarnRunnerBuilder addAllJobArgs(String[] jobArgs) {
+        this.jobArgs.addAll(Arrays.asList(jobArgs));
+        return this;
     }
-
     //@Override
     public void setJobManagerMemory(int memoryMb) {
         if (memoryMb < MIN_JM_MEMORY) {
@@ -394,7 +394,14 @@ public class FlinkYarnRunnerBuilder {
         
         //HOPS YarnRunner 
         builder.appName(name);
-        builder.amMainClass("org.apache.flink.yarn.ApplicationMaster");
+        builder.amMainClass(mainClass);
+        //Set up command
+        StringBuilder amargs = new StringBuilder("-m yarn-cluster");
+        amargs.append(" -yn ").append(taskManagerCount);
+        for (String s : jobArgs) {
+          amargs.append(" --arg ").append(s);
+        }
+        builder.amArgs(amargs.toString());
         return builder.build(hadoopDir, flinkDir, nameNodeIpPort);
     }
     
