@@ -113,8 +113,8 @@ public class PeopleAdministration implements Serializable {
 
   public String geteStatus() {
     this.eStatus
-            = PeopleAccountStatus.values()[this.editingUser.getStatus() - 1].
-            name();
+        = PeopleAccountStatus.values()[this.editingUser.getStatus() - 1].
+        name();
     return this.eStatus;
   }
 
@@ -153,7 +153,7 @@ public class PeopleAdministration implements Serializable {
 
   public String getChanged_Status(Users p) {
     return PeopleAccountStatus.values()[userManager.findByEmail(p.getEmail()).
-            getStatus() - 1].name();
+        getStatus() - 1].name();
   }
 
   public List<String> getActGroups() {
@@ -244,8 +244,8 @@ public class PeopleAdministration implements Serializable {
     }
 
     // remove the inactive users
-    status.remove(PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.name());
-    status.remove(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.name());
+    status.remove(PeopleAccountStatus.NEW_MOBILE_ACCOUNT.name());
+    status.remove(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.name());
     return status;
   }
 
@@ -296,7 +296,7 @@ public class PeopleAdministration implements Serializable {
 
     FacesContext context = FacesContext.getCurrentInstance();
     HttpServletRequest request = (HttpServletRequest) context.
-            getExternalContext().getRequest();
+        getExternalContext().getRequest();
 
     if (user1 == null) {
       MessagesController.addErrorMessage("Error", "No user found!");
@@ -309,30 +309,30 @@ public class PeopleAdministration implements Serializable {
       // update the user request table
       if (removeByEmail) {
 
-        if (user1.getStatus() == PeopleAccountStatus.ACCOUNT_VERIFICATION.
-                getValue()) {
+        if (user1.getStatus() == PeopleAccountStatus.VERIFIED_ACCOUNT.
+            getValue()) {
           spamUsers.remove(user1);
 
-        } else if (user1.getMode() == PeopleAccountStatus.YUBIKEY_USER.
-                getValue()) {
+        } else if (user1.getMode() == PeopleAccountStatus.Y_ACCOUNT_TYPE.
+            getValue()) {
           yRequests.remove(user1);
-        } else if (user1.getMode() == PeopleAccountStatus.MOBILE_USER.
-                getValue()) {
+        } else if (user1.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.
+            getValue()) {
           requests.remove(user1);
         }
       } else {
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              PeopleAccountStatus.SPAM_ACCOUNT.name(), UserAuditActions.FAILED.
-              name(), "Could not delete the user", user1);
+            PeopleAccountStatus.SPAM_ACCOUNT.name(), UserAuditActions.FAILED.
+            name(), "Could not delete the user", user1);
         MessagesController.addSecurityErrorMessage("Could not delete the user!");
       }
 
       emailBean.sendEmail(user1.getEmail(),
-              UserAccountsEmailMessages.ACCOUNT_REJECT,
-              UserAccountsEmailMessages.accountRejectedMessage());
+          UserAccountsEmailMessages.ACCOUNT_REJECT,
+          UserAccountsEmailMessages.accountRejectedMessage());
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              PeopleAccountStatus.SPAM_ACCOUNT.name(), UserAuditActions.SUCCESS.
-              name(), "", user1);
+          PeopleAccountStatus.SPAM_ACCOUNT.name(), UserAuditActions.SUCCESS.
+          name(), "", user1);
 
       MessagesController.addInfoMessage(user1.getEmail() + " was rejected.");
 
@@ -340,7 +340,7 @@ public class PeopleAdministration implements Serializable {
       MessagesController.addSecurityErrorMessage("Rejection failed");
     } catch (MessagingException ex) {
       Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
-              "Could not reject user.", ex);
+          "Could not reject user.", ex);
     }
 
   }
@@ -348,14 +348,14 @@ public class PeopleAdministration implements Serializable {
   public void confirmMessage(ActionEvent actionEvent) {
 
     FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
-            "Deletion Successful!", null);
+        "Deletion Successful!", null);
     FacesContext.getCurrentInstance().addMessage(null, message);
   }
 
   public String getLoginName() throws IOException {
     FacesContext context = FacesContext.getCurrentInstance();
     HttpServletRequest request = (HttpServletRequest) context.
-            getExternalContext().getRequest();
+        getExternalContext().getRequest();
 
     Principal principal = request.getUserPrincipal();
 
@@ -368,7 +368,7 @@ public class PeopleAdministration implements Serializable {
       }
     } catch (Exception ex) {
       ExternalContext extContext = FacesContext.getCurrentInstance().
-              getExternalContext();
+          getExternalContext();
       System.err.println(extContext.getRequestContextPath());
       extContext.redirect(extContext.getRequestContextPath());
       return null;
@@ -376,14 +376,13 @@ public class PeopleAdministration implements Serializable {
   }
 
   /**
-   * Get all open user requests.
+   * Get all open user requests (mobile or simple accounts).
    *
    * @return
    */
   public List<Users> getAllRequests() {
     if (requests == null) {
-      requests = userManager.findAllByStatus(
-              PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
+      requests = userManager.findMobileRequests();
     }
     return requests;
   }
@@ -395,8 +394,7 @@ public class PeopleAdministration implements Serializable {
    */
   public List<Users> getAllYubikeyRequests() {
     if (yRequests == null) {
-      yRequests = userManager.findAllByStatus(
-              PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+      yRequests = userManager.findYubikeyRequests();
     }
     return yRequests;
   }
@@ -418,46 +416,44 @@ public class PeopleAdministration implements Serializable {
 
       userTransaction.begin();
 
-//      if (!"#".equals(sgroup) && (!sgroup.isEmpty() || sgroup != null)) {
-//        userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
-        userManager.registerGroup(user1, BBCGroup.BBC_RESEARCHER.getValue());
+      if (!"#".equals(sgroup) && (!sgroup.isEmpty() || sgroup != null)) {
+        userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
         userManager.registerGroup(user1, BBCGroup.BBC_USER.getValue());
-        
-        auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
-                RolesAuditActions.SUCCESS.name(), BBCGroup.valueOf(sgroup).name(),
-                user1);
-        
-        auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
-                RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(),
-                user1);
-          
-//      } else {
-//          auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-//              PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
-//              RolesAuditActions.FAILED.name(), "Role could not be granted.", user1);
-//        MessagesController.addSecurityErrorMessage("Role could not be granted.");
-//        return;
-//      }
 
-      userManager.updateStatus(user1, PeopleAccountStatus.ACCOUNT_ACTIVATED.
-              getValue());
+        auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
+            RolesAuditActions.SUCCESS.name(), BBCGroup.valueOf(sgroup).name(),
+            user1);
+
+        auditManager.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(),
+            RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_USER.name(),
+            user1);
+      } else {
+        auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+            PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
+            RolesAuditActions.FAILED.name(), "Role could not be granted.", user1);
+        MessagesController.addSecurityErrorMessage("Role could not be granted.");
+        return;
+      }
+
+      userManager.updateStatus(user1, PeopleAccountStatus.ACTIVATED_ACCOUNT.
+          getValue());
       userTransaction.commit();
 
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
-              UserAuditActions.SUCCESS.name(), "", user1);
+          PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
+          UserAuditActions.SUCCESS.name(), "", user1);
       emailBean.sendEmail(user1.getEmail(),
-              UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
-              UserAccountsEmailMessages.
-              accountActivatedMessage(user1.getEmail()));
+          UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
+          UserAccountsEmailMessages.
+          accountActivatedMessage(user1.getEmail()));
 
     } catch (NotSupportedException | SystemException | MessagingException |
-            RollbackException | HeuristicMixedException |
-            HeuristicRollbackException | SecurityException |
-            IllegalStateException e) {
+        RollbackException | HeuristicMixedException |
+        HeuristicRollbackException | SecurityException |
+        IllegalStateException e) {
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
-              UserAuditActions.FAILED.name(), "", user1);
+          PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
+          UserAuditActions.FAILED.name(), "", user1);
       return;
     }
     requests.remove(user1);
@@ -467,19 +463,18 @@ public class PeopleAdministration implements Serializable {
     // Get the latest status
     Users newStatus = userManager.getUserByEmail(user1.getEmail());
     FacesContext.getCurrentInstance().getExternalContext()
-            .getSessionMap().put("editinguser", newStatus);
+        .getSessionMap().put("editinguser", newStatus);
 
     Userlogins login = auditManager.getLastUserLogin(user1.getUid());
 
     FacesContext.getCurrentInstance().getExternalContext()
-            .getSessionMap().put("editinguser_logins", login);
+        .getSessionMap().put("editinguser_logins", login);
 
     return "admin_profile";
   }
 
   public List<Users> getSpamUsers() {
-
-    return spamUsers = userManager.findAllSPAMAccounts();
+    return spamUsers = userManager.findSPAMAccounts();
   }
 
   public void setSpamUsers(List<Users> spamUsers) {
@@ -500,7 +495,7 @@ public class PeopleAdministration implements Serializable {
 
   public String activateYubikeyUser(Users u) {
     FacesContext.getCurrentInstance().getExternalContext().getSessionMap().put(
-            "yUser", u);
+        "yUser", u);
     return "activate_yubikey";
   }
 

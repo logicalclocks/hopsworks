@@ -135,7 +135,10 @@ public class ProjectTeamFacade {
   public List<ProjectTeam> findByMember(Users member) {
     Query query = em.createNamedQuery("ProjectTeam.findByTeamMember",
             ProjectTeam.class).setParameter("user", member);
-    return query.getResultList();
+            List<ProjectTeam>  x = query.getResultList();
+            
+    //return query.getResultList();
+    return x;
   }
 
   /**
