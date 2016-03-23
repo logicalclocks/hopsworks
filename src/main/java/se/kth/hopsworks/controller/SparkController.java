@@ -23,6 +23,7 @@ import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
+import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.UserGroupInformationService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
@@ -108,7 +109,7 @@ public class SparkController {
 			  "Failed to persist JobHistory. Aborting execution.");
 	  throw new IOException("Failed to persist JobHistory.");
 	}
-	activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
+	activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.getProject(),
 			user.asUser());
 	return jh;
   }

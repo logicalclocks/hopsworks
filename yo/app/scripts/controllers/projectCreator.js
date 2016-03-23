@@ -5,6 +5,7 @@ angular.module('hopsWorksApp')
           function ($modalInstance, $scope, ProjectService, UserService, growl) {
 
             var self = this;
+            
             self.working = false;
             self.card = {};
             self.myCard = {};
@@ -76,8 +77,7 @@ angular.module('hopsWorksApp')
             self.removeMember = function (member) {
               self.projectMembers.splice(self.projectMembers.indexOf(member), 1);
             };
-
-
+                   
             self.createProject = function () {
               self.working = true;
               $scope.newProject = {

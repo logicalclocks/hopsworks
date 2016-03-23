@@ -1,26 +1,35 @@
 <div ng-controller="MainCtrl as mainCtrl">
-  <div ng-include="'nav.html'"></div>
-  
-  <div id="wrapper" class="toggled">
-    <div class="overlay"></div>
-
-    <div ng-controller="MetadataCtrl as metadataCtrl">
-
-    <div ng-controller="DatasetsCtrl as datasetsCtrl">
-
-    <div ng-include="'navProject.html'"></div>
-
-    <section>
-      <div class="content-wrapper">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} /</h3>
-        <!-- Page Content -->
-        <div ng-show="mainCtrl.searchReturned !== ''">
-          <div id="projectSearchResults">
-            <div ng-include="'views/searchResult.html'"></div>
-          </div>
-        </div>
-      <div ng-show="mainCtrl.searchReturned === ''">
-<!--        <div class="col-lg-2" style="max-width: 250px">
+    
+    <div ng-include="'nav.html'"></div>
+    
+    <div id="wrapper" class="toggled">
+        <div class="overlay"></div>
+        
+        <div ng-controller="MetadataCtrl as metadataCtrl">
+            
+            <div ng-controller="DatasetsCtrl as datasetsCtrl">
+                
+                <div ng-include="'navProject.html'" ng-model="projectCtrl.loaded" ng-change="projectCtrl.navLoaded()"></div>
+                
+                <section>
+                    
+                    <div class="content-wrapper">
+                        
+                        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} /</h3>
+                        <!-- Page Content -->
+                        <div ng-show="mainCtrl.searchReturned !== ''">
+                            
+                            <div id="projectSearchResults">
+                                
+                                <div ng-include="'views/searchResult.html'"></div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        <div ng-show="mainCtrl.searchReturned === ''">
+                            
+                            <!--        <div class="col-lg-2" style="max-width: 250px">
           <div class="ibox float-e-margins">
             <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
               <div class="file-manager">
@@ -45,43 +54,50 @@
             <div class="ibox-content"></div>
           </div>
         </div>-->
-        <div class="widget-body col-md-10">
-          <div class="timeline clearfix">
-            <div class="mid-line"></div>
+                            
+                            <div class="widget-body col-md-10">
+                                
+                                <div class="timeline clearfix">
+                                    
+                                    <div class="mid-line"></div>
 
-            <div ng-repeat="activity in projectCtrl.activities| startFrom:(projectCtrl.currentPage - 1) * projectCtrl.pageSize | limitTo:projectCtrl.pageSize">
+                                    <div ng-repeat="activity in projectCtrl.activities| startFrom:(projectCtrl.currentPage - 1) * projectCtrl.pageSize | limitTo:projectCtrl.pageSize">
 
-              <div class="right">
-                <div class="r-arrow"></div>
-                <div class="about-task">
-                  <div class="header">{{activity.user.fname}} {{activity.user.lname}} {{activity.activity}}
-                    <small class="muted">On {{activity.timestamp|
-                      date:'medium'}}
-                    </small>
-                  </div>
-                  <p class="no-margin">
-                    Project name: {{activity.project.name}} Owner: {{activity.project.owner.fname}}
-                    Created on: {{activity.project.created| date:'medium'}}
-                  </p>
-                </div>
-              </div>
-            </div>
+                                        <div class="right">
+                                          <div class="r-arrow"></div>
+                                          <div class="about-task">
+                                            <div class="header">{{activity.user.fname}} {{activity.user.lname}} {{activity.activity}}
+                                              <small class="muted">On {{activity.timestamp|
+                                                date:'medium'}}
+                                              </small>
+                                            </div>
+                                            <p class="no-margin">
+                                              Project name: {{activity.project.name}} Owner: {{activity.project.owner.fname}}
+                                              Created on: {{activity.project.created| date:'medium'}}
+                                            </p>
+                                          </div>
+                                        </div>
+                                    </div>
 
-            <pagination ng-if="projectCtrl.totalPages > 1"
-                        total-items="projectCtrl.totalItems"
-                        ng-model="projectCtrl.currentPage"
-                        max-size="projectCtrl.pageSize"
-                        class="pagination-sm"
-                        boundary-links="true"
-                        rotate="false"
-                        num-pages="projectCtrl.totalPages" >
-            </pagination>
-          </div>
-        </div>
+                                    <pagination ng-if="projectCtrl.totalPages > 1"
+                                                total-items="projectCtrl.totalItems"
+                                                ng-model="projectCtrl.currentPage"
+                                                max-size="projectCtrl.pageSize"
+                                                class="pagination-sm"
+                                                boundary-links="true"
+                                                rotate="false"
+                                                num-pages="projectCtrl.totalPages" >
+                                    </pagination>
+                                    
+                                </div>
+                                
+                            </div>
         <!-- /#page-content-wrapper -->
-      </div>
-      </div>
-<!--      <div class="col-lg-4" style="border-left: 1px dashed lightgrey;
+                        </div>
+                        
+                    </div>
+                    
+                    <!--      <div class="col-lg-4" style="border-left: 1px dashed lightgrey;
         padding-left: 0px; float: right; margin-top: -40px;">
         <div class="ibox float-e-margins" style="margin-bottom: -25px; height: 95%;">
           <div class="file-manager">
@@ -91,7 +107,6 @@
                   <md-tab label="Details">
                     <md-content>
                       <table id="mytable1" class="table table-bordred table-striped" style="margin-top: 16px;">
-
                         <tr style="background-color: #fafafa">
                           <td style="color:lightgrey;">Description</td>
                           <td style="color: grey;">{{projectCtrl.projectFile
@@ -107,10 +122,7 @@
                           </td>
                         </tr>
                       </table>
-
                     </md-content>
-
-
                     div class="ibox-content" id="hoverable" ng-click="datasetsCtrl.toggleRight()">
                       <span class="pull-left" style="font-size: 16px; margin-top:-2px;">Add metadata</span> <i
                         class="fa fa-pencil-square-o pull-right" style="font-size: 20px;"></i>
@@ -153,10 +165,8 @@
                                                               <i class="fa fa-exclamation-circle"></i>
                                                     </span>
                                     <a style="color: green;padding-left: 10px " ng-click="metadataCtrl.setVisibilityAddMetadata(table.id+'-'+field.tagName,true)" ng-hide="metadataCtrl.visibilityInfo[table.id+'-'+field.tagName]"><i class="fa fa-plus"></i></a>
-
                                   </div>
                                 </div>
-
                                 <div  class="pull-left " style="padding-bottom: 0;">
                                   <div ng-repeat="card in table.inputcontent">
                                     text input field type
@@ -169,9 +179,7 @@
                                              ng-keypress="($event.which === 13)?metadataCtrl.createMetadata(table.id,card.id):0" autofocus/>
                                       <button class="btn btn-default btn-xs" ng-click="metadataCtrl.createMetadata(table.id,card.id);" ><span class="glyphicon glyphicon-ok"></span></button>
                                       <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id+'-'+field.tagName,false);"><span class="glyphicon glyphicon-remove"></span></button>
-
                                     </div>
-
                                     single select list input type
                                     <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 150px;" ng-show="metadataCtrl.visibilityInfo[table.id+'-'+field.tagName]">
                                       <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
@@ -186,7 +194,6 @@
                                       <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.createMetadata(table.id,card.id);"></span></button>
                                       <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id+'-'+field.tagName,false);"><span class="glyphicon glyphicon-remove"></span></button>
                                     </div>
-
                                     multi select list input type
                                     <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[table.id+'-'+field.tagName]">
                                       <div
@@ -205,12 +212,7 @@
                                     </div>
                                   </div>
                                 </div>
-
                                 <div style="width: 100%; height: 45px;" ng-show="metadataCtrl.visibilityInfo[table.id+'-'+field.tagName]"></div>
-
-
-
-
                                 <div ng-repeat="value in field.metadataView" style="padding-left: 15px;padding-top: 0px">
                                   <div ng-hide="metadataCtrl.visibilityInfo[value.id]" ng-if="value.data !== ''" ng-init="metashow[value.id]=false" ng-mouseenter="metashow[value.id]=true" ng-mouseleave="metashow[value.id]=false">
                                     <div style="display:inline-block" >
@@ -222,8 +224,6 @@
                                     </div>
                                     <br>
                                   </div>
-
-
                                   <div  class="pull-left " style="padding-bottom: 0;">
                                     <div ng-repeat="card in table.inputcontent">
                                       text input field type
@@ -235,9 +235,7 @@
                                                ng-model="metadataCtrl.metaDataDetail[value.id]"  style="width: 100px"/>
                                         <button class="btn btn-default btn-xs" ng-click="metadataCtrl.updateMetadata(value);" ><span class="glyphicon glyphicon-ok"></span></button>
                                         <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id,false);"><span class="glyphicon glyphicon-remove"></span></button>
-
                                       </div>
-
                                       single select list input type
                                       <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 125px;" ng-show="metadataCtrl.visibilityInfo[value.id]">
                                         <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
@@ -252,7 +250,6 @@
                                         <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.updateMetadata(value);"></span></button>
                                         <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id,false);"><span class="glyphicon glyphicon-remove"></span></button>
                                       </div>
-
                                       multi select list input type
                                       <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[value.id]">
                                         <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
@@ -283,14 +280,13 @@
                 </md-tabs>
               </md-content>
             </div>-->
-          </div>
+                    
+                </section>
+    
+            </div>
+            
         </div>
-      </div>
-    </section>
+        
     </div>
-    </div>
-  </div>
-  <!-- /#wrapper -->
 </div>
-
 

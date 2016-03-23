@@ -14,6 +14,8 @@ import javax.ejb.*;
 import javax.ws.rs.core.Response;
 
 import io.hops.bbc.ProjectPaymentAction;
+import io.hops.hdfs.HdfsLeDescriptors;
+import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
@@ -93,6 +95,8 @@ public class ProjectController {
   private DistributedFsService dfs;
   @EJB
   private Settings settings;
+  @EJB
+  private HdfsLeDescriptorsFacade hdfsLeDescriptorFacade;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -178,7 +182,7 @@ public class ProjectController {
                         .getYarnDefaultQuota()), 0));
         this.yarnProjectsQuotaFacade.flushEm();
         //Add the activity information
-        logActivity(ActivityFacade.NEW_PROJECT,
+        logActivity(ActivityFacade.NEW_PROJECT + project.getName(),
                 ActivityFacade.FLAG_PROJECT, user, project);
         //update role information in project
         addProjectOwner(project.getId(), user.getEmail());
@@ -277,7 +281,11 @@ public class ProjectController {
 
     if (addedService) {
       Users user = userBean.getUserByEmail(userEmail);
-      logActivity(ActivityFacade.ADDED_SERVICES, ActivityFacade.FLAG_PROJECT,
+      String servicesString = "";
+      for(int i = 0;i < services.size();i++){
+          servicesString = servicesString + services.get(i).name() + " ";
+      }
+      logActivity(ActivityFacade.ADDED_SERVICES + servicesString, ActivityFacade.FLAG_PROJECT,
               user, project);
 //      if (sshAdded == true) {
 //        try {
@@ -405,7 +413,7 @@ public class ProjectController {
     String projectPath = File.separator + rootDir + File.separator + project;
 
     //Create first the projectPath
-    projectDirCreated = fileOps.mkDir(projectPath);
+    projectDirCreated = fileOps.mkDir(projectPath); //fails here
 
     //Set default space quota in GB_IN_BYTES
     ProjectController.this.setHdfsSpaceQuota(new Path(projectPath), Long.
@@ -850,4 +858,24 @@ public class ProjectController {
             projectname)), diskspaceQuotaInBytes);
   }
 
+    public void addExampleJarToExampleProject(String username, Project project) {
+      
+      Users user = userBean.getUserByEmail(username);
+      try {  
+          datasetController.createDataset(user, project, "TestJob", "jar file to calculate pi", -1, false, true);
+      } catch (IOException ex) {
+          Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE, null, ex);
+      }
+      try {
+          
+          HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorFacade.findEndpoint();
+          File file = new File(settings.getSparkDir() + "/lib/" + "spark-examples-1.5.2-hadoop2.4.0.jar");
+          fileOps.copyToHDFSFromLocal(false,file.getAbsolutePath(), "hdfs://"+hdfsLeDescriptors.getHostname()+"/Projects/"+project.getName()+"/TestJob/");
+          
+      } catch (IOException ex) {
+          Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE, null, ex);
+      }
+        
+    }
+    
 }

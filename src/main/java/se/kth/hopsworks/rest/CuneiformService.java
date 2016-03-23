@@ -157,7 +157,7 @@ public class CuneiformService {
         config.setAppName("Untitled Cuneiform job");
       }
       JobDescription created = jobController.createJob(user, project, config);
-      activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
+      activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();
     }
