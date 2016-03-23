@@ -27,7 +27,7 @@
                   <div class="dropdown" dropdown>
                     <button class="btn btn-default"  dropdown-toggle type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                       <i class="glyphicon glyphicon-folder-open" style="padding-right: 10px;"></i>
-                      {{datasetsCtrl.pathArray[datasetsCtrl.pathArray.length - 1]| limitTo: 8 }}{{datasetsCtrl.pathArray[datasetsCtrl.pathArray.length-1].length > 8 ? '...' : ''}}
+                      {{datasetsCtrl.pathArray[datasetsCtrl.pathArray.length - 1]| limitTo: 8 }}{{datasetsCtrl.pathArray[datasetsCtrl.pathArray.length-1].length > 8 ? '..' : ''}}
                       <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu" dropdown-menu aria-labelledby="dropdownMenu1">
@@ -36,22 +36,18 @@
                     </ul>
                   </div>
                 </div>
-                <div class="col-md-2" style="margin-left: 5px;">
-                    <span data-ng-repeat="path in datasetsCtrl.pathArray.slice(datasetsCtrl.pathArray.length-3) track by $index">
-                      <span ng-show="$index > 0">> </span><a ng-click="datasetsCtrl.goToFolder($index)">{{path| limitTo: 6 }}{{path.length > 6 ? '..' : ' '}}</a>
+                <div class="col-md-3" style="margin-left: 10px;">
+                    <span data-ng-repeat="path in datasetsCtrl.pathArray.slice(datasetsCtrl.pathArray.length - datasetsCtrl.breadcrumbLen()) track by $index">
+                      <span ng-show="$index > 0">> </span><a ng-click="datasetsCtrl.goToFolder($index)">{{path| limitTo: 8 }}{{path.length > 8 ? '..' : ' '}}</a>
                     </span>
                 </div>
 
                 <div class="col-md-1">
-<!--                  <form class="form-inline">
-                    <div class="form-group">-->
                       <input type="text" ng-model="search" 
                              class="form-control" placeholder="Filter" 
                              style="margin-top: -17px; ">
-                    <!--</div>-->
-                  <!--</form>-->
                 </div>                
-                <div class="col-md-7" style="margin-top: -15px; margin-right: -40px;" ng-show="datasetsCtrl.fileDetail !== null">
+                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 12px;" ng-show="datasetsCtrl.fileDetail !== null">
                   <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span><span>/{{datasetsCtrl.fileDetail.name}}</span>
                     <button style="margin-left: 0px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                             data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
@@ -63,23 +59,6 @@
               </h3>
             </div>
 
-
-            <!--            <div class="row" style="background-color: #fbfbfc; border-bottom: 1px solid #cfdbe2; border-top: 1px solid #cfdbe2;"
-                             ng-show="datasetsCtrl.fileDetail !== null" ng-controller="ProjectCtrl as projectCtrl">
-                          <div class="col-md-12" style="margin-left: 25px;">
-            
-                            <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a>/{{datasetsCtrl.fileDetail.name}}</span>
-                               Trigger 
-                              <button style="margin-left: 5px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
-                                      data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
-                              </button>        
-                          </div>
-                        </div>-->
-
-
-            <!--            <div class="row" ng-show="datasetsCtrl.fileDetail !== null" ng-controller="ProjectCtrl as projectCtrl">
-                          <span>hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a>/<a ng-show="datasetsCtrl.fileDetail !== null">{{datasetsCtrl.fileDetail.name}}</a></span>
-                        </div>-->
             <div class="row row-no-margin-left">
               <div class="col-lg-12">
                 <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: 5px;">
@@ -102,10 +81,6 @@
                       <tbody ng-model="datasetsCtrl.files">
 
                         <tr>
-                          <!--                          <td style="padding: 0px" colspan="5">
-                                                      <i class="glyphicon glyphicon-level-up" style="margin-left:10px;" ng-click="datasetsCtrl.back()"></i>
-                                                      &nbsp;&nbsp;<span data-ng-repeat="path in datasetsCtrl.parentPathArray() track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a>
-                                                    </td>-->
                           <td style="padding: 0px" colspan="5">&nbsp &nbsp
                             <a ng-click="datasetsCtrl.back()" style="font-size:30px">..</a>
                           </td>

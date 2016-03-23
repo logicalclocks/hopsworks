@@ -110,7 +110,7 @@ public class CuneiformController {
               "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
-    activities.persistActivity(ActivityFacade.RAN_JOB, job.getProject(), user.
+    activities.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.getProject(), user.
             asUser());
     return jh;
   }

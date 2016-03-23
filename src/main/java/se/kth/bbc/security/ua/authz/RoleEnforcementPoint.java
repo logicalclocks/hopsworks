@@ -131,9 +131,9 @@ public class RoleEnforcementPoint implements Serializable {
     if (isSYSAdmin()) {
       //return false if no requests
       open_requests = !(userManager.findAllByStatus(
-              PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()).isEmpty())
+              PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()).isEmpty())
               || !(userManager.findAllByStatus(
-                      PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()).
+                      PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()).
               isEmpty());
     }
     return open_requests;
@@ -146,11 +146,15 @@ public class RoleEnforcementPoint implements Serializable {
   
   public String openRequests() {
     this.tabIndex = 1;
-    if (!userManager.findAllByStatus(
-            PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()).isEmpty()) {
+    if (!userManager.findMobileRequests().isEmpty()) {
       return "mobUsers";
+    }else if (!userManager.findYubikeyRequests().isEmpty()) {
+      return "yubikeyUsers";
+    } else if (!userManager.findSPAMAccounts().isEmpty()){
+      return "spamUsers";
     }
-    return "yubikeyUsers";
+   
+    return "mobUsers";
   }
 
   

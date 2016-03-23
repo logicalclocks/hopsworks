@@ -33,10 +33,11 @@
                                         <div class="file-manager">-->
                   <!--style="margin: 0px; font-weight: bold; color: #2e353d;"-->
                   Filter: 
-                  <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined" class="file-control active">All</a>
-                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true" class="file-control">Shared</a>
-                  <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true" class="file-control">Exclusive</a>
-                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false" class="file-control">Pending</a>
+                  <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined;" class="file-control active">All</a>
+                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; datasetsCtrl.isPublic = false" class="file-control">Shared</a>
+                  <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true; datasetsCtrl.isPublic = false" class="file-control">Exclusive</a>
+                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false; datasetsCtrl.isPublic = false" class="file-control">Pending</a>
+                  <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = false; datasetsCtrl.isPublic = true" class="file-control">Public</a>
                 </div>
                 <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
                   <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()">
@@ -51,7 +52,7 @@
                   <div class="col-lg-12">
 
 
-                    <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared:datasetsCtrl.shared, status: datasetsCtrl.status} | orderBy: 'name'">
+                    <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, isPublic: datasetsCtrl.isPublic} | orderBy: 'name'">
                       <div ng-dblclick="projectCtrl.browseDataset(dataset)"
                            ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.openMetadata();"
                            ng-init="(iscollapsed$index) = true"
@@ -60,6 +61,7 @@
                            data-target="menu-{{ $index}}">
                         <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === $index}">
                           <a>
+                            <span class="publicDS" ng-class="{'glyphicon glyphicon-globe': dataset.publicDS === true}"></span>
                             <span class="corner"></span>
                             <div class="icon">
                               <i class="glyphicon" ng-class="{'glyphicon-folder-close': datasetsCtrl.selected === $index, 'glyphicon-folder-open' : datasetsCtrl.selected !== $index}"></i>
@@ -72,60 +74,61 @@
                           </a>
                         </div>
                       </div>  
-                      <!--                      <div ng-init="(iscollapsed$index) = true"
-                                                 class="file-box"
-                                                 context-menu
-                                                 data-target="menu-{{ $index}}">
-                                              <div  class="file">
-                                                <div ng-click="projectCtrl.browseDataset(dataset)">
-                                                  <a>
-                                                    <span class="corner"></span>
-                                                    <div class="icon">
-                                                      <i class="glyphicon glyphicon-folder-open"></i>
-                                                    </div>
-                                                  </a>
-                                                </div>
-                                                <div class="file-name">
-                                                  {{dataset.name}}
-                                                  <br/>
-                                                  <small><b>Owner: </b> {{dataset.owner}}</small>
-                                                  <br/>
-                                                  <button
-                                                    style="font-size:15px;height:28px;color:white;padding-top: 3px; margin-left: 20px; margin-top: -40px;"
-                                                    ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset)"
-                                                    class="btn btn-info">
-                                                    <i class="fa fa-search"></i>
-                                                  </button>
-                                                </div>
-                                              </div>
-                                            </div>-->
+<!--                              <div ng-init="(iscollapsed$index) = true"
+                                   class="file-box"
+                                   context-menu
+                                   data-target="menu-{{ $index}}">
+                                <div  class="file">
+                                  <div ng-click="projectCtrl.browseDataset(dataset)">
+                                    <a>
+                                      <span class="corner"></span>
+                                      <div class="icon">
+                                        <i class="glyphicon glyphicon-folder-open"></i>
+                                      </div>
+                                    </a>
+                                  </div>
+                                  <div class="file-name">
+                                    {{dataset.name}}
+                                    <br/>
+                                    <small><b>Owner: </b> {{dataset.owner}}</small>
+                                    <br/>
+                                    <button
+                                      style="font-size:15px;height:28px;color:white;padding-top: 3px; margin-left: 20px; margin-top: -40px;"
+                                      ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset)"
+                                      class="btn btn-info">
+                                      <i class="fa fa-search"></i>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>-->
                       <div class="dropdown position-fixed" id="menu-{{$index}}">
                         <ul class="dropdown-menu dropdown-amore">
-                          <!--                        <li>
-                                                    <a class="pointer"
-                                                       role="menuitem"
-                                                       tabindex="1"
-                                                       ng-click="panel.highlight = true; datasetsCtrl.compress(dataset); $event.stopPropagation();">
-                                                      <span><i class="fa fa-file-archive-o"></i>
-                                                        Compress</span>
-                                                    </a>
-                                                  </li>-->
-                          <li ng-show="projectCtrl.role == 'Data owner'">
+                          <li ng-show="projectCtrl.role === 'Data owner'">
+                            <a class="pointer"
+                               role="menuitem"
+                               tabindex="1"
+                               ng-click="datasetsCtrl.deleteFile(dataset.name)">
+                              <span><i class="fa fa-trash"></i>
+                                Remove DataSet</span>
+                            </a>
+                          </li>
+                          <li ng-show="projectCtrl.role === 'Data owner'">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="2"
                                ng-click="datasetsCtrl.share(dataset.name)">
-                              <span><i class="fa fa-share-alt"></i>
-                                Share...</span>
+                              <span><i class="fa fa-share"></i>
+                                Share DataSet</span>
                             </a>
                           </li>
-                          <li>
+                          <li class="divider"></li>
+                         <li>
                             <a class="pointer"
                                role="menuitem"
                                tabindex="3"
                                ng-click="metadataCtrl.attachTemplate(dataset); $event.stopPropagation();">
                               <span><i class="fa fa-upload"></i>
-                                Add metadata template</span>
+                                Add metadata</span>
                             </a>
                           </li>
                           <li>
@@ -134,16 +137,26 @@
                                tabindex="4"
                                ng-click="metadataCtrl.detachTemplate(dataset); $event.stopPropagation();">
                               <span><i class="fa fa-download"></i>
-                                Remove metadata template</span>
+                                Remove metadata</span>
                             </a>
                           </li>
-                          <li ng-show="projectCtrl.role == 'Data owner'">
+                          <li class="divider"></li>
+                          <li>
                             <a class="pointer"
                                role="menuitem"
                                tabindex="5"
-                               ng-click="datasetsCtrl.deleteFile(dataset.name)">
-                              <span><i class="fa fa-trash"></i>
-                                Remove</span>
+                               ng-click="panel.highlight = true; datasetsCtrl.compress(dataset); $event.stopPropagation();">
+                              <span><i class="fa fa-file-archive-o"></i>
+                                Compress</span>
+                            </a>
+                          </li>
+                          <li ng-show="projectCtrl.role === 'Data owner'">
+                            <a class="pointer"
+                               role="menuitem"
+                               tabindex="6"
+                               ng-click="datasetsCtrl.makePublic(dataset.id); $event.stopPropagation();">
+                              <span><i class="fa fa-share-alt"></i>
+                                Make Public</span>
                             </a>
                           </li>
                         </ul>
@@ -167,8 +180,6 @@
                         </div>
                       </div>
                     </div>                  
-
-
                   </div>
                 </div>
               </div>

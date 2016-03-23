@@ -22,6 +22,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 @Stateless
 public class ExecutionFacade extends AbstractFacade<Execution> {
 
+
   private static final Logger logger = Logger.getLogger(ExecutionFacade.class.
       getName());
 

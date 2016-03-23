@@ -2,6 +2,7 @@ package se.kth.hopsworks.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,6 +40,7 @@ import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ProjectDTO;
 import se.kth.hopsworks.controller.QuotasDTO;
 import se.kth.hopsworks.controller.ResponseMessages;
+import se.kth.hopsworks.controller.UsersController;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
@@ -80,6 +82,8 @@ public class ProjectService {
 
   @EJB
   private ActivityFacade activityController;
+  @EJB
+  private UsersController usersController;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
           getName());
@@ -274,6 +278,86 @@ public class ProjectService {
             Response.Status.CREATED).entity(json).build();
   }
 
+  
+  @POST
+  @Path("starterProject")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response starterProject(
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    ProjectDTO projectDTO = new ProjectDTO();
+    JsonResponse json = new JsonResponse();
+    Project project = null;
+   projectDTO.setDescription("An Example project.");
+
+    String owner = sc.getUserPrincipal().getName();
+    String username = usersController.generateUsername(owner);
+    projectDTO.setProjectName("HopsDemo-" + username);
+    List<ProjectServiceEnum> projectServices = new ArrayList<>();
+    List<ProjectTeam> projectMembers = new ArrayList<>();
+    projectServices.add(ProjectServiceEnum.JOBS);
+    
+    
+    try {
+      //save the project
+      project = projectController.createProject(projectDTO, owner);
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE,
+              ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
+    } catch (IllegalArgumentException e) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), e.
+              getLocalizedMessage());
+    } catch (EJBException ex) {
+      logger.log(Level.SEVERE, ResponseMessages.FOLDER_INODE_NOT_CREATED, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.FOLDER_INODE_NOT_CREATED);
+    }
+    if (project != null) {
+      try {
+        hdfsUsersBean.addProjectFolderOwner(project);
+        projectController.createProjectLogResources(owner, project);
+        projectController.addExampleJarToExampleProject(owner, project);
+        // if (projectServices.contains(ProjectServiceEnum.BIOBANKING)) {
+        //   projectController.createProjectConsentFolder(owner, project);
+        // }
+        // if (projectServices.contains(ProjectServiceEnum.CHARON)) {
+        //   projectController.createProjectCharonFolder(project);
+        // }
+      } catch (ProjectInternalFoldersFailedException ee) {
+        try {
+          projectController.removeByID(project.getId(), owner, true);
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  "Could not create project resources");
+        } catch (IOException e) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                  getStatusCode(), e.getMessage());
+        }
+      } catch (IOException ex) {
+        try {
+          projectController.removeByID(project.getId(), owner, true);
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  "Could not add project folder owner in HDFS");
+        } catch (IOException e) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                  getStatusCode(), e.getMessage());
+        }
+      }
+    } else {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NAME_EXIST);
+    }
+    
+    projectController.addMembers(project, owner, projectMembers);
+    //add the services for the project
+    projectController.addServices(project, projectServices, owner);
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(project).build(); 
+  }  
+  
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
@@ -366,8 +450,8 @@ public class ProjectService {
             entity(json).build();
   }
 
-  @DELETE
-  @Path("{id}")
+  @POST
+  @Path("{id}/delete")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response removeProjectAndFiles(
@@ -404,7 +488,7 @@ public class ProjectService {
 
   }
 
-  @DELETE
+  @POST
   @Path("{id}/remove")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})

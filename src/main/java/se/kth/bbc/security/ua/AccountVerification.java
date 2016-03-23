@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.ua;
 
 import javax.annotation.PostConstruct;
@@ -14,7 +9,6 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
-import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.user.model.Users;
 
 
@@ -52,59 +46,42 @@ public class AccountVerification {
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
             getRequest();
 
-    /*
-    if (req.getRemoteUser() != null) {
-      HttpSession session = (HttpSession) ctx.getExternalContext().getSession(
-              false);
-
-      if (null != session) {
-        session.invalidate();
-        return false;
-      }
-    } */
-
     Users user = mgr.getUserByUsername(username);
 
-    if (user.getStatus() != PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()) {
+    if ((user.getStatus() != PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue() 
+            && user.getMode()== PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) || 
+            (user.getStatus() != PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue() 
+            && user.getMode()== PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue())
+            ) {
        am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-              AccountsAuditActions.FAILED.name(), "Could not verify the account due to wrnong status.", user);
+              AccountsAuditActions.FAILED.name(), "Could not verify the account due to wrong status.", user);
 
       return false;
     }
 
     if (key.equals(user.getValidationKey())) {
-      if (user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
 
         mgr.changeAccountStatus(user.getUid(), "",
-                PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
-
-      } else if (user.getMode() == PeopleAccountStatus.MOBILE_USER.
-              getValue()) {
-         
-
-        mgr.changeAccountStatus(user.getUid(), "",
-                PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
-      }
-              
-       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+                PeopleAccountStatus.VERIFIED_ACCOUNT.getValue());
+        am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
               AccountsAuditActions.SUCCESS.name(), "Verified account email address.", user);
-
-      mgr.resetKey(user.getUid());
+        mgr.resetKey(user.getUid());
       return true;
     }
 
     int val = user.getFalseLogin();
     mgr.increaseLockNum(user.getUid(), val + 1);
 
-    if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
-      mgr.changeAccountStatus(user.getUid(), "SPAM Acccount",
+    // if more than 5 times false logins set as spam
+    if (val > 5) {
+
+      mgr.changeAccountStatus(user.getUid(), PeopleAccountStatus.SPAM_ACCOUNT.toString(),
               PeopleAccountStatus.SPAM_ACCOUNT.getValue());
       mgr.resetKey(user.getUid());
       mgr.resetKey(user.getUid());
-       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+      am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
               AccountsAuditActions.FAILED.name(), "Too many false activation attemps.", user);
-
-      
+    
     }
 
     return false;
