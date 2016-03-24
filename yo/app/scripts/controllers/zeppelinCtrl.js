@@ -18,6 +18,8 @@ angular.module('hopsWorksApp')
             
             self.deselect = function () {
               self.selected = null;
+              refresh();
+              getNotesInProject();
             };
 
             var getInterpreterStatus = function () {
