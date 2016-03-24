@@ -45,20 +45,20 @@
 
 <property>
   <name>zeppelin.home</name>
-  <value>%%zeppelin_dir%%/%%project_dir%%</value>
+  <value>%%zeppelin_home%%</value>
   <description>path for zeppelin home</description>
 </property>
 
 <property>
   <name>zeppelin.conf.dir</name>
-  <value>%%zeppelin_dir%%/%%project_dir%%/conf</value>
+  <value>%%zeppelin_home_dir%%/conf</value>
   <description>path for config directory</description>
 </property>
 
 
 <property>
   <name>zeppelin.notebook.dir</name>
-  <value>%%zeppelin_dir%%/%%project_dir%%/notebook</value>
+  <value>%%zeppelin_home_dir%%/notebook</value>
   <description>path or URI for notebook persist</description>
 </property>
 
@@ -112,13 +112,13 @@
 
 <property>
   <name>zeppelin.interpreter.dir</name>
-  <value>%%zeppelin_dir%%/interpreter</value>
+  <value>%%zeppelin_home_dir%%/interpreter</value>
   <description>Interpreter implementation base directory</description>
 </property>
 
 <property>
   <name>zeppelin.interpreter.remoterunner</name>
-  <value>%%zeppelin_dir%%/%%project_dir%%/bin/interpreter.sh</value>
+  <value>%%zeppelin_home_dir%%/bin/interpreter.sh</value>
   <description>Interpreter implementation base directory</description>
 </property>
 

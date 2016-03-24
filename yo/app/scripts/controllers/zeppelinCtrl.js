@@ -95,7 +95,7 @@ angular.module('hopsWorksApp')
             };
 
             self.createNewNote = function () {
-              var noteName = '';
+              var noteName;
               ModalService.noteName('md','','','').then(
                         function (success) {
                           noteName = success.val;

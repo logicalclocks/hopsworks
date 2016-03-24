@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Properties;
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -121,6 +120,7 @@ public class InterpreterRestApi {
   public Response updateSetting(String message,
           @PathParam("settingId") String settingId) {
     logger.info("Update interpreterSetting {}", settingId);
+    logger.info("Update message {}", message);
     try {
       UpdateInterpreterSettingRequest p = gson.fromJson(message,
               UpdateInterpreterSettingRequest.class);
@@ -184,18 +184,18 @@ public class InterpreterRestApi {
     long endTime;
     while (zeppelinResource.isInterpreterRunning(setting, project)) {
       endTime = System.currentTimeMillis();
-      if (endTime - startTime > timeout*2) {
+      if ((endTime - startTime) > (timeout*2)) {
         break;
       }
     }
 
     if (zeppelinResource.isInterpreterRunning(setting, project)) {
       zeppelinResource.forceKillInterpreter(setting, project);
+      
     }
     InterpreterDTO interpreter = new InterpreterDTO(setting,
-            zeppelinResource.isInterpreterRunning(setting, project));
+            !zeppelinResource.isInterpreterRunning(setting, project));
     return new JsonResponse(Status.OK, "", interpreter).build();
-    //return new JsonResponse(Status.OK, "", setting).build();
   }
 
   /**

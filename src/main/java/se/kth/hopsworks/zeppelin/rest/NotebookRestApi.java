@@ -19,7 +19,6 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.NoteInfo;
-import org.apache.zeppelin.notebook.Notebook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.bbc.project.Project;
@@ -200,30 +199,26 @@ public class NotebookRestApi {
   /**
    * Create new note in a project
    * <p/>
-   * @param id
    * @param newNote
    * @return note info if successful.
    * @throws se.kth.hopsworks.rest.AppException
    */
   @POST
-  @Path("{id}/new")
+  @Path("/new")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response createNew(@PathParam("id") Integer id,
-          NewNotebookRequest newNote) throws
+  public Response createNew(NewNotebookRequest newNote) throws
           AppException {
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
-    Notebook newNotebook;
     Note note;
     NoteInfo noteInfo;
     try {
       note = zeppelinConf.getNotebook().createNote();
       note.addParagraph(); // it's an empty note. so add one paragraph
       String noteName = newNote.getName();
-
       if (noteName == null || noteName.isEmpty()) {
         noteName = "Note " + note.getId();
       }

@@ -15,7 +15,7 @@ angular.module('hopsWorksApp')
             createNotebook: function (noteName) {
               var regReq = {
                     method: 'POST',
-                    url: '/api/notebook/',
+                    url: '/api/notebook/new',
                     headers: {
                       'Content-Type': 'application/json'
                     },

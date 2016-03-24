@@ -54,7 +54,7 @@ public class ZeppelinResource {
     boolean running = false;
 
     for (FileObject file : pidFiles) {
-      if (file.getName().toString().contains(interpreter.getGroup())) {
+      if (file.getName().toString().contains("interpreter-"+interpreter.getGroup()+"-")) {
         running = isProccessAlive(readPid(file));
         //in the rare case were there are more that one pid files for the same 
         //interpreter break only when we find running one
@@ -76,7 +76,7 @@ public class ZeppelinResource {
     }
     boolean running = false;
     for (FileObject file : pidFiles) {
-      if (file.getName().toString().contains(interpreter.getGroup())) {
+      if (file.getName().toString().contains("interpreter-"+interpreter.getGroup()+"-")) {
         running = isProccessAlive(readPid(file));
         if (running) {
           forceKillProccess(readPid(file));
@@ -84,6 +84,7 @@ public class ZeppelinResource {
         }
       }
     }
+    zeppelinConfFactory.removeFromCache(project.getName());
   }
 
   private FileObject[] getPidFiles(Project project) throws URISyntaxException,
@@ -92,7 +93,7 @@ public class ZeppelinResource {
             project.getName()).getConf();
     URI filesystemRoot;
     FileSystemManager fsManager;
-    String runPath = conf.getRelativeDir("run");//the string run should be a constant.
+    String runPath = conf.getRelativeDir("run");
     try {
       filesystemRoot = new URI(runPath);
     } catch (URISyntaxException e1) {
@@ -146,15 +147,12 @@ public class ZeppelinResource {
   }
 
   private boolean isProccessAlive(String pid) {
-
-    logger.log(Level.INFO,
-            "Checking if Zeppelin Interpreter alive with PID: {0}", pid);
     String[] command = {"kill", "-0", pid};
     ProcessBuilder pb = new ProcessBuilder(command);
     if (pid == null) {
       return false;
     }
-
+    
     //TODO: We should clear the environment variables before launching the 
     // redirect stdout and stderr for child process to the zeppelin/project/logs file.
     int exitValue;
@@ -195,6 +193,7 @@ public class ZeppelinResource {
     byte[] pid = new byte[8];
     try {
       file.getContent().getInputStream().read(pid);
+      file.close();
     } catch (FileSystemException ex) {
       return null;
     } catch (IOException ex) {
