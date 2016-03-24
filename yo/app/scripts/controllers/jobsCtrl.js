@@ -191,7 +191,7 @@ angular.module('hopsWorksApp')
             this.runJob = function (jobId) {
               
               var price = 0.11;
-              ModalService.uberPrice('sm', 'Confirm', 'Do you want to run this job at this price?', price).then(
+              ModalService.uberPrice('lg', 'Confirm', 'Do you want to run this job at this price?', price).then(
                       function (success) {
                         JobService.runJob(self.projectId, jobId).then(
                                 function (success) {

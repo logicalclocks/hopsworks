@@ -12,8 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
@@ -36,6 +34,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import se.kth.bbc.lims.Utils;
+import se.kth.hopsworks.util.IoUtils;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -44,8 +43,7 @@ import se.kth.hopsworks.util.Settings;
  */
 public class YarnRunner {
 
-  private static final Logger logger = Logger.getLogger(YarnRunner.class.
-      getName());
+  private static final Logger logger = Logger.getLogger(YarnRunner.class.getName());
   public static final String APPID_PLACEHOLDER = "$APPID";
   private static final String APPID_REGEX = "\\$APPID";
   private static final String KEY_CLASSPATH = "CLASSPATH";
@@ -754,6 +752,7 @@ public class YarnRunner {
      * <p/>
      * @param hadoopDir
      * @param sparkDir
+     * @param nameNodeIpPort
      * @return
      * @throws IllegalStateException Thrown if (a) configuration is not found, (b) invalid main class name
      * @throws IOException Thrown if stdOut and/or stdErr path have not been set and temp files could not be created
@@ -772,7 +771,7 @@ public class YarnRunner {
      
       //Set main class
       if (amMainClass == null) {
-        amMainClass = getMainClassNameFromJar();
+        amMainClass = IoUtils.getMainClassNameFromJar(amJarPath, null);
         if (amMainClass == null) {
           throw new IllegalStateException(
               "Could not infer main class name from jar and was not specified.");
@@ -891,31 +890,7 @@ public class YarnRunner {
       }
     }
 
-    private String getMainClassNameFromJar() {
-      if (amJarPath == null) {
-        throw new IllegalStateException(
-            "Main class name and amJar path cannot both be null.");
-      }
-      String fileName = amJarPath;
-      String mainClassName = null;
 
-      try (JarFile jarFile = new JarFile(fileName)) {
-        Manifest manifest = jarFile.getManifest();
-        if (manifest != null) {
-          mainClassName = manifest.getMainAttributes().getValue("Main-Class");
-        }
-      } catch (IOException io) {
-        logger.log(Level.SEVERE, "Could not open jar file " + amJarPath
-            + " to load main class.", io);
-        return null;
-      }
-
-      if (mainClassName != null) {
-        return mainClassName.replaceAll("/", ".");
-      } else {
-        return null;
-      }
-    }
 
   }
 

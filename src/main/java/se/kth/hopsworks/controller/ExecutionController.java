@@ -57,8 +57,8 @@ public class ExecutionController {
         Pattern p = Pattern.compile(patternString);
         Matcher m = p.matcher(args);
         for (int i = 0; i < m.groupCount(); i++) { // for each filename, resolve Inode from HDFS filename
-          String filename = m.group(i);
-           Inode inode = inodes.getInodeAtPath("hdfs://" + filename);
+//          String filename = m.group(i);
+//           Inode inode = inodes.getInodeAtPath("hdfs://" + filename);
           // insert into inputfiles_executions (inode, execId).
         }
         break;
