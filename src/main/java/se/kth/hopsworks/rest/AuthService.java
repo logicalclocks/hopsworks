@@ -131,6 +131,7 @@ public class AuthService {
           if (!sc.isUserInRole(BBCGroup.BBC_USER.name()) && !sc.isUserInRole(BBCGroup.SYS_ADMIN.name())) {
             am.registerLoginInfo(user, UserAuditActions.UNAUTHORIZED.getValue(),
                     UserAuditActions.FAILED.name(), req);
+           userController.setUserIsOnline(user, AuthenticationConstants.IS_OFFLINE);
             req.logout();
 
             throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
@@ -153,6 +154,7 @@ public class AuthService {
               + email);
     }
 
+    userController.setUserIsOnline(user, AuthenticationConstants.IS_ONLINE);
     //read the user data from db and return to caller
     json.setStatus("SUCCESS");
     json.setSessionID(req.getSession().getId());
@@ -173,6 +175,7 @@ public class AuthService {
       req.logout();
       json.setStatus("SUCCESS");
       req.getSession().invalidate();
+      userController.setUserIsOnline(user, AuthenticationConstants.IS_OFFLINE);
       am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
               UserAuditActions.SUCCESS.name(), req);
 
