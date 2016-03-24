@@ -14,35 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package se.kth.hopsworks.zeppelin.rest.message;
 
-import java.util.List;
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
- * NewNotebookRequest rest api request message
+ *  CronRequest rest api request message
  *
  */
-@XmlRootElement
-public class NewNotebookRequest {
+public class CronRequest {
+  String cron;
 
-    String name;
-    List<NewParagraphRequest> paragraphs;
+  public CronRequest (){
 
-    public NewNotebookRequest() {
+  }
 
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public List<NewParagraphRequest> getParagraphs() {
-        return paragraphs;
-    }
-
+  public String getCronString() {
+    return cron;
+  }
 }

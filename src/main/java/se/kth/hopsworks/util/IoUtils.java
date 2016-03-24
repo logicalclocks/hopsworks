@@ -17,7 +17,7 @@ public class IoUtils {
   private static final Logger logger = Logger.getLogger(IoUtils.class.getName());
 
   public static String readContentFromClasspath(String path) throws IOException {
-    URL url = Resources.getResource(path);
+    URL url = IoUtils.class.getResource(path);// Resources.getResource(path);
     if (url == null) {
       throw new IOException("No config.props file found in cookbook");
     }

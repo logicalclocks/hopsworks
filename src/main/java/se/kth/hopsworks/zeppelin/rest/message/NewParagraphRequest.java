@@ -16,33 +16,29 @@
  */
 package se.kth.hopsworks.zeppelin.rest.message;
 
-import java.util.List;
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
- * NewNotebookRequest rest api request message
+ * NewParagraphRequest rest api request message
  *
+ * index field will be ignored when it's used to provide initial paragraphs
  */
-@XmlRootElement
-public class NewNotebookRequest {
+public class NewParagraphRequest {
+  String title;
+  String text;
+  Double index;
 
-    String name;
-    List<NewParagraphRequest> paragraphs;
+  public NewParagraphRequest() {
 
-    public NewNotebookRequest() {
+  }
 
-    }
+  public String getTitle() {
+    return title;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public String getText() {
+    return text;
+  }
 
-    public String getName() {
-        return name;
-    }
-
-    public List<NewParagraphRequest> getParagraphs() {
-        return paragraphs;
-    }
-
+  public Double getIndex() {
+    return index;
+  }
 }
