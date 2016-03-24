@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.flink.configuration.Configuration;
 import org.apache.hadoop.fs.Path;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.JobDescription;
@@ -73,7 +72,6 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setConfigurationFilePath(new Path(flinkDir + jobconfig.getFlinkConfDir() + jobconfig.getFlinkConfFile()));
         //Flink specific conf object
         //TODO: Check if needs to be initialized
-        flinkBuilder.setFlinkConfigurationObject(new Configuration());
         //TODO: Check if Path is correct
         flinkBuilder.setFlinkLoggingConfigurationPath(new Path(flinkDir + jobconfig.getFlinkConfDir() + jobconfig.getFlinkConfFile()));
         flinkBuilder.setLocalJarPath(new Path(flinkDir+"/flink.jar"));

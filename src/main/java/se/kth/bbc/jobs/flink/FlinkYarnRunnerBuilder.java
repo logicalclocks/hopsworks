@@ -1,8 +1,5 @@
 package se.kth.bbc.jobs.flink;
 
-import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.client.CliFrontend;
-import org.apache.flink.client.FlinkYarnSessionCli;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -19,8 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import org.apache.flink.yarn.ApplicationMaster;
-import org.apache.flink.yarn.FlinkYarnClient;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.hopsworks.util.Settings;
 
@@ -39,7 +34,7 @@ import se.kth.hopsworks.util.Settings;
 */
 public class FlinkYarnRunnerBuilder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FlinkYarnClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FlinkYarnRunnerBuilder.class);
 
     /**
      * Constants, all starting with ENV_ are used as environment variables to
@@ -56,7 +51,9 @@ public class FlinkYarnRunnerBuilder {
     public static final String ENV_DETACHED = "_DETACHED";
     public static final String ENV_STREAMING_MODE = "_STREAMING_MODE";
     public static final String ENV_DYNAMIC_PROPERTIES = "_DYNAMIC_PROPERTIES";
-
+	private static final String CONFIG_FILE_NAME = "flink-conf.yaml";
+	public static final String CONFIG_FILE_LOGBACK_NAME = "logback.xml";
+	public static final String CONFIG_FILE_LOG4J_NAME = "log4j.properties";
     /**
      * Minimum memory requirements, checked by the Client.
      */
@@ -87,7 +84,6 @@ public class FlinkYarnRunnerBuilder {
     private Path flinkJarPath;
     private String dynamicPropertiesEncoded;
     private List<File> shipFiles = new ArrayList<File>();
-    private org.apache.flink.configuration.Configuration flinkConfiguration;
     private boolean detached;
     private boolean streamingMode;
     private String customName = null;
@@ -128,10 +124,6 @@ public class FlinkYarnRunnerBuilder {
         this.taskManagerMemoryMb = memoryMb;
     }
 
-    //@Override
-    public void setFlinkConfigurationObject(org.apache.flink.configuration.Configuration conf) {
-        this.flinkConfiguration = conf;
-    }
 
     //@Override
     public void setTaskManagerSlots(int slots) {
@@ -232,9 +224,6 @@ public class FlinkYarnRunnerBuilder {
         if (this.flinkConfigurationPath == null) {
             throw new YarnDeploymentException("Configuration path not set");
         }
-        if (this.flinkConfiguration == null) {
-            throw new YarnDeploymentException("Flink configuration object has not been set");
-        }
 
         // check if required Hadoop environment variables are set. If not, warn user
         if (System.getenv(Settings.ENV_KEY_HADOOP_CONF_DIR) == null
@@ -304,10 +293,10 @@ public class FlinkYarnRunnerBuilder {
     
     
     	// ------------------ Add dynamic properties to local flinkConfiguraton ------
-        List<Tuple2<String, String>> dynProperties = CliFrontend.getDynamicProperties(dynamicPropertiesEncoded);
-        for (Tuple2<String, String> dynProperty : dynProperties) {
-            flinkConfiguration.setString(dynProperty.f0, dynProperty.f1);
-        }
+//        List<Tuple2<String, String>> dynProperties = CliFrontend.getDynamicProperties(dynamicPropertiesEncoded);
+//        for (Tuple2<String, String> dynProperty : dynProperties) {
+//            flinkConfiguration.setString(dynProperty.f0, dynProperty.f1);
+//        }
 
 	
 
@@ -330,9 +319,9 @@ public class FlinkYarnRunnerBuilder {
 //            taskManagerMemoryMb = yarnMinAllocationMB;
 //        }
 
-        String logbackFile = configurationDirectory + File.separator + FlinkYarnSessionCli.CONFIG_FILE_LOGBACK_NAME;
+        String logbackFile = configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
         boolean hasLogback = new File(logbackFile).exists();
-        String log4jFile = configurationDirectory + File.separator + FlinkYarnSessionCli.CONFIG_FILE_LOG4J_NAME;
+        String log4jFile = configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOG4J_NAME;
 
         boolean hasLog4j = new File(log4jFile).exists();
         if (hasLogback) {
@@ -360,21 +349,21 @@ public class FlinkYarnRunnerBuilder {
         }
 
 
-        builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_TM_COUNT, String.valueOf(taskManagerCount));
-        builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_TM_MEMORY, String.valueOf(taskManagerMemoryMb));
-        builder.addToAppMasterEnvironment(FlinkYarnClient.FLINK_JAR_PATH, flinkJarPath.toString());
-        builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_CLIENT_SHIP_FILES, envShipFileList.toString());
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_COUNT, String.valueOf(taskManagerCount));
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_MEMORY, String.valueOf(taskManagerMemoryMb));
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.FLINK_JAR_PATH, flinkJarPath.toString());
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, envShipFileList.toString());
         try {
-            builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_CLIENT_USERNAME, UserGroupInformation.getCurrentUser().getShortUserName());
+            builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, UserGroupInformation.getCurrentUser().getShortUserName());
         } catch (IOException ex) {
             LOG.error("Error while getting Flink client username", ex);
         }
-        builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_SLOTS, String.valueOf(slots));
-        builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_DETACHED, String.valueOf(detached));
-        builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_STREAMING_MODE, String.valueOf(streamingMode));
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_SLOTS, String.valueOf(slots));
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DETACHED, String.valueOf(detached));
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_STREAMING_MODE, String.valueOf(streamingMode));
         if (dynamicPropertiesEncoded != null) {
-            //appMasterEnv.put(FlinkYarnClient.ENV_DYNAMIC_PROPERTIES, dynamicPropertiesEncoded);
-            builder.addToAppMasterEnvironment(FlinkYarnClient.ENV_DYNAMIC_PROPERTIES, dynamicPropertiesEncoded);
+            //appMasterEnv.put(FlinkYarnRunnerBuilder.ENV_DYNAMIC_PROPERTIES, dynamicPropertiesEncoded);
+            builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DYNAMIC_PROPERTIES, dynamicPropertiesEncoded);
         }
 
         // Set up resource type requirements for ApplicationMaster
