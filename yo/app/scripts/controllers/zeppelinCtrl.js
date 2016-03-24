@@ -1,9 +1,9 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ZeppelinCtrl', ['$routeParams',
+        .controller('ZeppelinCtrl', ['$scope','$routeParams',
           'growl', 'ModalService', 'ZeppelinService',
-          function ($routeParams, growl, ModalService, ZeppelinService) {
+          function ($scope, $routeParams, growl, ModalService, ZeppelinService) {
 
             var self = this;
             self.interpretersRefreshing = false;
@@ -12,8 +12,13 @@ angular.module('hopsWorksApp')
             self.tutorialNotes = [];
             self.notes = [];
             self.transition = false;
+            $scope.tgState = true;
             var projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', 'running    ', 'stopping...', 'restarting...'];
+            
+            self.deselect = function () {
+              self.selected = null;
+            };
 
             var getInterpreterStatus = function () {
               self.interpreters = [];
