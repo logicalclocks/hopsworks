@@ -97,6 +97,10 @@ public class AuthService {
               "Unrecognized email address. Have you registered yet?");
     }
     String newPassword = null;
+    if (user == null) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+                ResponseMessages.AUTHENTICATION_FAILURE);
+    }
     // Add padding if custom realm is disabled
     if (otp == null || otp.isEmpty() && user.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
       otp = AuthenticationConstants.MOBILE_OTP_PADDING;

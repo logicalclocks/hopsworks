@@ -18,7 +18,6 @@ import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -56,6 +55,7 @@ import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.SshkeysFacade;
 import se.kth.hopsworks.util.ConfigFileGenerator;
 import se.kth.hopsworks.util.Settings;
+import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -95,6 +95,8 @@ public class ProjectController {
   private DistributedFsService dfs;
   @EJB
   private Settings settings;
+  @EJB
+  private ZeppelinConfigFactory zeppelinConfFactory;
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeDescriptorFacade;
 
@@ -476,6 +478,7 @@ public class ProjectController {
       if (success) {
         hdfsUsersBean.deleteProjectGroupsRecursive(project, dsInProject);
         hdfsUsersBean.deleteProjectUsers(project, projectTeam);
+        zeppelinConfFactory.deleteZeppelinConfDir(project.getName());
         //projectPaymentsHistoryFacade.remove(projectPaymentsHistory);
         yarnProjectsQuotaFacade.remove(yarnProjectsQuota);
       }

@@ -29,6 +29,8 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.DownloadService.class);
     register(se.kth.hopsworks.rest.UploadService.class);
     register(se.kth.hopsworks.rest.UserService.class);
+    register(se.kth.hopsworks.zeppelin.rest.InterpreterService.class);
+    register(se.kth.hopsworks.zeppelin.rest.NotebookService.class);
     register(se.kth.hopsworks.zeppelin.rest.InterpreterRestApi.class);
     register(se.kth.hopsworks.zeppelin.rest.NotebookRestApi.class);
     register(se.kth.hopsworks.zeppelin.rest.ZeppelinRestApi.class);

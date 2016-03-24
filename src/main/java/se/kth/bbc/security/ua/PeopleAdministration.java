@@ -417,6 +417,7 @@ public class PeopleAdministration implements Serializable {
       userTransaction.begin();
 
       if (!"#".equals(sgroup) && (!sgroup.isEmpty() || sgroup != null)) {
+
         userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
         userManager.registerGroup(user1, BBCGroup.BBC_USER.getValue());
 
