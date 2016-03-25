@@ -40,6 +40,9 @@ angular.module('hopsWorksApp')
             };
 
             self.yarnQuota = function (id) {
+              if (self.quotas === {} ||  self.quotas.yarnQuotaInMins === undefined ) {
+                return 'unknown';
+              }
               var quota = self.quotas.yarnQuotaInMins;
               var pos = quota.lastIndexOf('.');
               var quotaInt = quota.substring(0, pos);

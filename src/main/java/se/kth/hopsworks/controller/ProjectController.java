@@ -871,7 +871,7 @@ public class ProjectController {
 
   }
 
-  public YarnRunningPrice getYarnPrice() {
+    public YarnRunningPrice getYarnPrice() {
     YarnRunningPrice price = yarnProjectsQuotaFacade.getPrice();
     if (price == null) {
       price = new YarnRunningPrice();

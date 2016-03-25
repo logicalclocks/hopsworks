@@ -44,6 +44,19 @@ angular.module('hopsWorksApp')
               });
             };
 
+            self.display = function (group) {
+              if (group.indexOf("spark") > -1) 
+                return true;
+              if (group.indexOf("flink") > -1) 
+                return true;
+              if (group.indexOf("sh") > -1) 
+                return true;
+              if (group.indexOf("angular") > -1) 
+                return true;
+              
+              return false;
+            };
+            
             var refresh = function () {
               self.interpretersRefreshing = true;
               ZeppelinService.interpreters().then(function (success) {

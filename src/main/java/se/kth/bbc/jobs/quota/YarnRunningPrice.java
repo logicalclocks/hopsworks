@@ -22,13 +22,13 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author jdowling
  */
 @Entity
-@Table(name = "yarn_running_price", catalog = "hops", schema = "")
+@Table(name = "hops.yarn_running_price")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "YarnRunningPrice.findAll", query = "SELECT y FROM YarnRunningPrice y"),
   @NamedQuery(name = "YarnRunningPrice.findById", query = "SELECT y FROM YarnRunningPrice y WHERE y.id = :id"),
   @NamedQuery(name = "YarnRunningPrice.findByTime", query = "SELECT y FROM YarnRunningPrice y WHERE y.time = :time"),
-  @NamedQuery(name = "YarnRunningPrice.findLatestPrice", query = "SELECT y FROM YarnRunningPrice y ORDER BY y.time LIMIT 1"),
+  @NamedQuery(name = "YarnRunningPrice.findLatest", query = "SELECT y FROM YarnRunningPrice y ORDER BY y.time"),
   @NamedQuery(name = "YarnRunningPrice.findByPrice", query = "SELECT y FROM YarnRunningPrice y WHERE y.price = :price")})
 public class YarnRunningPrice implements Serializable {
 
