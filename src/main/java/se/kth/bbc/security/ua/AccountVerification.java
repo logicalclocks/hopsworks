@@ -9,6 +9,7 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.user.model.Users;
 
 
@@ -32,10 +33,10 @@ public class AccountVerification {
   @PostConstruct
   public void init() {
 
-    username = key.substring(0, 8);
+    username = key.substring(0, AuthenticationConstants.USERNAME_LENGTH);
 
     // get the 8 char username
-    String secret = key.substring(8, key.length());
+    String secret = key.substring(AuthenticationConstants.USERNAME_LENGTH, key.length());
     valid = validateKey(secret);
   }
 
@@ -48,6 +49,10 @@ public class AccountVerification {
 
     Users user = mgr.getUserByUsername(username);
 
+    if(user==null){
+        return false;
+    }    
+    
     if ((user.getStatus() != PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue() 
             && user.getMode()== PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) || 
             (user.getStatus() != PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue() 
@@ -73,7 +78,7 @@ public class AccountVerification {
     mgr.increaseLockNum(user.getUid(), val + 1);
 
     // if more than 5 times false logins set as spam
-    if (val > 5) {
+    if (val > AuthenticationConstants.ACCOUNT_VALIDATION_TRIES) {
 
       mgr.changeAccountStatus(user.getUid(), PeopleAccountStatus.SPAM_ACCOUNT.toString(),
               PeopleAccountStatus.SPAM_ACCOUNT.getValue());

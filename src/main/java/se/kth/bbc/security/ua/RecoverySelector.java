@@ -50,7 +50,7 @@ public class RecoverySelector implements Serializable {
   private String tmpCode;
   private String passwd;
 
-  private final int passwordLength = AuthenticationConstants.PASSWORD_LENGTH;
+  private final int passwordLength = AuthenticationConstants.PASSWORD_MIN_LENGTH;
 
   private int qrEnabled = -1;
 

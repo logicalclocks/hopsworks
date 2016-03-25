@@ -40,7 +40,12 @@
                            emptyMessage="No open user requests"
                            rowKey="#{req.email}" 
                            selection="#{peopleAdministration.selectedUsers}" 
-                           editable="true" editMode="cell">
+                           editable="true" editMode="cell"
+                           rows="25"
+                           paginator="true"
+                           paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                           rowsPerPageTemplate="15,25,35,45,55">
+                          
 
                 <p:column id="nameColumn" headerText="First Name"  
                           filterBy="#{req.fname}">

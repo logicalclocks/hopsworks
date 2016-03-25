@@ -13,7 +13,7 @@ public class UserAccountsEmailMessages {
    * Subject of account activation email
    */
   public final static String ACCOUNT_CONFIRMATION_SUBJECT
-          = "Welcome to Hops!";
+          = "Welcome to HopsWorks!";
 
   /*
    * Subject of device lost
