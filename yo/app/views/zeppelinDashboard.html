@@ -53,8 +53,8 @@
                                             </div>
                                             <div class="file-name">
                                                 <div style="text-align: center;">
-                                                    {{note.name|| 'Note ' + note.id}}
-                                                </div>
+                                                    {{note.name | limitTo: 18 || 'Note ' + note.id}}{{note.name.length > 18 ? '...' : ''}}
+                                                </div>                                                
                                             </div>
                                         </a>
                                     </div>
