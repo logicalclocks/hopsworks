@@ -24,23 +24,27 @@ angular.module('hopsWorksApp')
             self.getQuotas();
 
             self.hdfsUsage = function (id) {
-                return convertSize(self.quotas.hdfsUsageInBytes);
+              return convertSize(self.quotas.hdfsUsageInBytes);
             };
 
             self.hdfsQuota = function (id) {
-                return convertSize(self.quotas.hdfsQuotaInBytes);
+              return convertSize(self.quotas.hdfsQuotaInBytes);
             };
 
             self.hdfsNsCount = function (id) {
-                return convertNs(self.quotas.hdfsNsCount);
+              return convertNs(self.quotas.hdfsNsCount);
             };
 
             self.hdfsNsQuota = function (id) {
-                return convertNs(self.quotas.hdfsNsQuota);
+              return convertNs(self.quotas.hdfsNsQuota);
             };
 
             self.yarnQuota = function (id) {
-                return convertSeconds(self.quotas.yarnQuotaInMins);
+              var quota = self.quotas.yarnQuotaInMins;
+              var pos = quota.lastIndexOf('.');
+              var quotaInt = quota.substring(0, pos);
+
+              return convertSeconds(parseInt(quotaInt));
             };
 
             self.ok = function () {

@@ -472,6 +472,11 @@ public class Settings {
   public static final String SHARED_FILE_SEPARATOR = "::";
   public static final String DOUBLE_UNDERSCORE = "__";
 
+  
+  // QUOTA
+  public static final float DEFAULT_YARN_PRICE = 1.0f;
+
+  
   //Project creation: default datasets
   public static enum DefaultDataset {
 

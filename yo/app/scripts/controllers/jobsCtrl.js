@@ -6,8 +6,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'TourService',
-          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval, StorageService, $mdSidenav, TourService) {
+        .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval', 'StorageService',
+          '$mdSidenav', 'TourService', 'ProjectService',
+          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval, StorageService,
+                  $mdSidenav, TourService, ProjectService) {
 
             var self = this;
             self.tourService = TourService;
@@ -99,7 +101,7 @@ angular.module('hopsWorksApp')
                 mainFileTxt = "JAR file";
                 mainFileVal = flinkState.selectedJar;
                 jobDetailsTxt = "Job details";
-              } 
+              }
               var state = {
                 "jobtype": jobType,
                 "jobname": self.currentjob.name,
@@ -188,22 +190,31 @@ angular.module('hopsWorksApp')
             self.getRunStatus();
             self.createAppReport();
 
-            this.runJob = function (jobId) {
-              
-              var price = 0.11;
-              ModalService.uberPrice('lg', 'Confirm', 'Do you want to run this job at this price?', price).then(
+            this.runJob = function (job, index) {
+              var jobId = job.id;
+
+              ProjectService.uberPrice({id: self.projectId}).$promise.then(
                       function (success) {
-                        JobService.runJob(self.projectId, jobId).then(
+                        var price = success.price;
+                        ModalService.uberPrice('lg', 'Confirm', 'Do you want to run this job at this price?', price).then(
                                 function (success) {
-                                  self.getRunStatus();
-                                }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Failed to run job', ttl: 15000});
-                        });
+                                  JobService.runJob(self.projectId, jobId).then(
+                                          function (success) {
+                                            self.toggle(job, index);
+                                            self.buttonClickedToggle(job.id, true);
+//                                            self.stopbuttonClickedToggle(job.id, false);
+                                            self.getRunStatus();
+                                          }, function (error) {
+                                    growl.error(error.data.errorMsg, {title: 'Failed to run job', ttl: 10000});
+                                  });
 
-                      }
-              );
+                                }
+                        );
 
-            };
+                      }, function (error) {
+                      growl.error(error.data.errorMsg, {title: 'Could not get the current YARN price.', ttl: 10000});
+                    }
+                )};
 
             this.stopJob = function (jobId) {
               self.stopbuttonClickedToggle(jobId, true);

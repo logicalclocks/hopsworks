@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package se.kth.bbc.project;
+package se.kth.bbc.jobs.quota;
 
+import se.kth.bbc.jobs.quota.YarnProjectsQuota;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 import javax.ejb.Stateless;
@@ -76,4 +77,17 @@ public class YarnProjectsQuotaFacade extends
     }
     em.merge(project);
   }
+  
+  
+  public YarnRunningPrice getPrice() {
+    TypedQuery<YarnRunningPrice> query = em.
+        createNamedQuery("YarnRunningPrice.findLatestPrice", YarnRunningPrice.class);
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+    
+  }
+  
 }

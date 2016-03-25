@@ -3,7 +3,10 @@
   <h3 class="modal-title">{{uberCtrl.title}}</h3>
 </div>
 <div class="modal-body">
-  {{uberCtrl.msg}}
+   <div class="jumbotron" style="background-color: black; color: lightblue;">
+    <h1>{{uberCtrl.price}}X</h1>
+   </div>
+  The current price is <b>{{uberCtrl.price}}</b> times the normal price.
 </div>
 <div class="modal-footer">
   <button class="btn btn-default" ng-click="uberCtrl.cancel()">Cancel</button>
