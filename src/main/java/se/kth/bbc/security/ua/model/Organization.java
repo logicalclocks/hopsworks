@@ -26,6 +26,8 @@ import se.kth.hopsworks.user.model.Users;
           query = "SELECT o FROM Organization o"),
   @NamedQuery(name = "Organization.findById",
           query = "SELECT o FROM Organization o WHERE o.id = :id"),
+  @NamedQuery(name = "Organization.findByUid",
+          query = "SELECT o FROM Organization o WHERE o.uid = :uid"),
   @NamedQuery(name = "Organization.findByOrgName",
           query = "SELECT o FROM Organization o WHERE o.orgName = :orgName"),
   @NamedQuery(name = "Organization.findByWebsite",

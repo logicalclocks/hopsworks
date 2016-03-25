@@ -24,6 +24,8 @@ import se.kth.hopsworks.user.model.Users;
 @NamedQueries({
   @NamedQuery(name = "Address.findAll",
           query = "SELECT a FROM Address a"),
+  @NamedQuery(name = "Address.findByUid",
+          query = "SELECT a FROM Address a WHERE a.uid = :uid"),
   @NamedQuery(name = "Address.findByAddress1",
           query = "SELECT a FROM Address a WHERE a.address1 = :address1"),
   @NamedQuery(name = "Address.findByAddress2",

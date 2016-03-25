@@ -28,6 +28,8 @@ import se.kth.hopsworks.user.model.Users;
           query = "SELECT a FROM AccountAudit a"),
   @NamedQuery(name = "AccountAudit.findByLogId",
           query = "SELECT a FROM AccountAudit a WHERE a.logId = :logId"),
+  @NamedQuery(name = "AccountAudit.findByInitiator",
+          query = "SELECT a FROM AccountAudit a WHERE a.initiator = :initiator"),
   @NamedQuery(name = "AccountAudit.findByAction",
           query = "SELECT a FROM AccountAudit a WHERE a.action = :action"),
   @NamedQuery(name = "AccountAudit.findByTime",

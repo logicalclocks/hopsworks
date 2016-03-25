@@ -2,6 +2,7 @@ package se.kth.bbc.security.ua;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
@@ -10,6 +11,8 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.project.Project;
+import se.kth.bbc.security.audit.model.AccountAudit;
+import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
@@ -128,17 +131,7 @@ public class UserManager {
     em.merge(p);
     return true;
   }
-
-  public boolean updateGroup(int uid, int gid) {
-    TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid",
-            PeopleGroup.class);
-    query.setParameter("uid", uid);
-    PeopleGroup p = (PeopleGroup) query.getSingleResult();
-    p.setPeopleGroupPK(new PeopleGroupPK(uid, gid));
-    em.merge(p);
-    return true;
-  }
-
+  
   public List<Users> findInactivateUsers() {
     Query query = em.createNativeQuery(
             "SELECT * FROM hopsworks.users p WHERE p.active = "
@@ -249,8 +242,6 @@ public class UserManager {
       
   }
 
-  
-
   public Users findByEmail(String email) {
     TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
             Users.class);
@@ -357,23 +348,31 @@ public class UserManager {
     boolean success = false;
 
     if (u != null) {
-      TypedQuery<PeopleGroup> query = em.createNamedQuery(
-              "PeopleGroup.findByUid", PeopleGroup.class);
-      query.setParameter("uid", u.getUid());
-      List<PeopleGroup> p = query.getResultList();
+        
+      TypedQuery<RolesAudit> query4 = em.createNamedQuery(
+              "RolesAudit.findByInitiator", RolesAudit.class);
+      query4.setParameter("initiator", u);
 
-      for (PeopleGroup next : p) {
-        em.remove(p);
-      }
-
-      if (em.contains(u)) {
-        em.remove(u);
-      } else {
-
-        em.remove(em.merge(u));
-
-      }
+      List<RolesAudit> results1= query4.getResultList();
       
+        for (Iterator<RolesAudit> iterator = results1.iterator(); iterator.hasNext();) {
+            RolesAudit next = iterator.next();
+            em.remove(next);
+        }
+
+      
+      TypedQuery<AccountAudit> query5 = em.createNamedQuery(
+              "AccountAudit.findByInitiator", AccountAudit.class);
+      query5.setParameter("initiator", u);
+       
+      List<AccountAudit> aa = query5.getResultList();
+      
+        for (Iterator<AccountAudit> iterator = aa.iterator(); iterator.hasNext();) {
+            AccountAudit next = iterator.next();
+            em.remove(next);
+        }
+      u = em.merge(u);
+      em.remove(u);
       success = true;
     }
 
