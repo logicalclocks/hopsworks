@@ -12,9 +12,9 @@ angular.module('hopsWorksApp')
             self.tutorialNotes = [];
             self.notes = [];
             self.transition = false;
-            $scope.tgState = true;
+            $scope.tgState = false;
             var projectId = $routeParams.projectID;
-            var statusMsgs = ['stopped    ', "<span style=\"color: green\">running    </span>", 'stopping...', 'restarting...'];
+            var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
             
             self.deselect = function () {
               self.selected = null;
@@ -78,6 +78,7 @@ angular.module('hopsWorksApp')
             var init = function () {
               getInterpreterStatus();
               getNotesInProject();
+              $scope.tgState = true;
             };
 
             init();
