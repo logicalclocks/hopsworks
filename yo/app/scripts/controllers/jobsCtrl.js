@@ -6,8 +6,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'TourService',
-          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval, StorageService, $mdSidenav, TourService) {
+        .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval', 'StorageService',
+          '$mdSidenav', 'TourService', 'ProjectService',
+          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval, StorageService,
+                  $mdSidenav, TourService, ProjectService) {
 
             var self = this;
             self.tourService = TourService;
@@ -68,9 +70,11 @@ angular.module('hopsWorksApp')
                 case "ADAM":
                   jobType = 2;
                   break;
+                case "FLINK":
+                  jobType = 3;
               }
-              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState;
-              if (jobType === 0) {
+              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
+              if (jobType == 0) {
                 mainFileTxt = "Workflow file";
                 mainFileVal = self.currentjob.runConfig.wf.name;
                 jobDetailsTxt = "Input variables";
@@ -90,6 +94,13 @@ angular.module('hopsWorksApp')
                 mainFileTxt = "ADAM command";
                 mainFileVal = adamState.selectedCommand;
                 jobDetailsTxt = "Job arguments";
+              } else if (jobType == 3) {
+                flinkState = {
+                  "selectedJar": getFileName(self.currentjob.runConfig.jarPath)
+                };
+                mainFileTxt = "JAR file";
+                mainFileVal = flinkState.selectedJar;
+                jobDetailsTxt = "Job details";
               }
               var state = {
                 "jobtype": jobType,
@@ -99,6 +110,7 @@ angular.module('hopsWorksApp')
                 "runConfig": self.currentjob.runConfig,
                 "sparkState": sparkState,
                 "adamState": adamState,
+                "flinkState": flinkState,
                 "accordion1": {//Contains the job name
                   "isOpen": false,
                   "visible": true,
@@ -178,22 +190,32 @@ angular.module('hopsWorksApp')
             self.getRunStatus();
             self.createAppReport();
 
-            this.runJob = function (jobId) {
-              
-              var price = 0.11;
-              ModalService.uberPrice('sm', 'Confirm', 'Do you want to run this job at this price?', price).then(
+            this.runJob = function (job, index) {
+              var jobId = job.id;
+
+              ProjectService.uberPrice({id: self.projectId}).$promise.then(
                       function (success) {
-                        JobService.runJob(self.projectId, jobId).then(
+                        var price = success.price;
+                        price = parseFloat(price).toFixed(4) * 100.0;
+                        ModalService.uberPrice('sm', 'Confirm', 'Do you want to run this job at this price?', price).then(
                                 function (success) {
-                                  self.getRunStatus();
-                                }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Failed to run job', ttl: 15000});
-                        });
+                                  JobService.runJob(self.projectId, jobId).then(
+                                          function (success) {
+                                            self.toggle(job, index);
+                                            self.buttonClickedToggle(job.id, true);
+//                                            self.stopbuttonClickedToggle(job.id, false);
+                                            self.getRunStatus();
+                                          }, function (error) {
+                                    growl.error(error.data.errorMsg, {title: 'Failed to run job', ttl: 10000});
+                                  });
 
-                      }
-              );
+                                }
+                        );
 
-            };
+                      }, function (error) {
+                      growl.error(error.data.errorMsg, {title: 'Could not get the current YARN price.', ttl: 10000});
+                    }
+                )};
 
             this.stopJob = function (jobId) {
               self.stopbuttonClickedToggle(jobId, true);

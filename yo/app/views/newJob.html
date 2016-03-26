@@ -34,7 +34,8 @@
             <div class="btn-group">
               <!--<label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="0" ng-change="newJobCtrl.jobTypeChosen()">Cuneiform</label>-->
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
-              <!--<label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>-->
+              <label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>
+              <label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>
             </div>
           </accordion-group>
 
@@ -43,8 +44,8 @@
           <accordion-group heading="{{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}" 
                            is-open="newJobCtrl.accordion3.isOpen" 
                            ng-show="newJobCtrl.accordion3.visible">
-            <!-- Cuneiform and Spark -->
-            <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype === 0 || newJobCtrl.jobtype === 1">
+            <!-- Cuneiform, Spark and Flink  -->
+            <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 0 || newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3">
               <span>Select...</span>
             </button>
             <!-- ADAM -->
@@ -82,8 +83,8 @@
                 <div class="col-md-8"> <input type="text" ng-model="param.value" class="form-control"></div>
               </div>
             </div>
-            <!-- Spark -->
-            <div ng-show="newJobCtrl.jobtype === 1">
+            <!-- Spark, Flink-->
+            <div ng-show="newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3">
               <div class="row">
                 <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="text" ng-model="newJobCtrl.runConfig.mainClass" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
@@ -125,6 +126,7 @@
                 </div>
               </div>
             </div>
+            
           </accordion-group>
           <!-- Set some run configuration -->
           <accordion-group heading="{{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}" 
@@ -163,6 +165,19 @@
               <div class="row" ng-show="newJobCtrl.jobtype === 1">
                 <div class="text-right col-md-4">Executor memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="number" min="0" ng-model="newJobCtrl.runConfig.executorMemory" class="form-control"></div>
+              </div>
+              <!-- Flink -->
+              <div class="row" ng-show="newJobCtrl.jobtype == 3">
+                <div class="text-right col-md-4">Number of TaskManagers <i class="fa fa-info-circle" tooltip="The number of Flink TaskManagers that should be requested for this job." style="margin-left: 10px"></i></div>
+                <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numberOfTaskManagers" class="form-control"></div>
+              </div>
+              <div class="row" ng-show="newJobCtrl.jobtype == 3">
+                <div class="text-right col-md-4">Number of slots <i class="fa fa-info-circle" tooltip="The number of slots per TaskManager that should be requested for this job." style="margin-left: 10px"></i></div>
+                <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numberOfSlots" class="form-control"></div>
+              </div>
+              <div class="row" ng-show="newJobCtrl.jobtype == 3">
+                <div class="text-right col-md-4">TaskManager memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for each TaskManager." style="margin-left: 10px"></i></div>
+                <div class="col-md-8"><input type="number" min="768" ng-model="newJobCtrl.runConfig.taskManagerMemory" class="form-control"></div>
               </div>
             </div>
             <!-- Add libraries -->

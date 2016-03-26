@@ -30,6 +30,7 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.configuration.ScheduleDTO;
@@ -49,7 +50,7 @@ import se.kth.hopsworks.meta.exception.DatabaseException;
 public class JobService {
 
   private static final Logger logger = Logger.getLogger(JobService.class.
-          getName());
+      getName());
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -65,13 +66,14 @@ public class JobService {
   private SparkService spark;
   @Inject
   private AdamService adam;
+  @Inject
+  private FlinkService flink;
   @EJB
   private FileOperations fops;
   @EJB
   private JobController jobController;
   @EJB
   private ActivityFacade activityFacade;
-  
 
   private Project project;
 
@@ -92,14 +94,14 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response findAllJobs(@Context SecurityContext sc,
-          @Context HttpServletRequest req)
-          throws AppException {
+      @Context HttpServletRequest req)
+      throws AppException {
     List<JobDescription> jobs = jobFacade.findForProject(project);
     GenericEntity<List<JobDescription>> jobList
-            = new GenericEntity<List<JobDescription>>(jobs) {
-            };
+        = new GenericEntity<List<JobDescription>>(jobs) {
+    };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            jobList).build();
+        jobList).build();
   }
 
   /**
@@ -116,29 +118,27 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response getJob(@PathParam("jobId") int jobId,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
     JobDescription job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
-              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
       logger.log(Level.SEVERE,
-              "A user is trying to access a job outside their project!");
+          "A user is trying to access a job outside their project!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(job).build();
+          entity(job).build();
     }
   }
 
   /**
-   * Get the JobConfiguration object for the specified job. The sole reason of
-   * existence of this method is the dodginess of polymorphism in JAXB/JAXRS. As
-   * such, the jobConfig field is always empty when a JobDescription object is
-   * returned. This method must therefore be called explicitly to get the job
-   * configuration.
+   * Get the JobConfiguration object for the specified job. The sole reason of existence of this method is the dodginess
+   * of polymorphism in JAXB/JAXRS. As such, the jobConfig field is always empty when a JobDescription object is
+   * returned. This method must therefore be called explicitly to get the job configuration.
    * <p/>
    * @param jobId
    * @param sc
@@ -151,20 +151,20 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response getJobConfiguration(@PathParam("jobId") int jobId,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
     JobDescription job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
-              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
       logger.log(Level.SEVERE,
-              "A user is trying to access a job outside their project!");
+          "A user is trying to access a job outside their project!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(job.getJobConfig()).build();
+          entity(job.getJobConfig()).build();
     }
   }
 
@@ -173,17 +173,16 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response getConfigurationTemplate(@PathParam("type") String type,
-          @Context SecurityContext sc, @Context HttpServletRequest req) {
+      @Context SecurityContext sc, @Context HttpServletRequest req) {
     JobConfiguration template = JobConfiguration.JobConfigurationFactory.
-            getJobConfigurationTemplate(JobType.valueOf(type));
+        getJobConfigurationTemplate(JobType.valueOf(type));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(template).build();
+        entity(template).build();
   }
 
   /**
-   * Get all the jobs in this project that have a running execution. The return
-   * value is a JSON object, where each job id is a key and the corresponding
-   * boolean indicates whether the job is running or not.
+   * Get all the jobs in this project that have a running execution. The return value is a JSON object, where each job
+   * id is a key and the corresponding boolean indicates whether the job is running or not.
    * <p/>
    * @param sc
    * @param req
@@ -194,20 +193,17 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response getConfigurationTemplate(@Context SecurityContext sc,
-          @Context HttpServletRequest req) {
+      @Context HttpServletRequest req) {
     List<JobDescription> running = jobFacade.getRunningJobs(project);
     List<JobDescription> allJobs = jobFacade.findForProject(project);
     JsonObjectBuilder builder = Json.createObjectBuilder();
     for (JobDescription desc : allJobs) {
       try {
-        Execution execution = exeFacade.findForJob(desc).get(0);
-        builder.add(desc.getId().toString(), Json.createObjectBuilder().add
-            ("running", false).add
-            ("state", execution.getState().toString()).add
-            ("finalStatus", execution.getFinalStatus().toString()).add
-            ("progress", execution.getProgress()).add
-            ("duration", execution.getExecutionDuration()).add
-            ("submissiontime", execution.getSubmissionTime().toString()));
+        List<Execution> executions = exeFacade.findForJob(desc);
+        if (executions != null && executions.isEmpty() == false) {
+          Execution execution = executions.get(0);
+          builder.add(desc.getId().toString(), Json.createObjectBuilder().add("running", false).add("state", execution.getState().toString()).add("finalStatus", execution.getFinalStatus().toString()).add("progress", execution.getProgress()).add("duration", execution.getExecutionDuration()).add("submissiontime", execution.getSubmissionTime().toString()));
+        }
       } catch (ArrayIndexOutOfBoundsException e) {
         logger.log(Level.WARNING, "No execution was found: " + e
             .getMessage());
@@ -217,31 +213,22 @@ public class JobService {
       try {
         Execution execution = exeFacade.findForJob(desc).get(0);
         Execution updatedExecution = exeFacade.getExecution(execution.getJob().getId());
-        if(updatedExecution!=null){
+        if (updatedExecution != null) {
           execution = updatedExecution;
         }
-        builder.add(desc.getId().toString(), Json.createObjectBuilder().add
-            ("running", true).add
-            ("state", execution.getState().toString()).add
-            ("finalStatus", execution.getFinalStatus().toString()).add
-            ("progress", execution.getProgress()).add
-            ("duration", execution.getExecutionDuration()).add
-            ("submissiontime", execution.getSubmissionTime().toString()));
+        builder.add(desc.getId().toString(), Json.createObjectBuilder().add("running", true).add("state", execution.getState().toString()).add("finalStatus", execution.getFinalStatus().toString()).add("progress", execution.getProgress()).add("duration", execution.getExecutionDuration()).add("submissiontime", execution.getSubmissionTime().toString()));
       } catch (ArrayIndexOutOfBoundsException e) {
         logger.log(Level.WARNING, "No execution was found: " + e
             .getMessage());
       }
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(builder.build()).build();
+        entity(builder.build()).build();
   }
-  
-   /**
-   * Get the log information related to a job. The return
-   * value is a JSON object, with format 
-   * logset=[{"time":"JOB EXECUTION TIME"}, 
-   *        {"log":"INFORMATION LOG"},
-   *        {"err":"ERROR LOG"}] 
+
+  /**
+   * Get the log information related to a job. The return value is a JSON object, with format logset=[{"time":"JOB
+   * EXECUTION TIME"}, {"log":"INFORMATION LOG"}, {"err":"ERROR LOG"}]
    * <p/>
    * @param sc
    * @param req
@@ -252,60 +239,55 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response getLogInformation(@PathParam("jobId") int jobId, @Context SecurityContext sc,
-          @Context HttpServletRequest req) {
-      
-      JsonObjectBuilder builder = Json.createObjectBuilder();
-      JsonArrayBuilder arrayBuilder=Json.createArrayBuilder();       
-      try
-      {
-          List<Execution> executionHistory=exeFacade.findbyProjectAndJobId(project, jobId);
-          JsonObjectBuilder arrayObjectBuilder;
-          if(executionHistory!=null && !executionHistory.isEmpty()){
-            String message;            
-            for(Execution e :executionHistory){
-                arrayObjectBuilder=Json.createObjectBuilder();
-                arrayObjectBuilder.add("time", e.getSubmissionTime().toString()); 
-                if(e.getStdoutPath() !=null && !e.getStdoutPath().isEmpty()){
-                    String hdfsLogPath="hdfs://"+e.getStdoutPath();                
-                    message = IOUtils.toString(fops.getInputStream(hdfsLogPath), "UTF-8");           
-                    arrayObjectBuilder.add("log", message.isEmpty()?"No information.":message); 
-                }
-                else{
-                    arrayObjectBuilder.add("log", "No log available"); 
-                }
-                
-                if(e.getStderrPath() !=null && !e.getStderrPath().isEmpty()){
-                    
-                    String hdfsErrPath="hdfs://"+e.getStderrPath();
-                    message = IOUtils.toString(fops.getInputStream(hdfsErrPath), "UTF-8"); 
-                    arrayObjectBuilder.add("err",  message.isEmpty()?"No error.":message); 
-                }
-                else{
-                    arrayObjectBuilder.add("err", "No error log available"); 
-                }
-                arrayBuilder.add(arrayObjectBuilder);                
-            }            
+      @Context HttpServletRequest req) {
+
+    JsonObjectBuilder builder = Json.createObjectBuilder();
+    JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+    try {
+      List<Execution> executionHistory = exeFacade.findbyProjectAndJobId(project, jobId);
+      JsonObjectBuilder arrayObjectBuilder;
+      if (executionHistory != null && !executionHistory.isEmpty()) {
+        String message;
+        for (Execution e : executionHistory) {
+          arrayObjectBuilder = Json.createObjectBuilder();
+          arrayObjectBuilder.add("time", e.getSubmissionTime().toString());
+          if (e.getStdoutPath() != null && !e.getStdoutPath().isEmpty()) {
+            String hdfsLogPath = "hdfs://" + e.getStdoutPath();
+            message = IOUtils.toString(fops.getInputStream(hdfsLogPath), "UTF-8");
+            arrayObjectBuilder.add("log", message.isEmpty() ? "No information." : message);
+          } else {
+            arrayObjectBuilder.add("log", "No log available");
           }
-          else{
-              arrayObjectBuilder=Json.createObjectBuilder();
-              arrayObjectBuilder.add("time", "No log available");
-              arrayObjectBuilder.add("log", "No log available");
-              arrayObjectBuilder.add("err", "No log available");
-              arrayBuilder.add(arrayObjectBuilder);
+
+          if (e.getStderrPath() != null && !e.getStderrPath().isEmpty()) {
+
+            String hdfsErrPath = "hdfs://" + e.getStderrPath();
+            message = IOUtils.toString(fops.getInputStream(hdfsErrPath), "UTF-8");
+            arrayObjectBuilder.add("err", message.isEmpty() ? "No error." : message);
+          } else {
+            arrayObjectBuilder.add("err", "No error log available");
           }
-          builder.add("logset", arrayBuilder);
+          arrayBuilder.add(arrayObjectBuilder);
+        }
+      } else {
+        arrayObjectBuilder = Json.createObjectBuilder();
+        arrayObjectBuilder.add("time", "No log available");
+        arrayObjectBuilder.add("log", "No log available");
+        arrayObjectBuilder.add("err", "No log available");
+        arrayBuilder.add(arrayObjectBuilder);
       }
-      catch(IOException ex){
-          logger.log(Level.WARNING, "Error when reading hdfs logs: "+ex.getMessage());
-      }
+      builder.add("logset", arrayBuilder);
+    } catch (IOException ex) {
+      logger.log(Level.WARNING, "Error when reading hdfs logs: " + ex.getMessage());
+    }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(builder.build()).build();
+        entity(builder.build()).build();
   }
-  
-   /**
-   * Delete the job associated to the project and jobid. The return
-   * value is a JSON object stating operation successful or not.
+
+  /**
+   * Delete the job associated to the project and jobid. The return value is a JSON object stating operation successful
+   * or not.
    * <p/>
    * @param sc
    * @param req
@@ -316,37 +298,35 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response deleteJob(@PathParam("jobId") int jobId, @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-        logger.log(Level.INFO, "Request to delete job");
-    
+      @Context HttpServletRequest req) throws AppException {
+    logger.log(Level.INFO, "Request to delete job");
+
     JobDescription job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
-              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
       logger.log(Level.SEVERE,
-              "A user is trying to access a job outside their project!");
-       return noCacheResponse.
-              getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
+          "A user is trying to access a job outside their project!");
+      return noCacheResponse.
+          getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
     } else {
-        try{
-            logger.log(Level.INFO, "Request to delete job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
-            jobFacade.removeJob(job);
-            logger.log(Level.INFO, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
-            JsonResponse json = new JsonResponse();
-            json.setSuccessMessage("Deleted job "+job.getName()+" successfully");
-            activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.getName(), project, sc.getUserPrincipal().getName());
-            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-        }catch(DatabaseException ex){
-            logger.log(Level.WARNING, "Job cannot be deleted  job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
-            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.getMessage());
-        }
+      try {
+        logger.log(Level.INFO, "Request to delete job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
+        jobFacade.removeJob(job);
+        logger.log(Level.INFO, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
+        JsonResponse json = new JsonResponse();
+        json.setSuccessMessage("Deleted job " + job.getName() + " successfully");
+        activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.getName(), project, sc.getUserPrincipal().getName());
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+      } catch (DatabaseException ex) {
+        logger.log(Level.WARNING, "Job cannot be deleted  job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.getMessage());
+      }
     }
-   }  
-  
-  
-  
+  }
+
   /**
    * Get the ExecutionService for the job with given id.
    * <p/>
@@ -362,56 +342,55 @@ public class JobService {
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
       logger.log(Level.SEVERE,
-              "A user is trying to access a job outside their project!");
+          "A user is trying to access a job outside their project!");
       return null;
     } else {
       return this.executions.setJob(job);
     }
   }
-  
+
   @POST
   @Path("/updateschedule/{jobId}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response updateSchedule(ScheduleDTO schedule,@PathParam("jobId") int jobId,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-      JobDescription job = jobFacade.findById(jobId);
-      if (job == null) {
-        return noCacheResponse.
-              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
-      } else if (!job.getProject().equals(project)) {
-        //In this case, a user is trying to access a job outside its project!!!
-        logger.log(Level.SEVERE,
-              "A user is trying to access a job outside their project!");
-        return noCacheResponse.
-              getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
-      } else {
-         try{
-            boolean isScheduleUpdated = jobFacade.updateJobSchedule(jobId,schedule);
-            if(isScheduleUpdated){
-                boolean status = jobController.scheduleJob(jobId);
-                if(status){
-                    JsonResponse json = new JsonResponse();
-                    json.setSuccessMessage("Scheduled job "+job.getName()+" successfully");
-                    activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + job.getName(), project, sc.getUserPrincipal().getName());
-                    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-                }else{
-                    logger.log(Level.WARNING, "Schedule is not created in the scheduler for the jobid "+jobId);
-                }
-            }else{
-                logger.log(Level.WARNING, "Schedule is not updated in DB for the jobid "+jobId);
-            }
-            
-         }catch(DatabaseException ex){
-              logger.log(Level.WARNING, "Cannot update schedule "+ex.getMessage());
-              throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode() ,ex.getMessage());
-         }
-      }    
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();    
+  public Response updateSchedule(ScheduleDTO schedule, @PathParam("jobId") int jobId,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
+    JobDescription job = jobFacade.findById(jobId);
+    if (job == null) {
+      return noCacheResponse.
+          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } else if (!job.getProject().equals(project)) {
+      //In this case, a user is trying to access a job outside its project!!!
+      logger.log(Level.SEVERE,
+          "A user is trying to access a job outside their project!");
+      return noCacheResponse.
+          getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
+    } else {
+      try {
+        boolean isScheduleUpdated = jobFacade.updateJobSchedule(jobId, schedule);
+        if (isScheduleUpdated) {
+          boolean status = jobController.scheduleJob(jobId);
+          if (status) {
+            JsonResponse json = new JsonResponse();
+            json.setSuccessMessage("Scheduled job " + job.getName() + " successfully");
+            activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + job.getName(), project, sc.getUserPrincipal().getName());
+            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+          } else {
+            logger.log(Level.WARNING, "Schedule is not created in the scheduler for the jobid " + jobId);
+          }
+        } else {
+          logger.log(Level.WARNING, "Schedule is not updated in DB for the jobid " + jobId);
+        }
+
+      } catch (DatabaseException ex) {
+        logger.log(Level.WARNING, "Cannot update schedule " + ex.getMessage());
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.getMessage());
+      }
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();
   }
-  
 
   @Path("/cuneiform")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
@@ -429,5 +408,11 @@ public class JobService {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public AdamService adam() {
     return this.adam.setProject(project);
+  }
+
+  @Path("/flink")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public FlinkService flink() {
+    return this.flink.setProject(project);
   }
 }

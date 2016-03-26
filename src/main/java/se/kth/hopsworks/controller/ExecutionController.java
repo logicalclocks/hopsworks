@@ -28,7 +28,10 @@ public class ExecutionController {
   @EJB
   private AdamController adamController;
   @EJB
+  private FlinkController flinkController;
+  @EJB
   private InodeFacade inodes;
+
 
   public Execution start(JobDescription job, Users user) throws IOException {
     Execution exec = null;
@@ -39,6 +42,8 @@ public class ExecutionController {
       case ADAM:
         exec = adamController.startJob(job, user);
         break;
+      case FLINK:
+        return flinkController.startJob(job, user);
       case SPARK:
         exec = sparkController.startJob(job, user);
         if (exec == null) {
@@ -52,8 +57,8 @@ public class ExecutionController {
         Pattern p = Pattern.compile(patternString);
         Matcher m = p.matcher(args);
         for (int i = 0; i < m.groupCount(); i++) { // for each filename, resolve Inode from HDFS filename
-          String filename = m.group(i);
-           Inode inode = inodes.getInodeAtPath("hdfs://" + filename);
+//          String filename = m.group(i);
+//           Inode inode = inodes.getInodeAtPath("hdfs://" + filename);
           // insert into inputfiles_executions (inode, execId).
         }
         break;

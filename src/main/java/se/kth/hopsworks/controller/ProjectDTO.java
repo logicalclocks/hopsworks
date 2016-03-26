@@ -17,7 +17,7 @@ public class ProjectDTO {
   private Integer projectId;
   private Long hdfsUsageInBytes;
   private Long hdfsQuotaInBytes;
-  private Integer yarnQuotaInMins;
+  private String yarnQuotaInMins;
   private String projectName;
   private String owner;
   private String description;
@@ -40,7 +40,7 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
-          List<ProjectTeam> projectTeam, Integer yarnQuotaInMins) {
+          List<ProjectTeam> projectTeam, String yarnQuotaInMins) {
     this.projectId = project.getId();
     this.inodeid = inodeid;
     this.projectName = project.getName();
@@ -56,7 +56,7 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
-          List<ProjectTeam> projectTeam, List<InodeView> datasets, Integer yarnQuota) {
+          List<ProjectTeam> projectTeam, List<InodeView> datasets, String yarnQuotaInMins) {
     this.projectId = project.getId();
     //the inodeid of the current project comes from hops database
     this.inodeid = inodeid;
@@ -70,7 +70,7 @@ public class ProjectDTO {
     this.services = services;
     this.projectTeam = projectTeam;
     this.datasets = datasets;
-    this.yarnQuotaInMins = yarnQuota;
+    this.yarnQuotaInMins = yarnQuotaInMins;
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
@@ -188,7 +188,7 @@ public class ProjectDTO {
     return hdfsQuotaInBytes;
   }
 
-  public Integer getYarnQuotaInMins() {
+  public String getYarnQuotaInMins() {
     return yarnQuotaInMins;
   }
 
@@ -196,7 +196,7 @@ public class ProjectDTO {
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;
   }
 
-  public void setYarnQuotaInMins(Integer yarnQuotaInMins) {
+  public void setYarnQuotaInMins(String yarnQuotaInMins) {
     this.yarnQuotaInMins = yarnQuotaInMins;
   }
 

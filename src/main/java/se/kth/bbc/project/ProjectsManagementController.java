@@ -15,6 +15,7 @@
  */
 package se.kth.bbc.project;
 
+import se.kth.bbc.jobs.quota.YarnProjectsQuotaFacade;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.util.Settings;
 

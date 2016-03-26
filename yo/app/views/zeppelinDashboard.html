@@ -111,7 +111,8 @@
                                         </div>
                                         <md-content>
                                             <table class="table table-hover" style="width: 100%">
-                                                <tr ng-repeat="interpreter in zeppelinCtrl.interpreters track by $index">
+                                                <tr ng-repeat="interpreter in zeppelinCtrl.interpreters track by $index"
+                                                    ng-show="zeppelinCtrl.display(interpreter.interpreter.group)">
                                                     <td><span>{{interpreter.interpreter.group}} Interpreter </span></td>
                                                     <td class="text-muted">{{interpreter.statusMsg}}</td>
                                                     <td style="text-align: right">                                      

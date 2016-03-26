@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.bbc.project;
+package se.kth.bbc.jobs.quota;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
@@ -17,7 +17,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@Entity
+@Entity 
 @Table(name = "hops.yarn_projects_quota")
 @XmlRootElement
 @NamedQueries({
@@ -33,8 +33,8 @@ public class YarnProjectsQuota implements Serializable {
     @Size(min = 1, max = 100)
     private String projectname;
     @Column(name = "quota_remaining")
-    private Integer quotaRemaining;
-    private Integer total;
+    private float quotaRemaining;
+    private float total;
 
     public YarnProjectsQuota() {
     }
@@ -57,19 +57,19 @@ public class YarnProjectsQuota implements Serializable {
         this.projectname = projectname;
     }
 
-    public Integer getQuotaRemaining() {
+    public float getQuotaRemaining() {
         return quotaRemaining;
     }
 
-    public void setQuotaRemaining(Integer quotaRemaining) {
+    public void setQuotaRemaining(float quotaRemaining) {
         this.quotaRemaining = quotaRemaining;
     }
 
-    public Integer getTotal() {
+    public float getTotal() {
         return total;
     }
 
-    public void setTotal(Integer total) {
+    public void setTotal(float total) {
         this.total = total;
     }
 
