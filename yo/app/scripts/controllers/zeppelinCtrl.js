@@ -14,7 +14,7 @@ angular.module('hopsWorksApp')
             self.transition = false;
             $scope.tgState = true;
             var projectId = $routeParams.projectID;
-            var statusMsgs = ['stopped    ', 'running    ', 'stopping...', 'restarting...'];
+            var statusMsgs = ['stopped    ', "<span style=\"color: green\">running    </span>", 'stopping...', 'restarting...'];
             
             self.deselect = function () {
               self.selected = null;

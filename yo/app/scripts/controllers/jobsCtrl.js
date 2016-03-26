@@ -196,7 +196,8 @@ angular.module('hopsWorksApp')
               ProjectService.uberPrice({id: self.projectId}).$promise.then(
                       function (success) {
                         var price = success.price;
-                        ModalService.uberPrice('lg', 'Confirm', 'Do you want to run this job at this price?', price).then(
+                        price = parseFloat(price).toFixed(4) * 100.0;
+                        ModalService.uberPrice('sm', 'Confirm', 'Do you want to run this job at this price?', price).then(
                                 function (success) {
                                   JobService.runJob(self.projectId, jobId).then(
                                           function (success) {
