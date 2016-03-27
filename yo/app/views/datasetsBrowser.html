@@ -49,14 +49,14 @@
                 </div>                
 
                 <span  ng-show="datasetsCtrl.fileDetail !== null">
-                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 12px;"  ng-show="datasetsCtrl.sharedPath === ''">
+                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 16px;"  ng-show="datasetsCtrl.sharedPath === ''">
                   <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span><span>/{{datasetsCtrl.fileDetail.name}}</span>
                     <button style="margin-left: 0px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                             data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
                     </button>        
                 </div>
           <!-- shared datasets link -->
-                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 12px;" ng-show="datasetsCtrl.sharedPath !== ''">
+                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 16px;" ng-show="datasetsCtrl.sharedPath !== ''">
                   <span id="sharedfileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{datasetsCtrl.sharedPath}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index" ng-show="$index > 1">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
                     <button style="margin-left: 0px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                             data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
@@ -70,7 +70,7 @@
               </h3>
             </div>
 
-            <div class="row row-no-margin-left">
+            <div class="row row-no-margin-left"
               <div class="col-lg-12">
                 <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: 5px;">
                   <div class="table-responsive" style="overflow: hidden;">

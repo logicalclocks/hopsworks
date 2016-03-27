@@ -22,12 +22,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.elasticsearch.action.ActionFuture;
+import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.admin.indices.cache.clear.ClearIndicesCacheRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsResponse;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
@@ -41,14 +43,11 @@ import static org.elasticsearch.index.query.QueryBuilders.hasParentQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import org.elasticsearch.search.SearchHit;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.util.Ip;
 import se.kth.hopsworks.util.Settings;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
 /**
@@ -70,7 +69,7 @@ public class ElasticService {
 
   @EJB
   private Settings settings;
-  
+
   /**
    * Searches for content composed of projects and datasets. Hits two elastic indices: 'project' and 'dataset'
    * <p/>
@@ -104,7 +103,6 @@ public class ElasticService {
     //initialize the client
     Client client = new TransportClient(settings)
         .addTransportAddress(new InetSocketTransportAddress(addr, Settings.ELASTIC_PORT));
-
 
     //check if the indices are up and running
     if (!this.indexExists(client, Settings.META_PROJECT_INDEX) || !this.
@@ -153,11 +151,11 @@ public class ElasticService {
       this.clientShutdown(client);
       GenericEntity<List<ElasticHit>> searchResults
           = new GenericEntity<List<ElasticHit>>(elasticHits) {
-          };
+      };
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity(searchResults).build();
     }
-    
+
     logger.warning("Elasticsearch error code: " + response.status().getStatus());
 
     //something went wrong so throw an exception
@@ -195,7 +193,6 @@ public class ElasticService {
         .put("client.transport.sniff", true) //being able to retrieve other nodes 
         .put("cluster.name", "hops").build();
 
-
     //initialize the client
     Client client = new TransportClient(settings)
         .addTransportAddress(new InetSocketTransportAddress(getElasticIpAsString(), Settings.ELASTIC_PORT));
@@ -218,7 +215,7 @@ public class ElasticService {
         = client.prepareSearch(Settings.META_PROJECT_INDEX)
         .setTypes(Settings.META_PROJECT_CHILD_TYPE)
         .setQuery(this.matchChildQuery(projectName,
-                Settings.META_PROJECT_PARENT_TYPE, searchTerm))
+            Settings.META_PROJECT_PARENT_TYPE, searchTerm))
         .addHighlightedField("name")
         .execute().actionGet();
 
@@ -240,7 +237,7 @@ public class ElasticService {
       this.clientShutdown(client);
       GenericEntity<List<ElasticHit>> searchResults
           = new GenericEntity<List<ElasticHit>>(elasticHits) {
-          };
+      };
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity(searchResults).build();
     }
@@ -290,20 +287,19 @@ public class ElasticService {
           getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
     } else if (!this.typeExists(client, Settings.META_DATASET_INDEX,
         Settings.META_DATASET_PARENT_TYPE)) {
-//        Settings.META_DATASET_CHILD_TYPE)) {
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
     }
 
     //hit the indices - execute the queries
-    SearchResponse response
-        = client.prepareSearch(Settings.META_DATASET_INDEX)
-        .setTypes(Settings.META_DATASET_CHILD_TYPE)
-        .setQuery(this.matchChildQuery(datasetName,
-                Settings.META_DATASET_PARENT_TYPE, searchTerm))
-        .addHighlightedField("name")
-        .execute().actionGet();
+    SearchRequestBuilder srb = client.prepareSearch(Settings.META_DATASET_INDEX);
+    srb = srb.setTypes(Settings.META_DATASET_PARENT_TYPE);
+    srb = srb.setQuery(this.matchChildQuery(datasetName,
+        Settings.META_DATASET_PARENT_TYPE, searchTerm));
+    srb = srb.addHighlightedField("name");
+    ListenableActionFuture<SearchResponse> futureResponse = srb.execute();
+    SearchResponse response = futureResponse.actionGet();
 
     if (response.status().getStatus() == 200) {
       //logger.log(Level.INFO, "Matched number of documents: {0}", response.
@@ -323,7 +319,7 @@ public class ElasticService {
       this.clientShutdown(client);
       GenericEntity<List<ElasticHit>> searchResults
           = new GenericEntity<List<ElasticHit>>(elasticHits) {
-          };
+      };
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity(searchResults).build();
     }
@@ -596,7 +592,6 @@ public class ElasticService {
   private String getElasticIpAsString() throws AppException {
     String addr = settings.getElasticIp();
 
-
     // Validate the ip address pulled from the variables
     if (Ip.validIp(addr) == false) {
       try {
@@ -608,7 +603,7 @@ public class ElasticService {
 
       }
     }
-    
+
     return addr;
   }
 
