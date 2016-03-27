@@ -48,6 +48,8 @@ import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.util.Ip;
 import se.kth.hopsworks.util.Settings;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
 /**
  *
@@ -108,10 +110,12 @@ public class ElasticService {
     if (!this.indexExists(client, Settings.META_PROJECT_INDEX) || !this.
         indexExists(client, Settings.META_DATASET_INDEX)) {
 
-      logger.log(Level.FINE, ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
+      logger.log(Level.INFO, ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
     }
+
+    logger.log(Level.INFO, "Found elastic index, now executing the query.");
 
     /*
      * If projects contain a searchable field then the client can hit both
@@ -153,6 +157,8 @@ public class ElasticService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity(searchResults).build();
     }
+    
+    logger.warning("Elasticsearch error code: " + response.status().getStatus());
 
     //something went wrong so throw an exception
     this.clientShutdown(client);

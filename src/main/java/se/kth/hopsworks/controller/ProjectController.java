@@ -862,7 +862,7 @@ public class ProjectController {
     try {
 
       HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorFacade.findEndpoint();
-      File file = new File(settings.getSparkDir() + "/lib/" + "spark-examples-1.5.2-hadoop2.4.0.jar");
+      File file = new File(settings.getSparkDir() + "/lib/spark-examples-1.5.2-hadoop2.4.0.jar");
       fileOps.copyToHDFSFromLocal(false, file.getAbsolutePath(), "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects/" + project.getName() + "/TestJob/");
 
     } catch (IOException ex) {

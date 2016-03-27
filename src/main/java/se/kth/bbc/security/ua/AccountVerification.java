@@ -20,7 +20,7 @@ public class AccountVerification {
   @EJB
   private UserManager mgr;
 
-    @EJB
+  @EJB
   private AuditManager am;
 
 

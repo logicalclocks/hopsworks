@@ -475,41 +475,40 @@ public class UsersController {
   }
   
   public  String generateUsername(String email) {
-    int count = 0;
-    int digit = 0;
+    Integer count = 0;
     String uname = getUsernameFromEmail(email);
     Users user = userBean.findByUsername(uname);
     String suffix = "";
-    Random r = new Random();
     if (user == null) {
       return uname;
     }
 
-    while (user != null) {
-      if (count > 100) {
-        digit++;
-        count = 0;
-      }      
-      suffix = ""+r.nextInt(Settings.MAX_USERNAME_SUFFIX + digit);
-      uname = uname.substring(0, (Settings.MAX_USERNAME_LEN - suffix.length()));
-      user = userBean.findByUsername(uname + suffix);
+    String testUname = "";
+    while (user != null && count < 100) {
+      suffix = count.toString();
+      testUname = uname.substring(0, (Settings.USERNAME_LEN - suffix.length()));
+      user = userBean.findByUsername(testUname + suffix);
       count++;
     }
-    return uname + suffix;
+    if (count == 100) {
+      throw new IllegalStateException("You cannot register with this email address. Pick another.");
+    }
+    return testUname + suffix;
   }
   
   private String getUsernameFromEmail(String email) {
-        String username = email.substring(0, email.lastIndexOf("@"));
+    String username = email.substring(0, email.lastIndexOf("@"));
     if (username.contains(".")) {
       username = username.replace(".", "_");
     }
     if (username.contains("__")) {
       username = username.replace("__", "_");
     }
-    if (username.length() > Settings.MAX_USERNAME_LEN) {
-      username = username.substring(0,Settings.MAX_USERNAME_LEN-1);
-    } else if (username.length() < Settings.MAX_USERNAME_LEN) {
-      while (username.length() < Settings.MAX_USERNAME_LEN) {
+    if (username.length() > Settings.USERNAME_LEN) {
+      username = username.substring(0,Settings.USERNAME_LEN);
+    } 
+    if (username.length() < Settings.USERNAME_LEN) {
+      while (username.length() < Settings.USERNAME_LEN) {
         username += "0";
       }
     }
