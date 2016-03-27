@@ -47,12 +47,23 @@
                              class="form-control" placeholder="Filter" 
                              style="margin-top: -17px; ">
                 </div>                
-                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 12px;" ng-show="datasetsCtrl.fileDetail !== null">
+
+                <span  ng-show="datasetsCtrl.fileDetail !== null">
+                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 12px;"  ng-show="datasetsCtrl.sharedPath === ''">
                   <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span><span>/{{datasetsCtrl.fileDetail.name}}</span>
                     <button style="margin-left: 0px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                             data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
                     </button>        
                 </div>
+          <!-- shared datasets link -->
+                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 12px;" ng-show="datasetsCtrl.sharedPath !== ''">
+                  <span id="sharedfileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{datasetsCtrl.sharedPath}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index" ng-show="$index > 1">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
+                    <button style="margin-left: 0px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
+                            data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
+                    </button>        
+                </div>                
+</span>
+                
                 <div class="col-md-1 pull-right" style="margin-top: -18px;">
                   <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()"></hamburger-toggle>
                 </div>
@@ -95,7 +106,7 @@
                         <tr
                           dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:50"
                           context-menu
-                          ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata()" 
+                          ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.pathSharedDs();" 
                           ng-dblclick="datasetsCtrl.openDir(file)"
                           data-target="menu-{{ $index}}"
                           ng-class="{ 'highlight': datasetsCtrl.selected === $index, 'expanded': expanded }"
