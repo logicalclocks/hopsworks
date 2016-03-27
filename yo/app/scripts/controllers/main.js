@@ -64,7 +64,7 @@ angular.module('hopsWorksApp')
                                 }, function (error) {
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                         });
-                    } else if (dataType === 'dataset') {
+                    } else if (dataType === 'ds') {
                         //fetch the dataset
                         ProjectService.getDatasetInfo({inodeId: id}).$promise.then(
                                 function (response) {
