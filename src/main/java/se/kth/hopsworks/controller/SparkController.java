@@ -145,7 +145,11 @@ public class SparkController {
   public boolean isSparkJarAvailable() {
 	boolean isInHdfs;
 	try {
-	  isInHdfs = fops.exists(settings.getHdfsSparkJarPath());
+    String sparkInHdfsPath = settings.getHdfsSparkJarPath();
+    // don't need the NN ip:port here - just going to DB
+//    sparkInHdfsPath = sparkInHdfsPath.replaceFirst("hdfs:/*user",
+//          "hdfs://" + hdfsLeDescriptorsFacade.getSingleEndpoint() + "/user");
+	  isInHdfs = fops.exists(sparkInHdfsPath);
 	} catch (IOException e) {
 	  logger.log(Level.WARNING, "Cannot get Spark jar file from HDFS: {0}",
 			  settings.getHdfsSparkJarPath());

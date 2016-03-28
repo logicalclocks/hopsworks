@@ -323,7 +323,7 @@ module.exports = function (grunt) {
       }
     },
     // Replace Google CDN references
-    cdnify: {
+   cdnify: {
       dist: {
         html: ['<%= yeoman.dist %>/*.html']
       }
@@ -424,7 +424,7 @@ module.exports = function (grunt) {
     'concat',
     'ngAnnotate',
     'copy:dist',
-    'cdnify',
+//    'cdnify',
     'cssmin',
     'uglify',
     'filerev',
