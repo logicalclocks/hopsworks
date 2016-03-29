@@ -290,11 +290,11 @@ public class ProjectService {
     ProjectDTO projectDTO = new ProjectDTO();
     JsonResponse json = new JsonResponse();
     Project project = null;
-    projectDTO.setDescription("An Example project.");
+    projectDTO.setDescription("A demo project for getting started with Spark.");
 
     String owner = sc.getUserPrincipal().getName();
     String username = usersController.generateUsername(owner);
-    projectDTO.setProjectName("HopsDemo-" + username);
+    projectDTO.setProjectName("demo_" + username);
     List<ProjectServiceEnum> projectServices = new ArrayList<>();
     List<ProjectTeam> projectMembers = new ArrayList<>();
     projectServices.add(ProjectServiceEnum.JOBS);

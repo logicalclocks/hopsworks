@@ -447,8 +447,7 @@ public class Settings {
   public static final Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERNAME_SEPARATOR = "__";
   public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
-  public static final int MAX_USERNME_LEN = 32;
-  public static final int MAX_USERNAME_LEN = 8;
+  public static final int USERNAME_LEN = 8;
   public static final int MAX_USERNAME_SUFFIX = 99;
   public static final int MAX_RETRIES = 500;
   public static final String META_NAME_FIELD = "name";

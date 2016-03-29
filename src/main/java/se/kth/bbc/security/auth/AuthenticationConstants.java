@@ -4,7 +4,7 @@ package se.kth.bbc.security.auth;
 public final class AuthenticationConstants {
   
     // Issuer of the QrCode
-  public static final String ISSUER = "BiobankCloud";
+  public static final String ISSUER = "hops.io";
 
   // To distinguish Yubikey users
   public static final String YUBIKEY_USER_MARKER = "YUBIKEY_USER_MARKER";
@@ -39,6 +39,5 @@ public final class AuthenticationConstants {
 
   // POSIX compliant usernake length
   public static final int ACCOUNT_VALIDATION_TRIES = 5;
-
   
 }

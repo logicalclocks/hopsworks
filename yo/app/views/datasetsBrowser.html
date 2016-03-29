@@ -53,13 +53,22 @@
                             data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
                     </button>        
                 </div>
+          <!-- shared datasets link -->
+                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 16px;" ng-show="datasetsCtrl.sharedPath !== ''">
+                  <span id="sharedfileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{datasetsCtrl.sharedPath}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index" ng-show="$index > 1">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
+                    <button style="margin-left: 0px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
+                            data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
+                    </button>        
+                </div>                
+</span>
+                
                 <div class="col-md-1 pull-right" style="margin-top: -18px;">
                   <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()"></hamburger-toggle>
                 </div>
               </h3>
             </div>
 
-            <div class="row row-no-margin-left">
+            <div class="row row-no-margin-left"
               <div class="col-lg-12">
                 <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: 5px;">
                   <div class="table-responsive" style="overflow: hidden;">
@@ -95,7 +104,7 @@
                         <tr
                           dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:50"
                           context-menu
-                          ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata()" 
+                          ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.pathSharedDs();" 
                           ng-dblclick="datasetsCtrl.openDir(file)"
                           data-target="menu-{{ $index}}"
                           ng-class="{ 'highlight': datasetsCtrl.selected === $index, 'expanded': expanded }"

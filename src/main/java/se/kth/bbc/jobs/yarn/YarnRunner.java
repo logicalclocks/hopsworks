@@ -106,7 +106,7 @@ public class YarnRunner {
     //Set application name and type
     appContext = app.getApplicationSubmissionContext();
     appContext.setApplicationName(appName);
-    appContext.setApplicationType("Hops Yarn");
+    appContext.setApplicationType("HopsWorks-Yarn");
 
     //Add local resources to AM container
     Map<String, LocalResource> localResources = addAllToLocalResources(nameNodeIpPort);
@@ -225,8 +225,9 @@ public class YarnRunner {
     //If an AM jar has been specified: include that one
     if (shouldCopyAmJarToLocalResources && amJarLocalName != null
         && !amJarLocalName.isEmpty() && amJarPath != null
-        && !amJarPath.isEmpty()) {
-      if (amJarPath.startsWith("hdfs")) {
+        && !amJarPath.isEmpty()
+        ) {
+      if (amJarPath.startsWith("hdfs:")) {
         amLocalResourcesOnHDFS.put(amJarLocalName, amJarPath);
       } else {
         amLocalResourcesToCopy.put(amJarLocalName, amJarPath);
@@ -478,7 +479,7 @@ public class YarnRunner {
     //Number of cores for appMaster
     private int amVCores = 1;
     // Application name
-    private String appName = "Hops Yarn";
+    private String appName = "HopsWorks-Yarn";
     //Arguments to pass on in invocation of Application master
     private String amArgs;
     //List of paths to resources that should be copied to application master

@@ -112,7 +112,7 @@
                     class="list-group-item"
                     context-menu
                     data-target="menu-{{$index}}"
-                    id="{{project.project.name.substr(0, 8) === 'HopsDemo'}}">
+                    id="{{project.project.name.substr(0, 5) === 'demo_'}}">
                     <div ng-if="project.teamRole === 'Data scientist'">
                         <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"></i>
                     </div>
@@ -124,7 +124,7 @@
                            class="fa fa-ban fa-2 pull-left"></i>
                     </div>
                     {{project.project.name}}
-                    <span ng-if="project.project.name.substr(0, 8) === 'HopsDemo'" class="glyphicon glyphicon-play-circle pull-right" style="margin-top: 5px;"></span>
+                    <span ng-if="project.project.name.substr(0, 5) === 'demo_'" class="glyphicon glyphicon-play-circle pull-right" style="margin-top: 5px;"></span>
                 </a>
                 <div class="dropdown position-fixed" id="menu-{{$index}}">
                     <ul class="dropdown-menu dropdown-amore">
