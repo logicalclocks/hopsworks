@@ -48,7 +48,7 @@
                              style="margin-top: -17px; ">
                 </div>                
                 <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 12px;" ng-show="datasetsCtrl.fileDetail !== null">
-                  <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span><span>/{{datasetsCtrl.fileDetail.name}}</span>
+                  <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{projectCtrl.currentProject.projectName}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
                     <button style="margin-left: 0px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                             data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
                     </button>        

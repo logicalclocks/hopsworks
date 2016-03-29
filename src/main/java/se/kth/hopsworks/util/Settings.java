@@ -392,7 +392,8 @@ public class Settings {
   }
 
   private static String sparkDefaultClasspath(String sparkDir) {
-    return sparkDir + "/conf:" + sparkDir + "/lib/*";
+//    return sparkDir + "/conf:" + sparkDir + "/lib/*";
+    return sparkDir + "/lib/*";
   }
 
   public static String getSparkDefaultClasspath(String sparkDir) {
