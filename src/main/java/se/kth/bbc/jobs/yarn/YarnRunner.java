@@ -261,11 +261,10 @@ public class YarnRunner {
     for (Entry<String, String> entry : amLocalResourcesOnHDFS.entrySet()) {
       String key = entry.getKey();
       String pathToResource = entry.getValue();
-      pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
-          "hdfs://" + nameNodeIpPort + "/Projects");
-      pathToResource = pathToResource.replaceFirst("hdfs:/*user",
-          "hdfs://" + nameNodeIpPort + "/user");
-
+//      pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
+//          "hdfs://" + nameNodeIpPort + "/Projects");
+//      pathToResource = pathToResource.replaceFirst("hdfs:/*user",
+//          "hdfs://" + nameNodeIpPort + "/user");
       Path src = new Path(pathToResource);
       FileStatus scFileStat = fs.getFileStatus(src);
       LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
@@ -769,9 +768,12 @@ public class YarnRunner {
         throw new IllegalStateException("Failed to load configuration", e);
       }
 
-     
-      yarnClient = YarnClient.createYarnClient();
-      yarnClient.init(conf);
+      //Client passed by Flink is already set up.
+      if(yarnClient == null){
+        //Set YarnClient
+        yarnClient = YarnClient.createYarnClient();
+        yarnClient.init(conf);
+      } 
      
       //Set main class
       if (amMainClass == null) {
