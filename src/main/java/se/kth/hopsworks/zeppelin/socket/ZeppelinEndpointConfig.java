@@ -1,7 +1,5 @@
 package se.kth.hopsworks.zeppelin.socket;
 
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -10,15 +8,12 @@ import javax.servlet.http.HttpSession;
 import javax.websocket.HandshakeResponse;
 import javax.websocket.server.HandshakeRequest;
 import javax.websocket.server.ServerEndpointConfig;
-import se.kth.hopsworks.zeppelin.server.ZeppelinSingleton;
-import se.kth.hopsworks.zeppelin.util.SecurityUtils;
 
 public class ZeppelinEndpointConfig extends ServerEndpointConfig.Configurator {
 
   private static final Logger logger = Logger.getLogger(
           ZeppelinEndpointConfig.class.
           getName());
-  private final ZeppelinSingleton zeppelin = ZeppelinSingleton.SINGLETON;
 
   @Override
   public void modifyHandshake(ServerEndpointConfig config,
@@ -39,14 +34,14 @@ public class ZeppelinEndpointConfig extends ServerEndpointConfig.Configurator {
             new Object[]{cookies.get("email"), cookies.get("projectID")});
   }
 
-  @Override
-  public boolean checkOrigin(String originHeaderValue) {
-    try {
-      return SecurityUtils.isValidOrigin(originHeaderValue, zeppelin.getConf());
-    } catch (UnknownHostException | URISyntaxException e) {
-      logger.log(Level.INFO, "{0}", e.getMessage());
-    }
-
-    return false;
-  }
+//  @Override
+//  public boolean checkOrigin(String originHeaderValue) {
+//    try {
+//      return SecurityUtils.isValidOrigin(originHeaderValue, zeppelin.getConf());
+//    } catch (UnknownHostException | URISyntaxException e) {
+//      logger.log(Level.INFO, "{0}", e.getMessage());
+//    }
+//
+//    return false;
+//  } 
 }

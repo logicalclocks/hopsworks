@@ -86,7 +86,7 @@ angular.module('hopsWorksApp')
                                 self.projectFile.description = self.currentProject.description;
                                 self.projectFile.retentionPeriod = self.currentProject.retentionPeriod;
                                 self.projectFile.yarnQuotaInMins = self.currentProject.yarnQuotaInMins;
-                                if (angular.equals(self.currentProject.projectName.substr(0, 8), 'HopsDemo')) {
+                                if (angular.equals(self.currentProject.projectName.substr(0, 5), 'demo_')) {
                                     self.initTour();
                                 }
                                 else{

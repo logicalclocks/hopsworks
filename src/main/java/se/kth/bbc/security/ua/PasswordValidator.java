@@ -10,6 +10,7 @@ import javax.faces.validator.FacesValidator;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 
  
 @FacesValidator("passwordValidator")
@@ -45,7 +46,8 @@ public class PasswordValidator implements Validator {
       throw new ValidatorException(facesMsg);
     }
 
-    if (password.length() < 6) {
+    if (password.length() < AuthenticationConstants.PASSWORD_MIN_LENGTH ||
+            password.length() > AuthenticationConstants.PASSWORD_MAX_LENGTH) {
       uiInputConfirmPassword.setValid(false);
       FacesMessage facesMsg = new FacesMessage(
               AccountStatusErrorMessages.PASSWORD_REQUIREMNTS);

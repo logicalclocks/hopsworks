@@ -33,6 +33,8 @@ public class ExecutionController {
   @EJB
   private AdamController adamController;
   @EJB
+  private FlinkController flinkController;
+  @EJB
   private InodeFacade inodes;
   @EJB
   private ExecutionInputfilesFacade execInputFilesFacade;
@@ -48,6 +50,8 @@ public class ExecutionController {
       case ADAM:
         exec = adamController.startJob(job, user);
         break;
+      case FLINK:
+        return flinkController.startJob(job, user);
       case SPARK:
         exec = sparkController.startJob(job, user);
         if (exec == null) {
@@ -79,7 +83,12 @@ public class ExecutionController {
 //          mC = m.groupCount();
 //          execInputFilesFacade.create(execId, inode.getInodePK().getParentId(), inode.getInodePK().getName());
 //          // insert into inputfiles_executions (inode, execId).
-//        }
+//       }
+        for (int i = 0; i < m.groupCount(); i++) { // for each filename, resolve Inode from HDFS filename
+//          String filename = m.group(i);
+//           Inode inode = inodes.getInodeAtPath("hdfs://" + filename);
+          // insert into inputfiles_executions (inode, execId).
+        }
         }
         break;
       default:

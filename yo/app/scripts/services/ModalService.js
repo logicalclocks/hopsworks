@@ -32,7 +32,7 @@ angular.module('hopsWorksApp')
                       return msg;
                     },
                     price: function () {
-                      return msg;
+                      return price;
                     }
                   }
                 });

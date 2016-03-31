@@ -12,8 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
@@ -36,6 +34,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import se.kth.bbc.lims.Utils;
+import se.kth.hopsworks.util.IoUtils;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -44,8 +43,7 @@ import se.kth.hopsworks.util.Settings;
  */
 public class YarnRunner {
 
-  private static final Logger logger = Logger.getLogger(YarnRunner.class.
-      getName());
+  private static final Logger logger = Logger.getLogger(YarnRunner.class.getName());
   public static final String APPID_PLACEHOLDER = "$APPID";
   private static final String APPID_REGEX = "\\$APPID";
   private static final String KEY_CLASSPATH = "CLASSPATH";
@@ -108,7 +106,7 @@ public class YarnRunner {
     //Set application name and type
     appContext = app.getApplicationSubmissionContext();
     appContext.setApplicationName(appName);
-    appContext.setApplicationType("Hops Yarn");
+    appContext.setApplicationType("HopsWorks-Yarn");
 
     //Add local resources to AM container
     Map<String, LocalResource> localResources = addAllToLocalResources(nameNodeIpPort);
@@ -227,8 +225,9 @@ public class YarnRunner {
     //If an AM jar has been specified: include that one
     if (shouldCopyAmJarToLocalResources && amJarLocalName != null
         && !amJarLocalName.isEmpty() && amJarPath != null
-        && !amJarPath.isEmpty()) {
-      if (amJarPath.startsWith("hdfs")) {
+        && !amJarPath.isEmpty()
+        ) {
+      if (amJarPath.startsWith("hdfs:")) {
         amLocalResourcesOnHDFS.put(amJarLocalName, amJarPath);
       } else {
         amLocalResourcesToCopy.put(amJarLocalName, amJarPath);
@@ -262,8 +261,10 @@ public class YarnRunner {
     for (Entry<String, String> entry : amLocalResourcesOnHDFS.entrySet()) {
       String key = entry.getKey();
       String pathToResource = entry.getValue();
-      pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
-          "hdfs://" + nameNodeIpPort + "/Projects");
+//      pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
+//          "hdfs://" + nameNodeIpPort + "/Projects");
+//      pathToResource = pathToResource.replaceFirst("hdfs:/*user",
+//          "hdfs://" + nameNodeIpPort + "/user");
       Path src = new Path(pathToResource);
       FileStatus scFileStat = fs.getFileStatus(src);
       LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
@@ -478,7 +479,7 @@ public class YarnRunner {
     //Number of cores for appMaster
     private int amVCores = 1;
     // Application name
-    private String appName = "Hops Yarn";
+    private String appName = "HopsWorks-Yarn";
     //Arguments to pass on in invocation of Application master
     private String amArgs;
     //List of paths to resources that should be copied to application master
@@ -748,12 +749,13 @@ public class YarnRunner {
       javaOptions.add(option);
       return this;
     }
-
+    
     /**
      * Build the YarnRunner instance
      * <p/>
      * @param hadoopDir
      * @param sparkDir
+     * @param nameNodeIpPort
      * @return
      * @throws IllegalStateException Thrown if (a) configuration is not found, (b) invalid main class name
      * @throws IOException Thrown if stdOut and/or stdErr path have not been set and temp files could not be created
@@ -766,13 +768,16 @@ public class YarnRunner {
         throw new IllegalStateException("Failed to load configuration", e);
       }
 
-      //Set YarnClient
-      yarnClient = YarnClient.createYarnClient();
-      yarnClient.init(conf);
-
+      //Client passed by Flink is already set up.
+      if(yarnClient == null){
+        //Set YarnClient
+        yarnClient = YarnClient.createYarnClient();
+        yarnClient.init(conf);
+      } 
+     
       //Set main class
       if (amMainClass == null) {
-        amMainClass = getMainClassNameFromJar();
+        amMainClass = IoUtils.getMainClassNameFromJar(amJarPath, null);
         if (amMainClass == null) {
           throw new IllegalStateException(
               "Could not infer main class name from jar and was not specified.");
@@ -891,31 +896,7 @@ public class YarnRunner {
       }
     }
 
-    private String getMainClassNameFromJar() {
-      if (amJarPath == null) {
-        throw new IllegalStateException(
-            "Main class name and amJar path cannot both be null.");
-      }
-      String fileName = amJarPath;
-      String mainClassName = null;
 
-      try (JarFile jarFile = new JarFile(fileName)) {
-        Manifest manifest = jarFile.getManifest();
-        if (manifest != null) {
-          mainClassName = manifest.getMainAttributes().getValue("Main-Class");
-        }
-      } catch (IOException io) {
-        logger.log(Level.SEVERE, "Could not open jar file " + amJarPath
-            + " to load main class.", io);
-        return null;
-      }
-
-      if (mainClassName != null) {
-        return mainClassName.replaceAll("/", ".");
-      } else {
-        return null;
-      }
-    }
 
   }
 

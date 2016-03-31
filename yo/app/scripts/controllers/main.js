@@ -90,8 +90,32 @@ angular.module('hopsWorksApp')
                                 }, function (error) {
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                         });
-                    });
-            };
+                    } else if (dataType === 'ds') {
+                        //fetch the dataset
+                        ProjectService.getDatasetInfo({inodeId: id}).$promise.then(
+                                function (response) {
+                                    var projects;
+                                    //fetch the projects to pass them in the modal. Fixes empty projects array on ui-select initialization
+                                    ProjectService.query().$promise.then(
+                                            function (success) {
+                                                projects = success;
+
+                                                //show dataset
+                                                ModalService.viewSearchResult('md', response, dataType, projects)
+                                                        .then(function (success) {
+                                                            growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
+                                                        }, function (error) {
+
+                                                        });
+                                            }, function (error) {
+                                        console.log('Error: ' + error);
+                                    });
+
+                                }, function (error) {
+                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                        });
+                    }
+                };
 
             }
 

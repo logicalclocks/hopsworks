@@ -18,12 +18,12 @@ public class QuotasDTO {
   private Long hdfsQuotaInBytes;
   private Long hdfsNsCount;
   private Long hdfsNsQuota;
-  private Integer yarnQuotaInMins;
+  private String yarnQuotaInMins;
 
   public QuotasDTO() {
   }
 
-  public QuotasDTO(Integer yarnQuotaInMins,
+  public QuotasDTO(String yarnQuotaInMins,
       Long hdfsQuotaInBytes, Long hdfsUsageInBytes,
        Long hdfsNsQuota, Long hdfsNsCount
   ) {
@@ -38,7 +38,7 @@ public class QuotasDTO {
     return hdfsQuotaInBytes;
   }
 
-  public Integer getYarnQuotaInMins() {
+  public String getYarnQuotaInMins() {
     return yarnQuotaInMins;
   }
 
@@ -46,7 +46,7 @@ public class QuotasDTO {
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;
   }
 
-  public void setYarnQuotaInMins(Integer yarnQuotaInMins) {
+  public void setYarnQuotaInMins(String yarnQuotaInMins) {
     this.yarnQuotaInMins = yarnQuotaInMins;
   }
 

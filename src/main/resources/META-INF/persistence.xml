@@ -57,9 +57,11 @@
     <class>se.kth.bbc.project.ProjectPaymentsHistory</class>
     <class>se.kth.bbc.project.CharonRegisteredSites</class>
     <class>se.kth.bbc.project.CharonRepoShared</class>
-    <class>se.kth.bbc.project.YarnProjectsQuota</class>
     <class>io.hops.bbc.charon.CharonRepoShared</class>
     <class>io.hops.bbc.charon.CharonRegisteredSites</class>
+    <class>se.kth.bbc.jobs.quota.YarnProjectsQuota</class>
+    <class>se.kth.bbc.jobs.quota.YarnRunningPrice</class>
+    <class>se.kth.bbc.jobs.quota.YarnProjectsDailyCost</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

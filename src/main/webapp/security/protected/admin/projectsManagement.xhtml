@@ -100,7 +100,7 @@
                                           filterBy="#{projectsmanagement.getHdfsQuota(project.projectname)}"
                                           sortBy="#{projectsmanagement.getHdfsQuota(project.projectname)}"
                                           filterMatchMode="contains"
-                                          headerText="Disk quota"
+                                          headerText="Disk size quota"
                                           style=" font-size: 12px; text-align: center;">
                                     <p:cellEditor>
                                         <f:facet name="output">
@@ -111,22 +111,53 @@
                                             <p:inputText
                                                 value="#{projectsmanagement.hdfsquota}" style="width:100%">
                                                 <f:validateLongRange
-                                                    maximum="100000"
+                                                    maximum="10000000000"
                                                     minimum="1" />
                                             </p:inputText>
                                         </f:facet>
                                     </p:cellEditor>
                                 </p:column>
-
-                                <p:column id="hdfstotalquotaColumn"
-                                          filterBy="#{projectsmanagement.getHDFSUsedQuota(project.projectname)}"
-                                          sortBy="#{projectsmanagement.getHDFSUsedQuota(project.projectname)}"
+                                <p:column id="diskUsedColumn"
+                                          filterBy="#{projectsmanagement.getHdfsUsed(project.projectname)}"
+                                          sortBy="#{projectsmanagement.getHdfsUsed(project.projectname)}"
                                           filterMatchMode="contains"
-                                          headerText="Disk used"
-                                          style=" font-size: 12px; text-align: center;">
-                                    <h:outputText value="#{projectsmanagement.getHDFSUsedQuota(project.projectname)}" />
+                                          headerText="Disk Used"
+                                          style=" font-size: 12px; text-align: left;">
+                                    <h:outputText value="#{projectsmanagement.getHdfsUsed(project.projectname)}" />
                                 </p:column>
 
+                                <p:column id="hdfsNsquotaColumn"
+                                          filterBy="#{projectsmanagement.getHdfsNsQuota(project.projectname)}"
+                                          sortBy="#{projectsmanagement.getHdfsNsQuota(project.projectname)}"
+                                          filterMatchMode="contains"
+                                          headerText="Max No of Files"
+                                          style=" font-size: 12px; text-align: center;">
+                                    <p:cellEditor>
+                                        <f:facet name="output">
+                                            <h:outputText
+                                                value="#{projectsmanagement.getHdfsNsQuota(project.projectname)}" />
+                                        </f:facet>
+                                        <f:facet name="input">
+                                            <p:inputText
+                                                value="#{projectsmanagement.hdfsNsquota}" style="width:100%">
+                                                <f:validateLongRange
+                                                    maximum="100000000"
+                                                    minimum="1" />
+                                            </p:inputText>
+                                        </f:facet>
+                                    </p:cellEditor>
+                                </p:column>
+                                <p:column id="noFilesUsedColumn"
+                                          filterBy="#{projectsmanagement.getHdfsNsUsed(project.projectname)}"
+                                          sortBy="#{projectsmanagement.getHdfsNsUsed(project.projectname)}"
+                                          filterMatchMode="contains"
+                                          headerText="Num Files"
+                                          style=" font-size: 12px; text-align: left;">
+                                    <h:outputText value="#{projectsmanagement.getHdfsNsUsed(project.projectname)}" />
+                                </p:column>
+
+                                
+                                
                                 <p:column id="useremailColumn"
                                           filterBy="#{project.username}"
                                           sortBy="#{project.username}"

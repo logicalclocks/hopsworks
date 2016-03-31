@@ -22,7 +22,7 @@ angular.module('hopsWorksApp')
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 21});
                 });
               };
-            } else if (datatype === 'child' || datatype === 'dataset') {
+            } else if (datatype === 'inode' || datatype === 'ds') {
 
               self.type = 'Dataset';
               self.requestType = 'access';

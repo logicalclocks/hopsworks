@@ -16,6 +16,7 @@ angular.module('hopsWorksApp')
             self.selected = null; //The index of the selected file in the files array.
             self.selectedList = []; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
+            self.sharedPath; //The details about the currently selected file.
 
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
@@ -81,12 +82,6 @@ angular.module('hopsWorksApp')
               }
             });
 
-//            $scope.$watch(MetadataHelperService.getCloseSlider, function (response) {
-//              if (response === "true") {
-//                self.close();
-//                MetadataHelperService.setCloseSlider("false");
-//              }
-//            });
 
             $scope.$watch(MetadataHelperService.getDirContents, function (response) {
               if (response === "true") {
@@ -94,6 +89,27 @@ angular.module('hopsWorksApp')
                 MetadataHelperService.setDirContents("false");
               }
             });
+
+            self.isShared = function () {
+  
+              var topLevel = self.pathArray[0] ;
+              if ((topLevel.indexOf("::") > -1)) {
+                return true;
+              }
+              return false;
+            };
+            
+            self.pathSharedDs = function () {
+              if (self.pathArray === null || self.pathArray.length === 0) {
+                return '';
+              }
+              var topLevel = self.pathArray[0] ;
+              if ((topLevel.indexOf("::") === -1)) {
+                self.sharedPath = "";
+              }
+                self.sharedPath = topLevel.replace("::", "/");
+            };
+
 
             /*
              * Get all datasets under the current project.
@@ -481,8 +497,9 @@ This will make all its files available for any registered user to download and p
             };
 
             self.deselect = function () {
-              self.selected = null;
+              self.selected = null
               self.fileDetail = null;
+              self.sharedPath = null;
             };
 
             self.toggleLeft = buildToggler('left');

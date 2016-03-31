@@ -158,11 +158,23 @@ public class Settings {
     return ADAM_USER;
   }
 
-  private String FLINK_DIR = "/usr/local/flink";
+  private String FLINK_DIR = "/srv/flink";
 
   public synchronized String getFlinkDir() {
-    checkCache();
+    //checkCache();
     return FLINK_DIR;
+  }
+  private String FLINK_CONF_DIR = FLINK_DIR + "/conf";
+
+  public synchronized String getFlinkConfDir() {
+    //checkCache();
+    return FLINK_CONF_DIR;
+  }
+  private String FLINK_CONF_FILE = FLINK_CONF_DIR + "/flink-conf.yaml";
+ 
+  public synchronized String getFlinkConfFile() {
+    //checkCache();
+    return FLINK_CONF_FILE;
   }
   private String MYSQL_DIR = "/usr/local/mysql";
 
@@ -218,7 +230,7 @@ public class Settings {
     return SPARK_USER;
   }
 
-  private String FLINK_USER = "flink";
+  private String FLINK_USER = "glassfish";
 
   public synchronized String getFlinkUser() {
     checkCache();
@@ -299,9 +311,10 @@ public class Settings {
   public static final String DEFAULT_HDFS_CONFFILE_NAME = "hdfs-site.xml";
 
   //Environment variable keys
+  //TODO: Check if ENV_KEY_YARN_CONF_DIR should be replaced with ENV_KEY_YARN_CONF
   public static final String ENV_KEY_YARN_CONF_DIR = "hdfs";
   public static final String ENV_KEY_HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
-
+  public static final String ENV_KEY_YARN_CONF = "YARN_CONF_DIR";
   //YARN constants
   public static final int YARN_DEFAULT_APP_MASTER_MEMORY = 512;
   public static final String YARN_DEFAULT_OUTPUT_PATH = "Logs/Yarn/";
@@ -324,6 +337,40 @@ public class Settings {
   public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
 
+  //Flink constants
+  public static final String FLINK_DEFAULT_OUTPUT_PATH = "Logs/Flink/";
+  public static final String FLINK_LOCRSC_SPARK_JAR = "__flink__.jar";
+  public static final String FLINK_LOCRSC_APP_JAR = "__app__.jar";
+  
+  
+  public synchronized String getLocalFlinkJarPath() {
+    return getFlinkDir()+ "/flink.jar";
+  }
+  
+  public synchronized String getHdfsFlinkJarPath() {
+    return hdfsFlinkJarPath(getFlinkUser());
+  }
+  
+  private static String hdfsFlinkJarPath(String flinkUser) {
+    return "hdfs:///user/" + flinkUser + "/flink.jar";
+  }
+
+  public static String getHdfsFlinkJarPath(String flinkUser) {
+    return hdfsFlinkJarPath(flinkUser);
+  }
+
+  public synchronized String getFlinkDefaultClasspath() {
+    return flinkDefaultClasspath(getFlinkDir());
+  }
+
+  private static String flinkDefaultClasspath(String flinkDir) {
+    return flinkDir + "/conf:" + flinkDir + "/lib/*";
+  }
+
+  public static String getFlinkDefaultClasspath(String flinkDir) {
+    return flinkDefaultClasspath(flinkDir);
+  }
+  
   public synchronized String getLocalSparkJarPath() {
     return getSparkDir() + "/spark.jar";
   }
@@ -345,7 +392,8 @@ public class Settings {
   }
 
   private static String sparkDefaultClasspath(String sparkDir) {
-    return sparkDir + "/conf:" + sparkDir + "/lib/*";
+//    return sparkDir + "/conf:" + sparkDir + "/lib/*";
+    return sparkDir + "/lib/*";
   }
 
   public static String getSparkDefaultClasspath(String sparkDir) {
@@ -399,8 +447,7 @@ public class Settings {
   public static final Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERNAME_SEPARATOR = "__";
   public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
-  public static final int MAX_USERNME_LEN = 32;
-  public static final int MAX_USERNAME_LEN = 8;
+  public static final int USERNAME_LEN = 8;
   public static final int MAX_USERNAME_SUFFIX = 99;
   public static final int MAX_RETRIES = 500;
   public static final String META_NAME_FIELD = "name";
@@ -425,6 +472,11 @@ public class Settings {
   public static final String SHARED_FILE_SEPARATOR = "::";
   public static final String DOUBLE_UNDERSCORE = "__";
 
+  
+  // QUOTA
+  public static final float DEFAULT_YARN_PRICE = 1.0f;
+
+  
   //Project creation: default datasets
   public static enum DefaultDataset {
 

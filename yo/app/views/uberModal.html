@@ -1,11 +1,15 @@
 <div class="modal-header">
-  <button type="button" class="close" ng-click="modalCtrl.cancel()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-  <h3 class="modal-title">{{modalCtrl.title}}</h3>
+  <button type="button" class="close" ng-click="uberCtrl.cancel()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <h3 class="modal-title">{{uberCtrl.msg}}</h3>
 </div>
 <div class="modal-body">
-  {{modalCtrl.msg}}
+   <div class="jumbotron" style="background-color: black; color: lightblue;">
+    <h1 style="text-align:center">{{uberCtrl.price}} X</h1>
+   </div>
+  <h3 style="text-align:center">The current price is <b>{{uberCtrl.price}}</b> times the normal price.</h3>
+  <h2 style="text-align:center">Do you still want to run this job? </h2>
 </div>
 <div class="modal-footer">
-  <button class="btn btn-default" ng-click="modalCtrl.cancel()">Cancel</button>
-  <button class="btn btn-primary" ng-click="modalCtrl.ok()">OK</button>
+  <button class="btn btn-default" ng-click="uberCtrl.cancel()">Cancel</button>
+  <button class="btn btn-primary" ng-click="uberCtrl.ok()">OK</button>
 </div>

@@ -39,6 +39,10 @@ angular.module('hopsWorksApp')
                url: '/api/project/:id/quotas',
                'method': 'GET'
                       },
+              "uberPrice":{
+               url: '/api/project/:id/price',
+               'method': 'GET'
+                      },
               "getProjectInfo": {
                 url: '/api/project/getProjectInfo/:projectName',
                 'method': 'GET'

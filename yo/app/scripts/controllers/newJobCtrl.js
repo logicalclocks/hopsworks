@@ -11,47 +11,52 @@
 
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
-            '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-            'CuneiformService', 'AdamService', 'TourService',
-            function ($routeParams, growl, JobService,
-                    $location, ModalService, StorageService, $scope, SparkService,
-                    CuneiformService, AdamService, TourService) {
-
+          '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
+          'CuneiformService', 'AdamService', 'FlinkService', 'TourService',
+          function ($routeParams, growl, JobService,
+                  $location, ModalService, StorageService, $scope, SparkService,
+                  CuneiformService, AdamService, FlinkService, TourService) {
                 var self = this;
                 self.tourService = TourService;
                 //Set services as attributes 
                 this.ModalService = ModalService;
                 this.growl = growl;
 
-                //Set some (semi-)constants
-                this.selectFileRegexes = {
-                    "SPARK": /.jar\b/,
-                    "LIBRARY": /.jar\b/,
-                    "CUNEIFORM": /.cf\b/,
-                    "ADAM": /[^]*/
-                };
-                this.selectFileErrorMsgs = {
-                    "SPARK": "Please select a JAR file.",
-                    "LIBRARY": "Please select a JAR file.",
-                    "CUNEIFORM": "Please select a Cuneiform workflow. The file should have the extension '.cf'.",
-                    "ADAM": "Please select a file or folder."
-                };
-                this.projectId = $routeParams.projectID;
-                //Create variables for user-entered information
-                this.jobtype; //Will hold the selection of which job to create.
-                this.jobname; //Will hold the name of the job
-                this.localResources = {"entry": []}; //Will hold extra libraries
-                this.phase = 0; //The phase of creation we are in.
-                this.runConfig; //Will hold the job configuration
-                this.sparkState = {//Will hold spark-specific state
-                    "selectedJar": null //The path to the selected jar
-                };
-                this.adamState = {//Will hold ADAM-specific state
-                    "processparameter": null, //The parameter currently being processed
-                    "commandList": null, //The ADAM command list.
-                    "selectedCommand": null //The selected ADAM command
-                };
 
+            //Set some (semi-)constants
+            this.selectFileRegexes = {
+              "SPARK": /.jar\b/,
+              "FLINK": /.jar\b/,
+              "LIBRARY": /.jar\b/,
+              "CUNEIFORM": /.cf\b/,
+              "ADAM": /[^]*/
+            };
+            this.selectFileErrorMsgs = {
+              "SPARK": "Please select a JAR file.",
+              "FLINK": "Please select a JAR file.",
+              "LIBRARY": "Please select a JAR file.",
+              "CUNEIFORM": "Please select a Cuneiform workflow. The file should have the extension '.cf'.",
+              "ADAM": "Please select a file or folder."
+            };
+            this.projectId = $routeParams.projectID;
+
+            //Create variables for user-entered information
+            this.jobtype; //Will hold the selection of which job to create.
+            this.jobname; //Will hold the name of the job
+            this.localResources = {"entry": []}; //Will hold extra libraries
+            this.phase = 0; //The phase of creation we are in.
+            this.runConfig; //Will hold the job configuration
+            this.sparkState = {//Will hold spark-specific state
+              "selectedJar": null //The path to the selected jar
+            };
+            this.flinkState = {//Will hold flink-specific state
+              "selectedJar": null //The path to the selected jar
+            };
+            this.adamState = {//Will hold ADAM-specific state
+              "processparameter": null, //The parameter currently being processed
+              "commandList": null, //The ADAM command list.
+              "selectedCommand": null //The selected ADAM command
+            };
                 //Variables for front-end magic
                 this.accordion1 = {//Contains the job name
                     "isOpen": true,
@@ -139,25 +144,88 @@ angular.module('hopsWorksApp')
                         "title": "Configure and create"};
                 };
 
-                this.undoClear = function () {
-                    if (self.undoneState !== null) {
-                        self.jobtype = self.undoneState.jobtype;
-                        self.jobname = self.undoneState.jobname;
-                        self.localResources = self.undoneState.localResources;
-                        self.phase = self.undoneState.phase;
-                        self.runConfig = self.undoneState.runConfig;
-                        self.sparkState = self.undoneState.sparkState;
-                        self.adamState = self.undoneState.adamState;
-                        self.accordion1 = self.undoneState.accordions[0];
-                        self.accordion2 = self.undoneState.accordions[1];
-                        self.accordion3 = self.undoneState.accordions[2];
-                        self.accordion4 = self.undoneState.accordions[3];
-                        self.accordion5 = self.undoneState.accordions[4];
-                    }
-                    self.unodeState = null;
-                    self.undoable = false;
-                };
 
+            /**
+             * Clear the current state (and allow for undo).
+             * @returns {undefined}
+             */
+            this.clear = function () {
+              var state = {
+                "jobtype": self.jobtype,
+                "jobname": self.jobname,
+                "localResources": self.localResources,
+                "phase": self.phase,
+                "runConfig": self.runConfig,
+                "sparkState": self.sparkState,
+                "flinkState":self.flinkState,
+                "adamState": self.adamState,
+                "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5],
+              };
+              self.undoneState = state;
+              self.undoable = true;
+              self.jobtype = null;
+              self.jobname = null;
+              self.localResources = {"entry": []};
+              self.phase = 0;
+              self.runConfig = null;
+              self.sparkState = {
+                "selectedJar": null //The path to the selected jar
+              };
+              self.flinkState = {
+                "selectedJar": null //The path to the selected jar
+              };
+              self.adamState = {//Will hold ADAM-specific state
+                "processparameter": null, //The parameter currently being processed
+                "commandList": null, //The ADAM command list.
+                "selectedCommand": null //The selected ADAM command
+              };
+              //Variables for front-end magic
+              self.accordion1 = {//Contains the job name
+                "isOpen": true,
+                "visible": true,
+                "value": "",
+                "title": "Job name"};
+              self.accordion2 = {//Contains the job type
+                "isOpen": false,
+                "visible": false,
+                "value": "",
+                "title": "Job type"};
+              self.accordion3 = {// Contains the main execution file (jar, workflow,...)
+                "isOpen": false,
+                "visible": false,
+                "value": "",
+                "title": ""};
+              self.accordion4 = {// Contains the job setup (main class, input variables,...)
+                "isOpen": false,
+                "visible": false,
+                "value": "",
+                "title": ""};
+              self.accordion5 = {//Contains the configuration and creation
+                "isOpen": false,
+                "visible": false,
+                "value": "",
+                "title": "Configure and create"};
+            };
+
+            this.undoClear = function () {
+              if (self.undoneState !== null) {
+                self.jobtype = self.undoneState.jobtype;
+                self.jobname = self.undoneState.jobname;
+                self.localResources = self.undoneState.localResources;
+                self.phase = self.undoneState.phase;
+                self.runConfig = self.undoneState.runConfig;
+                self.sparkState = self.undoneState.sparkState;
+                self.flinkState= self.undoneState.flinkState;
+                self.adamState = self.undoneState.adamState;
+                self.accordion1 = self.undoneState.accordions[0];
+                self.accordion2 = self.undoneState.accordions[1];
+                self.accordion3 = self.undoneState.accordions[2];
+                self.accordion4 = self.undoneState.accordions[3];
+                self.accordion5 = self.undoneState.accordions[4];
+              }
+              self.unodeState = null;
+              self.undoable = false;
+            };
                 /**
                  * Create the job.
                  * @returns {undefined}
@@ -205,6 +273,72 @@ angular.module('hopsWorksApp')
                 };
 
 
+
+            /**
+             * Callback method for when the user selected a job type. Will then 
+             * display the file selection.
+             * @returns {undefined}
+             */
+            this.jobTypeChosen = function () {
+              self.phase = 2;
+              self.accordion3.isOpen = true; //Open file selection
+              var type;
+              switch (self.jobtype) { //Set the panel titles according to job type
+                case 0:
+                  self.accordion3.title = "Workflow file";
+                  self.accordion4.title = "Input variables";
+                  type = "Cuneiform";
+                  break;
+                case 1:
+                  self.accordion3.title = "JAR file";
+                  self.accordion4.title = "Job details";
+                  type = "Spark";
+                  break;
+                case 2:
+                  self.accordion3.title = "ADAM command";
+                  self.accordion4.title = "Job arguments";
+                  type = "ADAM";
+                  break;
+                case 3:
+                  self.accordion3.title = "JAR file";
+                  self.accordion4.title = "Job details";
+                  type = "Flink";
+                  break;
+              }
+              self.accordion1.isOpen = false; //Close job name panel
+              self.accordion1.value = " - " + self.jobname; //Set job name panel title
+              self.accordion3.visible = true; //Display file selection
+              self.accordion2.value = " - " + type; //Set job type panel title
+              self.accordion2.isOpen = false; //Close job type panel
+              self.accordion4.isOpen = false; //Close job setup
+              self.accordion4.visible = false; //Hide job setup
+              self.accordion5.visible = false; // Hide job configuration
+              self.accordion3.value = ""; //Reset selected file
+              if (self.tourService.currentStep_TourFour > -1) {
+                  self.tourService.currentStep_TourFour = 4;
+              }
+            };
+
+
+            /**
+             * Get the String representation of the selected jobType.
+             * @returns {String}
+             */
+            self.getJobType = function () {
+              switch (self.jobtype) {
+                case 0:
+                  return "CUNEIFORM";
+                case 1:
+                  return "SPARK";
+                case 2:
+                  return "ADAM";
+                case 3:
+                  return "FLINK";
+                default:
+                  return null;
+              }
+            };
+
                 self.jobTypeSpark = function () {
                     self.jobtype = 1;
                     self.jobTypeChosen();
@@ -220,62 +354,8 @@ angular.module('hopsWorksApp')
                     }
                 };
 
-                /**
-                 * Callback method for when the user selected a job type. Will then 
-                 * display the file selection.
-                 * @returns {undefined}
-                 */
-                this.jobTypeChosen = function () {
-                    self.phase = 2;
-                    self.accordion3.isOpen = true; //Open file selection
-                    var type;
-                    switch (self.jobtype) { //Set the panel titles according to job type
-                        case 0:
-                            self.accordion3.title = "Workflow file";
-                            self.accordion4.title = "Input variables";
-                            type = "Cuneiform";
-                            break;
-                        case 1:
-                            self.accordion3.title = "JAR file";
-                            self.accordion4.title = "Job details";
-                            type = "Spark";
-                            break;
-                        case 2:
-                            self.accordion3.title = "ADAM command";
-                            self.accordion4.title = "Job arguments";
-                            type = "ADAM";
-                            break;
-                    }
-                    self.accordion1.isOpen = false; //Close job name panel
-                    self.accordion1.value = " - " + self.jobname; //Set job name panel title
-                    self.accordion3.visible = true; //Display file selection
-                    self.accordion2.value = " - " + type; //Set job type panel title
-                    self.accordion2.isOpen = false; //Close job type panel
-                    self.accordion4.isOpen = false; //Close job setup
-                    self.accordion4.visible = false; //Hide job setup
-                    self.accordion5.visible = false; // Hide job configuration
-                    self.accordion3.value = ""; //Reset selected file
-                    if (self.tourService.currentStep_TourFour > -1) {
-                        self.tourService.currentStep_TourFour = 4;
-                    }
-                };
 
-                /**
-                 * Get the String representation of the selected jobType.
-                 * @returns {String}
-                 */
-                this.getJobType = function () {
-                    switch (self.jobtype) {
-                        case 0:
-                            return "CUNEIFORM";
-                        case 1:
-                            return "SPARK";
-                        case 2:
-                            return "ADAM";
-                        default:
-                            return null;
-                    }
-                };
+
 
                 /**
                  * Callback method for when the main job file has been selected.
@@ -299,6 +379,56 @@ angular.module('hopsWorksApp')
                     self.phase = 4;
                 };
 
+            /**
+             * Callback for when the user selected a file.
+             * @param {String} reason
+             * @param {String} path
+             * @returns {undefined}
+             */
+            this.onFileSelected = function (reason, path) {
+              var filename = getFileName(path);
+              switch (reason.toUpperCase()) {
+                case "SPARK":
+                  self.sparkState.selectedJar = filename;
+                  SparkService.inspectJar(self.projectId, path).then(
+                          function (success) {
+                            self.runConfig = success.data;
+                            self.mainFileSelected(filename);
+                            if (self.tourService.currentStep_TourFour > -1) {
+                                  self.tourService.currentStep_TourFour = 6;
+                            }
+
+                          }, function (error) {
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                  });
+                  break;
+                case "LIBRARY":
+                  self.localResources.entry.push({"key": filename, "value": path});
+                  break;
+                case "CUNEIFORM":
+                  CuneiformService.inspectStoredWorkflow(self.projectId, path).then(
+                          function (success) {
+                            self.runConfig = success.data;
+                            self.mainFileSelected(filename);
+                          }, function (error) {
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                  });
+                  break;
+                case "ADAM":
+                  self.adamState.processparameter.value = path;
+                  break;
+                case "FLINK":
+                  self.flinkState.selectedJar = filename;
+                  FlinkService.inspectJar(self.projectId, path).then(
+                          function (success) {
+                            self.runConfig = success.data;
+                            self.mainFileSelected(filename);
+                          }, function (error) {
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                  });
+                  break;
+              }
+            };
 
                 /**
                  * Open a dialog for file selection.
@@ -319,45 +449,6 @@ angular.module('hopsWorksApp')
                     });
                 };
 
-                /**
-                 * Callback for when the user selected a file.
-                 * @param {String} reason
-                 * @param {String} path
-                 * @returns {undefined}
-                 */
-                this.onFileSelected = function (reason, path) {
-                    var filename = getFileName(path);
-                    switch (reason.toUpperCase()) {
-                        case "SPARK":
-                            self.sparkState.selectedJar = filename;
-                            SparkService.inspectJar(self.projectId, path).then(
-                                    function (success) {
-                                        self.runConfig = success.data;
-                                        self.mainFileSelected(filename);
-                                        if (self.tourService.currentStep_TourFour > -1) {
-                                            self.tourService.currentStep_TourFour = 6;
-                                        }
-                                    }, function (error) {
-                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                            });
-                            break;
-                        case "LIBRARY":
-                            self.localResources.entry.push({"key": filename, "value": path});
-                            break;
-                        case "CUNEIFORM":
-                            CuneiformService.inspectStoredWorkflow(self.projectId, path).then(
-                                    function (success) {
-                                        self.runConfig = success.data;
-                                        self.mainFileSelected(filename);
-                                    }, function (error) {
-                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                            });
-                            break;
-                        case "ADAM":
-                            self.adamState.processparameter.value = path;
-                            break;
-                    }
-                };
 
                 /**
                  * Get a list of ADAM commands from the server.
@@ -387,6 +478,32 @@ angular.module('hopsWorksApp')
                     }
                 };
 
+
+            /**
+             * Save state upon destroy.
+             */
+            $scope.$on('$destroy', function () {
+              if (self.removed) {
+                //The state was removed explicitly; do not add again.
+                return;
+              }
+              var state = {
+                "jobtype": self.jobtype,
+                "jobname": self.jobname,
+                "localResources": self.localResources,
+                "phase": self.phase,
+                "runConfig": self.runConfig,
+                "sparkState": self.sparkState,
+                "adamState": self.adamState,
+                "flinkState": self.flinkState,
+                "accordion1": self.accordion1,
+                "accordion2": self.accordion2,
+                "accordion3": self.accordion3,
+                "accordion4": self.accordion4,
+                "accordion5": self.accordion5
+              };
+              StorageService.store(self.projectId + "newjob", state);
+            });
                 /**
                  * Init method: restore any previous state.
                  * @returns {undefined}
@@ -405,7 +522,9 @@ angular.module('hopsWorksApp')
                             self.sparkState = stored.sparkState;
                         } else if (self.jobtype === 2) {
                             self.adamState = stored.adamState;
-                        }
+			} else  if (self.jobtype == 3) {
+			    self.flinkState = stored.flinkState;
+			}
                         //GUI state
                         self.accordion1 = stored.accordion1;
                         self.accordion2 = stored.accordion2;
@@ -416,7 +535,6 @@ angular.module('hopsWorksApp')
                     if (self.adamState.commandList === null) {
                         self.getCommandList();
                     }
-
                 };
                 init(); //Call upon create;
                 /**
@@ -436,30 +554,6 @@ angular.module('hopsWorksApp')
                     });
                 };
 
-                /**
-                 * Save state upon destroy.
-                 */
-                $scope.$on('$destroy', function () {
-                    if (self.removed) {
-                        //The state was removed explicitly; do not add again.
-                        return;
-                    }
-                    var state = {
-                        "jobtype": self.jobtype,
-                        "jobname": self.jobname,
-                        "localResources": self.localResources,
-                        "phase": self.phase,
-                        "runConfig": self.runConfig,
-                        "sparkState": self.sparkState,
-                        "adamState": self.adamState,
-                        "accordion1": self.accordion1,
-                        "accordion2": self.accordion2,
-                        "accordion3": self.accordion3,
-                        "accordion4": self.accordion4,
-                        "accordion5": self.accordion5
-                    };
-                    StorageService.store(self.projectId + "newjob", state);
-                });
 
             }]);
 

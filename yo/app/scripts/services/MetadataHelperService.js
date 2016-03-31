@@ -28,8 +28,10 @@ angular.module('hopsWorksApp')
 
                 MetadataActionService.fetchTemplates($cookies['email'])
                         .then(function (data) {
-                          angular.copy(JSON.parse(data.board).templates, availableTemplates);
-                          defer.resolve(data);
+                          if (data.board !== null || data.board !== {}) {
+                              angular.copy(JSON.parse(data.board).templates, availableTemplates);
+                              defer.resolve(data);
+                          }
                         });
 
                 return defer.promise;

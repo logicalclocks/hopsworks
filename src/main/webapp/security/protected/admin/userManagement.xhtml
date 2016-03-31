@@ -46,6 +46,11 @@
                              rowKey="#{muser.email}"
                              style="table-layout: fixed" 
                              scrollable="false"
+                             rows="25"
+                             paginator="true"
+                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="15,25,35,45,55">
+                  
                              >
 
                   <p:column id="nameColumn" filterBy="#{muser.fname}" headerText="First Name" >
