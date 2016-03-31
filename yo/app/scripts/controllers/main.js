@@ -90,33 +90,10 @@ angular.module('hopsWorksApp')
                                 }, function (error) {
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                         });
-                    } else if (dataType === 'dataset') {
-                        //fetch the dataset
-                        ProjectService.getDatasetInfo({inodeId: id}).$promise.then(
-                                function (response) {
-                                    var projects;
-                                    //fetch the projects to pass them in the modal. Fixes empty projects array on ui-select initialization
-                                    ProjectService.query().$promise.then(
-                                            function (success) {
-                                                projects = success;
+                    });
+            };
 
-                                                //show dataset
-                                                ModalService.viewSearchResult('md', response, dataType, projects)
-                                                        .then(function (success) {
-                                                            growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
-                                                        }, function (error) {
-
-                                                        });
-                                            }, function (error) {
-                                        console.log('Error: ' + error);
-                                    });
-
-                                }, function (error) {
-                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-                        });
-                    }
-                };
-
+            }
 
                 var getUnreadCount = function () {
                     MessageService.getUnreadCount().then(
@@ -256,12 +233,13 @@ angular.module('hopsWorksApp')
 
                     datePicker();// this will load the function so that the date picker can call it.
                 };
-                var datePicker = function () {
-                    $(function () {
-                        $('#datetimepicker1').datetimepicker();
-                    });
-                };
+                
                 $scope.$on("$destroy", function () {
                     $interval.cancel(getUnreadCountInterval);
                 });
+                
+                var datePicker = function () {
+                    $(function () {
+                        $('#datetimepicker1').datetimepicker();
+                    })};
             }]);

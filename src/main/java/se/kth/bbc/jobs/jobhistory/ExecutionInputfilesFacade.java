@@ -10,6 +10,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.project.fb.Inode;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 @Stateless
@@ -29,6 +30,12 @@ public class ExecutionInputfilesFacade extends AbstractFacade<ExecutionsInputfil
     
     public void create(int executionId, int inodeId, String inodeName){
         ExecutionsInputfiles file = new ExecutionsInputfiles(executionId, inodeId, inodeName);
+        em.persist(file);
+        em.flush();
+    }
+    
+    public void create(int executionId, Inode inode){
+        ExecutionsInputfiles file = new ExecutionsInputfiles(executionId, inode.getInodePK().getParentId(),inode.getInodePK().getName());
         em.persist(file);
         em.flush();
     }

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -19,13 +21,17 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.slf4j.LoggerFactory;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
+import se.kth.bbc.project.fb.Inode;
+import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.controller.ExecutionController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
@@ -39,8 +45,11 @@ import se.kth.hopsworks.users.UserFacade;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExecutionService {
 
-  private static final Logger logger = Logger.getLogger(ExecutionService.class.
+ private static final Logger logger = Logger.getLogger(ExecutionService.class.
           getName());
+  
+ private static final org.slf4j.Logger debugger = LoggerFactory.getLogger(ExecutionController.class);
+
 
   @EJB
   private ExecutionFacade executionFacade;
@@ -54,6 +63,10 @@ public class ExecutionService {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private ExecutionController executionController;
+  @EJB
+  private InodeFacade inodes;
+  @EJB
+  private ExecutionInputfilesFacade execInputFilesFacade;
 
   private JobDescription job;
 
@@ -107,6 +120,43 @@ public class ExecutionService {
       if (job.getJobType() == JobType.SPARK) {
         SparkJobConfiguration sjb = (SparkJobConfiguration) job.getJobConfig();
         String inputArgs = sjb.getArgs();
+        String path = sjb.getJarPath();
+        
+        String patternString = "hdfs://(.*)\\s";
+        Pattern p = Pattern.compile(patternString);
+        Matcher m = p.matcher(path);
+        
+        int count = m.groupCount();
+        
+        Inode inode13 = inodes.findById(13);
+        int Parent_ID_13 = inode13.getInodePK().getParentId();
+        String Name_13 = inode13.getInodePK().getName();
+        String Path_13 = inodes.getPath(inode13);
+        
+        Inode inode23 = inodes.findById(23);
+        int Parent_ID_23 = inode23.getInodePK().getParentId();
+        String Name_23 = inode23.getInodePK().getName();
+        String Path_23 = inodes.getPath(inode23);
+        
+        Inode inode23_b = inodes.getInodeAtPath(Path_23);
+        int parentID = inode23_b.getInodePK().getParentId();
+        String nameID = inode23_b.getInodePK().getName();
+
+        execInputFilesFacade.create(11, parentID, nameID);
+        
+        
+        
+//        for (int i = 0; i < m.groupCount(); i++) { // for each filename, resolve Inode from HDFS filename
+//          String filename = m.group(i);
+//          count = m.groupCount();
+//          //Inode inode = inodes.getInodeAtPath("hdfs://");
+//          Inode inode = inodes.getInodeAtPath(Path_13);
+//          int parentID = inode.getInodePK().getParentId();
+//          String nameID = inode.getInodePK().getName();
+//          count = m.groupCount();
+//
+//          execInputFilesFacade.create(11, parentID, nameID);
+//        }
         
         // Parse inputArgs and extract any hdfs files. Use a Regex expression
         // 'hdfs:\/\/*/*

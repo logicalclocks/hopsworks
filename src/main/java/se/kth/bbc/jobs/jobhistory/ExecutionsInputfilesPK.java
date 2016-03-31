@@ -20,10 +20,12 @@ public class ExecutionsInputfilesPK implements Serializable {
   @NotNull
   @Column(name = "execution_id")
   private int executionId;
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "inode_pid")
   private int inodePid;
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1, max = 255)
