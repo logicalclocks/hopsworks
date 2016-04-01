@@ -10,7 +10,6 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.project.fb.Inode;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 @Stateless
@@ -28,14 +27,8 @@ public class ExecutionInputfilesFacade extends AbstractFacade<ExecutionsInputfil
         return em;
     }
     
-    public void create(int executionId, int inodeId, String inodeName){
-        ExecutionsInputfiles file = new ExecutionsInputfiles(executionId, inodeId, inodeName);
-        em.persist(file);
-        em.flush();
-    }
-    
-    public void create(int executionId, Inode inode){
-        ExecutionsInputfiles file = new ExecutionsInputfiles(executionId, inode.getInodePK().getParentId(),inode.getInodePK().getName());
+    public void create(int executionId, int inodePid, String name){
+        ExecutionsInputfiles file = new ExecutionsInputfiles(executionId, inodePid, name);
         em.persist(file);
         em.flush();
     }
@@ -44,27 +37,35 @@ public class ExecutionInputfilesFacade extends AbstractFacade<ExecutionsInputfil
         TypedQuery<ExecutionsInputfiles> q = em.createNamedQuery(
             "ExecutionsInputfiles.findByExecutionId", ExecutionsInputfiles.class);
         q.setParameter("executionId", executionId);
-        return null;
+        return q.getResultList();
     }
     
     public List<ExecutionsInputfiles> findExecutionInputFileByInodePid(int inodePid){
         TypedQuery<ExecutionsInputfiles> q = em.createNamedQuery(
             "ExecutionsInputfiles.findByInodePid", ExecutionsInputfiles.class);
         q.setParameter("inodePid", inodePid);
-        return null;
+        return q.getResultList();
     }
     
     public List<ExecutionsInputfiles> findExecutionInputFileByInodePidName(int inodePid){
         TypedQuery<ExecutionsInputfiles> q = em.createNamedQuery(
             "ExecutionsInputfiles.findByInodePidName", ExecutionsInputfiles.class);
-        q.setParameter("inodePid", inodePid);
-        return null;
+        q.setParameter("parent_id", inodePid);
+        return q.getResultList();
     }
     
     public List<ExecutionsInputfiles> findExecutionInputFileByByInodeName(String inodeName){
         TypedQuery<ExecutionsInputfiles> q = em.createNamedQuery(
             "ExecutionsInputfiles.findByInodeName", ExecutionsInputfiles.class);
-        q.setParameter("inodeName", inodeName);
-        return null;
+        q.setParameter("name", inodeName);
+        return q.getResultList();
+    }
+    
+    public List<ExecutionsInputfiles> findRecord(int inodePid, String inodeName){
+        TypedQuery<ExecutionsInputfiles> q = em.createNamedQuery(
+                "ExecutionsInputfiles.findRecord", ExecutionsInputfiles.class);
+        q.setParameter("parentId", inodePid);
+        q.setParameter("name", inodeName);
+        return q.getResultList();
     }
 }

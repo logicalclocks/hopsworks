@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -25,12 +23,9 @@ import org.slf4j.LoggerFactory;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
-import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
-import se.kth.bbc.jobs.spark.SparkJobConfiguration;
-import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.controller.ExecutionController;
 import se.kth.hopsworks.filters.AllowedRoles;
@@ -116,54 +111,6 @@ public class ExecutionService {
               "You are not authorized for this invocation.");
     }
     try {
-      
-      if (job.getJobType() == JobType.SPARK) {
-        SparkJobConfiguration sjb = (SparkJobConfiguration) job.getJobConfig();
-        String inputArgs = sjb.getArgs();
-        String path = sjb.getJarPath();
-        
-        String patternString = "hdfs://(.*)\\s";
-        Pattern p = Pattern.compile(patternString);
-        Matcher m = p.matcher(path);
-        
-        int count = m.groupCount();
-        
-        Inode inode13 = inodes.findById(13);
-        int Parent_ID_13 = inode13.getInodePK().getParentId();
-        String Name_13 = inode13.getInodePK().getName();
-        String Path_13 = inodes.getPath(inode13);
-        
-        Inode inode23 = inodes.findById(23);
-        int Parent_ID_23 = inode23.getInodePK().getParentId();
-        String Name_23 = inode23.getInodePK().getName();
-        String Path_23 = inodes.getPath(inode23);
-        
-        Inode inode23_b = inodes.getInodeAtPath(Path_23);
-        int parentID = inode23_b.getInodePK().getParentId();
-        String nameID = inode23_b.getInodePK().getName();
-
-        execInputFilesFacade.create(11, parentID, nameID);
-        
-        
-        
-//        for (int i = 0; i < m.groupCount(); i++) { // for each filename, resolve Inode from HDFS filename
-//          String filename = m.group(i);
-//          count = m.groupCount();
-//          //Inode inode = inodes.getInodeAtPath("hdfs://");
-//          Inode inode = inodes.getInodeAtPath(Path_13);
-//          int parentID = inode.getInodePK().getParentId();
-//          String nameID = inode.getInodePK().getName();
-//          count = m.groupCount();
-//
-//          execInputFilesFacade.create(11, parentID, nameID);
-//        }
-        
-        // Parse inputArgs and extract any hdfs files. Use a Regex expression
-        // 'hdfs:\/\/*/*
-        // Get Inode from hdfs reference
-        //     Inode i = inodes.getInodeAtPath(path);
-        //myFacade.add(executionId, inode)
-      }
       Execution exec = executionController.start(job, user);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(exec).build();

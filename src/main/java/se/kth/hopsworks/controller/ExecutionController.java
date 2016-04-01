@@ -59,36 +59,22 @@ public class ExecutionController {
               getJobType());
         }
         int execId = exec.getId();
-        logger.debug("The execution Id is: " + execId);
         SparkJobConfiguration config = (SparkJobConfiguration) job.getJobConfig();
-        String args = config.getArgs();
-        logger.debug("The args are: " + args);
         String path = config.getJarPath();
-        logger.debug("The path is: " + path);
         String patternString = "hdfs://(.*)\\s";
         Pattern p = Pattern.compile(patternString);
         Matcher m = p.matcher(path);
-        //execInputFilesFacade.create(execId, 8, "myFirstProject");
-        int mCount = m.groupCount();
-        if(m.groupCount()>0){
-//        for (int i = 0; i < m.groupCount(); i++) { // for each filename, resolve Inode from HDFS filename
-//          int mC;
-//          //String filename = m.group();
-//          mC = m.groupCount();
-//          Inode inode = inodes.getInodeAtPath(path);
-//          mC = m.groupCount();
-//          int parentID = inode.getInodePK().getParentId();
-//          mC = m.groupCount();
-//          String name = inode.getInodePK().getName(); 
-//          mC = m.groupCount();
-//          execInputFilesFacade.create(execId, inode.getInodePK().getParentId(), inode.getInodePK().getName());
-//          // insert into inputfiles_executions (inode, execId).
-//       }
-        for (int i = 0; i < m.groupCount(); i++) { // for each filename, resolve Inode from HDFS filename
-//          String filename = m.group(i);
-//           Inode inode = inodes.getInodeAtPath("hdfs://" + filename);
-          // insert into inputfiles_executions (inode, execId).
-        }
+        String[] parts = path.split("/");
+        String pathOfInode = path.replace("hdfs://" + parts[2], "");
+        
+        Inode inode = inodes.getInodeAtPath(pathOfInode);
+        int inodePid = inode.getInodePK().getParentId();
+        String inodeName = inode.getInodePK().getName();
+        
+        List<ExecutionsInputfiles> oldRecords = execInputFilesFacade.findRecord(inodePid, inodeName);
+        
+        if(oldRecords.isEmpty()){
+            execInputFilesFacade.create(execId, inodePid, inodeName);
         }
         break;
       default:

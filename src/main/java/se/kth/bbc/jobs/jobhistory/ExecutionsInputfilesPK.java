@@ -11,73 +11,74 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import se.kth.bbc.project.fb.Inode;
 
 @Embeddable
 public class ExecutionsInputfilesPK implements Serializable {
-
+    
   @Basic(optional = false)
   @NotNull
   @Column(name = "execution_id")
   private int executionId;
-
+  
   @Basic(optional = false)
   @NotNull
   @Column(name = "inode_pid")
   private int inodePid;
-  
+
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1, max = 255)
+  @Size(min = 1,
+          max = 255)
   @Column(name = "inode_name")
-  private String inodeName;
+  private String name;
 
   public ExecutionsInputfilesPK() {
   }
 
-  public ExecutionsInputfilesPK(int executionId, int inodePid, String inodeName) {
+  public ExecutionsInputfilesPK(int executionId, int inodePid, String name) {
     this.executionId = executionId;
     this.inodePid = inodePid;
-    this.inodeName = inodeName;
+    this.name = name;           
   }
 
-  public int getExecutionId() {
-    return executionId;
-  }
+    public int getExecutionId() {
+        return executionId;
+    }
 
-  public void setExecutionId(int executionId) {
-    this.executionId = executionId;
-  }
+    public void setExecutionId(int executionId) {
+        this.executionId = executionId;
+    }
 
-  public int getInodePid() {
-    return inodePid;
-  }
+    public int getInodePid() {
+        return inodePid;
+    }
 
-  public void setInodePid(int inodePid) {
-    this.inodePid = inodePid;
-  }
+    public void setInodePid(int inodePid) {
+        this.inodePid = inodePid;
+    }
 
-  public String getInodeName() {
-    return inodeName;
-  }
+    public String getName() {
+        return name;
+    }
 
-  public void setInodeName(String inodeName) {
-    this.inodeName = inodeName;
-  }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-  @Override
+  
+   @Override
   public int hashCode() {
     int hash = 0;
     hash += executionId;
     hash += inodePid;
-    hash += (inodeName != null ? inodeName.hashCode() : 0);
+    hash += (name != null ? name.hashCode() : 0);
     return hash;
   }
 
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof ExecutionsInputfilesPK)) {
+    if (!(object instanceof JobOutputFilePK)) {
       return false;
     }
     ExecutionsInputfilesPK other = (ExecutionsInputfilesPK) object;
@@ -87,7 +88,8 @@ public class ExecutionsInputfilesPK implements Serializable {
     if (this.inodePid != other.inodePid) {
       return false;
     }
-    if ((this.inodeName == null && other.inodeName != null) || (this.inodeName != null && !this.inodeName.equals(other.inodeName))) {
+    if ((this.name == null && other.name != null) || (this.name != null
+            && !this.name.equals(other.name))) {
       return false;
     }
     return true;
@@ -95,7 +97,10 @@ public class ExecutionsInputfilesPK implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.jobs.execution.ExecutionsInputfilesPK[ executionId=" + executionId + ", inodePid=" + inodePid + ", inodeName=" + inodeName + " ]";
+    return "se.kth.bbc.jobs.history.ExecutionsInputfilesPK[ executionId=" + executionId + 
+            ", inodePid="+ inodePid + 
+            ", name="+ name +
+            "]";
   }
-  
 }
+

@@ -90,6 +90,7 @@ angular.module('hopsWorksApp')
                                 }, function (error) {
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                         });
+                        });
                     } else if (dataType === 'ds') {
                         //fetch the dataset
                         ProjectService.getDatasetInfo({inodeId: id}).$promise.then(
@@ -116,8 +117,6 @@ angular.module('hopsWorksApp')
                         });
                     }
                 };
-
-            }
 
                 var getUnreadCount = function () {
                     MessageService.getUnreadCount().then(
