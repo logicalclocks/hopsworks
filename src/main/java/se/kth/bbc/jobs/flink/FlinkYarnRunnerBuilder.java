@@ -271,12 +271,12 @@ public class FlinkYarnRunnerBuilder {
             final String nameNodeIpPort) throws IOException {
         isReadyForDeployment();
 
-        //Create the YarnRunner builder for Flink, proceed with setting values
-        YarnRunner.Builder builder = new YarnRunner.Builder(flinkDir+"/flink.jar", "flink.jar");
-         
         //Set Classpath and Jar Path
         String flinkClasspath = Settings.getFlinkDefaultClasspath(flinkDir);
         String hdfsFlinkJarPath = Settings.getHdfsFlinkJarPath(flinkUser);
+        //Create the YarnRunner builder for Flink, proceed with setting values
+        YarnRunner.Builder builder = new YarnRunner.Builder(Settings.FLINK_AM_MAIN);
+         
         builder.addToAppMasterEnvironment("CLASSPATH", flinkClasspath);
         String stagingPath = File.separator + "Projects" + File.separator + project
             + File.separator
@@ -342,11 +342,10 @@ public class FlinkYarnRunnerBuilder {
                
         StringBuilder envShipFileList = new StringBuilder();
         // upload ship files
-        for (int i = 0; i < shipFiles.size(); i++) {
+        /*for (int i = 0; i < shipFiles.size(); i++) {
             File shipFile = shipFiles.get(i);
-            //TODO: Check if we need absolute or relative path of shipFile
             builder.addLocalResource(shipFile.getName(), shipFile.getAbsolutePath());
-        }
+        }*/
 
 
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_COUNT, String.valueOf(taskManagerCount));
@@ -381,10 +380,9 @@ public class FlinkYarnRunnerBuilder {
             name = customName;
         }
         
-        //HOPS YarnRunner 
+        //Set name of application
         builder.appName(name);
-        //TODO: Confirm this is the correct AM class
-        builder.amMainClass("org.apache.flink.yarn.ApplicationMaster");
+        
         //Set up command
         StringBuilder amargs = new StringBuilder("-m yarn-cluster");
         amargs.append(" -yn ").append(taskManagerCount);

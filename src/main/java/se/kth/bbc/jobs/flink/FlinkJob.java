@@ -31,6 +31,8 @@ public class FlinkJob extends YarnJob {
      * @param user
      * @param hadoopDir
      * @param flinkDir
+     * @param flinkConfDir
+     * @param flinkConfFile
      * @param nameNodeIpPort
      * @param flinkUser
      */
@@ -69,11 +71,11 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setDetachedMode(false);
         flinkBuilder.setName(jobconfig.getAppName());
         flinkBuilder.setConfigurationDirectory(jobconfig.getFlinkConfDir());
-        flinkBuilder.setConfigurationFilePath(new Path(flinkDir + jobconfig.getFlinkConfDir() + jobconfig.getFlinkConfFile()));
+        flinkBuilder.setConfigurationFilePath(new Path(jobconfig.getFlinkConfFile()));
         //Flink specific conf object
         //TODO: Check if needs to be initialized
         //TODO: Check if Path is correct
-        flinkBuilder.setFlinkLoggingConfigurationPath(new Path(flinkDir + jobconfig.getFlinkConfDir() + jobconfig.getFlinkConfFile()));
+        flinkBuilder.setFlinkLoggingConfigurationPath(new Path(jobconfig.getFlinkConfFile()));
         flinkBuilder.setLocalJarPath(new Path(flinkDir+"/flink.jar"));
         String[] jobArgs = jobconfig.getArgs().trim().split(" ");
         flinkBuilder.addAllJobArgs(jobArgs);
@@ -109,7 +111,11 @@ public class FlinkJob extends YarnJob {
 
     @Override
     protected void cleanup() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        logger.log(Level.INFO, "Job finished performing cleanup...");
+        if (monitor != null) {
+          monitor.close();
+          monitor = null;
+        }
     }
 
 }

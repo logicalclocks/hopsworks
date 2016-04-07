@@ -341,7 +341,7 @@ public class Settings {
   public static final String FLINK_DEFAULT_OUTPUT_PATH = "Logs/Flink/";
   public static final String FLINK_LOCRSC_SPARK_JAR = "__flink__.jar";
   public static final String FLINK_LOCRSC_APP_JAR = "__app__.jar";
-  
+  public static final String FLINK_AM_MAIN = "org.apache.flink.yarn.ApplicationMaster";
   
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir()+ "/flink.jar";
