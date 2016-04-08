@@ -696,28 +696,6 @@ public class YarnRunner {
       this.localResourcesBasePath = basePath;
       return this;
     }
-    
-    /**
-     * Set the base path for aggregated log for yarn. This is the path where the logs
-     * from all nodes are aggregated to. Use "$APPID" as a replacement for the appId, 
-     * which will be replaced once it is available.
-     * <p/>
-     * If this method is not invoked, a default path will be used.
-     *
-     * @param logPath
-     * @return
-     */
-    public Builder aggregatedLogPath(String logPath) {
-      while (logPath.endsWith(File.separator)) {
-        logPath = logPath.substring(0, logPath.length() - 1);
-      }
-      //TODO: handle paths like "hdfs://"
-      if (!logPath.startsWith("/")) {
-        logPath = "/" + logPath;
-      }
-      this.aggregatedLogPath = logPath;
-      return this;
-    }
 
     /**
      * Add a local resource that should be added to the AM container. The name is the key as used in the LocalResources
