@@ -159,12 +159,12 @@ public class SparkService {
       String email = sc.getUserPrincipal().getName();
       Users user = userFacade.findByEmail(email);
       String path = config.getJarPath();
-      if (!path.startsWith("hdfs")) {
-        path = "hdfs://" + path;
-      }
-      HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
-      path = path.replaceFirst("hdfs:/*Projects",
-          "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
+//      if (!path.startsWith("hdfs")) {
+//        path = "hdfs://" + path;
+//      }
+//      HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
+//      path = path.replaceFirst("hdfs:/*Projects",
+//          "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
 
       if (user == null) {
         //Should not be possible, but, well...

@@ -145,7 +145,11 @@ public class SparkController {
   public boolean isSparkJarAvailable() {
 	boolean isInHdfs;
 	try {
-	  isInHdfs = fops.exists(settings.getHdfsSparkJarPath());
+    String sparkInHdfsPath = settings.getHdfsSparkJarPath();
+    // don't need the NN ip:port here - just going to DB
+//    sparkInHdfsPath = sparkInHdfsPath.replaceFirst("hdfs:/*user",
+//          "hdfs://" + hdfsLeDescriptorsFacade.getSingleEndpoint() + "/user");
+	  isInHdfs = fops.exists(sparkInHdfsPath);
 	} catch (IOException e) {
 	  logger.log(Level.WARNING, "Cannot get Spark jar file from HDFS: {0}",
 			  settings.getHdfsSparkJarPath());
@@ -190,10 +194,10 @@ public class SparkController {
 	if (!path.endsWith(".jar")) {
 	  throw new IllegalArgumentException("Path does not point to a jar file.");
 	}
-	HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
+//	HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
 	// If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
-	path = path.replaceFirst("hdfs:/*Projects",
-			"hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
+//	path = path.replaceFirst("hdfs:/*Projects",
+//			"hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
 	logger.log(Level.INFO, "Really executing Spark job by {0} at path: {1}", new Object[]{username, path});
 	
 	JarInputStream jis = new JarInputStream(dfs.getDfsOps(username).open(path));

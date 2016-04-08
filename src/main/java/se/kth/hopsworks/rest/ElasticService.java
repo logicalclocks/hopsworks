@@ -123,15 +123,23 @@ public class ElasticService {
      * SEARCHABLE BY DEFAULT. NEEDS REFACTORING
      */
     //hit the indices - execute the queries
-    SearchResponse response
-        = client.prepareSearch(Settings.META_PROJECT_INDEX,
-            Settings.META_DATASET_INDEX).
-        setTypes(Settings.META_PROJECT_PARENT_TYPE,
-            Settings.META_DATASET_PARENT_TYPE)
-        .setQuery(this.matchProjectsDatasetsQuery(searchTerm))
-        //.setQuery(this.getDatasetComboQuery(searchTerm))
-        .addHighlightedField("name")
-        .execute().actionGet();
+//    SearchResponse response
+//        = client.prepareSearch(Settings.META_PROJECT_INDEX,
+//            Settings.META_DATASET_INDEX).
+//        setTypes(Settings.META_PROJECT_PARENT_TYPE,
+//            Settings.META_DATASET_PARENT_TYPE)
+//        .setQuery(this.matchProjectsDatasetsQuery(searchTerm))
+//        //.setQuery(this.getDatasetComboQuery(searchTerm))
+//        .addHighlightedField("name")
+//        .execute().actionGet();
+    SearchRequestBuilder srb = client.prepareSearch(Settings.META_PROJECT_INDEX, Settings.META_DATASET_INDEX);
+    srb = srb.setTypes(Settings.META_PROJECT_PARENT_TYPE,
+        Settings.META_DATASET_PARENT_TYPE);
+    srb = srb.setQuery(this.matchProjectsDatasetsQuery(searchTerm));
+    srb = srb.addHighlightedField("name");
+    logger.info("Global search Elastic query is: " + srb.toString());
+    ListenableActionFuture<SearchResponse> futureResponse = srb.execute();
+    SearchResponse response = futureResponse.actionGet();
 
     if (response.status().getStatus() == 200) {
       //logger.log(Level.INFO, "Matched number of documents: {0}", response.
@@ -211,13 +219,21 @@ public class ElasticService {
     }
 
     //hit the indices - execute the queries
-    SearchResponse response
-        = client.prepareSearch(Settings.META_PROJECT_INDEX)
-        .setTypes(Settings.META_PROJECT_CHILD_TYPE)
-        .setQuery(this.matchChildQuery(projectName,
-            Settings.META_PROJECT_PARENT_TYPE, searchTerm))
-        .addHighlightedField("name")
-        .execute().actionGet();
+//    SearchResponse response
+//        = client.prepareSearch(Settings.META_PROJECT_INDEX)
+//        .setTypes(Settings.META_PROJECT_CHILD_TYPE)
+//        .setQuery(this.matchChildQuery(projectName,
+//            Settings.META_PROJECT_PARENT_TYPE, searchTerm))
+//        .addHighlightedField("name")
+//        .execute().actionGet();
+    SearchRequestBuilder srb = client.prepareSearch(Settings.META_PROJECT_INDEX);
+    srb = srb.setTypes(Settings.META_PROJECT_PARENT_TYPE);
+    srb = srb.setQuery(this.matchChildQuery(projectName,
+        Settings.META_PROJECT_PARENT_TYPE, searchTerm));
+    srb = srb.addHighlightedField("name");
+    logger.info("Project Elastic query is: " + srb.toString());
+    ListenableActionFuture<SearchResponse> futureResponse = srb.execute();
+    SearchResponse response = futureResponse.actionGet();
 
     if (response.status().getStatus() == 200) {
       //logger.log(Level.INFO, "Matched number of documents: {0}", response.
@@ -298,6 +314,7 @@ public class ElasticService {
     srb = srb.setQuery(this.matchChildQuery(datasetName,
         Settings.META_DATASET_PARENT_TYPE, searchTerm));
     srb = srb.addHighlightedField("name");
+    logger.info("Dataset Elastic query is: " + srb.toString());
     ListenableActionFuture<SearchResponse> futureResponse = srb.execute();
     SearchResponse response = futureResponse.actionGet();
 
@@ -493,7 +510,8 @@ public class ElasticService {
         .must(childBase)
         .must(childRest);
 
-    return union;
+//    return union;
+    return childRest;
   }
 
   /**

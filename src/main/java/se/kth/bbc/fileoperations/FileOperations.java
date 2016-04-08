@@ -229,6 +229,11 @@ public class FileOperations {
   public boolean exists(String path) throws IOException {
     if (path.startsWith("hdfs:")) {
       path = path.substring(5);
+      int pos = path.indexOf(":");
+      if (pos != -1) {
+        int pathPos = path.indexOf("/", pos);
+        path = path.substring(pathPos);
+      }
       while (path.charAt(1) == '/') {
         path = path.substring(1);
       }
