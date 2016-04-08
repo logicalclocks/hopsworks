@@ -19,6 +19,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -47,6 +48,7 @@ public class YarnRunner {
   public static final String APPID_PLACEHOLDER = "$APPID";
   private static final String APPID_REGEX = "\\$APPID";
   private static final String KEY_CLASSPATH = "CLASSPATH";
+  private static final String LOCAL_LOG_DIR_PLACEHOLDER = "<LOG_DIR>";
 
   private YarnClient yarnClient;
   private Configuration conf;
@@ -64,11 +66,13 @@ public class YarnRunner {
   private final Map<String, String> amLocalResourcesOnHDFS;
   private final Map<String, String> amEnvironment;
   private String localResourcesBasePath;
+  private String aggregatedLogPath;
   private String stdOutPath;
   private String stdErrPath;
   private final boolean shouldCopyAmJarToLocalResources;
   private final List<String> filesToBeCopied;
   private final boolean logPathsAreHdfs;
+  private final boolean logPathsAreAggregated;
   private final List<YarnSetupCommand> commands;
   private final List<String> javaOptions;
   private final List<String> filesToRemove;
@@ -154,7 +158,7 @@ public class YarnRunner {
     YarnClient newClient = YarnClient.createYarnClient();
     newClient.init(conf);
     YarnMonitor monitor = new YarnMonitor(appId, newClient);
-
+    
     //Clean up some
     removeAllNecessary();
     yarnClient = null;
@@ -188,6 +192,9 @@ public class YarnRunner {
   //---------------------------------------------------------------------------
   private void fillInAppid(String id) {
     localResourcesBasePath = localResourcesBasePath.replaceAll(APPID_REGEX, id);
+    if (logPathsAreAggregated) {
+      aggregatedLogPath = aggregatedLogPath.replaceAll(APPID_REGEX, id);
+    }
     appName = appName.replaceAll(APPID_REGEX, id);
     amArgs = amArgs.replaceAll(APPID_REGEX, id);
     stdOutPath = stdOutPath.replaceAll(APPID_REGEX, id);
@@ -406,12 +413,14 @@ public class YarnRunner {
     this.amLocalResourcesOnHDFS = builder.amLocalResourcesOnHDFS;
     this.amEnvironment = builder.amEnvironment;
     this.localResourcesBasePath = builder.localResourcesBasePath;
+    this.aggregatedLogPath = builder.aggregatedLogPath;
     this.yarnClient = builder.yarnClient;
     this.conf = builder.conf;
     this.shouldCopyAmJarToLocalResources
         = builder.shouldAddAmJarToLocalResources;
     this.filesToBeCopied = builder.filesToBeCopied;
     this.logPathsAreHdfs = builder.logPathsAreRelativeToResources;
+    this.logPathsAreAggregated = builder.logPathsAreAggregated;
     this.stdOutPath = builder.stdOutPath;
     this.stdErrPath = builder.stdErrPath;
     this.commands = builder.commands;
@@ -434,17 +443,20 @@ public class YarnRunner {
   }
 
   public String getStdOutPath() {
-    if (logPathsAreHdfs) {
+    if (logPathsAreHdfs && !logPathsAreAggregated) {
       return localResourcesBasePath + File.separator + stdOutPath;
+    } else if (logPathsAreAggregated) {
+      return aggregatedLogPath;
     } else {
       return stdOutPath;
     }
   }
 
   public String getStdErrPath() {
-    if (logPathsAreHdfs) {
-
+    if (logPathsAreHdfs && !logPathsAreAggregated) {
       return localResourcesBasePath + File.separator + stdErrPath;
+    } else if (logPathsAreAggregated) {
+      return aggregatedLogPath;
     } else {
       return stdErrPath;
     }
@@ -452,6 +464,10 @@ public class YarnRunner {
 
   public boolean areLogPathsHdfs() {
     return logPathsAreHdfs;
+  }
+  
+  public boolean areLogPathsAggregated() {
+    return logPathsAreAggregated;
   }
 
   public void cancelJob(String appid) throws YarnException, IOException {
@@ -491,12 +507,16 @@ public class YarnRunner {
     private Map<String, String> amEnvironment = new HashMap<>();
     //Path where the application master expects its local resources to be (added to fs.getHomeDirectory)
     private String localResourcesBasePath;
+    //aggregated yarn logs path
+    private String aggregatedLogPath;
     //Path to file where stdout should be written, default in tmp folder
     private String stdOutPath;
     //Path to file where stderr should be written, default in tmp folder
     private String stdErrPath;
     //Signify whether the log paths are relative to the localResourcesBasePath
     private boolean logPathsAreRelativeToResources = false;
+    //Signify whether the log paths are aggregated
+    private boolean logPathsAreAggregated = false;
     //Signify whether the application master jar should be added to local resources
     private boolean shouldAddAmJarToLocalResources = true;
     //List of files to be copied to localResourcesBasePath
@@ -677,6 +697,28 @@ public class YarnRunner {
       this.localResourcesBasePath = basePath;
       return this;
     }
+    
+    /**
+     * Set the base path for aggregated log for yarn. This is the path where the logs
+     * from all nodes are aggregated to. Use "$APPID" as a replacement for the appId, 
+     * which will be replaced once it is available.
+     * <p/>
+     * If this method is not invoked, a default path will be used.
+     *
+     * @param logPath
+     * @return
+     */
+    public Builder aggregatedLogPath(String logPath) {
+      while (logPath.endsWith(File.separator)) {
+        logPath = logPath.substring(0, logPath.length() - 1);
+      }
+      //TODO: handle paths like "hdfs://"
+      if (!logPath.startsWith("/")) {
+        logPath = "/" + logPath;
+      }
+      this.aggregatedLogPath = logPath;
+      return this;
+    }
 
     /**
      * Add a local resource that should be added to the AM container. The name is the key as used in the LocalResources
@@ -768,11 +810,27 @@ public class YarnRunner {
       } catch (IllegalStateException e) {
         throw new IllegalStateException("Failed to load configuration", e);
       }
-
-     
+      
+      logPathsAreAggregated = conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
+              YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED);      
+      if (logPathsAreAggregated) {
+          //{yarn.nodemanager.remote-app-log-dir}/${user}/{yarn.nodemanager.remote-app-log-dir-suffix}
+          String[] nmRemoteLogDirs  = conf.getStrings(
+                  YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
+                  YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR);
+          
+          String[] nmRemoteLogDirSuffix  = conf.getStrings(
+                  YarnConfiguration.NM_REMOTE_APP_LOG_DIR_SUFFIX, 
+                  YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR_SUFFIX);
+          aggregatedLogPath = nmRemoteLogDirs[0] + File.separator + getUser() + 
+                  File.separator + nmRemoteLogDirSuffix[0] + File.separator + APPID_PLACEHOLDER;
+          stdOutPath = LOCAL_LOG_DIR_PLACEHOLDER + "/stdout";
+          stdErrPath = LOCAL_LOG_DIR_PLACEHOLDER + "/stderr";
+      }
+      
       yarnClient = YarnClient.createYarnClient();
       yarnClient.init(conf);
-     
+      
       //Set main class
       if (amMainClass == null) {
         amMainClass = IoUtils.getMainClassNameFromJar(amJarPath, null);
@@ -894,8 +952,18 @@ public class YarnRunner {
       }
     }
 
-
-
+    private static String getUser() {
+        UserGroupInformation hdfsUser;
+        try {  
+            hdfsUser = UserGroupInformation.getCurrentUser();
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+            throw new IllegalArgumentException(
+              "Exception while trying to retrieve hadoop UserGroupInformation: "
+              + ex.getMessage());
+        }
+        return hdfsUser.getUserName();
+    }
   }
 
   //---------------------------------------------------------------------------        

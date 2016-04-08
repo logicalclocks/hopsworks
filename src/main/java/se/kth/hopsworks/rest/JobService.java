@@ -30,7 +30,6 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.configuration.ScheduleDTO;
@@ -230,6 +229,7 @@ public class JobService {
    * Get the log information related to a job. The return value is a JSON object, with format logset=[{"time":"JOB
    * EXECUTION TIME"}, {"log":"INFORMATION LOG"}, {"err":"ERROR LOG"}]
    * <p/>
+   * @param jobId
    * @param sc
    * @param req
    * @return
@@ -251,17 +251,15 @@ public class JobService {
         for (Execution e : executionHistory) {
           arrayObjectBuilder = Json.createObjectBuilder();
           arrayObjectBuilder.add("time", e.getSubmissionTime().toString());
-          if (e.getStdoutPath() != null && !e.getStdoutPath().isEmpty()) {
-            String hdfsLogPath = "hdfs://" + e.getStdoutPath();
+          String hdfsLogPath = "hdfs://" + e.getStdoutPath();
+          if (e.getStdoutPath() != null && !e.getStdoutPath().isEmpty() && fops.exists(hdfsLogPath)) {
             message = IOUtils.toString(fops.getInputStream(hdfsLogPath), "UTF-8");
             arrayObjectBuilder.add("log", message.isEmpty() ? "No information." : message);
           } else {
             arrayObjectBuilder.add("log", "No log available");
           }
-
-          if (e.getStderrPath() != null && !e.getStderrPath().isEmpty()) {
-
-            String hdfsErrPath = "hdfs://" + e.getStderrPath();
+          String hdfsErrPath = "hdfs://" + e.getStderrPath();
+          if (e.getStderrPath() != null && !e.getStderrPath().isEmpty() && fops.exists(hdfsErrPath)) {
             message = IOUtils.toString(fops.getInputStream(hdfsErrPath), "UTF-8");
             arrayObjectBuilder.add("err", message.isEmpty() ? "No error." : message);
           } else {
@@ -278,7 +276,7 @@ public class JobService {
       }
       builder.add("logset", arrayBuilder);
     } catch (IOException ex) {
-      logger.log(Level.WARNING, "Error when reading hdfs logs: " + ex.getMessage());
+      logger.log(Level.WARNING, "Error when reading hdfs logs: {0}", ex.getMessage());
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
@@ -289,9 +287,11 @@ public class JobService {
    * Delete the job associated to the project and jobid. The return value is a JSON object stating operation successful
    * or not.
    * <p/>
+   * @param jobId
    * @param sc
    * @param req
    * @return
+   * @throws se.kth.hopsworks.rest.AppException
    */
   @DELETE
   @Path("/{jobId}/deleteJob")

@@ -1,6 +1,5 @@
 package se.kth.bbc.jobs;
 
-import java.io.IOException;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -54,6 +53,10 @@ public class AsynchronousJobExecutor {
 
   public FileOperations getFileOperations() {
     return fileOperations;
+  }
+  
+  public DistributedFsService getFsService() {
+    return dfs;
   }
 
   public DistributedFileSystemOps getFileOperations(String hdfsUser) throws
