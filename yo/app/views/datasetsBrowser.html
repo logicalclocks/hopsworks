@@ -37,20 +37,18 @@
                   </div>
                 </div>
                 <div class="col-md-3" style="margin-left: 10px;">
-                    <span data-ng-repeat="path in datasetsCtrl.pathArray.slice(datasetsCtrl.pathArray.length - datasetsCtrl.breadcrumbLen()) track by $index">
-                      <span ng-show="$index > 0">> </span><a ng-click="datasetsCtrl.goToFolder($index)">{{path| limitTo: 8 }}{{path.length > 8 ? '..' : ' '}}</a>
-                    </span>
+                  <span data-ng-repeat="path in datasetsCtrl.pathArray.slice(datasetsCtrl.pathArray.length - datasetsCtrl.breadcrumbLen()) track by $index">
+                    <span ng-show="$index > 0">> </span><a ng-click="datasetsCtrl.goToFolder($index)">{{path| limitTo: 8 }}{{path.length > 8 ? '..' : ' '}}</a>
+                  </span>
                 </div>
 
                 <div class="col-md-1">
-                      <input type="text" ng-model="search" 
-                             class="form-control" placeholder="Filter" 
-                             style="margin-top: -17px; ">
+                  <input type="text" ng-model="search" 
+                         class="form-control" placeholder="Filter" 
+                         style="margin-top: -17px; ">
                 </div>                
-
-                <span  ng-show="datasetsCtrl.fileDetail !== null">
-                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 16px;"  ng-show="datasetsCtrl.sharedPath === ''">
-                  <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/<a href="#/project/{{datasetsCtrl.projectId}}/datasets">{{projectCtrl.currentProject.projectName}}</a><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/<a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span><span>/{{datasetsCtrl.fileDetail.name}}</span>
+                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 12px;" ng-show="datasetsCtrl.fileDetail !== null">
+                  <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{projectCtrl.currentProject.projectName}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
                     <button style="margin-left: 0px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                             data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
                     </button>        
@@ -70,7 +68,7 @@
               </h3>
             </div>
 
-            <div class="row row-no-margin-left"
+            <div class="row row-no-margin-left" ng-show="mainCtrl.searchReturned === ''">
               <div class="col-lg-12">
                 <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: 5px;">
                   <div class="table-responsive" style="overflow: hidden;">
@@ -158,15 +156,15 @@
 
                                 <li class="divider"></li>
 
-<!--                                <li>
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="1"
-                                     ng-click="panel.highlight = true; datasetsCtrl.compress(file); $event.stopPropagation();">
-                                    <span><i class="fa fa-file-archive-o"></i>
-                                      Compress</span>
-                                  </a>
-                                </li>-->
+                                <!--                                <li>
+                                                                  <a class="pointer"
+                                                                     role="menuitem"
+                                                                     tabindex="1"
+                                                                     ng-click="panel.highlight = true; datasetsCtrl.compress(file); $event.stopPropagation();">
+                                                                    <span><i class="fa fa-file-archive-o"></i>
+                                                                      Compress</span>
+                                                                  </a>
+                                                                </li>-->
 
                                 <li class="divider"></li>
                                 <li>
@@ -438,6 +436,162 @@
                                 </div>
                               </div>
 
+
+
+                              <div id="board" ng-show="datasetsCtrl.selected > -1 && datasetsCtrl.selected != undefined" style="font-family: Times New Roman;">
+                                <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px">
+                                  <div style="display: inline-block">
+                                    <div style="display: inline-block"><h4>No metadata template attached.</h4></div>
+                                    <span class="field-info" tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
+                                      <i class="fa fa-exclamation-circle"></i>
+                                    </span>
+                                  </div>
+                                </div>
+                                <div class="" height="80%" ng-hide="metadataCtrl.noTemplates">
+                                  <div class="input-group-lg" align="left" style="height: 70%">
+                                    <div ng-repeat="table in metadataCtrl.metainfo| orderBy:'name'"
+                                         style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
+                                      <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px">
+                                        <label style="font-size: 16px;">{{table.name}}</label>
+                                        <button type="button" class="btn btn-default btn-xs pull-right" style="background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" data-toggle="collapse" data-target="#metadatadiv{{$index}}"><i class="fa fa-ellipsis-v"></i></button>
+                                      </div>
+                                      <div id="metadatadiv{{$index}}" class="collapse in">
+                                        <div ng-repeat="field in table.rest" style="padding-left: 15px;padding-top:15px;font-size: 15px;">
+                                          <div class="panel panel-default">
+                                            <div>
+                                              <label>{{field.tagName}}</label>
+                                              <span class="field-info" tooltip-placement="right"
+                                                    tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
+                                                <i class="fa fa-exclamation-circle"></i>
+                                              </span>
+                                              <a style="color: green;padding-left: 10px " ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, true)" ng-hide="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"><i class="fa fa-plus"></i></a>
+
+                                            </div>
+                                          </div>
+
+                                          <div  class="pull-left " style="padding-bottom: 0;">
+                                            <div ng-repeat="card in table.inputcontent">
+                                              <!--text input field type-->
+                                              <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
+                                                <input value="" class="fillInMetadataInput" id="sizeFieldInput"
+                                                       tooltips title="{{card.description}}"
+                                                       ng-show="true"
+                                                       ng-model="metadataCtrl.metaData[card.id]"  style="width: 100px"
+                                                       ng-keypress="($event.which === 13)?metadataCtrl.createMetadata(table.id,card.id):0" autofocus/>
+                                                <button class="btn btn-default btn-xs" ng-click="metadataCtrl.createMetadata(table.id, card.id);" ><span class="glyphicon glyphicon-ok"></span></button>
+                                                <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
+
+                                              </div>
+
+                                              <!--single select list input type-->
+                                              <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 150px;" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
+                                                <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
+                                                  <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                                  <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                                    <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                                    <small>
+                                                      <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                                    </small>
+                                                  </ui-select-choices>
+                                                </ui-select>
+                                                <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></span></button>
+                                                <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
+                                              </div>
+
+                                              <!--multi select list input type-->
+                                              <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
+                                                <div
+                                                  isteven-multi-select
+                                                  input-model="card.fieldtypeContent"
+                                                  output-model="metadataCtrl.metaData[card.id]"
+                                                  button-label="value"
+                                                  item-label="value"
+                                                  tick-property="ticked"
+                                                  output-properties="value"
+                                                  style="display:inline-block"
+                                                  >
+                                                </div>
+                                                <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></span></button>
+                                                <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <div style="width: 100%; height: 45px;" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"></div>
+
+
+
+
+                                          <div ng-repeat="value in field.metadataView" style="padding-left: 15px;padding-top: 0px">
+                                            <div ng-hide="metadataCtrl.visibilityInfo[value.id]" ng-if="value.data !== ''" ng-init="metashow[value.id] = false" ng-mouseenter="metashow[value.id] = true" ng-mouseleave="metashow[value.id] = false">
+                                              <div style="display:inline-block" >
+                                                <label style="font-weight: normal">{{value.data}}</label>
+                                              </div>
+                                              <div style="display:inline-block;padding-left: 20px" ng-show="metashow[value.id]">
+                                                <button class="btn btn-info btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, true);" ><i class="fa fa-pencil"></i></button>
+                                                <button class="btn btn-danger btn-xs" ng-click="metadataCtrl.removeMetadata(value);" ><i class="fa fa-times"></i></button>
+                                              </div>
+                                              <br>
+                                            </div>
+
+
+                                            <div  class="pull-left " style="padding-bottom: 0;">
+                                              <div ng-repeat="card in table.inputcontent">
+                                                <!--text input field type-->
+                                                <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[value.id]">
+                                                  <input placeholder="{{value.data}}" class="fillInMetadataInput" id="sizeFieldInput"
+                                                         tooltips title="{{card.description}}"
+                                                         ng-show="true"
+                                                         ng-model="metadataCtrl.metaDataDetail[value.id]"  style="width: 100px"/>
+                                                  <button class="btn btn-default btn-xs" ng-click="metadataCtrl.updateMetadata(value);" ><span class="glyphicon glyphicon-ok"></span></button>
+                                                  <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
+
+                                                </div>
+
+                                                <!--single select list input type-->
+                                                <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 125px;" ng-show="metadataCtrl.visibilityInfo[value.id]">
+                                                  <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
+                                                    <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                                    <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                                      <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                                      <small>
+                                                        <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                                      </small>
+                                                    </ui-select-choices>
+                                                  </ui-select>
+                                                  <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.updateMetadata(value);"></span></button>
+                                                  <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
+                                                </div>
+
+                                                <!--multi select list input type-->
+                                                <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[value.id]">
+                                                  <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
+                                                    <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                                    <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                                      <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                                      <small>
+                                                        <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                                      </small>
+                                                    </ui-select-choices>
+                                                  </ui-select>
+                                                  <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.updateMetadata(value);"></span></button>
+                                                  <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div style="width: 100%; height: 35px;" ng-show="metadataCtrl.visibilityInfo[value.id]"></div>
+
+
+                                          </div>
+
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+
                             </md-tab>
                             <md-tab label="Activity">
                               <md-content class="md-padding" style="padding-left: 20px;padding-right: 20px;">
@@ -527,6 +681,141 @@
           <div flex=""></div>
         </md-content>
 
+        <!-- Slideout - Add Metadata -->
+        <md-sidenav class="md-sidenav-right md-whiteframe-z2" md-component-id="right"
+                    style="margin-top: 0px;">
+
+          <md-toolbar class="md-theme-light"
+                      style="background-color: #f1f1f1;color: gray; height: 39px; min-height: 39px;">
+
+            <div class="md-toolbar-tools">
+              <h2 style="margin:0;">
+                <span>Metadata manager</span>
+              </h2>
+              <span flex></span>
+              <button style="font-size:15px;height:28px;color:white;padding-top: 3px;"
+                      ng-click="metadataCtrl.submitMetadata(metadataCtrl.metaData); datasetsCtrl.close()"
+                      class="btn btn-success">
+                <i class="fa fa-save"></i>
+                Save
+              </button>
+            </div>
+
+          </md-toolbar>
+          <md-content layout-padding>
+            <p>Associating metadata to: <a><b>'{{metadataCtrl.currentFile.name}}'</b></a></p>
+
+            <label class="control-label" ng-show="metadataCtrl.noTemplates">
+              <font color="red">There is no template attached to file {{metadataCtrl.currentFile.name}}</font>
+            </label>
+            <p></p>
+
+            <div class="pull-left" ng-if="!metadataCtrl.noTemplates">
+              Select a template to add metadata to:
+              <ui-select ng-model="metadataCtrl.selectedTemplate" theme="select2" 
+                         ng-disabled="metadataCtrl.noTemplates"
+                         on-select="metadataCtrl.updateMetadataTabs()" style="min-width: 15em;">
+
+                <ui-select-match placeholder="Select a template...">{{$select.selected.templateName}}</ui-select-match>
+
+                <ui-select-choices repeat="template in metadataCtrl.currentFileTemplates | filter: $select.search">
+                  <small>
+                    <span ng-bind-html="'' + template.templateName | highlight: $select.search"></span>
+                  </small>
+                </ui-select-choices>
+              </ui-select>
+            </div>
+
+            <div style="margin-top: 10em;">
+              <tabset justified="false">
+                <tab ng-repeat="tab in metadataCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
+                     disabled="tab.disabled" select="metadataCtrl.onTabSelect(tab)"
+                     style="padding-left: 1em;z-index: 0;">
+
+                  <form name="{{tab.title}}{{$index}}" ng-submit="metadataCtrl.submitMetadata(metadataCtrl.metaData)"
+                        style="padding:0em 1em 50em 1em;">
+
+                    <ul class="card-list" ng-model="column.cards">
+                      <li ng-repeat="card in tab.cards" style="padding-bottom: 0;">
+                        <div style="padding-bottom: 0;">
+
+                          <!--The table section-->
+                          <div class="row col-md-15" style="padding-bottom: 0;">
+                            <!--The row section-->
+                            <div class="col-md-12" style="padding-bottom: 0;">
+                              <div tabindex="1" class="col-md-2">
+                                <span class="card-title pull-right btn btn-xs"
+                                      style="font-size: 1em">{{card.title}}</span>
+                              </div>
+
+                              <div tabindex="2" class="col-md-1" style="padding-bottom: 0;">
+                                <span class="field-info pull-left" tooltip-placement="right"
+                                      tooltip="{{card.description}}">
+                                  <i class="fa fa-exclamation-circle"></i>
+                                </span>
+                              </div>
+
+                              <div tabindex="3" class="pull-left col-md-9" style="padding-bottom: 0;">
+                                <!--text input field type-->
+                                <div ng-if="card.fieldtypeid === 1">
+                                  <input value="" class="fillInMetadataInput" id="sizeFieldInput"
+                                         tooltips title="{{card.description}}"
+                                         ng-show="true"
+                                         ng-model="metadataCtrl.metaData[card.id]"/>
+                                </div>
+
+                                <!--single select list input type-->
+                                <div ng-if="card.fieldtypeid === 2">
+
+                                  <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
+                                    <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                    <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                      <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                      <small>
+                                        <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                      </small>
+                                    </ui-select-choices>
+                                  </ui-select>
+                                </div>
+
+                                <!--multi select list input type-->
+                                <div ng-if="card.fieldtypeid === 3">
+                                  <div
+                                    isteven-multi-select
+                                    input-model="card.fieldtypeContent"
+                                    output-model="metadataCtrl.metaData[card.id]"
+                                    button-label="value"
+                                    item-label="value"
+                                    tick-property="ticked"
+                                    output-properties="value"
+                                    >
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <hr>
+                        </div>
+                      </li>
+                    </ul>
+                    <hr/>
+                    <div>
+                      <button class="btn btn-default">
+                        <i class="glyphicon glyphicon-floppy-save"></i>
+                        Save
+                      </button>
+                      <button class="btn btn-default" type="button"
+                              ng-click="datasetsCtrl.close()">
+                        <i class="glyphicon glyphicon-chevron-left"></i>
+                        Back
+                      </button>
+                    </div>
+                  </form>
+                </tab>
+              </tabset>
+            </div>
+          </md-content>
+        </md-sidenav>
 
       </section>
     </div>
