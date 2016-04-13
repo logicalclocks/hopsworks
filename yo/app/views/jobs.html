@@ -160,6 +160,11 @@
                         {{jobsCtrl.runningInfo['' + job.id].state}}
                       </span>
                       <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Aggregating logs'"
+                        style="color: #0066bb ">
+                        {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
                         ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Framework failure'"
                         style="color: #880000 ">
                         {{jobsCtrl.runningInfo['' + job.id].state}}
