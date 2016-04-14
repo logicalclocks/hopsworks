@@ -355,7 +355,7 @@ public class YarnRunner {
     vargs.add("-Xmx" + amMemory + "M");
     //vargs.add(" -Dlogback.configurationFile=file:logback.xml");
     //vargs.add(" -Dlog4j.configuration=file:log4j.properties");
-    vargs.add(" -Dlog.file=/srv/hadoop/logs/userlogs/jobmanager1.out") ;   
+    //vargs.add(" -Dlog.file=/srv/hadoop/logs/userlogs/jobmanager1.out") ;   
 //Add jvm options
     for (String s : javaOptions) {
       vargs.add(s);
