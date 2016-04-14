@@ -18,7 +18,7 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
     private String flinkConfFile;
 
     private int numberOfTaskManagers = 1;
-    private int slots = 5;
+    private int slots = 1;
     private int taskManagerMemory = 1024;
 
     protected static final String KEY_JARPATH = "JARPATH";
@@ -35,6 +35,10 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         super();
     }
 
+    /**
+     * Get the path to the main executable jar.
+     * @return 
+     */
     public String getJarPath() {
         return jarPath;
     }
@@ -48,6 +52,10 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         this.jarPath = jarPath;
     }
 
+    /**
+     * Get the name of the main class to be executed.
+     * @return 
+     */
     public String getMainClass() {
         return mainClass;
     }

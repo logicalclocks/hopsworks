@@ -133,7 +133,7 @@ public abstract class JobConfiguration implements JsonReduceable {
           conf = new YarnJobConfiguration();
           break;
         case FLINK:
-            conf = new FlinkJobConfiguration();
+          conf = new FlinkJobConfiguration();
             break;
         case ERASURE_CODING:
           conf = new ErasureCodeJobConfiguration();

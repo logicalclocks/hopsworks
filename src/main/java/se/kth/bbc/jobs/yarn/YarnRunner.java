@@ -331,6 +331,8 @@ public class YarnRunner {
     } else {
       env.put(KEY_CLASSPATH, classPathEnv.toString());
     }
+    env.
+        put(Settings.HADOOP_HOME_KEY, hadoopDir);
     //Put some environment vars in env
     env.
         put(Settings.HADOOP_COMMON_HOME_KEY, hadoopDir);
@@ -351,7 +353,10 @@ public class YarnRunner {
     vargs.add(ApplicationConstants.Environment.JAVA_HOME.$() + "/bin/java");
     // Set Xmx based on am memory size
     vargs.add("-Xmx" + amMemory + "M");
-    //Add jvm options
+    //vargs.add(" -Dlogback.configurationFile=file:logback.xml");
+    //vargs.add(" -Dlog4j.configuration=file:log4j.properties");
+    vargs.add(" -Dlog.file=/srv/hadoop/logs/userlogs/jobmanager1.out") ;   
+//Add jvm options
     for (String s : javaOptions) {
       vargs.add(s);
     }

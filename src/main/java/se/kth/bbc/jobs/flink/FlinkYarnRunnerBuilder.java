@@ -1,10 +1,7 @@
 package se.kth.bbc.jobs.flink;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.yarn.api.records.LocalResource;
-import org.apache.hadoop.yarn.util.Records;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +12,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
+import org.apache.hadoop.yarn.api.records.LocalResource;
+import org.apache.hadoop.yarn.util.Records;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.hopsworks.util.Settings;
 
@@ -51,33 +49,32 @@ public class FlinkYarnRunnerBuilder {
     public static final String ENV_DETACHED = "_DETACHED";
     public static final String ENV_STREAMING_MODE = "_STREAMING_MODE";
     public static final String ENV_DYNAMIC_PROPERTIES = "_DYNAMIC_PROPERTIES";
-	private static final String CONFIG_FILE_NAME = "flink-conf.yaml";
-	public static final String CONFIG_FILE_LOGBACK_NAME = "logback.xml";
-	public static final String CONFIG_FILE_LOG4J_NAME = "log4j.properties";
+    private static final String CONFIG_FILE_NAME = "flink-conf.yaml";
+    public static final String CONFIG_FILE_LOGBACK_NAME = "logback.xml";
+    public static final String CONFIG_FILE_LOG4J_NAME = "log4j.properties";
     /**
      * Minimum memory requirements, checked by the Client.
      */
     private static final int MIN_JM_MEMORY = 768; // the minimum memory should be higher than the min heap cutoff
     private static final int MIN_TM_MEMORY = 768;
-
+    private static final int MIN_JM_CORES = 1;
+    
     //Jar paths for AM and app
-     private final String appJarPath, mainClass;
-     //Optional parameters
-     private final List<String> jobArgs = new ArrayList<>();
-    /**
-     * Files (usually in a distributed file system) used for the YARN session of
-     * Flink. Contains configuration files and jar files.
-     */
-    private Path sessionFilesDir;
+    private final String appJarPath, mainClass;
+    //Optional parameters
+    private final List<String> jobArgs = new ArrayList<>();
+    
 
     /**
      * If the user has specified a different number of slots, we store them here
      */
-    private int slots = -1;
+    private int taskManagerSlots = 1;
     private int jobManagerMemoryMb = 1024;
+    private int jobManagerCores = 1;
+    private String jobManagerQueue = "default";
+
     private int taskManagerMemoryMb = 1024;
     private int taskManagerCount = 1;
-    private String yarnQueue = null;
     private String configurationDirectory;
     private Path flinkConfigurationPath;
     private Path flinkLoggingConfigurationPath; // optional
@@ -114,7 +111,18 @@ public class FlinkYarnRunnerBuilder {
         }
         this.jobManagerMemoryMb = memoryMb;
     }
-
+    public void setJobManagerCores(int cores) {
+        if (cores < MIN_JM_CORES) {
+            throw new IllegalArgumentException("The JobManager cores (" + cores + ") are below the minimum required amount "
+                    + "of " + MIN_JM_CORES);
+        }
+        this.jobManagerCores = cores;
+    }
+    
+    public void setJobManagerQueue(String queue) {
+        this.jobManagerQueue = queue;
+    }
+    
     //@Override
     public void setTaskManagerMemory(int memoryMb) {
         if (memoryMb < MIN_TM_MEMORY) {
@@ -130,17 +138,17 @@ public class FlinkYarnRunnerBuilder {
         if (slots <= 0) {
             throw new IllegalArgumentException("Number of TaskManager slots must be positive");
         }
-        this.slots = slots;
+        this.taskManagerSlots = slots;
     }
 
     //@Override
     public int getTaskManagerSlots() {
-        return this.slots;
+        return this.taskManagerSlots;
     }
 
     //@Override
     public void setQueue(String queue) {
-        this.yarnQueue = queue;
+        this.jobManagerQueue = queue;
     }
 
     //@Override
@@ -277,7 +285,7 @@ public class FlinkYarnRunnerBuilder {
         //Create the YarnRunner builder for Flink, proceed with setting values
         YarnRunner.Builder builder = new YarnRunner.Builder(Settings.FLINK_AM_MAIN);
          
-        builder.addToAppMasterEnvironment("CLASSPATH", flinkClasspath);
+        builder.addToAppMasterEnvironment("CLASSPATH", flinkClasspath/*+":"+"org.apache.flink.examples.java.graph.ConnectedComponents"*/);
         String stagingPath = File.separator + "Projects" + File.separator + project
             + File.separator
             + Settings.PROJECT_STAGING_DIR + File.separator
@@ -285,43 +293,24 @@ public class FlinkYarnRunnerBuilder {
         builder.localResourcesBasePath(stagingPath);
         
         //Add Flink jar
-        builder.addLocalResource(Settings.FLINK_LOCRSC_SPARK_JAR, hdfsFlinkJarPath,
+        builder.addLocalResource(Settings.FLINK_LOCRSC_FLINK_JAR, hdfsFlinkJarPath,
                 false);
+        //Add Flink conf file
+        builder.addLocalResource(Settings.FLINK_DEFAULT_CONF_FILE, "hdfs://10.0.2.15/user/glassfish/flink-conf.yaml",
+                false);
+        //Add log4j properties file
+//        builder.addLocalResource(Settings.FLINK_DEFAULT_LOG4J_FILE, "hdfs://10.0.2.15/user/glassfish/log4j.properties",
+//                false);
+//        //Add log4j properties file
+//        builder.addLocalResource(Settings.FLINK_DEFAULT_LOGBACK_FILE, "hdfs://10.0.2.15/user/glassfish/logback.xml",
+//                false);
         //Add app jar
         builder.addLocalResource(Settings.FLINK_LOCRSC_APP_JAR, appJarPath,
             !appJarPath.startsWith("hdfs:"));
-    
-    
-    	// ------------------ Add dynamic properties to local flinkConfiguraton ------
-//        List<Tuple2<String, String>> dynProperties = CliFrontend.getDynamicProperties(dynamicPropertiesEncoded);
-//        for (Tuple2<String, String> dynProperty : dynProperties) {
-//            flinkConfiguration.setString(dynProperty.f0, dynProperty.f1);
-//        }
-
-	
-
-		// ------------------ Check if the YARN Cluster has the requested resources --------------
-		// the yarnMinAllocationMB specifies the smallest possible container allocation size.
-        // all allocations below this value are automatically set to this value.
-//        final int yarnMinAllocationMB = conf.getInt("yarn.scheduler.minimum-allocation-mb", 0);
-//        if (jobManagerMemoryMb < yarnMinAllocationMB || taskManagerMemoryMb < yarnMinAllocationMB) {
-//            LOG.warn("The JobManager or TaskManager memory is below the smallest possible YARN Container size. "
-//                    + "The value of 'yarn.scheduler.minimum-allocation-mb' is '" + yarnMinAllocationMB + "'. Please increase the memory size."
-//                    + "YARN will allocate the smaller containers but the scheduler will account for the minimum-allocation-mb, maybe not all instances "
-//                    + "you requested will start.");
-//        }
-//
-//        // set the memory to minAllocationMB to do the next checks correctly
-//        if (jobManagerMemoryMb < yarnMinAllocationMB) {
-//            jobManagerMemoryMb = yarnMinAllocationMB;
-//        }
-//        if (taskManagerMemoryMb < yarnMinAllocationMB) {
-//            taskManagerMemoryMb = yarnMinAllocationMB;
-//        }
-
-        String logbackFile = configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
+        
+        String logbackFile = "hdfs://10.0.2.15/user/glassfish/logback.xml";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
         boolean hasLogback = new File(logbackFile).exists();
-        String log4jFile = configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOG4J_NAME;
+        String log4jFile = "hdfs://10.0.2.15/user/glassfish/log4j.properties";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOG4J_NAME;
 
         boolean hasLog4j = new File(log4jFile).exists();
         if (hasLogback) {
@@ -332,32 +321,20 @@ public class FlinkYarnRunnerBuilder {
         }
 
 
-        // Setup jar for ApplicationMaster
-        LocalResource appMasterJar = Records.newRecord(LocalResource.class);
-        LocalResource flinkConf = Records.newRecord(LocalResource.class);
-        Map<String, LocalResource> localResources = new HashMap<String, LocalResource>(2);
-        localResources.put("flink.jar", appMasterJar);
-        localResources.put("flink-conf.yaml", flinkConf);
-
-               
-        StringBuilder envShipFileList = new StringBuilder();
-        // upload ship files
-        /*for (int i = 0; i < shipFiles.size(); i++) {
-            File shipFile = shipFiles.get(i);
-            builder.addLocalResource(shipFile.getName(), shipFile.getAbsolutePath());
-        }*/
-
-
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_APP_ID, YarnRunner.APPID_PLACEHOLDER);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_COUNT, String.valueOf(taskManagerCount));
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_MEMORY, String.valueOf(taskManagerMemoryMb));
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.FLINK_JAR_PATH, flinkJarPath.toString());
-        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, envShipFileList.toString());
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, ""/*logbackFile+","+log4jFile*/);
+       
         try {
             builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, UserGroupInformation.getCurrentUser().getShortUserName());
+             builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_HOME_DIR, "hdfs://"+nameNodeIpPort+"/user/"+UserGroupInformation.getCurrentUser().getShortUserName()+"/");
         } catch (IOException ex) {
             LOG.error("Error while getting Flink client username", ex);
         }
-        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_SLOTS, String.valueOf(slots));
+        
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_SLOTS, String.valueOf(taskManagerSlots));
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DETACHED, String.valueOf(detached));
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_STREAMING_MODE, String.valueOf(streamingMode));
         if (dynamicPropertiesEncoded != null) {
@@ -366,9 +343,9 @@ public class FlinkYarnRunnerBuilder {
         }
 
         // Set up resource type requirements for ApplicationMaster
-
         builder.amMemory(jobManagerMemoryMb);
-        builder.amVCores(1);
+        builder.amVCores(jobManagerCores);
+        builder.amQueue(jobManagerQueue);
         
         String name;
         if (customName == null) {
@@ -384,12 +361,15 @@ public class FlinkYarnRunnerBuilder {
         builder.appName(name);
         
         //Set up command
-        StringBuilder amargs = new StringBuilder("-m yarn-cluster");
-        amargs.append(" -yn ").append(taskManagerCount);
+        StringBuilder amargs = new StringBuilder(" org.apache.flink.examples.java.graph.ConnectedComponents");
+//        amargs.append(" -n ").append(taskManagerCount);
+//        amargs.append(" -tm ").append(taskManagerMemoryMb);
+//        amargs.append(" -s ").append(taskManagerSlots);
+                
         //TODO: Pass arguments according to flink 
-        for (String s : jobArgs) {
-          amargs.append(" --arg ").append(s);
-        }
+//        for (String s : jobArgs) {
+//          amargs.append(" ").append(s);
+//        }
         builder.amArgs(amargs.toString());
         return builder.build(hadoopDir, flinkDir, nameNodeIpPort);
     }

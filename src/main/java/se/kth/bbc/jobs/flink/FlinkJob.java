@@ -60,7 +60,7 @@ public class FlinkJob extends YarnJob {
         if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
             jobconfig.setAppName("Untitled Flink Job");
         }
-
+        
         FlinkYarnRunnerBuilder flinkBuilder = new FlinkYarnRunnerBuilder(jobconfig.getJarPath(), jobconfig.getMainClass());
         //https://ci.apache.org/projects/flink/flink-docs-release-0.10/setup/yarn_setup.html
         /*If you do not want to keep the Flink YARN client running all the time, 
@@ -75,10 +75,22 @@ public class FlinkJob extends YarnJob {
         //Flink specific conf object
         //TODO: Check if needs to be initialized
         //TODO: Check if Path is correct
-        flinkBuilder.setFlinkLoggingConfigurationPath(new Path(jobconfig.getFlinkConfFile()));
-        flinkBuilder.setLocalJarPath(new Path(flinkDir+"/flink.jar"));
-        String[] jobArgs = jobconfig.getArgs().trim().split(" ");
-        flinkBuilder.addAllJobArgs(jobArgs);
+        flinkBuilder.setFlinkLoggingConfigurationPath(new Path(jobconfig.getFlinkConfDir()));
+        //TODO: Fix path
+        flinkBuilder.setLocalJarPath(new Path("hdfs://"+nameNodeIpPort+"/user/glassfish/flink.jar"));
+        flinkBuilder.setTaskManagerMemory(jobconfig.getTaskManagerMemory());
+        flinkBuilder.setTaskManagerSlots(jobconfig.getSlots());
+        flinkBuilder.setTaskManagerCount(jobconfig.getNumberOfTaskManagers());
+        flinkBuilder.setJobManagerMemory(jobconfig.getAmMemory());
+        flinkBuilder.setJobManagerCores(jobconfig.getAmVCores());
+        flinkBuilder.setJobManagerQueue(jobconfig.getAmQueue());
+            
+        
+        
+        if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){
+            String[] jobArgs = jobconfig.getArgs().trim().split(" ");
+            flinkBuilder.addAllJobArgs(jobArgs);
+        } 
         try {
             runner = flinkBuilder.
            getYarnRunner(jobDescription.getProject().getName(),
