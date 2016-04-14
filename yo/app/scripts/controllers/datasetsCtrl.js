@@ -55,11 +55,21 @@ angular.module('hopsWorksApp')
               }
               var displayPathLen = 4;
               if (self.pathArray.length <= displayPathLen) {
-                return self.pathArray.length -1;
+                return self.pathArray.length - 1;
               }
               return displayPathLen;
             }
 
+            self.cutBreadcrumbLen = function () {
+              if (self.pathArray === undefined || self.pathArray === null) {
+                return false;
+              }
+              if (self.pathArray.length - self.breadcrumbLen() > 0) {
+                return true;
+              }
+              return false;
+            }
+            
             self.selectInode = function (inode) {
               // add to selectedList
             }
@@ -91,23 +101,23 @@ angular.module('hopsWorksApp')
             });
 
             self.isShared = function () {
-  
-              var topLevel = self.pathArray[0] ;
+
+              var topLevel = self.pathArray[0];
               if ((topLevel.indexOf("::") > -1)) {
                 return true;
               }
               return false;
             };
-            
+
             self.pathSharedDs = function () {
               if (self.pathArray === null || self.pathArray.length === 0) {
                 return '';
               }
-              var topLevel = self.pathArray[0] ;
+              var topLevel = self.pathArray[0];
               if ((topLevel.indexOf("::") === -1)) {
                 self.sharedPath = "";
               }
-                self.sharedPath = topLevel.replace("::", "/");
+              self.sharedPath = topLevel.replace("::", "/");
             };
 
 
@@ -472,7 +482,9 @@ This will make all its files available for any registered user to download and p
                 getDirContents(newPathArray);
               }
             };
-
+            self.goToDataSetsDir = function () {
+              $location.path('/project/' + self.projectId + '/datasets');
+            }
             /**
              * Go to the folder at the index in the pathArray array.
              * @param {type} index
@@ -480,7 +492,7 @@ This will make all its files available for any registered user to download and p
              */
             self.goToFolder = function (index) {
               var newPathArray = self.pathArray.slice(0);
-              newPathArray.splice(index + 1, newPathArray.length - index - 1);
+              newPathArray.splice(index, newPathArray.length - index);
               getDirContents(newPathArray);
             };
 

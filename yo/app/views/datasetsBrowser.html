@@ -37,8 +37,10 @@
                   </div>
                 </div>
                 <div class="col-md-3" style="margin-left: 10px;">
-                  <span data-ng-repeat="path in datasetsCtrl.pathArray.slice(datasetsCtrl.pathArray.length - datasetsCtrl.breadcrumbLen()) track by $index">
-                    <span ng-show="$index > 0">> </span><a ng-click="datasetsCtrl.goToFolder($index)">{{path| limitTo: 8 }}{{path.length > 8 ? '..' : ' '}}</a>
+                  <a ng-click="datasetsCtrl.goToDataSetsDir()">DataSets</a>
+                  <span ng-show="datasetsCtrl.pathArray.length > 4"></span>
+                  <span data-ng-repeat="path in datasetsCtrl.pathArray.slice(datasetsCtrl.pathArray.length -1 - datasetsCtrl.breadcrumbLen()) track by $index">
+                    <span>> </span><a ng-click="datasetsCtrl.goToFolder($index)">{{path| limitTo: 7 }}{{path.length > 7 ? '..' : ' '}}</a>
                   </span>
                 </div>
 
@@ -47,19 +49,19 @@
                          class="form-control" placeholder="Filter" 
                          style="margin-top: -17px; ">
                 </div>                
-                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 12px;" ng-show="datasetsCtrl.fileDetail !== null">
+                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 16px;" ng-show="datasetsCtrl.fileDetail !== null">
                   <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{projectCtrl.currentProject.projectName}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
                     <button style="margin-left: 0px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                             data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
                     </button>        
                 </div>
           <!-- shared datasets link -->
-                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 16px;" ng-show="datasetsCtrl.sharedPath !== ''">
+<!--                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 16px;" ng-show="datasetsCtrl.sharedPath !== ''">
                   <span id="sharedfileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{datasetsCtrl.sharedPath}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index" ng-show="$index > 1">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
                     <button style="margin-left: 0px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                             data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
                     </button>        
-                </div>                
+                </div>                -->
 </span>
                 
                 <div class="col-md-1 pull-right" style="margin-top: -18px;">
