@@ -42,18 +42,15 @@ angular.module('hopsWorksApp')
             self.availableTemplates = [];
             self.closeSlider = false;
 
-            self.openMetadata = function () {
-              $scope.tgState = true;
-            }
-
-            self.openMetadata();
-
+//            self.openMetadata = function () {
+//              $scope.tgState = true;
+//            }
 
             self.breadcrumbLen = function () {
               if (self.pathArray === undefined || self.pathArray === null) {
                 return 0;
               }
-              var displayPathLen = 4;
+              var displayPathLen = 10;
               if (self.pathArray.length <= displayPathLen) {
                 return self.pathArray.length - 1;
               }

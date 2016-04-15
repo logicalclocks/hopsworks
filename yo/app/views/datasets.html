@@ -44,9 +44,10 @@
                   </hamburger-toggle>
                 </div>
               </h3>
+              <h3></h3>
 
 
-              <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: 5px;">
+              <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px;">
                 <div class="row row-no-margin-left" style="margin-top: 15px;">
 
                   <div class="col-lg-12">
@@ -54,7 +55,7 @@
 
                     <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, isPublic: datasetsCtrl.isPublic} | orderBy: 'name'">
                       <div ng-dblclick="projectCtrl.browseDataset(dataset)"
-                           ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.openMetadata();"
+                           ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset); "
                            ng-init="(iscollapsed$index) = true"
                            class="file-box"
                            context-menu
@@ -328,8 +329,8 @@
 
         <!--<div class="col-lg-4" style="border-left: 1px dashed lightgrey; padding-left: 0px;">-->
         <div ng-show="mainCtrl.searchReturned === ''">
-          <div class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
-            <div class="ibox float-e-margins" style="margin-bottom: -25px; height: 95%;">
+          <div style="margin-top: 20px; height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
+            <div class="ibox float-e-margins" style="margin-top: 11px; margin-bottom: -25px; height: 95%;">
               <div class="file-manager">
                 <div>
                   <md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">
