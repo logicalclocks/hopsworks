@@ -63,6 +63,8 @@ public class ProjectService {
   private NoCacheResponse noCacheResponse;
   @Inject
   private ProjectMembers projectMembers;
+  //@Inject
+  //private KafkaService kafka;
   @Inject
   private DataSetService dataSet;
   @Inject
@@ -216,8 +218,7 @@ public class ProjectService {
     // Update the retention period if it have been chenged
     if (project.getRetentionPeriod() == null || !project.getRetentionPeriod().equals(
         projectDTO.getRetentionPeriod())) {
-      projectController.updateProject(project, projectDTO,
-          userEmail);
+      projectController.updateProject(project, projectDTO, userEmail);
       activityController.persistActivity("Changed   retention period to " + projectDTO.getRetentionPeriod(), project, userEmail);
       json.setSuccessMessage(ResponseMessages.PROJECT_RETENTON_CHANGED);
       updated = true;
@@ -612,4 +613,24 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         price).build();
   }
+  
+   /**
+   *
+   * @param id
+   * @return kafka service object
+   * @throws AppException
+   */
+  /*@Path("{id}/kafka")
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public KafkaService kafka(
+          @PathParam("id") Integer id) throws AppException {
+    Project project = projectController.findProjectById(id);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    this.kafka.setProjectId(id);
+
+    return this.kafka;
+  }*/    
 }

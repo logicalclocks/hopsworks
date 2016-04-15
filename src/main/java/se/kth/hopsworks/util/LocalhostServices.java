@@ -76,6 +76,32 @@ public class LocalhostServices {
     }
     return stdout;
   }
+  
+  public static String createSslUserCert(String username, String projectName, String glassfishDir) throws IOException {
+    String sslCertFile = Settings.HOMEDIR + username + ".jks";
+
+    if (new File(sslCertFile).exists() == false) {
+      throw new IOException("Ssl cert exists already: " + sslCertFile);
+    }
+    List<String> commands = new ArrayList<>();
+    commands.add("/bin/bash");
+    commands.add(glassfishDir + "/" + Settings.SSL_CREATE_CERT_SCRIPTNAME);
+
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+    String stdout = "", stderr = "";
+    try {
+      int result = commandExecutor.executeCommand();
+      // get the stdout and stderr from the command that was run
+      stdout = commandExecutor.getStandardOutputFromCommand();
+      stderr = commandExecutor.getStandardErrorFromCommand();
+      if (result != 0) {
+        throw new IOException("Could not delete user " + sslCertFile + " - " + stderr);
+      }
+    } catch (InterruptedException e) {
+      throw new IOException("Interrupted. Could not delete user: " + sslCertFile + " - " + stderr);
+    }
+    return stdout;
+   }
 
   public static String getUsernameInProject(String username, String projectName) {
 
