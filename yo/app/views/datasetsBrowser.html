@@ -72,7 +72,7 @@
 </h3>
             </div>
 
-            <div class="row row-no-margin-left" ng-show="mainCtrl.searchReturned === ''">
+            <div class="row row-no-margin-left" ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">
               <div class="col-lg-12">
                 <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: -5px;">
                   <div class="table-responsive" style="overflow: hidden;">
@@ -272,10 +272,10 @@
                                       <span style=" color: #757575; font-size: 12px; padding-left: 5px;"> {{datasetsCtrl.fileDetail.email}}</span>
                                     </td>
                                   </tr>
-                                  <tr style="background-color: #fafafa">
+<!--                                  <tr style="background-color: #fafafa">
                                     <td style="color:lightgrey;">Permission</td>
                                     <td style="color: grey;">{{datasetsCtrl.fileDetail.permission}}</td>
-                                  </tr>
+                                  </tr>-->
                                 </table>
 
                               </md-content>

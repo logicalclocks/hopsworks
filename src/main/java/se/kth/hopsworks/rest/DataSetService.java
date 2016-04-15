@@ -918,6 +918,40 @@ public class DataSetService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
+  
+  @GET
+  @Path("/removePublic/{inodeId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response removePublic(@PathParam("inodeId") Integer inodeId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    JsonResponse json = new JsonResponse();
+    if (inodeId == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Incomplete request!");
+    }
+    Inode inode = inodes.findById(inodeId);
+    if (inode == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NOT_FOUND);
+    }
+
+    Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
+    if (ds == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NOT_FOUND);
+    }
+    if (ds.isPublicDs() == false) { 
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NOT_PUBLIC);
+    }
+    ds.setPublicDs(false);
+    datasetFacade.merge(ds);
+    json.setSuccessMessage("The Dataset is no longer public.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
 
   
   

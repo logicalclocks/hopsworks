@@ -33,10 +33,10 @@
                                         <div class="file-manager">-->
                   <!--style="margin: 0px; font-weight: bold; color: #2e353d;"-->
                   Filter: 
-                  <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined;" class="file-control active">All</a>
-                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; datasetsCtrl.isPublic = false" class="file-control">Shared</a>
-                  <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true; datasetsCtrl.isPublic = false" class="file-control">Exclusive</a>
-                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false; datasetsCtrl.isPublic = false" class="file-control">Pending</a>
+                  <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; " class="file-control active">All</a>
+                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; " class="file-control">Shared</a>
+                  <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true;" class="file-control">Exclusive</a>
+                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false;" class="file-control">Pending</a>
                   <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = false; datasetsCtrl.isPublic = true" class="file-control">Public</a>
                 </div>
                 <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
@@ -62,13 +62,13 @@
                            data-target="menu-{{ $index}}">
                         <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === $index}">
                           <a>
-                            <span class="publicDS" ng-class="{'glyphicon glyphicon-globe': dataset.publicDS === true}"></span>
                             <span class="corner"></span>
                             <div class="icon">
                               <i class="glyphicon" ng-class="{'glyphicon-folder-close': datasetsCtrl.selected === $index, 'glyphicon-folder-open' : datasetsCtrl.selected !== $index}"></i>
                             </div>
                             <div class="file-name">
-                              {{dataset.name}}
+                              {{dataset.name}}                            
+                              <span class="pull-right publicDS" ng-class="{'glyphicon glyphicon-globe': dataset.publicDs === true}"></span>
                               <br/>
                               <small><b>Owner:</b> {{dataset.owner}}</small>
                             </div>
@@ -151,13 +151,22 @@
                                 Compress</span>
                             </a>
                           </li>
-                          <li ng-show="projectCtrl.role === 'Data owner'">
+                          <li ng-show="projectCtrl.role === 'Data owner'  && dataset.publicDs === false"s>
                             <a class="pointer"
                                role="menuitem"
                                tabindex="6"
                                ng-click="datasetsCtrl.makePublic(dataset.id); $event.stopPropagation();">
                               <span><i class="fa fa-share-alt"></i>
                                 Make Public</span>
+                            </a>
+                          </li>
+                          <li ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === true">
+                            <a class="pointer"
+                               role="menuitem"
+                               tabindex="6"
+                               ng-click="datasetsCtrl.removePublic(dataset.id); $event.stopPropagation();">
+                              <span><i class="fa fa-share-alt"></i>
+                                Remove Public</span>
                             </a>
                           </li>
                         </ul>
@@ -363,10 +372,14 @@
                               <td style="color:lightgrey;">Owner</td>
                               <td style="color: grey;">{{datasetsCtrl.fileDetail.owner}}</td>
                             </tr>
-                            <tr style="background-color: #fafafa">
+                              <tr ng-show="datasetsCtrl.fileDetail.publicDs == true" style="background-color: #fafafa">
+                              <td style="color: #ff4081;">Public</td>
+                              <td style="color: #ff4081;">This DataSet is public.</td>
+                            </tr>
+<!--                            <tr style="background-color: #fafafa">
                               <td style="color:lightgrey;">Permission</td>
                               <td style="color: grey;">{{datasetsCtrl.fileDetail.permission}}</td>
-                            </tr>
+                            </tr>-->
                           </table>
 
                       </md-content>

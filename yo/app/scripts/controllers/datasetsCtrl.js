@@ -42,10 +42,6 @@ angular.module('hopsWorksApp')
             self.availableTemplates = [];
             self.closeSlider = false;
 
-//            self.openMetadata = function () {
-//              $scope.tgState = true;
-//            }
-
             self.breadcrumbLen = function () {
               if (self.pathArray === undefined || self.pathArray === null) {
                 return 0;
@@ -66,7 +62,7 @@ angular.module('hopsWorksApp')
               }
               return false;
             }
-            
+
             self.selectInode = function (inode) {
               // add to selectedList
             }
@@ -203,6 +199,7 @@ angular.module('hopsWorksApp')
                 self.pathArray = [];
               }
               getDirContents();
+              $scope.tgState = true;
             };
 
             init();
@@ -251,7 +248,7 @@ angular.module('hopsWorksApp')
                         getDirContents();
                       }, function (error) {
                 //The user changed his/her mind. Don't really need to do anything.
-                getDirContents();
+//                getDirContents();
               });
             };
 
@@ -287,17 +284,24 @@ This will make all its files available for any registered user to download and p
                       }
               );
 
-
-            };
-
-
-            self.isPublic = function (id) {
-              dataSetService.isPublic(id).then(
+              dataSetService.makePublic(id).then(
                       function (success) {
+                        growl.success(success.data.successMessage, {title: 'The DataSet is now Public.', ttl: 1500});
+                        getDirContents();
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 1000});
               });
+
             };
+
+
+//            self.isPublic = function (id) {
+//              dataSetService.isPublic(id).then(
+//                      function (success) {
+//                      }, function (error) {
+//                growl.error(error.data.errorMsg, {title: 'Error', ttl: 1000});
+//              });
+//            };
 
 
             self.parentPathArray = function () {
