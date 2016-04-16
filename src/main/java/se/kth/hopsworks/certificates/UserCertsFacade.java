@@ -1,12 +1,17 @@
 package se.kth.hopsworks.certificates;
 
+import com.google.common.io.ByteStreams;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
@@ -92,20 +97,29 @@ public class UserCertsFacade {
     }
     
     public void putUserCerts(int projectId, int userId){
-        try {
-            Path keystore = Paths.get(Settings.CA_DIR + "/" + projectId + "__" + userId + "_kstore.jks");
-            Path truststure = Paths.get(Settings.CA_DIR + "/" + projectId + "__" + userId + "_tstore.jks");
-            byte[] kStoreBytes = Files.readAllBytes(keystore);
-            byte[] tStoreBytes = Files.readAllBytes(truststure);
+        File kStore = new File(Settings.CA_DIR + "/" + projectId + "__" + userId + "__kstore.jks");
+        File tStore = new File(Settings.CA_DIR + "/" + projectId + "__" + userId + "__tstore.jks");
+        FileInputStream kfin = null;
+        FileInputStream tfin = null;
         
+        try {
+            kfin = new FileInputStream(kStore);
+            tfin = new FileInputStream(tStore);
+            
+            byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
+            byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
+            
             UserCerts uc = new UserCerts(projectId, userId);
-            uc.setUserKey(kStoreBytes);
-            uc.setUserCert(tStoreBytes);
+            uc.setUserKey(kStoreBlob);
+            uc.setUserCert(tStoreBlob);
             em.merge(uc);
             em.persist(uc);
             em.flush();
-        } catch (IOException | NullPointerException e) {
-              e.printStackTrace();
+            
+        } catch (FileNotFoundException e) {
+            Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, e);
+        } catch (IOException ex) {
+            Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     

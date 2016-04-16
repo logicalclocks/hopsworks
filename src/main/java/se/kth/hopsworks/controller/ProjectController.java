@@ -533,14 +533,11 @@ public class ProjectController {
               projectTeamFacade.removeProjectTeam(project, newMember);
               throw new EJBException("Could not add member to HDFS.");
             }
-            try{
-                // Create KeyStore and TrustStore Locally
-                LocalhostServices.createUserCertificates(project.getId(), newMember.getUid());
-                // Put the new UserCerts into the DB
-                certificateBean.putUserCerts(project.getId(), newMember.getUid());
-            } catch (IOException e) {
-                System.out.println("Could not create certificates for the new user");
-            }
+        
+            LocalhostServices.createUserCertificates(project.getId(), newMember.getUid());
+            
+            //certificateBean.putUserCerts(project.getId(), newMember.getUid());
+       
             logger.log(Level.FINE, "{0} - member added to project : {1}.",
                 new Object[]{newMember.getEmail(),
                   project.getName()});
@@ -569,7 +566,9 @@ public class ProjectController {
             + "could not be added. Try again later.");
         logger.log(Level.SEVERE, "Adding  team member {0} to members failed",
             projectTeam.getProjectTeamPK().getTeamMember());
-      }
+      } catch (IOException ex) {
+            Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     return failedList;
   }

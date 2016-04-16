@@ -92,7 +92,7 @@ public class LocalhostServices {
     List<String> commands = new ArrayList<>();
     commands.add("/bin/bash");
     commands.add("-c");   
-    commands.add("/srv/glassfish/domain1/config/ca/intermediate" + "/" + Settings.SSL_CREATE_CERT_SCRIPTNAME + " " + projectId + "__" + userId);
+    commands.add("sudo /srv/glassfish/domain1/config/ca/intermediate" + "/" + Settings.SSL_CREATE_CERT_SCRIPTNAME + " " + projectId + "__" + userId);
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
     String stdout = "", stderr = "";
