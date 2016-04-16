@@ -236,7 +236,17 @@
                           <i class="fa fa-spinner fa-spin" ></i>
                         </button>
                       </span>
-                      <span class="field-info" tooltip="Schedule"
+                      <span ng-show="jobsCtrl.runningInfo['' + job.id].running && jobsCtrl.runningInfo['' + job.id].url !== ''" class="field-info" tooltip="Launch the Application Master Web Browser"
+                            style="padding-top: 5px;padding-left:3px">
+                        <button style=""
+                                ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.launchAppMasterUrl(jobsCtrl.runningInfo['' + job.id].url);
+                                        $event.stopPropagation();"
+                                class="btn btn-success glyphicon glyphicon-eye-open">
+                        </button>
+                      </span>
+
+
+                      <span class="field-info" tooltip="Schedule" ng-show="jobsCtrl.runningInfo['' + job.id].running === false"
                             style="padding-top: 5px;padding-left:3px">
                         <button style=""
                                 ng-click="jobsCtrl.toggle(job, $index);
@@ -244,7 +254,7 @@
                                 class="btn btn-primary glyphicon glyphicon-time">
                         </button>
                       </span>
-                      <span class="field-info" tooltip="Edit as new"
+                      <span class="field-info" tooltip="Edit as new" ng-show="jobsCtrl.runningInfo['' + job.id].running === false"
                             style="padding-top: 5px;padding-left:3px">
                         <button style=""
                                 ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.editAsNew(job);
@@ -260,7 +270,7 @@
                                 class="btn btn-info glyphicon glyphicon-list-alt">
                         </button>
                       </span>
-                      <span class="field-info" tooltip="Delete"
+                      <span class="field-info" tooltip="Delete"  ng-show="jobsCtrl.runningInfo['' + job.id].running === false"
                             style="padding-top: 5px;padding-left:3px">
                         <button style="margin-left: 10px"
                                 ng-click="jobsCtrl.toggle(job, $index);
