@@ -63,8 +63,8 @@ public class ProjectService {
   private NoCacheResponse noCacheResponse;
   @Inject
   private ProjectMembers projectMembers;
-  //@Inject
-  //private KafkaService kafka;
+  @Inject
+  private KafkaService kafka;
   @Inject
   private DataSetService dataSet;
   @Inject
@@ -620,7 +620,7 @@ public class ProjectService {
    * @return kafka service object
    * @throws AppException
    */
-  /*@Path("{id}/kafka")
+  @Path("{id}/kafka")
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public KafkaService kafka(
           @PathParam("id") Integer id) throws AppException {
@@ -632,5 +632,5 @@ public class ProjectService {
     this.kafka.setProjectId(id);
 
     return this.kafka;
-  }*/    
+  }      
 }

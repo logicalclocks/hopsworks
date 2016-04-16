@@ -460,14 +460,15 @@ public class Settings {
   }
 
   public static final int ELASTIC_PORT = 9300;
-
+  
+  public static final int ZK_IP_PORT = 2181; 
   
   // Zookeeper 
   private String ZK_IP = "127.0.0.1";
 
   public synchronized String getZkIp() {
     checkCache();
-    return ZK_IP;
+    return ZK_IP+":"+ZK_IP_PORT;
   }
 
   private String ZK_USER = "zk";
@@ -499,7 +500,10 @@ public class Settings {
   public static final String HOPS_USERNAME_SEPARATOR = "__";
   public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
   public static final String HOMEDIR = "/home/glassfish/";
-  public static final String SSL_CREATE_CERT_SCRIPTNAME = "ssl-client-cert-generation.sh";
+  public static final String CA_DIR = "/srv/glassfish/domain1/config/ca/intermediate/";
+  public static final String CA_CERT_DIR = CA_DIR + "certs/";
+  public static final String CA_KEY_DIR = CA_DIR + "private/";
+  public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
   public static final int USERNAME_LEN = 8;
   public static final int MAX_USERNAME_SUFFIX = 99;
   public static final int MAX_RETRIES = 500;

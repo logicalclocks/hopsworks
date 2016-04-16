@@ -12,9 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.Future;
-import javax.ejb.AsyncResult;
-import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -81,8 +78,8 @@ public class KafkaFacade {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "No Kafka topics found in this project.");
         }
-        for (TopicDTO t : topics) {
-            if (t.getTopic().compareToIgnoreCase(topicName) == 0) {
+        for (TopicDTO topic : topics) {
+            if (topic.getTopic().compareToIgnoreCase(topicName) == 0) {
                 TopicDetailDTO topicDetailDTO = getTopicDetailsfromKafkaCluster(topicName);
                 String zkIpPort = settings.getZkIp();
                 return topicDetailDTO;
@@ -91,7 +88,7 @@ public class KafkaFacade {
 
        // throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
        //         "No Kafka topics found in this project.");
-       return null;
+            return new TopicDetailDTO();
     }
 
     private int getPort(String zkIp) {
@@ -148,26 +145,25 @@ public class KafkaFacade {
         }finally{
             zkClient.close();
         }
+        
+        //persist topic into database
         pt = new ProjectTopics(topicName, project);
         em.merge(pt);
         em.persist(pt);
         em.flush();
     }
     
-//    public Future<String> createHopsUserSslCert(User user, Project project) throws IOException {
+//    public void createHopsUserSslCert(User user, Project project) throws IOException {
 //
 //        String stdout = LocalhostServices.createSslUserCert(user.getName(),
 //                project.getName(), settings.getGlassfishDir());
-//
-//        return new AsyncResult<>(stdout);
 //    }
-
 
     public void removeTopicFromProject(Project project, String topicName) throws AppException {
         ProjectTopics pt = em.find(ProjectTopics.class, topicName);
         if (pt != null) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
-                    "Kafka topic does not exists.");
+                    "Kafka topic does not exist in database.");
         }
         pt = new ProjectTopics(topicName, project);
         em.remove(pt);
@@ -182,7 +178,7 @@ public class KafkaFacade {
             AdminUtils.deleteTopic(zkUtils, topicName);
         } catch (TopicExistsException ex) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
-                    "Cannot remove Kafka topic.");
+                    "Kafka topic cannot be removed from Kafka.");
         }finally{
             zkClient.close();
         }
@@ -225,6 +221,8 @@ public class KafkaFacade {
             try {
                 simpleConsumer = new SimpleConsumer(getIp(seed).getHostAddress(),
                         getPort(seed), 10 * 1000, 20 * 1000, "list_topics");
+
+                //add ssl certificate to the consumer here
                 List<String> topics = new ArrayList<>();
 
                 TopicMetadataRequest req = new TopicMetadataRequest(topics);
@@ -258,6 +256,8 @@ public class KafkaFacade {
             try {
                 simpleConsumer = new SimpleConsumer(getIp(seed).getHostName(),
                         getPort(seed), 10 * 1000, 20 * 1000, "list_topics");
+                
+                //add ssl certificate to the consumer here
                 List<String> topics = new ArrayList<>();
                 topics.add(topicName);
 

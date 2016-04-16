@@ -37,6 +37,7 @@
     <class>se.kth.bbc.jobs.model.configuration.JsonReduceableConverter</class>
     <class>se.kth.hopsworks.user.model.SshKeys</class>
     <class>se.kth.hopsworks.users.AuthorizedSshkeys</class>
+    <class>se.kth.hopsworks.certificates.UserCerts</class>
     <class>se.kth.hopsworks.meta.entity.TupleToFile</class>
     <class>se.kth.hopsworks.meta.entity.Metadata</class>
     <class>se.kth.hopsworks.meta.entity.RawData</class>
@@ -53,6 +54,7 @@
     <class>se.kth.hopsworks.util.Variables</class>
     <class>io.hops.hdfs.HdfsLeDescriptors</class>
     <class>io.hops.bbc.Consents</class>
+    <class>io.hops.kafka.ProjectTopics</class>
     <class>se.kth.bbc.project.ProjectsManagement</class>
     <class>se.kth.bbc.project.ProjectPaymentsHistory</class>
     <class>se.kth.bbc.project.CharonRegisteredSites</class>
