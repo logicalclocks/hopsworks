@@ -76,8 +76,10 @@ public class FlinkJob extends YarnJob {
         //TODO: Check if needs to be initialized
         //TODO: Check if Path is correct
         flinkBuilder.setFlinkLoggingConfigurationPath(new Path(jobconfig.getFlinkConfDir()));
-        //TODO: Fix path
+        //TODO: Remove fixed path
         flinkBuilder.setLocalJarPath(new Path("hdfs://"+nameNodeIpPort+"/user/glassfish/flink.jar"));
+        flinkBuilder.setDynamicPropertiesEncoded("log4j.configuration=/srv/flink/conf/log4j.properties,logback.configurationFile=/srv/flink/conf/logback.xml");
+        
         flinkBuilder.setTaskManagerMemory(jobconfig.getTaskManagerMemory());
         flinkBuilder.setTaskManagerSlots(jobconfig.getSlots());
         flinkBuilder.setTaskManagerCount(jobconfig.getNumberOfTaskManagers());

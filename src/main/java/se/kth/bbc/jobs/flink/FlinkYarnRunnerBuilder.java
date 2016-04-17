@@ -326,13 +326,13 @@ public class FlinkYarnRunnerBuilder {
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_MEMORY, String.valueOf(taskManagerMemoryMb));
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.FLINK_JAR_PATH, flinkJarPath.toString());
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, ""/*logbackFile+","+log4jFile*/);
-       
-        try {
-            builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, UserGroupInformation.getCurrentUser().getShortUserName());
-             builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_HOME_DIR, "hdfs://"+nameNodeIpPort+"/user/"+UserGroupInformation.getCurrentUser().getShortUserName()+"/");
-        } catch (IOException ex) {
+        //TODO: Removed fixed endpoint
+        //try {
+            builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, "glassfish"/*UserGroupInformation.getCurrentUser().getShortUserName()*/);
+             builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_HOME_DIR, "hdfs://"+nameNodeIpPort+"/user/"+"glassfish"/*UserGroupInformation.getCurrentUser().getShortUserName()*/+"/");
+        /*} catch (IOException ex) {
             LOG.error("Error while getting Flink client username", ex);
-        }
+        }*/
         
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_SLOTS, String.valueOf(taskManagerSlots));
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DETACHED, String.valueOf(detached));
@@ -361,7 +361,7 @@ public class FlinkYarnRunnerBuilder {
         builder.appName(name);
         
         //Set up command
-        StringBuilder amargs = new StringBuilder(" org.apache.flink.examples.java.graph.ConnectedComponents");
+        StringBuilder amargs = new StringBuilder(" run  -m yarn-cluster -yn 1 -yjm 1024m -ytm 1024m  -j flink-examples-batch_2.10-1.1-SNAPSHOT-ConnectedComponents.jar -c org.apache.flink.examples.java.graph.ConnectedComponents");
 //        amargs.append(" -n ").append(taskManagerCount);
 //        amargs.append(" -tm ").append(taskManagerMemoryMb);
 //        amargs.append(" -s ").append(taskManagerSlots);
