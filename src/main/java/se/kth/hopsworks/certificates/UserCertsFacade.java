@@ -98,7 +98,7 @@ public class UserCertsFacade {
     
     public void putUserCerts(int projectId, int userId){
     //Checks if the User/Project combination already exists.
-     if(findUserCert(projectId, userId).getUserCert().length < 1){
+     if(findUserCert(projectId, userId).getUserCert().length > 1){
          return;
      }
         
