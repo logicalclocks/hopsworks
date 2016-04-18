@@ -536,7 +536,7 @@ public class ProjectController {
         
             LocalhostServices.createUserCertificates(project.getId(), newMember.getUid());
             
-            //certificateBean.putUserCerts(project.getId(), newMember.getUid());
+            certificateBean.putUserCerts(project.getId(), newMember.getUid());
        
             logger.log(Level.FINE, "{0} - member added to project : {1}.",
                 new Object[]{newMember.getEmail(),
