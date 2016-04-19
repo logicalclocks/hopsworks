@@ -2,7 +2,7 @@
 
 angular.module('hopsWorksApp')
         .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ActivityService', 'UtilsService', '$q', 'TourService', '$location', '$scope',
-            function (ProjectService, ModalService, growl, ActivityService, UtilsService, $q, TourService, $location, $scope) {
+            function (ProjectService,  ModalService, growl, ActivityService, UtilsService, $q, TourService, $location, $scope) {
 
                 var self = this;
 
@@ -13,6 +13,8 @@ angular.module('hopsWorksApp')
                 self.currentPage = 1;
                 self.creating = false;
                 self.exampleProjectID;
+                self.publicDatasets = [];
+                $scope.isCollapsed = true;
                 // Load all projects
 
                 var loadProjects = function (success) {
@@ -137,6 +139,29 @@ angular.module('hopsWorksApp')
 
 
                 updateUIAfterChange(false);
+
+
+
+                self.addPublicDataset = function (inodeId, projectId) {
+                  
+                
+                };
+                self.getPublicDatasets = function () {
+                    ProjectService.getPublicDatasets().$promise.then(
+                            function (success) {
+                              self.publicDatasets = success;
+                            },
+                            function (error) {
+                                self.creating = false;
+                                growl.info("Could not load Public Datasets", {title: 'Info', ttl: 5000});
+                            }
+
+                    );
+                };
+
+
+
+
 
                 self.showGettingStarted = function () {
                     if (self.projects === undefined || self.projects === null || self.projects.length === 0) {

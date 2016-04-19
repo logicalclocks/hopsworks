@@ -914,6 +914,7 @@ public class DataSetService {
     }
     ds.setPublicDs(true);
     datasetFacade.merge(ds);
+    datasetFacade.merge(ds);
     json.setSuccessMessage("The Dataset is now public.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();

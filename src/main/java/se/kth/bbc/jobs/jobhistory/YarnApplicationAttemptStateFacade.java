@@ -18,11 +18,8 @@ package se.kth.bbc.jobs.jobhistory;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.OrderBy;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.project.Project;
-import se.kth.bbc.project.fb.Inode;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 @Stateless
@@ -67,7 +64,7 @@ public class YarnApplicationAttemptStateFacade extends AbstractFacade<YarnApplic
                     return "";
                 }
             }
-            return "http\://" + trackingUrl;
+            return "http://" + trackingUrl;
         }
         return "";
     }

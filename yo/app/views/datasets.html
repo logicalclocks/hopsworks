@@ -33,11 +33,11 @@
                                         <div class="file-manager">-->
                   <!--style="margin: 0px; font-weight: bold; color: #2e353d;"-->
                   Filter: 
-                  <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; " class="file-control active">All</a>
-                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; " class="file-control">Shared</a>
-                  <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true;" class="file-control">Exclusive</a>
-                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false;" class="file-control">Pending</a>
-                  <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = false; datasetsCtrl.isPublic = true" class="file-control">Public</a>
+                  <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined;" class="file-control active">All</a>
+                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; datasetsCtrl.isPublic = false;" class="file-control">Shared</a>
+                  <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true; datasetsCtrl.isPublic = false;" class="file-control">Exclusive</a>
+                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false; datasetsCtrl.isPublic = false;" class="file-control">Pending</a>
+                  <!--<a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = false; datasetsCtrl.isPublic = true;" class="file-control">Public</a>-->
                 </div>
                 <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
                   <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()">
@@ -53,7 +53,7 @@
                   <div class="col-lg-12">
 
 
-                    <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, isPublic: datasetsCtrl.isPublic} | orderBy: 'name'">
+                    <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, publicDs: datasetsCtrl.isPublic} | orderBy: 'name'">
                       <div ng-dblclick="projectCtrl.browseDataset(dataset)"
                            ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset); "
                            ng-init="(iscollapsed$index) = true"
@@ -142,7 +142,7 @@
                             </a>
                           </li>
                           <li class="divider"></li>
-                          <li>
+<!--                          <li>
                             <a class="pointer"
                                role="menuitem"
                                tabindex="5"
@@ -150,7 +150,7 @@
                               <span><i class="fa fa-file-archive-o"></i>
                                 Compress</span>
                             </a>
-                          </li>
+                          </li>-->
                           <li ng-show="projectCtrl.role === 'Data owner'  && dataset.publicDs === false"s>
                             <a class="pointer"
                                role="menuitem"

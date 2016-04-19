@@ -41,6 +41,9 @@ import se.kth.bbc.project.fb.Inode;
   @NamedQuery(name = "Dataset.findByProject",
           query
           = "SELECT d FROM Dataset d WHERE d.projectId = :projectId"),
+  @NamedQuery(name = "Dataset.findAllPublic",
+          query
+          = "SELECT d FROM Dataset d WHERE d.publicDs = 1"),
   @NamedQuery(name = "Dataset.findByDescription",
           query
           = "SELECT d FROM Dataset d WHERE d.description = :description")})
