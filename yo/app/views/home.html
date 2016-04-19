@@ -1,111 +1,106 @@
-<div class="container" ng-controller="MainCtrl as mainCtrl" style="padding-top:25px;">
+<div class="container" ng-controller="MainCtrl as mainCtrl" style="padding-top:25px; width: 1500px;" style="margin-left: -100px;">
   <div ng-include="'nav.html'"></div>
   <div ng-show="mainCtrl.searchReturned !== ''" class="row">
     <div id="projectSearchResults">
       <div ng-include="'views/searchResult.html'"></div>
     </div>
   </div>
-  <div ng-show="mainCtrl.searchReturned === ''" class="row" style="min-width: 1200px">
-    <div class="col-sm-8 col-md-8 col-lg-8" style="padding-left:56px; min-width: 500px">
-      <div>
-        <div class="widget-body">
-          <div class="timeline clearfix">
-            <!--                        <div class="mid-line"></div>-->
-            <div class="row-centered" id="gettingStartedSection" ng-show="homeCtrl.showGettingStarted() === true">
-              <div class="col-sm-4">
-                <button style="margin: 0px; padding-bottom: 5px; padding-top: 5px; padding-left: 0px; padding-right: 0px;" uib-popover="Take a tour of Hopsworks by creating a project and running a Spark job!"
-                        type="button" class="btn btn-success btn-block" ng-click="homeCtrl.createExampleProject()">
-                  <span ng-hide="homeCtrl.creating === true"><b>Get Started with Hopsworks!</b></span>
-                  <span class="glyphicon glyphicon-play-circle" ng-hide="homeCtrl.creating === true"></span>
-                  <span ng-hide="homeCtrl.creating === false"><b>Load Example project..</b></span>
-                  <span class="fa fa-spinner fa-spin" ng-hide="homeCtrl.creating === false"></span>
+
+
+  <div ng-show="mainCtrl.searchReturned === ''" class="row" style="min-width: 1500px">
+
+    <div class="col-sm-2 col-md-2">
+      <div class="col-md-10 sidebar pull-left" style="min-width: 290px; max-width: 290px">
+
+
+        <div class="list-group">
+          <a href="" class="list-group-item active">Help</a>
+          <a href="" ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.getTours();" class="list-group-item">
+            <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showTours, 'glyphicon-triangle-bottom':homeCtrl.showTours}"></span>
+            Tours
+            <span class="glyphicon glyphicon-expand pull-right"></span>
+            <div ng-show="homeCtrl.showTours" ng-repeat="tour in homeCtrl.tours">              
+              <button style="margin: 0px; padding-bottom: 5px; padding-top: 5px; padding-left: 0px; padding-right: 0px;" uib-popover="tour.tip"
+                      type="button" class="btn btn-default btn-block" ng-click="homeCtrl.createExampleProject()">
+                <span ng-hide="homeCtrl.creating === true"><b>Get Started with Hopsworks!</b></span>
+                <span class="glyphicon glyphicon-play-circle" ng-hide="homeCtrl.creating === true"></span>
+                <span ng-hide="homeCtrl.creating === false"><b>Load Example project..</b></span>
+                <span class="fa fa-spinner fa-spin" ng-hide="homeCtrl.creating === false"></span>
+              </button>
+            </div>
+          </a>
+          <a href="" ng-click="homeCtrl.showTutorials = !homeCtrl.showTutorials; homeCtrl.getTutorials();" class="list-group-item">
+            <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showTutorials, 'glyphicon-triangle-bottom':homeCtrl.showTutorials}"></span>
+            Tutorials
+            <span class="fa fa-graduation-cap pull-right" style="margin-right: -1px;"></span>
+            <div ng-show="homeCtrl.showTutorials" ng-repeat="tutorial in homeCtrl.tutorials">              
+              {{tutorial}}
+            </div>
+          </a>
+          <a href="" ng-click="homeCtrl.showPublicDatasets = !homeCtrl.showPublicDatasets; homeCtrl.getPublicDatasets();" class="list-group-item">
+            <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showPublicDatasets, 'glyphicon-triangle-bottom':homeCtrl.showPublicDatasets}"></span>
+            Public Data Sets
+            <span class="glyphicon glyphicon-globe pull-right" style="margin-right: 1px;"></span>
+            <div ng-show="homeCtrl.showPublicDatasets" ng-repeat="dataset in homeCtrl.publicDatasets">
+              <div>
+                <button style="padding-bottom: 5px; padding-top: 5px; papdding-left: 0px; padding-right: 0px;" 
+                        uib-popover="Add this public dataset to one of your projects."
+                        type="button" class="btn btn-default btn-block" ng-click="homeCtrl.addPublicDatasetModal(dataset.inodeId, dataset.name, dataset.description);">
+                  <span style="margin-left: 10px;" >{{dataset.name}}</span>
                 </button>
               </div>
             </div>
-
-
-            <div class="row-centered"></div>
-            <div class="row-centered">
-              <div class="col-sm-4">
-                <button style="padding-bottom: 5px; padding-top: 5px; padding-left: 0px; padding-right: 0px;" 
-                        uib-popover="Show the available public datasets that can be imported into projects."
-                        type="button" class="btn btn-success btn-block" ng-click="homeCtrl.isCollapsed = !homeCtrl.isCollapsed; homeCtrl.getPublicDatasets();">
-                  <span class="pull-left" style="margin-left: 10px;" >Public DataSets</span>
-                  <span class="glyphicon glyphicon-globe pull-right" style="margin-right: 15px;"></span>
-                </button>
-              </div>
-            </div>
-            <div class="row panel panel-default" style="margin-left: 1px;" id="publicDatasets" ng-show="!homeCtrl.isCollapsed">
-              <div class="panel-heading" style="padding-top: 15px; padding-bottom: 20px;">
-                <h4 class="col-md-10 panel-title">
-                    Recently Added Public DataSets
-                </h4>
-              </div>
-              <div collapse="homeCtrl.isCollapsed">
-                <div class="col-md-10 panel-body">
-
-                  <div ng-repeat="dataset in homeCtrl.publicDatasets">
-                    <div class="file-name">
-                      Name: {{dataset.name}}                            
-                      <br/>
-                      <small><b>Description:</b> {{dataset.description}}</small>
-                      <div class="row">
-                      <button style="padding-bottom: 5px; padding-top: 5px; papdding-left: 0px; padding-right: 0px;" 
-                              uib-popover="Add this public dataset to one of your projects."
-                              type="button" class="btn btn-default btn-block" ng-click="homeCtrl.addPublicDatasetModal(dataset.inodeId);">
-                        <span style="margin-left: 10px;" >Import</span>
-                      </button>
-                        </div>
-                      <div class="row" style="border-bottom: 1px solid #ccc;"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>                
-
-
-
-            <!--                        <div
-                                        ng-repeat="historyObject in homeCtrl.histories| startFrom:(homeCtrl.currentPage - 1) * homeCtrl.pageSize | limitTo:homeCtrl.pageSize">
-            
-                                        <div class="time-header info" ng-if="historyObject.flag === 'older'">Older</div>
-                                        <div class="time-header error" ng-if="historyObject.flag === 'lastweek'">Last week</div>
-                                        <div class="time-header error" ng-if="historyObject.flag === 'thisweek'">This week</div>
-                                        <div class="time-header completed" ng-if="historyObject.flag === 'yesterday'">Yesterday</div>
-                                        <div class="time-header info" ng-if="historyObject.flag === 'today'">Today</div>
-            
-                                        <div class="right">
-                                            <div class="r-arrow"></div>
-                                            <div class="about-task">
-                                                <div class="header">{{historyObject.project.name}}
-                                                    <small class="muted">{{historyObject.timestamp|
-                                  date:'medium'}}
-                                                    </small>
-                                                </div>
-                                                <p class="no-margin">
-                                                    {{historyObject.user.fname}} {{historyObject.activity}}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-            
-                                    <pagination ng-show="homeCtrl.totalPages > 1"
-                                                total-items="homeCtrl.totalItems"
-                                                ng-model="homeCtrl.currentPage"
-                                                max-size="homeCtrl.pageSize"
-                                                class="pagination-sm"
-                                                boundary-links="true"
-                                                rotate="false"
-                                                style="margin-left: 170px"
-                                                num-pages="homeCtrl.totalPages">
-                                    </pagination>-->
-
-
-          </div>
+          </a>
         </div>
       </div>
 
 
+    </div>
+
+
+    <div class="col-sm-6 col-md-6 col-lg-6" style="padding-left:56px; min-width: 500px">
+      <div class="widget-body">
+        <div class="timeline clearfix">
+
+          <!--                        <div
+                                      ng-repeat="historyObject in homeCtrl.histories| startFrom:(homeCtrl.currentPage - 1) * homeCtrl.pageSize | limitTo:homeCtrl.pageSize">
+          
+                                      <div class="time-header info" ng-if="historyObject.flag === 'older'">Older</div>
+                                      <div class="time-header error" ng-if="historyObject.flag === 'lastweek'">Last week</div>
+                                      <div class="time-header error" ng-if="historyObject.flag === 'thisweek'">This week</div>
+                                      <div class="time-header completed" ng-if="historyObject.flag === 'yesterday'">Yesterday</div>
+                                      <div class="time-header info" ng-if="historyObject.flag === 'today'">Today</div>
+          
+                                      <div class="right">
+                                          <div class="r-arrow"></div>
+                                          <div class="about-task">
+                                              <div class="header">{{historyObject.project.name}}
+                                                  <small class="muted">{{historyObject.timestamp|
+                                date:'medium'}}
+                                                  </small>
+                                              </div>
+                                              <p class="no-margin">
+                                                  {{historyObject.user.fname}} {{historyObject.activity}}
+                                              </p>
+                                          </div>
+                                      </div>
+                                  </div>
+          
+                                  <pagination ng-show="homeCtrl.totalPages > 1"
+                                              total-items="homeCtrl.totalItems"
+                                              ng-model="homeCtrl.currentPage"
+                                              max-size="homeCtrl.pageSize"
+                                              class="pagination-sm"
+                                              boundary-links="true"
+                                              rotate="false"
+                                              style="margin-left: 170px"
+                                              num-pages="homeCtrl.totalPages">
+                                  </pagination>-->
+
+
+        </div>
+
+      </div>
     </div>
     <div class="col-sm-4 col-md-4 col-lg-4 sidebar" style="min-width: 390px; max-width: 390px">
 
@@ -208,17 +203,17 @@
       <pager total-items="homeCtrl.totalItemsProjects" ng-model="homeCtrl.currentPageProjects"></pager>
     </div>
   </div>
+  <tour class="ng-scope" step="homeCtrl.tourService.currentStep_TourOne" post-tour="closeTour()" ng-if="homeCtrl.loadedView">
+    <virtual-step
+      class="ng-scope"
+      tourtip="Begin the tour by clicking Next, OR when {{homeCtrl.tourService.alive_TourOne}} seconds passed, click on the project"
+      tourtip-step="0"
+      tourtip-element="#true.list-group-item"
+      tourtip-placement="left"
+      tourtip-next-label="Next"
+      on-proceed="homeCtrl.EnterExampleProject(homeCtrl.exampleProjectID)"
+      tourtip-offset-vertical="-17"
+      tourtip-offset-horizontal="13"
+      ></virtual-step>
+  </tour>
 </div>
-<tour class="ng-scope" step="homeCtrl.tourService.currentStep_TourOne" post-tour="closeTour()" ng-if="homeCtrl.loadedView">
-  <virtual-step
-    class="ng-scope"
-    tourtip="Begin the tour by clicking Next, OR when {{homeCtrl.tourService.alive_TourOne}} seconds passed, click on the project"
-    tourtip-step="0"
-    tourtip-element="#true.list-group-item"
-    tourtip-placement="left"
-    tourtip-next-label="Next"
-    on-proceed="homeCtrl.EnterExampleProject(homeCtrl.exampleProjectID)"
-    tourtip-offset-vertical="-17"
-    tourtip-offset-horizontal="13"
-    ></virtual-step>
-</tour>
