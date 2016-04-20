@@ -13,6 +13,7 @@ angular.module('hopsWorksApp')
             self.files = []; //A list of files currently displayed to the user.
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
+            self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
             self.selected = null; //The index of the selected file in the files array.
             self.selectedList = []; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
@@ -20,6 +21,8 @@ angular.module('hopsWorksApp')
 
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
+            $scope.isPublic = true;
+            
             $scope.tgState = true;
 
             $scope.status = {
@@ -42,22 +45,25 @@ angular.module('hopsWorksApp')
             self.availableTemplates = [];
             self.closeSlider = false;
 
-            self.openMetadata = function () {
-              $scope.tgState = true;
-            }
-
-            self.openMetadata();
-
-
             self.breadcrumbLen = function () {
               if (self.pathArray === undefined || self.pathArray === null) {
                 return 0;
               }
-              var displayPathLen = 4;
+              var displayPathLen = 10;
               if (self.pathArray.length <= displayPathLen) {
-                return self.pathArray.length -1;
+                return self.pathArray.length - 1;
               }
               return displayPathLen;
+            }
+
+            self.cutBreadcrumbLen = function () {
+              if (self.pathArray === undefined || self.pathArray === null) {
+                return false;
+              }
+              if (self.pathArray.length - self.breadcrumbLen() > 0) {
+                return true;
+              }
+              return false;
             }
 
             self.selectInode = function (inode) {
@@ -91,24 +97,29 @@ angular.module('hopsWorksApp')
             });
 
             self.isShared = function () {
-  
-              var topLevel = self.pathArray[0] ;
-              if ((topLevel.indexOf("::") > -1)) {
-                return true;
+              var top = self.pathArray[0].split("::");
+              if (top.length === 1) {
+                return false;
               }
-              return false;
+              return true;
             };
             
-            self.pathSharedDs = function () {
-              if (self.pathArray === null || self.pathArray.length === 0) {
-                return '';
+            self.sharedDatasetPath = function () {
+              var top = self.pathArray[0].split("::");
+              if (top.length === 1) {
+                self.sharedPathArray = [];
+                return;
               }
-              var topLevel = self.pathArray[0] ;
-              if ((topLevel.indexOf("::") === -1)) {
-                self.sharedPath = "";
+              // /proj::shared_ds/path/to  -> /proj/ds/path/to
+              // so, we add '1' to the pathLen
+              self.sharedPathArray = new Array(self.pathArray.length + 1);
+              self.sharedPathArray[0] = top[0];
+              self.sharedPathArray[1] = top[1];
+              for (var i=1; i<pathArray.length; i++ ) {
+                self.sharedPathArray[i+1] = pathArray[i];
               }
-                self.sharedPath = topLevel.replace("::", "/");
-            };
+              return self.sharedPathArray;
+            };            
 
 
             /*
@@ -196,6 +207,7 @@ angular.module('hopsWorksApp')
                 self.pathArray = [];
               }
               getDirContents();
+              $scope.tgState = true;
             };
 
             init();
@@ -244,7 +256,7 @@ angular.module('hopsWorksApp')
                         getDirContents();
                       }, function (error) {
                 //The user changed his/her mind. Don't really need to do anything.
-                getDirContents();
+//                getDirContents();
               });
             };
 
@@ -280,18 +292,25 @@ This will make all its files available for any registered user to download and p
                       }
               );
 
-
             };
+            
+             self.removePublic = function (id) {
 
-
-            self.isPublic = function (id) {
-              dataSetService.isPublic(id).then(
+              ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet private? \n\
+This will make all its files unavailable to other projects unless you share it explicitly.').then(
                       function (success) {
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 1000});
-              });
-            };
+                        dataSetService.removePublic(id).then(
+                                function (success) {
+                                  growl.success(success.data.successMessage, {title: 'The DataSet is now Private.', ttl: 1500});
+                                  getDirContents();
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 1000});
+                        });
 
+                      }
+              );
+            };           
+            
 
             self.parentPathArray = function () {
               var newPathArray = self.pathArray.slice(0);
@@ -472,7 +491,9 @@ This will make all its files available for any registered user to download and p
                 getDirContents(newPathArray);
               }
             };
-
+            self.goToDataSetsDir = function () {
+              $location.path('/project/' + self.projectId + '/datasets');
+            }
             /**
              * Go to the folder at the index in the pathArray array.
              * @param {type} index
@@ -480,7 +501,7 @@ This will make all its files available for any registered user to download and p
              */
             self.goToFolder = function (index) {
               var newPathArray = self.pathArray.slice(0);
-              newPathArray.splice(index + 1, newPathArray.length - index - 1);
+              newPathArray.splice(index, newPathArray.length - index);
               getDirContents(newPathArray);
             };
 

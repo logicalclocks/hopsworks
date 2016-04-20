@@ -56,4 +56,5 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
     return query.getResultList();
   }
 
+
 }
