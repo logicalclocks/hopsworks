@@ -74,7 +74,7 @@ angular.module('hopsWorksApp')
                   jobType = 3;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
-              if (jobType == 0) {
+              if (jobType === 0) {
                 mainFileTxt = "Workflow file";
                 mainFileVal = self.currentjob.runConfig.wf.name;
                 jobDetailsTxt = "Input variables";
@@ -94,7 +94,7 @@ angular.module('hopsWorksApp')
                 mainFileTxt = "ADAM command";
                 mainFileVal = adamState.selectedCommand;
                 jobDetailsTxt = "Job arguments";
-              } else if (jobType == 3) {
+              } else if (jobType === 3) {
                 flinkState = {
                   "selectedJar": getFileName(self.currentjob.runConfig.jarPath)
                 };

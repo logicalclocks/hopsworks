@@ -8,6 +8,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJBException;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -29,15 +30,15 @@ public class YarnLogUtil {
   }
 
   /**
-   * Given aggregated yarn log path and destination path copies the desired log 
-   * type (stdout/stderr) 
-   * 
+   * Given aggregated yarn log path and destination path copies the desired log
+   * type (stdout/stderr)
+   *
    * @param fsService
    * @param dfs
    * @param src aggregated yarn log path
    * @param dst destination path to copy to
    * @param desiredLogType stderr or stdout
-   * @throws IOException 
+   * @throws IOException
    */
   public static void copyAggregatedYarnLogs(DistributedFsService fsService,
           DistributedFileSystemOps dfs, String src, String dst,
@@ -46,9 +47,10 @@ public class YarnLogUtil {
     long wait = dfs.getConf().getLong(
             YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, 86400);
     PrintStream writer = null;
+    String[] srcs;
     try {
       Result result = waitForAggregatedLogFileCreation(src, dfs, fsService);
-      src = getAggregatedLogFilePath(src, dfs);
+      srcs = getAggregatedLogFilePaths(src, dfs);
       writer = new PrintStream(dfs.create(dst));
       switch (result) {
         case FAILED:
@@ -59,7 +61,7 @@ public class YarnLogUtil {
                   + wait + " seconds.");
           break;
         case SUCCESS:
-          writeLogs(dfs, src, writer, desiredLogType);
+          writeLogs(dfs, srcs, writer, desiredLogType);
           break;
       }
     } finally {
@@ -70,7 +72,7 @@ public class YarnLogUtil {
     }
   }
 
-  private static void writeLogs(DistributedFileSystemOps dfs, String src,
+  private static void writeLogs(DistributedFileSystemOps dfs, String[] srcs,
           PrintStream writer, String desiredLogType) {
     ArrayList<AggregatedLogFormat.LogKey> containerNames = new ArrayList<>();
     AggregatedLogFormat.LogReader reader = null;
@@ -78,39 +80,46 @@ public class YarnLogUtil {
     AggregatedLogFormat.LogKey key = new AggregatedLogFormat.LogKey();
     AggregatedLogFormat.ContainerLogsReader logReader = null;
     try {
-      try {
-        reader = new AggregatedLogFormat.LogReader(dfs.getConf(), new Path(src));
-        valueStream = reader.next(key);
-        while (valueStream != null) {
-          containerNames.add(key);
+      for (String src : srcs) {
+        try {
+          reader = new AggregatedLogFormat.LogReader(dfs.getConf(),
+                  new Path(src));
           valueStream = reader.next(key);
-        }
-        reader = new AggregatedLogFormat.LogReader(dfs.getConf(), new Path(src));
-      } catch (FileNotFoundException e) {
-        LOGGER.log(Level.SEVERE,
-                "Logs not available. Aggregation may have failed.");
-        return;
-      } catch (IOException e) {
-        LOGGER.log(Level.SEVERE, "Error getting logs");
-        return;
-      }
-
-      try {
-        for (AggregatedLogFormat.LogKey containerKey : containerNames) {
-          valueStream = reader.next(key);
-          while (valueStream != null && !key.equals(containerKey)) {
+          while (valueStream != null) {
+            containerNames.add(key);
             valueStream = reader.next(key);
           }
-          if (valueStream != null) {
-            logReader = new ContainerLogsReader(valueStream);
-          }
-          if (logReader != null) {
-            readContainerLogs(logReader, writer, desiredLogType, containerKey);
-          }
+          reader = new AggregatedLogFormat.LogReader(dfs.getConf(),
+                  new Path(src));
+        } catch (FileNotFoundException e) {
+          LOGGER.log(Level.SEVERE,
+                  "Logs not available. Aggregation may have failed.");
+          return;
+        } catch (IOException e) {
+          LOGGER.log(Level.SEVERE, "Error getting logs");
+          return;
         }
 
-      } catch (IOException e) {
-        LOGGER.log(Level.SEVERE, "Error getting logs");
+        try {
+          for (AggregatedLogFormat.LogKey containerKey : containerNames) {
+            valueStream = reader.next(key);
+            while (valueStream != null && !key.equals(containerKey)) {
+              valueStream = reader.next(key);
+            }
+            if (valueStream != null) {
+              logReader = new ContainerLogsReader(valueStream);
+            }
+            if (logReader != null) {
+              readContainerLogs(logReader, writer, desiredLogType, containerKey);
+            }
+          }
+
+        } catch (IOException e) {
+          LOGGER.log(Level.SEVERE, "Error getting logs");
+        }
+        containerNames.clear();
+        key = new AggregatedLogFormat.LogKey();
+        logReader = null;
       }
     } finally {
       if (reader != null) {
@@ -169,30 +178,32 @@ public class YarnLogUtil {
     //If retain seconds not set deffault to 24hours.
     long maxWait = dfs.getConf().getLong(
             YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, 86400);
-
     long startTime = System.currentTimeMillis();
     long endTime = System.currentTimeMillis();
     long retries = 0l;
     long wait;
     long fileSize = 0l;
-    path = getAggregatedLogFilePath(path, dfs);
-    created = logFileReady(path, dfs, fsService);
+    long pFileSize = 0l;
+    String[] paths;
     while (!created && (endTime - startTime) / 1000 < maxWait) {
+      paths = getAggregatedLogFilePaths(path, dfs);
+      created = logFilesReady(paths, dfs, fsService);
+      if (created) {
+        break;//should we break the first time
+      }
+      for (String path1 : paths) {
+        fileSize += getFileLen(path1, dfs);
+      }
       wait = (long) Math.pow(2, retries);
       try {
         Thread.sleep(wait * 1000);
       } catch (InterruptedException ex) {
       }
-      if (dfs.isDir(path)) {
-        path = getAggregatedLogFilePath(path, dfs);
-      }
-      //if file is still the same size increment twice 
-      if (fileSize == getFileLen(path, dfs)) {
+      if (pFileSize == fileSize) {
         retries++;
       }
       retries++;
-      fileSize = getFileLen(path, dfs);
-      created = logFileReady(path, dfs, fsService);
+      pFileSize = fileSize;
       endTime = System.currentTimeMillis();
     }
     if ((endTime - startTime) / 1000 >= maxWait) {
@@ -207,24 +218,32 @@ public class YarnLogUtil {
   /**
    * Given a path to an aggregated log returns the full path to the log file.
    */
-  private static String getAggregatedLogFilePath(String path,
+  private static String[] getAggregatedLogFilePaths(String path,
           DistributedFileSystemOps dfs) throws IOException {
     Path location = new Path(path);
+    String[] paths;
     FileStatus[] fileStatus;
     if (!dfs.exists(path)) {
-      return path;
+      paths = new String[1];
+      paths[0] = path;
+      return paths;
     }
     if (!dfs.isDir(path)) {
-      return path;
+      paths = new String[1];
+      paths[0] = path;
+      return paths;
     }
     fileStatus = dfs.listStatus(location);
     if (fileStatus == null || fileStatus.length == 0) {
-      return path;
+      paths = new String[1];
+      paths[0] = path;
+      return paths;
     }
-    if (fileStatus.length > 1) {
-      throw new IOException("Found more than one file under path.");
+    paths = new String[fileStatus.length];
+    for (int i = 0; i < fileStatus.length; i++) {
+      paths[i] = path + File.separator + fileStatus[i].getPath().getName();
     }
-    return path + File.separator + fileStatus[0].getPath().getName();
+    return paths;
   }
 
   private static long getFileLen(String path, DistributedFileSystemOps dfs) {
@@ -247,33 +266,39 @@ public class YarnLogUtil {
     return fileStatus[0].getLen();
   }
 
-  private static boolean logFileReady(String path, DistributedFileSystemOps dfs,
+  private static boolean logFilesReady(String[] paths,
+          DistributedFileSystemOps dfs,
           DistributedFsService fsService) throws
           IOException {
-    Path location = new Path(path);
-    FileStatus[] fileStatus;
-    if (!dfs.exists(path)) {
-      return false;
-    }
-    if (dfs.isDir(path)) {
-      return false;
-    }
-    fileStatus = dfs.listStatus(location);
-    if (fileStatus == null || fileStatus.length == 0) {
-      return false;
-    }
-    if (fileStatus.length > 1) {
-      throw new IOException("Found more than one file under path.");
-    }
-    if (fileStatus[0].getLen() == 0l) {
-      return false;
-    }
-    Inode i = fsService.getInode(path);
-    if (i == null) {
-      throw new IOException("File inode does not exist.");
-    }
-    if (i.getUnderConstruction() == 1) {
-      return false;
+    for (String path : paths) {
+      Path location = new Path(path);
+      FileStatus[] fileStatus;
+      if (!dfs.exists(path)) {
+        return false;
+      }
+      if (dfs.isDir(path)) {
+        return false;
+      }
+      fileStatus = dfs.listStatus(location);
+      if (fileStatus == null || fileStatus.length == 0) {
+        return false;
+      }
+      if (fileStatus[0].getLen() == 0l) {
+        return false;
+      }
+      Inode i;
+      try {
+        i = fsService.getInode(path);
+      } catch (EJBException e) {
+        return false;
+      }
+
+      if (i == null) {
+        return false;
+      }
+      if (i.getUnderConstruction() == 1) {
+        return false;
+      }
     }
     return true;
   }
