@@ -145,6 +145,17 @@ public class DistributedFsService {
     }
     return false;
   }
+  
+  /**
+   * Get the inode for a given path.
+   * <p/>
+   * @param path
+   * @return
+   */
+  public Inode getInode(String path) {
+    Inode i = inodes.getInodeAtPath(path);
+    return i;
+  }
 
   /**
    * Get a list of the names of the child files (so no directories) of the given

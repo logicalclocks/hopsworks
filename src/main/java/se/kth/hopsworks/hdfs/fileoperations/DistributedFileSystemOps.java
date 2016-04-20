@@ -11,6 +11,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -38,6 +40,7 @@ public class DistributedFileSystemOps {
    */
   public DistributedFileSystemOps(UserGroupInformation ugi, Configuration conf) {
     this.dfs = getDfs(ugi, conf);
+    this.conf = conf;
   }
 
   private DistributedFileSystem getDfs(UserGroupInformation ugi,
@@ -136,6 +139,17 @@ public class DistributedFileSystemOps {
   public void touchz(Path location) throws IOException {
     dfs.create(location);
   }
+  
+  /**
+   * List the statuses of the files/directories in the given path if the path 
+   * is a directory.
+   * @param location
+   * @return FileStatus[]
+   * @throws IOException 
+   */
+  public FileStatus[] listStatus(Path location) throws IOException {
+    return dfs.listStatus(location);
+  }
 
   /**
    * Delete a file or directory from the file system.
@@ -147,7 +161,8 @@ public class DistributedFileSystemOps {
    * @throws IOException
    */
   public boolean rm(Path location, boolean recursive) throws IOException {
-    logger.log(Level.INFO, "dfs.toString() ----------- Deletenig as {0}", dfs.toString());
+    logger.log(Level.INFO, "Deletenig {0} as {1}", new Object[]{location.toString(),
+      dfs.toString()});
     if (dfs.exists(location)) {
       return dfs.delete(location, recursive);
     }
@@ -265,6 +280,23 @@ public class DistributedFileSystemOps {
     for (Path src1 : srcs) {
       FileUtil.copy(dfs, src1, dfs, dst, false, conf);
     }
+  }
+  
+  /**
+   * Creates a file and all parent dirs that does not exist and returns 
+   * an FSDataOutputStream
+   * @param path
+   * @return FSDataOutputStream
+   * @throws IOException 
+   */
+  public FSDataOutputStream create(String path) throws IOException {
+    Path dstPath = new Path(path);
+    String dirs = Utils.getDirectoryPart(path);
+    Path dirsPath = new Path(dirs);
+    if (!exists(dirs)) {
+      dfs.mkdirs(dirsPath);
+    }
+    return dfs.create(dstPath);
   }
 
   /**

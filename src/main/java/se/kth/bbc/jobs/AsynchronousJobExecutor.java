@@ -60,6 +60,10 @@ public class AsynchronousJobExecutor {
   public FileOperations getFileOperations() {
     return fileOperations;
   }
+  
+  public DistributedFsService getFsService() {
+    return dfs;
+  }
 
   public DistributedFileSystemOps getFileOperations(String hdfsUser) throws
           IOException {

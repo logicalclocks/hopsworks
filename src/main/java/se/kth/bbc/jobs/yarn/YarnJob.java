@@ -128,7 +128,7 @@ public abstract class YarnJob extends HopsJob {
    * between.
    */
   protected final boolean monitor() {
-      try (YarnMonitor r = monitor.start()) {
+    try (YarnMonitor r = monitor.start()) {
       if (!started) {
         throw new IllegalStateException(
                 "Trying to monitor a job that has not been started!");
@@ -219,23 +219,38 @@ public abstract class YarnJob extends HopsJob {
   protected void copyLogs() {
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
-        if (!runner.areLogPathsHdfs()) {
-          services.getFileOperations(hdfsUser.getUserName()).copyToHDFSFromLocal(true, runner.
+        if (!runner.areLogPathsHdfs() && !runner.areLogPathsAggregated()) {
+          services.getFileOperations(hdfsUser.getUserName()).
+                  copyToHDFSFromLocal(true, runner.
+                          getStdOutPath(),
+                          stdOutFinalDestination);
+        } else if (runner.areLogPathsAggregated()) {
+          YarnLogUtil.copyAggregatedYarnLogs(services.getFsService(),
+                  services.getFileOperations(hdfsUser.getUserName()), runner.
                   getStdOutPath(),
-                  stdOutFinalDestination);
+                  stdOutFinalDestination, "stdout");
+
         } else {
-          services.getFileOperations(hdfsUser.getUserName()).renameInHdfs(runner.
+          services.getFileOperations(hdfsUser.getUserName()).renameInHdfs(
+                  runner.
                   getStdOutPath(),
                   stdOutFinalDestination);
         }
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
-        if (!runner.areLogPathsHdfs()) {
-          services.getFileOperations(hdfsUser.getUserName()).copyToHDFSFromLocal(true, runner.
-                  getStdErrPath(),
-                  stdErrFinalDestination);
+        if (!runner.areLogPathsHdfs() && !runner.areLogPathsAggregated()) {
+          services.getFileOperations(hdfsUser.getUserName()).
+                  copyToHDFSFromLocal(true, runner.
+                          getStdErrPath(),
+                          stdErrFinalDestination);
+        } else if (runner.areLogPathsAggregated()) {
+          YarnLogUtil.copyAggregatedYarnLogs(services.getFsService(),
+                  services.getFileOperations(hdfsUser.getUserName()), runner.
+                  getStdOutPath(),
+                  stdErrFinalDestination, "stderr");
         } else {
-          services.getFileOperations(hdfsUser.getUserName()).renameInHdfs(runner.
+          services.getFileOperations(hdfsUser.getUserName()).renameInHdfs(
+                  runner.
                   getStdErrPath(),
                   stdErrFinalDestination);
         }
@@ -262,6 +277,7 @@ public abstract class YarnJob extends HopsJob {
     if (!proceed) {
       return;
     }
+    updateState(JobState.AGGREGATING_LOGS);
     copyLogs();
     updateState(getFinalState());
   }
@@ -269,18 +285,18 @@ public abstract class YarnJob extends HopsJob {
   @Override
   //DOESN'T WORK FOR NOW
   protected void stopJob(String appid) {
-      try {
-        YarnClient yarnClient = new YarnClientImpl();
-        yarnClient.init(conf);
-        yarnClient.start();
-        ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
-        yarnClient.killApplication(applicationId);
-      } catch (YarnException e) {
-        e.printStackTrace();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+    try {
+      YarnClient yarnClient = new YarnClientImpl();
+      yarnClient.init(conf);
+      yarnClient.start();
+      ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
+      yarnClient.killApplication(applicationId);
+    } catch (YarnException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
 
 
 
