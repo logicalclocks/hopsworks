@@ -2,7 +2,7 @@
 <div class="modal-header">
   <button class="close" ng-click="viewPublicDatasetCtrl.close()" data-dismiss="modal" aria-hidden="true"
           type="button">&times;</button>
-  <h2 class="modal-title">{{viewPublicDatasetCtrl.name}} Information</h2>
+  <h2 class="modal-title">{{viewPublicDatasetCtrl.name}}Add a Public Dataset to a Project</h2>
 </div>
 <div growl reference="21" class="pull-right"></div>
 <div class="modal-body"  ng-init="viewPublicDatasetCtrl.initProjectsList()">
@@ -10,21 +10,23 @@
 
   <form role="form" name="publicDataSetForm" 
         ng-submit="viewPublicDatasetCtrl.importDataset()" novalidate
-        class="form-validate">
+        class="form-validate">                                                                                                                              
     <div class="view-info">
       <div class="col-md-2" style="width: 20%">
         <label class="control-label">Name :</label>
         <label class="control-label">Description :</label>
       </div>
       <div class="col-md-10" style="width: 80%">
-        <label class="control-label text-muted">{{viewPublicDatasetCtrl.result.name}}</label><br>
-        <label class="control-label text-muted">{{viewPublicDatasetCtrl.result.description}}</label>
+        <label class="control-label">{{viewPublicDatasetCtrl.dataset.name}}</label><br>
+        <label class="control-label">{{viewPublicDatasetCtrl.dataset.description}}</label>
       </div>
       <br>
     </div>
-    <div class="col-xs-9" style="padding-left: 0px">
-      <label class="text-muted control-label">Projects</label>
-      <ui-select name="project_name" theme="select2"
+    <div class="row"></div>
+    <hr />
+    <div class="row" style="padding-left: 30px">
+      <label class="control-label">Projects</label>
+      <ui-select name="project_name" theme="select2" style="margin-left: 10px"
                  ng-model="viewPublicDatasetCtrl.request.projectId" style="min-width: 300px;" required>
 
         <ui-select-match placeholder="Select a project this dataset will be shared with">{{$select.selected.project.name}}</ui-select-match>
@@ -37,22 +39,20 @@
         </ui-select-choices>
 
       </ui-select><br>
-      <span ng-show="(dataSetForm.$submitted || dataSetForm.project_name.$dirty) & amp; & amp;
-                  dataSetForm.project_name.$error.required"
+      <span ng-show="(dataSetForm.$submitted || dataSetForm.project_name.$dirty) & amp;
+          & amp;
+          dataSetForm.project_name.$error.required"
             class="text-danger ng-hide">
-        Choose a project this dataset will be imported into.
+        Choose a project this dataset will be add to (imported into).
       </span>
     </div>
-</div>
-<br ng-show="viewPublicDatasetCtrl.type === 'Dataset'" style="margin:15px">
-<div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
+    <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
 
-  <button class="btn btn-default" type="button" ng-click="viewPublicDatasetCtrl.close()">Cancel</button>
-  <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.project_name.$error.required">
-    Import DataSet
-  </button>
+      <button class="btn btn-default" type="button" ng-click="viewPublicDatasetCtrl.close()">Cancel</button>
+      <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.project_name.$error.required">
+        Add DataSet
+      </button>
 
-</div>
-</form>
-
+    </div>
+  </form>
 </div>

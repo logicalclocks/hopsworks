@@ -13,6 +13,7 @@ angular.module('hopsWorksApp')
             self.files = []; //A list of files currently displayed to the user.
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
+            self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
             self.selected = null; //The index of the selected file in the files array.
             self.selectedList = []; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
@@ -96,24 +97,29 @@ angular.module('hopsWorksApp')
             });
 
             self.isShared = function () {
-
-              var topLevel = self.pathArray[0];
-              if ((topLevel.indexOf("::") > -1)) {
-                return true;
+              var top = self.pathArray[0].split("::");
+              if (top.length === 1) {
+                return false;
               }
-              return false;
+              return true;
             };
-
-            self.pathSharedDs = function () {
-              if (self.pathArray === null || self.pathArray.length === 0) {
-                return '';
+            
+            self.sharedDatasetPath = function () {
+              var top = self.pathArray[0].split("::");
+              if (top.length === 1) {
+                self.sharedPathArray = [];
+                return;
               }
-              var topLevel = self.pathArray[0];
-              if ((topLevel.indexOf("::") === -1)) {
-                self.sharedPath = "";
+              // /proj::shared_ds/path/to  -> /proj/ds/path/to
+              // so, we add '1' to the pathLen
+              self.sharedPathArray = new Array(self.pathArray.length + 1);
+              self.sharedPathArray[0] = top[0];
+              self.sharedPathArray[1] = top[1];
+              for (var i=1; i<pathArray.length; i++ ) {
+                self.sharedPathArray[i+1] = pathArray[i];
               }
-              self.sharedPath = topLevel.replace("::", "/");
-            };
+              return self.sharedPathArray;
+            };            
 
 
             /*

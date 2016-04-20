@@ -9,23 +9,23 @@
 
   <div ng-show="mainCtrl.searchReturned === ''" class="row" style="min-width: 1500px">
 
-    <div class="col-sm-2 col-md-2">
-      <div class="col-md-10 sidebar pull-left" style="min-width: 290px; max-width: 290px">
+    <div class="col-sm-2 col-md-2" style="margin-left: -70px;">
+      <div class="col-md-10 sidebar pull-left" style="min-width: 280px; max-width: 280px">
 
 
         <div class="list-group">
           <a href="" class="list-group-item active">Help</a>
-          <a href="" ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.getTours();" class="list-group-item">
+          <a href="" ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.getTours();" class="list-group-item"
+             ng-class="{'tour-highlight': homeCtrl.showGettingStarted()}">
             <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showTours, 'glyphicon-triangle-bottom':homeCtrl.showTours}"></span>
             Tours
             <span class="glyphicon glyphicon-expand pull-right"></span>
             <div ng-show="homeCtrl.showTours" ng-repeat="tour in homeCtrl.tours">              
-              <button style="margin: 0px; padding-bottom: 5px; padding-top: 5px; padding-left: 0px; padding-right: 0px;" uib-popover="tour.tip"
+              <button style="margin: 0px; padding-bottom: 5px; padding-top: 5px; padding-left: 0px; padding-right: 0px;" uib-popover="Take a tour of Hopsworks by creating a project and running a Spark job!"
                       type="button" class="btn btn-default btn-block" ng-click="homeCtrl.createExampleProject()">
-                <span ng-hide="homeCtrl.creating === true"><b>Get Started with Hopsworks!</b></span>
-                <span class="glyphicon glyphicon-play-circle" ng-hide="homeCtrl.creating === true"></span>
-                <span ng-hide="homeCtrl.creating === false"><b>Load Example project..</b></span>
-                <span class="fa fa-spinner fa-spin" ng-hide="homeCtrl.creating === false"></span>
+                <span>{{tour.name}}</span>
+                <span style="margin-right: 5px" class="glyphicon glyphicon-play-circle pull-right" ng-hide="homeCtrl.creating === true"></span>
+                <span style="margin-right: 5px" class="fa fa-spinner fa-spin pull-right" ng-hide="homeCtrl.creating === false"></span>
               </button>
             </div>
           </a>
@@ -33,21 +33,33 @@
             <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showTutorials, 'glyphicon-triangle-bottom':homeCtrl.showTutorials}"></span>
             Tutorials
             <span class="fa fa-graduation-cap pull-right" style="margin-right: -1px;"></span>
-            <div ng-show="homeCtrl.showTutorials" ng-repeat="tutorial in homeCtrl.tutorials">              
-              {{tutorial}}
+            <div style="margin-left: 20px;" ng-show="homeCtrl.showTutorials">
+              <!--<a href="//" target="_blank">Spark on YARN</a>-->
+              Spark on YARN
+              <br>
+              Flink on YARN
+              <br>
+              Getting Started with Zeppelin
             </div>
           </a>
+          <!--            <div ng-show="homeCtrl.showTutorials" ng-repeat="tutorial in homeCtrl.tutorials">
+                          <a href="//https://ci.apache.org/projects/flink/flink-docs-master/setup/yarn_setup.html" target="_blank">Flink on YARN</a>
+                          <a href="tutorial.url" target="_blank">{{tutorial.description}}</a>
+                      </div>-->
           <a href="" ng-click="homeCtrl.showPublicDatasets = !homeCtrl.showPublicDatasets; homeCtrl.getPublicDatasets();" class="list-group-item">
             <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showPublicDatasets, 'glyphicon-triangle-bottom':homeCtrl.showPublicDatasets}"></span>
             Public Data Sets
             <span class="glyphicon glyphicon-globe pull-right" style="margin-right: 1px;"></span>
             <div ng-show="homeCtrl.showPublicDatasets" ng-repeat="dataset in homeCtrl.publicDatasets">
               <div>
-                <button style="padding-bottom: 5px; padding-top: 5px; papdding-left: 0px; padding-right: 0px;" 
+                <button style="padding-bottom: 2px; padding-top: 2px; papdding-left: 0px; padding-right: 0px;" 
                         uib-popover="Add this public dataset to one of your projects."
                         type="button" class="btn btn-default btn-block" ng-click="homeCtrl.addPublicDatasetModal(dataset.inodeId, dataset.name, dataset.description);">
-                  <span style="margin-left: 10px;" >{{dataset.name}}</span>
+                  <span>{{dataset.name}}</span>
                 </button>
+              </div>
+              <div ng-show="homeCtrl.publicDatasets.length === 0" >
+                None available.
               </div>
             </div>
           </a>
@@ -102,7 +114,7 @@
 
       </div>
     </div>
-    <div class="col-sm-4 col-md-4 col-lg-4 sidebar" style="min-width: 390px; max-width: 390px">
+    <div class="col-sm-3 col-md-3 col-lg-3 sidebar" style="min-width: 390px; max-width: 390px; margin-left: 180px;">
 
       <span class="list-group-item active">
         <span class="badge pull-left" style="margin-right: 10px;">{{homeCtrl.projects.length}}</span> Projects

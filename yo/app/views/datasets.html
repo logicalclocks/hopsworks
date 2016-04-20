@@ -23,7 +23,7 @@
             <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
               <h3>
                 <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
-                  <button class="btn btn-success" ng-click="datasetsCtrl.newDataSetModal()" dropdown-toggle type="button" id="newDataSet" aria-haspopup="true" aria-expanded="true">
+                  <button class="btn btn-sm btn-success" ng-click="datasetsCtrl.newDataSetModal()" dropdown-toggle type="button" id="newDataSet" aria-haspopup="true" aria-expanded="true">
                     Create New DataSet
                   </button>
                 </div>
@@ -104,7 +104,7 @@
                                                     </div>-->
                       <div class="dropdown position-fixed" id="menu-{{$index}}">
                         <ul class="dropdown-menu dropdown-amore">
-                          <li ng-show="projectCtrl.role === 'Data owner'">
+                          <li ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === false">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="1"
@@ -113,7 +113,7 @@
                                 Remove DataSet</span>
                             </a>
                           </li>
-                          <li ng-show="projectCtrl.role === 'Data owner'">
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner'">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="2"
@@ -122,8 +122,8 @@
                                 Share DataSet</span>
                             </a>
                           </li>
-                          <li class="divider"></li>
-                          <li>
+                          <li ng-if="dataset.name.indexOf('::') === -1" class="divider"></li>
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === false">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="3"
@@ -132,7 +132,7 @@
                                 Add metadata</span>
                             </a>
                           </li>
-                          <li>
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner'  && dataset.publicDs === false">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="4"
@@ -141,8 +141,8 @@
                                 Remove metadata</span>
                             </a>
                           </li>
-                          <li class="divider"></li>
-<!--                          <li>
+                          <li ng-if="dataset.name.indexOf('::') === -1" class="divider"></li>
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner'  && dataset.publicDs === false">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="5"
@@ -150,8 +150,8 @@
                               <span><i class="fa fa-file-archive-o"></i>
                                 Compress</span>
                             </a>
-                          </li>-->
-                          <li ng-show="projectCtrl.role === 'Data owner'  && dataset.publicDs === false"s>
+                          </li>
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner'  && dataset.publicDs === false">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="6"
@@ -160,7 +160,7 @@
                                 Make Public</span>
                             </a>
                           </li>
-                          <li ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === true">
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === true">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="6"

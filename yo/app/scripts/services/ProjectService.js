@@ -57,7 +57,7 @@ angular.module('hopsWorksApp')
                 'method': 'GET'                  
               },
               "importPublicDataset": {
-                url: '/api/project/:id/importPublicDataset/:dsId',
+                url: '/api/project/:id/importPublicDataset/:projectName/:inodeId',
                 'method': 'GET'                  
               }
               
