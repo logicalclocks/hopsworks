@@ -25,8 +25,7 @@ import se.kth.bbc.project.fb.Inode;
     @NamedQuery(name = "ExecutionsInputfiles.findAll", query = "SELECT e FROM ExecutionsInputfiles e"),
     @NamedQuery(name = "ExecutionsInputfiles.findByExecutionId", query = "SELECT e FROM ExecutionsInputfiles e WHERE e.execution.id = :id"),
     @NamedQuery(name = "ExecutionsInputfiles.findByInodePid", query = "SELECT e FROM ExecutionsInputfiles e WHERE e.inode.inodePK.parentId = :parent_id"),
-    @NamedQuery(name = "ExecutionsInputfiles.findByInodeName", query = "SELECT e FROM ExecutionsInputfiles e WHERE e.inode.inodePK.name = :name"),
-    @NamedQuery(name = "ExecutionsInputfiles.findRecord", query = "SELECT e FROM ExecutionsInputfiles e WHERE e.inode.inodePK.parentId = :parentId AND e.inode.inodePK.name =:name")})
+    @NamedQuery(name = "ExecutionsInputfiles.findByInodeName", query = "SELECT e FROM ExecutionsInputfiles e WHERE e.inode.inodePK.name = :name")})
 
 public class ExecutionsInputfiles implements Serializable {
     

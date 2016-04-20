@@ -1,16 +1,16 @@
 package se.kth.hopsworks.controller;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
-import se.kth.bbc.jobs.jobhistory.ExecutionsInputfiles;
+import se.kth.bbc.jobs.jobhistory.JobsHistoryFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.project.fb.Inode;
@@ -38,9 +38,13 @@ public class ExecutionController {
   private InodeFacade inodes;
   @EJB
   private ExecutionInputfilesFacade execInputFilesFacade;
+  @EJB
+  private ActivityFacade activityFacade;
+  @EJB
+  private JobsHistoryFacade jobHistoryFac;
   
   final Logger logger = LoggerFactory.getLogger(ExecutionController.class);
-  
+
   public Execution start(JobDescription job, Users user) throws IOException {
     Execution exec = null;
 
@@ -71,11 +75,10 @@ public class ExecutionController {
         int inodePid = inode.getInodePK().getParentId();
         String inodeName = inode.getInodePK().getName();
         
-        List<ExecutionsInputfiles> oldRecords = execInputFilesFacade.findRecord(inodePid, inodeName);
+        execInputFilesFacade.create(execId, inodePid, inodeName);
+        jobHistoryFac.persist(job, execId, exec.getAppId());
+        activityFacade.persistActivity(activityFacade.EXECUTED_JOB + inodeName, job.getProject(), user);
         
-        if(oldRecords.isEmpty()){
-            execInputFilesFacade.create(execId, inodePid, inodeName);
-        }
         break;
       default:
         throw new IllegalArgumentException(

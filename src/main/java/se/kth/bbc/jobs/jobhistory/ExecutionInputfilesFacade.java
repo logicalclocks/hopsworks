@@ -33,24 +33,17 @@ public class ExecutionInputfilesFacade extends AbstractFacade<ExecutionsInputfil
         em.flush();
     }
     
-    public List<ExecutionsInputfiles> findExecutionInputFileByExecutionId(int executionId){
+    public ExecutionsInputfiles findExecutionInputFileByExecutionId(int id){
         TypedQuery<ExecutionsInputfiles> q = em.createNamedQuery(
             "ExecutionsInputfiles.findByExecutionId", ExecutionsInputfiles.class);
-        q.setParameter("executionId", executionId);
-        return q.getResultList();
+        q.setParameter("id", id);
+        return q.getSingleResult();
     }
     
-    public List<ExecutionsInputfiles> findExecutionInputFileByInodePid(int inodePid){
+    public List<ExecutionsInputfiles> findExecutionInputFileByInodePid(int parent_id){
         TypedQuery<ExecutionsInputfiles> q = em.createNamedQuery(
             "ExecutionsInputfiles.findByInodePid", ExecutionsInputfiles.class);
-        q.setParameter("inodePid", inodePid);
-        return q.getResultList();
-    }
-    
-    public List<ExecutionsInputfiles> findExecutionInputFileByInodePidName(int inodePid){
-        TypedQuery<ExecutionsInputfiles> q = em.createNamedQuery(
-            "ExecutionsInputfiles.findByInodePidName", ExecutionsInputfiles.class);
-        q.setParameter("parent_id", inodePid);
+        q.setParameter("parent_id", parent_id);
         return q.getResultList();
     }
     
@@ -61,11 +54,4 @@ public class ExecutionInputfilesFacade extends AbstractFacade<ExecutionsInputfil
         return q.getResultList();
     }
     
-    public List<ExecutionsInputfiles> findRecord(int inodePid, String inodeName){
-        TypedQuery<ExecutionsInputfiles> q = em.createNamedQuery(
-                "ExecutionsInputfiles.findRecord", ExecutionsInputfiles.class);
-        q.setParameter("parentId", inodePid);
-        q.setParameter("name", inodeName);
-        return q.getResultList();
-    }
 }
