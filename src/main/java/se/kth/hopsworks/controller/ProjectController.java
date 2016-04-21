@@ -193,6 +193,9 @@ public class ProjectController {
         logger.log(Level.FINE, "{0} - project created successfully.", project.
             getName());
 
+        LocalhostServices.createUserCertificates(project.getId(), user.getUid());
+            
+        certificateBean.putUserCerts(project.getId(), user.getUid());
         //Create default DataSets
         return project;
       }
