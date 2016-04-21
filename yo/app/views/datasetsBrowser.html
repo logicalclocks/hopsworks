@@ -23,22 +23,15 @@
 
             <div class="content-wrapper" ng-show="mainCtrl.searchReturned === ''">
               <h3>
-                <div class="col-md-1 pull-left" style="margin-top: -17px; margin-left: -25px;">
-                  <div class="dropdown" dropdown>
-                    <button class="btn btn-default"  dropdown-toggle type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                      <i class="glyphicon glyphicon-folder-open" style="padding-right: 10px;"></i>
-                      {{datasetsCtrl.pathArray[datasetsCtrl.pathArray.length - 1]| limitTo: 8 }}{{datasetsCtrl.pathArray[datasetsCtrl.pathArray.length-1].length > 8 ? '..' : ''}}
-                      <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu" dropdown-menu aria-labelledby="dropdownMenu1">
-                      <li><a ng-click="datasetsCtrl.newDataSetModal()">New Folder</a></li>
-                      <li><a ng-click="datasetsCtrl.uploadFile()">Upload File</a></li>
-                    </ul>
-                  </div>
+                <div class="col-md-2 pull-left" style="margin-top: -17px; margin-left: -25px;">
+                    <button type="button" class="btn btn-sm btn-success" ng-click="datasetsCtrl.newDataSetModal()">New Folder</button>
+                    <button type="button" class="btn btn-sm btn-success" ng-click="datasetsCtrl.uploadFile()">Upload File(s)</button>
                 </div>
-                <div class="col-md-3" style="margin-left: 10px;">
-                  <span data-ng-repeat="path in datasetsCtrl.pathArray.slice(datasetsCtrl.pathArray.length - datasetsCtrl.breadcrumbLen()) track by $index">
-                    <span ng-show="$index > 0">> </span><a ng-click="datasetsCtrl.goToFolder($index)">{{path| limitTo: 8 }}{{path.length > 8 ? '..' : ' '}}</a>
+                <div class="col-md-9" style="margin-left: 10px;">
+                  <a ng-click="datasetsCtrl.goToDataSetsDir()">DataSets</a>
+                  <span ng-show="datasetsCtrl.pathArray.length > 10">...</span>
+                  <span data-ng-repeat="path in datasetsCtrl.pathArray.slice(datasetsCtrl.pathArray.length -1 - datasetsCtrl.breadcrumbLen()) track by $index">
+                    <span>> </span><a ng-click="datasetsCtrl.goToFolder($index+1)">{{path| limitTo: 16 }}{{path.length > 16 ? '..' : ' '}}</a>
                   </span>
                 </div>
 
@@ -47,30 +40,30 @@
                          class="form-control" placeholder="Filter" 
                          style="margin-top: -17px; ">
                 </div>                
-                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 12px;" ng-show="datasetsCtrl.fileDetail !== null">
-                  <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{projectCtrl.currentProject.projectName}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
-                    <button style="margin-left: 0px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
-                            data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
-                    </button>        
-                </div>
-          <!-- shared datasets link -->
-                <div class="col-md-6" style="margin-top: -15px; margin-right: -40px; font-size: 16px;" ng-show="datasetsCtrl.sharedPath !== ''">
-                  <span id="sharedfileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{datasetsCtrl.sharedPath}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index" ng-show="$index > 1">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
-                    <button style="margin-left: 0px;" class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
-                            data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
-                    </button>        
-                </div>                
-</span>
                 
-                <div class="col-md-1 pull-right" style="margin-top: -18px;">
+              </h3>
+              <h3>           
+                <div class="col-md-11" style="margin-bottom: 10px; margin-left: -25px; margin-top: -15px;font-size: 16px;" ng-show="datasetsCtrl.fileDetail !== null && datasetsCtrl.fileDetail.dir == false && !datasetsCtrl.isShared()">
+                    <button style="margin-left: 0px; " class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
+                            data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
+                    </button>        
+                  <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{projectCtrl.currentProject.projectName}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
+                </div>
+                <div class="col-md-11" style="margin-bottom: 10px; margin-left: -25px; margin-top: -15px;font-size: 16px;" ng-show="datasetsCtrl.fileDetail !== null && datasetsCtrl.fileDetail.dir == false && datasetsCtrl.isShared()">
+                    <button style="margin-left: 0px; " class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
+                            data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
+                    </button>        
+                  <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects<span data-ng-repeat="path in datasetsCtrl.sharedPathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
+                </div>
+                <div class="col-md-1 pull-right" style="margin-top: -15px;">
                   <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()"></hamburger-toggle>
                 </div>
-              </h3>
+</h3>
             </div>
 
-            <div class="row row-no-margin-left" ng-show="mainCtrl.searchReturned === ''">
+            <div class="row row-no-margin-left" ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">
               <div class="col-lg-12">
-                <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: 5px;">
+                <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: -5px;">
                   <div class="table-responsive" style="overflow: hidden;">
                     <table class="table table-bordred table-hover" >
 
@@ -104,7 +97,7 @@
                         <tr
                           dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:50"
                           context-menu
-                          ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.pathSharedDs();" 
+                          ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath(); " 
                           ng-dblclick="datasetsCtrl.openDir(file)"
                           data-target="menu-{{ $index}}"
                           ng-class="{ 'highlight': datasetsCtrl.selected === $index, 'expanded': expanded }"
@@ -222,8 +215,8 @@
 
 
                 <!--<div class="col-lg-4" style="border-left: 1px dashed lightgrey; padding-left: 0px;">-->
-                <div class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
-                  <div class="ibox float-e-margins" style="margin-bottom: -25px; height: 95%;">
+                <div style="margin-top: 20px; height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
+                  <div class="ibox float-e-margins" style="margin-top: 11px; margin-bottom: -25px; height: 95%;">
                     <div class="file-manager">
                       <div>
                         <!--<md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">-->
@@ -268,10 +261,10 @@
                                       <span style=" color: #757575; font-size: 12px; padding-left: 5px;"> {{datasetsCtrl.fileDetail.email}}</span>
                                     </td>
                                   </tr>
-                                  <tr style="background-color: #fafafa">
+<!--                                  <tr style="background-color: #fafafa">
                                     <td style="color:lightgrey;">Permission</td>
                                     <td style="color: grey;">{{datasetsCtrl.fileDetail.permission}}</td>
-                                  </tr>
+                                  </tr>-->
                                 </table>
 
                               </md-content>

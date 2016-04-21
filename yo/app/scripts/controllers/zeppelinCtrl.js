@@ -12,7 +12,7 @@ angular.module('hopsWorksApp')
             self.tutorialNotes = [];
             self.notes = [];
             self.transition = false;
-            $scope.tgState = false;
+            $scope.tgState = true;
             var projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
             

@@ -161,6 +161,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     return q.getResultList();
   }
 
+
   /**
    * Get all the activities performed on by user <i>user</i>.but paginated.Items
    * from
