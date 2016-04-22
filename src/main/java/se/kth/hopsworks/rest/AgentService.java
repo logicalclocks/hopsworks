@@ -45,7 +45,7 @@ public class AgentService {
             String certificate = "no certificate";
             if (json.has("csr")) {
                 String csr = json.getString("csr");
-                certificate = PKIUtils.signWithServerCertificate(csr);
+//                certificate = PKIUtils.signWithServerCertificate(csr);
             }
 
             return Response.ok(certificate).build();
