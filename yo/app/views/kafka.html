@@ -20,43 +20,45 @@
           </div>
 
           <div class="panel panel-default">
-           <div class="panel-heading">
+            <div class="panel-heading">
               <h3 class="panel-title">Kafka Topics</h3>
             </div>
             <div class="panel-body">
-                <table                      style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
-                  <tr>
-                    <th>Topic Name</th>
-                    <th>Action</th>
-                  </tr>
+              <table style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
+                <tr>
+                  <th>Topic</th>
+                </tr>
 
-                  <tr ng-repeat = "topic kafkaCtrl.topics | orderBy:'topic'">
-                    <td>{{ topic}}</td>
-                    <td>
-                      <span class="field-info" tooltip="Details"
-                            style="padding-top: 5px;padding-left:3px">
-                        <button style=""
-                                ng-click="jobsCtrl.toggle(job, $index); kafkaCtrl.showDetails(topic); $event.stopPropagation();"
-                                class="btn btn-info glyphicon glyphicon-list-alt">
-                        </button>
-                      </span>
-                      <span class="field-info" tooltip="Delete"
-                            style="padding-top: 5px;padding-left:3px">
-                        <button style="margin-left: 10px"
-                                ng-click="kafkaCtrl.toggle(job, $index); kafkaCtrl.deleteJob(topic.topic); $event.stopPropagation();"
-                                class="btn btn-danger glyphicon glyphicon-trash">
-                        </button>
-                      </span>
-
-
-
-                    </td>
-                  </tr>
-                </table>
+                <tr ng-repeat = "topic in kafkaCtrl.topics| orderBy:'topic'">
+                  <td>
+                    <span>{{ topic.name}}</span>
+                    <!--<td><span class="glypicon glyphicon-plus" ng-click="kafkaCtrl.showTopicDetails(topic)"></span></td>-->
+                    <span class="field-info" tooltip="Add Rule Modals"
+                          style="padding-top: 5px;padding-left:3px">
+                      <button style=""
+                              ng-click="jobsCtrl.toggle(job, $index); kafkaCtrl.showTopicDetails(topic); $event.stopPropagation();"
+                              class="btn btn-info glyphicon glyphicon-list-alt">
+                      </button>
+                    </span>
+                    <span class="field-info" tooltip="Delete"
+                          style="padding-top: 5px;padding-left:3px">
+                      <button style="margin-left: 10px"
+                              ng-click="kafkaCtrl.toggle(job, $index); kafkaCtrl.deleteJob(topic.topic); $event.stopPropagation();"
+                              class="btn btn-danger glyphicon glyphicon-trash">
+                      </button>
+                    </span>
+                    <table style="background-color:#FFFFFF;">
+                      <tr ng-repeat = "rule in topic.rules">
+                        <td>{{rule}}</td>
+                        <td>Remove</td>
+                      </tr>
+                    </table>
+                </tr>
+              </table>
 
 
             </div>
-            </div>
-            </section>
           </div>
-        </div> 
+          </section>
+        </div>
+      </div>
