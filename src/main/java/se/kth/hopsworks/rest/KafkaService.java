@@ -70,6 +70,7 @@ import se.kth.hopsworks.users.UserFacade;
 import io.hops.kafka.KafkaFacade;
 import io.hops.kafka.ProjectTopics;
 import io.hops.kafka.TopicDetailDTO;
+import org.mortbay.util.ajax.JSON;
 import se.kth.hopsworks.util.Settings;
 
 @RequestScoped
@@ -141,7 +142,7 @@ public class KafkaService {
   @GET
   @Path("/create/{topic}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response createTopic(@PathParam("topic") String topicName,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -161,7 +162,7 @@ public class KafkaService {
   @GET
   @Path("/remove/{topic}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response removeTopic(@PathParam("name") String topicName,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -195,5 +196,43 @@ public class KafkaService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         topic).build();
   }
+  
+ 
+  @GET
+  @Path("/share/{topic}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response shareTopic(@PathParam("name") String topicName,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException, Exception {
+    JsonResponse json = new JsonResponse();
+    if (projectId == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Incomplete request!");
+    }
 
+    kafkaFacade.shareTopicToProject(topicName, project);
+    json.setSuccessMessage("The topic has been shared.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        json).build();
+  }
+  
+  @GET
+  @Path("/removeshare/{topic}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response removeSharedTopic(@PathParam("name") String topicName,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException, Exception {
+    JsonResponse json = new JsonResponse();
+    if (projectId == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Incomplete request!");
+    }
+
+    kafkaFacade.removeSharedTopicFromProject(topicName, project);
+    json.setSuccessMessage("Topic has been removd from shared.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        json).build();
+  }
 }
