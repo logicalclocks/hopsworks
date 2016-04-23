@@ -24,37 +24,100 @@
               <h3 class="panel-title">Kafka Topics</h3>
             </div>
             <div class="panel-body">
-              <table style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
-                <tr>
-                  <th>Topic</th>
-                </tr>
 
-                <tr ng-repeat = "topic in kafkaCtrl.topics| orderBy:'topic'">
-                  <td>
-                    <span>{{ topic.name}}</span>
-                    <!--<td><span class="glypicon glyphicon-plus" ng-click="kafkaCtrl.showTopicDetails(topic)"></span></td>-->
-                    <span class="field-info" tooltip="Add Rule Modals"
-                          style="padding-top: 5px;padding-left:3px">
-                      <button style=""
-                              ng-click="jobsCtrl.toggle(job, $index); kafkaCtrl.showTopicDetails(topic); $event.stopPropagation();"
-                              class="btn btn-info glyphicon glyphicon-list-alt">
-                      </button>
-                    </span>
-                    <span class="field-info" tooltip="Delete"
-                          style="padding-top: 5px;padding-left:3px">
-                      <button style="margin-left: 10px"
-                              ng-click="kafkaCtrl.toggle(job, $index); kafkaCtrl.deleteJob(topic.topic); $event.stopPropagation();"
-                              class="btn btn-danger glyphicon glyphicon-trash">
-                      </button>
-                    </span>
-                    <table style="background-color:#FFFFFF;">
-                      <tr ng-repeat = "rule in topic.rules">
-                        <td>{{rule}}</td>
-                        <td>Remove</td>
-                      </tr>
-                    </table>
-                </tr>
-              </table>
+
+
+              <div>
+
+                <button type="button" ng-click="kafkaCtrl.createTopic()" class="btn btn-sm btn-success">
+                  <i class="glyphicon glyphicon-plus">
+                  </i> Create a Topic
+                </button> <div> <input type="text" ng-model="kafkaCtrl.topicName"> </div>
+
+                <table st-table="displayedCollection" st-safe-src="rowCollection" class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th st-sort="topicName">Topic Name</th>
+                      <!--                      <th st-sort="createDate">Created On</th>
+                                            <th st-sort="size">Size</th>-->
+                    </tr>
+<!--                    <tr>
+                      <th colspan="5"><input st-search="" class="form-control" placeholder="search ..." type="text"/></th>
+                    </tr>-->
+                  </thead>
+                  <tbody>
+                    <tr st-select-row="row" st-select-mode="multiple" ng-repeat="row in kafkaCtrl.topics">
+                      <td>{{row.name}}
+                        <br>
+                        <!--                      <td>{{topic.createdOn}}</td>
+                                              <td>1000</td>-->
+
+                        <table ng-show="row.isSelected">
+                          <tr ng-repeat="acl in topic">
+                            <td>{{acl.username}}</td>
+                            <td>{{acl.permission_type}}</td>
+                            <td>{{acl.operation_type}}</td>
+                            <td>{{acl.host}}</td>
+                            <td>{{acl.role}}</td>
+                            <td>{{acl.shared}}</td>
+                      <td>
+                        <button type="button" ng-click="kafkaCtrl.addAcl(row.id, )" class="btn btn-sm btn-danger">
+                          <i class="glyphicon glyphicon-remove-circle">
+                          </i>
+                        </button>
+                      </td>                            
+                          </tr>
+                        </table>
+
+                      </td>
+                      <td>
+                        <button type="button" ng-click="kafkaCtrl.removeTopic(row.name)" class="btn btn-sm btn-danger">
+                          <i class="glyphicon glyphicon-remove-circle">
+                          </i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+              </div>              
+
+
+
+              <!--              
+                            
+                            
+                            <table style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
+                              <tr>
+                                <th>Topic</th>
+                              </tr>
+              
+                              <tr ng-repeat = "topic in kafkaCtrl.topics| orderBy:'topic'">
+                                <td>
+                                  <span>{{ topic.name}}</span>
+                                  <td><span class="glypicon glyphicon-plus" ng-click="kafkaCtrl.showTopicDetails(topic)"></span></td>
+                                  <span class="field-info" tooltip="Add Rule Modals"
+                                        style="padding-top: 5px;padding-left:3px">
+                                    <button style=""
+                                            ng-click="jobsCtrl.toggle(job, $index); kafkaCtrl.showTopicDetails(topic); $event.stopPropagation();"
+                                            class="btn btn-info glyphicon glyphicon-list-alt">
+                                    </button>
+                                  </span>
+                                  <span class="field-info" tooltip="Delete"
+                                        style="padding-top: 5px;padding-left:3px">
+                                    <button style="margin-left: 10px"
+                                            ng-click="kafkaCtrl.toggle(job, $index); kafkaCtrl.deleteJob(topic.topic); $event.stopPropagation();"
+                                            class="btn btn-danger glyphicon glyphicon-trash">
+                                    </button>
+                                  </span>
+                                  <table style="background-color:#FFFFFF;">
+                                    <tr ng-repeat = "rule in topic.rules">
+                                      <td>{{rule}}</td>
+                                      <td>Remove</td>
+                                    </tr>
+                                  </table>
+                              </tr>
+                            </table>-->
 
 
             </div>
