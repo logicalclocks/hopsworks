@@ -231,7 +231,61 @@ public class KafkaService {
     }
 
     kafkaFacade.removeSharedTopicFromProject(topicName, project);
-    json.setSuccessMessage("Topic has been removd from shared.");
+    json.setSuccessMessage("Topic has been removed from shared.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        json).build();
+  }
+  
+  @GET
+  @Path("/addtopicacls/{acls}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response addAclsToTopic(@PathParam("name") String topicName,
+          @PathParam("username") String userName,
+          @PathParam("permission_type") String permissionType,
+          @PathParam("operation_type") String operationType,
+          @PathParam("host") String host,
+          @PathParam("role") String role,
+          @PathParam("shared") String shared,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException, Exception {
+    JsonResponse json = new JsonResponse();
+    if (projectId == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Incomplete request!");
+    }
+
+    kafkaFacade.addAclsToTopic(topicName, userName, permissionType,
+            operationType, host, role, shared);
+    
+    json.setSuccessMessage("Topic acls has been added.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        json).build();
+  }
+  
+  @GET
+  @Path("/removetopicacls/{acls}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response removeAclsToTopic(@PathParam("name") String topicName,
+          @PathParam("username") String userName,
+          @PathParam("permission_type") String permissionType,
+          @PathParam("operation_type") String operationType,
+          @PathParam("host") String host,
+          @PathParam("role") String role,
+          @PathParam("shared") String shared,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException, Exception {
+    JsonResponse json = new JsonResponse();
+    if (projectId == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Incomplete request!");
+    }
+
+    kafkaFacade.removeAclsFromTopic(topicName, userName, permissionType,
+            operationType, host, role, shared);
+    
+    json.setSuccessMessage("Topic acls has been removed.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         json).build();
   }
