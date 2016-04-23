@@ -55,7 +55,7 @@ public class AuthService {
 
   @GET
   @Path("session")
-  @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+  @RolesAllowed({"SYS_ADMIN", "BBC_USER", "AGENT"})
   @Produces(MediaType.APPLICATION_JSON)
   public Response session(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {

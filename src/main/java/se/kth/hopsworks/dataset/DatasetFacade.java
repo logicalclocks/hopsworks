@@ -1,12 +1,16 @@
 package se.kth.hopsworks.dataset;
 
+import java.util.ArrayList;
 import java.util.List;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.Inode;
+import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 @Stateless
@@ -14,6 +18,9 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
+
+  @EJB
+  private InodeFacade inodes;
 
   @Override
   protected EntityManager getEntityManager() {
@@ -85,6 +92,23 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     return query.getResultList();
   }
 
+  public List<DataSetDTO> findPublicDatasets() {
+    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findAllPublic",
+            Dataset.class);
+    List<Dataset> datasets = query.getResultList();
+    
+    List<DataSetDTO> ds = new ArrayList<DataSetDTO>();
+    for (Dataset d : datasets) {
+        DataSetDTO dto = new DataSetDTO();
+        dto.setDescription(d.getDescription());
+        dto.setName(d.getInode().getInodePK().getName());
+        dto.setInodeId(d.getInode().getId());
+        ds.add(dto);
+    }
+    return ds;
+  }
+  
+  
   public void persistDataset(Dataset dataset) {
     em.persist(dataset);
   }

@@ -193,6 +193,9 @@ public class ProjectController {
         logger.log(Level.FINE, "{0} - project created successfully.", project.
             getName());
 
+        LocalhostServices.createUserCertificates(project.getId(), user.getUid());
+            
+        certificateBean.putUserCerts(project.getId(), user.getUid());
         //Create default DataSets
         return project;
       }
@@ -536,7 +539,7 @@ public class ProjectController {
         
             LocalhostServices.createUserCertificates(project.getId(), newMember.getUid());
             
-            //certificateBean.putUserCerts(project.getId(), newMember.getUid());
+            certificateBean.putUserCerts(project.getId(), newMember.getUid());
        
             logger.log(Level.FINE, "{0} - member added to project : {1}.",
                 new Object[]{newMember.getEmail(),
@@ -670,9 +673,11 @@ public class ProjectController {
   }
 
   public String getYarnQuota(String name) {
-    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.
-        findByProjectName(name);
-    return Float.toString(yarnQuota.getQuotaRemaining());
+    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.findByProjectName(name);
+    if (yarnQuota != null) {
+        return Float.toString(yarnQuota.getQuotaRemaining());
+    }
+    return "";
   }
 
 //  public Long getHdfsSpaceQuotaInBytes(String name) throws AppException {

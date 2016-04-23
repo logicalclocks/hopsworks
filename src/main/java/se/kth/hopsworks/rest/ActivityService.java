@@ -57,6 +57,27 @@ public class ActivityService {
   }
 
   @GET
+  @Path("/inode")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response findByInode(@QueryParam("inodeId") int inodeId, 
+          @QueryParam("from") int from,
+          @QueryParam("to") int to,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) {
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
+    GenericEntity<List<Activity>> projectActivities
+            = new GenericEntity<List<Activity>>(activityDetails) {
+            };
+
+    Response r = noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            projectActivities).build();
+    return r;
+  }
+  
+  
+  
+  @GET
   @Path("/query")
   @Produces(MediaType.APPLICATION_JSON)
   public Response findPaginatedByUser(@QueryParam("from") int from,

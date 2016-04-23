@@ -20,6 +20,10 @@ public class PolicyDecisionPoint {
     return userManager.findGroups(user.getUid()).contains(BBCGroup.BBC_ADMIN.
             name());
   }
+  
+  public boolean isInAgentRole(Users user) {
+    return userManager.findGroups(user.getUid()).contains(BBCGroup.AGENT.name());
+  }
 
   public boolean isInAuditorRole(Users user) {
     return userManager.findGroups(user.getUid()).contains(BBCGroup.AUDITOR.
