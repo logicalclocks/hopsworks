@@ -10,9 +10,11 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.projectId = $routeParams.projectID;
-            self.topics = [{name : "myTopic", acl :
-                [{ username: "bbb", permission_type: "write", operation_type: "write", host: "*", role: "*", shared: "*"}] }
-              ]; 
+            self.topics = [{"name": "myTopic", 'acl': {'id': '4563', 'username': "bbb", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}},
+              {"name": "yourTopic", 'acl': {'id': '443', 'username': "aaa", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}},
+              {"name": "thisTopic", 'acl': {'id': '123', 'username': "ccc", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}}];
+
+            self.numTopicsLeft = 0;
 
             self.currentTopic = null;
             self.topicName = "";
@@ -22,8 +24,20 @@ angular.module('hopsWorksApp')
             self.host = "*";
             self.role = "*";
             self.shared = "*";
+            self.activeId = "";
 
-            var getAllTopics = function () {
+            self.selectAcl = function (acl) {
+              self.username = acl.username;
+              self.permission_type = acl.permission_type;
+              self.operation_type = acl.operation_type;
+              self.host = acl.host;
+              self.role = acl.role;
+              self.shared = acl.shared;
+              self.activeId = acl.id;
+            };
+
+
+            self.getAllTopics = function () {
               KafkaService.getTopics(self.projectId).then(
                       function (success) {
                         self.topics = success.data;
@@ -50,8 +64,7 @@ angular.module('hopsWorksApp')
 
             self.removeTopic = function (topicId) {
               ModalService.confirm("sm", "Delete Topic (" + topicName + ")",
-                      "Do you really want to delete this topic?\n\
-                                This action cannot be undone.")
+                      "Do you really want to delete this topic? This action cannot be undone.")
                       .then(function (success) {
                         KafkaService.removeTopic(self.projectId, topicId).then(
                                 function (success) {
@@ -74,7 +87,16 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.addAcl = function (topicId, acl) {
+            self.addAcl = function (topicId) {
+              var acl = {};
+              acl.role = "*";
+              acl.topicId = topicId;
+              acl.username = self.username;
+              acl.permission_type = self.permission_type;
+              acl.operation_type = self.operation_type;
+              acl.host = self.host;
+              acl.shared = self.shared;
+
               KafkaService.addAcl(self.projectId, topicId, acl).then(
                       function (success) {
                         self.getAclsForTopic();
