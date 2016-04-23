@@ -27,6 +27,5 @@ public class TopicDTO {
   public void setTopic(String topic) {
     this.topic = topic;
   }
-  
 
 }

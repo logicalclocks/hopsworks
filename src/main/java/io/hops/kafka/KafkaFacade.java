@@ -19,7 +19,6 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 import se.kth.hopsworks.rest.AppException;
-import se.kth.hopsworks.util.LocalhostServices;
 import se.kth.hopsworks.util.Settings;
 import kafka.admin.AdminUtils;
 import kafka.common.TopicExistsException;
@@ -63,7 +62,7 @@ public class KafkaFacade {
         TypedQuery<ProjectTopics> query = em.createNamedQuery(
                 "ProjectTopics.findByProject",
                 ProjectTopics.class);
-        query.setParameter("project", project);
+        query.setParameter("project_id", project.getId());
         List<ProjectTopics> res = query.getResultList();
         List<TopicDTO> topics = new ArrayList<>();
         for (ProjectTopics pt : res) {
@@ -72,7 +71,8 @@ public class KafkaFacade {
         return topics;
     }
 
-    public TopicDetailDTO getTopicDetails(Project project, String topicName) throws AppException, Exception {
+    public TopicDetailDTO getTopicDetails(Project project, String topicName)
+            throws AppException, Exception {
         List<TopicDTO> topics = findTopicsByProject(project);
         if (topics.isEmpty()) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
@@ -81,14 +81,11 @@ public class KafkaFacade {
         for (TopicDTO topic : topics) {
             if (topic.getTopic().compareToIgnoreCase(topicName) == 0) {
                 TopicDetailDTO topicDetailDTO = getTopicDetailsfromKafkaCluster(topicName);
-                String zkIpPort = settings.getZkIp();
                 return topicDetailDTO;
             }
         }
 
-       // throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-       //         "No Kafka topics found in this project.");
-            return new TopicDetailDTO();
+        return new TopicDetailDTO();
     }
 
     private int getPort(String zkIp) {
@@ -108,28 +105,42 @@ public class KafkaFacade {
         }
     }
 
-    public Project findProjectforTopic(String topicName) throws AppException {
-        ProjectTopics pt = em.find(ProjectTopics.class, topicName);
-        if (pt == null) {
-            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), 
-                    "No project found for this Kafka topic.");
-        }
-        Project proj = pt.getProject();
-        if (proj == null) {
+    //this should return list of projects the topic belongs to as owner or shared
+    public List<Project> findProjectforTopic(String topicName) throws AppException {
+        TypedQuery<ProjectTopics> query = em.createNamedQuery(
+                "ProjectTopics.findByTopicName", ProjectTopics.class);
+        query.setParameter("topic_name", topicName);
+        
+        if (query == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "No project found for this Kafka topic.");
         }
-        return proj;
+        List<ProjectTopics> resp = query.getResultList();
+        List<Project> projects = new ArrayList<>();
+        for (ProjectTopics id : resp) {
+            Project p = em.find(Project.class, id.getId());
+            if (p != null) {
+                projects.add(p);
+            }
+        }
+        
+        if (projects.isEmpty()) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "No project found for this Kafka topic.");
+        }
+        
+        return projects;
     }
 
     public void createTopicInProject(Project project, String topicName) throws AppException {
-        ProjectTopics pt = em.find(ProjectTopics.class, topicName);
+        ProjectTopics pt = em.find(ProjectTopics.class, new ProjectTopicsPK(topicName, project.getId()));
         if (pt != null) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "Kafka topic already exists. Pick a different topic name.");
         }
 
-        // create the topic in kafka    
+        // create the topic in kafka if project is owner
+        if(pt.getOwner()){
         ZkClient zkClient = new ZkClient(getIp(settings.getZkIp()).getHostName(), 
                 10*1000, 29*1000, ZKStringSerializer$.MODULE$);
         ZkConnection zkConnection = new ZkConnection(settings.getZkIp());       
@@ -145,43 +156,66 @@ public class KafkaFacade {
         }finally{
             zkClient.close();
         }
-        
+        }
         //persist topic into database
-        pt = new ProjectTopics(topicName, project);
+        pt = new ProjectTopics(topicName, project.getId(), true);
+        em.merge(pt);
+        em.persist(pt);
+        em.flush();
+    }
+
+    public void removeTopicFromProject(Project project, String topicName) throws AppException {
+        ProjectTopics pt = em.find(ProjectTopics.class, new ProjectTopicsPK(topicName, project.getId()));
+        if (pt != null) {
+            throw new AppException(Response.Status.FOUND.getStatusCode(),
+                    "Kafka topic does not exist in database.");
+        }
+        
+        //remove topic from kafka cluster if project owns topic
+        if (pt.getOwner()) {
+            //remove from database
+            pt = new ProjectTopics(topicName, project.getId(), pt.getOwner());
+            em.remove(pt);
+            //remove from zookeeper
+            ZkClient zkClient = new ZkClient(getIp(settings.getZkIp()).getHostName(),
+                    10 * 1000, 29 * 1000, ZKStringSerializer$.MODULE$);
+            ZkConnection zkConnection = new ZkConnection(settings.getZkIp());
+            ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
+
+            try {
+                AdminUtils.deleteTopic(zkUtils, topicName);
+            } catch (TopicExistsException ex) {
+                throw new AppException(Response.Status.FOUND.getStatusCode(),
+                        "Kafka topic cannot be removed from Kafka.");
+            } finally {
+                zkClient.close();
+            }
+        }
+    }
+    
+    public void shareTopicToProject(String topicName, Project project) throws AppException {
+
+        ProjectTopics pt = em.find(ProjectTopics.class, new ProjectTopicsPK(topicName, project.getId()));
+        if (pt != null) {
+            throw new AppException(Response.Status.FOUND.getStatusCode(),
+                    "Kafka topic does not exist in database.");
+        }
+        //persist shared topic to database
+        pt = new ProjectTopics(topicName, project.getId(), false);
         em.merge(pt);
         em.persist(pt);
         em.flush();
     }
     
-//    public void createHopsUserSslCert(User user, Project project) throws IOException {
-//
-//        String stdout = LocalhostServices.createSslUserCert(user.getName(),
-//                project.getName(), settings.getGlassfishDir());
-//    }
-
-    public void removeTopicFromProject(Project project, String topicName) throws AppException {
-        ProjectTopics pt = em.find(ProjectTopics.class, topicName);
+    public void removeSharedTopicFromProject(String topicName, Project project) throws AppException{
+    
+     ProjectTopics pt = em.find(ProjectTopics.class, new ProjectTopicsPK(topicName, project.getId()));
         if (pt != null) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "Kafka topic does not exist in database.");
         }
-        pt = new ProjectTopics(topicName, project);
+        pt = new ProjectTopics(topicName, project.getId(), pt.getOwner());
         em.remove(pt);
-        
-        //remove topic from kafka cluster
-        ZkClient zkClient = new ZkClient(getIp(settings.getZkIp()).getHostName(),
-                10 * 1000, 29 * 1000, ZKStringSerializer$.MODULE$);
-        ZkConnection zkConnection = new ZkConnection(settings.getZkIp());
-        ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
-
-        try {
-            AdminUtils.deleteTopic(zkUtils, topicName);
-        } catch (TopicExistsException ex) {
-            throw new AppException(Response.Status.FOUND.getStatusCode(),
-                    "Kafka topic cannot be removed from Kafka.");
-        }finally{
-            zkClient.close();
-        }
     }
      
     public Set<String> getBrokerList() throws AppException {
@@ -252,11 +286,11 @@ public class KafkaFacade {
         Map<Integer, String> partitionLeaders = new HashMap<>();
 
         for (String seed : zkBrokerList) {
-            kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
+            kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;            
             try {
                 simpleConsumer = new SimpleConsumer(getIp(seed).getHostName(),
-                        getPort(seed), 10 * 1000, 20 * 1000, "list_topics");
-                
+                        getPort(seed), 10 * 1000, 20 * 1000, "topic_detail");
+
                 //add ssl certificate to the consumer here
                 List<String> topics = new ArrayList<>();
                 topics.add(topicName);
@@ -287,7 +321,7 @@ public class KafkaFacade {
                     }
                 }
             } catch (Exception ex) {
-                throw new Exception("Error communicating to broker: " + seed);
+                throw new Exception("Error communicating to broker: " + seed,ex);
             } finally {
                 if (simpleConsumer != null) {
                     simpleConsumer.close();

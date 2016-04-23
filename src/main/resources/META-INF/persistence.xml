@@ -55,7 +55,6 @@
     <class>se.kth.hopsworks.util.Variables</class>
     <class>io.hops.hdfs.HdfsLeDescriptors</class>
     <class>io.hops.bbc.Consents</class>
-    <class>io.hops.kafka.ProjectTopics</class>
     <class>se.kth.bbc.project.ProjectsManagement</class>
     <class>se.kth.bbc.project.ProjectPaymentsHistory</class>
     <class>se.kth.bbc.project.CharonRegisteredSites</class>
@@ -65,6 +64,10 @@
     <class>se.kth.bbc.jobs.quota.YarnProjectsQuota</class>
     <class>se.kth.bbc.jobs.quota.YarnRunningPrice</class>
     <class>se.kth.bbc.jobs.quota.YarnProjectsDailyCost</class>
+    <class>io.hops.kafka.TopicAcls</class>
+    <class>io.hops.kafka.Users</class>
+    <class>io.hops.kafka.Project</class>
+    <class>io.hops.kafka.ProjectTopics</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
