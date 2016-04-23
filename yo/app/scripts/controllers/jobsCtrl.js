@@ -13,12 +13,12 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.tourService = TourService;
-            this.projectId = $routeParams.projectID;
-            this.jobs; // Will contain all the jobs.
-            this.runningInfo; //Will contain run information
-            this.buttonArray = [];
-            this.workingArray = [];
-            this.jobFilter = {
+            self.projectId = $routeParams.projectID;
+            self.jobs; // Will contain all the jobs.
+            self.runningInfo; //Will contain run information
+            self.buttonArray = [];
+            self.workingArray = [];
+            self.jobFilter = {
               "creator": {
                 "email": ""
               },
@@ -26,7 +26,7 @@ angular.module('hopsWorksApp')
               "name": ""
             };
 
-            this.hasSelectJob = false;
+            self.hasSelectJob = false;
 
             self.currentjob = null;
             self.currentToggledIndex = -1;
@@ -39,7 +39,7 @@ angular.module('hopsWorksApp')
               $scope.sortKey = keyname;   //set the sortKey to the param passed
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
             };
-            this.editAsNew = function (job) {
+            self.editAsNew = function (job) {
               JobService.getConfiguration(self.projectId, job.id).then(
                       function (success) {
                         self.currentjob = job;
@@ -74,7 +74,7 @@ angular.module('hopsWorksApp')
                   jobType = 3;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
-              if (jobType == 0) {
+              if (jobType === 0) {
                 mainFileTxt = "Workflow file";
                 mainFileVal = self.currentjob.runConfig.wf.name;
                 jobDetailsTxt = "Input variables";
@@ -94,7 +94,7 @@ angular.module('hopsWorksApp')
                 mainFileTxt = "ADAM command";
                 mainFileVal = adamState.selectedCommand;
                 jobDetailsTxt = "Job arguments";
-              } else if (jobType == 3) {
+              } else if (jobType === 3) {
                 flinkState = {
                   "selectedJar": getFileName(self.currentjob.runConfig.jarPath)
                 };
@@ -155,7 +155,7 @@ angular.module('hopsWorksApp')
               });
             };
 
-            this.getRunStatus = function () {
+            self.getRunStatus = function () {
               JobService.getRunStatus(self.projectId).then(
                       function (success) {
                         self.runningInfo = success.data;
@@ -171,7 +171,7 @@ angular.module('hopsWorksApp')
               });
             };
 
-            this.createAppReport = function () {
+            self.createAppReport = function () {
               angular.forEach(self.jobs, function (temp, key) {
                 if (typeof self.runningInfo['' + temp.id] !== "undefined") {
                   if (temp.state !== self.runningInfo['' + temp.id].state) {
@@ -183,6 +183,7 @@ angular.module('hopsWorksApp')
                   temp.running = self.runningInfo['' + temp.id].running;
                   temp.state = self.runningInfo['' + temp.id].state;
                   temp.submissiontime = self.runningInfo['' + temp.id].submissiontime;
+                  temp.url = self.runningInfo['' + temp.id].url;
                 }
               });
             };
@@ -190,7 +191,7 @@ angular.module('hopsWorksApp')
             self.getRunStatus();
             self.createAppReport();
 
-            this.runJob = function (job, index) {
+            self.runJob = function (job, index) {
               var jobId = job.id;
 
               ProjectService.uberPrice({id: self.projectId}).$promise.then(
@@ -213,11 +214,12 @@ angular.module('hopsWorksApp')
                         );
 
                       }, function (error) {
-                      growl.error(error.data.errorMsg, {title: 'Could not get the current YARN price.', ttl: 10000});
-                    }
-                )};
+                growl.error(error.data.errorMsg, {title: 'Could not get the current YARN price.', ttl: 10000});
+              }
+              )
+            };
 
-            this.stopJob = function (jobId) {
+            self.stopJob = function (jobId) {
               self.stopbuttonClickedToggle(jobId, true);
               JobService.stopJob(self.projectId, jobId).then(
                       function (success) {
@@ -254,17 +256,6 @@ angular.module('hopsWorksApp')
               });
             };
 
-//            self.deleteJob=function (jobId){
-//
-//                  JobService.deleteJob(self.projectId, jobId).then(
-//                      function (success) {
-//                           getAllJobs();
-//                           self.hasSelectJob=false;
-//                           growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
-//                      }, function (error) {
-//                growl.error(error.data.errorMsg, {title: 'Failed to delete job', ttl: 15000});
-//              });
-//            };
             self.deleteJob = function (jobId, jobName) {
               ModalService.confirm("sm", "Delete Job (" + jobName + ")",
                       "Do you really want to delete this job?\n\
@@ -317,11 +308,16 @@ angular.module('hopsWorksApp')
              * Check if the jobType filter is null, and set to empty string if it is.
              * @returns {undefined}
              */
-            this.checkJobTypeFilter = function () {
+            self.checkJobTypeFilter = function () {
               if (self.jobFilter.jobType === null) {
                 self.jobFilter.jobType = "";
               }
             };
+
+            self.launchAppMasterUrl = function (trackingUrl) {
+              window.open(trackingUrl);
+            };
+
 
             /**
              * Close the poller if the controller is destroyed.

@@ -51,7 +51,7 @@ public class UserCertsFacade {
         } catch (EntityNotFoundException e) {
             e.printStackTrace();
         }
-        return null;
+        return new UserCerts();
     }
     
     public List<UserCerts> findAllCerts(){
@@ -63,7 +63,7 @@ public class UserCertsFacade {
         } catch (EntityNotFoundException e) {
             e.printStackTrace();
         }
-        return null;
+        return new ArrayList<>();
     }
     
     public List<UserCerts> findUserCertsByProjectId(int projectId) {
@@ -76,7 +76,7 @@ public class UserCertsFacade {
         } catch (EntityNotFoundException e) {
             e.printStackTrace();
         }
-        return null;
+        return new ArrayList<>();
     }
     
     public List<UserCerts> findUserCertsByUid(int uid){
@@ -89,7 +89,7 @@ public class UserCertsFacade {
         } catch (EntityNotFoundException e) {
             e.printStackTrace();
         }
-        return null;
+        return new ArrayList<>();
     } 
     
     public void persist(UserCerts uc) {
@@ -97,10 +97,16 @@ public class UserCertsFacade {
     }
     
     public void putUserCerts(int projectId, int userId){
-        File kStore = new File(Settings.CA_DIR + "/" + projectId + "__" + userId + "__kstore.jks");
-        File tStore = new File(Settings.CA_DIR + "/" + projectId + "__" + userId + "__tstore.jks");
-        FileInputStream kfin = null;
-        FileInputStream tfin = null;
+    //Checks if the User/Project combination already exists.
+     if(findUserCert(projectId, userId).getUserCert().length > 1){
+         return;
+     }
+        
+     File kStore = new File("/tmp/tempstores/" + projectId + "__" + userId + "__kstore.jks");
+     File tStore = new File("/tmp/tempstores/" + projectId + "__" + userId + "__tstore.jks");
+     
+     FileInputStream kfin = null;
+     FileInputStream tfin = null;
         
         try {
             kfin = new FileInputStream(kStore);

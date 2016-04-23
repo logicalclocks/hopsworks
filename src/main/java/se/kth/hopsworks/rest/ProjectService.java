@@ -27,6 +27,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.quota.YarnRunningPrice;
@@ -36,7 +38,9 @@ import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.services.ProjectServiceEnum;
+import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.controller.DataSetDTO;
+import se.kth.hopsworks.controller.DatasetController;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ProjectDTO;
 import se.kth.hopsworks.controller.QuotasDTO;
@@ -47,6 +51,7 @@ import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
+import se.kth.hopsworks.user.model.Users;
 
 @Path("/project")
 @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
@@ -55,243 +60,250 @@ import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectService {
 
-  @EJB
-  private ProjectFacade projectFacade;
-  @EJB
-  private ProjectController projectController;
-  @EJB
-  private NoCacheResponse noCacheResponse;
-  @Inject
-  private ProjectMembers projectMembers;
-  @Inject
-  private KafkaService kafka;
-  @Inject
-  private DataSetService dataSet;
-  @Inject
-  private LocalFsService localFs;
-  @Inject
-  private JobService jobs;
-  @Inject
-  private BiobankingService biobanking;
-  @Inject
-  private CharonService charon;
+    @EJB
+    private ProjectFacade projectFacade;
+    @EJB
+    private ProjectController projectController;
+    @EJB
+    private NoCacheResponse noCacheResponse;
+    @Inject
+    private ProjectMembers projectMembers;
+    @Inject
+    private KafkaService kafka;
+    @Inject
+    private DataSetService dataSet;
+    @Inject
+    private LocalFsService localFs;
+    @Inject
+    private JobService jobs;
+    @Inject
+    private BiobankingService biobanking;
+    @Inject
+    private CharonService charon;
+    
+    @EJB
+    private ActivityFacade activityFacade;
+    @EJB
+    private DatasetFacade datasetFacade;
+    @EJB
+    private DatasetController datasetController;
+    @EJB
+    private InodeFacade inodes;
+    @EJB
+    private HdfsUsersController hdfsUsersBean;
 
-  @EJB
-  private DatasetFacade datasetFacade;
-  @EJB
-  private InodeFacade inodes;
-  @EJB
-  private HdfsUsersController hdfsUsersBean;
+    @EJB
+    private ActivityFacade activityController;
+    @EJB
+    private UsersController usersController;
+    @EJB
+    private UserManager userManager;
 
-  @EJB
-  private ActivityFacade activityController;
-  @EJB
-  private UsersController usersController;
+    private final static Logger logger = Logger.getLogger(ProjectService.class.
+        getName());
 
-  private final static Logger logger = Logger.getLogger(ProjectService.class.
-      getName());
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.ALL})
+    public Response findAllByUser(@Context SecurityContext sc,
+        @Context HttpServletRequest req) {
 
-  @GET
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response findAllByUser(@Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+        // Get the user according to current session and then get all its projects
+        String email = sc.getUserPrincipal().getName();
+        List<ProjectTeam> list = projectController.findProjectByUser(email);
+        GenericEntity<List<ProjectTeam>> projects
+            = new GenericEntity<List<ProjectTeam>>(list) {
+        };
 
-    // Get the user according to current session and then get all its projects
-    String email = sc.getUserPrincipal().getName();
-    List<ProjectTeam> list = projectController.findProjectByUser(email);
-    GenericEntity<List<ProjectTeam>> projects
-        = new GenericEntity<List<ProjectTeam>>(list) {
-    };
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        projects).build();
-  }
-
-  @GET
-  @Path("/getAll")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response getAllProjects(@Context SecurityContext sc,
-      @Context HttpServletRequest req) {
-
-    List<Project> list = projectFacade.findAll();
-    GenericEntity<List<Project>> projects
-        = new GenericEntity<List<Project>>(list) {
-    };
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        projects).build();
-  }
-
-  @GET
-  @Path("/getProjectInfo/{projectName}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response getProjectByName(@PathParam("projectName") String projectName,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
-
-    ProjectDTO proj = projectController.getProjectByName(projectName);
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        proj).build();
-  }
-
-  @GET
-  @Path("getDatasetInfo/{inodeId}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response getDatasetInfo(
-      @PathParam("inodeId") Integer inodeId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
-    Inode inode = inodes.findById(inodeId);
-    if (inode == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_NOT_FOUND);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            projects).build();
     }
 
-    Inode parent = inodes.findParent(inode);
-    Project proj = projectFacade.findByName(parent.getInodePK().getName());
-    Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
+    @GET
+    @Path("/getAll")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.ALL})
+    public Response getAllProjects(@Context SecurityContext sc,
+        @Context HttpServletRequest req) {
 
-    if (ds == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_NOT_FOUND);
+        List<Project> list = projectFacade.findAll();
+        GenericEntity<List<Project>> projects
+            = new GenericEntity<List<Project>>(list) {
+        };
+
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            projects).build();
     }
 
-    List<Dataset> projectsContainingInode = datasetFacade.findByInode(inode);
-    List<String> sharedWith = new ArrayList<>();
-    for (Dataset d : projectsContainingInode) {
-      if (!d.getProjectId().getId().equals(proj.getId())) {
-        sharedWith.add(d.getProjectId().getName());
-      }
-    }
-    DataSetDTO dataset = new DataSetDTO(ds, proj, sharedWith);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        dataset).build();
-  }
+    @GET
+    @Path("/getProjectInfo/{projectName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.ALL})
+    public Response getProjectByName(@PathParam("projectName") String projectName,
+        @Context SecurityContext sc,
+        @Context HttpServletRequest req) throws AppException {
 
-  @GET
-  @Path("{id}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response findByProjectID(
-      @PathParam("id") Integer id,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+        ProjectDTO proj = projectController.getProjectByName(projectName);
 
-    // Get a specific project based on the id, Annotated so that 
-    // only the user with the allowed role is able to see it 
-    ProjectDTO proj = projectController.getProjectByID(id);
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        proj).build();
-  }
-
-  @PUT
-  @Path("{id}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response updateProject(
-      ProjectDTO projectDTO,
-      @PathParam("id") Integer id,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
-    JsonResponse json = new JsonResponse();
-    boolean updated = false;
-
-    Project project = projectController.findProjectById(id);
-    String userEmail = sc.getUserPrincipal().getName();
-
-    // Update the description if it have been chenged
-    if (project.getDescription() == null || !project.getDescription().equals(
-        projectDTO.getDescription())) {
-      projectController.updateProject(project, projectDTO, userEmail);
-
-      json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
-      updated = true;
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            proj).build();
     }
 
-    // Update the retention period if it have been chenged
-    if (project.getRetentionPeriod() == null || !project.getRetentionPeriod().equals(
-        projectDTO.getRetentionPeriod())) {
-      projectController.updateProject(project, projectDTO, userEmail);
-      activityController.persistActivity("Changed   retention period to " + projectDTO.getRetentionPeriod(), project, userEmail);
-      json.setSuccessMessage(ResponseMessages.PROJECT_RETENTON_CHANGED);
-      updated = true;
+    @GET
+    @Path("getDatasetInfo/{inodeId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.ALL})
+    public Response getDatasetInfo(
+        @PathParam("inodeId") Integer inodeId,
+        @Context SecurityContext sc,
+        @Context HttpServletRequest req) throws AppException {
+        Inode inode = inodes.findById(inodeId);
+        if (inode == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                ResponseMessages.DATASET_NOT_FOUND);
+        }
+
+        Inode parent = inodes.findParent(inode);
+        Project proj = projectFacade.findByName(parent.getInodePK().getName());
+        Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
+
+        if (ds == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                ResponseMessages.DATASET_NOT_FOUND);
+        }
+
+        List<Dataset> projectsContainingInode = datasetFacade.findByInode(inode);
+        List<String> sharedWith = new ArrayList<>();
+        for (Dataset d : projectsContainingInode) {
+            if (!d.getProjectId().getId().equals(proj.getId())) {
+                sharedWith.add(d.getProjectId().getName());
+            }
+        }
+        DataSetDTO dataset = new DataSetDTO(ds, proj, sharedWith);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            dataset).build();
     }
 
-    // Add all the new services
-    List<ProjectServiceEnum> projectServices = new ArrayList<>();
-    for (String s : projectDTO.getServices()) {
-      try {
-        ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
-        se.toString();
+    @GET
+    @Path("{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+    public Response findByProjectID(
+        @PathParam("id") Integer id,
+        @Context SecurityContext sc,
+        @Context HttpServletRequest req) throws AppException {
 
-        // if (s.compareToIgnoreCase(ProjectServiceEnum.BIOBANKING.toString()) == 0) {
-        //   String owner = sc.getUserPrincipal().getName();
-        //   try {
-        //     projectController.createProjectConsentFolder(owner, project);
-        //   } catch (ProjectInternalFoldersFailedException ex) {
-        //     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-        //             null, ex);
-        //     json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
-        //             + " 'consents' \n "
-        //             + json.getErrorMsg());
-        //   }
-        // }
-        // if (s.compareToIgnoreCase(ProjectServiceEnum.CHARON.toString()) == 0) {
-        //   try {
-        //     projectController.createProjectCharonFolder(project);
-        //   } catch (ProjectInternalFoldersFailedException ex) {
-        //     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-        //             null, ex);
-        //     json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
-        //             + " 'consents' \n "
-        //             + json.getErrorMsg());
-        //   }
-        // }
-        projectServices.add(se);
-      } catch (IllegalArgumentException iex) {
-        logger.log(Level.SEVERE,
-            ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
-        json.setErrorMsg(s + ResponseMessages.PROJECT_SERVICE_NOT_FOUND + "\n "
-            + json.getErrorMsg());
-      }
+        // Get a specific project based on the id, Annotated so that 
+        // only the user with the allowed role is able to see it 
+        ProjectDTO proj = projectController.getProjectByID(id);
+
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            proj).build();
     }
 
-    if (!projectServices.isEmpty()) {
-      boolean added = projectController.addServices(project, projectServices,
-          userEmail);
-      if (added) {
-        json.setSuccessMessage(ResponseMessages.PROJECT_SERVICE_ADDED);
-        updated = true;
-      }
+    @PUT
+    @Path("{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response updateProject(
+        ProjectDTO projectDTO,
+        @PathParam("id") Integer id,
+        @Context SecurityContext sc,
+        @Context HttpServletRequest req) throws AppException {
+        JsonResponse json = new JsonResponse();
+        boolean updated = false;
+
+        Project project = projectController.findProjectById(id);
+        String userEmail = sc.getUserPrincipal().getName();
+
+        // Update the description if it have been chenged
+        if (project.getDescription() == null || !project.getDescription().equals(
+            projectDTO.getDescription())) {
+            projectController.updateProject(project, projectDTO, userEmail);
+
+            json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
+            updated = true;
+        }
+
+        // Update the retention period if it have been chenged
+        if (project.getRetentionPeriod() == null || !project.getRetentionPeriod().equals(
+            projectDTO.getRetentionPeriod())) {
+            projectController.updateProject(project, projectDTO,
+                userEmail);
+            activityController.persistActivity("Changed   retention period to " + projectDTO.getRetentionPeriod(), project, userEmail);
+            json.setSuccessMessage(ResponseMessages.PROJECT_RETENTON_CHANGED);
+            updated = true;
+        }
+
+        // Add all the new services
+        List<ProjectServiceEnum> projectServices = new ArrayList<>();
+        for (String s : projectDTO.getServices()) {
+            try {
+                ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
+                se.toString();
+
+                // if (s.compareToIgnoreCase(ProjectServiceEnum.BIOBANKING.toString()) == 0) {
+                //   String owner = sc.getUserPrincipal().getName();
+                //   try {
+                //     projectController.createProjectConsentFolder(owner, project);
+                //   } catch (ProjectInternalFoldersFailedException ex) {
+                //     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+                //             null, ex);
+                //     json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
+                //             + " 'consents' \n "
+                //             + json.getErrorMsg());
+                //   }
+                // }
+                // if (s.compareToIgnoreCase(ProjectServiceEnum.CHARON.toString()) == 0) {
+                //   try {
+                //     projectController.createProjectCharonFolder(project);
+                //   } catch (ProjectInternalFoldersFailedException ex) {
+                //     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+                //             null, ex);
+                //     json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
+                //             + " 'consents' \n "
+                //             + json.getErrorMsg());
+                //   }
+                // }
+                projectServices.add(se);
+            } catch (IllegalArgumentException iex) {
+                logger.log(Level.SEVERE,
+                    ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
+                json.setErrorMsg(s + ResponseMessages.PROJECT_SERVICE_NOT_FOUND + "\n "
+                    + json.getErrorMsg());
+            }
+        }
+
+        if (!projectServices.isEmpty()) {
+            boolean added = projectController.addServices(project, projectServices,
+                userEmail);
+            if (added) {
+                json.setSuccessMessage(ResponseMessages.PROJECT_SERVICE_ADDED);
+                updated = true;
+            }
+        }
+
+        if (!updated) {
+            json.setSuccessMessage("Nothing to update.");
+        }
+
+        return noCacheResponse.getNoCacheResponseBuilder(
+            Response.Status.CREATED).entity(json).build();
     }
 
-    if (!updated) {
-      json.setSuccessMessage("Nothing to update.");
-    }
-
-    return noCacheResponse.getNoCacheResponseBuilder(
-        Response.Status.CREATED).entity(json).build();
-  }
-
-  @POST
-  @Path("starterProject")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response starterProject(
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
-    ProjectDTO projectDTO = new ProjectDTO();
-    JsonResponse json = new JsonResponse();
-    Project project = null;
-    projectDTO.setDescription("A demo project for getting started with Spark.");
+    @POST
+    @Path("starterProject")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.ALL})
+    public Response starterProject(
+        @Context SecurityContext sc,
+        @Context HttpServletRequest req) throws AppException {
+        ProjectDTO projectDTO = new ProjectDTO();
+        JsonResponse json = new JsonResponse();
+        Project project = null;
+        projectDTO.setDescription("A demo project for getting started with Spark.");
 
     String owner = sc.getUserPrincipal().getName();
     String username = usersController.generateUsername(owner);
@@ -613,24 +625,85 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         price).build();
   }
-  
-   /**
-   *
-   * @param id
-   * @return kafka service object
-   * @throws AppException
-   */
-  @Path("{id}/kafka")
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public KafkaService kafka(
-          @PathParam("id") Integer id) throws AppException {
-    Project project = projectController.findProjectById(id);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_NOT_FOUND);
-    }
-    this.kafka.setProjectId(id);
+   
+  @GET
+  @Path("getPublicDatasets")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getPublicDatasets(
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
 
-    return this.kafka;
+      List<DataSetDTO> publicDatasets = datasetFacade.findPublicDatasets();
+
+      GenericEntity<List<DataSetDTO>> datasets
+ 	    = new GenericEntity<List<DataSetDTO>>(publicDatasets) {
+      };
+
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+          datasets).build();
+   }
+ 
+   @GET
+   @Path("{id}/importPublicDataset/{projectName}/{inodeId}")
+   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+   public Response quotasByProjectID(
+       @PathParam("id") Integer id,
+       @PathParam("projectName") String projectName,
+       @PathParam("inodeId") Integer dsId,
+       @Context SecurityContext sc,
+       @Context HttpServletRequest req) throws AppException {
+
+       Project destProj = projectController.findProjectById(id);
+       Project dsProject = projectFacade.findByName(projectName);
+
+       if (dsProject == null || destProj == null) {
+           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+               "Could not find the project or dataset.");
+       }
+       Inode inode = inodes.findById(dsId);
+       if (inode == null) {
+           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+               "Could not find the dataset.");
+       }
+       Dataset ds = datasetFacade.findByProjectAndInode(dsProject, inode);
+       if (ds == null) {
+           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+               "Could not find the dataset.");
+       }
+
+       if (ds.isPublicDs() == false) {
+           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+               ResponseMessages.DATASET_NOT_PUBLIC);
+       }
+
+       Dataset newDS = new Dataset(inode, destProj);
+       if (ds.getDescription() != null) {
+           newDS.setDescription(ds.getDescription());
+       }
+       newDS.setEditable(false);
+       datasetFacade.persistDataset(newDS);
+       Users user = userManager.getUserByEmail(sc.getUserPrincipal().getName());
+
+       activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString()
+           + " with project " + destProj.getName(), destProj, user);
+
+       hdfsUsersBean.shareDataset(destProj, ds);
+
+       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+   }
+
+   @Path("{id}/kafka")
+   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+   public KafkaService kafka(
+           @PathParam("id") Integer id) throws AppException {
+   Project project = projectController.findProjectById(id);
+   if (project == null) {
+     throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+             ResponseMessages.PROJECT_NOT_FOUND);
+   }
+   this.kafka.setProjectId(id);
+
+   return this.kafka;
   }      
 }

@@ -18,6 +18,10 @@
     <role-name>BBC_USER</role-name>
     <group-name>BBC_USER</group-name>
   </security-role-mapping>
+  <security-role-mapping>
+    <role-name>AGENT</role-name>
+    <group-name>AGENT</group-name>
+  </security-role-mapping>  
   <parameter-encoding default-charset="UTF-8"/>
   <security-role-mapping>
     <role-name>BBC_RESEARCHER</role-name>

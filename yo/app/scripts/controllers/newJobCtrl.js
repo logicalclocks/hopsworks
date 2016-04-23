@@ -522,9 +522,9 @@ angular.module('hopsWorksApp')
                             self.sparkState = stored.sparkState;
                         } else if (self.jobtype === 2) {
                             self.adamState = stored.adamState;
-			} else  if (self.jobtype == 3) {
-			    self.flinkState = stored.flinkState;
-			}
+                        } else  if (self.jobtype == 3) {
+                            self.flinkState = stored.flinkState;
+                        }copy
                         //GUI state
                         self.accordion1 = stored.accordion1;
                         self.accordion2 = stored.accordion2;

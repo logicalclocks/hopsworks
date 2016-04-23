@@ -31,6 +31,7 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.jobhistory.YarnApplicationAttemptStateFacade;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.configuration.ScheduleDTO;
 import se.kth.bbc.jobs.model.description.JobDescription;
@@ -71,6 +72,8 @@ public class JobService {
   private FileOperations fops;
   @EJB
   private JobController jobController;
+  @EJB
+  private YarnApplicationAttemptStateFacade appAttemptStateFacade;
   @EJB
   private ActivityFacade activityFacade;
 
@@ -201,7 +204,14 @@ public class JobService {
         List<Execution> executions = exeFacade.findForJob(desc);
         if (executions != null && executions.isEmpty() == false) {
           Execution execution = executions.get(0);
-          builder.add(desc.getId().toString(), Json.createObjectBuilder().add("running", false).add("state", execution.getState().toString()).add("finalStatus", execution.getFinalStatus().toString()).add("progress", execution.getProgress()).add("duration", execution.getExecutionDuration()).add("submissiontime", execution.getSubmissionTime().toString()));
+          builder.add(desc.getId().toString(), Json.createObjectBuilder()
+              .add("running", false)
+              .add("state", execution.getState().toString())
+              .add("finalStatus", execution.getFinalStatus().toString())
+              .add("progress", execution.getProgress())
+              .add("duration", execution.getExecutionDuration())
+              .add("submissiontime", execution.getSubmissionTime().toString())
+          );
         }
       } catch (ArrayIndexOutOfBoundsException e) {
         logger.log(Level.WARNING, "No execution was found: " + e
@@ -215,7 +225,17 @@ public class JobService {
         if (updatedExecution != null) {
           execution = updatedExecution;
         }
-        builder.add(desc.getId().toString(), Json.createObjectBuilder().add("running", true).add("state", execution.getState().toString()).add("finalStatus", execution.getFinalStatus().toString()).add("progress", execution.getProgress()).add("duration", execution.getExecutionDuration()).add("submissiontime", execution.getSubmissionTime().toString()));
+        String trackingUrl = appAttemptStateFacade.findTrackingUrlByAppId(execution.getAppId());
+        builder.add(desc.getId().toString(), 
+            Json.createObjectBuilder()
+                .add("running", true)
+                .add("state", execution.getState().toString())
+                .add("finalStatus", execution.getFinalStatus().toString())
+                .add("progress", execution.getProgress())
+                .add("duration", execution.getExecutionDuration())
+                .add("submissiontime", execution.getSubmissionTime().toString())
+                .add("url",trackingUrl)
+                );
       } catch (ArrayIndexOutOfBoundsException e) {
         logger.log(Level.WARNING, "No execution was found: " + e
             .getMessage());

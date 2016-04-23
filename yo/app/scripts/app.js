@@ -26,7 +26,8 @@ angular.module('hopsWorksApp', [
   'ngclipboard',    
   'isteven-multi-select',
   'angularUtils.directives.dirPagination',
-  'angular-tour'
+  'angular-tour',
+  'smart-table'
 ])
     .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider',
       function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider) {

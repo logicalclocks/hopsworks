@@ -8,7 +8,8 @@ public enum BBCGroup {
   BBC_GUEST(1003),
   AUDITOR(1004),  
   SYS_ADMIN(1005),
-  BBC_USER(1006);
+  BBC_USER(1006),
+  AGENT(1007);
 
   private final int value;
 
