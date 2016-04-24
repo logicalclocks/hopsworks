@@ -106,7 +106,8 @@ public class KafkaFacade {
     }
 
     //this should return list of projects the topic belongs to as owner or shared
-    public List<Project> findProjectforTopic(String topicName) throws AppException {
+    public List<Project> findProjectforTopic(String topicName)
+            throws AppException {
         TypedQuery<ProjectTopics> query = em.createNamedQuery(
                 "ProjectTopics.findByTopicName", ProjectTopics.class);
         query.setParameter("topic_name", topicName);
@@ -132,8 +133,11 @@ public class KafkaFacade {
         return projects;
     }
 
-    public void createTopicInProject(Project project, String topicName) throws AppException {
-        ProjectTopics pt = em.find(ProjectTopics.class, new ProjectTopicsPK(topicName, project.getId()));
+    public void createTopicInProject(Project project, String topicName) 
+            throws AppException {
+        ProjectTopics pt = em.find(ProjectTopics.class, 
+                new ProjectTopicsPK(topicName, project.getId()));
+        
         if (pt != null) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "Kafka topic already exists. Pick a different topic name.");
@@ -164,8 +168,11 @@ public class KafkaFacade {
         em.flush();
     }
 
-    public void removeTopicFromProject(Project project, String topicName) throws AppException {
-        ProjectTopics pt = em.find(ProjectTopics.class, new ProjectTopicsPK(topicName, project.getId()));
+    public void removeTopicFromProject(Project project, String topicName)
+            throws AppException {
+        ProjectTopics pt = em.find(ProjectTopics.class, 
+                new ProjectTopicsPK(topicName, project.getId()));
+        
         if (pt != null) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "Kafka topic does not exist in database.");
@@ -193,9 +200,12 @@ public class KafkaFacade {
         }
     }
     
-    public void shareTopicToProject(String topicName, Project project) throws AppException {
+    public void shareTopicToProject(String topicName, Project project) 
+            throws AppException {
 
-        ProjectTopics pt = em.find(ProjectTopics.class, new ProjectTopicsPK(topicName, project.getId()));
+        ProjectTopics pt = em.find(ProjectTopics.class,
+                new ProjectTopicsPK(topicName, project.getId()));
+        
         if (pt != null) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "Kafka topic does not exist in database.");
@@ -207,10 +217,13 @@ public class KafkaFacade {
         em.flush();
     }
     
-    public void removeSharedTopicFromProject(String topicName, Project project) throws AppException{
+    public void removeSharedTopicFromProject(String topicName, Project project)
+            throws AppException{
     
-     ProjectTopics pt = em.find(ProjectTopics.class, new ProjectTopicsPK(topicName, project.getId()));
-        if (pt != null) {
+     ProjectTopics pt = em.find(ProjectTopics.class, 
+             new ProjectTopicsPK(topicName, project.getId()));
+        if (pt != null
+                ) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "Kafka topic does not exist in database.");
         }
@@ -218,6 +231,70 @@ public class KafkaFacade {
         em.remove(pt);
     }
      
+    public void addAclsToTopic(String topicName, String userName,
+            String projectName, String permission_type, String operation_type,
+            String host, String role, String shared) throws AppException {
+       
+        //get the project id
+        TypedQuery<Project> query = em.createNamedQuery("Project.findByName",
+                Project.class);
+        query.setParameter("projectname", projectName);
+        Project project  = query.getSingleResult();
+        
+        if (project == null) {
+            throw new AppException(Response.Status.FOUND.getStatusCode(),
+                    "The specified project for the topic is not in database");
+        }
+        
+        ProjectTopics pt = em.find(ProjectTopics.class, 
+                new ProjectTopicsPK(topicName, project.getId()));
+
+        if (pt == null) {
+            throw new AppException(Response.Status.FOUND.getStatusCode(),
+                    "Topic does not belong to the project.");
+        }
+
+        TopicAcls ta = new TopicAcls(pt.getId(), projectName+"__"+userName,
+                permission_type, operation_type, host, role, shared);
+        em.merge(ta);
+        em.persist(ta);
+        em.flush();
+
+    }
+
+    public void removeAclsFromTopic(String topicName, String userName,
+            String projectName, String permission_type, String operation_type, 
+            String host, String role, String shared) throws AppException {
+        
+        //get the project id
+        TypedQuery<Project> query = em.createNamedQuery("Project.findByName",
+                Project.class);
+        query.setParameter("projectname", projectName);
+        Project project  = query.getSingleResult();
+        
+        if (project == null) {
+            throw new AppException(Response.Status.FOUND.getStatusCode(),
+                    "The specified project for the topic is not in database");
+        }
+        
+        ProjectTopics pt = em.find(ProjectTopics.class, 
+                new ProjectTopicsPK(topicName, project.getId()));
+
+        if (pt == null) {
+            throw new AppException(Response.Status.FOUND.getStatusCode(),
+                    "Topic does not belong to the project.");
+        }
+
+        
+        TopicAcls acl = em.find(TopicAcls.class, 
+                new TopicAclsPK(pt.getId(), projectName+"__"+userName,
+                permission_type, operation_type, host, role));
+        
+        TopicAcls ta= new TopicAcls(pt.getId(), projectName+"__"+userName,
+                permission_type, operation_type, host, role, acl.getShared());
+        em.remove(ta);
+    }    
+    
     public Set<String> getBrokerList() throws AppException {
 
         int sessionTimeoutMs = 10 * 1000;//10 seconds
@@ -279,7 +356,8 @@ public class KafkaFacade {
         return topicList;
     }
     
-    private TopicDetailDTO getTopicDetailsfromKafkaCluster(String topicName) throws Exception {
+    private TopicDetailDTO getTopicDetailsfromKafkaCluster(String topicName)
+            throws Exception {
 
         Map<Integer, Set<String>> replicas = new HashMap<>();
         Map<Integer, Set<String>> inSync = new HashMap<>();

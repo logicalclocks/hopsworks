@@ -197,7 +197,6 @@ public class KafkaService {
         topic).build();
   }
   
- 
   @GET
   @Path("/share/{topic}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -255,7 +254,7 @@ public class KafkaService {
           "Incomplete request!");
     }
 
-    kafkaFacade.addAclsToTopic(topicName, userName, permissionType,
+    kafkaFacade.addAclsToTopic(topicName, userName, project.getName(), permissionType,
             operationType, host, role, shared);
     
     json.setSuccessMessage("Topic acls has been added.");
@@ -282,8 +281,8 @@ public class KafkaService {
           "Incomplete request!");
     }
 
-    kafkaFacade.removeAclsFromTopic(topicName, userName, permissionType,
-            operationType, host, role, shared);
+    kafkaFacade.removeAclsFromTopic(topicName, userName, project.getName(),
+            permissionType, operationType, host, role, shared);
     
     json.setSuccessMessage("Topic acls has been removed.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
