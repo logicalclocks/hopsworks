@@ -505,7 +505,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              selectProject: function (size, regex, errorMsg) {
+              selectProject: function (size, projectId, msg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/selectProject.html',
                   controller: 'SelectProjectCtrl as selectProjectCtrl',
@@ -522,16 +522,17 @@ angular.module('hopsWorksApp')
                                   return $q.reject(err);
                                 });
                       }],
-                    regex: function () {
-                      return regex;
+                    projectId: function () {
+                      return projectId;
                     },
-                    errorMsg: function () {
-                      return errorMsg;
+                    msg: function () {
+                      return msg;
                     }
                   }
                 });
                 return modalInstance.result;
-              },              jobDetails: function (size, job, projectId) {
+              },              
+              jobDetails: function (size, job, projectId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/jobDetails.html',
                   controller: 'JobDetailCtrl as jobDetailCtrl',

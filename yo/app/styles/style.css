@@ -381,3 +381,8 @@ fieldset[disabled] #tourColumn .btn-danger.active {
     display: -ms-flexbox;
     display:         flex;
 }
+
+
+.lightyellow {
+    background-color: lightyellow; 
+}

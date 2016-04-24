@@ -15,12 +15,14 @@ angular.module('hopsWorksApp')
                 'shares': [{'proj_name': 'shareOne'},{'proj_name': 'shareTwo'}]              
                  },
               {"name": "yourTopic", 'acls': [{'id': '443', 'username': "aaa", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}], 'shares': []},
-              {"name": "thisTopic", 'acls': [{'id': '123', 'username': "ccc", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}], 'shares': []}];
+              {"name": "thisTopic", 'acls': [{'id': '123', 'username': "ccc", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}], 'shares': []},
+              {"name": "emptyTopic", 'acls': [], 'shares': []}
+            ];
 
             self.maxNumTopics = 10;
             self.numTopicsUsed = 0;
 
-            self.currentTopic = null;
+            self.currentTopic = "";
             self.topicName = "";
             self.username = "";
             self.permission_type = "";
@@ -129,7 +131,7 @@ angular.module('hopsWorksApp')
             
             self.shareTopic = function(topicId) {
               ModalService.selectProject('lg', "/[^]*/",
-                      "problem selecting project").then(
+                      "Select a Project to share the topic with.").then(
                       function (success) {
                         var destProj = success;
 

@@ -25,7 +25,7 @@ angular.module('hopsWorksApp')
                 return;
               }
 
-                        ProjectService.getProjectInfo({projectName: selectedProjectName}).$promise.then(
+                        ProjectService.getProjectInfo({projectName: self.selectedProjectName}).$promise.then(
                                 function (success) {
                                   $modalInstance.close(success);
                                 }, function (error) {
