@@ -10,9 +10,9 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.projectId = $routeParams.projectID;
-            self.topics = [{"name": "myTopic", 'acl': {'id': '4563', 'username': "bbb", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}},
-              {"name": "yourTopic", 'acl': {'id': '443', 'username': "aaa", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}},
-              {"name": "thisTopic", 'acl': {'id': '123', 'username': "ccc", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}}];
+            self.topics = [{"name": "myTopic", 'acls': [{'id': '4563', 'username': "bbb", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}, {'id': '999', 'username': "hdhd", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}]},
+              {"name": "yourTopic", 'acls': [{'id': '443', 'username': "aaa", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}]},
+              {"name": "thisTopic", 'acls': [{'id': '123', 'username': "ccc", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}]}];
 
             self.numTopicsLeft = 0;
 
@@ -24,9 +24,13 @@ angular.module('hopsWorksApp')
             self.host = "*";
             self.role = "*";
             self.shared = "*";
-            self.activeId = "";
+            self.activeId = -1;
 
             self.selectAcl = function (acl) {
+              if (self.activeId === acl.id) { //unselect the current selected ACL
+                self.activeId = 0;
+                return;
+              }
               self.username = acl.username;
               self.permission_type = acl.permission_type;
               self.operation_type = acl.operation_type;
@@ -40,7 +44,7 @@ angular.module('hopsWorksApp')
             self.getAllTopics = function () {
               KafkaService.getTopics(self.projectId).then(
                       function (success) {
-                        self.topics = success.data;
+//                        self.topics = success.data;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
@@ -62,7 +66,7 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.removeTopic = function (topicId) {
+            self.removeTopic = function (topicName, topicId) {
               ModalService.confirm("sm", "Delete Topic (" + topicName + ")",
                       "Do you really want to delete this topic? This action cannot be undone.")
                       .then(function (success) {
@@ -81,9 +85,10 @@ angular.module('hopsWorksApp')
             self.getAclsForTopic = function (topicId) {
               KafkaService.getAclsForTopic(self.projectId, topicId).then(
                       function (success) {
-                        topics[topicId] = success.data;
+                        self.topics[topicId].acls = success.data;
+                        self.activeId = "";
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to get topic details', ttl: 5000});
+                growl.error(error.data.errorMsg, {title: 'Failed to get ACLs for the topic', ttl: 5000});
               });
             };
 

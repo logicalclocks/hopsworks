@@ -19,7 +19,7 @@
         <div>
           <form class="form-horizontal">
             <div class="form-group">
-              <div class="col-sm-1">
+              <div class="col-sm-2">
                 <button type="button" ng-click="kafkaCtrl.createTopic()" class="btn btn-sm btn-success btn-block control-label">
                   New Topic<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
                   </i> 
@@ -35,34 +35,40 @@
             </div>
           </form>
 
-          <table st-table="rowCollection" class="table table-striped" ng-show="">
+          <table st-table="rowCollection" class="table table-striped">
             <thead>
               <tr>
-                <th st-sort="topicName">Topic Name</th>
-                <th >Select Topic</th>
-                <th >New ACL</th>
-                <th >Remove Topic</th>
+                <th st-sort="topicName" class="col-sm-8">Topic Name</th>
+                <th class="col-sm-2"></th>
+                <th class="col-sm-2">Select Topic</th>
               </tr>
             </thead>
             <tbody>
-              <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.topics" ng-show="row.isSelected">
-                <td>{{row.name}} <br>
-                  <table ng-show="row.isSelected">
+              <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.topics">
+                <td class="col-sm-8">{{row.name}} 
+                  <br>
+                                    <button ng-show="row.isSelected" type="button" ng-click="kafkaCtrl.addAcl(row.id)" class="btn btn-sm btn-success">
+                    <i class="glyphicon glyphicon-plus">
+                    </i>
+                  </button>
+                  <br>
+                  <table ng-show="row.isSelected" class="col-sm-12">
                     <thead>
                       <tr>
-                        <th >Username</th>
-                        <th >Permission Type</th>
-                        <th >Operation Type</th>
-                        <th >Host</th>
-                        <th >Role</th>
-                        <th >Shared</th>
-                        <th >Edit</th>
+                        <th class="col-sm-3">Username</th>
+                        <th class="col-sm-1">Permission Type</th>
+                        <th class="col-sm-1">Operation Type</th>
+                        <th class="col-sm-3">Host</th>
+                        <th class="col-sm-1">Role</th>
+                        <th class="col-sm-1">Shared</th>
+                        <th class="col-sm-1">Edit</th>
+                        <th class="col-sm-1">Remove</th>
                       </tr>
                     </thead>
-                    <tr ng-repeat="acl in row">
-                      <td ng-if="kafkaCtrl.activeId !== acl.id">{{acl.username}}</td>
+                    <tr ng-repeat="acl in row.acls">
+                      <td ng-if="kafkaCtrl.activeId === -1">{{acl.username}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.username" placeholder="Username"></td>
-                      <td ng-if="kafkaCtrl.activeId !== acl.id">{{acl.permission_type}}</td>
+                      <td ng-if="kafkaCtrl.activeId === -1">{{acl.permission_type}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id">
                         <select name="permission_type" ng-model="kafkaCtrl.permission_type">
                           <option value="read">read</option>
@@ -71,7 +77,7 @@
                           <option value="*">*</option>
                         </select>
                       </td>
-                      <td ng-if="kafkaCtrl.activeId !== acl.id">{{acl.operation_type}}</td>
+                      <td ng-if="kafkaCtrl.activeId === -1">{{acl.operation_type}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id">
                         <select name="operation_type" ng-model="kafkaCtrl.operation_type">
                           <option value="read">read</option>
@@ -80,9 +86,11 @@
                           <option value="*">*</option>
                         </select>
                       </td>
-                      <td ng-if="kafkaCtrl.activeId !== acl.id">{{acl.host}}</td>
-                      <input type="text" class="form-control" id="aclHost" ng-model="kafkaCtrl.host" placeholder="Hostname (or * or subnet)">
-                      <td ng-if="kafkaCtrl.activeId !== acl.id">{{acl.role}}</td>
+                      <td ng-if="kafkaCtrl.activeId === -1">{{acl.host}}</td>
+                      <td ng-if="kafkaCtrl.activeId === acl.id">
+                        <input type="text" class="form-control" id="aclHost" ng-model="kafkaCtrl.host" placeholder="Hostname (or * or subnet)">
+                      </td>
+                      <td ng-if="kafkaCtrl.activeId === -1">{{acl.role}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id">
                         <select name="role_type" ng-model="kafkaCtrl.role">
                           <option value="Data Scientist">Data scientist</option>
@@ -90,37 +98,38 @@
                           <option value="*">*</option>
                         </select>
                       </td>
-                      <td ng-if="kafkaCtrl.activeId !== acl.id">{{acl.shared}}</td>
+                      <td ng-if="kafkaCtrl.activeId === -1">{{acl.shared}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id">
                         <select name="role_type" ng-model="kafkaCtrl.role">
                           <option value="Data Scientist">Data scientist</option>
                           <option value="Data Owner">Data owner</option>
                           <option value="*">*</option>
                         </select>
-                      </td>                      <td>
-                        <button type="button" ng-click="acl.selectedAcl = true; kafkaCtrl.selectAcl(acl)" class="btn btn-sm btn-primary">
+                      </td>                      
+                      <td ng-if="kafkaCtrl.activeId === -1 || kafkaCtrl.activeId === acl.id">
+                        <button type="button" ng-click="kafkaCtrl.selectAcl(acl)" class="btn btn-sm btn-primary">
                           Edit ACL
+                        </button>
+                      </td>
+                      <td ng-if="kafkaCtrl.activeId === acl.id">
+                        <button  type="button" ng-click="kafkaCtrl.removeAcl(row.id, acl.id)" class="btn btn-sm btn-danger">
+                          <i class="glyphicon glyphicon-remove-circle">
+                          </i>
                         </button>
                       </td>
                     </tr>
                   </table>
 
                 </td>
-                <td>
-                  <button type="button" ng-click="row.isSelected = !row.isSelected;" class="btn btn-sm btn-primary">
-                    Select
-                  </button>
-                </td>
-                <td>
-                  <button ng-show="row.isSelected" type="button" ng-click="kafkaCtrl.addAcl(row.id)" class="btn btn-sm btn-success">
-                    <i class="glyphicon glyphicon-plus">
-                    </i>
-                  </button>
-                </td>
-                <td>
+                <td class="col-sm-2" >
                   <button  type="button" ng-click="kafkaCtrl.removeTopic(row.name)" class="btn btn-sm btn-danger">
                     <i class="glyphicon glyphicon-remove-circle">
                     </i>
+                  </button>
+                </td>
+                <td class="col-sm-2">
+                  <button type="button" ng-click="row.isSelected = !row.isSelected; kafkaCtrl.activeId = -1;" class="btn btn-sm btn-primary">
+                    Select
                   </button>
                 </td>
               </tr>
