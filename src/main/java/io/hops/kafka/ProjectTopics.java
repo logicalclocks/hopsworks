@@ -39,7 +39,7 @@ import se.kth.bbc.project.Project;
     @NamedQuery(name = "ProjectTopics.findById", query = "SELECT p FROM ProjectTopics p WHERE p.id = :id"),
     @NamedQuery(name = "ProjectTopics.findByTopicName", query = "SELECT p FROM ProjectTopics p WHERE p.topicName = :topicName"),
     @NamedQuery(name = "ProjectTopics.findByOwner", query = "SELECT p FROM ProjectTopics p WHERE p.owner = :owner"),
-    @NamedQuery(name = "ProjectTopics.findByProject", query = "SELECT p FROM ProjectTopics p WHERE p.project_id = :project_id")})
+    @NamedQuery(name = "ProjectTopics.findByProject", query = "SELECT p FROM ProjectTopics p WHERE p.projectId = :projectId")})
 public class ProjectTopics implements Serializable {
 
     private static final long serialVersionUID = 1L;

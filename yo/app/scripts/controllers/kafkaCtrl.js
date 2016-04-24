@@ -10,9 +10,12 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.projectId = $routeParams.projectID;
-            self.topics = [{"name": "myTopic", 'acls': [{'id': '4563', 'username': "bbb", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}, {'id': '999', 'username': "hdhd", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}]},
-              {"name": "yourTopic", 'acls': [{'id': '443', 'username': "aaa", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}]},
-              {"name": "thisTopic", 'acls': [{'id': '123', 'username': "ccc", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}]}];
+            self.topics = [{"name": "myTopic", 
+                'acls': [{'id': '4563', 'username': "bbb", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}, {'id': '999', 'username': "hdhd", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}],
+                'shares': [{'proj_name': 'shareOne'},{'proj_name': 'shareTwo'}]              
+                 },
+              {"name": "yourTopic", 'acls': [{'id': '443', 'username': "aaa", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}], 'shares': []},
+              {"name": "thisTopic", 'acls': [{'id': '123', 'username': "ccc", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}], 'shares': []}];
 
             self.maxNumTopics = 10;
             self.numTopicsUsed = 0;
@@ -26,6 +29,7 @@ angular.module('hopsWorksApp')
             self.role = "*";
             self.shared = "*";
             self.activeId = -1;
+            self.activeShare = -1;
 
             self.selectAcl = function (acl) {
               if (self.activeId === acl.id) { //unselect the current selected ACL
@@ -121,6 +125,48 @@ angular.module('hopsWorksApp')
               });
 
             };
+            
+            
+            self.shareTopic = function(topicId) {
+              ModalService.selectProject('lg', "/[^]*/",
+                      "problem selecting project").then(
+                      function (success) {
+                        var destProj = success;
+
+                        KafkaService.shareTopic(self.projectId, topicId, destProj.projectId).then(
+                                function (success) {
+                                  growl.success(success.data.successMessage, {title: 'Topic shared successfully with project: ' + destProj.name, ttl: 2000});
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                        });
+
+
+                      }, function (error) {
+                //The user changed their mind.
+              });
+
+            };
+              
+            self.unshareTopic = function(topicId, projectName) {
+              ModalService.selectProject('lg', "/[^]*/",
+                      "problem selecting project").then(
+                      function (success) {
+                        var destProj = success;
+
+                        KafkaService.unshareTopic(self.projectId, topicId, projectName).then(
+                                function (success) {
+                                  growl.success(success.data.successMessage, {title: 'Topic share removed (unshared) rom project: ' + destProj.name, ttl: 2000});
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                        });
+
+
+                      }, function (error) {
+                //The user changed their mind.
+              });
+
+            };
+              
 
           }]);
 

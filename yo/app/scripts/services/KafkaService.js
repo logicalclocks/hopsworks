@@ -77,6 +77,28 @@ angular.module('hopsWorksApp')
                */
               removeTopic: function (projectId, topicId) {
                 return $http.delete('/api/project/' + projectId + '/topics/' + topicId + '/deleteTopic');
+              },
+              
+              /**
+               * Shares a topic with a different project.
+               * @param {type} projectId
+               * @param {type} topicId
+               * @param {type} destProjectId
+               * @returns {unresolved}
+               */
+              shareTopic: function (projectId, topicId, destProjectId) {
+                return $http.get('/api/project/' + projectId + '/topics/' + topicId + "/share/" + destProjectId);
+              },
+              
+              /**
+               * Removes a shared topic from a project - run by the Data Owner of the project that owns the topic.
+               * @param {type} projectId
+               * @param {type} topicId
+               * @param {type} destProjectId
+               * @returns {unresolved}
+               */
+              unshareTopic: function (projectId, topicId, destProjectId) {
+                return $http.delete('/api/project/' + projectId + '/topics/' + topicId + '/unshare/' + destProjectId);
               }
               
             };

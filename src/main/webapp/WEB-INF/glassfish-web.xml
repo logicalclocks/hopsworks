@@ -21,7 +21,7 @@
   <security-role-mapping>
     <role-name>AGENT</role-name>
     <group-name>AGENT</group-name>
-  </security-role-mapping>  
+  </security-role-mapping>
   <parameter-encoding default-charset="UTF-8"/>
   <security-role-mapping>
     <role-name>BBC_RESEARCHER</role-name>
