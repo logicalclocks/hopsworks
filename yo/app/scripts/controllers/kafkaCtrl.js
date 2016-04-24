@@ -14,7 +14,8 @@ angular.module('hopsWorksApp')
               {"name": "yourTopic", 'acls': [{'id': '443', 'username': "aaa", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}]},
               {"name": "thisTopic", 'acls': [{'id': '123', 'username': "ccc", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}]}];
 
-            self.numTopicsLeft = 0;
+            self.maxNumTopics = 10;
+            self.numTopicsUsed = 0;
 
             self.currentTopic = null;
             self.topicName = "";
@@ -28,7 +29,7 @@ angular.module('hopsWorksApp')
 
             self.selectAcl = function (acl) {
               if (self.activeId === acl.id) { //unselect the current selected ACL
-                self.activeId = 0;
+//                self.activeId = -1;
                 return;
               }
               self.username = acl.username;
