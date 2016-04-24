@@ -10,9 +10,12 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.projectId = $routeParams.projectID;
-            self.topics = [{name : "myTopic", acl :
-                [{ username: "bbb", permission_type: "write", operation_type: "write", host: "*", role: "*", shared: "*"}] }
-              ]; 
+            self.topics = [{"name": "myTopic", 'acls': [{'id': '4563', 'username': "bbb", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}, {'id': '999', 'username': "hdhd", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}]},
+              {"name": "yourTopic", 'acls': [{'id': '443', 'username': "aaa", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}]},
+              {"name": "thisTopic", 'acls': [{'id': '123', 'username': "ccc", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}]}];
+
+            self.maxNumTopics = 10;
+            self.numTopicsUsed = 0;
 
             self.currentTopic = null;
             self.topicName = "";
@@ -22,11 +25,27 @@ angular.module('hopsWorksApp')
             self.host = "*";
             self.role = "*";
             self.shared = "*";
+            self.activeId = -1;
 
-            var getAllTopics = function () {
+            self.selectAcl = function (acl) {
+              if (self.activeId === acl.id) { //unselect the current selected ACL
+//                self.activeId = -1;
+                return;
+              }
+              self.username = acl.username;
+              self.permission_type = acl.permission_type;
+              self.operation_type = acl.operation_type;
+              self.host = acl.host;
+              self.role = acl.role;
+              self.shared = acl.shared;
+              self.activeId = acl.id;
+            };
+
+
+            self.getAllTopics = function () {
               KafkaService.getTopics(self.projectId).then(
                       function (success) {
-                        self.topics = success.data;
+//                        self.topics = success.data;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
@@ -48,10 +67,9 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.removeTopic = function (topicId) {
+            self.removeTopic = function (topicName, topicId) {
               ModalService.confirm("sm", "Delete Topic (" + topicName + ")",
-                      "Do you really want to delete this topic?\n\
-                                This action cannot be undone.")
+                      "Do you really want to delete this topic? This action cannot be undone.")
                       .then(function (success) {
                         KafkaService.removeTopic(self.projectId, topicId).then(
                                 function (success) {
@@ -68,13 +86,23 @@ angular.module('hopsWorksApp')
             self.getAclsForTopic = function (topicId) {
               KafkaService.getAclsForTopic(self.projectId, topicId).then(
                       function (success) {
-                        topics[topicId] = success.data;
+                        self.topics[topicId].acls = success.data;
+                        self.activeId = "";
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to get topic details', ttl: 5000});
+                growl.error(error.data.errorMsg, {title: 'Failed to get ACLs for the topic', ttl: 5000});
               });
             };
 
-            self.addAcl = function (topicId, acl) {
+            self.addAcl = function (topicId) {
+              var acl = {};
+              acl.role = "*";
+              acl.topicId = topicId;
+              acl.username = self.username;
+              acl.permission_type = self.permission_type;
+              acl.operation_type = self.operation_type;
+              acl.host = self.host;
+              acl.shared = self.shared;
+
               KafkaService.addAcl(self.projectId, topicId, acl).then(
                       function (success) {
                         self.getAclsForTopic();
