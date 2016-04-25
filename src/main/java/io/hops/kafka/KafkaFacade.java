@@ -231,7 +231,11 @@ public class KafkaFacade {
         em.remove(pt);
     }
      
-    public void addAclsToTopic(String topicName, String userName,
+    public void addAclsToTopic(String topicName, String projectName, AclDTO dto) throws AppException {
+        addAclsToTopic(topicName, dto.getUsername(), projectName, dto.getPermissionType(), 
+            dto.getOperationType(), dto.getHost(), dto.getRole(), dto.getShared());
+    }
+    private void addAclsToTopic(String topicName, String userName,
             String projectName, String permission_type, String operation_type,
             String host, String role, String shared) throws AppException {
        

@@ -11,24 +11,36 @@ package io.hops.kafka;
  */
 public class AclDTO {
     
-    String topic_Name;
-    String user_id;
-    String permission_type;
-    String operation_type;
-    String host;
-    String role;
-    String shared;
+    private int id;
+    private String topicName;
+    private String username;
+    private String permissionType;
+    private String operationType;
+    private String host;
+    private String role;
+    private String shared;
 
+    public AclDTO() {
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+    
     public String getHost() {
         return host;
     }
 
-    public String getOperation_type() {
-        return operation_type;
+    public String getOperationType() {
+        return operationType;
     }
 
-    public String getPermission_type() {
-        return permission_type;
+    public String getPermissionType() {
+        return permissionType;
     }
 
     public String getRole() {
@@ -39,24 +51,24 @@ public class AclDTO {
         return shared;
     }
 
-    public String getTopic_Name() {
-        return topic_Name;
+    public String getTopicName() {
+        return topicName;
     }
 
-    public String getUser_id() {
-        return user_id;
+    public String getUsername() {
+        return username;
     }
 
     public void setHost(String host) {
         this.host = host;
     }
 
-    public void setOperation_type(String operation_type) {
-        this.operation_type = operation_type;
+    public void setOperationType(String operationType) {
+        this.operationType = operationType;
     }
 
-    public void setPermission_type(String permission_type) {
-        this.permission_type = permission_type;
+    public void setPermissionType(String permissionType) {
+        this.permissionType = permissionType;
     }
 
     public void setRole(String role) {
@@ -67,11 +79,11 @@ public class AclDTO {
         this.shared = shared;
     }
 
-    public void setTopic_Name(String topic_Name) {
-        this.topic_Name = topic_Name;
+    public void setTopicName(String topicName) {
+        this.topicName = topicName;
     }
 
-    public void setUser_id(String user_id) {
-        this.user_id = user_id;
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

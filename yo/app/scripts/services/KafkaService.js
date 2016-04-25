@@ -34,7 +34,7 @@ angular.module('hopsWorksApp')
               createTopic: function (projectId, topicDetails) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/topic',
+                  url: '/api/project/' + projectId + '/topic/add',
                   headers: {
                     'Content-Type': 'application/json'
                   },
@@ -52,7 +52,7 @@ angular.module('hopsWorksApp')
               addAcl: function (projectId, topicId, topicAcl) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/topics/' + topicId + "/addAcl",
+                  url: '/api/project/' + projectId + '/topic/' + topicId + "/addAcl",
                   headers: {
                     'Content-Type': 'application/json'
                   },
@@ -67,7 +67,7 @@ angular.module('hopsWorksApp')
                * @returns {undefined} true if success, false otheriwse
                */
               removeAcl: function (projectId, topicId, aclId) {
-                return $http.delete('/api/project/' + projectId + '/topics/' + topicId + '/deleteAcl/' + aclId);
+                return $http.delete('/api/project/' + projectId + '/topic/' + topicId + '/removeAcl/' + aclId);
               },
               /**
                * Delete a topic 
@@ -76,7 +76,7 @@ angular.module('hopsWorksApp')
                * @returns {undefined} true if success, false otheriwse
                */
               removeTopic: function (projectId, topicId) {
-                return $http.delete('/api/project/' + projectId + '/topics/' + topicId + '/deleteTopic');
+                return $http.delete('/api/project/' + projectId + '/topic/' + topicId + '/removeTopic');
               },
               
               /**
@@ -87,7 +87,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved}
                */
               shareTopic: function (projectId, topicId, destProjectId) {
-                return $http.get('/api/project/' + projectId + '/topics/' + topicId + "/share/" + destProjectId);
+                return $http.get('/api/project/' + projectId + '/topic/' + topicId + "/share/" + destProjectId);
               },
               
               /**
@@ -97,8 +97,8 @@ angular.module('hopsWorksApp')
                * @param {type} destProjectId
                * @returns {unresolved}
                */
-              unshareTopic: function (projectId, topicId, destProjectId) {
-                return $http.delete('/api/project/' + projectId + '/topics/' + topicId + '/unshare/' + destProjectId);
+              unshareTopic: function (projectId, topicName, destProjectId) {
+                return $http.delete('/api/project/' + projectId + '/topic/' + topicName + '/unshare/' + destProjectId);
               }
               
             };
