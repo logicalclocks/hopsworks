@@ -19,11 +19,27 @@ angular.module('hopsWorksApp')
               {"name": "emptyTopic", 'acls': [], 'shares': []}
             ];
 
+//            self.topicDetails = {"name": "myTopic", "partitionReplicas" : [{"id" : "21212", "partitionEndpoints" : []}]
+//                , "partitionLeader": [{"id": "234545", "leader" : "1.2.3.5:8484"}]
+//                , "inSyncReplicas" : [{"id" : "11112", "partitionEndpoints" : ["4.2.3.5:8484", "2.2.3.5:5555"]}, 
+//                    {"id" : "1666112", "partitionEndpoints" : []}]
+//            }; 
+
+
+            self.topicDetails = {"name": "myTopic", 
+                                 "partitionDetails" : [{ "id" : "21212",
+                                            "paritionLeader": "1.2.3.4:8484",
+                                            "partitionReplicas" : ["4.2.3.5:8484", "2.2.3.5:5555", "1.2.3.4:8484"],
+                                            "paritionInSyncReplicas": ["4.2.3.5:8484", "1.2.3.4:8484"]}]
+            }; 
+
             self.maxNumTopics = 10;
             self.numTopicsUsed = 0;
 
             self.currentTopic = "";
             self.topicName = "";
+            self.numReplicas = "";
+            self.numPartitions = "";
             self.username = "";
             self.permission_type = "";
             self.operation_type = "";
@@ -65,7 +81,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.createTopic = function () {
-              KafkaService.createTopic(self.projectId, self.topicName).then(
+              KafkaService.createTopic(self.projectId, self.topicDetails).then(
                       function (success) {
                         self.getAllTopics();
                       }, function (error) {
@@ -73,11 +89,11 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.removeTopic = function (topicName, topicId) {
+            self.removeTopic = function (topicName) {
               ModalService.confirm("sm", "Delete Topic (" + topicName + ")",
                       "Do you really want to delete this topic? This action cannot be undone.")
                       .then(function (success) {
-                        KafkaService.removeTopic(self.projectId, topicId).then(
+                        KafkaService.removeTopic(self.projectId, topicName).then(
                                 function (success) {
                                   getTopics();
                                 }, function (error) {
@@ -89,27 +105,27 @@ angular.module('hopsWorksApp')
             };
 
 
-            self.getAclsForTopic = function (topicId) {
-              KafkaService.getAclsForTopic(self.projectId, topicId).then(
+            self.getAclsForTopic = function (topicName) {
+              KafkaService.getAclsForTopic(self.projectId, topicName).then(
                       function (success) {
-                        self.topics[topicId].acls = success.data;
+                        self.topics[topicName].acls = success.data;
                         self.activeId = "";
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to get ACLs for the topic', ttl: 5000});
               });
             };
 
-            self.addAcl = function (topicId) {
+            self.addAcl = function (topicName) {
               var acl = {};
               acl.role = "*";
-              acl.topicId = topicId;
+              acl.topicName = topicName;
               acl.username = self.username;
               acl.permission_type = self.permission_type;
               acl.operation_type = self.operation_type;
               acl.host = self.host;
               acl.shared = self.shared;
 
-              KafkaService.addAcl(self.projectId, topicId, acl).then(
+              KafkaService.addAcl(self.projectId, topicName, acl).then(
                       function (success) {
                         self.getAclsForTopic();
                       }, function (error) {
@@ -118,8 +134,8 @@ angular.module('hopsWorksApp')
 
             };
 
-            self.removeAcl = function (topicId, aclId) {
-              KafkaService.removeTopicAcl(self.projectId, topicId, aclId).then(
+            self.removeAcl = function (topicName, aclId) {
+              KafkaService.removeTopicAcl(self.projectId, topicName, aclId).then(
                       function (success) {
                         self.getAclsForTopic();
                       }, function (error) {
@@ -129,13 +145,13 @@ angular.module('hopsWorksApp')
             };
             
             
-            self.shareTopic = function(topicId) {
+            self.shareTopic = function(topicName) {
               ModalService.selectProject('lg', "/[^]*/",
                       "Select a Project to share the topic with.").then(
                       function (success) {
                         var destProj = success;
 
-                        KafkaService.shareTopic(self.projectId, topicId, destProj.projectId).then(
+                        KafkaService.shareTopic(self.projectId, topicName, destProj.projectId).then(
                                 function (success) {
                                   growl.success(success.data.successMessage, {title: 'Topic shared successfully with project: ' + destProj.name, ttl: 2000});
                                 }, function (error) {
@@ -149,13 +165,13 @@ angular.module('hopsWorksApp')
 
             };
               
-            self.unshareTopic = function(topicId, projectName) {
+            self.unshareTopic = function(topicName, projectName) {
               ModalService.selectProject('lg', "/[^]*/",
                       "problem selecting project").then(
                       function (success) {
                         var destProj = success;
 
-                        KafkaService.unshareTopic(self.projectId, topicId, projectName).then(
+                        KafkaService.unshareTopic(self.projectId, topicName, projectName).then(
                                 function (success) {
                                   growl.success(success.data.successMessage, {title: 'Topic share removed (unshared) rom project: ' + destProj.name, ttl: 2000});
                                 }, function (error) {

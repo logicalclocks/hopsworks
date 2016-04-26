@@ -17,7 +17,7 @@ import javax.validation.constraints.Size;
  * @author misdess
  */
 @Embeddable
-public class ProjectTopicsPK implements Serializable {
+public class SharedTopicsPK implements Serializable {
 
     @Basic(optional = false)
     @NotNull
@@ -26,13 +26,13 @@ public class ProjectTopicsPK implements Serializable {
     private String topicName;
     @Basic(optional = false)
     @NotNull
-    @Column(name = "project_id")
+    @Column(name = "owning_id")
     private int projectId;
 
-    public ProjectTopicsPK() {
+    public SharedTopicsPK() {
     }
 
-    public ProjectTopicsPK(String topicName, int projectId) {
+    public SharedTopicsPK(String topicName, int projectId) {
         this.topicName = topicName;
         this.projectId = projectId;
     }
@@ -64,10 +64,10 @@ public class ProjectTopicsPK implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof ProjectTopicsPK)) {
+        if (!(object instanceof SharedTopicsPK)) {
             return false;
         }
-        ProjectTopicsPK other = (ProjectTopicsPK) object;
+        SharedTopicsPK other = (SharedTopicsPK) object;
         if ((this.topicName == null && other.topicName != null) || (this.topicName != null && !this.topicName.equals(other.topicName))) {
             return false;
         }
@@ -79,7 +79,7 @@ public class ProjectTopicsPK implements Serializable {
 
     @Override
     public String toString() {
-        return "io.hops.kafka.ProjectTopicsPK[ topicName=" + topicName + ", projectId=" + projectId + " ]";
+        return "io.hops.kafka.SharedTopicsPK[ topicName=" + topicName + ", projectId=" + projectId + " ]";
     }
     
 }

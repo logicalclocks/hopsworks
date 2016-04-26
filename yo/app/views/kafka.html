@@ -43,7 +43,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.topics">
+                <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.topics" ng-class="{'selectedTopic': row.isSelected === true}">
                 <td class="col-sm-10">
                   <div class="row" style="margin-left: 10px;">{{row.name}}</div>
 

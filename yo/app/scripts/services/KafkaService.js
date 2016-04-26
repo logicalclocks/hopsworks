@@ -12,18 +12,30 @@ angular.module('hopsWorksApp')
                * @returns {unresolved} A list of topic objects.
                */
               getTopics: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/topics');
+                return $http.get('/api/project/' + projectId + '/kafka/topics');
               },
+              /**
+               * Get the details of the topic with given ID, under the given project.
+               * Includes all description for the topic
+               * @param {type} projectId
+               * @param {type} topicName
+               * @returns {unresolved} A complete description of the requested topic.
+               */
+              getTopicDetails: function (projectId, topicName) {
+                return $http.get('/api/project/' + projectId + '/kafka/details/' + topicName);
+              },
+              
               /**
                * Get the details of the topic with given ID, under the given project.
                * Includes all ACLs for the topic
                * @param {type} projectId
-               * @param {type} topicId
+               * @param {type} topicName
                * @returns {unresolved} A complete description of the requested topic.
                */
-              getAclsForTopic: function (projectId, topicId) {
-                return $http.get('/api/project/' + projectId + '/topics/' + topicId);
+              showTopicAcls: function (projectId, topicName) {
+                return $http.get('/api/project/' + projectId + '/kafka/acls/' + topicName);
               },
+              
               /**
                * Create a new Topic in the given project, of the given type. 
                * @param {type} projectId 
@@ -34,7 +46,7 @@ angular.module('hopsWorksApp')
               createTopic: function (projectId, topicDetails) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/topic/add',
+                  url: '/api/project/' + projectId + '/kafka/topic/add',
                   headers: {
                     'Content-Type': 'application/json'
                   },
@@ -45,14 +57,14 @@ angular.module('hopsWorksApp')
               /**
                * Add a new ACL rule to a Topic in the given project. 
                * @param {type} projectId 
-               * @param {type} topicId
+               * @param {type} topicName
                * @param {type} topicAcl The ACL for the topic.
                * @returns {undefined} The newly created topic object.
                */
-              addAcl: function (projectId, topicId, topicAcl) {
+              addAcl: function (projectId, topicName, topicAcl) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/topic/' + topicId + "/addAcl",
+                  url: '/api/project/' + projectId + '/kafka/topic/' + topicName + "/addAcl",
                   headers: {
                     'Content-Type': 'application/json'
                   },
@@ -63,42 +75,42 @@ angular.module('hopsWorksApp')
               /**
                * Delete an ACL rule for a topic
                * @param {type} projectId
-               * @param {type} topicId
+               * @param {type} topicName
                * @returns {undefined} true if success, false otheriwse
                */
-              removeAcl: function (projectId, topicId, aclId) {
-                return $http.delete('/api/project/' + projectId + '/topic/' + topicId + '/removeAcl/' + aclId);
+              removeAcl: function (projectId, topicName, aclId) {
+                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/removeAcl/' + aclId);
               },
               /**
                * Delete a topic 
                * @param {type} projectId
-               * @param {type} topicId
+               * @param {type} topicName
                * @returns {undefined} true if success, false otheriwse
                */
-              removeTopic: function (projectId, topicId) {
-                return $http.delete('/api/project/' + projectId + '/topic/' + topicId + '/removeTopic');
+              removeTopic: function (projectId, topicName) {
+                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/removeTopic');
               },
               
               /**
                * Shares a topic with a different project.
                * @param {type} projectId
-               * @param {type} topicId
+               * @param {type} topicName
                * @param {type} destProjectId
                * @returns {unresolved}
                */
-              shareTopic: function (projectId, topicId, destProjectId) {
-                return $http.get('/api/project/' + projectId + '/topic/' + topicId + "/share/" + destProjectId);
+              shareTopic: function (projectId, topicName, destProjectId) {
+                return $http.get('/api/project/' + projectId + '/topic/' + topicName + "/share/" + destProjectId);
               },
               
               /**
                * Removes a shared topic from a project - run by the Data Owner of the project that owns the topic.
                * @param {type} projectId
-               * @param {type} topicId
+               * @param {type} topicName
                * @param {type} destProjectId
                * @returns {unresolved}
                */
               unshareTopic: function (projectId, topicName, destProjectId) {
-                return $http.delete('/api/project/' + projectId + '/topic/' + topicName + '/unshare/' + destProjectId);
+                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/unshare/' + destProjectId);
               }
               
             };

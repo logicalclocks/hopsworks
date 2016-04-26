@@ -52,7 +52,10 @@ public class Settings {
   private static final String VARIABLE_ZK_IP = "zk_ip";
   
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
-
+  
+  private static final String VARIABLE_KAFKA_NUM_PARTITIONS = "kafka_num_partitions";
+  private static final String VARIABLE_KAFKA_NUM_REPLICAS = "kafka_num_replicas";
+  
   private String setUserVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (userName.getValue().isEmpty() == false)) {
@@ -110,6 +113,8 @@ public class Settings {
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
       KAFKA_USER = setUserVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
+      KAFKA_DEFAULT_NUM_PARTITIONS = setDirVar(VARIABLE_KAFKA_NUM_PARTITIONS, KAFKA_DEFAULT_NUM_PARTITIONS);
+      KAFKA_DEFAULT_NUM_REPLICAS = setDirVar(VARIABLE_KAFKA_NUM_REPLICAS, KAFKA_DEFAULT_NUM_REPLICAS);
       CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
       HIWAY_DIR = setDirVar(VARIABLE_HIWAY_DIR, HIWAY_DIR);
       YARN_DEFAULT_QUOTA = setDirVar(VARIABLE_YARN_DEFAULT_QUOTA, YARN_DEFAULT_QUOTA);
@@ -487,6 +492,20 @@ public class Settings {
     checkCache();
    return KAFKA_DIR;
  }
+  
+  private String KAFKA_DEFAULT_NUM_PARTITIONS = "2";
+  private String KAFKA_DEFAULT_NUM_REPLICAS = "2";
+
+   
+  public synchronized String getKafkaDefaultNumPartitions() {
+    checkCache();
+    return KAFKA_DEFAULT_NUM_PARTITIONS;
+  }
+
+  public synchronized String getKafkaDefaultNumReplicas() {
+    checkCache();
+    return KAFKA_DEFAULT_NUM_REPLICAS;
+  }
  
   private String ZK_DIR = "/srv/zookeeper";
   public synchronized String getZkDir() {

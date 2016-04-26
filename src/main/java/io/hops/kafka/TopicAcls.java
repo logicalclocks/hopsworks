@@ -8,10 +8,10 @@ package io.hops.kafka;
 import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -28,74 +28,124 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "TopicAcls.findAll", query = "SELECT t FROM TopicAcls t"),
-    @NamedQuery(name = "TopicAcls.findByTopicId", query = "SELECT t FROM TopicAcls t WHERE t.topicAclsPK.topicId = :topicId"),
-    @NamedQuery(name = "TopicAcls.findByUserId", query = "SELECT t FROM TopicAcls t WHERE t.topicAclsPK.userId = :userId"),
-    @NamedQuery(name = "TopicAcls.findByPermissionType", query = "SELECT t FROM TopicAcls t WHERE t.topicAclsPK.permissionType = :permissionType"),
-    @NamedQuery(name = "TopicAcls.findByOperationType", query = "SELECT t FROM TopicAcls t WHERE t.topicAclsPK.operationType = :operationType"),
-    @NamedQuery(name = "TopicAcls.findByHost", query = "SELECT t FROM TopicAcls t WHERE t.topicAclsPK.host = :host"),
-    @NamedQuery(name = "TopicAcls.findByRole", query = "SELECT t FROM TopicAcls t WHERE t.topicAclsPK.role = :role"),
-    @NamedQuery(name = "TopicAcls.findByNotShared", query = "SELECT t FROM TopicAcls t WHERE t.shared != :shared")})
+    @NamedQuery(name = "TopicAcls.findById", query = "SELECT t FROM TopicAcls t WHERE t.id = :id"),
+    @NamedQuery(name = "TopicAcls.findByUsername", query = "SELECT t FROM TopicAcls t WHERE t.username = :username"),
+    @NamedQuery(name = "TopicAcls.findByPermissionType", query = "SELECT t FROM TopicAcls t WHERE t.permissionType = :permissionType"),
+    @NamedQuery(name = "TopicAcls.findByOperationType", query = "SELECT t FROM TopicAcls t WHERE t.operationType = :operationType"),
+    @NamedQuery(name = "TopicAcls.findByHost", query = "SELECT t FROM TopicAcls t WHERE t.host = :host"),
+    @NamedQuery(name = "TopicAcls.findByRole", query = "SELECT t FROM TopicAcls t WHERE t.role = :role")})
 public class TopicAcls implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    @EmbeddedId
-    protected TopicAclsPK topicAclsPK;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
+    @Column(name = "id")
+    private Integer id;
     @Basic(optional = false)
     @NotNull
-    @Size(min = 1, max = 25)
-    @Column(name = "shared")
-    private String shared;
-    @JoinColumn(name = "topic_id", referencedColumnName = "id", insertable = false, updatable = false)
-    @ManyToOne(optional = false)
-    private ProjectTopics projectTopics;
+    @Size(min = 1, max = 1000)
+    @Column(name = "username")
+    private String username;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "permission_type")
+    private String permissionType;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "operation_type")
+    private String operationType;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "host")
+    private String host;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "role")
+    private String role;
 
     public TopicAcls() {
     }
 
-    public TopicAcls(TopicAclsPK topicAclsPK) {
-        this.topicAclsPK = topicAclsPK;
+    public TopicAcls(Integer id) {
+        this.id = id;
     }
 
-    public TopicAcls(TopicAclsPK topicAclsPK, String shared) {
-        this.topicAclsPK = topicAclsPK;
-        this.shared = shared;
+    public TopicAcls(String username, String permissionType,
+            String operationType, String host, String role) {
+        this.username = username;
+        this.permissionType = permissionType;
+        this.operationType = operationType;
+        this.host = host;
+        this.role = role;
     }
 
-    public TopicAcls(int topicId, String userId, String permissionType,
-            String operationType, String host, String role, String shared) {
-        this.topicAclsPK = new TopicAclsPK(topicId, userId, permissionType,
-                operationType, host, role);
-        this.shared =shared;
+        public TopicAcls(Integer aclId, String username, String permissionType, 
+                String operationType, String host, String role) {
+        this.id=aclId;
+        this.username = username;
+        this.permissionType = permissionType;
+        this.operationType = operationType;
+        this.host = host;
+        this.role = role;
     }
 
-    public TopicAclsPK getTopicAclsPK() {
-        return topicAclsPK;
+    public Integer getId() {
+        return id;
     }
 
-    public void setTopicAclsPK(TopicAclsPK topicAclsPK) {
-        this.topicAclsPK = topicAclsPK;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
-    public String getShared() {
-        return shared;
+    public String getUsername() {
+        return username;
     }
 
-    public void setShared(String shared) {
-        this.shared = shared;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public ProjectTopics getProjectTopics() {
-        return projectTopics;
+    public String getPermissionType() {
+        return permissionType;
     }
 
-    public void setProjectTopics(ProjectTopics projectTopics) {
-        this.projectTopics = projectTopics;
+    public void setPermissionType(String permissionType) {
+        this.permissionType = permissionType;
+    }
+
+    public String getOperationType() {
+        return operationType;
+    }
+
+    public void setOperationType(String operationType) {
+        this.operationType = operationType;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (topicAclsPK != null ? topicAclsPK.hashCode() : 0);
+        hash += (id != null ? id.hashCode() : 0);
         return hash;
     }
 
@@ -106,7 +156,8 @@ public class TopicAcls implements Serializable {
             return false;
         }
         TopicAcls other = (TopicAcls) object;
-        if ((this.topicAclsPK == null && other.topicAclsPK != null) || (this.topicAclsPK != null && !this.topicAclsPK.equals(other.topicAclsPK))) {
+        if ((this.id == null && other.id != null) || (this.id != null &&
+                !this.id.equals(other.id))) {
             return false;
         }
         return true;
@@ -114,7 +165,7 @@ public class TopicAcls implements Serializable {
 
     @Override
     public String toString() {
-        return "io.hops.kafka.TopicAcls[ topicAclsPK=" + topicAclsPK + " ]";
+        return "io.hops.kafka.TopicAcls[ id=" + id + " ]";
     }
     
 }

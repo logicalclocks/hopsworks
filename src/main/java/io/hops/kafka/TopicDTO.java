@@ -5,27 +5,27 @@
  */
 package io.hops.kafka;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-
-@XmlRootElement
+/**
+ *
+ * @author misdess
+ */
 public class TopicDTO {
-
-  private String topic;
-  // TODO - put in all the topic details here
+    
+  private String name;
+  // TODO - put in all the name details here
 
   public TopicDTO() {
-  }
-  public TopicDTO(String topic) {
-    this.topic = topic;
-  }
-
-  public String getTopic() {
-    return topic;
+}
+  public TopicDTO(String name) {
+    this.name = name;
   }
 
-  public void setTopic(String topic) {
-    this.topic = topic;
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
 }

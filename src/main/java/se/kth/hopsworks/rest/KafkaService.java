@@ -28,7 +28,7 @@ import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.users.UserFacade;
 import io.hops.kafka.KafkaFacade;
-import io.hops.kafka.TopicDetailDTO;
+import io.hops.kafka.TopicDetailsDTO;
 import javax.ws.rs.Consumes;
 import se.kth.hopsworks.util.Settings;
 
@@ -112,7 +112,7 @@ public class KafkaService {
           "Incomplete request!");
     }
     //create the topic in the database and the Kafka cluster
-//    kafkaFacade.createTopicInProject(this.project, topicDto); 
+    kafkaFacade.createTopicInProject(this.project, topicDto); 
     
     json.setSuccessMessage("The Topic has been created.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -152,26 +152,27 @@ public class KafkaService {
           "Incomplete request!");
     }
 
-    TopicDetailDTO topic = kafka.getTopicDetails(project, topicName);
+    TopicDetailsDTO topic = kafka.getTopicDetails(project, topicName);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         topic).build();
   }
   
   @GET
-  @Path("/topic/{topic}/share")
+  @Path("/topic/{topic}/share/{projId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response shareTopic(
       @PathParam("topic") String topicName,
+      @PathParam("projId") int projectId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException, Exception {
     JsonResponse json = new JsonResponse();
-    if (projectId == null) {
+    if (this.projectId == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Incomplete request!");
     }
 
-    kafkaFacade.shareTopicToProject(topicName, project);
+    kafkaFacade.shareTopicToProject(topicName, this.projectId, projectId);
     json.setSuccessMessage("The topic has been shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         json).build();
@@ -180,7 +181,7 @@ public class KafkaService {
   @GET
   @Path("/topic/{topic}/unshare/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response removeSharedTopic(
       @PathParam("topic") String topicName,
       @PathParam("projectId") int projectId,
@@ -188,7 +189,7 @@ public class KafkaService {
       @Context HttpServletRequest req) throws AppException, Exception {
     JsonResponse json = new JsonResponse();
 
-    kafkaFacade.removeSharedTopicFromProject(topicName, project);
+    kafkaFacade.removeSharedTopicFromProject(topicName, this.projectId, projectId);
     json.setSuccessMessage("Topic has been removed from shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         json).build();
@@ -224,7 +225,7 @@ public class KafkaService {
   @GET
   @Path("/topic/{topic}/removeAcl/{aclId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response removeAclsToTopic(@PathParam("topic") String topicName,
           @PathParam("aclId") int aclId,
       @Context SecurityContext sc,
@@ -234,12 +235,45 @@ public class KafkaService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Incomplete request!");
     }
-
-//    kafkaFacade.removeAclsFromTopic(topicName, userName, project.getName(),
-//            permissionType, operationType, host, role, shared);
+    
+      try {
+          kafkaFacade.removeAclsFromTopic(topicName, aclId);
+      } catch (Exception e) {
+          throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+          "Topic acl not found in database");
+      }
     
     json.setSuccessMessage("Topic acls has been removed.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         json).build();
   }
+  
+    @GET
+    @Path("/topic/{topic}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response getTopicAcls(@PathParam("topic") String topicName,
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException, Exception {
+        JsonResponse json = new JsonResponse();
+
+        if (projectId == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Incomplete request!");
+        }
+        List<AclDTO> aclDto = null;
+        try {
+            aclDto = kafka.getTopicAcls(topicName, projectId);
+        } catch (Exception e) {
+        }
+        if (aclDto == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "Topic has not ACLs");
+        }
+
+        GenericEntity<List<AclDTO>> aclDtos =
+                new GenericEntity<List<AclDTO>>(aclDto) {
+        };
+         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(aclDtos).build();
+    }
 }
