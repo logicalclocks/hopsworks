@@ -12,15 +12,23 @@ package io.hops.kafka;
 public class AclDTO {
     
     private int id;
-    private String topicName;
     private String username;
     private String permissionType;
     private String operationType;
     private String host;
     private String role;
-    private String shared;
 
     public AclDTO() {
+    }
+
+    AclDTO(Integer id, String username, String permissionType,
+            String operationType, String host, String role) {
+        this.id = id;
+        this.username = username;
+        this.permissionType = permissionType;
+        this.operationType = operationType;
+        this.host = host;
+        this.role = role;
     }
 
     public int getId() {
@@ -47,14 +55,6 @@ public class AclDTO {
         return role;
     }
 
-    public String getShared() {
-        return shared;
-    }
-
-    public String getTopicName() {
-        return topicName;
-    }
-
     public String getUsername() {
         return username;
     }
@@ -73,14 +73,6 @@ public class AclDTO {
 
     public void setRole(String role) {
         this.role = role;
-    }
-
-    public void setShared(String shared) {
-        this.shared = shared;
-    }
-
-    public void setTopicName(String topicName) {
-        this.topicName = topicName;
     }
 
     public void setUsername(String username) {

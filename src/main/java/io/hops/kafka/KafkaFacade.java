@@ -217,8 +217,8 @@ public class KafkaFacade {
         em.flush();
     }
     
-    public void removeSharedTopicFromProject(String topicName,Integer owningProjectId, Integer projectId)
-            throws AppException{
+    public void removeSharedTopicFromProject(String topicName,
+            Integer owningProjectId, Integer projectId) throws AppException{
     
      ProjectTopics pt = em.find(ProjectTopics.class, 
              new ProjectTopicsPK(topicName, owningProjectId));
@@ -230,7 +230,9 @@ public class KafkaFacade {
         em.remove(st);
     }
      
-    public void addAclsToTopic(String topicName, String projectName, AclDTO dto) throws AppException {
+    public void addAclsToTopic(String topicName, String projectName, AclDTO dto)
+            throws AppException {
+        
         addAclsToTopic(topicName, dto.getUsername(), projectName, dto.getPermissionType(), 
             dto.getOperationType(), dto.getHost(), dto.getRole());
     }
@@ -257,7 +259,7 @@ public class KafkaFacade {
                     "Topic does not belong to the project.");
         }
 
-        TopicAcls ta = new TopicAcls(projectName+"__"+userName,permission_type,
+        TopicAcls ta = new TopicAcls(topicName, project.getId(), userName,permission_type,
                 operation_type, host, role);
         em.merge(ta);
         em.persist(ta);
@@ -272,7 +274,11 @@ public class KafkaFacade {
                     "aclId not found in database");
         }
 
-        ta = new TopicAcls(aclId, ta.getUsername(), ta.getPermissionType(),
+        if(!ta.getTopicName().equals(topicName)){
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "aclId does not belong the specified topic");
+        }
+        ta = new TopicAcls(aclId, topicName, ta.getProjectId(), ta.getUsername(), ta.getPermissionType(),
                 ta.getOperationType(), ta.getHost(), ta.getRole());
         em.remove(ta);
     }
@@ -285,10 +291,20 @@ public class KafkaFacade {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "Kafka topic does not exist in database.");
         }
-        
+
         //we need the topicName in the topic_acl table.
-        
-        return null;
+        TypedQuery<TopicAcls> query = em.createNamedQuery("TopicAcls.findByTopicName",
+                TopicAcls.class).setHint("topic_name", topicName);
+        List<TopicAcls> acls = query.getResultList();
+
+        List<AclDTO> aclDtos = new ArrayList<>();
+        for (TopicAcls ta : acls) {
+            aclDtos.add(new AclDTO(ta.getId(), ta.getUsername(), ta.getPermissionType(),
+                    ta.getOperationType(), ta.getHost(), ta.getRole()));
+
+        }
+
+        return aclDtos;
     }
     
     public Set<String> getBrokerList() throws AppException {

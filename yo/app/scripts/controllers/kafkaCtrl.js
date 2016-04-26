@@ -45,7 +45,6 @@ angular.module('hopsWorksApp')
             self.operation_type = "";
             self.host = "*";
             self.role = "*";
-            self.shared = "*";
             self.activeId = -1;
             self.activeShare = -1;
 
@@ -59,7 +58,6 @@ angular.module('hopsWorksApp')
               self.operation_type = acl.operation_type;
               self.host = acl.host;
               self.role = acl.role;
-              self.shared = acl.shared;
               self.activeId = acl.id;
             };
 
@@ -123,13 +121,12 @@ angular.module('hopsWorksApp')
               acl.permission_type = self.permission_type;
               acl.operation_type = self.operation_type;
               acl.host = self.host;
-              acl.shared = self.shared;
 
               KafkaService.addAcl(self.projectId, topicName, acl).then(
                       function (success) {
                         self.getAclsForTopic();
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to remove topic', ttl: 5000});
+                growl.error(error.data.errorMsg, {title: 'Failed to add topic', ttl: 5000});
               });
 
             };

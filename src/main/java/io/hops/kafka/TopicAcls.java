@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name = "TopicAcls.findAll", query = "SELECT t FROM TopicAcls t"),
     @NamedQuery(name = "TopicAcls.findById", query = "SELECT t FROM TopicAcls t WHERE t.id = :id"),
+    @NamedQuery(name = "TopicAcls.findByTopicName", query = "SELECT t FROM TopicAcls t WHERE t.topicName = :topicName"),
     @NamedQuery(name = "TopicAcls.findByUsername", query = "SELECT t FROM TopicAcls t WHERE t.username = :username"),
     @NamedQuery(name = "TopicAcls.findByPermissionType", query = "SELECT t FROM TopicAcls t WHERE t.permissionType = :permissionType"),
     @NamedQuery(name = "TopicAcls.findByOperationType", query = "SELECT t FROM TopicAcls t WHERE t.operationType = :operationType"),
@@ -42,6 +43,17 @@ public class TopicAcls implements Serializable {
     @Basic(optional = false)
     @Column(name = "id")
     private Integer id;
+    
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 1000)
+    @Column(name = "topic_name")
+    private String topicName;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 1000)
+    @Column(name = "project_id")
+    private Integer projectId;
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 1000)
@@ -75,8 +87,10 @@ public class TopicAcls implements Serializable {
         this.id = id;
     }
 
-    public TopicAcls(String username, String permissionType,
+    public TopicAcls(String topicName, Integer projectId, String username, String permissionType, 
             String operationType, String host, String role) {
+        this.topicName = topicName;
+        this.projectId = projectId;
         this.username = username;
         this.permissionType = permissionType;
         this.operationType = operationType;
@@ -84,22 +98,40 @@ public class TopicAcls implements Serializable {
         this.role = role;
     }
 
-        public TopicAcls(Integer aclId, String username, String permissionType, 
-                String operationType, String host, String role) {
-        this.id=aclId;
+     public TopicAcls(Integer id, String topicName, Integer projectId, String username,
+             String permissionType, String operationType, String host, String role) {
+        this.id = id;
+        this.topicName = topicName;
+        this.projectId = projectId;
         this.username = username;
         this.permissionType = permissionType;
         this.operationType = operationType;
         this.host = host;
         this.role = role;
     }
-
+     
     public Integer getId() {
         return id;
     }
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getTopicName() {
+        return topicName;
+    }
+
+    public void setTopicName(String topicName) {
+        this.topicName = topicName;
+    }
+
+    public Integer getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(Integer projectId) {
+        this.projectId = projectId;
     }
 
     public String getUsername() {
@@ -156,8 +188,7 @@ public class TopicAcls implements Serializable {
             return false;
         }
         TopicAcls other = (TopicAcls) object;
-        if ((this.id == null && other.id != null) || (this.id != null &&
-                !this.id.equals(other.id))) {
+        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
         return true;
@@ -165,7 +196,7 @@ public class TopicAcls implements Serializable {
 
     @Override
     public String toString() {
-        return "io.hops.kafka.TopicAcls[ id=" + id + " ]";
+        return "io.hops.kafka.TopicAcls[ id=" + id + " for topic = "+topicName+"]";
     }
     
 }
