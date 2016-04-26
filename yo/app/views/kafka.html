@@ -64,7 +64,6 @@
                         <th class="col-sm-2">Operation Type</th>
                         <th class="col-sm-2">Host</th>
                         <th class="col-sm-1">Role</th>
-                        <th class="col-sm-1">Shared</th>
                         <th class="col-sm-1">Remove</th>
                         <th class="col-sm-1">Edit ACL</th>
                       </tr>
@@ -75,10 +74,8 @@
                       <td ng-if="kafkaCtrl.activeId === -1">{{acl.permission_type}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id">
                         <select name="permission_type" ng-model="kafkaCtrl.permission_type">
-                          <option value="read">read</option>
-                          <option value="write">write</option>
-                          <option value="details">details</option>
-                          <option value="*">*</option>
+                          <option value="allow">Allow</option>
+                          <option value="deny">Deny</option>
                         </select>
                       </td>
                       <td ng-if="kafkaCtrl.activeId === -1">{{acl.operation_type}}</td>
@@ -95,14 +92,6 @@
                         <input type="text" class="form-control" id="aclHost" ng-model="kafkaCtrl.host" placeholder="Hostname (or * or subnet)">
                       </td>
                       <td ng-if="kafkaCtrl.activeId === -1">{{acl.role}}</td>
-                      <td ng-if="kafkaCtrl.activeId === acl.id">
-                        <select name="role_type" ng-model="kafkaCtrl.role">
-                          <option value="Data Scientist">Data scientist</option>
-                          <option value="Data Owner">Data owner</option>
-                          <option value="*">*</option>
-                        </select>
-                      </td>
-                      <td ng-if="kafkaCtrl.activeId === -1">{{acl.shared}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id">
                         <select name="role_type" ng-model="kafkaCtrl.role">
                           <option value="Data Scientist">Data scientist</option>

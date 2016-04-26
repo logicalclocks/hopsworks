@@ -14,8 +14,8 @@ angular.module('hopsWorksApp')
                 'acls': [{'id': '4563', 'username': "bbb", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}, {'id': '999', 'username': "hdhd", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}],
                 'shares': [{'proj_name': 'shareOne'},{'proj_name': 'shareTwo'}]              
                  },
-              {"name": "yourTopic", 'acls': [{'id': '443', 'username': "aaa", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}], 'shares': []},
-              {"name": "thisTopic", 'acls': [{'id': '123', 'username': "ccc", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}], 'shares': []},
+              {"name": "yourTopic", 'acls': [{'id': '443', 'username': "aaa", 'permission_type': "Allow", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}], 'shares': []},
+              {"name": "thisTopic", 'acls': [{'id': '123', 'username': "ccc", 'permission_type': "Deny", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}], 'shares': []},
               {"name": "emptyTopic", 'acls': [], 'shares': []}
             ];
 
