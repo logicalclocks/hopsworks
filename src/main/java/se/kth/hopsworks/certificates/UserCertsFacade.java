@@ -97,10 +97,6 @@ public class UserCertsFacade {
     }
     
     public void putUserCerts(int projectId, int userId){
-    //Checks if the User/Project combination already exists.
-     if(findUserCert(projectId, userId).getUserCert().length > 1){
-         return;
-     }
         
      File kStore = new File("/tmp/tempstores/" + projectId + "__" + userId + "__kstore.jks");
      File tStore = new File("/tmp/tempstores/" + projectId + "__" + userId + "__tstore.jks");

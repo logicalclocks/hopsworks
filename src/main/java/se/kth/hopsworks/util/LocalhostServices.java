@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.ejb.Asynchronous;
 
 public class LocalhostServices {
 
@@ -76,7 +77,7 @@ public class LocalhostServices {
     }
     return stdout;
   }
-  
+  //Make this asynchronous and call back UserCertsFacade.putUSer()
   public static String createUserCertificates(int projectId, int userId) throws IOException {
     
     String sslCertFile = Settings.CA_CERT_DIR + projectId + "__" + userId + ".cert.pem";
