@@ -38,20 +38,21 @@ public class YarnLogUtil {
    * @param src aggregated yarn log path
    * @param dst destination path to copy to
    * @param desiredLogType stderr or stdout
-   * @throws IOException
    */
   public static void copyAggregatedYarnLogs(DistributedFsService fsService,
           DistributedFileSystemOps dfs, String src, String dst,
-          String desiredLogType) throws
-          IOException {
+          String desiredLogType) {
     long wait = dfs.getConf().getLong(
             YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, 86400);
     PrintStream writer = null;
     String[] srcs;
     try {
+      writer = new PrintStream(dfs.create(dst));
       Result result = waitForAggregatedLogFileCreation(src, dfs, fsService);
       srcs = getAggregatedLogFilePaths(src, dfs);
-      writer = new PrintStream(dfs.create(dst));
+      if (!logFilesReady(srcs, dfs, fsService)) {
+        LOGGER.log(Level.SEVERE, "Error getting logs");
+      }
       switch (result) {
         case FAILED:
           writer.print("Failed to get the aggregated logs.");
@@ -64,6 +65,12 @@ public class YarnLogUtil {
           writeLogs(dfs, srcs, writer, desiredLogType);
           break;
       }
+    } catch (Exception ex) {
+      if (writer != null) {
+        writer.print(YarnLogUtil.class.getName()
+                + ": Failed to get aggregated logs.\n" + ex.getMessage());
+      }
+      LOGGER.log(Level.SEVERE, null, ex);
     } finally {
       if (writer != null) {
         writer.flush();
@@ -79,8 +86,11 @@ public class YarnLogUtil {
     DataInputStream valueStream;
     AggregatedLogFormat.LogKey key = new AggregatedLogFormat.LogKey();
     AggregatedLogFormat.ContainerLogsReader logReader = null;
+    Path location;
     try {
       for (String src : srcs) {
+        location = new Path(src);
+        LOGGER.log(Level.INFO, "Copying log from {0}", src);
         try {
           reader = new AggregatedLogFormat.LogReader(dfs.getConf(),
                   new Path(src));
@@ -110,7 +120,8 @@ public class YarnLogUtil {
               logReader = new ContainerLogsReader(valueStream);
             }
             if (logReader != null) {
-              readContainerLogs(logReader, writer, desiredLogType, containerKey);
+              readContainerLogs(logReader, writer, desiredLogType, containerKey,
+                      location.getName());
             }
           }
 
@@ -131,7 +142,8 @@ public class YarnLogUtil {
   //Mostly taken from org.apache.hadoop.yarn.webapp.log.AggregatedLogsBlock
   private static boolean readContainerLogs(
           AggregatedLogFormat.ContainerLogsReader logReader, PrintStream writer,
-          String desiredLogType, AggregatedLogFormat.LogKey containerKey) throws
+          String desiredLogType, AggregatedLogFormat.LogKey containerKey,
+          String nodename) throws
           IOException {
     int bufferSize = 65536;
     char[] cbuf = new char[bufferSize];
@@ -146,9 +158,10 @@ public class YarnLogUtil {
           continue;
         }
         if (!foundLog) {
-          writer.append("Container: " + containerKey.toString() + "\n"
+          writer.append("Container: " + containerKey.toString() + " on "
+                  + nodename + "\n"
                   + "==============================================="
-                  + "============================================== \n");
+                  + "=============================================== \n");
         }
         writer.append("Log Type: " + logType + "\n");
         writer.append("Log Length: " + Long.toString(logLength) + "\n");
@@ -189,7 +202,7 @@ public class YarnLogUtil {
       paths = getAggregatedLogFilePaths(path, dfs);
       created = logFilesReady(paths, dfs, fsService);
       if (created) {
-        break;//should we break the first time
+        retries++;//wait any way to be sure there are no more logs 
       }
       for (String path1 : paths) {
         fileSize += getFileLen(path1, dfs);
@@ -205,6 +218,8 @@ public class YarnLogUtil {
       retries++;
       pFileSize = fileSize;
       endTime = System.currentTimeMillis();
+      paths = getAggregatedLogFilePaths(path, dfs);
+      created = logFilesReady(paths, dfs, fsService);
     }
     if ((endTime - startTime) / 1000 >= maxWait) {
       return Result.TIMEOUT;
@@ -270,6 +285,7 @@ public class YarnLogUtil {
           DistributedFileSystemOps dfs,
           DistributedFsService fsService) throws
           IOException {
+    boolean ready = false;
     for (String path : paths) {
       Path location = new Path(path);
       FileStatus[] fileStatus;
@@ -299,8 +315,9 @@ public class YarnLogUtil {
       if (i.getUnderConstruction() == 1) {
         return false;
       }
+      ready = true;
     }
-    return true;
+    return ready;
   }
 
 }
