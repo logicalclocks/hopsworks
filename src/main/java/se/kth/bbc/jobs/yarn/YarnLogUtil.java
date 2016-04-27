@@ -51,8 +51,8 @@ public class YarnLogUtil {
     try {
       Result result = waitForAggregatedLogFileCreation(src, dfs, fsService);
       srcs = getAggregatedLogFilePaths(src, dfs);
-      if (logFilesReady(srcs, dfs, fsService)) {
-        LOGGER.log(Level.SEVERE, "Error getting logs----------");
+      if (!logFilesReady(srcs, dfs, fsService)) {
+        LOGGER.log(Level.SEVERE, "Error getting logs");
       }
       writer = new PrintStream(dfs.create(dst));
       switch (result) {
@@ -82,8 +82,10 @@ public class YarnLogUtil {
     DataInputStream valueStream;
     AggregatedLogFormat.LogKey key = new AggregatedLogFormat.LogKey();
     AggregatedLogFormat.ContainerLogsReader logReader = null;
+    Path location;
     try {
       for (String src : srcs) {
+        location = new Path(src);
         LOGGER.log(Level.INFO, "Copying log from {0}", src);
         try {
           reader = new AggregatedLogFormat.LogReader(dfs.getConf(),
@@ -114,7 +116,8 @@ public class YarnLogUtil {
               logReader = new ContainerLogsReader(valueStream);
             }
             if (logReader != null) {
-              readContainerLogs(logReader, writer, desiredLogType, containerKey);
+              readContainerLogs(logReader, writer, desiredLogType, containerKey,
+                      location.getName());
             }
           }
 
@@ -135,7 +138,8 @@ public class YarnLogUtil {
   //Mostly taken from org.apache.hadoop.yarn.webapp.log.AggregatedLogsBlock
   private static boolean readContainerLogs(
           AggregatedLogFormat.ContainerLogsReader logReader, PrintStream writer,
-          String desiredLogType, AggregatedLogFormat.LogKey containerKey) throws
+          String desiredLogType, AggregatedLogFormat.LogKey containerKey,
+          String nodename) throws
           IOException {
     int bufferSize = 65536;
     char[] cbuf = new char[bufferSize];
@@ -150,9 +154,10 @@ public class YarnLogUtil {
           continue;
         }
         if (!foundLog) {
-          writer.append("Container: " + containerKey.toString() + "\n"
+          writer.append("Container: " + containerKey.toString() + " on "
+                  + nodename + "\n"
                   + "==============================================="
-                  + "============================================== \n");
+                  + "=============================================== \n");
         }
         writer.append("Log Type: " + logType + "\n");
         writer.append("Log Length: " + Long.toString(logLength) + "\n");
@@ -209,6 +214,7 @@ public class YarnLogUtil {
       retries++;
       pFileSize = fileSize;
       endTime = System.currentTimeMillis();
+      paths = getAggregatedLogFilePaths(path, dfs);
       created = logFilesReady(paths, dfs, fsService);
     }
     if ((endTime - startTime) / 1000 >= maxWait) {
