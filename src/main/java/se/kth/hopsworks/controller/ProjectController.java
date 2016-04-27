@@ -659,9 +659,11 @@ public class ProjectController {
   }
 
   public String getYarnQuota(String name) {
-    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.
-        findByProjectName(name);
-    return Float.toString(yarnQuota.getQuotaRemaining());
+    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.findByProjectName(name);
+    if (yarnQuota != null) {
+        return Float.toString(yarnQuota.getQuotaRemaining());
+    }
+    return "";
   }
 
 //  public Long getHdfsSpaceQuotaInBytes(String name) throws AppException {
