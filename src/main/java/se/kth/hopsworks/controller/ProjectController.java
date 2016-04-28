@@ -75,7 +75,7 @@ public class ProjectController {
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
-  private UserManager userBean;
+  private UserManager userManager;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -124,7 +124,7 @@ public class ProjectController {
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Project createProject(ProjectDTO newProject, String email) throws
       IOException, AppException {
-    Users user = userBean.getUserByEmail(email);
+    Users user = userManager.getUserByEmail(email);
 //    //if there is no project by the same name in the system and project name is valid
 //    if (FolderNameValidator.isValidName(newProject.getProjectName())
 //            && !projectFacade.projectExists(newProject.getProjectName())) {
@@ -193,9 +193,6 @@ public class ProjectController {
         logger.log(Level.FINE, "{0} - project created successfully.", project.
             getName());
 
-        //LocalhostServices.createUserCertificates(project.getId(), user.getUid());
-            
-        //certificateBean.putUserCerts(project.getId(), user.getUid());
         //Create default DataSets
         return project;
       }
@@ -214,7 +211,7 @@ public class ProjectController {
   public void createProjectLogResources(String username, Project project) throws
       ProjectInternalFoldersFailedException {
 
-    Users user = userBean.getUserByEmail(username);
+    Users user = userManager.getUserByEmail(username);
 
     try {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
@@ -233,7 +230,7 @@ public class ProjectController {
       throws
       ProjectInternalFoldersFailedException {
 
-    Users user = userBean.getUserByEmail(username);
+    Users user = userManager.getUserByEmail(username);
 
     try {
       datasetController.createDataset(user, project, "consents",
@@ -285,7 +282,7 @@ public class ProjectController {
     }
 
     if (addedService) {
-      Users user = userBean.getUserByEmail(userEmail);
+      Users user = userManager.getUserByEmail(userEmail);
       String servicesString = "";
       for (int i = 0; i < services.size(); i++) {
         servicesString = servicesString + services.get(i).name() + " ";
@@ -333,7 +330,7 @@ public class ProjectController {
   public void changeName(Project project, String newProjectName,
       String userEmail)
       throws AppException, IOException {
-    Users user = userBean.getUserByEmail(userEmail);
+    Users user = userManager.getUserByEmail(userEmail);
 
     boolean nameExists = projectFacade.projectExistsForOwner(newProjectName,
         user);
@@ -362,7 +359,7 @@ public class ProjectController {
    */
   public void updateProject(Project project, ProjectDTO proj,
       String userEmail) {
-    Users user = userBean.getUserByEmail(userEmail);
+    Users user = userManager.getUserByEmail(userEmail);
 
     project.setDescription(proj.getDescription());
     project.setRetentionPeriod(proj.getRetentionPeriod());
@@ -452,7 +449,7 @@ public class ProjectController {
   public boolean removeByID(Integer projectID, String email,
       boolean deleteFilesOnRemove) throws IOException, AppException {
     boolean success = !deleteFilesOnRemove;
-    Users user = userBean.getUserByEmail(email);
+    Users user = userManager.getUserByEmail(email);
     Project project = projectFacade.find(projectID);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -506,7 +503,7 @@ public class ProjectController {
   public List<String> addMembers(Project project, String email,
       List<ProjectTeam> projectTeams) {
     List<String> failedList = new ArrayList<>();
-    Users user = userBean.getUserByEmail(email);
+    Users user = userManager.getUserByEmail(email);
     Users newMember;
     for (ProjectTeam projectTeam : projectTeams) {
       try {
@@ -522,7 +519,7 @@ public class ProjectController {
           }
 
           projectTeam.setTimestamp(new Date());
-          newMember = userBean.getUserByEmail(projectTeam.getProjectTeamPK().
+          newMember = userManager.getUserByEmail(projectTeam.getProjectTeamPK().
               getTeamMember());
           if (newMember != null && !projectTeamFacade.isUserMemberOfProject(
               project, newMember)) {
@@ -723,7 +720,7 @@ public class ProjectController {
    */
   public void deleteMemberFromTeam(Project project, String email,
       String toRemoveEmail) throws AppException {
-    Users userToBeRemoved = userBean.getUserByEmail(toRemoveEmail);
+    Users userToBeRemoved = userManager.getUserByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.USER_DOES_NOT_EXIST);
@@ -736,7 +733,7 @@ public class ProjectController {
           ResponseMessages.TEAM_MEMBER_NOT_FOUND);
     }
     projectTeamFacade.removeProjectTeam(project, userToBeRemoved);
-    Users user = userBean.getUserByEmail(email);
+    Users user = userManager.getUserByEmail(email);
     //remove the user name from HDFS
     hdfsUsersBean.removeProjectMember(projectTeam.getUser(), project);
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
@@ -765,8 +762,8 @@ public class ProjectController {
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, String owner,
       String toUpdateEmail, String newRole) throws AppException {
-    Users projOwner = userBean.getUserByEmail(owner);
-    Users user = userBean.getUserByEmail(toUpdateEmail);
+    Users projOwner = userManager.getUserByEmail(owner);
+    Users user = userManager.getUserByEmail(toUpdateEmail);
     if (user == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.USER_DOES_NOT_EXIST);
@@ -803,7 +800,7 @@ public class ProjectController {
    * @return a list of project team
    */
   public List<ProjectTeam> findProjectByUser(String email) {
-    Users user = userBean.getUserByEmail(email);
+    Users user = userManager.getUserByEmail(email);
     return projectTeamFacade.findByMember(user);
   }
 
@@ -869,7 +866,7 @@ public class ProjectController {
 
   public void addExampleJarToExampleProject(String username, Project project) {
 
-    Users user = userBean.getUserByEmail(username);
+    Users user = userManager.getUserByEmail(username);
     try {
       datasetController.createDataset(user, project, "TestJob", "jar file to calculate pi", -1, false, true);
     } catch (IOException ex) {
