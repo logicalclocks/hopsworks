@@ -29,7 +29,7 @@ import se.kth.hopsworks.util.PKIUtils;
  */
 @Path("/agent")
 @Stateless
-@RolesAllowed({"AGENT"})
+@RolesAllowed({"AGENT", "SYS_ADMIN"})
 public class AgentService {
 
     final static Logger logger = Logger.getLogger(AgentService.class.getName());
@@ -45,7 +45,7 @@ public class AgentService {
             String certificate = "no certificate";
             if (json.has("csr")) {
                 String csr = json.getString("csr");
-//                certificate = PKIUtils.signWithServerCertificate(csr);
+                certificate = PKIUtils.signWithServerCertificate(csr);
             }
 
             return Response.ok(certificate).build();
