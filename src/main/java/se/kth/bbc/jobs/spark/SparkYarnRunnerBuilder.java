@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.hopsworks.util.Settings;
 
@@ -140,7 +141,7 @@ public class SparkYarnRunnerBuilder {
     //Set app name
     builder.appName(jobName);
 
-    return builder.build(hadoopDir, sparkDir, nameNodeIpPort);
+    return builder.build(hadoopDir, sparkDir, nameNodeIpPort, JobType.SPARK);
   }
 
   public SparkYarnRunnerBuilder setJobName(String jobName) {

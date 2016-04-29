@@ -4,6 +4,8 @@ import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.security.PrivilegedExceptionAction;
 import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
@@ -12,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ws.rs.Path;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.activity.ActivityFacade;
@@ -55,6 +58,8 @@ public class FlinkController {
     @EJB
     private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
 
+    private String localPathAppJar;
+    private String path;
     /**
      * Start the Flink job as the given user.
      * <p/>
@@ -80,6 +85,16 @@ public class FlinkController {
                     "Job configuration is not a Flink job configuration.");
         } else if (!isFlinkJarAvailable()) {
             throw new IllegalStateException("Flink is not installed on this system.");
+        }
+        if(localPathAppJar!=null && !localPathAppJar.isEmpty()){
+            File tmpDir = new File(localPathAppJar);
+            if(!tmpDir.exists()){
+                tmpDir.mkdir();
+            }
+            //Copy job jar locaclly so that Flink client has access to it
+            //in YarnRunner
+
+            fops.copyToLocal(path, localPathAppJar+".jar");
         }
         String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
         UserGroupInformation proxyUser = ugiService.getProxyUser(username);
@@ -196,6 +211,7 @@ public class FlinkController {
 	}
 	HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
 	// If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
+        localPathAppJar = "/tmp/"+path.substring(path.indexOf("Projects"), path.length()-4);
 	path = path.replaceFirst("hdfs:/*Projects",
 			"hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
 	logger.log(Level.INFO, "Really executing Flink job by {0} at path: {1}", new Object[]{username, path});
@@ -212,6 +228,7 @@ public class FlinkController {
         config.setFlinkConfFile(settings.getFlinkConfFile());
         
 	config.setJarPath(path);
+        this.path = path;
 	return config;
   }
 }

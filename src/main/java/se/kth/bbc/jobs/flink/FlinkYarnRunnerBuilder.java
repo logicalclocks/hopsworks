@@ -1,7 +1,6 @@
 package se.kth.bbc.jobs.flink;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,11 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import org.apache.hadoop.yarn.api.records.LocalResource;
-import org.apache.hadoop.yarn.util.Records;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.hopsworks.util.Settings;
 
@@ -277,15 +273,13 @@ public class FlinkYarnRunnerBuilder {
     protected YarnRunner getYarnRunner(String project, final String flinkUser,
             String hadoopDir, final String flinkDir, 
             final String nameNodeIpPort) throws IOException {
-        isReadyForDeployment();
-
+              
         //Set Classpath and Jar Path
         String flinkClasspath = Settings.getFlinkDefaultClasspath(flinkDir);
-        String hdfsFlinkJarPath = Settings.getHdfsFlinkJarPath(flinkUser);
         //Create the YarnRunner builder for Flink, proceed with setting values
         YarnRunner.Builder builder = new YarnRunner.Builder(Settings.FLINK_AM_MAIN);
          
-        builder.addToAppMasterEnvironment("CLASSPATH", flinkClasspath/*+":"+"org.apache.flink.examples.java.graph.ConnectedComponents"*/);
+        builder.addToAppMasterEnvironment("CLASSPATH", flinkClasspath);
         String stagingPath = File.separator + "Projects" + File.separator + project
             + File.separator
             + Settings.PROJECT_STAGING_DIR + File.separator
@@ -293,10 +287,10 @@ public class FlinkYarnRunnerBuilder {
         builder.localResourcesBasePath(stagingPath);
         
         //Add Flink jar
-        builder.addLocalResource(Settings.FLINK_LOCRSC_FLINK_JAR, hdfsFlinkJarPath,
+        builder.addLocalResource(Settings.FLINK_LOCRSC_FLINK_JAR, "hdfs://"+nameNodeIpPort+"/user/glassfish/flink.jar",
                 false);
         //Add Flink conf file
-        builder.addLocalResource(Settings.FLINK_DEFAULT_CONF_FILE, "hdfs://10.0.2.15/user/glassfish/flink-conf.yaml",
+        builder.addLocalResource(Settings.FLINK_DEFAULT_CONF_FILE, "hdfs://"+nameNodeIpPort+"/user/glassfish/flink-conf.yaml",
                 false);
         //Add log4j properties file
 //        builder.addLocalResource(Settings.FLINK_DEFAULT_LOG4J_FILE, "hdfs://10.0.2.15/user/glassfish/log4j.properties",
@@ -308,9 +302,9 @@ public class FlinkYarnRunnerBuilder {
         builder.addLocalResource(Settings.FLINK_LOCRSC_APP_JAR, appJarPath,
             !appJarPath.startsWith("hdfs:"));
         
-        String logbackFile = "hdfs://10.0.2.15/user/glassfish/logback.xml";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
+        String logbackFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/logback.xml";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
         boolean hasLogback = new File(logbackFile).exists();
-        String log4jFile = "hdfs://10.0.2.15/user/glassfish/log4j.properties";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOG4J_NAME;
+        String log4jFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/log4j.properties";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOG4J_NAME;
 
         boolean hasLog4j = new File(log4jFile).exists();
         if (hasLogback) {
@@ -321,24 +315,20 @@ public class FlinkYarnRunnerBuilder {
         }
 
 
+        //Set Flink ApplicationMaster env parameters
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_APP_ID, YarnRunner.APPID_PLACEHOLDER);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_COUNT, String.valueOf(taskManagerCount));
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_MEMORY, String.valueOf(taskManagerMemoryMb));
-        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.FLINK_JAR_PATH, flinkJarPath.toString());
-        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, ""/*logbackFile+","+log4jFile*/);
-        //TODO: Removed fixed endpoint
-        //try {
-            builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, "glassfish"/*UserGroupInformation.getCurrentUser().getShortUserName()*/);
-             builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_HOME_DIR, "hdfs://"+nameNodeIpPort+"/user/"+"glassfish"/*UserGroupInformation.getCurrentUser().getShortUserName()*/+"/");
-        /*} catch (IOException ex) {
-            LOG.error("Error while getting Flink client username", ex);
-        }*/
-        
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_SLOTS, String.valueOf(taskManagerSlots));
+
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.FLINK_JAR_PATH, flinkJarPath.toString());
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, "");
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, flinkUser);
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_HOME_DIR, "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/");
+               
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DETACHED, String.valueOf(detached));
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_STREAMING_MODE, String.valueOf(streamingMode));
         if (dynamicPropertiesEncoded != null) {
-            //appMasterEnv.put(FlinkYarnRunnerBuilder.ENV_DYNAMIC_PROPERTIES, dynamicPropertiesEncoded);
             builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DYNAMIC_PROPERTIES, dynamicPropertiesEncoded);
         }
 
@@ -361,17 +351,13 @@ public class FlinkYarnRunnerBuilder {
         builder.appName(name);
         
         //Set up command
-        StringBuilder amargs = new StringBuilder(" run  -m yarn-cluster -yn 1 -yjm 1024m -ytm 1024m  -j flink-examples-batch_2.10-1.1-SNAPSHOT-ConnectedComponents.jar -c org.apache.flink.examples.java.graph.ConnectedComponents");
-//        amargs.append(" -n ").append(taskManagerCount);
-//        amargs.append(" -tm ").append(taskManagerMemoryMb);
-//        amargs.append(" -s ").append(taskManagerSlots);
-                
-        //TODO: Pass arguments according to flink 
-//        for (String s : jobArgs) {
-//          amargs.append(" ").append(s);
-//        }
+        StringBuilder amargs = new StringBuilder("");                
+        //Pass job arguments
+        for (String s : jobArgs) {
+          amargs.append(" ").append(s);
+        }
         builder.amArgs(amargs.toString());
-        return builder.build(hadoopDir, flinkDir, nameNodeIpPort);
+        return builder.build(hadoopDir, flinkDir, nameNodeIpPort, JobType.FLINK);
     }
     
    

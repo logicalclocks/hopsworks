@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.jobs.yarn.YarnRunner;
@@ -193,7 +194,7 @@ public final class CuneiformJob extends YarnJob {
 
     try {
       //Get the YarnRunner instance
-      runner = b.build(hadoopDir, sparkDir, nameNodeIpPort);
+      runner = b.build(hadoopDir, sparkDir, nameNodeIpPort, JobType.CUNEIFORM);
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               "Unable to create temp directory for logs.",

@@ -86,7 +86,6 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setJobManagerMemory(jobconfig.getAmMemory());
         flinkBuilder.setJobManagerCores(jobconfig.getAmVCores());
         flinkBuilder.setJobManagerQueue(jobconfig.getAmQueue());
-            
         
         
         if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){

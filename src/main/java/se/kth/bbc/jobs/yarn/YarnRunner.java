@@ -2,7 +2,10 @@ package se.kth.bbc.jobs.yarn;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -14,6 +17,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.flink.api.common.JobID;
+import org.apache.flink.api.common.JobSubmissionResult;
+import org.apache.flink.client.program.Client;
+import org.apache.flink.client.program.PackagedProgram;
+import org.apache.flink.client.program.ProgramInvocationException;
+import org.apache.flink.configuration.ConfigConstants;
+import org.apache.flink.yarn.FlinkYarnCluster;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,6 +43,7 @@ import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.util.IoUtils;
 import se.kth.hopsworks.util.Settings;
@@ -51,7 +62,7 @@ public class YarnRunner {
   private YarnClient yarnClient;
   private Configuration conf;
   private ApplicationId appId = null;
-
+  private JobType jobType;
   private final String amJarLocalName;
   private final String amJarPath;
   private final String amQueue;
@@ -94,66 +105,105 @@ public class YarnRunner {
 
     //Get application id
     yarnClient.start();
-    YarnClientApplication app = yarnClient.createApplication();
-    GetNewApplicationResponse appResponse = app.getNewApplicationResponse();
-    appId = appResponse.getApplicationId();
-    //And replace all occurences of $APPID with the real id.
-    fillInAppid(appId.toString());
+    //if(!isFlink){
 
-    //Check resource requests and availabilities
-    checkAmResourceRequest(appResponse);
+        YarnClientApplication app = yarnClient.createApplication();
+        GetNewApplicationResponse appResponse = app.getNewApplicationResponse();
+        appId = appResponse.getApplicationId();
+        //And replace all occurences of $APPID with the real id.
+        fillInAppid(appId.toString());
 
-    //Set application name and type
-    appContext = app.getApplicationSubmissionContext();
-    appContext.setApplicationName(appName);
-    appContext.setApplicationType("HopsWorks-Yarn");
+        //Check resource requests and availabilities
+        checkAmResourceRequest(appResponse);
 
-    //Add local resources to AM container
-    Map<String, LocalResource> localResources = addAllToLocalResources(nameNodeIpPort);
+        //Set application name and type
+        appContext = app.getApplicationSubmissionContext();
+        appContext.setApplicationName(appName);
+        appContext.setApplicationType("HopsWorks-Yarn");
 
-    //Copy files to HDFS that are expected to be there
-    copyAllToHDFS();
+        //Add local resources to AM container
+        Map<String, LocalResource> localResources = addAllToLocalResources(nameNodeIpPort);
 
-    //Set up environment
-    Map<String, String> env = new HashMap<>();
-    env.putAll(amEnvironment);
-    setUpClassPath(env);
+        //Copy files to HDFS that are expected to be there
+        copyAllToHDFS();
 
-    //Set up commands
-    List<String> amCommands = setUpCommands();
+        //Set up environment
+        Map<String, String> env = new HashMap<>();
+        env.putAll(amEnvironment);
+        setUpClassPath(env);
 
-    //TODO: set up security tokens
-    //Set up container launch context
-    ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
-        localResources, env, amCommands, null, null, null);
-    // TODO: implement this for real. doAs
-    //    UserGroupInformation proxyUser = UserGroupInformation.
-    //            createProxyUser("user", UserGroupInformation.
-    //                    getCurrentUser());
+        //Set up commands
+        List<String> amCommands = setUpCommands();
 
-    //Finally set up context
-    appContext.setAMContainerSpec(amContainer); //container spec
-    appContext.setResource(Resource.newInstance(amMemory, amVCores)); //resources
-    appContext.setQueue(amQueue); //Queue
+        //TODO: set up security tokens
+        //Set up container launch context
+        ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
+            localResources, env, amCommands, null, null, null);
+        // TODO: implement this for real. doAs
+        //    UserGroupInformation proxyUser = UserGroupInformation.
+        //            createProxyUser("user", UserGroupInformation.
+        //                    getCurrentUser());
 
-    // Signify that ready to submit
-    readyToSubmit = true;
+        //Finally set up context
+        appContext.setAMContainerSpec(amContainer); //container spec
+        appContext.setResource(Resource.newInstance(amMemory, amVCores)); //resources
+        appContext.setQueue(amQueue); //Queue
 
-    //Run any remaining commands
-    for (YarnSetupCommand c : commands) {
-      c.execute(this);
-    }
+        // Signify that ready to submit
+        readyToSubmit = true;
 
-    //And submit
-    logger.log(Level.INFO, "Submitting application {0} to applications manager.", appId);
-    yarnClient.submitApplication(appContext);
+        //Run any remaining commands
+        for (YarnSetupCommand c : commands) {
+          c.execute(this);
+        }
 
-    yarnClient.close();
+        //And submit
+        logger.log(Level.INFO, "Submitting application {0} to applications manager.", appId);
+        yarnClient.submitApplication(appContext);
+        
+        // Create a new client for monitoring
+        YarnClient newClient = YarnClient.createYarnClient();
+        newClient.init(conf);
+        YarnMonitor monitor = new YarnMonitor(appId, newClient);
+        if(jobType == JobType.FLINK){
+            String[] args  = {};
+            if(amArgs!=null && !amArgs.isEmpty()){
+                args = amArgs.trim().split(" ");
+            }
+            //app.jar path 
+            String appJarPath = "/tmp"+localResources.get("app.jar").getResource().getFile();
+            //copy app jar locally
+            File file = new File(appJarPath);
+            //TODO: Remove hard-coded parallelism
+            int parallelism = 1;
 
-    // Create a new client for monitoring
-    YarnClient newClient = YarnClient.createYarnClient();
-    newClient.init(conf);
-    YarnMonitor monitor = new YarnMonitor(appId, newClient);
+            Path sessionFilesDir = new Path(localResourcesBasePath);
+            org.apache.flink.configuration.Configuration flinkConf = new org.apache.flink.configuration.Configuration();
+            //ApplicationReport appReport = yarnClient.getApplicationReport(appId);
+            FlinkYarnCluster cluster = new FlinkYarnCluster(yarnClient, appId, conf, flinkConf, sessionFilesDir, false);
+            cluster.connectToCluster();
+
+            InetSocketAddress jobManagerAddress = cluster.getJobManagerAddress();
+
+            org.apache.flink.configuration.Configuration clientConf = new org.apache.flink.configuration.Configuration();
+            clientConf.setInteger(ConfigConstants.JOB_MANAGER_IPC_PORT_KEY, jobManagerAddress.getPort());
+            clientConf.setString(ConfigConstants.JOB_MANAGER_IPC_ADDRESS_KEY, jobManagerAddress.getHostName());
+            Client client = new Client(clientConf);
+            try {
+                PackagedProgram program = new PackagedProgram(file, args);
+                client.setPrintStatusDuringExecution(false);
+
+                JobSubmissionResult res =  client.runDetached(program, parallelism);
+                JobID jobId = res.getJobID();
+                cluster.stopAfterJob(jobId);
+            } catch (ProgramInvocationException ex) {
+                logger.log(Level.SEVERE, "Error while Flink Client submits jobs: {0}", ex.getMessage());
+                
+            }
+        }
+        yarnClient.close();
+        
+    
 
     //Clean up some
     removeAllNecessary();
@@ -356,7 +406,7 @@ public class YarnRunner {
     //vargs.add(" -Dlogback.configurationFile=file:logback.xml");
     //vargs.add(" -Dlog4j.configuration=file:log4j.properties");
     //vargs.add(" -Dlog.file=/srv/hadoop/logs/userlogs/jobmanager1.out") ;   
-//Add jvm options
+    //Add jvm options
     for (String s : javaOptions) {
       vargs.add(s);
     }
@@ -364,12 +414,14 @@ public class YarnRunner {
     vargs.add(amMainClass);
     // Set params for Application Master
     vargs.add(amArgs);
-
+    
     vargs.add("1> ");
     vargs.add(stdOutPath);
 
     vargs.add("2> ");
     vargs.add(stdErrPath);
+
+    
 
     // Get final commmand
     StringBuilder amcommand = new StringBuilder();
@@ -400,6 +452,7 @@ public class YarnRunner {
   private YarnRunner(Builder builder) {
     this.amJarLocalName = builder.amJarLocalName;
     this.amJarPath = builder.amJarPath;
+    this.jobType = builder.jobType;
     this.amQueue = builder.amQueue;
     this.amMemory = builder.amMemory;
     this.amVCores = builder.amVCores;
@@ -475,7 +528,8 @@ public class YarnRunner {
     private String amJarPath;
     //The name of the application master jar in the local resources
     private String amJarLocalName;
-
+    //Which job type is running 
+    private JobType jobType;
     //Optional attributes
     // Queue for App master
     private String amQueue = "default"; //TODO: enable changing this, or infer from user data
@@ -589,6 +643,13 @@ public class YarnRunner {
       return this;
     }
 
+    /**
+     * Set the job type for this runner instance.
+     * @param jobType 
+     */
+    public void setJobType(JobType jobType){
+        this.jobType = jobType;
+    }
     /**
      * Set the configuration of the Yarn Application to the values contained in the YarnJobConfiguration object. This
      * overrides any defaults or previously set values contained in the config file.
@@ -761,11 +822,12 @@ public class YarnRunner {
      * @param hadoopDir
      * @param sparkDir
      * @param nameNodeIpPort
+     * @param jobType
      * @return
      * @throws IllegalStateException Thrown if (a) configuration is not found, (b) invalid main class name
      * @throws IOException Thrown if stdOut and/or stdErr path have not been set and temp files could not be created
      */
-    public YarnRunner build(String hadoopDir, String sparkDir, String nameNodeIpPort) throws IllegalStateException, IOException {
+    public YarnRunner build(String hadoopDir, String sparkDir, String nameNodeIpPort, JobType jobType) throws IllegalStateException, IOException {
       //Set configuration
       try {
         setConfiguration(hadoopDir, sparkDir, nameNodeIpPort);
@@ -773,7 +835,7 @@ public class YarnRunner {
         throw new IllegalStateException("Failed to load configuration", e);
       }
 
-     
+      
       if(yarnClient == null){
         //Set YarnClient
         yarnClient = YarnClient.createYarnClient();
@@ -867,7 +929,7 @@ public class YarnRunner {
             hdfsConf);
         throw new IllegalStateException("No HDFS conf file");
       }
-
+      
       //Set the Configuration object for the returned YarnClient
       conf = new Configuration();
       conf.addResource(new Path(confFile.getAbsolutePath()));
@@ -916,4 +978,28 @@ public class YarnRunner {
       return "YarnRunner, ApplicationSubmissionContext: " + appContext;
     }
   }
+  
+  
+    /**
+     * Utility method that converts a string of the form "host:port" into an {@link InetSocketAddress}.
+     * The returned InetSocketAddress may be unresolved!
+     * 
+     * @param hostport The "host:port" string.
+     * @return The converted InetSocketAddress.
+     */
+    private static InetSocketAddress getInetFromHostport(String hostport) {
+            // from http://stackoverflow.com/questions/2345063/java-common-way-to-validate-and-convert-hostport-to-inetsocketaddress
+            URI uri;
+            try {
+                    uri = new URI("my://" + hostport);
+            } catch (URISyntaxException e) {
+                    throw new RuntimeException("Could not identify hostname and port in '" + hostport + "'.", e);
+            }
+            String host = uri.getHost();
+            int port = uri.getPort();
+            if (host == null || port == -1) {
+                    throw new RuntimeException("Could not identify hostname and port in '" + hostport + "'.");
+            }
+            return new InetSocketAddress(host, port);
+    }
 }
