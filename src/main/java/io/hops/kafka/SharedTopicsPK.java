@@ -26,7 +26,7 @@ public class SharedTopicsPK implements Serializable {
     private String topicName;
     @Basic(optional = false)
     @NotNull
-    @Column(name = "owner_id")
+    @Column(name = "project_id")
     private int projectId;
 
     public SharedTopicsPK() {

@@ -15,10 +15,10 @@
       <div class="col-md-12">
         <label class="control-label">{{selectProjectCtrl.msg}}</label><br>
       </div>
-      <br>s
+      <br>
     </div>
     <div class="row"></div>
-    <hr />s
+    <hr />
     <div class="row" style="padding-left: 30px">
       <label class="control-label">Projects</label>
       <ui-select name="project_name" theme="select2" style="margin-left: 10px"
@@ -35,7 +35,7 @@
 
       </ui-select><br>
       <span ng-show="(pickProjectForm.$submitted || pickProjectForm.project_name.$dirty) & amp;
-          & amp;
+         // & amp;
           pickProjectForm.project_name.$error.required"
             class="text-danger ng-hide">
         Choose a project.

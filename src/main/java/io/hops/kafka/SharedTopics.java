@@ -36,7 +36,7 @@ public class SharedTopics implements Serializable {
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 1000)
-    @Column(name = "project_id")
+    @Column(name = "owner_id")
     private Integer projectId;
 
     public SharedTopics() {
@@ -48,8 +48,8 @@ public class SharedTopics implements Serializable {
     }
 
     public SharedTopics(String topicName, int owningId, Integer projectId) {
-        this.sharedTopicsPK = new SharedTopicsPK(topicName, owningId);
-        this.projectId = projectId;
+        this.sharedTopicsPK = new SharedTopicsPK(topicName, projectId);
+        this.projectId = owningId;
     }
 
     public SharedTopicsPK getSharedTopicsPK() {

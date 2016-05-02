@@ -81,7 +81,7 @@ angular.module('hopsWorksApp')
                * @param {type} topicName
                * @returns {undefined} true if success, false otheriwse
                */
-              removeAcl: function (projectId, topicName, aclId) {
+              removeTopicAcl: function (projectId, topicName, aclId) {
                 return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/removeAcl/' + aclId);
               },
               /**

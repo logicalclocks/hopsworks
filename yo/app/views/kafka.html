@@ -68,16 +68,16 @@
                     <tr ng-repeat="acl in row.acls">
                       <td ng-if="kafkaCtrl.activeId === -1">{{acl.username}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.username" placeholder="Username"></td>
-                      <td ng-if="kafkaCtrl.activeId === -1">{{acl.permission_type}}</td>
+                      <td ng-if="kafkaCtrl.activeId === -1">{{acl.permissionType}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id">
-                        <select name="permission_type" ng-model="kafkaCtrl.permission_type">
+                        <select name="permission_type" ng-model="kafkaCtrl.permissionType">
                           <option value="allow">Allow</option>
                           <option value="deny">Deny</option>
                         </select>
                       </td>
-                      <td ng-if="kafkaCtrl.activeId === -1">{{acl.operation_type}}</td>
+                      <td ng-if="kafkaCtrl.activeId === -1">{{acl.operationType}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id">
-                        <select name="operation_type" ng-model="kafkaCtrl.operation_type">
+                        <select name="operation_type" ng-model="kafkaCtrl.operationType">
                           <option value="read">read</option>
                           <option value="write">write</option>
                           <option value="details">details</option>
@@ -97,11 +97,11 @@
                         </select>
                       </td>
                       <td>
-                        <button ng-if="kafkaCtrl.activeId === -1" type="button" ng-click="kafkaCtrl.removeAcl(row.id, acl.id)" class="btn btn-sm btn-danger">
+                        <button ng-if="kafkaCtrl.activeId === -1" type="button" ng-click="kafkaCtrl.removeAcl(row.name, acl.id)" class="btn btn-sm btn-danger">
                           <i class="glyphicon glyphicon-remove">
                           </i>
                         </button>
-                        <button ng-if="kafkaCtrl.activeId === acl.id" type="button" ng-click="kafkaCtrl.removeAcl(row.id, acl.id)" class="btn btn-sm btn-danger">
+                        <button ng-if="kafkaCtrl.activeId === acl.id" type="button" ng-click="kafkaCtrl.removeAcl(row.name, acl.id)" class="btn btn-sm btn-danger">
                           <i class="glyphicon glyphicon-remove">
                           </i>
                         </button>
@@ -137,9 +137,9 @@
                     </thead>
                     <thead ng-show="row.shares.length > 0">
                     <tr ng-repeat="proj in row.shares">
-                      <td>{{proj.proj_name}}</td>
+                      <td>{{proj.name}}</td>
                       <td>
-                        <button type="button" ng-click="kafkaCtrl.unshareTopic(row.id, proj.proj_name)" class="btn btn-sm btn-danger">
+                        <button type="button" ng-click="kafkaCtrl.unshareTopic(row.name, proj.id)" class="btn btn-sm btn-danger">
                           <i class="glyphicon glyphicon-remove">
                           </i>
                         </button>
@@ -182,7 +182,7 @@
                 </td>
                 <td class="col-sm-1">
                   <button type="button" ng-show="!row.isSelected" ng-click="row.isSelected = !row.isSelected; kafkaCtrl.activeId = -1; kafkaCtrl.getTopicDetails(row.name);
-                      kafkaCtrl.topicIsSharedTo(row.name);kafkaCtrl.getAclsForTopic(rowJ.name);
+                      kafkaCtrl.topicIsSharedTo(row.name);kafkaCtrl.getAclsForTopic(row.name);
                           " class="btn btn-sm btn-primary">
                     Select
                   </button>

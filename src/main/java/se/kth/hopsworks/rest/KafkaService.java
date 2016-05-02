@@ -31,6 +31,7 @@ import io.hops.kafka.KafkaFacade;
 import io.hops.kafka.SharedProjectDTO;
 import io.hops.kafka.TopicDefaultValueDTO;
 import io.hops.kafka.TopicDetailsDTO;
+import java.util.ArrayList;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import se.kth.hopsworks.controller.ProjectDTO;
@@ -162,9 +163,16 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        TopicDetailsDTO topic = kafka.getTopicDetails(project, topicName);
+        TopicDetailsDTO dto = kafka.getTopicDetails(project, topicName);
+        List<TopicDetailsDTO> topic = new ArrayList<>();
+        topic.add(dto);
+        
+        GenericEntity<List<TopicDetailsDTO>> topics 
+                = new GenericEntity<List<TopicDetailsDTO>>(topic){
+                };
+        
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-                topic).build();
+                topics).build();
     }
     
     @GET
@@ -174,15 +182,22 @@ public class KafkaService {
     public Response defaultTopicValues(
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
-        JsonResponse json = new JsonResponse();
+
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Incomplete request!");
         }
-
-        TopicDefaultValueDTO values = new TopicDefaultValueDTO(
+        
+        TopicDefaultValueDTO valueDto = new TopicDefaultValueDTO(
                 settings.getKafkaDefaultNumReplicas(), 
                 settings.getKafkaDefaultNumPartitions());
+        List<TopicDefaultValueDTO> valueDtos = new ArrayList<>();
+        valueDtos.add(valueDto);
+        
+        
+         GenericEntity<List<TopicDefaultValueDTO>> values
+                = new GenericEntity<List<TopicDefaultValueDTO>>(valueDtos) {
+        };
         
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 values).build();

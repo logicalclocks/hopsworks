@@ -80,7 +80,7 @@ angular.module('hopsWorksApp')
                             console.log(topicName);
                             for(var i =0;i<self.topics.length;i++){
                               if(self.topics[i].name === topicName){
-                                  console.log('this the topicName: '+self.topics[i].name)
+                                  console.log('this is the topicName: '+self.topics[i].name)
                                   self.topics[i].partitionDetails= success.data;
 
                                   return;
@@ -113,7 +113,8 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 //The user changed their mind.
               });
-               self.getAllTopics();
+              self.getAllTopics();
+
             };
 
             self.removeTopic = function (topicName) {
@@ -137,7 +138,6 @@ angular.module('hopsWorksApp')
                       function (success) {
                           for(var i =0;i<self.topics.length;i++){
                               if(self.topics[i].name === topicName){
-                                  console.log('this the topicName: '+self.topics[i].name)
                                   self.topics[i].acls = success.data;
                                   return;
                               }
@@ -152,13 +152,13 @@ angular.module('hopsWorksApp')
                 
                 ModalService.createTopicAcl('lg', self.projectId, topicName).then(
                       function (success) {
-                          self.getAclsForTopic(topicName);
                       }, function (error) {
                 //The user changed their mind.
                 growl.error(error.data.errorMsg, {title: 'adding acl', ttl: 5000});
 
               });
-                
+                self.getAclsForTopic(topicName);
+   
             };
 
             self.removeAcl = function (topicName, aclId) {
@@ -176,9 +176,9 @@ angular.module('hopsWorksApp')
               ModalService.selectProject('lg', "/[^]*/",
                       "Select a Project to share the topic with.").then(
                       function (success) {
-                        var destProj = success;
+                        var destProj = success.projectId;
 
-                        KafkaService.shareTopic(self.projectId, topicName, destProj.projectId).then(
+                        KafkaService.shareTopic(self.projectId, topicName, destProj).then(
                                 function (success) {
                                   self.topicIsSharedTo(topicName);
                                   growl.success(success.data.successMessage, {title: 'Topic shared successfully with project: ' + destProj.name, ttl: 2000});
@@ -193,13 +193,13 @@ angular.module('hopsWorksApp')
 
             };
               
-            self.unshareTopic = function(topicName, projectName) {
-              ModalService.selectProject('lg', "/[^]*/",
-                      "problem selecting project").then(
-                      function (success) {
-                        var destProj = success;
+            self.unshareTopic = function(topicName, projectId) {
+//              ModalService.selectProject('lg', "/[^]*/",
+//                      "problem selecting project").then(
+//                      function (success) {
+//                        var destProj = success;
 
-                        KafkaService.unshareTopic(self.projectId, topicName, projectName).then(
+                        KafkaService.unshareTopic(self.projectId, topicName, projectId).then(
                                 function (success) {
                                   self.topicIsSharedTo(topicName);
                                   growl.success(success.data.successMessage, {title: 'Topic share removed (unshared) rom project: ' + destProj.name, ttl: 2000});
@@ -208,9 +208,9 @@ angular.module('hopsWorksApp')
                         });
 
 
-                      }, function (error) {
-                //The user changed their mind.
-              });
+//                      }, function (error) {
+//                //The user changed their mind.
+//              });
 
             };
             
@@ -219,8 +219,7 @@ angular.module('hopsWorksApp')
                         function (success) {                         
                            for(var i =0;i<self.topics.length;i++){
                               if(self.topics[i].name === topicName){
-                                  console.log('this the topicName: '+self.topics[i].name)
-                                  self.topics[i].shares = success.data;
+                                  self.topics[i].shares=success.data;
                                   return;
                               }
                           }

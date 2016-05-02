@@ -12,6 +12,8 @@ package io.hops.kafka;
 public class SharedProjectDTO {
     
     private String name;
+    private Integer id;
+    
 
     public SharedProjectDTO() {
     }
@@ -19,6 +21,20 @@ public class SharedProjectDTO {
     public SharedProjectDTO(String name) {
         this.name = name;
     }
+
+    public SharedProjectDTO(String name, Integer id) {
+        this.name = name;
+        this.id = id;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+    
 
     public String getName() {
         return name;

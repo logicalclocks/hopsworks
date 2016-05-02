@@ -221,19 +221,18 @@ public class KafkaFacade {
             Integer destProjectId) throws AppException{
     
      SharedTopics pt = em.find(SharedTopics.class, 
-             new SharedTopicsPK(topicName, owningProjectId));
+             new SharedTopicsPK(topicName, destProjectId));
         if (pt == null) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "Kafka topic is not shared to the project.");
         }
-        SharedTopics st = new SharedTopics(topicName, owningProjectId, destProjectId);
-        em.remove(st);
+       // SharedTopics st = new SharedTopics(topicName, owningProjectId, destProjectId);
+        em.remove(pt);
     }
     
     public List<SharedProjectDTO> topicIsSharedTo(String topicName, Integer projectId) {
 
         List<SharedProjectDTO> shareProjectDtos = new ArrayList<>();
-        SharedProjectDTO sharedProjectDto;
 
         TypedQuery<SharedTopics> query = em.createNamedQuery(
                 "SharedTopics.findByTopicName", SharedTopics.class);
@@ -243,11 +242,9 @@ public class KafkaFacade {
 
         for (SharedTopics st : projectIds) {
 
-            Project project = em.find(Project.class, st.getProjectId());
+            Project project = em.find(Project.class, st.getSharedTopicsPK().getProjectId());
             if (project != null) {
-                sharedProjectDto = new SharedProjectDTO();
-                sharedProjectDto.setName(project.getName());
-                shareProjectDtos.add(sharedProjectDto);
+                shareProjectDtos.add(new SharedProjectDTO(project.getName(), project.getId()));
             }
         }
 
@@ -302,8 +299,9 @@ public class KafkaFacade {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "aclId does not belong the specified topic");
         }
-        ta = new TopicAcls(aclId, topicName, ta.getProjectId(), ta.getUsername(), ta.getPermissionType(),
-                ta.getOperationType(), ta.getHost(), ta.getRole());
+//        ta = new TopicAcls(aclId, topicName, ta.getProjectId(), ta.getUsername(), ta.getPermissionType(),
+//                ta.getOperationType(), ta.getHost(), ta.getRole());
+//        em.merge(ta);
         em.remove(ta);
     }
     
@@ -323,7 +321,7 @@ public class KafkaFacade {
 
         List<AclDTO> aclDtos = new ArrayList<>();
         for (TopicAcls ta : acls) {
-            aclDtos.add(new AclDTO(ta.getUsername(), ta.getPermissionType(),
+            aclDtos.add(new AclDTO(ta.getId(), ta.getUsername(), ta.getPermissionType(),
                     ta.getOperationType(), ta.getHost(), ta.getRole()));
 
         }

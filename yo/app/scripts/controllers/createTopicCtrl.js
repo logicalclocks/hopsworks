@@ -16,7 +16,7 @@ angular.module('hopsWorksApp')
                                   self.partitioning_factor = success.data.numOfReplicas;
                                   
                                 }, function (error) {
-                                growl.error(error.data.errorMsg, {title: 'Could not get list of Projects', ttl: 5000, referenceId: 21});
+                                growl.error(error.data.errorMsg, {title: 'Could not get defualt topic values', ttl: 5000, referenceId: 21});
                         });
             };
             
