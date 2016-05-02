@@ -12,6 +12,7 @@ import javax.ejb.Stateless;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -40,7 +41,7 @@ public class AgentService {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response sign(@Context HttpServletRequest req, String jsonString) {
         try {
-            JSONObject json = new JSONObject(jsonString);
+          JSONObject json = new JSONObject(jsonString);
             boolean toRegister = false;
             String certificate = "no certificate";
             if (json.has("csr")) {

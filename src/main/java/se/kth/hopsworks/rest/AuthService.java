@@ -124,7 +124,7 @@ public class AuthService {
           am.registerLoginInfo(user, UserAuditActions.LOGIN.name(),
                   UserAuditActions.SUCCESS.name(), req);
           //if the logedin user has no supported role logout
-          if (!sc.isUserInRole(BBCGroup.BBC_USER.name()) && !sc.isUserInRole(BBCGroup.SYS_ADMIN.name())) {
+          if (!sc.isUserInRole(BBCGroup.BBC_USER.name()) && !sc.isUserInRole(BBCGroup.SYS_ADMIN.name()) && !sc.isUserInRole(BBCGroup.AGENT.name())) {
             am.registerLoginInfo(user, UserAuditActions.UNAUTHORIZED.getValue(),
                     UserAuditActions.FAILED.name(), req);
            userController.setUserIsOnline(user, AuthenticationConstants.IS_OFFLINE);

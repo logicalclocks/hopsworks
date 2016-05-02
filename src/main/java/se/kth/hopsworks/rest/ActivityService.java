@@ -26,7 +26,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
 
 @Path("/activity")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"SYS_ADMIN", "BBC_USER", "AGENT"})
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
