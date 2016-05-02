@@ -78,7 +78,14 @@ angular.module('hopsWorksApp')
                 KafkaService.getTopicDetails(self.projectId, topicName).then(
                         function (success) {
                             console.log(topicName);
-                            self.topics[topicName].partitionDetails= success.data;
+                            for(var i =0;i<self.topics.length;i++){
+                              if(self.topics[i].name === topicName){
+                                  console.log('this the topicName: '+self.topics[i].name)
+                                  self.topics[i].partitionDetails= success.data;
+
+                                  return;
+                              }
+                          }
                         }, function (error) {
                     growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                });
@@ -103,13 +110,10 @@ angular.module('hopsWorksApp')
 
               ModalService.createTopic('lg', self.projectId).then(
                       function (success) {
-//                        var destProj = success;
-
-
                       }, function (error) {
                 //The user changed their mind.
               });
-
+               self.getAllTopics();
             };
 
             self.removeTopic = function (topicName) {
@@ -131,7 +135,13 @@ angular.module('hopsWorksApp')
             self.getAclsForTopic = function (topicName) {
               KafkaService.getAclsForTopic(self.projectId, topicName).then(
                       function (success) {
-                        self.topics[topicName].acls = success.data;
+                          for(var i =0;i<self.topics.length;i++){
+                              if(self.topics[i].name === topicName){
+                                  console.log('this the topicName: '+self.topics[i].name)
+                                  self.topics[i].acls = success.data;
+                                  return;
+                              }
+                          }
                         self.activeId = "";
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to get ACLs for the topic', ttl: 5000});
@@ -139,20 +149,16 @@ angular.module('hopsWorksApp')
             };
 
             self.addAcl = function (topicName) {
-              var acl = {};
-              acl.role = "*";
-              acl.username = self.username;
-              acl.permission_type = self.permission_type;
-              acl.operation_type = self.operation_type;
-              acl.host = self.host;
-
-              KafkaService.addAcl(self.projectId, topicName, acl).then(
+                
+                ModalService.createTopicAcl('lg', self.projectId, topicName).then(
                       function (success) {
-                        self.getAclsForTopic(topicName);
+                          self.getAclsForTopic(topicName);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to add topic', ttl: 5000});
-              });
+                //The user changed their mind.
+                growl.error(error.data.errorMsg, {title: 'adding acl', ttl: 5000});
 
+              });
+                
             };
 
             self.removeAcl = function (topicName, aclId) {
@@ -210,9 +216,14 @@ angular.module('hopsWorksApp')
             
             self.topicIsSharedTo = function (topicName) {
                 KafkaService.topicIsSharedTo(this.projectId, topicName).then(
-                        function (success) {
-                           self.topics[topicName].shares = success.data;
-                           console.log('the data is :');
+                        function (success) {                         
+                           for(var i =0;i<self.topics.length;i++){
+                              if(self.topics[i].name === topicName){
+                                  console.log('this the topicName: '+self.topics[i].name)
+                                  self.topics[i].shares = success.data;
+                                  return;
+                              }
+                          }
                         }, function (error) {
                     growl.error(error.data.errorMsg, {title: 'Failed to get topic sharing information', ttl: 5000});
                 });

@@ -10,22 +10,49 @@ package io.hops.kafka;
  * @author misdess
  */
 public class TopicDTO {
+
+    private String name;
+
+    private Integer numOfReplicas;
     
-  private String name;
-  // TODO - put in all the name details here
+    private Integer numOfPartitions;
 
-  public TopicDTO() {
-}
-  public TopicDTO(String name) {
-    this.name = name;
-  }
+    // TODO - put in all the name details here
+    public TopicDTO() {
+    }
 
-  public String getName() {
-    return name;
-  }
+    public TopicDTO(String name) {
+        this.name = name;
+    }
 
-  public void setName(String name) {
-    this.name = name;
-  }
+    public TopicDTO(String name, Integer numOfReplicas, Integer numOfPartitions) {
+        this.name = name;
+        this.numOfReplicas = numOfReplicas;
+        this.numOfPartitions = numOfPartitions;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getNumOfPartitions() {
+        return numOfPartitions;
+    }
+
+    public Integer getNumOfReplicas() {
+        return numOfReplicas;
+    }
+
+    public void setNumOfPartitions(Integer numOfPartitions) {
+        this.numOfPartitions = numOfPartitions;
+    }
+
+    public void setNumOfReplicas(Integer numOfReplicas) {
+        this.numOfReplicas = numOfReplicas;
+    }
 
 }

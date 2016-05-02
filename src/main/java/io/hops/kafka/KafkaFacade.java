@@ -67,7 +67,7 @@ public class KafkaFacade {
         List<ProjectTopics> res = query.getResultList();
         List<TopicDTO> topics = new ArrayList<>();
         for (ProjectTopics pt : res) {
-            topics.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName()));
+            topics.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName(), 3,2));
         }
         return topics;
     }
@@ -254,36 +254,36 @@ public class KafkaFacade {
         return shareProjectDtos;
     }
     
-    public void addAclsToTopic(String topicName, String projectName, AclDTO dto)
+    public void addAclsToTopic(String topicName, Integer projectId, AclDTO dto)
             throws AppException {
         
-        addAclsToTopic(topicName, dto.getUsername(), projectName, dto.getPermissionType(), 
+        addAclsToTopic(topicName, dto.getUsername(), projectId, dto.getPermissionType(), 
             dto.getOperationType(), dto.getHost(), dto.getRole());
     }
     private void addAclsToTopic(String topicName, String userName,
-            String projectName, String permission_type, String operation_type,
+            Integer projectId, String permission_type, String operation_type,
             String host, String role) throws AppException {
        
-        //get the project id
-        TypedQuery<Project> query = em.createNamedQuery("Project.findByName",
-                Project.class);
-        query.setParameter("name", projectName);
-        Project project  = query.getSingleResult();
-        
-        if (project == null) {
-            throw new AppException(Response.Status.FOUND.getStatusCode(),
-                    "The specified project for the topic is not in database");
-        }
-        
-        ProjectTopics pt = em.find(ProjectTopics.class, 
-                new ProjectTopicsPK(topicName, project.getId()));
+//        //get the project id
+//        TypedQuery<Project> query = em.createNamedQuery("Project.findByName",
+//                Project.class);
+//        query.setParameter("name", projectName);
+//        Project project  = query.getSingleResult();
+//        
+//        if (project == null) {
+//            throw new AppException(Response.Status.FOUND.getStatusCode(),
+//                    "The specified project for the topic is not in database");
+//        }
+//        
+//        ProjectTopics pt = em.find(ProjectTopics.class, 
+//                new ProjectTopicsPK(topicName, project.getId()));
+//
+//        if (pt == null) {
+//            throw new AppException(Response.Status.FOUND.getStatusCode(),
+//                    "Topic does not belong to the project.");
+//        }
 
-        if (pt == null) {
-            throw new AppException(Response.Status.FOUND.getStatusCode(),
-                    "Topic does not belong to the project.");
-        }
-
-        TopicAcls ta = new TopicAcls(topicName, project.getId(), userName, permission_type,
+        TopicAcls ta = new TopicAcls(topicName, projectId, userName, permission_type,
                 operation_type, host, role);
         em.merge(ta);
         em.persist(ta);

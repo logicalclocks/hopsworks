@@ -560,7 +560,7 @@ angular.module('hopsWorksApp')
               createTopicAcl: function (size, projectId, topicName) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/createTopicAcl.html',
-                  controller: 'CreateTopicAclCtrl as createTopicAclCtrl',
+                  controller: 'CreateAclCtrl as createAclCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',
@@ -579,7 +579,7 @@ angular.module('hopsWorksApp')
                     },
                     topicName: function () {
                       return topicName;
-                    }
+                  }
                   }
                 });
                 return modalInstance.result;

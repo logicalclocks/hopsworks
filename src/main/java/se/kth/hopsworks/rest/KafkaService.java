@@ -29,6 +29,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.users.UserFacade;
 import io.hops.kafka.KafkaFacade;
 import io.hops.kafka.SharedProjectDTO;
+import io.hops.kafka.TopicDefaultValueDTO;
 import io.hops.kafka.TopicDetailsDTO;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -165,7 +166,28 @@ public class KafkaService {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 topic).build();
     }
+    
+    @GET
+    @Path("/defaultTopicValues")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+    public Response defaultTopicValues(
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException, Exception {
+        JsonResponse json = new JsonResponse();
+        if (projectId == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Incomplete request!");
+        }
 
+        TopicDefaultValueDTO values = new TopicDefaultValueDTO(
+                settings.getKafkaDefaultNumReplicas(), 
+                settings.getKafkaDefaultNumPartitions());
+        
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                values).build();
+    }
+    
     @GET
     @Path("/topic/{topic}/share/{projId}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -237,7 +259,7 @@ public class KafkaService {
         }
 
         try {
-            kafkaFacade.addAclsToTopic(topicName, project.getName(), aclDto);
+            kafkaFacade.addAclsToTopic(topicName, projectId, aclDto);
         } catch (Exception e) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Problem adding ACL to topic.");

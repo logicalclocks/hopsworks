@@ -6,7 +6,7 @@
 </div>
 <div growl reference="21" class="pull-right"></div>
 <div class="modal-body">
-
+    
 
     <form role="form" name="pickProjectForm" 
           ng-submit="createTopicCtrl.createTopic()" novalidate
@@ -19,9 +19,15 @@
                 </div>
             </div>
             <div class="col-md-12">
+                <label class="control-label">Number of partitions</label><br>
+                <div class="col-sm-12">
+                    <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.num_paritions" placeholder="num_paritions">
+                </div>
+            </div>
+                    <div class="col-md-12">
                 <label class="control-label">Number of Replicas</label><br>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.partitionReplicas" placeholder="Num replicas">
+                    <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.partitioning_factor" placeholder="partitioning_factor">
                 </div>
             </div>
             <br>
@@ -31,7 +37,7 @@
         <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
 
             <button class="btn btn-default" type="button" ng-click="createTopicCtrl.close()">Cancel</button>
-            <button class="btn btn-primary" type="submit">
+            <button class="btn btn-primary" type="submit" ng-click="createTopicCtrl.close()">
                 Create
             </button>
 

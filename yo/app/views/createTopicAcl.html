@@ -1,6 +1,6 @@
 
 <div class="modal-header">
-    <button class="close" ng-click="createTopicAclCtrl.close()" data-dismiss="modal" aria-hidden="true"
+    <button class="close" ng-click="createAclCtrl.close()" data-dismiss="modal" aria-hidden="true"
             type="button">&times;</button>
     <h2 class="modal-title">Enter Topic Details</h2>
 </div>
@@ -9,20 +9,49 @@
 
 
     <form role="form" name="pickProjectForm" 
-          ng-submit="createTopicAclCtrl.createTopic()" novalidate
+          ng-submit="createAclCtrl.createTopicAcl()" novalidate
           class="form-validate">                                                                                                                              
         <div class="view-info">
+            
             <div class="col-md-12">
-                <label class="control-label">Topic Name</label><br>
-                <div class="col-sm-12">
-                    <input type="text" class="form-control" id="topicName" ng-model="createTopicAclCtrl.topicName" placeholder="New Topic Name">
-                </div>
+                <label class="control-label">Topic name</label><br>
+                    <input type="text" class="form-control" id="aclUsername" ng-model="createAclCtrl.topicName" placeholder="Username">
+            </div>
+            
+            <div class="col-md-12">
+                <label class="control-label">Username</label><br>
+                    <input type="text" class="form-control" id="aclUsername" ng-model="createAclCtrl.username" placeholder="Username">
+            </div>
+           
+            <div class="col-md-12">
+                <label class="control-label">Permission Type</label><br>
+                        <select name="permission_type" ng-model="createAclCtrl.permission_type">
+                          <option value="allow">Allow</option>
+                          <option value="deny">Deny</option>
+                        </select>
             </div>
             <div class="col-md-12">
-                <label class="control-label">Number of Replicas</label><br>
-                <div class="col-sm-12">
-                    <input type="text" class="form-control" id="topicName" ng-model="createTopicAclCtrl.partitionReplicas" placeholder="Num replicas">
-                </div>
+                <label class="control-label">Operation Type</label><br>
+                        <select name="operation_type" ng-model="createAclCtrl.operation_type">
+                          <option value="read">read</option>
+                          <option value="write">write</option>
+                          <option value="details">details</option>
+                          <option value="*">*</option>
+                        </select>
+            </div>
+            
+              <div class="col-md-12">
+                <label class="control-label">Host</label><br>
+                    <input type="text" class="form-control" id="aclHost" ng-model="createAclCtrl.host" placeholder="Hostname (or * or subnet)">
+            </div>
+            
+            <div class="col-md-12">
+                <label class="control-label">Role</label><br>
+                        <select name="role_type" ng-model="createAclCtrl.role">
+                          <option value="Data Scientist">Data scientist</option>
+                          <option value="Data Owner">Data owner</option>
+                          <option value="*">*</option>
+                        </select>
             </div>
             <br>
         </div>
@@ -30,8 +59,8 @@
         <hr />s
         <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
 
-            <button class="btn btn-default" type="button" ng-click="createTopicAclCtrl.close()">Cancel</button>
-            <button class="btn btn-primary" type="submit">
+            <button class="btn btn-default" type="button" ng-click="createAclCtrl.close()">Cancel</button>
+            <button class="btn btn-primary" type="submit" ng-click="createAclCtrl.close()">
                 Create
             </button>
 

@@ -36,6 +36,9 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/kafka/acls/' + topicName);
               },
               
+              defaultTopicValues: function (projectId){
+                return $http.get('/api/project/' + projectId + '/kafka/defaultTopicValues');
+              },
               /**
                * Create a new Topic in the given project, of the given type. 
                * @param {type} projectId 
@@ -61,7 +64,7 @@ angular.module('hopsWorksApp')
                * @param {type} topicAcl The ACL for the topic.
                * @returns {undefined} The newly created topic object.
                */
-              addAcl: function (projectId, topicName, topicAcl) {
+              createTopicAcl: function (projectId, topicName, topicAcl) {
                 var req = {
                   method: 'POST',
                   url: '/api/project/' + projectId + '/kafka/topic/' + topicName + "/addAcl",

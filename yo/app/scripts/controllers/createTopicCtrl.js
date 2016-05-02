@@ -1,23 +1,19 @@
 angular.module('hopsWorksApp')
-        .controller('CreateTopicCtrl', ['$modalInstance', 'ProjectService', 'KafkaService', 'growl', 'projectId', 
-          function ($modalInstance, ProjectService, KafkaService, growl, projectId) {
+        .controller('CreateTopicCtrl', ['$modalInstance', 'KafkaService', 'growl', 'projectId', 
+          function ($modalInstance, KafkaService, growl, projectId) {
 
             var self = this;
             self.projectId = projectId;
             self.selectedProjectName;
             self.topicName;
-//            self.partitionId = 1;
-//            self.partitionLeader;
-            self.partitionReplicas;
-            self.partitionInsyncReplicas;
+            self.num_paritions;
+            self.partitioning_factor;
             
             self.init = function() {
-                          KafkaService.defaultTopicValues().then(
+                          KafkaService.defaultTopicValues(self.projectId).then(
                                 function (success) {
-//                                  self.partitionId = success.data.partitionId;
-//                                  self.partitionLeader = success.data.partitionLeader;
-                                  self.partitionReplicas = success.data.partitionReplicas;
-                                  self.partitionInsyncReplicas = success.data.partitionInsyncReplicas;
+                                  self.num_paritions = success.data.numOfPartitions;
+                                  self.partitioning_factor = success.data.numOfReplicas;
                                   
                                 }, function (error) {
                                 growl.error(error.data.errorMsg, {title: 'Could not get list of Projects', ttl: 5000, referenceId: 21});
@@ -28,9 +24,13 @@ angular.module('hopsWorksApp')
 
             
             self.createTopic = function () {
-              KafkaService.createTopic(self.projectId, self.topicName,  self.partitionId, self.partitionLeader).then(
+                var topicDetails ={};
+                topicDetails.name=self.topicName;
+                topicDetails.numOfPartitions =self.num_paritions;
+                topicDetails.numOfReplicas =self.partitioning_factor;
+
+              KafkaService.createTopic(self.projectId, topicDetails).then(
                       function (success) {
-                        self.getAllTopics();
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to create topic', ttl: 5000});
               });      

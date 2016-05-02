@@ -21,9 +21,6 @@
                     </i> 
                   </button>
                 </div>
-                <div class="col-sm-2">
-                  <input ng-disabled="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0" type="text" class="form-control" id="topicName" ng-model="kafkaCtrl.topicDetails.name" placeholder="New Topic Name">
-                </div>
               </div>
               <div class="row">
                 <div class="col-sm-2">
@@ -185,7 +182,7 @@
                 </td>
                 <td class="col-sm-1">
                   <button type="button" ng-show="!row.isSelected" ng-click="row.isSelected = !row.isSelected; kafkaCtrl.activeId = -1; kafkaCtrl.getTopicDetails(row.name);
-                      kafkaCtrl.topicIsSharedTo(row.name);kafkaCtrl.getAclsForTopic(row.name);
+                      kafkaCtrl.topicIsSharedTo(row.name);kafkaCtrl.getAclsForTopic(rowJ.name);
                           " class="btn btn-sm btn-primary">
                     Select
                   </button>
