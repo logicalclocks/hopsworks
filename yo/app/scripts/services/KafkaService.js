@@ -32,7 +32,7 @@ angular.module('hopsWorksApp')
                * @param {type} topicName
                * @returns {unresolved} A complete description of the requested topic.
                */
-              showTopicAcls: function (projectId, topicName) {
+              getAclsForTopic: function (projectId, topicName) {
                 return $http.get('/api/project/' + projectId + '/kafka/acls/' + topicName);
               },
               
@@ -88,7 +88,7 @@ angular.module('hopsWorksApp')
                * @returns {undefined} true if success, false otheriwse
                */
               removeTopic: function (projectId, topicName) {
-                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/removeTopic');
+                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/remove');
               },
               
               /**
@@ -99,7 +99,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved}
                */
               shareTopic: function (projectId, topicName, destProjectId) {
-                return $http.get('/api/project/' + projectId + '/topic/' + topicName + "/share/" + destProjectId);
+                return $http.get('/api/project/' + projectId + '/kafka/topic/' + topicName + "/share/" + destProjectId);
               },
               
               /**
@@ -111,6 +111,10 @@ angular.module('hopsWorksApp')
                */
               unshareTopic: function (projectId, topicName, destProjectId) {
                 return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/unshare/' + destProjectId);
+              },
+              
+              topicIsSharedTo: function (projectId, topicName){
+                  return $http.get('/api/project/' + projectId + '/kafka/'+topicName+'/sharedwith');
               }
               
             };

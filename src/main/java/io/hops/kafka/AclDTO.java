@@ -11,7 +11,6 @@ package io.hops.kafka;
  */
 public class AclDTO {
     
-    private int id;
     private String username;
     private String permissionType;
     private String operationType;
@@ -21,9 +20,8 @@ public class AclDTO {
     public AclDTO() {
     }
 
-    AclDTO(Integer id, String username, String permissionType,
+    AclDTO(String username, String permissionType,
             String operationType, String host, String role) {
-        this.id = id;
         this.username = username;
         this.permissionType = permissionType;
         this.operationType = operationType;
@@ -31,14 +29,6 @@ public class AclDTO {
         this.role = role;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-    
     public String getHost() {
         return host;
     }

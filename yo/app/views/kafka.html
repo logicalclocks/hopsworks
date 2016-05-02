@@ -22,7 +22,7 @@
                   </button>
                 </div>
                 <div class="col-sm-2">
-                  <input ng-disabled="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0" type="text" class="form-control" id="topicName" ng-model="kafkaCtrl.topicName" placeholder="New Topic Name">
+                  <input ng-disabled="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0" type="text" class="form-control" id="topicName" ng-model="kafkaCtrl.topicDetails.name" placeholder="New Topic Name">
                 </div>
               </div>
               <div class="row">
@@ -49,7 +49,7 @@
 
                   <div class="col-sm-2">
                     <button style="margin-left: -20px" ng-show="row.isSelected" type="button" 
-                            ng-click="kafkaCtrl.addAcl(row.id)" class="btn btn-default btn-success btn-block">
+                            ng-click="kafkaCtrl.addAcl(row.name)" class="btn btn-default btn-success btn-block">
                       New ACL <i style="margin-left: 10px" class="glyphicon glyphicon-plus">
                       </i>
                     </button>
@@ -57,7 +57,7 @@
                   <br ng-show="row.isSelected">
                   <br ng-show="row.isSelected">
                   <table ng-if="row.isSelected" st-table="rowCollection" class="table table-striped col-sm-12">
-                    <thead ng-show="row.acls.length > 0">
+                    <thead >
                       <tr>
                         <th class="col-sm-2">Username</th>
                         <th class="col-sm-2">Permission Type</th>
@@ -123,7 +123,7 @@
                   <br ng-show="row.isSelected">
                   <div class="col-sm-2">
                     <button style="margin-left: -20px" ng-show="row.isSelected" type="button" 
-                            ng-click="kafkaCtrl.shareTopic(row.id)" class="btn btn-default btn-success btn-block">
+                            ng-click="kafkaCtrl.shareTopic(row.name)" class="btn btn-default btn-success btn-block">
                       Share<i style="margin-left: 10px" class="glyphicon glyphicon-share-alt">
                       </i>
                     </button>
@@ -132,12 +132,13 @@
                   <br ng-show="row.isSelected">
 
                   <table ng-show="row.isSelected" st-table="rowCollection" class="table table-striped col-sm-4">
-                    <thead ng-show="row.shares.length > 0">
+                    <thead>
                       <tr>
                         <th class="col-sm-10">Shared with Project</th>
                         <th class="col-sm-1">Unshare</th>
                       </tr>
                     </thead>
+                    <thead ng-show="row.shares.length > 0">
                     <tr ng-repeat="proj in row.shares">
                       <td>{{proj.proj_name}}</td>
                       <td>
@@ -147,9 +148,32 @@
                         </button>
                       </td>
                     </tr>
+                    </thead>
                   </table>
                   <br ng-show="row.isSelected">
-
+                  <br ng-show="row.isSelected">
+                  <table ng-show="row.isSelected" st-table="rowCollection" class="table table-striped col-sm-4">
+                    <thead>
+                        <tr>
+                            <th class="col-sm-2">Partition details</th> 
+                        </tr>
+                      <tr>
+                        <th class="col-sm-2">Partition id</th>
+                        <th class="col-sm-2">Partition leader</th>
+                        <th class="col-sm-2">Partition replicas</th>
+                        <th class="col-sm-2">Partition insync replicas</th>
+                      </tr>
+                      </thead>
+                    <thead ng-show="row.partitionDetails.length > 0">
+                    <tr ng-repeat="partition in row.partitionDetails">
+                        <td ng-if="kafkaCtrl.activeId === -1">{{partition.id}}</td>
+                        <td ng-if="kafkaCtrl.activeId === -1">{{partition.partitionLeader}}</td>
+                        <td ng-if="kafkaCtrl.activeId === -1">{{partition.partitionReplicas}}</td>
+                        
+                        <td ng-if="kafkaCtrl.activeId === -1">{{partition.paritionInSyncReplicas}}</td>
+                    </tr>
+                    </thead>
+                  </table>
 
                 </td>
                 <td class="col-sm-1">
@@ -160,7 +184,9 @@
                   
                 </td>
                 <td class="col-sm-1">
-                  <button type="button" ng-show="!row.isSelected" ng-click="row.isSelected = !row.isSelected; kafkaCtrl.activeId = -1;" class="btn btn-sm btn-primary">
+                  <button type="button" ng-show="!row.isSelected" ng-click="row.isSelected = !row.isSelected; kafkaCtrl.activeId = -1; kafkaCtrl.getTopicDetails(row.name);
+                      kafkaCtrl.topicIsSharedTo(row.name);kafkaCtrl.getAclsForTopic(row.name);
+                          " class="btn btn-sm btn-primary">
                     Select
                   </button>
                   <button type="button" ng-show="row.isSelected" ng-click="row.isSelected = !row.isSelected; kafkaCtrl.activeId = -1;" class="btn btn-sm btn-warning">

@@ -1,0 +1,40 @@
+
+<div class="modal-header">
+    <button class="close" ng-click="createTopicCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;</button>
+    <h2 class="modal-title">Enter Topic Details</h2>
+</div>
+<div growl reference="21" class="pull-right"></div>
+<div class="modal-body">
+
+
+    <form role="form" name="pickProjectForm" 
+          ng-submit="createTopicCtrl.createTopic()" novalidate
+          class="form-validate">                                                                                                                              
+        <div class="view-info">
+            <div class="col-md-12">
+                <label class="control-label">Topic Name</label><br>
+                <div class="col-sm-12">
+                    <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.topicName" placeholder="New Topic Name">
+                </div>
+            </div>
+            <div class="col-md-12">
+                <label class="control-label">Number of Replicas</label><br>
+                <div class="col-sm-12">
+                    <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.partitionReplicas" placeholder="Num replicas">
+                </div>
+            </div>
+            <br>
+        </div>
+        <div class="row"></div>
+        <hr />s
+        <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
+
+            <button class="btn btn-default" type="button" ng-click="createTopicCtrl.close()">Cancel</button>
+            <button class="btn btn-primary" type="submit">
+                Create
+            </button>
+
+        </div>
+    </form>
+</div>

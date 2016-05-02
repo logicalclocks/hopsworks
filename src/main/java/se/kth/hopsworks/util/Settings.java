@@ -494,7 +494,7 @@ public class Settings {
  }
   
   private String KAFKA_DEFAULT_NUM_PARTITIONS = "2";
-  private String KAFKA_DEFAULT_NUM_REPLICAS = "2";
+  private String KAFKA_DEFAULT_NUM_REPLICAS = "1";
 
    
   public synchronized String getKafkaDefaultNumPartitions() {

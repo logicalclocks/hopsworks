@@ -12,7 +12,7 @@ import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-/**
+/**kafkaCtrl.topicIsSharedTo(row.name);kafkaCtrl.getAclsForTopic(row.name);
  *
  * @author misdess
  */
@@ -26,7 +26,7 @@ public class SharedTopicsPK implements Serializable {
     private String topicName;
     @Basic(optional = false)
     @NotNull
-    @Column(name = "owning_id")
+    @Column(name = "owner_id")
     private int projectId;
 
     public SharedTopicsPK() {
