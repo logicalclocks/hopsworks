@@ -12,7 +12,7 @@ import org.apache.commons.io.FileUtils;
 
 public class PKIUtils {
 
-  final static String PASSWORD = "changeit";
+  final static String PASSWORD = "adminpw";
 
   final static Logger logger = Logger.getLogger(PKIUtils.class.getName());
 
