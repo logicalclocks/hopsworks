@@ -7,6 +7,7 @@ package se.kth.hopsworks.util;
 
 import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
+import java.net.InetSocketAddress;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -16,7 +17,6 @@ import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
-import javax.ws.rs.core.Response.Status;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.Service;
 import org.apache.hadoop.yarn.client.api.YarnClient;
@@ -26,7 +26,6 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
 
@@ -41,6 +40,7 @@ public class ServiceAvailabilityBean {
     private boolean namenode;
     private boolean resourcemanager;
     private boolean livy;
+    private boolean oozie;
     private boolean elasticIndexer;
     private boolean p2p;
     private boolean ndb;
@@ -95,13 +95,14 @@ public class ServiceAvailabilityBean {
 // Check Elastic
         String addr = this.settings.getElasticIp();
 
-        final org.elasticsearch.common.settings.Settings settings = ImmutableSettings.settingsBuilder()
-            .put("client.transport.sniff", true) //being able to inspect other nodes 
-            .put("cluster.name", "hops")
-            .build();
-        //initialize the client
-        Client client = new TransportClient(settings)
-            .addTransportAddress(new InetSocketTransportAddress(addr, Settings.ELASTIC_PORT));
+        final org.elasticsearch.common.settings.Settings settings = 
+            org.elasticsearch.common.settings.Settings.settingsBuilder()
+            .put("client.transport.sniff", true) //being able to retrieve other nodes 
+            .put("cluster.name", "hops").build();
+
+        Client client = TransportClient.builder().settings(settings).build()
+            .addTransportAddress(new InetSocketTransportAddress(new InetSocketAddress(addr,Settings.ELASTIC_PORT)));
+        
         try {
             final ClusterHealthResponse healthResponse = client.admin().cluster().prepareHealth()
                 .setWaitForStatus(ClusterHealthStatus.GREEN).setTimeout(TimeValue.timeValueSeconds(5)).execute().actionGet();
@@ -122,6 +123,10 @@ public class ServiceAvailabilityBean {
 // Check Livy
     // TODO
 
+      
+// Check Ooozie
+    // TODO
+    
     }
 
     @PostConstruct
@@ -164,6 +169,10 @@ public class ServiceAvailabilityBean {
 
     public boolean isElasticIndexer() {
         return elasticIndexer;
+    }
+    
+    public boolean isOozie() {
+        return oozie;
     }
 
     public boolean isP2p() {
