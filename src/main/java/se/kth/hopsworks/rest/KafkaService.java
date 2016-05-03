@@ -34,6 +34,7 @@ import io.hops.kafka.TopicDetailsDTO;
 import java.util.ArrayList;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.PUT;
 import se.kth.hopsworks.controller.ProjectDTO;
 import se.kth.hopsworks.util.Settings;
 
@@ -176,10 +177,10 @@ public class KafkaService {
     }
     
     @GET
-    @Path("/defaultTopicValues")
+    @Path("/topic/defaultValues")
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-    public Response defaultTopicValues(
+    public Response topicDefaultValues(
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
 
@@ -188,12 +189,8 @@ public class KafkaService {
                     "Incomplete request!");
         }
         
-        TopicDefaultValueDTO valueDto = new TopicDefaultValueDTO(
-                settings.getKafkaDefaultNumReplicas(), 
-                settings.getKafkaDefaultNumPartitions());
-        List<TopicDefaultValueDTO> valueDtos = new ArrayList<>();
-        valueDtos.add(valueDto);
-        
+        List<TopicDefaultValueDTO> valueDtos = 
+                kafkaFacade.topicDefaultValues();
         
          GenericEntity<List<TopicDefaultValueDTO>> values
                 = new GenericEntity<List<TopicDefaultValueDTO>>(valueDtos) {
@@ -326,7 +323,7 @@ public class KafkaService {
         }
         List<AclDTO> aclDto = null;
         try {
-            aclDto = kafka.getTopicAcls(topicName, projectId);
+            aclDto = kafkaFacade.getTopicAcls(topicName, projectId);
         } catch (Exception e) {
         }
         if (aclDto == null) {
@@ -338,5 +335,26 @@ public class KafkaService {
                 = new GenericEntity<List<AclDTO>>(aclDto) {
         };
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(aclDtos).build();
+    }
+    
+    @PUT
+    @Path("/topic/{topic}/updateAcl/{aclId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response updateTopicAcls(@PathParam("topic") String topicName,
+            @PathParam("aclId") String aclId, AclDTO aclDto,
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException, Exception {
+        JsonResponse json = new JsonResponse();
+
+        if (projectId == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Incomplete request!");
+        }
+
+        kafkaFacade.updateTopicAcl(projectId, Integer.parseInt(aclId), aclDto);
+        
+        json.setSuccessMessage("TopicAcl updated successfuly");
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
     }
 }

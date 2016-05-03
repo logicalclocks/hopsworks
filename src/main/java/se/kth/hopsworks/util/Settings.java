@@ -467,9 +467,9 @@ public class Settings {
   public static final int ELASTIC_PORT = 9300;
   
   public static final int ZK_IP_PORT = 2181; 
-  
+ 
   // Zookeeper 
-  private String ZK_IP = "127.0.0.1";
+  private String ZK_IP = "10.0.2.15";
 
   public synchronized String getZkIp() {
     checkCache();

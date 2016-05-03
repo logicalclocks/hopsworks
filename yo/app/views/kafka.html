@@ -107,7 +107,7 @@
                         </button>
                       </td>
                       <td ng-if="kafkaCtrl.activeId === -1 || kafkaCtrl.activeId === acl.id">
-                        <button ng-show="kafkaCtrl.activeId === acl.id" type="button" ng-click="kafkaCtrl.activeId = -1;" class="btn btn-sm btn-warning">
+                        <button ng-show="kafkaCtrl.activeId === acl.id" type="button" ng-click="kafkaCtrl.activeId = -1;kafkaCtrl.updateAcl(row.name, acl.id)" class="btn btn-sm btn-warning">
                           Save ACL
                         </button>
                         <button ng-show="kafkaCtrl.activeId === -1" type="button" ng-click="kafkaCtrl.selectAcl(acl);" class="btn btn-sm btn-primary">

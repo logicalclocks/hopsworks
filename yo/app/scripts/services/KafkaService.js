@@ -37,7 +37,7 @@ angular.module('hopsWorksApp')
               },
               
               defaultTopicValues: function (projectId){
-                return $http.get('/api/project/' + projectId + '/kafka/defaultTopicValues');
+                return $http.get('/api/project/' + projectId + '/kafka/topic/defaultValues');
               },
               /**
                * Create a new Topic in the given project, of the given type. 
@@ -83,6 +83,18 @@ angular.module('hopsWorksApp')
                */
               removeTopicAcl: function (projectId, topicName, aclId) {
                 return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/removeAcl/' + aclId);
+              },
+              
+              updateTopicAcl: function(projectId, topicName, aclId, topicAcl){                
+                var req = {
+                  method: 'PUT',
+                  url: '/api/project/' + projectId + '/kafka/topic/' + topicName + '/updateAcl/' + aclId,
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: topicAcl
+                  };
+                return $http(req);  
               },
               /**
                * Delete a topic 

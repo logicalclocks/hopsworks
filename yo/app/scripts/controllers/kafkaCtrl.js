@@ -60,6 +60,23 @@ angular.module('hopsWorksApp')
               self.activeId = acl.id;
             };
 
+            self.updateAcl = function (topicName, aclId){
+              var acl ={};
+              acl.role = self.role;
+              acl.username = self.username;
+              acl.permissionType = self.permission_type;
+              acl.operationType = self.operation_type;
+              acl.host = self.host;
+                kafkaService.updateAcl(self.projectId, topicName, aclId, acl).then(
+                        
+                        function(success){
+                            self.getAclsForTopic(topicName);
+                            
+                        }, function(error){
+                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                            
+                        });
+            }
 
             self.getAllTopics = function () {
               KafkaService.getTopics(self.projectId).then(
