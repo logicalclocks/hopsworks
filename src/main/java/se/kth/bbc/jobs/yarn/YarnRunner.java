@@ -24,6 +24,8 @@ import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
 import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.yarn.FlinkYarnCluster;
+
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,6 +34,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.LocalResource;
@@ -63,6 +66,7 @@ public class YarnRunner {
   private Configuration conf;
   private ApplicationId appId = null;
   private JobType jobType;
+  private String appJarPath;
   private final String amJarLocalName;
   private final String amJarPath;
   private final String amQueue;
@@ -160,8 +164,19 @@ public class YarnRunner {
         //And submit
         logger.log(Level.INFO, "Submitting application {0} to applications manager.", appId);
         yarnClient.submitApplication(appContext);
-        
-        // Create a new client for monitoring
+        ApplicationReport appReport = yarnClient.getApplicationReport(appId);
+        int retries = 0;
+        int maxRetries = 60;
+        while(yarnClient.getApplicationReport(appId).getRpcPort() < 1 && retries<maxRetries){
+            logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
+            retries++;
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                logger.log(Level.SEVERE, "Error while waitingfor AppReport rpcPort to be set");
+            }
+        }
+        logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
         YarnClient newClient = YarnClient.createYarnClient();
         newClient.init(conf);
         YarnMonitor monitor = new YarnMonitor(appId, newClient);
@@ -171,15 +186,12 @@ public class YarnRunner {
                 args = amArgs.trim().split(" ");
             }
             //app.jar path 
-            String appJarPath = "/tmp"+localResources.get("app.jar").getResource().getFile();
-            //copy app jar locally
             File file = new File(appJarPath);
             //TODO: Remove hard-coded parallelism
             int parallelism = 1;
 
             Path sessionFilesDir = new Path(localResourcesBasePath);
             org.apache.flink.configuration.Configuration flinkConf = new org.apache.flink.configuration.Configuration();
-            //ApplicationReport appReport = yarnClient.getApplicationReport(appId);
             FlinkYarnCluster cluster = new FlinkYarnCluster(yarnClient, appId, conf, flinkConf, sessionFilesDir, false);
             cluster.connectToCluster();
 
@@ -198,9 +210,9 @@ public class YarnRunner {
                 cluster.stopAfterJob(jobId);
             } catch (ProgramInvocationException ex) {
                 logger.log(Level.SEVERE, "Error while Flink Client submits jobs: {0}", ex.getMessage());
-                
-            }
-        }
+            } 
+        } // Create a new client for monitoring
+       
         yarnClient.close();
         
     
@@ -453,6 +465,7 @@ public class YarnRunner {
     this.amJarLocalName = builder.amJarLocalName;
     this.amJarPath = builder.amJarPath;
     this.jobType = builder.jobType;
+    this.appJarPath = builder.appJarPath;
     this.amQueue = builder.amQueue;
     this.amMemory = builder.amMemory;
     this.amVCores = builder.amVCores;
@@ -530,6 +543,7 @@ public class YarnRunner {
     private String amJarLocalName;
     //Which job type is running 
     private JobType jobType;
+    private String appJarPath;
     //Optional attributes
     // Queue for App master
     private String amQueue = "default"; //TODO: enable changing this, or infer from user data
@@ -649,6 +663,10 @@ public class YarnRunner {
      */
     public void setJobType(JobType jobType){
         this.jobType = jobType;
+    }
+    
+    public void setAppJarPath(String path){
+        this.appJarPath = path;
     }
     /**
      * Set the configuration of the Yarn Application to the values contained in the YarnJobConfiguration object. This

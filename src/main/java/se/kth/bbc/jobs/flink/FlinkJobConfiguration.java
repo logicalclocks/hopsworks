@@ -12,6 +12,15 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 public class FlinkJobConfiguration extends YarnJobConfiguration {
 
     private String jarPath;
+    private String appJarPath;
+
+    public String getAppJarPath() {
+        return appJarPath;
+    }
+
+    public void setAppJarPath(String localJarPath) {
+        this.appJarPath = localJarPath;
+    }
     private String mainClass;
     private String args;
     private String flinkConfDir;

@@ -56,7 +56,7 @@ public class FlinkYarnRunnerBuilder {
     private static final int MIN_JM_CORES = 1;
     
     //Jar paths for AM and app
-    private final String appJarPath, mainClass;
+    private String appJarPath, mainClass;
     //Optional parameters
     private final List<String> jobArgs = new ArrayList<>();
     
@@ -99,6 +99,10 @@ public class FlinkYarnRunnerBuilder {
         this.jobArgs.addAll(Arrays.asList(jobArgs));
         return this;
     }
+    public void setAppJarPath(String appJarPath){
+        this.appJarPath = appJarPath;
+    }
+    
     //@Override
     public void setJobManagerMemory(int memoryMb) {
         if (memoryMb < MIN_JM_MEMORY) {
@@ -299,20 +303,20 @@ public class FlinkYarnRunnerBuilder {
 //        builder.addLocalResource(Settings.FLINK_DEFAULT_LOGBACK_FILE, "hdfs://10.0.2.15/user/glassfish/logback.xml",
 //                false);
         //Add app jar
-        builder.addLocalResource(Settings.FLINK_LOCRSC_APP_JAR, appJarPath,
-            !appJarPath.startsWith("hdfs:"));
-        
-        String logbackFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/logback.xml";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
-        boolean hasLogback = new File(logbackFile).exists();
-        String log4jFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/log4j.properties";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOG4J_NAME;
-
-        boolean hasLog4j = new File(log4jFile).exists();
-        if (hasLogback) {
-            shipFiles.add(new File(logbackFile));
-        }
-        if (hasLog4j) {
-            shipFiles.add(new File(log4jFile));
-        }
+//        builder.addLocalResource(Settings.FLINK_LOCRSC_APP_JAR, appJarPath,
+//            !appJarPath.startsWith("hdfs:"));
+//        
+//        String logbackFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/logback.xml";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
+//        boolean hasLogback = new File(logbackFile).exists();
+//        String log4jFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/log4j.properties";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOG4J_NAME;
+//
+//        boolean hasLog4j = new File(log4jFile).exists();
+//        if (hasLogback) {
+//            shipFiles.add(new File(logbackFile));
+//        }
+//        if (hasLog4j) {
+//            shipFiles.add(new File(log4jFile));
+//        }
 
 
         //Set Flink ApplicationMaster env parameters
@@ -337,6 +341,8 @@ public class FlinkYarnRunnerBuilder {
         builder.amVCores(jobManagerCores);
         builder.amQueue(jobManagerQueue);
         
+        builder.setJobType(JobType.FLINK);
+        builder.setAppJarPath(appJarPath);
         String name;
         if (customName == null) {
             name = "Flink session with " + taskManagerCount + " TaskManagers";
