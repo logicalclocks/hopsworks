@@ -28,6 +28,7 @@ import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.users.UserFacade;
 import io.hops.kafka.KafkaFacade;
+import io.hops.kafka.PartitionDetailsDTO;
 import io.hops.kafka.SharedProjectDTO;
 import io.hops.kafka.TopicDefaultValueDTO;
 import io.hops.kafka.TopicDetailsDTO;
@@ -109,6 +110,26 @@ public class KafkaService {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 topics).build();
     }
+    
+    @GET
+    @Path("/sharedTopics")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+    public Response getSharedTopics(@Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException, Exception {
+
+        if (projectId == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Incomplete request!");
+        }
+
+        List<TopicDTO> listTopics = kafka.findSharedTopicsByProject(projectId);
+        GenericEntity<List<TopicDTO>> topics
+                = new GenericEntity<List<TopicDTO>>(listTopics) {
+        };
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                topics).build();
+    }
 
     @POST
     @Path("/topic/add")
@@ -124,7 +145,7 @@ public class KafkaService {
                     "Incomplete request!");
         }
         //create the topic in the database and the Kafka cluster
-        kafkaFacade.createTopicInProject(this.project, topicDto.getName());
+        kafkaFacade.createTopicInProject(this.projectId, topicDto.getName());
 
         json.setSuccessMessage("The Topic has been created.");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -158,18 +179,16 @@ public class KafkaService {
     public Response getDetailsTopic(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
-        JsonResponse json = new JsonResponse();
+        
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Incomplete request!");
         }
 
-        TopicDetailsDTO dto = kafka.getTopicDetails(project, topicName);
-        List<TopicDetailsDTO> topic = new ArrayList<>();
-        topic.add(dto);
+        List<PartitionDetailsDTO> topic = kafka.getTopicDetails(project, topicName);
         
-        GenericEntity<List<TopicDetailsDTO>> topics 
-                = new GenericEntity<List<TopicDetailsDTO>>(topic){
+        GenericEntity<List<PartitionDetailsDTO>> topics 
+                = new GenericEntity<List<PartitionDetailsDTO>>(topic){
                 };
         
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -189,13 +208,10 @@ public class KafkaService {
                     "Incomplete request!");
         }
         
-        List<TopicDefaultValueDTO> valueDtos = 
+        TopicDefaultValueDTO values = 
                 kafkaFacade.topicDefaultValues();
         
-         GenericEntity<List<TopicDefaultValueDTO>> values
-                = new GenericEntity<List<TopicDefaultValueDTO>>(valueDtos) {
-        };
-        
+
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 values).build();
     }
@@ -237,6 +253,25 @@ public class KafkaService {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 json).build();
     }
+    
+    
+    
+    @DELETE
+    @Path("/topic/{topic}/unshare")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response unShareTopicFromProject(
+            @PathParam("topic") String topicName,
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException, Exception {
+        JsonResponse json = new JsonResponse();
+
+        kafkaFacade.unShareTopic(topicName, this.projectId);
+        json.setSuccessMessage("Topic has been removed from shared.");
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                json).build();
+    }
+    
     
     @GET
     @Path("/{topic}/sharedwith")

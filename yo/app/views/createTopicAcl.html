@@ -15,12 +15,68 @@
             
             <div class="col-md-12">
                 <label class="control-label">Topic name</label><br>
-                    <input type="text" class="form-control" id="aclUsername" ng-model="createAclCtrl.topicName" placeholder="Username">
+                <span>{{createAclCtrl.topicName}}</span>
             </div>
             
             <div class="col-md-12">
                 <label class="control-label">Username</label><br>
                     <input type="text" class="form-control" id="aclUsername" ng-model="createAclCtrl.username" placeholder="Username">
+
+
+<!--        <ui-select ng-model="createAclCtrl.username"
+                   theme="select2"
+                   style="min-width: 300px;">
+
+          <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
+          <ui-select-choices
+            repeat="card in memberCtrl.cards">
+
+            <div ng-bind-html="memberCtrl.card.email | highlight: $select.search"></div>
+            <small>
+              <i class="fa fa-user-plus"></i>
+              <span style="font-size: 14px;;"
+                    ng-bind-html="''+card.email | highlight: $select.search">
+              </span>
+              <br/>
+              <span ng-bind-html="''+card.firstname | highlight: $select.search"></span>
+              <span ng-bind-html="''+card.lastname | highlight: $select.search"></span>
+            </small>
+          </ui-select-choices>
+        </ui-select>
+
+              <tr ng-repeat="newMember in memberCtrl.newMembers.projectTeam">
+
+                <td>
+                  <div class="media">
+                    <div class="media-body" style="padding-top:8px;">
+                      <h4 class="media-heading" style="margin-bottom:0px;">
+                        <b>{{newMember.projectTeamPK.teamMember}}</b>
+                      </h4>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <select name="role"
+                          ng-model="newMember.teamRole"
+                          class="form-control">
+                    <option ng-repeat="role in memberCtrl.roles"
+                            value="{{role}}">
+                      {{role}}
+                    </option>
+                  </select>
+                </td>
+                <td>
+                  <button type="button"
+                          style="width:32px; height: 32px; border-radius: 16px;"
+                          ng-click="memberCtrl.removeMember(newMember.projectTeamPK.teamMember)"
+                          class="btn btn-danger pull-right">
+                    <em class="fa fa-trash"></em>
+                  </button>
+                </td>
+
+              </tr>-->
+
+
             </div>
            
             <div class="col-md-12">
@@ -56,11 +112,11 @@
             <br>
         </div>
         <div class="row"></div>
-        <hr />s
+        <hr />
         <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
 
             <button class="btn btn-default" type="button" ng-click="createAclCtrl.close()">Cancel</button>
-            <button class="btn btn-primary" type="submit" ng-click="createAclCtrl.close()">
+            <button class="btn btn-primary" type="submit">
                 Create
             </button>
 

@@ -5,16 +5,22 @@
  */
 package io.hops.kafka;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  *
  * @author misdess
  */
+@XmlRootElement
 public class TopicDefaultValueDTO {
     
     private String numOfReplicas;
     
     private String numOfPartitions;
 
+    public TopicDefaultValueDTO() {
+    }
+    
     public TopicDefaultValueDTO(String numOfReplicas, String numOfPartitions) {
         this.numOfReplicas = numOfReplicas;
         this.numOfPartitions = numOfPartitions;

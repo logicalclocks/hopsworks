@@ -13,7 +13,7 @@ public class TopicDetailsDTO {
 
     private String name;
 
-    private List<PartitionDetails> parrtitionDetails;
+    private List<PartitionDetailsDTO> parrtitionDetails;
 
     public TopicDetailsDTO() {
     }
@@ -22,7 +22,7 @@ public class TopicDetailsDTO {
         this.name = name;
     }
 
-    public TopicDetailsDTO(String topic, List<PartitionDetails> partitionDetails) {
+    public TopicDetailsDTO(String topic, List<PartitionDetailsDTO> partitionDetails) {
         this.name = topic;
         this.parrtitionDetails = partitionDetails;
     }
@@ -31,7 +31,7 @@ public class TopicDetailsDTO {
         return name;
     }
 
-    public List<PartitionDetails> getPartition() {
+    public List<PartitionDetailsDTO> getPartition() {
         return parrtitionDetails;
     }
 
@@ -39,7 +39,7 @@ public class TopicDetailsDTO {
         this.name = topic;
     }
 
-    public void setPartition(List<PartitionDetails> partitionReplicas) {
+    public void setPartition(List<PartitionDetailsDTO> partitionReplicas) {
         this.parrtitionDetails = partitionReplicas;
     }
 

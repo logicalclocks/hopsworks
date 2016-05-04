@@ -7,26 +7,29 @@ package io.hops.kafka;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
  * @author misdess
  */
-public class PartitionDetails {
+
+@XmlRootElement
+public class PartitionDetailsDTO {
 
     private int id;
-    private String paritionLeader;
-    private List<String> partitionReplicas = new ArrayList<>();
+    private String leader;
+    private List<String> replicas = new ArrayList<>();
     private List<String> inSyncReplicas = new ArrayList<>();
 
-    public PartitionDetails() {
+    public PartitionDetailsDTO() {
     }
 
-    public PartitionDetails(int id, String paritionLeader,
-            List<String> partitionReplicas, List<String> inSyncReplicas) {
+    public PartitionDetailsDTO(int id, String paritionLeader,
+            List<String> replicas, List<String> inSyncReplicas) {
         this.id = id;
-        this.paritionLeader = paritionLeader;
-        this.partitionReplicas = partitionReplicas;
+        this.leader = paritionLeader;
+        this.replicas = replicas;
         this.inSyncReplicas = inSyncReplicas;
     }
 
@@ -38,20 +41,20 @@ public class PartitionDetails {
         this.id = id;
     }
 
-    public String getParitionLeader() {
-        return paritionLeader;
+    public String getLeader() {
+        return leader;
     }
 
-    public void setParitionLeader(String paritionLeader) {
-        this.paritionLeader = paritionLeader;
+    public void setLeader(String leader) {
+        this.leader = leader;
     }
 
-    public List<String> getPartitionReplicas() {
-        return partitionReplicas;
+    public List<String> getReplicas() {
+        return replicas;
     }
 
-    public void setPartitionReplicas(List<String> partitionReplicas) {
-        this.partitionReplicas = partitionReplicas;
+    public void setReplicas(List<String> partitionReplicas) {
+        this.replicas = partitionReplicas;
     }
 
     public List<String> getInSyncReplicas() {

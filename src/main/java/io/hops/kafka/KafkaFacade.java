@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -31,7 +33,6 @@ import org.apache.zookeeper.ZooKeeper;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkConnection;
-import se.kth.hopsworks.controller.ProjectDTO;
 
 @Stateless
 public class KafkaFacade {
@@ -72,8 +73,28 @@ public class KafkaFacade {
         }
         return topics;
     }
+    
+    /**
+     * Get all shared Topics for the given project.
+     * <p/>
+     * @param projectId
+     * @return
+     */
+    public List<TopicDTO> findSharedTopicsByProject(Integer projectId) {
+        TypedQuery<SharedTopics> query = em.createNamedQuery(
+                "SharedTopics.findByProjectId",
+                SharedTopics.class);
+        query.setParameter("projectId", projectId);
+        List<SharedTopics> res = query.getResultList();
+        List<TopicDTO> topics = new ArrayList<>();
+        for (SharedTopics pt : res) {
+            topics.add(new TopicDTO(pt.getSharedTopicsPK().getTopicName(), 3, 2));
+        }
+        return topics;
+    }
+    
 
-    public TopicDetailsDTO getTopicDetails(Project project, String topicName)
+    public List<PartitionDetailsDTO> getTopicDetails(Project project, String topicName)
             throws AppException, Exception {
         List<TopicDTO> topics = findTopicsByProject(project.getId());
         if (topics.isEmpty()) {
@@ -82,12 +103,14 @@ public class KafkaFacade {
         }
         for (TopicDTO topic : topics) {
             if (topic.getName().compareToIgnoreCase(topicName) == 0) {
-                TopicDetailsDTO topicDetailDTO = getTopicDetailsfromKafkaCluster(topicName);
+                List<PartitionDetailsDTO> topicDetailDTO = getTopicDetailsfromKafkaCluster(topicName);
                 return topicDetailDTO;
             }
         }
+        
+        List<PartitionDetailsDTO> pDto = new ArrayList<>();
 
-        return new TopicDetailsDTO();
+        return pDto;
     }
 
     private int getPort(String zkIp) {
@@ -135,16 +158,20 @@ public class KafkaFacade {
         return projects;
     }
 
-    public void createTopicInProject(Project project, String topicName)
+    public void createTopicInProject(Integer projectId, String topicName)
             throws AppException {
-        ProjectTopics pt = em.find(ProjectTopics.class,
-                new ProjectTopicsPK(topicName, project.getId()));
+        
+        TypedQuery<ProjectTopics> query = em.createNamedQuery(
+                "ProjectTopics.findByTopicName",
+                ProjectTopics.class);
+        query.setParameter("topicName", topicName);
+        List<ProjectTopics> res = query.getResultList();
 
-        if (pt != null) {
+        if (!res.isEmpty()) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "Kafka topic already exists. Pick a different topic name.");
         }
-
+        
         // create the topic in kafka 
         ZkClient zkClient = new ZkClient(getIp(settings.getZkIp()).getHostName(),
                 10 * 1000, 29 * 1000, ZKStringSerializer$.MODULE$);
@@ -165,7 +192,7 @@ public class KafkaFacade {
             zkClient.close();
         }
         //persist topic into database
-        pt = new ProjectTopics(topicName, project.getId());
+        ProjectTopics pt = new ProjectTopics(topicName, projectId);
         em.merge(pt);
         em.persist(pt);
         em.flush();
@@ -199,15 +226,13 @@ public class KafkaFacade {
         }
     }
 
-    public List<TopicDefaultValueDTO> topicDefaultValues() {
+    public TopicDefaultValueDTO topicDefaultValues() {
 
         TopicDefaultValueDTO valueDto = new TopicDefaultValueDTO(
                 settings.getKafkaDefaultNumReplicas(),
                 settings.getKafkaDefaultNumPartitions());
-        List<TopicDefaultValueDTO> valueDtos = new ArrayList<>();
-        valueDtos.add(valueDto);
 
-        return valueDtos;
+        return valueDto;
     }
 
     public void shareTopic(Integer owningProjectId, String topicName, Integer projectId)
@@ -251,6 +276,19 @@ public class KafkaFacade {
         em.remove(pt);
     }
 
+     public void unShareTopic(String topicName, Integer ownerProjectId)
+             throws AppException {
+
+        SharedTopics pt = em.find(SharedTopics.class,
+                new SharedTopicsPK(topicName, ownerProjectId));
+        if (pt == null) {
+            throw new AppException(Response.Status.FOUND.getStatusCode(),
+                    "Kafka topic is not shared to the project.");
+        }
+
+        em.remove(pt);
+    }
+     
     public List<SharedProjectDTO> topicIsSharedTo(String topicName, Integer projectId) {
 
         List<SharedProjectDTO> shareProjectDtos = new ArrayList<>();
@@ -400,8 +438,8 @@ public class KafkaFacade {
         for (String seed : zkBrokerList) {
             kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
             try {
-                simpleConsumer = new SimpleConsumer(getIp(seed).getHostAddress(),
-                        getPort(seed), 10 * 1000, 20 * 1000, "list_topics");
+                simpleConsumer = new SimpleConsumer(getBrokerIp(seed).getHostAddress(),
+                        getBrokerPort(seed), 10 * 1000, 20 * 1000, "list_topics");
 
                 //add ssl certificate to the consumer here
                 List<String> topics = new ArrayList<>();
@@ -426,23 +464,23 @@ public class KafkaFacade {
         return topicList;
     }
 
-    private TopicDetailsDTO getTopicDetailsfromKafkaCluster(String topicName)
+    private List<PartitionDetailsDTO> getTopicDetailsfromKafkaCluster(String topicName)
             throws Exception {
 
         Set<String> zkBrokerList = getBrokerList();
 
         Map<Integer, List<String>> replicas = new HashMap<>();
-        Map<Integer, List<String>> inSync = new HashMap<>();
-        Map<Integer, String> partitionLeaders = new HashMap<>();
+        Map<Integer, List<String>> inSyncReplicas = new HashMap<>();
+        Map<Integer, String> leaders = new HashMap<>();
 
-        List<PartitionDetails> partitionDetails = new ArrayList<>();
-        PartitionDetails pd = new PartitionDetails();
+        List<PartitionDetailsDTO> partitionDetailsDto = new ArrayList<>();
+        PartitionDetailsDTO pd = new PartitionDetailsDTO();
 
         for (String seed : zkBrokerList) {
             kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
             try {
-                simpleConsumer = new SimpleConsumer(getIp(seed).getHostAddress(),
-                        getPort(seed), 10 * 1000, 20 * 1000, "topic_detail");
+                simpleConsumer = new SimpleConsumer(getBrokerIp(seed).getHostAddress(),
+                        getBrokerPort(seed), 10 * 1000, 20 * 1000, "topic_detail");
 
                 //add ssl certificate to the consumer here
                 List<String> topics = new ArrayList<>();
@@ -458,7 +496,7 @@ public class KafkaFacade {
                         int partId = partitionMetadata.partitionId();
 
                         //list the leaders of each parition
-                        partitionLeaders.put(partId, partitionMetadata.leader().host());
+                        leaders.put(partId, partitionMetadata.leader().host());
 
                         //list the replicas of the parition
                         replicas.put(partId, new ArrayList<String>());
@@ -467,12 +505,12 @@ public class KafkaFacade {
                         }
 
                         //list the insync replicas of the parition
-                        inSync.put(partId, new ArrayList<String>());
+                        inSyncReplicas.put(partId, new ArrayList<String>());
                         for (kafka.cluster.BrokerEndPoint broker : partitionMetadata.isr()) {
-                            inSync.get(partId).add(broker.host());
+                            inSyncReplicas.get(partId).add(broker.host());
                         }
 
-                        partitionDetails.add(new PartitionDetails(partId, partitionLeaders.get(partId),
+                        partitionDetailsDto.add(new PartitionDetailsDTO(partId, leaders.get(partId),
                                 replicas.get(partId), replicas.get(partId)));
                     }
                 }
@@ -485,6 +523,30 @@ public class KafkaFacade {
             }
         }
 
-        return new TopicDetailsDTO(topicName, partitionDetails);
+        return partitionDetailsDto;
+    }
+    
+    private InetAddress getBrokerIp(String str){
+    
+    String endpoint =  str.split("//")[1];
+    
+    String ip = endpoint.split(":")[0];
+    
+        try {
+            return InetAddress.getByName(ip);
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(KafkaFacade.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+    
+     private int getBrokerPort(String str){
+    
+    String endpoint =  str.split("//")[1];
+    
+    String ip = endpoint.split(":")[1];
+    return Integer.parseInt(ip);
+    
     }
 }
+

@@ -15,6 +15,14 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/kafka/topics');
               },
               /**
+               * Get all the topics defined in the project with given id.
+               * @param {int} projectId
+               * @returns {unresolved} A list of topic objects.
+               */
+              getSharedTopics: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/kafka/sharedTopics');
+              },
+              /**
                * Get the details of the topic with given ID, under the given project.
                * Includes all description for the topic
                * @param {type} projectId
@@ -126,6 +134,10 @@ angular.module('hopsWorksApp')
                */
               unshareTopic: function (projectId, topicName, destProjectId) {
                 return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/unshare/' + destProjectId);
+              },
+              
+              unshareTopicFromProject: function (projectId, topicName) {
+                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/unshare/');
               },
               
               topicIsSharedTo: function (projectId, topicName){

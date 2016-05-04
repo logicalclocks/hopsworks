@@ -28,6 +28,7 @@ angular.module('hopsWorksApp')
 
               KafkaService.createTopicAcl(self.projectId, topicName, acl).then(
                       function (success) {
+                          $modalInstance.close(success);
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to add topic', ttl: 5000});
               });

@@ -164,10 +164,9 @@
                     <thead ng-show="row.partitionDetails.length > 0">
                     <tr ng-repeat="partition in row.partitionDetails">
                         <td ng-if="kafkaCtrl.activeId === -1">{{partition.id}}</td>
-                        <td ng-if="kafkaCtrl.activeId === -1">{{partition.partitionLeader}}</td>
-                        <td ng-if="kafkaCtrl.activeId === -1">{{partition.partitionReplicas}}</td>
-                        
-                        <td ng-if="kafkaCtrl.activeId === -1">{{partition.paritionInSyncReplicas}}</td>
+                        <td ng-if="kafkaCtrl.activeId === -1">{{partition.leader}}</td>
+                        <td ng-if="kafkaCtrl.activeId === -1">{{partition.replicas}}</td>
+                        <td ng-if="kafkaCtrl.activeId === -1">{{partition.inSyncReplicas}}</td>
                     </tr>
                     </thead>
                   </table>
@@ -194,6 +193,30 @@
               </tr>
             </tbody>
           </table>
+            
+            <table st-table="rowCollection" class="table table-striped"> 
+                <thead>
+                    <tr>
+                        <th class="col-sm-10">Shared Topics</th>
+                        <th class="col-sm-1">Unshare</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <thead ng-show="kafkaCtrl.sharedTopics.length > 0">
+                    <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.sharedTopics">
+                 
+                        <td>{{row.name}}</td>
+                        <td>
+                            <button type="button" ng-click="kafkaCtrl.unshareTopic(row.name)" class="btn btn-sm btn-danger">
+                                <i class="glyphicon glyphicon-remove">
+                                </i>
+                            </button>
+                        </td>
+                    </tr>
+                    </thead>
+                </tbody>
+
+            </table>
 
         </div>              
     </section>
