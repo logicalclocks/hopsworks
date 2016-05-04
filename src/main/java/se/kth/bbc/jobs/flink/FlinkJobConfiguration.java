@@ -28,8 +28,9 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
 
     private int numberOfTaskManagers = 1;
     private int slots = 1;
-    private int taskManagerMemory = 1024;
-
+    private int taskManagerMemory = 768;
+    private String jobtype;
+            
     protected static final String KEY_JARPATH = "JARPATH";
     protected static final String KEY_MAINCLASS = "MAINCLASS";
     protected static final String KEY_ARGS = "ARGS";
@@ -39,6 +40,8 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
     protected static final String KEY_SLOTS = "SLOTS";
     //TaskManager memory
     protected static final String KEY_TMMEM = "TMMEM";
+    //Job Type
+    protected static final String KEY_JOBTYPE = "JOBTYPE";
 
     public FlinkJobConfiguration() {
         super();
@@ -152,6 +155,22 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
     }
 
     /**
+     * Returns the Flink Job Type, Streaming or Batch.
+     * @return 
+     */
+    public String getJobtype() {
+        return jobtype;
+    }
+
+    /**
+     * Sets the Flink Job Type, Streaming or Batch.
+     * @param jobtype 
+     */
+    public void setJobtype(String jobtype) {
+        this.jobtype = jobtype;
+    }
+    
+    /**
      * Get Flink Configuration Directory
      * @return 
      */
@@ -205,6 +224,7 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         obj.set(KEY_SLOTS, "" + slots);
         obj.set(KEY_TMMEM, "" + taskManagerMemory);
         obj.set(KEY_NUMTMS, "" + numberOfTaskManagers);
+        obj.set(KEY_JOBTYPE, "" + jobtype);
         obj.set(KEY_TYPE, JobType.FLINK.name());
         return obj;
     }
@@ -214,7 +234,7 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
             IllegalArgumentException {
         //First: make sure the given object is valid by getting the type and AdamCommandDTO
         JobType type;
-        String jsonArgs, jsonJarpath, jsonMainclass, jsonNumtms;
+        String jsonArgs, jsonJarpath, jsonMainclass, jsonNumtms, jsonJobType;
         int jsonTMmem, jsonSlots;
         try {
             String jsonType = json.getString(KEY_TYPE);
@@ -230,6 +250,7 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
             jsonSlots = Integer.parseInt(json.getString(KEY_SLOTS));
             jsonTMmem = Integer.parseInt(json.getString(KEY_TMMEM));
             jsonNumtms = json.getString(KEY_NUMTMS);
+            jsonJobType = json.getString(KEY_JOBTYPE);
         } catch (Exception e) {
             throw new IllegalArgumentException(
                     "Cannot convert object into FlinkJobConfiguration.", e);
@@ -241,6 +262,7 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         this.args = jsonArgs;
         this.slots = jsonSlots;
         this.taskManagerMemory = jsonTMmem;
+        this.jobtype = jsonJobType;
         this.jarPath = jsonJarpath;
         this.mainClass = jsonMainclass;
         this.numberOfTaskManagers = Integer.parseInt(jsonNumtms);

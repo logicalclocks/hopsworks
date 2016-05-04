@@ -191,6 +191,14 @@ public class FlinkYarnRunnerBuilder {
         return this.taskManagerCount;
     }
 
+    public boolean isStreamingMode() {
+        return streamingMode;
+    }
+
+    public void setStreamingMode(boolean streamingMode) {
+        this.streamingMode = streamingMode;
+    }
+    
     //@Override
     public void setShipFiles(List<File> shipFiles) {
         for (File shipFile : shipFiles) {

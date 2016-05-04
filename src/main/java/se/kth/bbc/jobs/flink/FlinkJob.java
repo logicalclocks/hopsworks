@@ -23,7 +23,8 @@ public class FlinkJob extends YarnJob {
     private final FlinkJobConfiguration jobconfig;
     private final String flinkDir;
     private final String flinkUser;
-    
+    private final String JOBTYPE_BATCH = "Batch";
+    private final String JOBTYPE_STREAMING = "Streaming";
     /**
      *
      * @param job
@@ -83,6 +84,11 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setTaskManagerMemory(jobconfig.getTaskManagerMemory());
         flinkBuilder.setTaskManagerSlots(jobconfig.getSlots());
         flinkBuilder.setTaskManagerCount(jobconfig.getNumberOfTaskManagers());
+        if(jobconfig.getJobtype().equals(JOBTYPE_BATCH)){
+            flinkBuilder.setStreamingMode(false);
+        } else {
+            flinkBuilder.setStreamingMode(true);
+        }
         flinkBuilder.setJobManagerMemory(jobconfig.getAmMemory());
         flinkBuilder.setJobManagerCores(jobconfig.getAmVCores());
         flinkBuilder.setJobManagerQueue(jobconfig.getAmQueue());
