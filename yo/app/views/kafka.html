@@ -70,14 +70,14 @@
                       <td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.username" placeholder="Username"></td>
                       <td ng-if="kafkaCtrl.activeId === -1">{{acl.permissionType}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id">
-                        <select name="permission_type" ng-model="kafkaCtrl.permissionType">
+                        <select name="permission_type" ng-model="kafkaCtrl.permission_type">
                           <option value="allow">Allow</option>
                           <option value="deny">Deny</option>
                         </select>
                       </td>
                       <td ng-if="kafkaCtrl.activeId === -1">{{acl.operationType}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id">
-                        <select name="operation_type" ng-model="kafkaCtrl.operationType">
+                        <select name="operation_type" ng-model="kafkaCtrl.operation_type">
                           <option value="read">read</option>
                           <option value="write">write</option>
                           <option value="details">details</option>
@@ -139,7 +139,7 @@
                     <tr ng-repeat="proj in row.shares">
                       <td>{{proj.name}}</td>
                       <td>
-                        <button type="button" ng-click="kafkaCtrl.unshareTopic(row.name, proj.id)" class="btn btn-sm btn-danger">
+                        <button type="button" ng-click="kafkaCtrl.unshareTopic(row.name, proj)" class="btn btn-sm btn-danger">
                           <i class="glyphicon glyphicon-remove">
                           </i>
                         </button>

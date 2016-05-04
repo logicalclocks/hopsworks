@@ -6,13 +6,13 @@ angular.module('hopsWorksApp')
             self.projectId = projectId;
             self.selectedProjectName;
             self.topicName;
-            self.num_paritions;
+            self.num_partitions;
             self.partitioning_factor;
             
             self.init = function() {
                           KafkaService.defaultTopicValues(self.projectId).then(
                                 function (success) {
-                                  self.num_paritions = success.data.numOfPartitions;
+                                  self.num_partitions = success.data.numOfPartitions;
                                   self.partitioning_factor = success.data.numOfReplicas;
                                   
                                 }, function (error) {
@@ -26,7 +26,7 @@ angular.module('hopsWorksApp')
             self.createTopic = function () {
                 var topicDetails ={};
                 topicDetails.name=self.topicName;
-                topicDetails.numOfPartitions =self.num_paritions;
+                topicDetails.numOfPartitions =self.num_partitions;
                 topicDetails.numOfReplicas =self.partitioning_factor;
 
               KafkaService.createTopic(self.projectId, topicDetails).then(

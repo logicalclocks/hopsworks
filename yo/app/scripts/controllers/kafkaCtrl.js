@@ -25,10 +25,6 @@ angular.module('hopsWorksApp')
               {"name": "emptyTopic", 'acls': [], 'shares': []}
             ];
 
-//            self.topicDetails = [{"name": self.topicName,
-//                                  "replication_factor": '1',
-//                                  "partition": '2'}];
-
             self.topicDetails = {"name": ""};
                     
             self.maxNumTopics = 10;
@@ -67,8 +63,7 @@ angular.module('hopsWorksApp')
               acl.permissionType = self.permission_type;
               acl.operationType = self.operation_type;
               acl.host = self.host;
-                kafkaService.updateAcl(self.projectId, topicName, aclId, acl).then(
-                        
+                KafkaService.updateTopicAcl(self.projectId, topicName, aclId, acl).then(
                         function(success){
                             self.getAclsForTopic(topicName);
                             
@@ -169,6 +164,7 @@ angular.module('hopsWorksApp')
                 
                 ModalService.createTopicAcl('lg', self.projectId, topicName).then(
                       function (success) {
+                          self.getAclsForTopic(topicName);
                       }, function (error) {
                 //The user changed their mind.
                 growl.error(error.data.errorMsg, {title: 'adding acl', ttl: 5000});
@@ -194,7 +190,7 @@ angular.module('hopsWorksApp')
                       "Select a Project to share the topic with.").then(
                       function (success) {
                         var destProj = success.projectId;
-
+                        if(destProj!==self.projectId){
                         KafkaService.shareTopic(self.projectId, topicName, destProj).then(
                                 function (success) {
                                   self.topicIsSharedTo(topicName);
@@ -203,7 +199,10 @@ angular.module('hopsWorksApp')
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
 
-
+                        }else{
+                            growl.info(success.name+" is owner of topic.", {title:success.getname+"Topic not shared", ttl:500});
+                            
+                        }
                       }, function (error) {
                 //The user changed their mind.
               });
