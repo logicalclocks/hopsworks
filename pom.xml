@@ -172,7 +172,6 @@
       <groupId>org.elasticsearch</groupId>
       <artifactId>elasticsearch</artifactId>
       <version>2.1.2</version>
-      <!--<version>1.7.1</version>-->
     </dependency>
   </dependencies>
   <build>
