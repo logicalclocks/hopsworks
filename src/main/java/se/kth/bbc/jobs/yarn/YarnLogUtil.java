@@ -38,23 +38,21 @@ public class YarnLogUtil {
    * @param src aggregated yarn log path
    * @param dst destination path to copy to
    * @param desiredLogType stderr or stdout
-   * @throws IOException
    */
   public static void copyAggregatedYarnLogs(DistributedFsService fsService,
           DistributedFileSystemOps dfs, String src, String dst,
-          String desiredLogType) throws
-          IOException {
+          String desiredLogType) {
     long wait = dfs.getConf().getLong(
             YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, 86400);
     PrintStream writer = null;
     String[] srcs;
     try {
+      writer = new PrintStream(dfs.create(dst));
       Result result = waitForAggregatedLogFileCreation(src, dfs, fsService);
       srcs = getAggregatedLogFilePaths(src, dfs);
       if (!logFilesReady(srcs, dfs, fsService)) {
         LOGGER.log(Level.SEVERE, "Error getting logs");
       }
-      writer = new PrintStream(dfs.create(dst));
       switch (result) {
         case FAILED:
           writer.print("Failed to get the aggregated logs.");
@@ -67,6 +65,12 @@ public class YarnLogUtil {
           writeLogs(dfs, srcs, writer, desiredLogType);
           break;
       }
+    } catch (Exception ex) {
+      if (writer != null) {
+        writer.print(YarnLogUtil.class.getName()
+                + ": Failed to get aggregated logs.\n" + ex.getMessage());
+      }
+      LOGGER.log(Level.SEVERE, null, ex);
     } finally {
       if (writer != null) {
         writer.flush();

@@ -71,10 +71,8 @@ public class DistributedFileSystemOps {
     try (BufferedReader br = new BufferedReader(new InputStreamReader(dfs.
             open(file)));) {
       String line;
-      line = br.readLine();
-      while (line != null) {
+      while ((line = br.readLine()) != null) {
         out.append(line).append("\n");
-        line = br.readLine();
       }
       return out.toString();
     }
@@ -89,17 +87,7 @@ public class DistributedFileSystemOps {
    */
   public String cat(String file) throws IOException {
     Path path = new Path(file);
-    StringBuilder out = new StringBuilder();
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(dfs.
-            open(path)));) {
-      String line;
-      line = br.readLine();
-      while (line != null) {
-        out.append(line).append("\n");
-        line = br.readLine();
-      }
-      return out.toString();
-    }
+    return cat(path);
   }
 
   /**

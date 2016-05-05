@@ -40,6 +40,10 @@ public class InterpreterService {
   public InterpreterRestApi interpreter(@Context HttpServletRequest httpReq)
           throws AppException {
     Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
+    if (project == null) {
+      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+                            "Could not find project. Make sure cookies are enabled.");        
+    }
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
     ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
             getName(), user.getEmail());

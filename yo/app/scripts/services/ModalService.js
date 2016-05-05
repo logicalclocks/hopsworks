@@ -310,6 +310,33 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              viewPublicDataset: function (size, projects, datasetDto) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/viewPublicDataset.html',
+                  controller: 'ViewPublicDatasetCtrl as viewPublicDatasetCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projects: function () {
+                      return projects;
+                    },
+                    datasetDto: function () {
+                      return datasetDto;
+                    }
+                  }
+                });
+                return modalInstance.projects;
+              },
               /**
                * Open a dialog to allow creating a new folder at the given path (excluding the new folder's name).
                * @param {type} size

@@ -43,7 +43,7 @@ public class NotebookService {
     Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
     if (project == null) {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-                            "Could not load the project in Zeppelin.");
+                            "Could not find project. Make sure cookies are enabled.");
     }
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
     ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.

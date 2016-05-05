@@ -33,7 +33,8 @@
                     </ul>
                     
                 </h3>
-                <div class="ds-content col-lg-12" ng-class="{'sidenav-open': zeppelinCtrl.tgState}" style="margin-top: 5px;">
+                <div ng-init="(iscollapsed$index) = true; zeppelinCtrl.tgState = true;"
+                     class="ds-content col-lg-12" ng-class="{'sidenav-open': zeppelinCtrl.tgState}" style="margin-top: 5px;">
                     <div class="row row-no-margin-left" style="margin-top: 15px;">
                         <div class="col-lg-12">
                             <div class="file-box"
