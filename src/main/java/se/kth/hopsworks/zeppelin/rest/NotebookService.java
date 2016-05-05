@@ -45,8 +45,13 @@ public class NotebookService {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
                             "Could not load the project in Zeppelin.");
     }
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.getName());
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
+    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
+            getName(), user.getEmail());
+    if (zeppelinConf == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                            "Could not connect to web socket.");
+    }
     String userRole = projectTeamBean.findCurrentRole(project, user);
 
     if (userRole == null) {

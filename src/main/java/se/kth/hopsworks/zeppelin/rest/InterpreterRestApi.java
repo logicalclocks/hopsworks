@@ -30,6 +30,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -120,7 +121,6 @@ public class InterpreterRestApi {
   public Response updateSetting(String message,
           @PathParam("settingId") String settingId) {
     logger.info("Update interpreterSetting {}", settingId);
-    logger.info("Update message {}", message);
     try {
       UpdateInterpreterSettingRequest p = gson.fromJson(message,
               UpdateInterpreterSettingRequest.class);
@@ -191,7 +191,6 @@ public class InterpreterRestApi {
 
     if (zeppelinResource.isInterpreterRunning(setting, project)) {
       zeppelinResource.forceKillInterpreter(setting, project);
-      
     }
     InterpreterDTO interpreter = new InterpreterDTO(setting,
             !zeppelinResource.isInterpreterRunning(setting, project));

@@ -19,7 +19,6 @@ package se.kth.hopsworks.zeppelin.socket;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -28,6 +27,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.websocket.CloseReason;
 import javax.websocket.EndpointConfig;
@@ -57,19 +58,21 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 import se.kth.hopsworks.zeppelin.socket.Message.OP;
 
 /**
  * Zeppelin websocket service.
- *
+ * <p>
  */
 @ServerEndpoint(value = "/zeppelin/ws",
         configurator = ZeppelinEndpointConfig.class)
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class NotebookServer implements
         JobListenerFactory, AngularObjectRegistryListener {
 
-  private static final Logger logger = Logger.getLogger(NotebookServer.class.
+  private static final Logger LOG = Logger.getLogger(NotebookServer.class.
           getName());
 
   Gson gson = new Gson();
@@ -81,6 +84,7 @@ public class NotebookServer implements
   private String userRole;
   private Notebook notebook;
   private Session session;
+  private ZeppelinConfig conf;
   @EJB
   private ProjectTeamFacade projectTeamBean;
   @EJB
@@ -97,7 +101,7 @@ public class NotebookServer implements
 
   @OnOpen
   public void open(Session conn, EndpointConfig config) {
-    logger.log(Level.INFO, "Create zeppelin websocket on port {0}:{1}",
+    LOG.log(Level.INFO, "Create zeppelin websocket on port {0}:{1}",
             new Object[]{conn.getRequestURI().getHost(), conn.getRequestURI().
               getPort()});
     this.session = conn;
@@ -106,12 +110,13 @@ public class NotebookServer implements
             "projectID"));
     authenticateUser(conn, this.project, this.sender);
     if (this.userRole == null) {
-      logger.log(Level.INFO, "User not authorized for Zeepelin Access: {0}",
+      LOG.log(Level.INFO, "User not authorized for Zeepelin Access: {0}",
               this.sender);
       return;
     }
-    this.notebook = zeppelin.getZeppelinConfig(this.project.getName()).
-            getNotebook();
+    this.conf = zeppelin.getZeppelinConfig(this.project.getName(),
+            this.sender, this);
+    this.notebook = this.conf.getNotebook();
     synchronized (connectedSockets) {
       connectedSockets.add(conn);
     }
@@ -123,14 +128,16 @@ public class NotebookServer implements
     Notebook notebook = notebook();
     try {
       Message messagereceived = deserializeMessage(msg);
-      logger.log(Level.INFO, "RECEIVE << {0}", messagereceived.op);
+      LOG.log(Level.INFO, "RECEIVE << {0}", messagereceived.op);
       /**
        * Lets be elegant here
        */
       switch (messagereceived.op) {
         case LIST_NOTES:
           broadcastNoteList();
-          //sendNoteList(conn);
+          break;
+        case RELOAD_NOTES_FROM_REPO:
+          broadcastReloadedNoteList();
           break;
         case GET_HOME_NOTE:
           sendHomeNote(conn, notebook);
@@ -178,8 +185,7 @@ public class NotebookServer implements
           completion(conn, notebook, messagereceived);
           break;
         case PING:
-          pong();
-          break;
+          break; //do nothing
         case ANGULAR_OBJECT_UPDATED:
           angularObjectUpdated(conn, notebook, messagereceived);
           break;
@@ -188,13 +194,13 @@ public class NotebookServer implements
           break;
       }
     } catch (Exception e) {
-      logger.log(Level.SEVERE, "Can't handle message", e);
+      LOG.log(Level.SEVERE, "Can't handle message", e);
     }
   }
 
   @OnClose
   public void onClose(Session conn, CloseReason reason) {
-    logger.log(Level.INFO, "Closed connection to {0} : {1}. Reason: {2}",
+    LOG.log(Level.INFO, "Closed connection to {0} : {1}. Reason: {2}",
             new Object[]{
               conn.getRequestURI().getHost(),
               conn.getRequestURI().getPort(),
@@ -271,6 +277,7 @@ public class NotebookServer implements
         }
       }
     }
+
     return id;
   }
 
@@ -295,12 +302,12 @@ public class NotebookServer implements
       if (socketLists == null || socketLists.isEmpty()) {
         return;
       }
-      logger.log(Level.INFO, "SEND >> {0}", m.op);
+      LOG.log(Level.INFO, "SEND >> {0}", m.op);
       for (Session conn : socketLists) {
         try {
           conn.getBasicRemote().sendText(serializeMessage(m));
         } catch (IOException ex) {
-          logger.log(Level.SEVERE, "Unable to send message " + m, ex);
+          LOG.log(Level.SEVERE, "Unable to send message " + m, ex);
         }
       }
     }
@@ -312,7 +319,7 @@ public class NotebookServer implements
       if (socketLists == null || socketLists.isEmpty()) {
         return;
       }
-      logger.log(Level.INFO, "SEND >> {0}", m.op);
+      LOG.log(Level.INFO, "SEND >> {0}", m.op);
       for (Session conn : socketLists) {
         if (exclude.equals(conn)) {
           continue;
@@ -320,7 +327,7 @@ public class NotebookServer implements
         try {
           conn.getBasicRemote().sendText(serializeMessage(m));
         } catch (IOException ex) {
-          logger.log(Level.SEVERE, "Unable to send message " + m, ex);
+          LOG.log(Level.SEVERE, "Unable to send message " + m, ex);
         }
       }
     }
@@ -336,7 +343,7 @@ public class NotebookServer implements
             conn.getBasicRemote().sendText(serializeMessage(m));
           }
         } catch (IOException ex) {
-          logger.log(Level.SEVERE, "Unable to send message " + m, ex);
+          LOG.log(Level.SEVERE, "Unable to send message " + m, ex);
         }
       }
     }
@@ -350,6 +357,14 @@ public class NotebookServer implements
             ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN);
     boolean hideHomeScreenNotebookFromList = conf
             .getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN_HIDE);
+
+    if (needsReload) {
+      try {
+        notebook.reloadAllNotes();
+      } catch (IOException e) {
+        LOG.severe("Fail to reload notes from repository");
+      }
+    }
 
     List<Note> notes = notebook.getAllNotes();
     List<Map<String, String>> notesInfo = new LinkedList<>();
@@ -373,6 +388,32 @@ public class NotebookServer implements
     broadcast(note.id(), new Message(OP.NOTE).put("note", note));
   }
 
+  public void broadcastNoteList() {
+    List<Map<String, String>> notesInfo = generateNotebooksInfo(false);
+    broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
+  }
+
+  public void broadcastReloadedNoteList() {
+    List<Map<String, String>> notesInfo = generateNotebooksInfo(true);
+    broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
+  }
+
+  private void sendNote(Session conn, Notebook notebook,
+          Message fromMessage) throws IOException {
+    String noteId = (String) fromMessage.get("id");
+    if (noteId == null) {
+      return;
+    }
+
+    Note note = notebook.getNote(noteId);
+    if (note != null) {
+      addConnectionToNote(note.id(), conn);
+      conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).put(
+              "note", note)));
+      sendAllAngularObjects(note, conn);
+    }
+  }
+
   private void sendHomeNote(Session conn, Notebook notebook) throws IOException {
     String noteId = notebook.getConf().getString(
             ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN);
@@ -391,40 +432,6 @@ public class NotebookServer implements
       removeConnectionFromAllNote(conn);
       conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).put(
               "note", null)));
-    }
-  }
-
-  public void broadcastNoteList() {
-    Notebook notebook = notebook();
-    List<Note> notes = notebook.getAllNotes();//returns notes in project
-    List<Map<String, String>> notesInfo = new LinkedList<>();
-    for (Note note : notes) {
-      Map<String, String> info = new HashMap<>();
-      info.put("id", note.id());
-      info.put("name", note.getName());
-      notesInfo.add(info);
-    }
-    broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
-  }
-
-  private void sendNote(Session conn, Notebook notebook, Message fromMessage) {
-    String noteId = (String) fromMessage.get("id");
-    if (noteId == null) {
-      return;
-    }
-
-    Note note = notebook.getNote(noteId);
-    if (note != null) {
-      addConnectionToNote(note.id(), conn);
-      try {
-        conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).
-                put("note", note)));
-      } catch (IOException ex) {
-        logger.log(Level.SEVERE, "Unable to send message " + new Message(
-                Message.OP.NOTE).put("note",
-                        note), ex);
-      }
-      sendAllAngularObjects(note, conn);
     }
   }
 
@@ -577,7 +584,7 @@ public class NotebookServer implements
                     .get("config");
             p.setConfig(config);
           } catch (Exception e) {
-            logger.log(Level.SEVERE,
+            LOG.log(Level.SEVERE,
                     "Exception while setting parameter in paragraph", e);
           }
         }
@@ -623,28 +630,21 @@ public class NotebookServer implements
     broadcastNote(note);
   }
 
-  private void completion(Session conn, Notebook notebook, Message fromMessage) {
+  private void completion(Session conn, Notebook notebook, Message fromMessage)
+          throws IOException {
     String paragraphId = (String) fromMessage.get("id");
     String buffer = (String) fromMessage.get("buf");
     int cursor = (int) Double.parseDouble(fromMessage.get("cursor").toString());
     Message resp = new Message(OP.COMPLETION_LIST).put("id", paragraphId);
     if (paragraphId == null) {
-      try {
-        conn.getBasicRemote().sendText(serializeMessage(resp));
-      } catch (IOException ex) {
-        logger.log(Level.SEVERE, "Unable to send message " + resp, ex);
-      }
+      conn.getBasicRemote().sendText(serializeMessage(resp));
       return;
     }
 
     final Note note = notebook.getNote(getOpenNoteId(conn));
     List<String> candidates = note.completion(paragraphId, buffer, cursor);
     resp.put("completions", candidates);
-    try {
-      conn.getBasicRemote().sendText(serializeMessage(resp));
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Unable to send message " + resp, ex);
-    }
+    conn.getBasicRemote().sendText(serializeMessage(resp));
   }
 
   /**
@@ -677,7 +677,7 @@ public class NotebookServer implements
           // first trying to get local registry
           ao = angularObjectRegistry.get(varName, noteId);
           if (ao == null) {
-            logger.log(Level.WARNING, "Object {} is not binded", varName);
+            LOG.log(Level.WARNING, "Object {} is not binded", varName);
           } else {
             // path from client -> server
             ao.set(varValue, false);
@@ -790,7 +790,7 @@ public class NotebookServer implements
     try {
       note.run(paragraphId);
     } catch (Exception ex) {
-      logger.log(Level.SEVERE, "Exception from run", ex);
+      LOG.log(Level.SEVERE, "Exception from run", ex);
       if (p != null) {
         p.setReturn(new InterpreterResult(
                 InterpreterResult.Code.ERROR, ex.getMessage()), ex);
@@ -801,7 +801,7 @@ public class NotebookServer implements
 
   /**
    * Need description here.
-   *
+   * <p>
    */
   public static class ParagraphJobListener implements JobListener {
 
@@ -817,7 +817,7 @@ public class NotebookServer implements
     public void onProgressUpdate(Job job, int progress) {
       notebookServer.broadcast(note.id(),
               new Message(OP.PROGRESS).put("id", job.getId()).put("progress",
-                      job.progress()));
+              job.progress()));
     }
 
     @Override
@@ -828,12 +828,12 @@ public class NotebookServer implements
     public void afterStatusChange(Job job, Status before, Status after) {
       if (after == Status.ERROR) {
         if (job.getException() != null) {
-          logger.log(Level.INFO, "Error", job.getException());
+          LOG.log(Level.INFO, "Error", job.getException());
         }
       }
 
       if (job.isTerminated()) {
-        logger.log(Level.INFO, "Job {0} is finished", job.getId());
+        LOG.log(Level.INFO, "Job {0} is finished", job.getId());
         try {
           note.persist();
         } catch (IOException e) {
@@ -852,7 +852,7 @@ public class NotebookServer implements
   private void pong() {
   }
 
-  private void sendAllAngularObjects(Note note, Session conn) {
+  private void sendAllAngularObjects(Note note, Session conn) throws IOException {
     List<InterpreterSetting> settings = note.getNoteReplLoader().
             getInterpreterSettings();
     if (settings == null || settings.isEmpty()) {
@@ -864,18 +864,12 @@ public class NotebookServer implements
               .getAngularObjectRegistry();
       List<AngularObject> objects = registry.getAllWithGlobal(note.id());
       for (AngularObject object : objects) {
-        try {
-          conn.getBasicRemote().sendText(serializeMessage(new Message(
-                  OP.ANGULAR_OBJECT_UPDATE)
-                  .put("angularObject", object)
-                  .put("interpreterGroupId", intpSetting.getInterpreterGroup().
-                          getId())
-                  .put("noteId", note.id())));
-        } catch (IOException ex) {
-          logger.log(Level.SEVERE, "Unable to send message " + new Message(
-                  Message.OP.NOTE).put("note",
-                          note), ex);
-        }
+        conn.getBasicRemote().sendText(serializeMessage(new Message(
+                OP.ANGULAR_OBJECT_UPDATE)
+                .put("angularObject", object)
+                .put("interpreterGroupId", intpSetting.getInterpreterGroup().
+                        getId())
+                .put("noteId", note.id())));
       }
     }
   }
@@ -930,7 +924,7 @@ public class NotebookServer implements
           broadcast(
                   note.id(),
                   new Message(OP.ANGULAR_OBJECT_REMOVE).put("name", name).put(
-                          "noteId", noteId));
+                  "noteId", noteId));
         }
       }
     }
@@ -939,14 +933,14 @@ public class NotebookServer implements
   private void authenticateUser(Session session, Project project, String user) {
     //returns the user role in project. Null if the user has no role in project
     this.userRole = projectTeamBean.findCurrentRole(project, user);
-    logger.log(Level.SEVERE, "User role in this projuct {0}", this.userRole);
+    LOG.log(Level.SEVERE, "User role in this projuct {0}", this.userRole);
 
     if (this.userRole == null) {
       try {
         session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY,
                 "You do not have a role in this project."));
       } catch (IOException ex) {
-        logger.log(Level.SEVERE, null, ex);
+        LOG.log(Level.SEVERE, null, ex);
       }
     }
   }
@@ -963,26 +957,4 @@ public class NotebookServer implements
     return proj;
   }
 
-//  private Notebook setupNotebook(Project project) {
-//    ZeppelinConfiguration conf = zeppelin.getZeppelinConfig(project.getName()).
-//            getConf();
-//    Class<?> notebookStorageClass;
-//    NotebookRepo notebookRepo;
-//    Notebook notebook = null;
-//    try {
-//      notebookStorageClass = Class.forName(conf.getString(
-//              ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE));
-//      Constructor<?> constructor = notebookStorageClass.getConstructor(
-//              ZeppelinConfiguration.class, Project.class
-//      );
-//      notebookRepo = (NotebookRepo) constructor.newInstance(conf, project);
-//
-//      //notebook = new Notebook(notebookRepo, zeppelin.getZeppelinConfig(project.
-//              //getName()).getNotebookIndex());
-//    } catch (Exception ex) {
-//      logger.log(Level.SEVERE, "Could not instantiate notebook", ex);
-//    }
-//
-//    return notebook;
-//  }
 }

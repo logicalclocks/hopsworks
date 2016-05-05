@@ -89,7 +89,7 @@ public class ZeppelinResource {
 
   private FileObject[] getPidFiles(Project project) throws URISyntaxException,
           FileSystemException {
-    ZeppelinConfiguration conf = zeppelinConfFactory.getZeppelinConfig(
+    ZeppelinConfiguration conf = zeppelinConfFactory.getprojectConf(
             project.getName()).getConf();
     URI filesystemRoot;
     FileSystemManager fsManager;

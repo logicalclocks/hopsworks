@@ -19,10 +19,19 @@
                             Create New Notebook
                         </button>
                     </div>
-                    <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
+                    <ul class="nav navbar-nav pull-right" style="margin-right:30px;  margin-top:-10px;">
+                      <li class="pull-left" 
+                          ng-class="{'connected-space':zeppelinCtrl.connectedStatus, 'disconnected-space':!zeppelinCtrl.connectedStatus}">
                         <hamburger-toggle state="zeppelinCtrl.tgState" class="hamburger-toggle" ng-click="zeppelinCtrl.deselect()">
                         </hamburger-toggle>
-                    </div>
+                      </li>
+                      <li class="server-status">
+                          <span class="fa fa-circle" ng-class="{'server-connected':zeppelinCtrl.connectedStatus, 'server-disconnected':!zeppelinCtrl.connectedStatus}"></span>  
+                          <span ng-show="zeppelinCtrl.connectedStatus">Connected</span>
+                          <span ng-show="!zeppelinCtrl.connectedStatus">Disconnected</span>
+                      </li>
+                    </ul>
+                    
                 </h3>
                 <div class="ds-content col-lg-12" ng-class="{'sidenav-open': zeppelinCtrl.tgState}" style="margin-top: 5px;">
                     <div class="row row-no-margin-left" style="margin-top: 15px;">
