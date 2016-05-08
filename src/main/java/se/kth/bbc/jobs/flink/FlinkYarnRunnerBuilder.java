@@ -79,6 +79,7 @@ public class FlinkYarnRunnerBuilder {
     private List<File> shipFiles = new ArrayList<File>();
     private boolean detached;
     private boolean streamingMode;
+    private int parallelism;
     private String customName = null;
 
     public FlinkYarnRunnerBuilder(String appJarPath, String mainClass) {
@@ -270,6 +271,13 @@ public class FlinkYarnRunnerBuilder {
         return detached;
     }
 
+    public int getParallelism() {
+        return parallelism;
+    }
+
+    public void setParallelism(int parallelism) {
+        this.parallelism = parallelism;
+    }
     
     /**
      * This method will block until the ApplicationMaster/JobManager have been
@@ -299,10 +307,10 @@ public class FlinkYarnRunnerBuilder {
         builder.localResourcesBasePath(stagingPath);
         
         //Add Flink jar
-        builder.addLocalResource(Settings.FLINK_LOCRSC_FLINK_JAR, "hdfs://"+nameNodeIpPort+"/user/glassfish/flink.jar",
+        builder.addLocalResource(Settings.FLINK_LOCRSC_FLINK_JAR, "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR,
                 false);
         //Add Flink conf file
-        builder.addLocalResource(Settings.FLINK_DEFAULT_CONF_FILE, "hdfs://"+nameNodeIpPort+"/user/glassfish/flink-conf.yaml",
+        builder.addLocalResource(Settings.FLINK_DEFAULT_CONF_FILE, "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/"+Settings.FLINK_DEFAULT_CONF_FILE,
                 false);
         //Add log4j properties file
 //        builder.addLocalResource(Settings.FLINK_DEFAULT_LOG4J_FILE, "hdfs://10.0.2.15/user/glassfish/log4j.properties",
@@ -351,6 +359,7 @@ public class FlinkYarnRunnerBuilder {
         
         builder.setJobType(JobType.FLINK);
         builder.setAppJarPath(appJarPath);
+        builder.setParallelism(parallelism);
         String name;
         if (customName == null) {
             name = "Flink session with " + taskManagerCount + " TaskManagers";

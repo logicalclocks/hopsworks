@@ -74,8 +74,6 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setConfigurationDirectory(jobconfig.getFlinkConfDir());
         flinkBuilder.setConfigurationFilePath(new Path(jobconfig.getFlinkConfFile()));
         //Flink specific conf object
-        //TODO: Check if needs to be initialized
-        //TODO: Check if Path is correct
         flinkBuilder.setFlinkLoggingConfigurationPath(new Path(jobconfig.getFlinkConfDir()));
         //TODO: Remove fixed path
         flinkBuilder.setLocalJarPath(new Path("hdfs://"+nameNodeIpPort+"/user/glassfish/flink.jar"));
@@ -84,11 +82,12 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setTaskManagerMemory(jobconfig.getTaskManagerMemory());
         flinkBuilder.setTaskManagerSlots(jobconfig.getSlots());
         flinkBuilder.setTaskManagerCount(jobconfig.getNumberOfTaskManagers());
-        if(jobconfig.getJobtype().equals(JOBTYPE_BATCH)){
+        if(jobconfig.getFlinkJobType().equals(JOBTYPE_BATCH)){
             flinkBuilder.setStreamingMode(false);
         } else {
             flinkBuilder.setStreamingMode(true);
         }
+        flinkBuilder.setParallelism(jobconfig.getParallelism());
         flinkBuilder.setJobManagerMemory(jobconfig.getAmMemory());
         flinkBuilder.setJobManagerCores(jobconfig.getAmVCores());
         flinkBuilder.setJobManagerQueue(jobconfig.getAmQueue());

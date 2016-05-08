@@ -18,7 +18,7 @@ angular.module('hopsWorksApp')
                   CuneiformService, AdamService, FlinkService, TourService) {
                 var self = this;
                 self.tourService = TourService;
-                self.jobtypes = ["Streaming", "Batch"];
+                self.flinkjobtype = ["Streaming", "Batch"];
                 //Set services as attributes 
                 this.ModalService = ModalService;
                 this.growl = growl;

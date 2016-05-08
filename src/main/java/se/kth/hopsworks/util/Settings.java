@@ -368,7 +368,7 @@ public class Settings {
   }
 
   private static String flinkDefaultClasspath(String flinkDir) {
-    return flinkDir + "/*";
+    return flinkDir + "/lib/*";
   }
 
   public static String getFlinkDefaultClasspath(String flinkDir) {

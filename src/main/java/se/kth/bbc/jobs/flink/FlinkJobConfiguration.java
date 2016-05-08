@@ -13,14 +13,6 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
 
     private String jarPath;
     private String appJarPath;
-
-    public String getAppJarPath() {
-        return appJarPath;
-    }
-
-    public void setAppJarPath(String localJarPath) {
-        this.appJarPath = localJarPath;
-    }
     private String mainClass;
     private String args;
     private String flinkConfDir;
@@ -29,7 +21,8 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
     private int numberOfTaskManagers = 1;
     private int slots = 1;
     private int taskManagerMemory = 768;
-    private String jobtype;
+    private int parallelism = 1;
+    private String flinkjobtype;
             
     protected static final String KEY_JARPATH = "JARPATH";
     protected static final String KEY_MAINCLASS = "MAINCLASS";
@@ -41,7 +34,9 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
     //TaskManager memory
     protected static final String KEY_TMMEM = "TMMEM";
     //Job Type
-    protected static final String KEY_JOBTYPE = "JOBTYPE";
+    protected static final String KEY_FLINKJOBTYPE = "FLINKJOBTYPE";
+    //Parallelism property
+    protected static final String KEY_PARALLELISM = "PARALLELISM";
 
     public FlinkJobConfiguration() {
         super();
@@ -158,16 +153,32 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
      * Returns the Flink Job Type, Streaming or Batch.
      * @return 
      */
-    public String getJobtype() {
-        return jobtype;
+    public String getFlinkJobType() {
+        return flinkjobtype;
     }
 
     /**
      * Sets the Flink Job Type, Streaming or Batch.
      * @param jobtype 
      */
-    public void setJobtype(String jobtype) {
-        this.jobtype = jobtype;
+    public void setFlinkJobType(String jobtype) {
+        this.flinkjobtype = jobtype;
+    }
+    
+    public String getAppJarPath() {
+        return appJarPath;
+    }
+
+    public void setAppJarPath(String localJarPath) {
+        this.appJarPath = localJarPath;
+    }
+
+    public int getParallelism() {
+        return parallelism;
+    }
+
+    public void setParallelism(int parallelism) {
+        this.parallelism = parallelism;
     }
     
     /**
@@ -224,8 +235,10 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         obj.set(KEY_SLOTS, "" + slots);
         obj.set(KEY_TMMEM, "" + taskManagerMemory);
         obj.set(KEY_NUMTMS, "" + numberOfTaskManagers);
-        obj.set(KEY_JOBTYPE, "" + jobtype);
+        obj.set(KEY_FLINKJOBTYPE, "" + flinkjobtype);
+        obj.set(KEY_PARALLELISM, "" + parallelism);
         obj.set(KEY_TYPE, JobType.FLINK.name());
+        
         return obj;
     }
 
@@ -235,7 +248,7 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         //First: make sure the given object is valid by getting the type and AdamCommandDTO
         JobType type;
         String jsonArgs, jsonJarpath, jsonMainclass, jsonNumtms, jsonJobType;
-        int jsonTMmem, jsonSlots;
+        int jsonTMmem, jsonSlots, jsonParallelism;
         try {
             String jsonType = json.getString(KEY_TYPE);
             type = JobType.valueOf(jsonType);
@@ -250,7 +263,8 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
             jsonSlots = Integer.parseInt(json.getString(KEY_SLOTS));
             jsonTMmem = Integer.parseInt(json.getString(KEY_TMMEM));
             jsonNumtms = json.getString(KEY_NUMTMS);
-            jsonJobType = json.getString(KEY_JOBTYPE);
+            jsonJobType = json.getString(KEY_FLINKJOBTYPE);
+            jsonParallelism = Integer.parseInt(json.getString(KEY_PARALLELISM));
         } catch (Exception e) {
             throw new IllegalArgumentException(
                     "Cannot convert object into FlinkJobConfiguration.", e);
@@ -262,7 +276,8 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         this.args = jsonArgs;
         this.slots = jsonSlots;
         this.taskManagerMemory = jsonTMmem;
-        this.jobtype = jsonJobType;
+        this.flinkjobtype = jsonJobType;
+        this.parallelism = jsonParallelism;
         this.jarPath = jsonJarpath;
         this.mainClass = jsonMainclass;
         this.numberOfTaskManagers = Integer.parseInt(jsonNumtms);

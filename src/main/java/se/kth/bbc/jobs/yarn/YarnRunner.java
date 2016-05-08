@@ -46,6 +46,7 @@ import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
+import se.kth.bbc.jobs.flink.FlinkYarnRunnerBuilder;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.util.IoUtils;
@@ -65,7 +66,10 @@ public class YarnRunner {
   private YarnClient yarnClient;
   private Configuration conf;
   private ApplicationId appId = null;
+  //Type of Job to run, Spark/Flink/Adam...
   private JobType jobType;
+  //The parallelism parameter of Flink
+  private int parallelism;
   private String appJarPath;
   private final String amJarLocalName;
   private final String amJarPath;
@@ -164,23 +168,30 @@ public class YarnRunner {
         //And submit
         logger.log(Level.INFO, "Submitting application {0} to applications manager.", appId);
         yarnClient.submitApplication(appContext);
-        ApplicationReport appReport = yarnClient.getApplicationReport(appId);
-        int retries = 0;
-        int maxRetries = 60;
-        while(yarnClient.getApplicationReport(appId).getRpcPort() < 1 && retries<maxRetries){
-            logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
-            retries++;
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ex) {
-                logger.log(Level.SEVERE, "Error while waitingfor AppReport rpcPort to be set");
-            }
-        }
-        logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
+        // Create a new client for monitoring
         YarnClient newClient = YarnClient.createYarnClient();
         newClient.init(conf);
         YarnMonitor monitor = new YarnMonitor(appId, newClient);
+        
+        //If it is a Flink job, copy the job jar locally and submit the job.
         if(jobType == JobType.FLINK){
+            int retries = 0;
+            int maxRetries = 60;
+            //Wait for the job manager to start, so the runner is aware of its port.
+            while(yarnClient.getApplicationReport(appId).getRpcPort() < 1 && retries<maxRetries){
+                logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
+                retries++;
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    logger.log(Level.SEVERE, "Error while waitingfor AppReport rpcPort to be set");
+                }
+            }
+            if(yarnClient.getApplicationReport(appId).getRpcPort() < 1){
+                throw new FlinkYarnRunnerBuilder.YarnDeploymentException("Cound not determine Flink JobManager port");
+            }
+            logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
+
             String[] args  = {};
             if(amArgs!=null && !amArgs.isEmpty()){
                 args = amArgs.trim().split(" ");
@@ -188,13 +199,11 @@ public class YarnRunner {
             //app.jar path 
             File file = new File(appJarPath);
             //TODO: Remove hard-coded parallelism
-            int parallelism = 1;
-
+            
             Path sessionFilesDir = new Path(localResourcesBasePath);
             org.apache.flink.configuration.Configuration flinkConf = new org.apache.flink.configuration.Configuration();
             FlinkYarnCluster cluster = new FlinkYarnCluster(yarnClient, appId, conf, flinkConf, sessionFilesDir, false);
             cluster.connectToCluster();
-
             InetSocketAddress jobManagerAddress = cluster.getJobManagerAddress();
 
             org.apache.flink.configuration.Configuration clientConf = new org.apache.flink.configuration.Configuration();
@@ -202,7 +211,7 @@ public class YarnRunner {
             clientConf.setString(ConfigConstants.JOB_MANAGER_IPC_ADDRESS_KEY, jobManagerAddress.getHostName());
             Client client = new Client(clientConf);
             try {
-                PackagedProgram program = new PackagedProgram(file, args);
+                PackagedProgram program = new PackagedProgram(file,args);
                 client.setPrintStatusDuringExecution(false);
 
                 JobSubmissionResult res =  client.runDetached(program, parallelism);
@@ -211,7 +220,7 @@ public class YarnRunner {
             } catch (ProgramInvocationException ex) {
                 logger.log(Level.SEVERE, "Error while Flink Client submits jobs: {0}", ex.getMessage());
             } 
-        } // Create a new client for monitoring
+        } 
        
         yarnClient.close();
         
@@ -465,6 +474,7 @@ public class YarnRunner {
     this.amJarLocalName = builder.amJarLocalName;
     this.amJarPath = builder.amJarPath;
     this.jobType = builder.jobType;
+    this.parallelism = builder.parallelism;
     this.appJarPath = builder.appJarPath;
     this.amQueue = builder.amQueue;
     this.amMemory = builder.amMemory;
@@ -543,6 +553,8 @@ public class YarnRunner {
     private String amJarLocalName;
     //Which job type is running 
     private JobType jobType;
+    //Flink parallelism
+    private int parallelism;
     private String appJarPath;
     //Optional attributes
     // Queue for App master
@@ -663,6 +675,13 @@ public class YarnRunner {
      */
     public void setJobType(JobType jobType){
         this.jobType = jobType;
+    }
+    /**
+     * Set Flink parallelism property.
+     * @param parallelism 
+     */
+    public void setParallelism(int parallelism){
+        this.parallelism = parallelism;
     }
     
     public void setAppJarPath(String path){
