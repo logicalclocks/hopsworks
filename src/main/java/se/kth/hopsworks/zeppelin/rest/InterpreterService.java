@@ -40,8 +40,11 @@ public class InterpreterService {
   public InterpreterRestApi interpreter(@Context HttpServletRequest httpReq)
           throws AppException {
     Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName());
+    if (project == null) {
+      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+                            "Cookies appear to be disabled. You need to enable them to use Zeppelin.");        
+    }
+    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.getName());
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
     String userRole = projectTeamBean.findCurrentRole(project, user);
 

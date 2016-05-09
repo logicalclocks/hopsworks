@@ -19,6 +19,7 @@ public enum JobState {
   NEW("New"),
   NEW_SAVING("New, saving"),
   SUBMITTED("Submitted"),
+  AGGREGATING_LOGS("Aggregating logs"),
   FRAMEWORK_FAILURE("Framework failure"),
   STARTING_APP_MASTER("Starting Application Master"),
   APP_MASTER_START_FAILED("Failed starting AM");
@@ -73,7 +74,7 @@ public enum JobState {
 
   public static EnumSet<JobState> getRunningStates() {
     return EnumSet.of(INITIALIZING, RUNNING, ACCEPTED, NEW, NEW_SAVING,
-            SUBMITTED, STARTING_APP_MASTER);
+            SUBMITTED, STARTING_APP_MASTER, AGGREGATING_LOGS);
   }
 
 }

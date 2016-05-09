@@ -30,8 +30,8 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.jobhistory.YarnApplicationAttemptStateFacade;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.configuration.ScheduleDTO;
 import se.kth.bbc.jobs.model.description.JobDescription;
@@ -72,6 +72,8 @@ public class JobService {
   private FileOperations fops;
   @EJB
   private JobController jobController;
+  @EJB
+  private YarnApplicationAttemptStateFacade appAttemptStateFacade;
   @EJB
   private ActivityFacade activityFacade;
 
@@ -202,7 +204,14 @@ public class JobService {
         List<Execution> executions = exeFacade.findForJob(desc);
         if (executions != null && executions.isEmpty() == false) {
           Execution execution = executions.get(0);
-          builder.add(desc.getId().toString(), Json.createObjectBuilder().add("running", false).add("state", execution.getState().toString()).add("finalStatus", execution.getFinalStatus().toString()).add("progress", execution.getProgress()).add("duration", execution.getExecutionDuration()).add("submissiontime", execution.getSubmissionTime().toString()));
+          builder.add(desc.getId().toString(), Json.createObjectBuilder()
+              .add("running", false)
+              .add("state", execution.getState().toString())
+              .add("finalStatus", execution.getFinalStatus().toString())
+              .add("progress", execution.getProgress())
+              .add("duration", execution.getExecutionDuration())
+              .add("submissiontime", execution.getSubmissionTime().toString())
+          );
         }
       } catch (ArrayIndexOutOfBoundsException e) {
         logger.log(Level.WARNING, "No execution was found: " + e
@@ -216,7 +225,17 @@ public class JobService {
         if (updatedExecution != null) {
           execution = updatedExecution;
         }
-        builder.add(desc.getId().toString(), Json.createObjectBuilder().add("running", true).add("state", execution.getState().toString()).add("finalStatus", execution.getFinalStatus().toString()).add("progress", execution.getProgress()).add("duration", execution.getExecutionDuration()).add("submissiontime", execution.getSubmissionTime().toString()));
+        String trackingUrl = appAttemptStateFacade.findTrackingUrlByAppId(execution.getAppId());
+        builder.add(desc.getId().toString(), 
+            Json.createObjectBuilder()
+                .add("running", true)
+                .add("state", execution.getState().toString())
+                .add("finalStatus", execution.getFinalStatus().toString())
+                .add("progress", execution.getProgress())
+                .add("duration", execution.getExecutionDuration())
+                .add("submissiontime", execution.getSubmissionTime().toString())
+                .add("url",trackingUrl)
+                );
       } catch (ArrayIndexOutOfBoundsException e) {
         logger.log(Level.WARNING, "No execution was found: " + e
             .getMessage());
@@ -230,6 +249,7 @@ public class JobService {
    * Get the log information related to a job. The return value is a JSON object, with format logset=[{"time":"JOB
    * EXECUTION TIME"}, {"log":"INFORMATION LOG"}, {"err":"ERROR LOG"}]
    * <p/>
+   * @param jobId
    * @param sc
    * @param req
    * @return
@@ -251,17 +271,15 @@ public class JobService {
         for (Execution e : executionHistory) {
           arrayObjectBuilder = Json.createObjectBuilder();
           arrayObjectBuilder.add("time", e.getSubmissionTime().toString());
-          if (e.getStdoutPath() != null && !e.getStdoutPath().isEmpty()) {
-            String hdfsLogPath = "hdfs://" + e.getStdoutPath();
+          String hdfsLogPath = "hdfs://" + e.getStdoutPath();
+          if (e.getStdoutPath() != null && !e.getStdoutPath().isEmpty() && fops.exists(hdfsLogPath)) {
             message = IOUtils.toString(fops.getInputStream(hdfsLogPath), "UTF-8");
             arrayObjectBuilder.add("log", message.isEmpty() ? "No information." : message);
           } else {
             arrayObjectBuilder.add("log", "No log available");
           }
-
-          if (e.getStderrPath() != null && !e.getStderrPath().isEmpty()) {
-
-            String hdfsErrPath = "hdfs://" + e.getStderrPath();
+          String hdfsErrPath = "hdfs://" + e.getStderrPath();
+          if (e.getStderrPath() != null && !e.getStderrPath().isEmpty() && fops.exists(hdfsErrPath)) {
             message = IOUtils.toString(fops.getInputStream(hdfsErrPath), "UTF-8");
             arrayObjectBuilder.add("err", message.isEmpty() ? "No error." : message);
           } else {
@@ -278,7 +296,7 @@ public class JobService {
       }
       builder.add("logset", arrayBuilder);
     } catch (IOException ex) {
-      logger.log(Level.WARNING, "Error when reading hdfs logs: " + ex.getMessage());
+      logger.log(Level.WARNING, "Error when reading hdfs logs: {0}", ex.getMessage());
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
@@ -289,9 +307,11 @@ public class JobService {
    * Delete the job associated to the project and jobid. The return value is a JSON object stating operation successful
    * or not.
    * <p/>
+   * @param jobId
    * @param sc
    * @param req
    * @return
+   * @throws se.kth.hopsworks.rest.AppException
    */
   @DELETE
   @Path("/{jobId}/deleteJob")

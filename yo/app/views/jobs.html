@@ -160,6 +160,11 @@
                         {{jobsCtrl.runningInfo['' + job.id].state}}
                       </span>
                       <span
+                        ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Aggregating logs'"
+                        style="color: #0066bb ">
+                        {{jobsCtrl.runningInfo['' + job.id].state}}
+                      </span>
+                      <span
                         ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Framework failure'"
                         style="color: #880000 ">
                         {{jobsCtrl.runningInfo['' + job.id].state}}
@@ -231,32 +236,38 @@
                           <i class="fa fa-spinner fa-spin" ></i>
                         </button>
                       </span>
-                      <span class="field-info" tooltip="Schedule"
+<!--                      <span ng-show="jobsCtrl.runningInfo['' + job.id].running && jobsCtrl.runningInfo['' + job.id].url !== ''" class="field-info" tooltip="Launch the Application Master Web Browser"
                             style="padding-top: 5px;padding-left:3px">
+                        <button style=""
+                                ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.launchAppMasterUrl(jobsCtrl.runningInfo['' + job.id].url);
+                                        $event.stopPropagation();"
+                                class="btn btn-success glyphicon glyphicon-eye-open">
+                        </button>
+                      </span>-->
+
+                            <!--ng-show="jobsCtrl.runningInfo['' + job.id].running === false"-->
+                      <span class="field-info" tooltip="Schedule" style="padding-top: 5px;padding-left:3px">
                         <button style=""
                                 ng-click="jobsCtrl.toggle(job, $index);
                                           jobsCtrl.showDetails(job);$event.stopPropagation();"
                                 class="btn btn-primary glyphicon glyphicon-time">
                         </button>
                       </span>
-                      <span class="field-info" tooltip="Edit as new"
-                            style="padding-top: 5px;padding-left:3px">
+                      <span class="field-info" tooltip="Edit as new" style="padding-top: 5px;padding-left:3px">
                         <button style=""
                                 ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.editAsNew(job);
                                         $event.stopPropagation();"
                                 class="btn btn-warning glyphicon glyphicon-edit">
                         </button>
                       </span>
-                      <span class="field-info" tooltip="Details"
-                            style="padding-top: 5px;padding-left:3px">
+                      <span class="field-info" tooltip="Details" style="padding-top: 5px;padding-left:3px">
                         <button style=""
                                 ng-click="jobsCtrl.toggle(job, $index);
                                         jobsCtrl.showDetails(job);$event.stopPropagation();"
                                 class="btn btn-info glyphicon glyphicon-list-alt">
                         </button>
                       </span>
-                      <span class="field-info" tooltip="Delete"
-                            style="padding-top: 5px;padding-left:3px">
+                      <span class="field-info" tooltip="Delete" style="padding-top: 5px;padding-left:3px">
                         <button style="margin-left: 10px"
                                 ng-click="jobsCtrl.toggle(job, $index);
                                         jobsCtrl.deleteJob(job.id);
@@ -264,18 +275,6 @@
                                 class="btn btn-danger glyphicon glyphicon-trash">
                         </button>
                       </span>
-                      <!--<div class="dropdown" style="display:inline-block;">-->
-                      <!--<button class="btn btn-default btn-sm dropdown-toggle"  type="button" data-toggle="dropdown">More Actions-->
-                      <!--<span class="fa fa-caret-right"></span></button>-->
-                      <!--<ul class="dropdown-menu" style="left: 100px;top:0%">-->
-                      <!--<li><a ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"><span class="glyphicon glyphicon-time" style="padding-right: 10px"></span>Schedule</a></li>-->
-                      <!--<li><a ng-click="jobsCtrl.editAsNew(job);$event.stopPropagation();"><span class="glyphicon glyphicon-edit" style="padding-right: 10px"></span>Edit as New</a></li>-->
-                      <!--<li><a ng-click="jobsCtrl.showDetails(job);$event.stopPropagation();"><span class="glyphicon glyphicon-list-alt" style="padding-right: 10px"></span>Job Details</a></li>-->
-                      <!--<li><a ng-click="jobsCtrl.toggle(job,$index);jobsCtrl.showLogs(job.id);$event.stopPropagation();"><span class="glyphicon glyphicon-hdd" style="padding-right: 10px"></span>Log Files</a></li>-->
-                      <!--<li role="presentation" class="divider"></li>-->
-                      <!--<li><a ng-click="jobsCtrl.deleteJob(job.id,job.name);$event.stopPropagation();"><span class="glyphicon glyphicon-trash" style="padding-right: 10px"></span>Delete</a></li>-->
-                      <!--</ul>-->
-                      <!--</div>-->
                     </td>
                   </tr>
                 </tbody>
