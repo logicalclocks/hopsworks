@@ -1,14 +1,14 @@
 package se.kth.bbc.jobs.flink;
 
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.hopsworks.util.Settings;
@@ -28,7 +28,7 @@ import se.kth.hopsworks.util.Settings;
 */
 public class FlinkYarnRunnerBuilder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FlinkYarnRunnerBuilder.class);
+    private static final Logger LOG = Logger.getLogger(FlinkYarnRunnerBuilder.class.getName());
 
     /**
      * Constants, all starting with ENV_ are used as environment variables to
@@ -245,7 +245,7 @@ public class FlinkYarnRunnerBuilder {
         // check if required Hadoop environment variables are set. If not, warn user
         if (System.getenv(Settings.ENV_KEY_HADOOP_CONF_DIR) == null
                 && System.getenv(Settings.ENV_KEY_YARN_CONF) == null) {
-            LOG.warn("Neither the HADOOP_CONF_DIR nor the YARN_CONF_DIR environment variable is set."
+            LOG.log(Level.WARNING, "Neither the HADOOP_CONF_DIR nor the YARN_CONF_DIR environment variable is set."
                     + "The Flink YARN Client needs one of these to be set to properly load the Hadoop "
                     + "configuration for accessing YARN.");
         }
