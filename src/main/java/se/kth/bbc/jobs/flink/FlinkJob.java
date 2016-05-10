@@ -82,17 +82,19 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setTaskManagerMemory(jobconfig.getTaskManagerMemory());
         flinkBuilder.setTaskManagerSlots(jobconfig.getSlots());
         flinkBuilder.setTaskManagerCount(jobconfig.getNumberOfTaskManagers());
-        if(jobconfig.getFlinkJobType().equals(JOBTYPE_BATCH)){
-            flinkBuilder.setStreamingMode(false);
-        } else {
-            flinkBuilder.setStreamingMode(true);
-        }
+//        if(jobconfig.getFlinkJobType().equals(JOBTYPE_BATCH)){
+//            flinkBuilder.setStreamingMode(false);
+//        } else {
+//            flinkBuilder.setStreamingMode(true);
+//        }
+        flinkBuilder.setStreamingMode(false);
         flinkBuilder.setParallelism(jobconfig.getParallelism());
         flinkBuilder.setJobManagerMemory(jobconfig.getAmMemory());
         flinkBuilder.setJobManagerCores(jobconfig.getAmVCores());
         flinkBuilder.setJobManagerQueue(jobconfig.getAmQueue());
         flinkBuilder.setAppJarPath(jobconfig.getAppJarPath());
-        
+        flinkBuilder.setExtraFiles(jobconfig.getLocalResources());
+
         if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){
             String[] jobArgs = jobconfig.getArgs().trim().split(" ");
             flinkBuilder.addAllJobArgs(jobArgs);

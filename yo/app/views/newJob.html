@@ -185,7 +185,12 @@
               </div>
               <div class="row" ng-show="newJobCtrl.jobtype === 3">
                 <div class="text-right col-md-4">Job Type <i class="fa fa-info-circle" tooltip="Choose between Streaming or Batch job." style="margin-left: 10px"></i></div>
-                <div class="col-md-1"><select name="flinkjobtype" ng-options="flinkjobtype for flinkjobtype in newJobCtrl.flinkjobtype" ng-model="newJobCtrl.runConfig.flinkjobtype" class="form-control" required></select></div>
+                <div class="col-md-1">
+                    <select name="flinkjobtype" 
+                            ng-options="flinkjobtype for flinkjobtype in newJobCtrl.flinkjobtype"
+                            ng-model="newJobCtrl.runConfig.flinkjobtype" class="form-control">
+                    </select>
+                </div>
               </div>
             </div>
             <!-- Add libraries -->

@@ -6,7 +6,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import se.kth.bbc.jobs.jobhistory.JobType;
@@ -45,7 +47,6 @@ public class FlinkYarnRunnerBuilder {
     public static final String ENV_DETACHED = "_DETACHED";
     public static final String ENV_STREAMING_MODE = "_STREAMING_MODE";
     public static final String ENV_DYNAMIC_PROPERTIES = "_DYNAMIC_PROPERTIES";
-    private static final String CONFIG_FILE_NAME = "flink-conf.yaml";
     public static final String CONFIG_FILE_LOGBACK_NAME = "logback.xml";
     public static final String CONFIG_FILE_LOG4J_NAME = "log4j.properties";
     /**
@@ -59,7 +60,8 @@ public class FlinkYarnRunnerBuilder {
     private String appJarPath, mainClass;
     //Optional parameters
     private final List<String> jobArgs = new ArrayList<>();
-    
+    private Map<String, String> extraFiles = new HashMap<>();
+
 
     /**
      * If the user has specified a different number of slots, we store them here
@@ -228,6 +230,12 @@ public class FlinkYarnRunnerBuilder {
         customName = name;
     }
     
+    public void setExtraFiles(Map<String, String> extraFiles) {
+        if (extraFiles == null) {
+          throw new IllegalArgumentException("Map of extra files cannot be null.");
+        }
+        this.extraFiles = extraFiles;
+    }
     public void isReadyForDeployment() throws YarnDeploymentException {
         if (taskManagerCount <= 0) {
             throw new YarnDeploymentException("Taskmanager count must be positive");
@@ -312,6 +320,11 @@ public class FlinkYarnRunnerBuilder {
         //Add Flink conf file
         builder.addLocalResource(Settings.FLINK_DEFAULT_CONF_FILE, "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/"+Settings.FLINK_DEFAULT_CONF_FILE,
                 false);
+        //Add extra files to local resources, use filename as key
+        for (Map.Entry<String, String> k : extraFiles.entrySet()) {
+          builder.addLocalResource(k.getKey(), k.getValue(), !k.getValue().
+                  startsWith("hdfs:"));
+        }
         //Add log4j properties file
 //        builder.addLocalResource(Settings.FLINK_DEFAULT_LOG4J_FILE, "hdfs://10.0.2.15/user/glassfish/log4j.properties",
 //                false);
@@ -322,7 +335,7 @@ public class FlinkYarnRunnerBuilder {
 //        builder.addLocalResource(Settings.FLINK_LOCRSC_APP_JAR, appJarPath,
 //            !appJarPath.startsWith("hdfs:"));
 //        
-//        String logbackFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/logback.xml";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
+        String logbackFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/logback-yarn.xml";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
 //        boolean hasLogback = new File(logbackFile).exists();
 //        String log4jFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/log4j.properties";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOG4J_NAME;
 //
@@ -342,7 +355,7 @@ public class FlinkYarnRunnerBuilder {
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_SLOTS, String.valueOf(taskManagerSlots));
 
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.FLINK_JAR_PATH, flinkJarPath.toString());
-        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, "");
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, logbackFile);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, flinkUser);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_HOME_DIR, "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/");
                
