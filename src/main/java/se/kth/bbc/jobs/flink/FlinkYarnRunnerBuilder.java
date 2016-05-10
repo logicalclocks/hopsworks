@@ -67,7 +67,7 @@ public class FlinkYarnRunnerBuilder {
      * If the user has specified a different number of slots, we store them here
      */
     private int taskManagerSlots = 1;
-    private int jobManagerMemoryMb = 1024;
+    private int jobManagerMemoryMb = 768;
     private int jobManagerCores = 1;
     private String jobManagerQueue = "default";
 
@@ -335,7 +335,7 @@ public class FlinkYarnRunnerBuilder {
 //        builder.addLocalResource(Settings.FLINK_LOCRSC_APP_JAR, appJarPath,
 //            !appJarPath.startsWith("hdfs:"));
 //        
-        String logbackFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/logback-yarn.xml";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
+        //String logbackFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/logback-yarn.xml";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
 //        boolean hasLogback = new File(logbackFile).exists();
 //        String log4jFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/log4j.properties";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOG4J_NAME;
 //
@@ -355,7 +355,7 @@ public class FlinkYarnRunnerBuilder {
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_SLOTS, String.valueOf(taskManagerSlots));
 
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.FLINK_JAR_PATH, flinkJarPath.toString());
-        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, logbackFile);
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, "");
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, flinkUser);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_HOME_DIR, "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/");
                
