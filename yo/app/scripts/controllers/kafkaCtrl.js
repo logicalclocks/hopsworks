@@ -228,7 +228,7 @@ angular.module('hopsWorksApp')
             };
             
             //operation done from project
-            self.unshareTopic =function (topicName){
+            self.unshareTopicFromProject =function (topicName){
                 KafkaService.unshareTopicFromProject(self.projectId, topicName).then(
                         function (success) {
                                   self.getAllSharedTopics();
