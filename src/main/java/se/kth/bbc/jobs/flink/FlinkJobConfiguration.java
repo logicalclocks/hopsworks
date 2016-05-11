@@ -149,22 +149,14 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         this.taskManagerMemory = taskManagerMemory;
     }
 
-    /**
-     * Returns the Flink Job Type, Streaming or Batch.
-     * @return 
-     */
-    public String getFlinkJobType() {
+    public String getFlinkjobtype() {
         return flinkjobtype;
     }
 
-    /**
-     * Sets the Flink Job Type, Streaming or Batch.
-     * @param jobtype 
-     */
-    public void setFlinkJobType(String jobtype) {
-        this.flinkjobtype = jobtype;
+    public void setFlinkjobtype(String flinkjobtype) {
+        this.flinkjobtype = flinkjobtype;
     }
-    
+
     public String getAppJarPath() {
         return appJarPath;
     }
