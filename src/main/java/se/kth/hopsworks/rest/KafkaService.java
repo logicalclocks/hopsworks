@@ -145,7 +145,7 @@ public class KafkaService {
                     "Incomplete request!");
         }
         //create the topic in the database and the Kafka cluster
-        kafkaFacade.createTopicInProject(this.projectId, topicDto.getName());
+        kafkaFacade.createTopicInProject(this.projectId, topicDto);
 
         json.setSuccessMessage("The Topic has been created.");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

@@ -33,6 +33,7 @@ import org.apache.zookeeper.ZooKeeper;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkConnection;
+import se.kth.hopsworks.user.model.Users;
 
 @Stateless
 public class KafkaFacade {
@@ -73,7 +74,7 @@ public class KafkaFacade {
         }
         return topics;
     }
-    
+
     /**
      * Get all shared Topics for the given project.
      * <p/>
@@ -92,7 +93,6 @@ public class KafkaFacade {
         }
         return topics;
     }
-    
 
     public List<PartitionDetailsDTO> getTopicDetails(Project project, String topicName)
             throws AppException, Exception {
@@ -107,7 +107,7 @@ public class KafkaFacade {
                 return topicDetailDTO;
             }
         }
-        
+
         List<PartitionDetailsDTO> pDto = new ArrayList<>();
 
         return pDto;
@@ -158,9 +158,11 @@ public class KafkaFacade {
         return projects;
     }
 
-    public void createTopicInProject(Integer projectId, String topicName)
+    public void createTopicInProject(Integer projectId, TopicDTO topicDto)
             throws AppException {
-        
+
+        String topicName = topicDto.getName();
+
         TypedQuery<ProjectTopics> query = em.createNamedQuery(
                 "ProjectTopics.findByTopicName",
                 ProjectTopics.class);
@@ -171,7 +173,14 @@ public class KafkaFacade {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "Kafka topic already exists. Pick a different topic name.");
         }
-        
+
+        //check if the replication factor is not greater that than the  number of running borkers
+        Set<String> brokers = getBrokerList();
+        if (brokers.size() < topicDto.getNumOfReplicas()) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Topic replication factor can be maximum of" + brokers.size());
+        }
+
         // create the topic in kafka 
         ZkClient zkClient = new ZkClient(getIp(settings.getZkIp()).getHostName(),
                 10 * 1000, 29 * 1000, ZKStringSerializer$.MODULE$);
@@ -181,8 +190,8 @@ public class KafkaFacade {
         try {
             if (!AdminUtils.topicExists(zkUtils, topicName)) {
                 AdminUtils.createTopic(zkUtils, topicName,
-                        Integer.parseInt(settings.getKafkaDefaultNumPartitions()),
-                        Integer.parseInt(settings.getKafkaDefaultNumReplicas()),
+                        topicDto.getNumOfPartitions(),
+                        topicDto.getNumOfReplicas(),
                         new Properties());
             }
         } catch (TopicExistsException ex) {
@@ -220,17 +229,20 @@ public class KafkaFacade {
             AdminUtils.deleteTopic(zkUtils, topicName);
         } catch (TopicAlreadyMarkedForDeletionException ex) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
-                    topicName+" alread marked for deletion.");
+                    topicName + " alread marked for deletion.");
         } finally {
             zkClient.close();
         }
     }
 
-    public TopicDefaultValueDTO topicDefaultValues() {
+    public TopicDefaultValueDTO topicDefaultValues() throws AppException {
+        
+        Set<String> brokers = getBrokerList();
 
         TopicDefaultValueDTO valueDto = new TopicDefaultValueDTO(
                 settings.getKafkaDefaultNumReplicas(),
-                settings.getKafkaDefaultNumPartitions());
+                settings.getKafkaDefaultNumPartitions(),
+                brokers.size()+"");
 
         return valueDto;
     }
@@ -242,7 +254,7 @@ public class KafkaFacade {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Destination projet is topic owner");
         }
-        
+
         ProjectTopics pt = em.find(ProjectTopics.class,
                 new ProjectTopicsPK(topicName, owningProjectId));
         if (pt == null) {
@@ -276,8 +288,8 @@ public class KafkaFacade {
         em.remove(pt);
     }
 
-     public void unShareTopic(String topicName, Integer ownerProjectId)
-             throws AppException {
+    public void unShareTopic(String topicName, Integer ownerProjectId)
+            throws AppException {
 
         SharedTopics pt = em.find(SharedTopics.class,
                 new SharedTopicsPK(topicName, ownerProjectId));
@@ -288,7 +300,7 @@ public class KafkaFacade {
 
         em.remove(pt);
     }
-     
+
     public List<SharedProjectDTO> topicIsSharedTo(String topicName, Integer projectId) {
 
         List<SharedProjectDTO> shareProjectDtos = new ArrayList<>();
@@ -317,26 +329,37 @@ public class KafkaFacade {
                 dto.getOperationType(), dto.getHost(), dto.getRole());
     }
 
-    private void addAclsToTopic(String topicName, String userName,
+    private void addAclsToTopic(String topicName, String userEmail,
             Integer projectId, String permission_type, String operation_type,
             String host, String role) throws AppException {
 
         //get the project id
-        Project project  = em.find(Project.class, projectId);
+        Project project = em.find(Project.class, projectId);
         if (project == null) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "The specified project for the topic is not in database");
         }
-        
-        ProjectTopics pt = em.find(ProjectTopics.class, 
+
+        ProjectTopics pt = em.find(ProjectTopics.class,
                 new ProjectTopicsPK(topicName, projectId));
         if (pt == null) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "Topic does not belong to the project.");
         }
         
-        TopicAcls ta = new TopicAcls(topicName, projectId, userName, permission_type,
-                operation_type, host, role);
+        //fetch the user name from database       
+        TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail", Users.class);
+        query.setParameter("email", userEmail);
+        List<Users> users = query.getResultList();
+        
+        if (users == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "User email does not exist.");
+        }
+        Users user = users.get(0);
+
+        TopicAcls ta = new TopicAcls(topicName, projectId, user.getUsername(),
+                permission_type, operation_type, host, role);
         em.merge(ta);
         em.persist(ta);
         em.flush();
@@ -432,8 +455,8 @@ public class KafkaFacade {
     }
 
     private Set<String> getTopicList() throws Exception {
-
-        Set<String> zkBrokerList = getBrokerList();
+        
+        zkBrokerList = getBrokerList();
 
         for (String seed : zkBrokerList) {
             kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
@@ -525,13 +548,13 @@ public class KafkaFacade {
 
         return partitionDetailsDto;
     }
-    
-    private InetAddress getBrokerIp(String str){
-    
-    String endpoint =  str.split("//")[1];
-    
-    String ip = endpoint.split(":")[0];
-    
+
+    private InetAddress getBrokerIp(String str) {
+
+        String endpoint = str.split("//")[1];
+
+        String ip = endpoint.split(":")[0];
+
         try {
             return InetAddress.getByName(ip);
         } catch (UnknownHostException ex) {
@@ -539,14 +562,18 @@ public class KafkaFacade {
         }
         return null;
     }
-    
-     private int getBrokerPort(String str){
-    
-    String endpoint =  str.split("//")[1];
-    
-    String ip = endpoint.split(":")[1];
-    return Integer.parseInt(ip);
-    
+
+    private int getBrokerPort(String str) {
+
+        String endpoint = str.split("//")[1];
+
+        String ip = endpoint.split(":")[1];
+        return Integer.parseInt(ip);
+
     }
+  
 }
+
+
+
 

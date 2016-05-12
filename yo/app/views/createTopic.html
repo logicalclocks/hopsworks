@@ -18,18 +18,20 @@
                     <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.topicName" placeholder="New Topic Name">
                 </div>
             </div>
+            <div ng-if="createTopicCtrl.topicName_wrong_value === -1" style="color: red">{{"Topic Name shouldn't be empty"}}</div>
             <div class="col-md-12">
                 <label class="control-label">Number of partitions</label><br>
                 <div class="col-sm-12">
                     <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.num_partitions" placeholder="num_paritions">
                 </div>
             </div>
-                    <div class="col-md-12">
+            <div class="col-md-12">
                 <label class="control-label">Number of Replicas</label><br>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.partitioning_factor" placeholder="partitioning_factor">
+                    <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.num_replicas" placeholder="partitioning_factor">
                 </div>
             </div>
+            <div ng-if="createTopicCtrl.replication_wrong_value === -1" style="color: red">{{"Currently, maximum number of replicas should be "+createTopicCtrl.max_num_replicas}}</div>
             <br>
         </div>
         <div class="row"></div>
