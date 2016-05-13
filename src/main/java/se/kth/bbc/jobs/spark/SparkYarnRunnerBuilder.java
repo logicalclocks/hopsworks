@@ -7,6 +7,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.hadoop.yarn.api.records.LocalResourceType;
+import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
+import se.kth.bbc.jobs.yarn.LocalResourceDTO;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.hopsworks.util.Settings;
 
@@ -25,7 +28,6 @@ public class SparkYarnRunnerBuilder {
   private final List<String> jobArgs = new ArrayList<>();
   private String jobName = "Untitled Spark Job";
   private Map<String, String> extraFiles = new HashMap<>();
-
   private int numberOfExecutors = 1;
   private int executorCores = 1;
   private String executorMemory = "512m";
@@ -82,17 +84,35 @@ public class SparkYarnRunnerBuilder {
     builder.localResourcesBasePath(stagingPath);
 
     //Add Spark jar
-    builder.addLocalResource(Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath,
+    builder.addLocalResource(new LocalResourceDTO(
+            Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath,
+            LocalResourceVisibility.PUBLIC, LocalResourceType.FILE, null),
             false);
     //Add app jar
-    builder.addLocalResource(Settings.SPARK_LOCRSC_APP_JAR, appJarPath,
+    builder.addLocalResource(new LocalResourceDTO(
+            Settings.SPARK_LOCRSC_APP_JAR, appJarPath, 
+            LocalResourceVisibility.PUBLIC, LocalResourceType.FILE,null),
             !appJarPath.startsWith("hdfs:"));
 
+     
     //Add extra files to local resources, use filename as key
     for (Map.Entry<String, String> k : extraFiles.entrySet()) {
-      builder.addLocalResource(k.getKey(), k.getValue(), !k.getValue().
-              startsWith("hdfs:"));
+        
+        //If the LocalResource is the Kafka certificate, retrieve it from
+        if(k.getKey().equals(Settings.KAFKA_K_CERTIFICATE) || 
+                k.getKey().equals(Settings.KAFKA_T_CERTIFICATE)  ){
+            builder.addLocalResource(new LocalResourceDTO(k.getKey(), 
+                    k.getValue(), LocalResourceVisibility.APPLICATION, 
+                    LocalResourceType.FILE, null), 
+                    true);
+        } else {
+            builder.addLocalResource(new LocalResourceDTO(k.getKey(),
+                    k.getValue(), LocalResourceVisibility.PUBLIC, 
+                    LocalResourceType.FILE, null),
+                    !k.getValue().startsWith("hdfs:"));
+        }
     }
+  
 
     //Set Spark specific environment variables
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
@@ -183,7 +203,13 @@ public class SparkYarnRunnerBuilder {
     this.extraFiles.put(filename, location);
     return this;
   }
-
+   public SparkYarnRunnerBuilder addExtraFiles(Map<String, String> projectLocalResources) {
+    if(projectLocalResources != null &&!projectLocalResources.isEmpty()){
+        this.extraFiles.putAll(projectLocalResources);
+    }
+    return this;
+  }
+  
   public SparkYarnRunnerBuilder setNumberOfExecutors(int numberOfExecutors) {
     if (numberOfExecutors < 1) {
       throw new IllegalArgumentException(

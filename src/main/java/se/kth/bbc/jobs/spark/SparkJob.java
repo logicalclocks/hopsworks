@@ -50,6 +50,7 @@ public final class SparkJob extends YarnJob {
 
   @Override
   protected boolean setupJob() {
+    super.setupJob();
     //Then: actually get to running.
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled Spark Job");
@@ -67,8 +68,10 @@ public final class SparkJob extends YarnJob {
     runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
-
-    //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
+    runnerbuilder.addExtraFiles(jobconfig.getLocalResources());
+    //Set project specific resources
+    runnerbuilder.addExtraFiles(projectLocalResources);
+    
     try {
       runner = runnerbuilder.
           getYarnRunner(jobDescription.getProject().getName(),

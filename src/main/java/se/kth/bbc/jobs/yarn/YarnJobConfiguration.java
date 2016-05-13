@@ -101,8 +101,7 @@ public class YarnJobConfiguration extends JobConfiguration {
   }
 
   /**
-   * Return a view on the current local resources. The Map returned is not
-   * backed by this object.
+   * Return current local resources. 
    * <p/>
    * @return
    */
