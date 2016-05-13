@@ -177,19 +177,22 @@
           </compilerArguments>
         </configuration>
       </plugin>
-      <!--yeoman-maven-plugin -->
-      <plugin>    
-        <groupId>com.github.trecloux</groupId>
-        <artifactId>yeoman-maven-plugin</artifactId>
-        <version>0.5</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>build</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+
+      <!--start yeoman-maven-plugin -->
+	<plugin>    
+          <groupId>com.github.trecloux</groupId>
+          <artifactId>yeoman-maven-plugin</artifactId>
+          <version>0.5</version>
+          <executions>
+            <execution>
+              <goals>
+		<goal>build</goal>
+              </goals>
+            </execution>
+          </executions>
+	</plugin>
+
+
       <!--maven war plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -265,34 +268,35 @@
         </executions>
       </plugin>
             
-      <plugin>
-        <groupId>org.codehaus.cargo</groupId>
-        <artifactId>cargo-maven2-plugin</artifactId>
-        <version>1.2.4</version>
-        <configuration>
-          <container>
-            <containerId>glassfish4x</containerId>
-            <type>remote</type>
-          </container>
-          <configuration>
-            <type>runtime</type>
-            <properties>
-              <cargo.hostname>${glassfish.hostname}</cargo.hostname>
-              <cargo.remote.username>${glassfish.admin}</cargo.remote.username>
-              <cargo.remote.password>${glassfish.passwd}</cargo.remote.password>
-            </properties>
-          </configuration> 
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.glassfish.deployment</groupId>
-            <artifactId>deployment-client</artifactId>
-            <version>4.1</version>
-          </dependency>
-        </dependencies>
-      </plugin>
     </plugins>
   </build>
+
+
+<profiles>
+  <profile>
+    <id>dist</id>
+    <!-- Profile for generating all maven artifacts and documentation. -->
+    <build>
+      <plugins>
+
+	<!--yeoman-maven-plugin -->
+	<plugin>    
+          <groupId>com.github.trecloux</groupId>
+          <artifactId>yeoman-maven-plugin</artifactId>
+          <version>0.5</version>
+          <executions>
+            <execution>
+              <goals>
+		<goal>build</goal>
+              </goals>
+            </execution>
+          </executions>
+	</plugin>
+      <!--end yeoman-maven-plugin -->
+      </plugins>
+    </build>
+  </profile>
+</profiles>
 
   <repositories>
     <repository>
