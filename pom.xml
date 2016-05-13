@@ -181,7 +181,7 @@
       <plugin>    
         <groupId>com.github.trecloux</groupId>
         <artifactId>yeoman-maven-plugin</artifactId>
-        <version>0.4</version>
+        <version>0.5</version>
         <executions>
           <execution>
             <goals>
@@ -204,6 +204,12 @@
               <targetPath>zeppelin</targetPath>
             </overlay>
           </overlays>
+          <failOnMissingWebXml>false</failOnMissingWebXml>
+          <webResources>
+            <resource>
+              <directory>yo/dist</directory>
+            </resource>
+          </webResources>
         </configuration>
       </plugin>
       <plugin>
@@ -218,10 +224,11 @@
         </configuration>
       </plugin>
       <!--end yeoman-maven-plugin -->
+<!--
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
-        <version>2.1.1</version>
+        <version>2.3</version>
         <configuration>
           <failOnMissingWebXml>false</failOnMissingWebXml>
           <webResources>
@@ -231,6 +238,7 @@
           </webResources>
         </configuration>
       </plugin>
+-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
