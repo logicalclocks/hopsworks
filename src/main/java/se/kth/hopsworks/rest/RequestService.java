@@ -35,7 +35,7 @@ import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 
 @Path("/request")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)

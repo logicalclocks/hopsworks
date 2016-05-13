@@ -12,12 +12,7 @@ public class PolicyDecisionPoint {
   protected UserManager userManager;
 
   public boolean isInAdminRole(Users user) {
-    return userManager.findGroups(user.getUid()).contains(BBCGroup.SYS_ADMIN.
-            name());
-  }
-
-  public boolean isInDataProviderRole(Users user) {
-    return userManager.findGroups(user.getUid()).contains(BBCGroup.BBC_ADMIN.
+    return userManager.findGroups(user.getUid()).contains(BBCGroup.HOPS_ADMIN.
             name());
   }
 
@@ -26,15 +21,11 @@ public class PolicyDecisionPoint {
             name());
   }
 
-  public boolean isInResearcherRole(Users user) {
+  public boolean isInUserRole(Users user) {
     return userManager.findGroups(user.getUid()).contains(
-            BBCGroup.BBC_RESEARCHER.name());
+            BBCGroup.HOPS_USER.name());
   }
 
-  public boolean isInGuestRole(Users user) {
-    return userManager.findGroups(user.getUid()).contains(BBCGroup.BBC_GUEST.
-            name());
-  }
 
   public String redirectUser(Users user) {
 
@@ -42,7 +33,7 @@ public class PolicyDecisionPoint {
       return "adminIndex";
     } else if (isInAuditorRole(user)) {
       return "adminAuditIndex";
-    } else if (isInDataProviderRole(user) || isInResearcherRole(user) ) {
+    } else if (isInUserRole(user) ) {
       return "home";
     }
 

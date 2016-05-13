@@ -22,7 +22,7 @@
       <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
     </ui:insert>
 
-    <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.SYSAdmin}">  
+    <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">  
 
       <p:growl autoUpdate="true" showDetail="true"/>
       <p:layoutUnit id="centerLayout" position="center">
@@ -86,6 +86,13 @@
                                    update="@form">
                       <p:confirm header="Activate user" 
                                  message="Activate selected user?" 
+                                 icon="ui-icon-alert"/>
+                    </p:commandLink>
+                    <p:commandLink styleClass="ui-button-allow fa fa-envelope" 
+                                   actionListener="#{peopleAdministration.resendAccountVerificationEmail(req)}" 
+                                   update="@form">
+                      <p:confirm header="Resend Email" 
+                                 message="Resend Account Validation Email to #{req.email} ?"
                                  icon="ui-icon-alert"/>
                     </p:commandLink>
                   </h:panelGrid>

@@ -55,7 +55,7 @@ public class AuthService {
 
   @GET
   @Path("session")
-  @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+  @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
   public Response session(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -113,7 +113,7 @@ public class AuthService {
           am.registerLoginInfo(user, UserAuditActions.LOGIN.name(),
                   UserAuditActions.SUCCESS.name(), req);         
           //if the logedin user has no supported role logout
-          if (!sc.isUserInRole(BBCGroup.BBC_USER.name()) && !sc.isUserInRole(BBCGroup.SYS_ADMIN.name())) {
+          if (!sc.isUserInRole(BBCGroup.HOPS_USER.name()) && !sc.isUserInRole(BBCGroup.HOPS_ADMIN.name())) {
             am.registerLoginInfo(user, UserAuditActions.UNAUTHORIZED.getValue(),
                     UserAuditActions.FAILED.name(), req);
             req.logout();

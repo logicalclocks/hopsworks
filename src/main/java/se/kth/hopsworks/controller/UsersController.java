@@ -66,7 +66,8 @@ public class UsersController {
   private byte[] qrCode;
 
   public byte[] registerUser(UserDTO newUser, HttpServletRequest req) throws
-          AppException, SocketException, NoSuchAlgorithmException //      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
+          AppException, SocketException, NoSuchAlgorithmException 
+//      , IOException, UnsupportedEncodingException, WriterException, MessagingException 
   {
     if (userValidator.isValidEmail(newUser.getEmail())
             && userValidator.isValidPassword(newUser.getChosenPassword(),
@@ -91,9 +92,6 @@ public class UsersController {
       String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
 
       List<BbcGroup> groups = new ArrayList<>();
-
-      // add the guest default role so if a user can still browse the platform
-      groups.add(groupBean.findByGroupName(BBCGroup.BBC_GUEST.name()));
 
       Users user = new Users(uid);
       user.setUsername(uname);
@@ -157,18 +155,12 @@ public class UsersController {
                 AccountsAuditActions.SUCCESS.name(), "", user, req);
         am.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
                 AccountsAuditActions.SUCCESS.name(), "", user, req);
-        am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(),
-                RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(),
-                user, req);
       } catch (WriterException | MessagingException | IOException ex) {
 
         am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
                 AccountsAuditActions.FAILED.name(), "", user, req);
         am.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
                 AccountsAuditActions.FAILED.name(), "", user, req);
-        am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(),
-                RolesAuditActions.FAILED.name(), BBCGroup.BBC_GUEST.name(), user,
-                req);
 
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
@@ -206,9 +198,6 @@ public class UsersController {
       // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
       String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
       List<BbcGroup> groups = new ArrayList<>();
-
-      // add the guest default role so if a user can still browse the platform
-      groups.add(groupBean.findByGroupName(BBCGroup.BBC_GUEST.name()));
 
       Users user = new Users(uid);
       user.setUsername(uname);
@@ -272,16 +261,10 @@ public class UsersController {
         userBean.persist(user);
         am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
                 AccountsAuditActions.SUCCESS.name(), "", user, req);
-        am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(),
-                RolesAuditActions.SUCCESS.name(), BBCGroup.BBC_GUEST.name(),
-                user, req);
       } catch (MessagingException ex) {
 
         am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
                 AccountsAuditActions.FAILED.name(), "", user, req);
-        am.registerRoleChange(user, RolesAuditActions.ADDROLE.name(),
-                RolesAuditActions.FAILED.name(), BBCGroup.BBC_GUEST.name(), user,
-                req);
 
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),

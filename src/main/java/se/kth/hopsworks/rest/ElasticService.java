@@ -53,7 +53,7 @@ import se.kth.hopsworks.util.Settings;
  * @author vangelis
  */
 @Path("/elastic")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)

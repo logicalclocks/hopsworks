@@ -316,24 +316,12 @@ public class AdminProfileAdministration implements Serializable {
 
     // Remove a group
     if (!"#".equals(selectedGroup)) {
-      if (selectedGroup.equals(BBCGroup.BBC_GUEST.toString())) {
-        am.registerRoleChange(sessionState.getLoggedInUser(),
-                RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.FAILED.
-                name(), BBCGroup.valueOf(selectedGroup).name(), editingUser);
-        MessagesController.addErrorMessage("Error", BBCGroup.BBC_GUEST.
-                toString() + " can not be removed.");
-      } else {
-
-        userManager.removeGroup(editingUser, BBCGroup.valueOf(selectedGroup).
-                getValue());
+        userManager.removeGroup(editingUser, BBCGroup.valueOf(selectedGroup).getValue());
 
         am.registerRoleChange(sessionState.getLoggedInUser(),
                 RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.SUCCESS.
                 name(), BBCGroup.valueOf(selectedGroup).name(), editingUser);
-      }
-
-      MessagesController.addInfoMessage("Success",
-              "User updated successfully.");
+      MessagesController.addInfoMessage("Success", "User updated successfully.");
     }
 
     if ("#".equals(selectedGroup)) {
