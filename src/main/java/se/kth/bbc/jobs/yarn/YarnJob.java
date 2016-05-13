@@ -164,12 +164,12 @@ public abstract class YarnJob extends HopsJob {
               }
               try{
                 kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(
-                        "/srv/glassfish/tempstorecopy/" +
+                        "/srv/glassfish/kafkacerts/" +
                                 projectService.getProject().getId()+ "__" +
                                 projectService.getProject().getOwner().getUid() +
                                 "__kstore.jks"));
                 kafkaCerts.put(Settings.KAFKA_T_CERTIFICATE, new File(
-                        "/srv/glassfish/tempstorecopy/" +
+                        "/srv/glassfish/kafkacerts/" +
                                 projectService.getProject().getId()+ "__" +
                                 projectService.getProject().getOwner().getUid() +
                                 "__tstore.jks"));
