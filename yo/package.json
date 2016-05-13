@@ -5,7 +5,7 @@
   "repository": {},
   "devDependencies": {
     "globule": "^1.0.0",
-    "grunt": "^0.4.0",
+    "grunt": "^0.4.2",
     "grunt-autoprefixer": "^2.0.0",
     "grunt-concurrent": "^2.3.0",
     "grunt-contrib-clean": "^1.0.0",
