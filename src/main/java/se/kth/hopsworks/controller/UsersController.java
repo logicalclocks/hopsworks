@@ -26,7 +26,6 @@ import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.auth.QRCodeGenerator;
-import se.kth.bbc.security.ua.BBCGroup;
 import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.bbc.security.ua.SecurityUtils;
 import se.kth.bbc.security.ua.UserManager;

@@ -49,7 +49,7 @@
                              rows="25"
                              paginator="true"
                              paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                             rowsPerPageTemplate="15,25,35,45,55">
+                             rowsPerPageTemplate="10,25,50,100,250">
                   
                              >
 
@@ -88,12 +88,10 @@
                   <p:column id="actionUserColumn" headerText="Modify" >                                                 
                     <p:commandLink  action="#{peopleAdministration.modifyUser(muser)}" update="@form" styleClass="fa fa-pencil-square-o" value=""/>
                   </p:column>
+                             
                 </p:dataTable>                                            
               </h:form>   
 
-              <script>
-                userMgmtTabview.select(#{roleEnforcementPoint.tabIndex});
-              </script>
             </div>
           </div> 
         </p:layoutUnit>

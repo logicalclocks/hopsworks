@@ -61,11 +61,6 @@
                   <h:outputText value="#{req.email}" />
                 </p:column>
 
-                <p:column id="orgColumn" headerText="Organization"  
-                          filterBy="#{req.organization.orgName}">
-                  <h:outputText value="#{req.organization.orgName}" />
-                </p:column>
-
                 <p:column id="roleColumn" headerText="Role">
                   <p:selectOneMenu id="roleChoose" 
                                    value="#{peopleAdministration.sgroup}" 
@@ -78,28 +73,30 @@
                 </p:column>
 
                 <p:column id="actionColumn" headerText="Action">
-                  <h:panelGrid columns="2" style="width: auto">                                                    
+                  <h:panelGrid columns="3" style="width: auto">                                                    
                     <p:commandLink styleClass="ui-button-remove fa fa-ban" 
                                    action="#{peopleAdministration.rejectUser(req)}"
                                    update="@form">
                       <p:confirm header="Reject user" 
-                                 message="Are you sure you want to reject this user?" 
+                                 message="Are you sure you want to reject #{req.email} ?" 
                                  icon="ui-icon-alert"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-check" 
                                    actionListener="#{peopleAdministration.activateUser(req)}" 
                                    update="@form">
                       <p:confirm header="Activate user" 
-                                 message="Activate selected user?" 
+                                 message="Activate #{req.email} ?" 
                                  icon="ui-icon-alert"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-envelope" 
+                                   rendered="#{peopleAdministration.notVerified(req)}"
                                    actionListener="#{peopleAdministration.resendAccountVerificationEmail(req)}" 
                                    update="@form">
                       <p:confirm header="Resend Email" 
                                  message="Resend Account Validation Email to #{req.email} ?"
                                  icon="ui-icon-alert"/>
-                    </p:commandLink>
+                    </p:commandLink> 
+
                   </h:panelGrid>
                 </p:column>
               </p:dataTable>
@@ -111,9 +108,6 @@
 
             </h:form>
 
-<!--            <script>
-                    userMgmtTabview.select(#{roleEnforcementPoint.tabIndex});
-            </script>-->
           </div>
         </div> 
       </p:layoutUnit>

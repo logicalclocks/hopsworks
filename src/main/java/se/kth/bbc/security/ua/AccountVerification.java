@@ -18,7 +18,6 @@ import se.kth.hopsworks.user.model.Users;
 @RequestScoped
 public class AccountVerification {
 
-
     @EJB
     private UserManager mgr;
 
@@ -29,7 +28,9 @@ public class AccountVerification {
     private String key;
 
     private String username;
-    private boolean valid;
+    private boolean valid = false;
+    private boolean alreadyRegistered = false;
+    private boolean alreadyValidated = false;
     private boolean dbDown = false;
     private boolean userNotFound = false;
 
@@ -64,20 +65,28 @@ public class AccountVerification {
             return false;
         }
 
-	if ((user.getStatus() != PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue() 
-	     && user.getMode()== PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) || 
-            (user.getStatus() != PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue() 
-	     && user.getMode()== PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue())
-            ) {
-	    am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-				     AccountsAuditActions.FAILED.name(), "Could not verify the account due to wrong status.", user);
-	}
-	
+        if ((user.getStatus() != PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
+            && user.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue())
+            || (user.getStatus() != PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
+            && user.getMode() == PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue())) {
+            am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+                AccountsAuditActions.FAILED.name(), "Could not verify the account due to wrong status.", user);
+            
+            if (user.getStatus() == PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue()) {
+                this.alreadyRegistered = true;
+            }
+            if (user.getStatus() == PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()) {
+                this.alreadyValidated = true;
+            }
+            
+            return false;
+        }
+
         if (key.equals(user.getValidationKey())) {
             mgr.changeAccountStatus(user.getUid(), "",
-				    PeopleAccountStatus.VERIFIED_ACCOUNT.getValue());
+                PeopleAccountStatus.VERIFIED_ACCOUNT.getValue());
             am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-				     AccountsAuditActions.SUCCESS.name(), "Verified account email address.", user);
+                AccountsAuditActions.SUCCESS.name(), "Verified account email address.", user);
             mgr.resetKey(user.getUid());
             return true;
         }
@@ -85,18 +94,19 @@ public class AccountVerification {
         int val = user.getFalseLogin();
         mgr.increaseLockNum(user.getUid(), val + 1);
 
-    // if more than 5 times false logins set as spam
+        // if more than 5 times false logins set as spam
         if (val > AuthenticationConstants.ACCOUNT_VALIDATION_TRIES) {
             mgr.changeAccountStatus(user.getUid(), PeopleAccountStatus.SPAM_ACCOUNT.toString(),
-              PeopleAccountStatus.SPAM_ACCOUNT.getValue());
+                PeopleAccountStatus.SPAM_ACCOUNT.getValue());
             mgr.resetKey(user.getUid());
             am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-				     AccountsAuditActions.FAILED.name(), "Too many false activation attemps.", user);
+                AccountsAuditActions.FAILED.name(), "Too many false activation attemps.", user);
 
         }
 
         return false;
     }
+
     public String getKey() {
         return key;
     }
@@ -135,6 +145,26 @@ public class AccountVerification {
 
     public void setUserNotFound(boolean userNotFound) {
         this.userNotFound = userNotFound;
+    }
+
+    public boolean isAlreadyValidated() {
+        return alreadyValidated;
+    }
+
+    public void setAlreadyValidated(boolean alreadyValidated) {
+        this.alreadyValidated = alreadyValidated;
+    }
+
+    public String setLogin() {    
+        return ("welcome");
+    }
+
+    public boolean isAlreadyRegistered() {
+        return alreadyRegistered;
+    }
+
+    public void setAlreadyRegistered(boolean alreadyRegistered) {
+        this.alreadyRegistered = alreadyRegistered;
     }
 
 }

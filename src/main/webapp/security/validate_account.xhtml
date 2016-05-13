@@ -9,11 +9,7 @@
       xmlns:f="http://java.sun.com/jsf/core">
 
   <h:head>
-<<<<<<< HEAD
     <title>HopsWorks - Email Address Verification</title>
-=======
-    <title>HopsWorks - Password reset</title>
->>>>>>> 800a10a4664bf774085b2d386f70b595765a656d
     <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
     <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
   </h:head>
@@ -22,20 +18,27 @@
     <div class="container">
       <div class="ForgotPassword">
         <h:panelGroup layout="block" rendered="#{accountVerification.valid}">
-          <p>You have successfully validated your account, but your account still has to be approved 
+          <p>You have successfully validated your email address, but your account still has to be approved 
             by an administrator. Hopefully soon!</p>
-          </h:panelGroup>
-        
+        </h:panelGroup>
+        <h:panelGroup layout="block" rendered="#{accountVerification.alreadyRegistered}">
+          <p>Your account has already been approved!</p>
+          <h:link value="Login to HopsWorks" outcome="welcome"/>
+        </h:panelGroup>
+        <h:panelGroup layout="block" rendered="#{accountVerification.alreadyValidated}">
+          <p>Your email address has already been validated. Please be patient, your account still has to be approved 
+            by an administrator. Hopefully soon!</p>
+        </h:panelGroup>
         <h:panelGroup layout="block" rendered="#{accountVerification.dbDown}">
           <p>There seems to be some internal problem preventing us from verifying your account right now.</p> 
           <p>Please re-try verifying your account later when the system is working properly again.</p> 
-         </h:panelGroup>        
+        </h:panelGroup>        
         <h:panelGroup layout="block" rendered="#{accountVerification.userNotFound}">
           <p>The email address you are trying to validate does not exist in the system.</p> 
-         </h:panelGroup>        
-        <h:panelGroup layout="block" rendered="#{!accountVerification.valid} && #{!accountVerification.dbDown} && #{!accountVerification.userNotFound}">
+        </h:panelGroup>        
+        <h:panelGroup layout="block" rendered="#{!accountVerification.valid} and #{!accountVerification.dbDown} and #{!accountVerification.userNotFound}">
           <p>Email validation failed!</p> 
-         </h:panelGroup>
+        </h:panelGroup>
       </div>
     </div>
   </h:body>  

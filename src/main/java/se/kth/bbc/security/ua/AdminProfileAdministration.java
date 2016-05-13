@@ -12,342 +12,379 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
+import se.kth.bbc.security.audit.AuditUtil;
 import se.kth.bbc.security.audit.RolesAuditActions;
 import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.audit.model.Userlogins;
+import se.kth.hopsworks.user.model.BbcGroup;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.BbcGroupFacade;
 
 @ManagedBean
 @ViewScoped
 public class AdminProfileAdministration implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  @EJB
-  private UserManager userManager;
+    @EJB
+    private UserManager userManager;
 
-  @EJB
-  private AuditManager am;
+    @EJB
+    private AuditManager am;
 
-  @ManagedProperty(value = "#{clientSessionState}")
-  private ClientSessionState sessionState;
+    @EJB
+    private BbcGroupFacade bbcGroupFacade;
 
-  private Users user;
-  // for modifying user roles and status
-  private Users editingUser;
+    @EJB
+    private EmailBean emailBean;
 
-  // to remove an existing group
-  private String selectedGroup;
+    @ManagedProperty(value = "#{clientSessionState}")
+    private ClientSessionState sessionState;
 
-  // to assign a new stauts
-  private String selectedStatus;
+    private Users user;
+    // for modifying user roles and status
+    private Users editingUser;
 
-  // maxNumProjs
+    // to remove an existing group
+    private String selectedGroup;
+
+    // to assign a new stauts
+    private String selectedStatus;
+
+    // maxNumProjs
 //  private String maxNumProjs;
+    // to assign a new group
+    private String newGroup;
 
-  // to assign a new group
-  private String newGroup;
+    // all groups
+    List<String> groups;
 
-  // all groups
-  List<String> groups;
+    // all existing groups belong tp
+    List<String> currentGroups;
 
-  // all existing groups belong tp
-  List<String> currentGroups;
+    // all possible new groups user doesnt belong to
+    List<String> newGroups;
 
-  // all possible new groups user doesnt belong to
-  List<String> newGroups;
+    // current status of the editing user
+    private String editStatus;
 
-  // current status of the editing user
-  private String editStatus;
+    List<String> status;
 
-  List<String> status;
+    private Userlogins login;
 
-  private Userlogins login;
+    private Address address;
 
-  private Address address;
-  
-  public Address getAddress() {
-    return address;
-  }
+    public Address getAddress() {
+        return address;
+    }
 
-  public void setAddress(Address address) {
-    this.address = address;
-  }
+    public void setAddress(Address address) {
+        this.address = address;
+    }
 
-  public Userlogins getLogin() {
-    return login;
-  }
+    public Userlogins getLogin() {
+        return login;
+    }
 
-  public void setLogin(Userlogins login) {
-    this.login = login;
-  }
+    public void setLogin(Userlogins login) {
+        this.login = login;
+    }
 
-  public void setEditStatus(String editStatus) {
-    this.editStatus = editStatus;
-  }
+    public void setEditStatus(String editStatus) {
+        this.editStatus = editStatus;
+    }
 
-  public String getNew_group() {
-    return newGroup;
-  }
+    public String getNew_group() {
+        return newGroup;
+    }
 
-  public void setNew_group(String new_group) {
-    this.newGroup = new_group;
-  }
+    public void setNew_group(String new_group) {
+        this.newGroup = new_group;
+    }
 
-  public Users getEditingUser() {
-    return editingUser;
-  }
+    public Users getEditingUser() {
+        return editingUser;
+    }
 
-  public void setEditingUser(Users editingUser) {
-    this.editingUser = editingUser;
-  }
+    public void setEditingUser(Users editingUser) {
+        this.editingUser = editingUser;
+    }
 
-  public List<String> getUserRole(Users p) {
-    List<String> list = userManager.findGroups(p.getUid());
-    return list;
-  }
+    public boolean mobileAccount() {
+        return this.editingUser.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue();
+    }
+    
+    public List<String> getUserRole(Users p) {
+        List<String> list = userManager.findGroups(p.getUid());
+        return list;
+    }
 
-  public String getChangedStatus(Users p) {
-    return PeopleAccountStatus.values()[userManager.findByEmail(p.getEmail()).
+    public String getChangedStatus(Users p) {
+        return PeopleAccountStatus.values()[userManager.findByEmail(p.getEmail()).
             getStatus() - 1].name();
-  }
-
-  public Users getUser() {
-    return user;
-  }
-
-  public void setUser(Users user) {
-    this.user = user;
-  }
-
-  public void setNewGroups(List<String> newGroups) {
-    this.newGroups = newGroups;
-  }
-
-  public String getSelectedStatus() {
-    return selectedStatus;
-  }
-
-  public void setSelectedStatus(String selectedStatus) {
-    this.selectedStatus = selectedStatus;
-  }
-
-  public String getSelectedGroup() {
-    return selectedGroup;
-  }
-
-  public void setSelectedGroup(String selectedGroup) {
-    this.selectedGroup = selectedGroup;
-  }
-
-  /**
-   * Filter the current groups of the user.
-   *
-   * @return
-   */
-  public List<String> getCurrentGroups() {
-    List<String> list = userManager.findGroups(editingUser.getUid());
-    return list;
-  }
-
-  public void setCurrentGroups(List<String> currentGroups) {
-    this.currentGroups = currentGroups;
-  }
-
-  public List<String> getNewGroups() {
-    List<String> list = userManager.findGroups(editingUser.getUid());
-    List<String> tmp = new ArrayList<>();
-
-    for (BBCGroup b : BBCGroup.values()) {
-
-      if (!list.contains(b.name())) {
-        tmp.add(b.name());
-      }
     }
-    return tmp;
-  }
 
-  public String getEditStatus() {
+    public Users getUser() {
+        return user;
+    }
 
-    int status = userManager.getUserByEmail(this.editingUser.getEmail()).
+    public void setUser(Users user) {
+        this.user = user;
+    }
+
+    public void setNewGroups(List<String> newGroups) {
+        this.newGroups = newGroups;
+    }
+
+    public String getSelectedStatus() {
+        return selectedStatus;
+    }
+
+    public void setSelectedStatus(String selectedStatus) {
+        this.selectedStatus = selectedStatus;
+    }
+
+    public String getSelectedGroup() {
+        return selectedGroup;
+    }
+
+    public void setSelectedGroup(String selectedGroup) {
+        this.selectedGroup = selectedGroup;
+    }
+
+    /**
+     * Filter the current groups of the user.
+     *
+     * @return
+     */
+    public List<String> getCurrentGroups() {
+        List<String> list = userManager.findGroups(editingUser.getUid());
+        return list;
+    }
+
+    public void setCurrentGroups(List<String> currentGroups) {
+        this.currentGroups = currentGroups;
+    }
+
+    public List<String> getNewGroups() {
+        List<String> list = userManager.findGroups(editingUser.getUid());
+        List<String> tmp = new ArrayList<>();
+
+        for (BbcGroup b : bbcGroupFacade.findAll()) {
+
+            if (!list.contains(b.getGroupName())) {
+                tmp.add(b.getGroupName());
+            }
+        }
+        return tmp;
+    }
+
+    public String getEditStatus() {
+
+        int status = userManager.getUserByEmail(this.editingUser.getEmail()).
             getStatus();
-    this.editStatus = PeopleAccountStatus.values()[status - 1].name();
-    return this.editStatus;
-  }
-
-  @PostConstruct
-  public void init() {
-
-    groups = new ArrayList<>();
-    status = new ArrayList<>();
-
-    for (BBCGroup value : BBCGroup.values()) {
-      groups.add(value.name());
+        this.editStatus = PeopleAccountStatus.values()[status - 1].name();
+        return this.editStatus;
     }
 
-    editingUser = (Users) FacesContext.getCurrentInstance().getExternalContext()
-            .getSessionMap().get("editinguser");
-    address = editingUser.getAddress();
+    @PostConstruct
+    public void init() {
 
-    login = (Userlogins) FacesContext.getCurrentInstance().getExternalContext()
+        groups = new ArrayList<>();
+        status = new ArrayList<>();
+
+        for (BbcGroup value : bbcGroupFacade.findAll()) {
+            groups.add(value.getGroupName());
+        }
+
+        editingUser = (Users) FacesContext.getCurrentInstance().getExternalContext()
+            .getSessionMap().get("editinguser");
+        address = editingUser.getAddress();
+
+        login = (Userlogins) FacesContext.getCurrentInstance().getExternalContext()
             .getSessionMap().get("editinguser_logins");
 
-  }
-
-  public List<String> getStatus() {
-
-    status = new ArrayList<>();
-
-    for (PeopleAccountStatus p : PeopleAccountStatus.values()) {
-      status.add(p.name());
     }
 
-    // Remove the inactive users
-    status.remove(PeopleAccountStatus.NEW_MOBILE_ACCOUNT.name());
-    status.remove(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.name());
+    public List<String> getStatus() {
 
-    return status;
-  }
+        status = new ArrayList<>();
 
-  public void setStatus(List<String> status) {
-    this.status = status;
-  }
+        for (PeopleAccountStatus p : PeopleAccountStatus.values()) {
+            status.add(p.name());
+        }
 
-  public List<Users> getUsersNameList() {
-    return userManager.findAllUsers();
-  }
+        // Remove the inactive users
+        status.remove(PeopleAccountStatus.NEW_MOBILE_ACCOUNT.name());
+        status.remove(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.name());
 
-  public List<String> getGroups() {
-    return groups;
-  }
+        return status;
+    }
 
-  public Users getSelectedUser() {
-    return user;
-  }
+    public void setStatus(List<String> status) {
+        this.status = status;
+    }
 
-  public void setSelectedUser(Users user) {
-    this.user = user;
-  }
+    public List<Users> getUsersNameList() {
+        return userManager.findAllUsers();
+    }
 
-  public String getLoginName() throws IOException {
-    FacesContext context = FacesContext.getCurrentInstance();
-    HttpServletRequest request = (HttpServletRequest) context.
+    public List<String> getGroups() {
+        return groups;
+    }
+
+    public Users getSelectedUser() {
+        return user;
+    }
+
+    public void setSelectedUser(Users user) {
+        this.user = user;
+    }
+
+    public String getLoginName() throws IOException {
+        FacesContext context = FacesContext.getCurrentInstance();
+        HttpServletRequest request = (HttpServletRequest) context.
             getExternalContext().getRequest();
 
-    Principal principal = request.getUserPrincipal();
+        Principal principal = request.getUserPrincipal();
 
-    try {
-      Users p = userManager.findByEmail(principal.getName());
+        try {
+            Users p = userManager.findByEmail(principal.getName());
 
-      if (p != null) {
-        return p.getFname() + " " + p.getLname();
-      } else {
-        return principal.getName();
-      }
-    } catch (Exception ex) {
-      ExternalContext extContext = FacesContext.getCurrentInstance().
-              getExternalContext();
-      extContext.redirect(extContext.getRequestContextPath());
-      return null;
-    }
-  }
-
-  
-  /**
-   * Update user roles from profile by admin.
-   */
-  public void updateStatusByAdmin() {
-    // Update status
-    if (!"#".equals(selectedStatus)) {
-      editingUser.setStatus(PeopleAccountStatus.valueOf(selectedStatus).
-              getValue());
-      userManager.updateStatus(editingUser, PeopleAccountStatus.valueOf(
-              selectedStatus).getValue());
-      am.registerAccountChange(sessionState.getLoggedInUser(),
-              AccountsAuditActions.CHANGEDSTATUS.name(),
-              UserAuditActions.SUCCESS.
-              name(), selectedStatus, editingUser);
-      MessagesController.addInfoMessage("Success",
-              "Status updated successfully.");
-    } else {
-      am.registerAccountChange(sessionState.getLoggedInUser(),
-              AccountsAuditActions.CHANGEDSTATUS.name(),
-              UserAuditActions.FAILED.
-              name(), selectedStatus, editingUser);
-      MessagesController.addErrorMessage("Error", "No selection made!");
-
+            if (p != null) {
+                return p.getFname() + " " + p.getLname();
+            } else {
+                return principal.getName();
+            }
+        } catch (Exception ex) {
+            ExternalContext extContext = FacesContext.getCurrentInstance().
+                getExternalContext();
+            extContext.redirect(extContext.getRequestContextPath());
+            return null;
+        }
     }
 
-  }
+    /**
+     * Update user roles from profile by admin.
+     */
+    public void updateStatusByAdmin() {
+        // Update status
+        if (!"#".equals(selectedStatus)) {
+            editingUser.setStatus(PeopleAccountStatus.valueOf(selectedStatus).
+                getValue());
+            userManager.updateStatus(editingUser, PeopleAccountStatus.valueOf(
+                selectedStatus).getValue());
+            am.registerAccountChange(sessionState.getLoggedInUser(),
+                AccountsAuditActions.CHANGEDSTATUS.name(),
+                UserAuditActions.SUCCESS.
+                name(), selectedStatus, editingUser);
+            MessagesController.addInfoMessage("Success",
+                "Status updated successfully.");
+        } else {
+            am.registerAccountChange(sessionState.getLoggedInUser(),
+                AccountsAuditActions.CHANGEDSTATUS.name(),
+                UserAuditActions.FAILED.
+                name(), selectedStatus, editingUser);
+            MessagesController.addErrorMessage("Error", "No selection made!");
 
-  public void addRoleByAdmin() {
-
-    // Register a new group
-    if (!"#".equals(newGroup)) {
-      userManager.registerGroup(editingUser, BBCGroup.valueOf(newGroup).
-              getValue());
-      am.registerRoleChange(sessionState.getLoggedInUser(),
-              RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.
-              name(), BBCGroup.valueOf(newGroup).name(), editingUser);
-      MessagesController.addInfoMessage("Success", "Role updated successfully.");
-
-    } else {
-      am.registerRoleChange(sessionState.getLoggedInUser(),
-              RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.
-              name(), BBCGroup.valueOf(newGroup).name(), editingUser);
-
-      MessagesController.addErrorMessage("Error", "No selection made!!");
+        }
 
     }
 
-  }
+    public void addRoleByAdmin() {
+        BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(newGroup);
 
-  public void removeRoleByAdmin() {
+        // Register a new group
+        if (!"#".equals(newGroup)) {
+            userManager.registerGroup(editingUser, bbcGroup.getGid());
+            am.registerRoleChange(sessionState.getLoggedInUser(),
+                RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.
+                name(), bbcGroup.getGroupName(), editingUser);
+            MessagesController.addInfoMessage("Success", "Role updated successfully.");
 
-    // Remove a group
-    if (!"#".equals(selectedGroup)) {
-        userManager.removeGroup(editingUser, BBCGroup.valueOf(selectedGroup).getValue());
+        } else {
+            am.registerRoleChange(sessionState.getLoggedInUser(),
+                RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.
+                name(), bbcGroup.getGroupName(), editingUser);
+            MessagesController.addErrorMessage("Error", "No selection made!!");
+        }
 
-        am.registerRoleChange(sessionState.getLoggedInUser(),
+    }
+
+    public void removeRoleByAdmin() {
+        BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(selectedGroup);
+
+        // Remove a group
+        if (!"#".equals(selectedGroup)) {
+            userManager.removeGroup(editingUser, bbcGroup.getGid());
+
+            am.registerRoleChange(sessionState.getLoggedInUser(),
                 RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.SUCCESS.
-                name(), BBCGroup.valueOf(selectedGroup).name(), editingUser);
-      MessagesController.addInfoMessage("Success", "User updated successfully.");
+                name(), bbcGroup.getGroupName(), editingUser);
+            MessagesController.addInfoMessage("Success", "User updated successfully.");
+        }
+
+        if ("#".equals(selectedGroup)) {
+
+            if (("#".equals(selectedStatus))
+                || "#".equals(newGroup)) {
+                am.registerRoleChange(sessionState.getLoggedInUser(),
+                    RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.FAILED.
+                    name(), bbcGroup.getGroupName(), editingUser);
+                MessagesController.addErrorMessage("Error", "No selection made!");
+            }
+        }
+
     }
 
-    if ("#".equals(selectedGroup)) {
-
-      if (("#".equals(selectedStatus))
-              || "#".equals(newGroup)) {
-        am.registerRoleChange(sessionState.getLoggedInUser(),
-                RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.FAILED.
-                name(), BBCGroup.valueOf(selectedGroup).name(), editingUser);
-        MessagesController.addErrorMessage("Error", "No selection made!");
-      }
+    public ClientSessionState getSessionState() {
+        return sessionState;
     }
 
-  }
+    public void setSessionState(ClientSessionState sessionState) {
+        this.sessionState = sessionState;
+    }
 
-  public ClientSessionState getSessionState() {
-    return sessionState;
-  }
+    public String getMaxNumProjs() {
+        return userManager.findByEmail(editingUser.getEmail()).getMaxNumProjects().toString();
+    }
 
-  public void setSessionState(ClientSessionState sessionState) {
-    this.sessionState = sessionState;
-  }
+    public void setMaxNumProjs(String maxNumProjs) {
+        int num = Integer.parseInt(maxNumProjs);
+        userManager.updateMaxNumProjs(editingUser, num);
+    }
 
-  public String getMaxNumProjs() {
-    return userManager.findByEmail(editingUser.getEmail()).getMaxNumProjects().toString();
-  }
+    public boolean notVerified() {
+        
+        if (editingUser.getBbcGroupCollection().isEmpty() == false) {
+            return false;
+        }
+        if (editingUser.getStatus() == PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()) {
+            return false;
+        }
+        return true;
+    }
+    public void resendAccountVerificationEmail() throws MessagingException {
+        FacesContext context = FacesContext.getCurrentInstance();
+        HttpServletRequest request = (HttpServletRequest) context.
+            getExternalContext().getRequest();
 
-  public void setMaxNumProjs(String maxNumProjs) {
-    int num = Integer.parseInt(maxNumProjs);
-    userManager.updateMaxNumProjs(editingUser, num);
-  }
+        String activationKey = SecurityUtils.getRandomPassword(64);
+        emailBean.sendEmail(editingUser.getEmail(),
+            UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
+            UserAccountsEmailMessages.buildMobileRequestMessage(
+                AuditUtil.getUserURL(request), user.getUsername()
+                + activationKey));
+        editingUser.setValidationKey(activationKey);
+        userManager.persist(editingUser);
 
+    }    
+    
 }

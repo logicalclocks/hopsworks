@@ -178,13 +178,20 @@ public class UserManager {
   }
 
   
-    public List<Users> findMobileRequests() {
+    
+  public List<Users> findMobileRequests() {
     
     TypedQuery<Users> query  = em.createQuery(
             "SELECT p FROM Users p WHERE (p.status ="+ 
                     PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
                     + "  AND p.mode = " + PeopleAccountStatus.M_ACCOUNT_TYPE.getValue() + " )", Users.class);
-    return query.getResultList();
+    TypedQuery<Users> query2  = em.createQuery(
+            "SELECT p FROM Users p WHERE (p.status ="+ 
+                    PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.M_ACCOUNT_TYPE.getValue() + " )", Users.class);
+    List<Users> res = query.getResultList();
+    res.addAll(query2.getResultList());
+    return res;
   }
     
   
