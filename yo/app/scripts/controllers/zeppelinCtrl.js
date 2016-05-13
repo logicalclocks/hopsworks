@@ -1,9 +1,9 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ZeppelinCtrl', ['$routeParams',
+        .controller('ZeppelinCtrl', ['$scope','$routeParams',
           'growl', 'ModalService', 'ZeppelinService',
-          function ($routeParams, growl, ModalService, ZeppelinService) {
+          function ($scope, $routeParams, growl, ModalService, ZeppelinService) {
 
             var self = this;
             self.interpretersRefreshing = false;
@@ -12,8 +12,15 @@ angular.module('hopsWorksApp')
             self.tutorialNotes = [];
             self.notes = [];
             self.transition = false;
+            $scope.tgState = true;
             var projectId = $routeParams.projectID;
-            var statusMsgs = ['stopped    ', 'running    ', 'stopping...', 'starting...'];
+            var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
+            
+            self.deselect = function () {
+              self.selected = null;
+              refresh();
+              getNotesInProject();
+            };
 
             var getInterpreterStatus = function () {
               self.interpreters = [];
@@ -28,7 +35,7 @@ angular.module('hopsWorksApp')
 
             var getNotesInProject = function () {
               self.notesRefreshing = true;
-              ZeppelinService.notebooks(projectId).then(function (success) {
+              ZeppelinService.notebooks().then(function (success) {
                 self.notes = success.data.body;
                 self.notesRefreshing = false;
               }, function (error) {
@@ -37,14 +44,19 @@ angular.module('hopsWorksApp')
               });
             };
 
-            var getTutorialNotes = function () {
-              ZeppelinService.tutorialNotebooks().then(function (success) {
-                self.tutorialNotes = success.data.body;
-              }, function (error) {
-                console.log(error);
-              });
+            self.display = function (group) {
+              if (group.indexOf("spark") > -1) 
+                return true;
+              if (group.indexOf("flink") > -1) 
+                return true;
+              if (group.indexOf("sh") > -1) 
+                return true;
+              if (group.indexOf("angular") > -1) 
+                return true;
+              
+              return false;
             };
-
+            
             var refresh = function () {
               self.interpretersRefreshing = true;
               ZeppelinService.interpreters().then(function (success) {
@@ -66,47 +78,25 @@ angular.module('hopsWorksApp')
             var init = function () {
               getInterpreterStatus();
               getNotesInProject();
-              getTutorialNotes();
+              $scope.tgState = true;
             };
 
             init();
-
-            self.changeState = function (interpreter, index) {
+            
+            self.stopInterpreter = function (interpreter) {
               if (!interpreter.interpreter.notRunning) {
-                //start
-                self.transition = true;
-                interpreter.statusMsg = statusMsgs[3];
-                toggleForwardIndeterminate(index);
-                ZeppelinService.startInterpreter(projectId, interpreter.interpreter.id)
-                        .then(function (success) {
-                          toggleForwardIndeterminate(index);
-                          interpreter.interpreter = success.data.body;
-                          interpreter.statusMsg = statusMsgs[(success.data.body.notRunning ? 0 : 1)];
-                          self.transition = false;
-                        }, function (error) {
-                          toggleForwardIndeterminate(index);
-                          getInterpreterStatus();
-                          self.transition = false;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
-                        });
-
-              } else {
-                //stop
-                self.transition = true;
-                interpreter.statusMsg = statusMsgs[2];
-                toggleForwardIndeterminate(index);
-                ZeppelinService.stopInterpreter(interpreter.interpreter.id)
-                        .then(function (success) {
-                          toggleForwardIndeterminate(index);
-                          interpreter.interpreter = success.data.body;
-                          interpreter.statusMsg = statusMsgs[(success.data.body.notRunning ? 0 : 1)];
-                          self.transition = false;
-                        }, function (error) {
-                          toggleForwardIndeterminate(index);
-                          getInterpreterStatus();
-                          self.transition = false;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
-                        });
+                  self.transition = true;
+                  interpreter.statusMsg = statusMsgs[2];
+                  ZeppelinService.restartInterpreter(interpreter.interpreter.id)
+                            .then(function (success) {
+                              interpreter.interpreter = success.data.body;
+                              interpreter.statusMsg = statusMsgs[(success.data.body.notRunning ? 0 : 1)];
+                              self.transition = false;
+                            }, function (error) {
+                              getInterpreterStatus();
+                              self.transition = false;
+                              growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+                            });
               }
             };
 
@@ -116,7 +106,6 @@ angular.module('hopsWorksApp')
 
             self.refreshDashboard = function () {
               getNotesInProject();
-              //getTutorialNotes();//not nessesery b/c tutorials do not change.
             };
             self.openNote = function (note) {
               window.open(getLocationBase() + "/zeppelin/#/notebook/" + note.id);
@@ -127,11 +116,11 @@ angular.module('hopsWorksApp')
             };
 
             self.createNewNote = function () {
-              var noteName = '';
+              var noteName;
               ModalService.noteName('md','','','').then(
                         function (success) {
                           noteName = success.val;
-                          ZeppelinService.createNotebook(projectId, noteName).then(function (success) {
+                          ZeppelinService.createNotebook(noteName).then(function (success) {
                             self.notes.push(success.data.body);
                             growl.success("Notebook created successfully.", {title: 'Success', ttl: 5000, referenceId: 10});
                           }, function (error) {
@@ -141,20 +130,6 @@ angular.module('hopsWorksApp')
                         function(error) {
                 });
               
-            };
-
-            var toggleForwardIndeterminate = function (index) {
-              $("input[name=" + index + "]").bootstrapSwitch('toggleIndeterminate', true);
-              $("input[name=" + index + "]").bootstrapSwitch('toggleDisabled', true);
-            };
-
-            window.onbeforeunload = function () {
-              if (!self.transition) {
-                return;
-              } else {
-                return "Are you sure you want to reload this page? You will lose any interpreter status progress.";
-              }
-
             };
 
           }]);

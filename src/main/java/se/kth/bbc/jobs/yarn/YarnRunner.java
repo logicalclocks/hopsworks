@@ -12,8 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
@@ -21,6 +19,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -36,6 +35,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import se.kth.bbc.lims.Utils;
+import se.kth.hopsworks.util.IoUtils;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -44,11 +44,11 @@ import se.kth.hopsworks.util.Settings;
  */
 public class YarnRunner {
 
-  private static final Logger logger = Logger.getLogger(YarnRunner.class.
-          getName());
+  private static final Logger logger = Logger.getLogger(YarnRunner.class.getName());
   public static final String APPID_PLACEHOLDER = "$APPID";
   private static final String APPID_REGEX = "\\$APPID";
   private static final String KEY_CLASSPATH = "CLASSPATH";
+  private static final String LOCAL_LOG_DIR_PLACEHOLDER = "<LOG_DIR>";
 
   private YarnClient yarnClient;
   private Configuration conf;
@@ -66,18 +66,20 @@ public class YarnRunner {
   private final Map<String, String> amLocalResourcesOnHDFS;
   private final Map<String, String> amEnvironment;
   private String localResourcesBasePath;
+  private String aggregatedLogPath;
   private String stdOutPath;
   private String stdErrPath;
   private final boolean shouldCopyAmJarToLocalResources;
   private final List<String> filesToBeCopied;
   private final boolean logPathsAreHdfs;
+  private final boolean logPathsAreAggregated;
   private final List<YarnSetupCommand> commands;
   private final List<String> javaOptions;
   private final List<String> filesToRemove;
   private String hadoopDir;
   private String sparkDir;
+  private String nameNodeIpPort;
 
-  
   private boolean readyToSubmit = false;
   private ApplicationSubmissionContext appContext;
 
@@ -89,8 +91,7 @@ public class YarnRunner {
    * <p/>
    * @return The received ApplicationId identifying the application.
    * @throws YarnException
-   * @throws IOException Can occur upon opening and moving execution and input
-   * files.
+   * @throws IOException Can occur upon opening and moving execution and input files.
    */
   public YarnMonitor startAppMaster() throws YarnException, IOException {
     logger.info("Starting application master.");
@@ -109,10 +110,10 @@ public class YarnRunner {
     //Set application name and type
     appContext = app.getApplicationSubmissionContext();
     appContext.setApplicationName(appName);
-    appContext.setApplicationType("Hops Yarn");
+    appContext.setApplicationType("HopsWorks-Yarn");
 
     //Add local resources to AM container
-    Map<String, LocalResource> localResources = addAllToLocalResources();
+    Map<String, LocalResource> localResources = addAllToLocalResources(nameNodeIpPort);
 
     //Copy files to HDFS that are expected to be there
     copyAllToHDFS();
@@ -128,7 +129,7 @@ public class YarnRunner {
     //TODO: set up security tokens
     //Set up container launch context
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
-            localResources, env, amCommands, null, null, null);
+        localResources, env, amCommands, null, null, null);
     // TODO: implement this for real. doAs
     //    UserGroupInformation proxyUser = UserGroupInformation.
     //            createProxyUser("user", UserGroupInformation.
@@ -148,9 +149,7 @@ public class YarnRunner {
     }
 
     //And submit
-    logger.
-            log(Level.INFO,
-                    "Submitting application {0} to applications manager.", appId);
+    logger.log(Level.INFO, "Submitting application {0} to applications manager.", appId);
     yarnClient.submitApplication(appContext);
 
     yarnClient.close();
@@ -159,7 +158,7 @@ public class YarnRunner {
     YarnClient newClient = YarnClient.createYarnClient();
     newClient.init(conf);
     YarnMonitor monitor = new YarnMonitor(appId, newClient);
-
+    
     //Clean up some
     removeAllNecessary();
     yarnClient = null;
@@ -174,9 +173,8 @@ public class YarnRunner {
   //--------------------------- CALLBACK METHODS ------------------------------
   //---------------------------------------------------------------------------
   /**
-   * Get the ApplicationSubmissionContext used to submit the app. This method
-   * should only be called from registered Commands. Invoking it before the
-   * ApplicationSubmissionContext is properly set up will result in an
+   * Get the ApplicationSubmissionContext used to submit the app. This method should only be called from registered
+   * Commands. Invoking it before the ApplicationSubmissionContext is properly set up will result in an
    * IllegalStateException.
    * <p/>
    * @return
@@ -184,7 +182,7 @@ public class YarnRunner {
   public ApplicationSubmissionContext getAppContext() {
     if (!readyToSubmit) {
       throw new IllegalStateException(
-              "ApplicationSubmissionContext cannot be requested before it is set up.");
+          "ApplicationSubmissionContext cannot be requested before it is set up.");
     }
     return appContext;
   }
@@ -194,6 +192,9 @@ public class YarnRunner {
   //---------------------------------------------------------------------------
   private void fillInAppid(String id) {
     localResourcesBasePath = localResourcesBasePath.replaceAll(APPID_REGEX, id);
+    if (logPathsAreAggregated) {
+      aggregatedLogPath = aggregatedLogPath.replaceAll(APPID_REGEX, id);
+    }
     appName = appName.replaceAll(APPID_REGEX, id);
     amArgs = amArgs.replaceAll(APPID_REGEX, id);
     stdOutPath = stdOutPath.replaceAll(APPID_REGEX, id);
@@ -211,28 +212,29 @@ public class YarnRunner {
     int maxMem = appResponse.getMaximumResourceCapability().getMemory();
     if (amMemory > maxMem) {
       logger.log(Level.WARNING,
-              "AM memory specified above max threshold of cluster. Using max value. Specified: {0}, max: {1}",
-              new Object[]{amMemory,
-                maxMem});
+          "AM memory specified above max threshold of cluster. Using max value. Specified: {0}, max: {1}",
+          new Object[]{amMemory,
+            maxMem});
       amMemory = maxMem;
     }
     int maxVcores = appResponse.getMaximumResourceCapability().getVirtualCores();
     if (amVCores > maxVcores) {
       logger.log(Level.WARNING,
-              "AM vcores specified above max threshold of cluster. Using max value. Specified: {0}, max: {1}",
-              new Object[]{amVCores,
-                maxVcores});
+          "AM vcores specified above max threshold of cluster. Using max value. Specified: {0}, max: {1}",
+          new Object[]{amVCores,
+            maxVcores});
       amVCores = maxVcores;
     }
   }
 
-  private Map<String, LocalResource> addAllToLocalResources() throws IOException {
+  private Map<String, LocalResource> addAllToLocalResources(String nameNodeIpPort) throws IOException {
     Map<String, LocalResource> localResources = new HashMap<>();
     //If an AM jar has been specified: include that one
     if (shouldCopyAmJarToLocalResources && amJarLocalName != null
-            && !amJarLocalName.isEmpty() && amJarPath != null
-            && !amJarPath.isEmpty()) {
-      if (amJarPath.startsWith("hdfs")) {
+        && !amJarLocalName.isEmpty() && amJarPath != null
+        && !amJarPath.isEmpty()
+        ) {
+      if (amJarPath.startsWith("hdfs:")) {
         amLocalResourcesOnHDFS.put(amJarLocalName, amJarPath);
       } else {
         amLocalResourcesToCopy.put(amJarLocalName, amJarPath);
@@ -252,26 +254,31 @@ public class YarnRunner {
       Path dst = new Path(basePath + File.separator + filename);
       fs.copyFromLocalFile(new Path(source), dst);
       logger.log(Level.INFO, "Copying from: {0} to: {1}",
-              new Object[]{source,
-                dst});
+          new Object[]{source,
+            dst});
       FileStatus scFileStat = fs.getFileStatus(dst);
       LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
-              getYarnUrlFromPath(dst),
-              LocalResourceType.FILE, LocalResourceVisibility.PUBLIC,
-              scFileStat.getLen(),
-              scFileStat.getModificationTime());
+          getYarnUrlFromPath(dst),
+          LocalResourceType.FILE, LocalResourceVisibility.PUBLIC,
+          scFileStat.getLen(),
+          scFileStat.getModificationTime());
       localResources.put(key, scRsrc);
     }
     //For all local resources with hdfs path: add local resource
     for (Entry<String, String> entry : amLocalResourcesOnHDFS.entrySet()) {
       String key = entry.getKey();
-      Path src = new Path(entry.getValue());
+      String pathToResource = entry.getValue();
+//      pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
+//          "hdfs://" + nameNodeIpPort + "/Projects");
+//      pathToResource = pathToResource.replaceFirst("hdfs:/*user",
+//          "hdfs://" + nameNodeIpPort + "/user");
+      Path src = new Path(pathToResource);
       FileStatus scFileStat = fs.getFileStatus(src);
       LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
-              getYarnUrlFromPath(src),
-              LocalResourceType.FILE, LocalResourceVisibility.PUBLIC,
-              scFileStat.getLen(),
-              scFileStat.getModificationTime());
+          getYarnUrlFromPath(src),
+          LocalResourceType.FILE, LocalResourceVisibility.PUBLIC,
+          scFileStat.getLen(),
+          scFileStat.getModificationTime());
       localResources.put(key, scRsrc);
     }
     return localResources;
@@ -299,15 +306,13 @@ public class YarnRunner {
         Path[] srcs = FileUtil.stat2Paths(fs.globStatus(srcPath), srcPath);
         if (srcs.length > 1 && !fs.isDirectory(dst)) {
           throw new IOException("When copying multiple files, "
-                  + "destination should be a directory.");
+              + "destination should be a directory.");
         }
         for (Path src1 : srcs) {
           FileUtil.copy(fs, src1, fs, dst, false, conf);
         }
       }
-      logger.log(Level.INFO, "Copying from: {0} to: {1}",
-              new Object[]{path,
-                dst});
+      logger.log(Level.INFO, "Copying from: {0} to: {1}", new Object[]{path, dst});
     }
   }
 
@@ -315,8 +320,8 @@ public class YarnRunner {
     // Add AppMaster.jar location to classpath
     StringBuilder classPathEnv = new StringBuilder().append("./*");
     for (String c : conf.getStrings(
-            YarnConfiguration.YARN_APPLICATION_CLASSPATH,
-            YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH)) {
+        YarnConfiguration.YARN_APPLICATION_CLASSPATH,
+        YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH)) {
       classPathEnv.append(":").append(c.trim());
     }
     classPathEnv.append(":").append("./log4j.properties");
@@ -335,7 +340,7 @@ public class YarnRunner {
     }
     //Put some environment vars in env
     env.
-            put(Settings.HADOOP_COMMON_HOME_KEY, hadoopDir);
+        put(Settings.HADOOP_COMMON_HOME_KEY, hadoopDir);
 //                    Settings.HADOOP_COMMON_HOME_VALUE);
     env.put(Settings.HADOOP_CONF_DIR_KEY, Settings.getHadoopConfDir(hadoopDir));
 //    env.put(Settings.HADOOP_CONF_DIR_KEY, Settings.HADOOP_CONF_DIR_VALUE);
@@ -374,7 +379,7 @@ public class YarnRunner {
       amcommand.append(str).append(" ");
     }
     logger.log(Level.INFO, "Completed setting up app master command: {0}",
-            amcommand.toString());
+        amcommand.toString());
     List<String> amCommands = new ArrayList<>();
     amCommands.add(amcommand.toString());
     return amCommands;
@@ -407,12 +412,14 @@ public class YarnRunner {
     this.amLocalResourcesOnHDFS = builder.amLocalResourcesOnHDFS;
     this.amEnvironment = builder.amEnvironment;
     this.localResourcesBasePath = builder.localResourcesBasePath;
+    this.aggregatedLogPath = builder.aggregatedLogPath;
     this.yarnClient = builder.yarnClient;
     this.conf = builder.conf;
     this.shouldCopyAmJarToLocalResources
-            = builder.shouldAddAmJarToLocalResources;
+        = builder.shouldAddAmJarToLocalResources;
     this.filesToBeCopied = builder.filesToBeCopied;
     this.logPathsAreHdfs = builder.logPathsAreRelativeToResources;
+    this.logPathsAreAggregated = builder.logPathsAreAggregated;
     this.stdOutPath = builder.stdOutPath;
     this.stdErrPath = builder.stdErrPath;
     this.commands = builder.commands;
@@ -420,6 +427,7 @@ public class YarnRunner {
     this.filesToRemove = builder.filesToRemove;
     this.hadoopDir = builder.hadoopDir;
     this.sparkDir = builder.sparkDir;
+    this.nameNodeIpPort = builder.nameNodeIpPort;
   }
 
   //---------------------------------------------------------------------------
@@ -434,17 +442,20 @@ public class YarnRunner {
   }
 
   public String getStdOutPath() {
-    if (logPathsAreHdfs) {
+    if (logPathsAreHdfs && !logPathsAreAggregated) {
       return localResourcesBasePath + File.separator + stdOutPath;
+    } else if (logPathsAreAggregated) {
+      return aggregatedLogPath;
     } else {
       return stdOutPath;
     }
   }
 
   public String getStdErrPath() {
-    if (logPathsAreHdfs) {
-
+    if (logPathsAreHdfs && !logPathsAreAggregated) {
       return localResourcesBasePath + File.separator + stdErrPath;
+    } else if (logPathsAreAggregated) {
+      return aggregatedLogPath;
     } else {
       return stdErrPath;
     }
@@ -452,6 +463,10 @@ public class YarnRunner {
 
   public boolean areLogPathsHdfs() {
     return logPathsAreHdfs;
+  }
+  
+  public boolean areLogPathsAggregated() {
+    return logPathsAreAggregated;
   }
 
   public void cancelJob(String appid) throws YarnException, IOException {
@@ -480,7 +495,7 @@ public class YarnRunner {
     //Number of cores for appMaster
     private int amVCores = 1;
     // Application name
-    private String appName = "Hops Yarn";
+    private String appName = "HopsWorks-Yarn";
     //Arguments to pass on in invocation of Application master
     private String amArgs;
     //List of paths to resources that should be copied to application master
@@ -491,12 +506,16 @@ public class YarnRunner {
     private Map<String, String> amEnvironment = new HashMap<>();
     //Path where the application master expects its local resources to be (added to fs.getHomeDirectory)
     private String localResourcesBasePath;
+    //aggregated yarn logs path
+    private String aggregatedLogPath;
     //Path to file where stdout should be written, default in tmp folder
     private String stdOutPath;
     //Path to file where stderr should be written, default in tmp folder
     private String stdErrPath;
     //Signify whether the log paths are relative to the localResourcesBasePath
     private boolean logPathsAreRelativeToResources = false;
+    //Signify whether the log paths are aggregated
+    private boolean logPathsAreAggregated = false;
     //Signify whether the application master jar should be added to local resources
     private boolean shouldAddAmJarToLocalResources = true;
     //List of files to be copied to localResourcesBasePath
@@ -515,6 +534,7 @@ public class YarnRunner {
 
     private String hadoopDir;
     private String sparkDir;
+    private String nameNodeIpPort;
 
     //Constructors
     public Builder(String amMainClass) {
@@ -585,9 +605,8 @@ public class YarnRunner {
     }
 
     /**
-     * Set the configuration of the Yarn Application to the values contained in
-     * the YarnJobConfiguration object. This overrides any defaults or
-     * previously set values contained in the config file.
+     * Set the configuration of the Yarn Application to the values contained in the YarnJobConfiguration object. This
+     * overrides any defaults or previously set values contained in the config file.
      * <p/>
      * @param config
      * @return
@@ -604,9 +623,8 @@ public class YarnRunner {
     }
 
     /**
-     * Set a file to be copied over to HDFS. It will be copied to
-     * localresourcesBasePath/filename and the original will be removed.
-     * Equivalent to addFileToBeCopied(path,true).
+     * Set a file to be copied over to HDFS. It will be copied to localresourcesBasePath/filename and the original will
+     * be removed. Equivalent to addFileToBeCopied(path,true).
      * <p/>
      * @param path
      * @return
@@ -616,9 +634,8 @@ public class YarnRunner {
     }
 
     /**
-     * Set a file to be copied over to HDFS. It will be copied to
-     * localresourcesBasePath/filename. If removeAfterCopy is true, the file
-     * will also be removed after copying.
+     * Set a file to be copied over to HDFS. It will be copied to localresourcesBasePath/filename. If removeAfterCopy is
+     * true, the file will also be removed after copying.
      * <p/>
      * @param path
      * @param removeAfterCopy
@@ -660,10 +677,8 @@ public class YarnRunner {
     }
 
     /**
-     * Set the base path for local resources for the application master.
-     * This is the path where the AM expects its local resources to be. Use
-     * "$APPID" as a replacement for the appId, which will be replaced once
-     * it is available.
+     * Set the base path for local resources for the application master. This is the path where the AM expects its local
+     * resources to be. Use "$APPID" as a replacement for the appId, which will be replaced once it is available.
      * <p/>
      * If this method is not invoked, a default path will be used.
      *
@@ -683,15 +698,12 @@ public class YarnRunner {
     }
 
     /**
-     * Add a local resource that should be added to the AM container. The
-     * name is the key as used in the LocalResources map passed to the
-     * container. The source is the local path to the file. The file will be
-     * copied into HDFS under the path
-     * <i>localResourcesBasePath</i>/<i>filename</i> and the source file will be
-     * removed.
+     * Add a local resource that should be added to the AM container. The name is the key as used in the LocalResources
+     * map passed to the container. The source is the local path to the file. The file will be copied into HDFS under
+     * the path
+     * <i>localResourcesBasePath</i>/<i>filename</i> and the source file will be removed.
      *
-     * @param name The name of the local resource, key in the local resource
-     * map.
+     * @param name The name of the local resource, key in the local resource map.
      * @param source The local path to the file.
      * @return
      */
@@ -700,12 +712,11 @@ public class YarnRunner {
     }
 
     /**
-     * Add a local resource that should be added to the AM container. The
-     * name is the key as used in the LocalResources map passed to the
-     * container. The source is the local path to the file. The file will be
-     * copied into HDFS under the path
-     * <i>localResourcesBasePath</i>/<i>filename</i> and if removeAfterCopy is
-     * true, the original will be removed after starting the AM.
+     * Add a local resource that should be added to the AM container. The name is the key as used in the LocalResources
+     * map passed to the container. The source is the local path to the file. The file will be copied into HDFS under
+     * the path
+     * <i>localResourcesBasePath</i>/<i>filename</i> and if removeAfterCopy is true, the original will be removed after
+     * starting the AM.
      * <p/>
      * @param name
      * @param source
@@ -713,7 +724,7 @@ public class YarnRunner {
      * @return
      */
     public Builder addLocalResource(String name, String source,
-            boolean removeAfterCopy) {
+        boolean removeAfterCopy) {
       if (source.startsWith("hdfs")) {
         amLocalResourcesOnHDFS.put(name, source);
       } else {
@@ -736,9 +747,8 @@ public class YarnRunner {
     }
 
     /**
-     * Add a Command that should be executed before submission of the
-     * application to the ResourceManager. The commands will be executed in
-     * order of addition.
+     * Add a Command that should be executed before submission of the application to the ResourceManager. The commands
+     * will be executed in order of addition.
      * <p/>
      * @param c
      * @return
@@ -749,9 +759,8 @@ public class YarnRunner {
     }
 
     /**
-     * Add a java option that will be added in the invocation of the java
-     * command. Should be provided in a form that is accepted by the java
-     * command, i.e. including a dash in the beginning etc.
+     * Add a java option that will be added in the invocation of the java command. Should be provided in a form that is
+     * accepted by the java command, i.e. including a dash in the beginning etc.
      * <p/>
      * @param option
      * @return
@@ -760,36 +769,55 @@ public class YarnRunner {
       javaOptions.add(option);
       return this;
     }
-
+    
     /**
      * Build the YarnRunner instance
      * <p/>
      * @param hadoopDir
      * @param sparkDir
+     * @param nameNodeIpPort
      * @return
-     * @throws IllegalStateException Thrown if (a) configuration is not found,
-     * (b) invalid main class name
-     * @throws IOException Thrown if stdOut and/or stdErr path have not been set
-     * and temp files could not be created
+     * @throws IllegalStateException Thrown if (a) configuration is not found, (b) invalid main class name
+     * @throws IOException Thrown if stdOut and/or stdErr path have not been set and temp files could not be created
      */
-    public YarnRunner build(String hadoopDir, String sparkDir) throws IllegalStateException, IOException {
+    public YarnRunner build(String hadoopDir, String sparkDir, String nameNodeIpPort) throws IllegalStateException, IOException {
       //Set configuration
       try {
-        setConfiguration(hadoopDir, sparkDir);
+        setConfiguration(hadoopDir, sparkDir, nameNodeIpPort);
       } catch (IllegalStateException e) {
         throw new IllegalStateException("Failed to load configuration", e);
       }
+      
+      logPathsAreAggregated = conf.getBoolean(YarnConfiguration.LOG_AGGREGATION_ENABLED,
+              YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED);      
+      if (logPathsAreAggregated) {
+          //{yarn.nodemanager.remote-app-log-dir}/${user}/{yarn.nodemanager.remote-app-log-dir-suffix}
+          String[] nmRemoteLogDirs  = conf.getStrings(
+                  YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
+                  YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR);
+          
+          String[] nmRemoteLogDirSuffix  = conf.getStrings(
+                  YarnConfiguration.NM_REMOTE_APP_LOG_DIR_SUFFIX, 
+                  YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR_SUFFIX);
+          aggregatedLogPath = nmRemoteLogDirs[0] + File.separator + getUser() + 
+                  File.separator + nmRemoteLogDirSuffix[0] + File.separator + APPID_PLACEHOLDER;
+          stdOutPath = LOCAL_LOG_DIR_PLACEHOLDER + "/stdout";
+          stdErrPath = LOCAL_LOG_DIR_PLACEHOLDER + "/stderr";
+      }
 
-      //Set YarnClient
-      yarnClient = YarnClient.createYarnClient();
-      yarnClient.init(conf);
+      //Client passed by Flink is already set up.
+      if(yarnClient == null){
+        //Set YarnClient
+        yarnClient = YarnClient.createYarnClient();
+        yarnClient.init(conf);
+      } 
 
       //Set main class
       if (amMainClass == null) {
-        amMainClass = getMainClassNameFromJar();
+        amMainClass = IoUtils.getMainClassNameFromJar(amJarPath, null);
         if (amMainClass == null) {
           throw new IllegalStateException(
-                  "Could not infer main class name from jar and was not specified.");
+              "Could not infer main class name from jar and was not specified.");
         }
       }
       //Default localResourcesBasePath
@@ -814,15 +842,16 @@ public class YarnRunner {
       return new YarnRunner(this);
     }
 
-    private void setConfiguration(String hadoopDir, String sparkDir) throws IllegalStateException {
+    private void setConfiguration(String hadoopDir, String sparkDir, String nameNodeIpPort)
+        throws IllegalStateException {
       //Get the path to the Yarn configuration file from environment variables
       String yarnConfDir = System.getenv(Settings.ENV_KEY_YARN_CONF_DIR);
 //      If not found in environment variables: warn and use default,
       if (yarnConfDir == null) {
         logger.log(Level.WARNING,
-                "Environment variable "
-                + Settings.ENV_KEY_YARN_CONF_DIR +
-                " not found, using settings: {0}", Settings.getYarnConfDir(hadoopDir));
+            "Environment variable "
+            + Settings.ENV_KEY_YARN_CONF_DIR
+            + " not found, using settings: {0}", Settings.getYarnConfDir(hadoopDir));
         yarnConfDir = Settings.getYarnConfDir(hadoopDir);
 
       }
@@ -830,14 +859,15 @@ public class YarnRunner {
       //Get the configuration file at found path
       this.hadoopDir = hadoopDir;
       this.sparkDir = sparkDir;
+      this.nameNodeIpPort = nameNodeIpPort;
 
       Path confPath = new Path(yarnConfDir);
       File confFile = new File(confPath + File.separator
-              + Settings.DEFAULT_YARN_CONFFILE_NAME);
+          + Settings.DEFAULT_YARN_CONFFILE_NAME);
       if (!confFile.exists()) {
         logger.log(Level.SEVERE,
-                "Unable to locate Yarn configuration file in {0}. Aborting exectution.",
-                confFile);
+            "Unable to locate Yarn configuration file in {0}. Aborting exectution.",
+            confFile);
         throw new IllegalStateException("No Yarn conf file");
       }
 
@@ -847,8 +877,8 @@ public class YarnRunner {
       if (hadoopConfDir == null) {
         logger.log(Level.WARNING,
             "Environment variable "
-                + Settings.ENV_KEY_HADOOP_CONF_DIR
-                + " not found, using default {0}", 
+            + Settings.ENV_KEY_HADOOP_CONF_DIR
+            + " not found, using default {0}",
             (hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR));
         hadoopConfDir = hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR;
       }
@@ -856,8 +886,8 @@ public class YarnRunner {
       File hadoopConf = new File(confPath + "/" + Settings.DEFAULT_HADOOP_CONFFILE_NAME);
       if (!hadoopConf.exists()) {
         logger.log(Level.SEVERE,
-                "Unable to locate Hadoop configuration file in {0}. Aborting exectution.",
-                hadoopConf);
+            "Unable to locate Hadoop configuration file in {0}. Aborting exectution.",
+            hadoopConf);
         throw new IllegalStateException("No Hadoop conf file");
       }
 
@@ -865,8 +895,8 @@ public class YarnRunner {
       File hdfsConf = new File(confPath + "/" + Settings.DEFAULT_HDFS_CONFFILE_NAME);
       if (!hdfsConf.exists()) {
         logger.log(Level.SEVERE,
-                "Unable to locate HDFS configuration file in {0}. Aborting exectution.",
-                hdfsConf);
+            "Unable to locate HDFS configuration file in {0}. Aborting exectution.",
+            hdfsConf);
         throw new IllegalStateException("No HDFS conf file");
       }
 
@@ -903,32 +933,18 @@ public class YarnRunner {
       }
     }
 
-    private String getMainClassNameFromJar() {
-      if (amJarPath == null) {
-        throw new IllegalStateException(
-                "Main class name and amJar path cannot both be null.");
-      }
-      String fileName = amJarPath;
-      String mainClassName = null;
-
-      try (JarFile jarFile = new JarFile(fileName)) {
-        Manifest manifest = jarFile.getManifest();
-        if (manifest != null) {
-          mainClassName = manifest.getMainAttributes().getValue("Main-Class");
+    private static String getUser() {
+        UserGroupInformation hdfsUser;
+        try {  
+            hdfsUser = UserGroupInformation.getCurrentUser();
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+            throw new IllegalArgumentException(
+              "Exception while trying to retrieve hadoop UserGroupInformation: "
+              + ex.getMessage());
         }
-      } catch (IOException io) {
-        logger.log(Level.SEVERE, "Could not open jar file " + amJarPath
-                + " to load main class.", io);
-        return null;
-      }
-
-      if (mainClassName != null) {
-        return mainClassName.replaceAll("/", ".");
-      } else {
-        return null;
-      }
+        return hdfsUser.getUserName();
     }
-
   }
 
   //---------------------------------------------------------------------------        

@@ -133,7 +133,7 @@ public class DatasetController {
           newDS.setDescription(datasetDescription);
         }
         datasetFacade.persistDataset(newDS);
-        activityFacade.persistActivity(ActivityFacade.NEW_DATA, project, user);
+        activityFacade.persistActivity(ActivityFacade.NEW_DATA + dataSetName, project, user);
         // creates a dataset and adds user as owner.
         hdfsUsersBean.addDatasetUsersGroups(user, project, newDS);
       } catch (Exception e) {
@@ -219,20 +219,27 @@ public class DatasetController {
         }
       }
     }
-
-    //Check if the given dataset exists.
-    Inode projectRoot = inodes.getProjectRoot(project.getName());
-    Inode parentDataset = inodes.findByParentAndName(projectRoot, datasetName);
-
-    if (parentDataset == null) {
-      throw new IllegalArgumentException("DataSet does not exist: "
-              + datasetName + " under " + project.getName());
-    }
-
     //Check if the given folder already exists
     if (inodes.existsPath(fullPath)) {
       throw new IllegalArgumentException("The given path already exists.");
     }
+
+    //Check if the given dataset exists.
+    Inode projectRoot = inodes.getProjectRoot(project.getName());
+    
+    String parentPath = fullPath;
+    // strip any trailing '/' in the pathname
+    while (parentPath != null && parentPath.length() > 0 && parentPath.charAt(parentPath.length()-1)=='/') {
+      parentPath = parentPath.substring(0, parentPath.length()-1);
+    }    
+    // parent path prefixes the last '/' in the pathname
+    parentPath = parentPath.substring(0, parentPath.lastIndexOf("/"));
+    Inode parent = inodes.getInodeAtPath(parentPath);
+    if (parent == null) {
+      throw new IllegalArgumentException("Path for parent folder does not exist: "
+              + parentPath + " under " + project.getName());
+    }
+
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     //Now actually create the folder
     boolean success = this.createFolder(fullPath, templateId, username, null);
@@ -245,7 +252,7 @@ public class DatasetController {
       String folderName = pathParts[pathParts.length - 1];
 
       //find the corresponding inode
-      Inode folder = this.inodes.findByParentAndName(parentDataset, folderName);
+      Inode folder = this.inodes.findByParentAndName(parent, folderName);
       InodeBasicMetadata basicMeta = new InodeBasicMetadata(folder, description,
               searchable);
       this.inodeBasicMetaFacade.addBasicMetadata(basicMeta);

@@ -13,7 +13,6 @@
     <h:head>
       <title><ui:insert name="title">HopsWorks</ui:insert></title>
       <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-      <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
       <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
@@ -46,39 +45,47 @@
                              emptyMessage="No users found with given criteria"
                              rowKey="#{muser.email}"
                              style="table-layout: fixed" 
-                             
                              scrollable="false"
+                             rows="25"
+                             paginator="true"
+                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="15,25,35,45,55">
+                  
                              >
 
-                  <p:column id="nameColumn" filterBy="#{muser.fname}" headerText="First Name" style="width:32%; font-size: 12px; text-align: left;">
+                  <p:column id="nameColumn" filterBy="#{muser.fname}" headerText="First Name" >
                     <h:outputText value="#{muser.fname}" />
                   </p:column>
 
-                  <p:column id="lnameColumn" filterBy="#{muser.lname}" headerText="Last Name" style="width:32%; font-size: 12px; text-align: left;">
+                  <p:column id="lnameColumn" filterBy="#{muser.lname}" headerText="Last Name" >
                     <h:outputText value="#{muser.lname}" />
                   </p:column>
 
-                  <p:column id="emailColumn" filterBy="#{muser.email}" headerText="Email" style="width:32%;font-size: 12px;text-align: left;">
+                  <p:column id="emailColumn" filterBy="#{muser.email}" headerText="Email" >
                     <h:outputText value="#{muser.email}" />
                   </p:column>
 
-                  <p:column id="unameCol"  filterBy="#{muser.mode}"  headerText="Authentication Type" style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{muser.mode eq '11'?' 11 (Yubikey)':' 12 (Mobile)'}" />
-                    
-                    
+                  <p:column id="unameCol"  filterBy="#{muser.mode}"  headerText="Type" >
+                    <h:outputText value="#{muser.mode eq '10'?' 10 (Mobile)':' 11 (Yubikey)'}" />
                   </p:column>
 
                   <p:column id="statCol"  filterBy="#{muser.status}" 
-                            headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
+                            headerText="Status" >
                     <h:outputText value="#{peopleAdministration.getChanged_Status(muser)}"/>
                   </p:column>
+                  
+                  <p:column id="onlineCol"  filterBy="#{muser.isonline}" 
+                            headerText="Online" >
+                        <h:outputText value="#{muser.isonline eq '1' ? 'True (1)' : 'False (0)' }"/>
+                  </p:column>
 
-                  <p:column id="roleNCol" headerText="Role" style="width:32%;font-size: 12px;text-align: left;">
+   
+                  <p:column id="roleNCol" headerText="Role">
                     <h:outputText value="#{peopleAdministration.getUserRole(muser)}" />
                   </p:column>
 
 
-                  <p:column id="actionUserColumn" headerText="Modify" style="width:20%;font-size: 12px;">                                                 
+                  <p:column id="actionUserColumn" headerText="Modify" >                                                 
                     <p:commandLink  action="#{peopleAdministration.modifyUser(muser)}" update="@form" styleClass="fa fa-pencil-square-o" value=""/>
                   </p:column>
                 </p:dataTable>                                            

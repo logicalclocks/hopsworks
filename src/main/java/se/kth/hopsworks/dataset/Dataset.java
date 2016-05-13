@@ -41,6 +41,9 @@ import se.kth.bbc.project.fb.Inode;
   @NamedQuery(name = "Dataset.findByProject",
           query
           = "SELECT d FROM Dataset d WHERE d.projectId = :projectId"),
+  @NamedQuery(name = "Dataset.findAllPublic",
+          query
+          = "SELECT d FROM Dataset d WHERE d.publicDs = 1"),
   @NamedQuery(name = "Dataset.findByDescription",
           query
           = "SELECT d FROM Dataset d WHERE d.description = :description")})
@@ -81,6 +84,11 @@ public class Dataset implements Serializable {
   @NotNull
   @Column(name = "status")
   private boolean status = ACCEPTED;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "public_ds")
+  private boolean publicDs;
+
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "dataset")
   private Collection<DatasetRequest> datasetRequestCollection;
@@ -156,6 +164,14 @@ public class Dataset implements Serializable {
 
   public void setStatus(boolean status) {
     this.status = status;
+  }
+
+  public boolean isPublicDs() {
+    return publicDs;
+  }
+
+  public void setPublicDs(boolean publicDs) {
+    this.publicDs = publicDs;
   }
 
   public Collection<DatasetRequest> getDatasetRequestCollection() {

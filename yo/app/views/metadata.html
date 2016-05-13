@@ -93,7 +93,7 @@
                             ng-model="metadataCtrl.toExtend"
                             class="form-control"
                             style="border-radius: 0px;margin: 9px;width: 90%;margin-top:0px;" required>
-                      <option ng-repeat="template in datasetsCtrl.availableTemplates"
+                      <option ng-repeat="template in metadataCtrl.availableTemplates"
                               value="{{template.id}}">
                         {{template.name}}
                       </option>
@@ -176,7 +176,7 @@
                 </ul>
 
                 <div style="background-color: #f5f5f5"
-                     ng-if="metadataCtrl.currentTemplateID !== - 1 && !metadataCtrl.editingTemplate">
+                     ng-show="metadataCtrl.hideAddTable()">
                   <div style="width: 100%;border-radius: 0px; padding:10px; margin-top:10px;"
                        ng-click="metadataCtrl.addNewList()">
 

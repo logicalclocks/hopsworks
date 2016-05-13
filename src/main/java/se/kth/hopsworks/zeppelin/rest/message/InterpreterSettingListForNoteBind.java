@@ -31,7 +31,7 @@ public class InterpreterSettingListForNoteBind {
   private List<Interpreter> interpreters;
 
   public InterpreterSettingListForNoteBind(String id, String name,
-          String group, List<Interpreter> interpreters, boolean selected) {
+      String group, List<Interpreter> interpreters, boolean selected) {
     super();
     this.id = id;
     this.name = name;

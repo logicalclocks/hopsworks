@@ -21,7 +21,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   private int numberOfExecutors = 1;
   private int executorCores = 1;
-  private int executorMemory = 512;
+  private int executorMemory = 1024;
 
   protected static final String KEY_JARPATH = "JARPATH";
   protected static final String KEY_MAINCLASS = "MAINCLASS";

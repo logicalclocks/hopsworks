@@ -116,7 +116,7 @@ public class YubikeyActivator implements Serializable {
       // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
 
       if (this.selectedYubikyUser.getMode()
-              != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+              != PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue()) {
         MessagesController.addSecurityErrorMessage(user.getEmail()
                 + " is not a Yubikey user");
         return "";
@@ -139,16 +139,16 @@ public class YubikeyActivator implements Serializable {
       userTransaction.begin();
 
       if (this.selectedYubikyUser.getStatus()
-              == PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()
+              == PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
               && this.selectedYubikyUser.getYubikey().getStatus()
-              != PeopleAccountStatus.YUBIKEY_LOST.getValue()) {
-        // Set stauts to active
-        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVATED.getValue());
+              != PeopleAccountStatus.LOST_YUBIKEY.getValue()) {
+        // Set status to active
+        yubi.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
 
         userManager.updateYubikey(yubi);
 
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-                PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
+                PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
                 UserAuditActions.SUCCESS.name(), "", yubi.getUid());
 
         if (!"#".equals(this.sgroup.trim()) && (this.sgroup != null
@@ -173,12 +173,12 @@ public class YubikeyActivator implements Serializable {
 
       // for lost yubikey devices there is no need for role assignment
       if (this.selectedYubikyUser.getStatus()
-              == PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()
+              == PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
               && this.selectedYubikyUser.getYubikey().getStatus()
-              == PeopleAccountStatus.YUBIKEY_LOST.getValue()) {
+              == PeopleAccountStatus.LOST_YUBIKEY.getValue()) {
 
-        // Set stauts to active
-        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVATED.getValue());
+        // Set status to active
+        yubi.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
         userManager.updateYubikey(yubi);
         
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
@@ -188,11 +188,11 @@ public class YubikeyActivator implements Serializable {
       }
 
       userManager.updateStatus(this.selectedYubikyUser,
-              PeopleAccountStatus.ACCOUNT_ACTIVATED.getValue());
+              PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
       userTransaction.commit();
 
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-                PeopleAccountStatus.ACCOUNT_ACTIVATED.name(),
+                PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
                 UserAuditActions.SUCCESS.name(), "", yubi.getUid());
       
       emailBean.sendEmail(this.selectedYubikyUser.getEmail(),

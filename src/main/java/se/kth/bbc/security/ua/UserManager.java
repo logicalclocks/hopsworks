@@ -2,6 +2,7 @@ package se.kth.bbc.security.ua;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
@@ -10,6 +11,8 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.project.Project;
+import se.kth.bbc.security.audit.model.AccountAudit;
+import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
@@ -128,31 +131,13 @@ public class UserManager {
     em.merge(p);
     return true;
   }
-
-  public boolean updateGroup(int uid, int gid) {
-    TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid",
-            PeopleGroup.class);
-    query.setParameter("uid", uid);
-    PeopleGroup p = (PeopleGroup) query.getSingleResult();
-    p.setPeopleGroupPK(new PeopleGroupPK(uid, gid));
-    em.merge(p);
-    return true;
-  }
-
+  
   public List<Users> findInactivateUsers() {
     Query query = em.createNativeQuery(
             "SELECT * FROM hopsworks.users p WHERE p.active = "
-            + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
+            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
     List<Users> people = query.getResultList();
     return people;
-  }
-
-  public boolean registerYubikey(Users uid) {
-    Yubikey yk = new Yubikey();
-    yk.setUid(uid);
-    yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
-    em.persist(yk);
-    return true;
   }
 
   /**
@@ -192,13 +177,24 @@ public class UserManager {
     return (getUserByEmail(username) != null);
   }
 
-  public boolean findYubikeyUsersByStatus(int status) {
-    List existing = em.createQuery(
-            "SELECT p FROM hopsworks.users p WHERE p.status ='"
-            + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()
-            + "' AND p.mode = " + status)
-            .getResultList();
-    return (existing.size() > 0);
+  
+    public List<Users> findMobileRequests() {
+    
+    TypedQuery<Users> query  = em.createQuery(
+            "SELECT p FROM Users p WHERE (p.status ="+ 
+                    PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.M_ACCOUNT_TYPE.getValue() + " )", Users.class);
+    return query.getResultList();
+  }
+    
+  
+  public  List<Users>  findYubikeyRequests() {
+    TypedQuery<Users> query = em.createQuery(
+            "SELECT p FROM Users p WHERE (p.status = "
+            + PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue() +" )", Users.class);
+
+    return query.getResultList();
   }
 
   public Yubikey findYubikey(int uid) {
@@ -209,16 +205,14 @@ public class UserManager {
 
   }
 
+  
+  /**
+   * Get all users except spam accounts.
+   * @return 
+   */
   public List<Users> findAllUsers() {
     List<Users> query = em.createQuery(
-            "SELECT p FROM Users p WHERE p.status !='"
-            + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()
-            + "' AND p.status!='"
-            + PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()
-            + "' AND p.status!='" + PeopleAccountStatus.SPAM_ACCOUNT.getValue()
-            + "' AND p.status!='" + PeopleAccountStatus.ACCOUNT_VERIFICATION.
-            getValue()
-            + "'")
+            "SELECT p FROM Users p WHERE p.status!=" + PeopleAccountStatus.SPAM_ACCOUNT.getValue(), Users.class)
             .getResultList();
 
     return query;
@@ -231,16 +225,21 @@ public class UserManager {
     return query.getResultList();
   }
 
-  public List<Users> findAllSPAMAccounts() {
-    List<Users> query = em.createQuery(
-            "SELECT p FROM Users p WHERE (p.status ='"
-            + PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()
-            + "' OR p.status ='" + PeopleAccountStatus.SPAM_ACCOUNT.
-            getValue()
-            + "')")
-            .getResultList();
+  
+  /**
+   * Get a list of accounts that are not validated or marked as spam.
+   * @return 
+   */
+  public List<Users> findSPAMAccounts() {
+     TypedQuery<Users> query = em.createQuery(
+            "SELECT p FROM Users p WHERE ( p.status = "
+            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
+            + " OR p.status = " + PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
+                    + " OR p.status = " + PeopleAccountStatus.SPAM_ACCOUNT.getValue() + " )", Users.class);
+             
 
-    return query;
+    return query.getResultList();
+      
   }
 
   public Users findByEmail(String email) {
@@ -349,23 +348,31 @@ public class UserManager {
     boolean success = false;
 
     if (u != null) {
-      TypedQuery<PeopleGroup> query = em.createNamedQuery(
-              "PeopleGroup.findByUid", PeopleGroup.class);
-      query.setParameter("uid", u.getUid());
-      List<PeopleGroup> p = query.getResultList();
+        
+      TypedQuery<RolesAudit> query4 = em.createNamedQuery(
+              "RolesAudit.findByInitiator", RolesAudit.class);
+      query4.setParameter("initiator", u);
 
-      for (PeopleGroup next : p) {
-        em.remove(p);
-      }
-
-      if (em.contains(u)) {
-        em.remove(u);
-      } else {
-
-        em.remove(em.merge(u));
-
-      }
+      List<RolesAudit> results1= query4.getResultList();
       
+        for (Iterator<RolesAudit> iterator = results1.iterator(); iterator.hasNext();) {
+            RolesAudit next = iterator.next();
+            em.remove(next);
+        }
+
+      
+      TypedQuery<AccountAudit> query5 = em.createNamedQuery(
+              "AccountAudit.findByInitiator", AccountAudit.class);
+      query5.setParameter("initiator", u);
+       
+      List<AccountAudit> aa = query5.getResultList();
+      
+        for (Iterator<AccountAudit> iterator = aa.iterator(); iterator.hasNext();) {
+            AccountAudit next = iterator.next();
+            em.remove(next);
+        }
+      u = em.merge(u);
+      em.remove(u);
       success = true;
     }
 
@@ -412,5 +419,6 @@ public class UserManager {
     em.merge(id);
     return true;
   }
+
   
 }

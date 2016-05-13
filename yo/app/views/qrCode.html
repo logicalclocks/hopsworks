@@ -1,6 +1,6 @@
 <div class="wrapper">
   <div class="row-fluid">
-    <div class="col-md-offset-4 col-md-4">
+    <div class="col-md-offset-2 col-md-8">
       <!-- START panel-->
       <div class="panel">
         <div class="panel-heading text-center">
@@ -11,26 +11,79 @@
           </a>
         </div>
         <div class="panel-body"  >
-          <h1 class="text-center">You're almost there...</h1>
-          <p>A confirmation email has been sent to your email address.</p> 
-          
-          
-          <p>Scan the following image with your Google Authenticator App bar-code reader and follow the instructions in the confirmation email to activate your account.</p>
-   
-          
-          <div style="text-align: center">
-            <img alt="QR code" ng-src="data:image/JPEG;base64,{{regCtrl.QR}}" width="200" height="200">
+          <div class="row">
+            <div class="col-md-offset-1 col-md-5">
+              <h1 class="text-center">Four steps, and you're there...</h1>
+            </div>
+            <div class="col-md-4">
+              <img alt="QR example" src="images/qrExample.png" style="width: 100%"/>             
+            </div>
           </div>
+          <div class="row">
+            <div class="col-md-offset-1 col-md-4">
+
+              <div class="text-center text-mute row">
+                <div style="font-size: 20px;color: red;">First</div>
+
+              </div>
+              <div class="text-center text-mute row">
+                Click on the link in the confirmation email has been sent to your email address.
+              </div>
+            </div>
+            <div class="col-md-offset-1 col-md-6">
+
+              <div class="text-center text-mute row">
+                <div style="font-size: 20px;color: red;">Second</div>
+              </div>
+              <div class="text-center text-mute row">
+                Install one of the authenticator apps below.
+              </div>
+
+              <div class="row text-center text-mute">
+                <div class="row">
+                    <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2">Android app store (Google play)</a> 
+                </div>
+                <div class="row">
+                    <a href="https://itunes.apple.com/se/app/google-authenticator/id388497605?mt=8">Apple iTunes app store</a>
+                </div>
+                <div class="row">
+                    <a href="https://www.microsoft.com/store/apps/authenticator/9wzdncrfj3rj">Windows Phone Store</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+
+            <div class="col-md-6">
+            <div style="text-align: center">
+              <div class="text-center text-mute row"><div style="font-size: 20px;color: red;">Third</div>Scan the image below!
+              </div>
+              <div class="text-center text-mute row">(with your authenticator app)</div>
+              <img alt="QR code" ng-src="data:image/JPEG;base64,{{regCtrl.QR}}" width="200" height="200"/>
+            </div>
+            </div>
+            <div class="col-md-6">
+              <div class="text-center row"><div style="font-size: 20px;color: red;">Fourth</div>
+              </div> 
+              <div class="row">
+                <b>Wait until your account has been approved (you will receive an email). </b>
+                Then, login with your email, password, and the one time password from your authenticator app.
+              </div>
+              <div class="row">
+                <img alt="how-to-login-2fa" src="http://hops.readthedocs.org/en/latest/_images/login-2fa.png" style="width: 100%"/>
+              </div>
+            </div>
+            <!--          <br>
+                      <a href="http://hops.readthedocs.org/en/latest/user_guide/hopsworks.html#first-login-with-2-factor-authentication">Click here for help documentation.</a>-->
+          </div>
+          <!-- END panel-->
           <br>
-          <img alt="QR example" src="images/qrExample.png" style="width: 100%">             
-          
+          <a href="#/login" class="btn btn-block btn-default">Ok</a>
+          <div class="p-lg text-center">
+          </div>
         </div>
-      <!-- END panel-->
-      <br>
-        <a href="#/login" class="btn btn-block btn-default">Ok</a>
-      <div class="p-lg text-center">
       </div>
     </div>
   </div>
-</div>
 </div>

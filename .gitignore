@@ -8,6 +8,10 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 
+scripts/private_key
+
+yo/app/index.html
+yo/app/karma.conf.js
 
 ### NetBeans ###
 */nbproject/

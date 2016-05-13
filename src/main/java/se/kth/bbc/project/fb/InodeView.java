@@ -9,8 +9,7 @@ import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.util.Settings;
 
 /**
- * Simplified version of the Inode entity to allow for easier access through web
- * interface.
+ * Simplified version of the Inode entity to allow for easier access through web interface.
  * <p/>
  * @author stig
  */
@@ -35,6 +34,7 @@ public final class InodeView {
   private String owner;
   private String permission;
   private String email;
+  private boolean publicDs = false;
 
   public InodeView() {
   }
@@ -84,19 +84,20 @@ public final class InodeView {
     this.parent = false;
     this.path = path;
     this.modification
-            = new Date(ds.getInode().getModificationTime().longValue());
+        = new Date(ds.getInode().getModificationTime().longValue());
     this.accessTime = new Date(ds.getInode().getAccessTime().longValue());
     this.shared
-            = (!parent.inodePK.getName().equals(ds.getProjectId().getName()));
+        = (!parent.inodePK.getName().equals(ds.getProjectId().getName()));
     if (this.shared) {
       this.name = parent.inodePK.getName() + Settings.SHARED_FILE_SEPARATOR
-              + this.name;
+          + this.name;
     }
     this.owningProjectName = parent.inodePK.getName();
     this.description = ds.getDescription();
     this.status = ds.getStatus();
     this.owner = ds.getInode().getHdfsUser().getUsername();
     this.permission = FsPermission.createImmutable(ds.getInode().getPermission()).toString();
+    this.publicDs = ds.isPublicDs();
   }
 
   private InodeView(String name, boolean dir, boolean parent, String path) {
@@ -126,8 +127,8 @@ public final class InodeView {
   public void setDir(boolean dir) {
     this.dir = dir;
   }
-  
-  public void setParentId(int parentId){
+
+  public void setParentId(int parentId) {
     this.parentId = parentId;
   }
 
@@ -167,10 +168,10 @@ public final class InodeView {
     return this.id;
   }
 
-  public int getParentId(){
+  public int getParentId() {
     return this.parentId;
   }
-  
+
   public int getTemplate() {
     return this.template;
   }
@@ -261,6 +262,14 @@ public final class InodeView {
 
   public void setPermission(String permission) {
     this.permission = permission;
+  }
+
+  public void setPublicDs(boolean publicDs) {
+    this.publicDs = publicDs;
+  }
+
+  public boolean isPublicDs() {
+    return publicDs;
   }
 
   @Override

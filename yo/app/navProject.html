@@ -16,7 +16,7 @@
         </a>
       </li>
       
-      <li ng-click="projectCtrl.goToJobs()" ng-show="projectCtrl.showJobs()">
+      <li ng-click="projectCtrl.goToJobs()" ng-show="projectCtrl.showJobs()" id="jobsTab">
         <a>
           Jobs <span class="sub_icon fa fa-cogs fa-lg pull-right"></span>
         </a>
@@ -40,7 +40,7 @@
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToDatasets()">
+      <li ng-click="projectCtrl.goToDatasets()" style="margin-top:40px;">
         <a>
           Data Sets<span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
         </a>
@@ -58,7 +58,7 @@
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToMetadataDesigner()">
+      <li ng-click="projectCtrl.goToMetadataDesigner()" ng-show="projectCtrl.role == 'Data owner'">
         <a>
           Metadata Designer <span
           class="sub_icon fa fa-edit fa-lg pull-right"></span>
@@ -68,3 +68,18 @@
 
   </nav>
 </aside>
+
+<tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourTwo" post-tour="closeTour()" ng-if="projectCtrl.showJobs() && projectCtrl.loadedView">
+    <virtual-step
+        id="TourTwo"
+        class="ng-scope"
+        tourtip="Click Next, OR click on the Job tab to continue"
+        tourtip-step="0"
+        tourtip-element="#jobsTab"
+        tourtip-placement="right"
+        tourtip-next-label="Next"
+        on-proceed="projectCtrl.goToJobs()"
+        tourtip-offset-vertical="-25"
+        tourtip-offset-horizontal="-13"
+        ></virtual-step>
+</tour> 

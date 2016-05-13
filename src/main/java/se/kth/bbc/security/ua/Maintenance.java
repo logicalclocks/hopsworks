@@ -19,31 +19,41 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class Maintenance implements Serializable {
-    private static final long serialVersionUID = 1L;
 
-    private short status;
+  private static final long serialVersionUID = 1L;
 
-    private String message;
+  private short status;
 
-    public Maintenance() {
-        status = 0;
-        message = "Administration message";
-    }
+  private String message;
 
-    public short getStatus() {
-        return status;
-    }
+  private String otp = "true";
 
-    public void setStatus(short status) {
-        this.status = status;
-    }
+  public Maintenance() {
+    message = "Administration message";
+  }
 
-    public String getMessage() {
-        return message;
-    }
+  public short getStatus() {
+    return status;
+  }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+  public void setStatus(short status) {
+    this.status = status;
+  }
+
+  public String getMessage() {
+    return message;
+  }
+
+  public void setMessage(String message) {
+    this.message = message;
+  }
+
+  public String getOtp() {
+    return otp;
+  }
+
+  public void setOtp(String otp) {
+    this.otp = otp;
+  }
 
 }

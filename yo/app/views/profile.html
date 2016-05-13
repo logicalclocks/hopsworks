@@ -49,7 +49,7 @@
         </div>
 
         <div class="form-group has-feedback">
-          <label class="text-muted">Number of Projects Allowed: </label>{{profileCtrl.user.maxNumProjects}}
+          <label class="text-muted">Number of Projects Allowed: </label>&nbsp;&nbsp;{{profileCtrl.user.maxNumProjects}}
         </div>
 
 
@@ -137,10 +137,7 @@
         <span ng-show="credentialsForm.user_password.$dirty & amp; & amp; credentialsForm.user_password.$error.minlength"
               class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
           one special character and/or alphanumeric characters. </span>                 
-        <span ng-show="credentialsForm.user_password.$dirty & amp; & amp; credentialsForm.user_password.$error.pattern"
-              class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
-          one special character and/or alphanumeric characters. </span>
-        <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password_confirm.$dirty) & amp; & amp; credentialsForm.user_password_confirm.$invalid"
+         <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password_confirm.$dirty) & amp; & amp; credentialsForm.user_password_confirm.$invalid"
               class="text-danger ng-hide">The two passwords you entered do not match</span>
       </div>
     </div>

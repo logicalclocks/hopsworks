@@ -1,5 +1,6 @@
 package se.kth.hopsworks.controller;
 
+import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,6 +37,8 @@ public class AdamController {
   private SparkController sparkController;
   @EJB
   private Settings settings;
+  @EJB
+  private HdfsLeDescriptorsFacade hdfsEndpoint;
 
   /**
    * Start an execution of the given job, ordered by the given User.
@@ -66,6 +69,7 @@ public class AdamController {
     }
     //Get to starting the job
     AdamJob adamjob = new AdamJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
+        hdfsEndpoint.getSingleEndpoint(),
         settings.getAdamJarHdfsPath());
     Execution jh = adamjob.requestExecutionId();
     if (jh != null) {
@@ -75,7 +79,7 @@ public class AdamController {
           "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.getProject(),
         user.asUser());
     return jh;
   }

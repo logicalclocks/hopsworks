@@ -17,7 +17,6 @@
 package se.kth.hopsworks.zeppelin.rest.message;
 
 import java.util.Map;
-import org.apache.zeppelin.interpreter.InterpreterOption;
 
 /**
  * NewInterpreterSetting rest api request message
@@ -27,7 +26,7 @@ public class NewInterpreterSettingRequest {
 
   String name;
   String group;
-  InterpreterOption option;
+  // option was deprecated
   Map<String, String> properties;
 
   public NewInterpreterSettingRequest() {
@@ -44,9 +43,5 @@ public class NewInterpreterSettingRequest {
 
   public Map<String, String> getProperties() {
     return properties;
-  }
-
-  public InterpreterOption getOption() {
-    return option;
   }
 }

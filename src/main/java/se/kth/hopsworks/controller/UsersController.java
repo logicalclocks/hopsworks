@@ -86,25 +86,24 @@ public class UsersController {
       String otpSecret = SecurityUtils.calculateSecretKey();
       String activationKey = SecurityUtils.getRandomPassword(64);
 
-      int uid = userBean.lastUserID() + 1;
-
-      // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
-      String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
+      // 
+      String uname = generateUsername(newUser.getEmail());
 
       List<BbcGroup> groups = new ArrayList<>();
 
-      Users user = new Users(uid);
+
+      Users user = new Users();
       user.setUsername(uname);
       user.setEmail(newUser.getEmail());
       user.setFname(newUser.getFirstName());
       user.setLname(newUser.getLastName());
       user.setMobile(newUser.getTelephoneNum());
-      user.setStatus(PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue());
+      user.setStatus(PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
       user.setSecret(otpSecret);
       user.setOrcid("-");
-      user.setMobile("-");
+      user.setMobile(newUser.getTelephoneNum());
       user.setTitle("-");
-      user.setMode(PeopleAccountStatus.MOBILE_USER.getValue());
+      user.setMode(PeopleAccountStatus.M_ACCOUNT_TYPE.getValue());
       user.setValidationKey(activationKey);
       user.setActivated(new Timestamp(new Date().getTime()));
       user.setPasswordChanged(new Timestamp(new Date().getTime()));
@@ -193,24 +192,22 @@ public class UsersController {
       String otpSecret = SecurityUtils.calculateSecretKey();
       String activationKey = SecurityUtils.getRandomPassword(64);
 
-      int uid = userBean.lastUserID() + 1;
-
-      // String uname = LocalhostServices.getUsernameFromEmail(newUser.getEmail());
-      String uname = AuthenticationConstants.USERNAME_PREFIX + uid;
+      String uname = generateUsername(newUser.getEmail());
       List<BbcGroup> groups = new ArrayList<>();
 
-      Users user = new Users(uid);
+
+      Users user = new Users();
       user.setUsername(uname);
       user.setEmail(newUser.getEmail());
       user.setFname(newUser.getFirstName());
       user.setLname(newUser.getLastName());
       user.setMobile(newUser.getTelephoneNum());
-      user.setStatus(PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue());
+      user.setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue());
       user.setSecret(otpSecret);
       user.setOrcid("-");
-      user.setMobile("-");
+      user.setMobile(newUser.getTelephoneNum());
       user.setTitle("-");
-      user.setMode(PeopleAccountStatus.YUBIKEY_USER.getValue());
+      user.setMode(PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue());
       user.setValidationKey(activationKey);
       user.setActivated(new Timestamp(new Date().getTime()));
       user.setPasswordChanged(new Timestamp(new Date().getTime()));
@@ -246,7 +243,7 @@ public class UsersController {
 
       Yubikey yk = new Yubikey();
       yk.setUid(user);
-      yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+      yk.setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue());
       user.setYubikey(yk);
       user.setOrganization(org);
 
@@ -434,6 +431,13 @@ public class UsersController {
     }
   }
 
+   public void setUserIsOnline(Users user , int status) {
+    if (user != null) {
+      user.setIsonline(status);
+      userBean.update(user);
+    }
+  }
+    
   public SshKeyDTO addSshKey(int id, String name, String sshKey) {
     SshKeys key = new SshKeys();
     key.setSshKeysPK(new SshKeysPK(id, name));
@@ -453,6 +457,47 @@ public class UsersController {
       dtos.add(new SshKeyDTO(sshKey));
     }
     return dtos;
+  }
+  
+  public  String generateUsername(String email) {
+    Integer count = 0;
+    String uname = getUsernameFromEmail(email);
+    Users user = userBean.findByUsername(uname);
+    String suffix = "";
+    if (user == null) {
+      return uname;
+    }
+
+    String testUname = "";
+    while (user != null && count < 100) {
+      suffix = count.toString();
+      testUname = uname.substring(0, (Settings.USERNAME_LEN - suffix.length()));
+      user = userBean.findByUsername(testUname + suffix);
+      count++;
+    }
+    if (count == 100) {
+      throw new IllegalStateException("You cannot register with this email address. Pick another.");
+    }
+    return testUname + suffix;
+  }
+  
+  private String getUsernameFromEmail(String email) {
+    String username = email.substring(0, email.lastIndexOf("@"));
+    if (username.contains(".")) {
+      username = username.replace(".", "_");
+    }
+    if (username.contains("__")) {
+      username = username.replace("__", "_");
+    }
+    if (username.length() > Settings.USERNAME_LEN) {
+      username = username.substring(0,Settings.USERNAME_LEN);
+    } 
+    if (username.length() < Settings.USERNAME_LEN) {
+      while (username.length() < Settings.USERNAME_LEN) {
+        username += "0";
+      }
+    }
+    return username;
   }
 
 }

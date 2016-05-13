@@ -75,6 +75,9 @@
   padding: 0;
   position: relative;
 }
+.file.greyed {
+  background-color: #f3f3f4;
+}
 
 .file .icon, .file .image {
   height: 100px;
@@ -101,9 +104,18 @@
   border-top: 1px solid #e7eaec;
   padding: 10px;
 }
+
+.file .file-name .selected {
+  background-color: #ffffff;
+  border-top: 5px solid #e7eaec;
+  padding: 10px;
+  text-decoration: underline;
+}
+
 .file-name small {
   color: #676a6c;
 }
+
 .corner {
   -moz-border-bottom-colors: none;
   -moz-border-left-colors: none;
@@ -120,6 +132,11 @@
   position: absolute;
   right: 0;
   width: 0;
+}
+
+.publicDS {
+  padding-bottom: 0;
+  padding-top: 15px;
 }
 
 

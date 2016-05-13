@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.ua;
 
 import javax.annotation.PostConstruct;
@@ -23,13 +18,13 @@ import se.kth.hopsworks.user.model.Users;
 @RequestScoped
 public class AccountVerification {
 
+
     @EJB
     private UserManager mgr;
 
     @EJB
     private AuditManager am;
 
-//  @ManagedProperty(value = "#{param.key}")
     @ManagedProperty("#{param.key}")
     private String key;
 
@@ -40,9 +35,9 @@ public class AccountVerification {
 
     @PostConstruct
     public void init() {
-        username = key.substring(0, 8);
+        username = key.substring(0, AuthenticationConstants.USERNAME_LENGTH);
         // get the 8 char username
-        String secret = key.substring(8, key.length());
+        String secret = key.substring(AuthenticationConstants.USERNAME_LENGTH, key.length());
         valid = validateKey(secret);
     }
 
@@ -55,7 +50,7 @@ public class AccountVerification {
         Users user = null;
 
         try {
-            mgr.getUserByUsername(username);
+            user = mgr.getUserByUsername(username);
         } catch (QueryTimeoutException ex) {
             dbDown = true;
             return false;
@@ -69,29 +64,20 @@ public class AccountVerification {
             return false;
         }
 
-        if (user.getStatus() != PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()) {
-            am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-                AccountsAuditActions.FAILED.name(), "Could not verify the account due to wrong status.", user);
-
-            return false;
-        }
-
+	if ((user.getStatus() != PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue() 
+	     && user.getMode()== PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) || 
+            (user.getStatus() != PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue() 
+	     && user.getMode()== PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue())
+            ) {
+	    am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+				     AccountsAuditActions.FAILED.name(), "Could not verify the account due to wrong status.", user);
+	}
+	
         if (key.equals(user.getValidationKey())) {
-            if (user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
-
-                mgr.changeAccountStatus(user.getUid(), "",
-                    PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
-
-            } else if (user.getMode() == PeopleAccountStatus.MOBILE_USER.
-                getValue()) {
-
-                mgr.changeAccountStatus(user.getUid(), "",
-                    PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
-            }
-
+            mgr.changeAccountStatus(user.getUid(), "",
+				    PeopleAccountStatus.VERIFIED_ACCOUNT.getValue());
             am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-                AccountsAuditActions.SUCCESS.name(), "Verified account email address.", user);
-
+				     AccountsAuditActions.SUCCESS.name(), "Verified account email address.", user);
             mgr.resetKey(user.getUid());
             return true;
         }
@@ -99,19 +85,18 @@ public class AccountVerification {
         int val = user.getFalseLogin();
         mgr.increaseLockNum(user.getUid(), val + 1);
 
-        if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
-            mgr.changeAccountStatus(user.getUid(), "SPAM Acccount",
-                PeopleAccountStatus.SPAM_ACCOUNT.getValue());
-            mgr.resetKey(user.getUid());
+    // if more than 5 times false logins set as spam
+        if (val > AuthenticationConstants.ACCOUNT_VALIDATION_TRIES) {
+            mgr.changeAccountStatus(user.getUid(), PeopleAccountStatus.SPAM_ACCOUNT.toString(),
+              PeopleAccountStatus.SPAM_ACCOUNT.getValue());
             mgr.resetKey(user.getUid());
             am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-                AccountsAuditActions.FAILED.name(), "Too many false activation attemps.", user);
+				     AccountsAuditActions.FAILED.name(), "Too many false activation attemps.", user);
 
         }
 
         return false;
     }
-
     public String getKey() {
         return key;
     }

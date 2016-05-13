@@ -18,6 +18,9 @@ var getFileName = function (path) {
  * @param {long} size in bytes
  */
 var convertSize = function (fileSizeInBytes) {
+  if (fileSizeInBytes === -1) {
+    return "unlimited";
+  }
   if (fileSizeInBytes === 0) {
     return 0;
   }
@@ -30,7 +33,49 @@ var convertSize = function (fileSizeInBytes) {
 
   return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
 };
-  
+
+
+var convertNs = function (numFiles) {
+  if (numFiles === -1) {
+    return "unlimited";
+  }
+  if (numFiles === 0) {
+    return 0;
+  }
+  var i = -1;
+  var byteUnits = ['K', ' M'];
+  do {
+    numFiles = numFiles / 1000;
+    i++;
+  } while (numFiles > 1000);
+
+  return Math.max(numFiles, 0.1).toFixed(1) + byteUnits[i];
+};
+
+/**
+ * Change time in seconds to minutes, hours
+ * @param {long} time in seconds
+ */
+var convertSeconds = function (timeInSeconds) {
+  if (timeInSeconds === 0) {
+    return 0;
+  }
+  var mins = timeInSeconds / 60;
+  mins = Math.floor(mins);
+  if (mins > 60) {
+    var hours = mins / 60;
+    hours = Math.floor(hours);
+    mins = mins - (hours * 60);
+    return hours + "hrs " + mins + "mins";
+  } else {
+    timeInSeconds = timeInSeconds - (mins * 60);
+    return mins + "mins " + timeInSeconds + "secs";    
+  }
+
+};
+
+
+
 /**
  * Sorts an object (a list) based on a predicate
  * 

@@ -86,17 +86,5 @@ public class LocalhostServices {
     return username + Settings.HOPS_USERNAME_SEPARATOR + projectName;
   }
 
-  public static String getUsernameFromEmail(String email) {
-    String username = email.substring(0, email.lastIndexOf("@"));
-    if (username.contains(".")) {
-      username.replace(".", "_");
-    }
-    if (username.contains("__")) {
-      username.replace("__", "_");
-    }
-    if (username.length() > Settings.MAX_USERNME_LEN) {
-      username = username.substring(0,Settings.MAX_USERNME_LEN-1);
-    }
-    return username;
-  }
+
 }

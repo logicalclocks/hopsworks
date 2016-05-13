@@ -10,12 +10,13 @@ import javax.faces.validator.FacesValidator;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
+import se.kth.bbc.security.auth.AuthenticationConstants;
 
  
 @FacesValidator("passwordValidator")
 public class PasswordValidator implements Validator {
 
-  final String PASSWORD_PATTERNN = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=\\S+$).{6,}$";
+  final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=\\S+$).{6,}$";
 
   /**
    * Ensure the password presented by user during registration is qualified.
@@ -45,7 +46,8 @@ public class PasswordValidator implements Validator {
       throw new ValidatorException(facesMsg);
     }
 
-    if (password.length() < 6) {
+    if (password.length() < AuthenticationConstants.PASSWORD_MIN_LENGTH ||
+            password.length() > AuthenticationConstants.PASSWORD_MAX_LENGTH) {
       uiInputConfirmPassword.setValid(false);
       FacesMessage facesMsg = new FacesMessage(
               AccountStatusErrorMessages.PASSWORD_REQUIREMNTS);
@@ -78,7 +80,7 @@ public class PasswordValidator implements Validator {
    * @return
    */
   public boolean isAlphaNumeric(String s) {
-    Pattern pattern = Pattern.compile(PASSWORD_PATTERNN);
+    Pattern pattern = Pattern.compile(PASSWORD_PATTERN);
     Matcher matcher = pattern.matcher(s);
     return matcher.matches();
   }

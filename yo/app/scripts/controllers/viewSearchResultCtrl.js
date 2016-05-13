@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('ViewSearchResultCtrl', ['$modalInstance', 'RequestService', 'growl', 'result', 'datatype', 'projects',
-          function ($modalInstance, RequestService, growl, result, datatype, projects) {
+        .controller('ViewSearchResultCtrl', ['$modalInstance', 'RequestService', 'DataSetService',  'growl', 'result', 'datatype', 'projects',
+          function ($modalInstance, RequestService, DataSetService, growl, result, datatype, projects) {
 
             var self = this;
             self.request = {'inodeId': "", 'projectId': "", 'message': ""};
@@ -22,7 +22,7 @@ angular.module('hopsWorksApp')
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 21});
                 });
               };
-            } else if (datatype === 'child' || datatype === 'dataset') {
+            } else if (datatype === 'inode' || datatype === 'ds') {
 
               self.type = 'Dataset';
               self.requestType = 'access';
@@ -30,6 +30,7 @@ angular.module('hopsWorksApp')
               self.infoDS = 'Projects this dataset is shared with.';
               self.result = result;
               self.request.inodeId = self.result.inodeId;
+              self.projectId = self.result.projectId;              
 
               self.sendRequest = function () {
                 RequestService.accessRequest(self.request).then(
@@ -40,6 +41,8 @@ angular.module('hopsWorksApp')
                 });
               };
             }
+
+            var dataSetService = DataSetService(self.projectId); 
 
             self.close = function () {
               $modalInstance.dismiss('cancel');

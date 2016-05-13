@@ -1,6 +1,7 @@
 package se.kth.hopsworks.controller;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
+import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,6 +37,8 @@ public class CuneiformController {
   private ActivityFacade activities;
   @EJB
   private Settings settings;
+  @EJB
+  private HdfsLeDescriptorsFacade hdfsEndpoint;
 
   /**
    * Inspect the workflow at the given path under the projectname. The path
@@ -96,8 +99,9 @@ public class CuneiformController {
     }
 
     //Then: create a CuneiformJob to run it
-    CuneiformJob cfjob = new CuneiformJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
-    settings.getHiwayDir());
+    CuneiformJob cfjob = new CuneiformJob(job, submitter, user, settings.getHadoopDir(), 
+        settings.getSparkDir(), hdfsEndpoint.getSingleEndpoint(),
+        settings.getHiwayDir());
     Execution jh = cfjob.requestExecutionId();
     if (jh != null) {
       submitter.startExecution(cfjob);
@@ -106,7 +110,7 @@ public class CuneiformController {
               "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
-    activities.persistActivity(ActivityFacade.RAN_JOB, job.getProject(), user.
+    activities.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.getProject(), user.
             asUser());
     return jh;
   }

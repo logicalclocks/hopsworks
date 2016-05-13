@@ -6,22 +6,16 @@ angular.module('hopsWorksApp')
             settings: function () {
                 return $http.get('/api/interpreter/setting');
             },
-            startInterpreter: function (projectId, settingId) {
-                return $http.get('/api/interpreter/'+projectId+'/start/'+settingId);
+            restartInterpreter: function (settingId) {
+                return $http.put('/api/interpreter/setting/restart/' + settingId);
             },
-            stopInterpreter: function (settingId) {
-                return $http.get('/api/interpreter/stop/' + settingId);
+            notebooks: function () {
+                return $http.get('/api/notebook/');
             },
-            notebooks: function (projectId) {
-                return $http.get('/api/notebook/'+ projectId);
-            },
-            tutorialNotebooks: function () {
-                return $http.get('/api/notebook/tutorial');
-            },
-            createNotebook: function (projectId, noteName) {
+            createNotebook: function (noteName) {
               var regReq = {
                     method: 'POST',
-                    url: '/api/notebook/'+ projectId + '/new',
+                    url: '/api/notebook/new',
                     headers: {
                       'Content-Type': 'application/json'
                     },

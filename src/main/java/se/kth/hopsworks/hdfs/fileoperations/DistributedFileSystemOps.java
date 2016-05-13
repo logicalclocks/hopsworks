@@ -11,6 +11,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -19,6 +21,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.lims.Utils;
+import se.kth.hopsworks.util.Settings;
 
 public class DistributedFileSystemOps {
 
@@ -37,6 +40,7 @@ public class DistributedFileSystemOps {
    */
   public DistributedFileSystemOps(UserGroupInformation ugi, Configuration conf) {
     this.dfs = getDfs(ugi, conf);
+    this.conf = conf;
   }
 
   private DistributedFileSystem getDfs(UserGroupInformation ugi,
@@ -67,10 +71,8 @@ public class DistributedFileSystemOps {
     try (BufferedReader br = new BufferedReader(new InputStreamReader(dfs.
             open(file)));) {
       String line;
-      line = br.readLine();
-      while (line != null) {
+      while ((line = br.readLine()) != null) {
         out.append(line).append("\n");
-        line = br.readLine();
       }
       return out.toString();
     }
@@ -85,17 +87,7 @@ public class DistributedFileSystemOps {
    */
   public String cat(String file) throws IOException {
     Path path = new Path(file);
-    StringBuilder out = new StringBuilder();
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(dfs.
-            open(path)));) {
-      String line;
-      line = br.readLine();
-      while (line != null) {
-        out.append(line).append("\n");
-        line = br.readLine();
-      }
-      return out.toString();
-    }
+    return cat(path);
   }
 
   /**
@@ -135,6 +127,17 @@ public class DistributedFileSystemOps {
   public void touchz(Path location) throws IOException {
     dfs.create(location);
   }
+  
+  /**
+   * List the statuses of the files/directories in the given path if the path 
+   * is a directory.
+   * @param location
+   * @return FileStatus[]
+   * @throws IOException 
+   */
+  public FileStatus[] listStatus(Path location) throws IOException {
+    return dfs.listStatus(location);
+  }
 
   /**
    * Delete a file or directory from the file system.
@@ -146,7 +149,8 @@ public class DistributedFileSystemOps {
    * @throws IOException
    */
   public boolean rm(Path location, boolean recursive) throws IOException {
-    logger.log(Level.INFO, "dfs.toString() ----------- Deletenig as {0}", dfs.toString());
+    logger.log(Level.INFO, "Deletenig {0} as {1}", new Object[]{location.toString(),
+      dfs.toString()});
     if (dfs.exists(location)) {
       return dfs.delete(location, recursive);
     }
@@ -265,6 +269,23 @@ public class DistributedFileSystemOps {
       FileUtil.copy(dfs, src1, dfs, dst, false, conf);
     }
   }
+  
+  /**
+   * Creates a file and all parent dirs that does not exist and returns 
+   * an FSDataOutputStream
+   * @param path
+   * @return FSDataOutputStream
+   * @throws IOException 
+   */
+  public FSDataOutputStream create(String path) throws IOException {
+    Path dstPath = new Path(path);
+    String dirs = Utils.getDirectoryPart(path);
+    Path dirsPath = new Path(dirs);
+    if (!exists(dirs)) {
+      dfs.mkdirs(dirsPath);
+    }
+    return dfs.create(dstPath);
+  }
 
   /**
    * Set permission for path.
@@ -291,18 +312,33 @@ public class DistributedFileSystemOps {
     dfs.setOwner(path, username, groupname);
   }
 
-  //Set quota in GB
-  public void setQuota(Path src, long diskspaceQuota) throws
+  /**
+   * 
+   * @param src
+   * @param diskspaceQuotaInBytes hdfs quota size in bytes
+   * @throws IOException 
+   */
+  public void setQuota(Path src, long diskspaceQuotaInBytes) throws
           IOException {
-    dfs.setQuota(src, HdfsConstants.QUOTA_DONT_SET, 1073741824 * diskspaceQuota);
+    dfs.setQuota(src, HdfsConstants.QUOTA_DONT_SET, 1073741824 * diskspaceQuotaInBytes);
   }
 
-  //Get quota in GB
+  /**
+   * 
+   * @param path
+   * @return hdfs quota size in bytes
+   * @throws IOException 
+   */
   public long getQuota(Path path) throws IOException {
     return dfs.getContentSummary(path).getSpaceQuota() / 1073741824;
   }
 
-  //Get used disk space in GB
+  /**
+   * 
+   * @param path
+   * @return number of bytes stored in this subtree in bytes
+   * @throws IOException 
+   */
   public long getUsedQuota(Path path) throws IOException {
     return dfs.getContentSummary(path).getSpaceConsumed() / 1073741824;
   }
@@ -336,12 +372,12 @@ public class DistributedFileSystemOps {
     Path location = new Path(p);
     //add the erasure coding configuration file
     File erasureCodingConfFile
-            = new File(hadoopConfDir, "erasure-coding-site.xml");
+            = new File(hadoopConfDir, Settings.ERASURE_CODING_CONFIG);
     if (!erasureCodingConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               erasureCodingConfFile);
       throw new IllegalStateException(
-              "No erasure coding conf file: erasure-coding-site.xml");
+              "No erasure coding conf file: " + Settings.ERASURE_CODING_CONFIG);
     }
 
     this.conf.addResource(new Path(erasureCodingConfFile.getAbsolutePath()));
