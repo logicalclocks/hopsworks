@@ -1,5 +1,7 @@
 package se.kth.bbc.jobs.yarn;
 
+import io.hops.kafka.HopsKafkaConsumer;
+import io.hops.kafka.HopsKafkaProducer;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -147,9 +149,15 @@ public class YarnRunner {
     for (YarnSetupCommand c : commands) {
       c.execute(this);
     }
-
+    
+    //testing Kafka producer and producer
+    HopsKafkaProducer producer = new HopsKafkaProducer("google", Boolean.TRUE);
+    producer.start();
+    HopsKafkaConsumer consumer = new HopsKafkaConsumer("google");
+    consumer.start();
+    
     //And submit
-    logger.log(Level.INFO, "Submitting application {0} to applications manager.", appId);
+    logger.log(Level.INFO, "Submitting application {0} to applications manager.", appId); 
     yarnClient.submitApplication(appContext);
 
     yarnClient.close();

@@ -299,6 +299,9 @@ public class KafkaFacade {
         }
 
         em.remove(pt);
+        // remove the associated acl from database; 
+        
+        
     }
 
     public List<SharedProjectDTO> topicIsSharedTo(String topicName, Integer projectId) {
@@ -571,7 +574,7 @@ public class KafkaFacade {
         return Integer.parseInt(ip);
 
     }
-  
+
 }
 
 
