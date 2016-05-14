@@ -551,7 +551,10 @@ public class Settings {
   
   // QUOTA
   public static final float DEFAULT_YARN_PRICE = 1.0f;
-
+  
+  //Kakfa certificate
+  public static final String KAFKA_K_CERTIFICATE = "kafka_k_certificate";
+  public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
   
   //Project creation: default datasets
   public static enum DefaultDataset {
