@@ -300,18 +300,15 @@ public class PeopleAdministration implements Serializable {
         }
         try {
 
-            boolean removeByEmail = userManager.deleteUserRequest(user1);
+            userManager.deleteUserRequest(user1);
 
             // update the user request table
-            if (removeByEmail) {
                 emailBean.sendEmail(user1.getEmail(),
                     UserAccountsEmailMessages.ACCOUNT_REJECT,
                     UserAccountsEmailMessages.accountRejectedMessage());
                 MessagesController.addInfoMessage(user1.getEmail() + " was rejected.");
                 spamUsers.remove(user1);
-
-            }
-        } catch (MessagingException ex) {
+        } catch (MessagingException | RuntimeException ex) {
             MessagesController.addSecurityErrorMessage("Rejection failed");
             Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
                 "Could not reject user.", ex);
@@ -382,6 +379,7 @@ public class PeopleAdministration implements Serializable {
         this.selectedUsers = users;
     }
 
+    
     public void activateUser(Users user1) {
         if (sgroup == null || sgroup.isEmpty()) {
             MessagesController.addSecurityErrorMessage("Select a role.");
@@ -408,20 +406,23 @@ public class PeopleAdministration implements Serializable {
             }
 
             userManager.updateStatus(user1, PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
-            userTransaction.commit();
 
             auditManager.registerAccountChange(sessionState.getLoggedInUser(),
                 PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
                 UserAuditActions.SUCCESS.name(), "", user1);
+
+            userTransaction.commit();
+
             emailBean.sendEmail(user1.getEmail(),
                 UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
                 UserAccountsEmailMessages.
                 accountActivatedMessage(user1.getEmail()));
 
-        } catch (NotSupportedException | SystemException | MessagingException |
+        } catch (
+            NotSupportedException | SystemException | 
             RollbackException | HeuristicMixedException |
             HeuristicRollbackException | SecurityException |
-            IllegalStateException e) {
+            MessagingException |IllegalStateException e) {
             auditManager.registerAccountChange(sessionState.getLoggedInUser(),
                 PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
                 UserAuditActions.FAILED.name(), "", user1);
@@ -439,6 +440,7 @@ public class PeopleAdministration implements Serializable {
         }
         return true;
     }
+    
     public void resendAccountVerificationEmail(Users user) throws MessagingException {
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletRequest request = (HttpServletRequest) context.

@@ -45,7 +45,7 @@
                            paginator="true"
                            paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
                            rowsPerPageTemplate="15,25,35,45,55">
-                          
+
 
                 <p:column id="nameColumn" headerText="First Name"  
                           filterBy="#{req.fname}">
@@ -63,6 +63,7 @@
 
                 <p:column id="roleColumn" headerText="Role">
                   <p:selectOneMenu id="roleChoose" 
+                                   rendered="#{peopleAdministration.notVerified(req) == false}"
                                    value="#{peopleAdministration.sgroup}" 
                                    editable="false">
                     <f:selectItem itemLabel="Select Role"
@@ -82,6 +83,7 @@
                                  icon="ui-icon-alert"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-check" 
+                                   rendered="#{peopleAdministration.notVerified(req) == false}"
                                    actionListener="#{peopleAdministration.activateUser(req)}" 
                                    update="@form">
                       <p:confirm header="Activate user" 

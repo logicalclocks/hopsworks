@@ -379,7 +379,7 @@ public class AuditManager {
    * @param outcome
    * @return
    */
-  public boolean registerLoginInfo(Users u, String action, String ip,
+  public void registerLoginInfo(Users u, String action, String ip,
           String browser, String os, String mac, String outcome) {
 
     Userlogins l = new Userlogins();
@@ -393,8 +393,6 @@ public class AuditManager {
     l.setEmail(u.getEmail());
     l.setMac(mac);
     em.persist(l);
-
-    return true;
   }
 
   /**
@@ -492,7 +490,7 @@ public class AuditManager {
    * @param target
    * @return
    */
-  public boolean registerAccountChange(Users init, String action, String outcome,
+  public void registerAccountChange(Users init, String action, String outcome,
           String message, Users target) {
 
     AccountAudit aa = new AccountAudit();
@@ -508,8 +506,6 @@ public class AuditManager {
     aa.setEmail(target.getEmail());
     aa.setTarget(target);
     em.persist(aa);
-
-    return true;
   }
 
   /**
@@ -522,7 +518,7 @@ public class AuditManager {
    * @param req
    * @return 
    */
-  public boolean registerAccountChange(Users init, String action, String outcome,
+  public void registerAccountChange(Users init, String action, String outcome,
           String message, Users target, HttpServletRequest req){
 
     AccountAudit aa = new AccountAudit();
@@ -538,8 +534,6 @@ public class AuditManager {
     aa.setEmail(init.getEmail());
     aa.setTarget(target);
     em.persist(aa);
-
-    return true;
   }
 
   
