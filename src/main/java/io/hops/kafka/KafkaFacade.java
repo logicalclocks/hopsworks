@@ -33,6 +33,7 @@ import org.apache.zookeeper.ZooKeeper;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkConnection;
+import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
 import se.kth.hopsworks.user.model.Users;
 
 @Stateless
@@ -324,6 +325,45 @@ public class KafkaFacade {
 
         return shareProjectDtos;
     }
+ 
+    public List<HdfsUserDTO> aclUsers(Integer projectId, String topicName) throws AppException {
+
+        List<HdfsUserDTO> aclUsers = new ArrayList<>();
+        Set<String> allTopicProjects = new HashSet();
+        String projectName;
+     
+        //get the owner project name 
+        Project project = em.find(Project.class, projectId);
+        if (project == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "The owner project does not exist in database.");
+        }
+        allTopicProjects.add(project.getName());
+
+        //get all the projects this topic is shared with
+        TypedQuery<SharedTopics> query = em.createNamedQuery(
+                "SharedTopics.findByTopicName", SharedTopics.class);
+        query.setParameter("topicName", topicName);
+
+        for (SharedTopics sharedTopics : query.getResultList()) {
+            project = em.find(Project.class, sharedTopics.getSharedTopicsPK().getProjectId());
+            allTopicProjects.add(project.getName());
+        }
+
+        //So far, we got the project names that this topic is shared with and
+        // the owner. Next is to find all the HdfsUsers and filter all the 
+        //users for the topic project which will be the acl users.
+        TypedQuery<HdfsUsers> hdfsUsers = em.createNamedQuery(
+                "HdfsUsers.findAll", HdfsUsers.class);
+        for (HdfsUsers user : hdfsUsers.getResultList()) {
+            projectName = user.getName().split("__")[0];
+            if (allTopicProjects.contains(projectName)) {
+                aclUsers.add(new HdfsUserDTO(user.getName()));
+            }
+        }
+
+        return aclUsers;
+    }
 
     public void addAclsToTopic(String topicName, Integer projectId, AclDTO dto)
             throws AppException {
@@ -339,7 +379,7 @@ public class KafkaFacade {
         //get the project id
         Project project = em.find(Project.class, projectId);
         if (project == null) {
-            throw new AppException(Response.Status.FOUND.getStatusCode(),
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "The specified project for the topic is not in database");
         }
 

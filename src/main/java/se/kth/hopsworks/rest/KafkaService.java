@@ -1,6 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import io.hops.kafka.AclDTO;
+import io.hops.kafka.HdfsUserDTO;
 import io.hops.kafka.TopicDTO;
 import java.io.File;
 import java.util.List;
@@ -289,6 +290,30 @@ public class KafkaService {
 
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 projectDtos).build();
+    }
+    
+    @GET
+    @Path("/aclUsers/topic/{topicName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+    public Response aclUsers( @PathParam("toipcName") String topicName,
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException, Exception {
+
+        if (projectId == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Incomplete request!");
+        }
+        
+        List<HdfsUserDTO> aclUsersDtos = 
+                kafkaFacade.aclUsers(projectId, topicName);
+
+        GenericEntity<List<HdfsUserDTO>> aclUsers
+                = new GenericEntity<List<HdfsUserDTO>>(aclUsersDtos) {
+        };
+        
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                aclUsers).build();
     }
 
     @POST

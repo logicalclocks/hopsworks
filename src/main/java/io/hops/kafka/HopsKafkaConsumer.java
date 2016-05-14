@@ -43,13 +43,13 @@ public class HopsKafkaConsumer extends ShutdownableThread {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
         
         //configure the ssl parameters
-        props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-        props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/var/private/client/kafka.client.truststore.jks");
-        props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "kafka1");
-        props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "kafka1");
-        props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/var/private/client/kafka.client.keystore.jks");
-        props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "kafka1");
-        
+//        props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+//        props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/var/private/client/kafka.client.truststore.jks");
+//        props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "kafka1");
+//        props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "kafka1");
+//        props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/var/private/client/kafka.client.keystore.jks");
+//        props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "kafka1");
+//        
         
 
         consumer = new KafkaConsumer<>(props);
@@ -61,7 +61,7 @@ public class HopsKafkaConsumer extends ShutdownableThread {
         consumer.subscribe(Collections.singletonList(this.topic));
         ConsumerRecords<Integer, String> records = consumer.poll(1000);
         for (ConsumerRecord<Integer, String> record : records) {
-             logger.log(Level.INFO, "Receoved message: {0}", record.value()); 
+             logger.log(Level.INFO, "Received message: {0}", record.value()); 
         }
     }
 

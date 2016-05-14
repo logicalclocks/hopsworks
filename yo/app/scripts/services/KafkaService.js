@@ -65,6 +65,11 @@ angular.module('hopsWorksApp')
                 };
                 return $http(req);
               },
+
+              aclUsers: function(projectId, topicName){
+                return $http.get('/api/project/' + projectId + '/kafka/aclUsers/topic/' + topicName);
+              },
+              
               /**
                * Add a new ACL rule to a Topic in the given project. 
                * @param {type} projectId 
