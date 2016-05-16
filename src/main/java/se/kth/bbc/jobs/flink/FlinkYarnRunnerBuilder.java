@@ -57,7 +57,7 @@ public class FlinkYarnRunnerBuilder {
     private static final int MIN_JM_CORES = 1;
     
     //Jar paths for AM and app
-    private String appJarPath, mainClass;
+    private String appJarPath;
     //Optional parameters
     private final List<String> jobArgs = new ArrayList<>();
     private Map<String, String> extraFiles = new HashMap<>();
@@ -78,7 +78,7 @@ public class FlinkYarnRunnerBuilder {
     private Path flinkLoggingConfigurationPath; // optional
     private Path flinkJarPath;
     private String dynamicPropertiesEncoded;
-    private List<File> shipFiles = new ArrayList<File>();
+    private List<File> shipFiles = new ArrayList<>();
     private boolean detached;
     private boolean streamingMode;
     private int parallelism;
@@ -94,8 +94,6 @@ public class FlinkYarnRunnerBuilder {
                   "Name of the main class cannot be empty!");
         }
         this.appJarPath = appJarPath;
-        this.mainClass = mainClass;
-        
     }
 
     public FlinkYarnRunnerBuilder addAllJobArgs(String[] jobArgs) {
@@ -106,7 +104,6 @@ public class FlinkYarnRunnerBuilder {
         this.appJarPath = appJarPath;
     }
     
-    //@Override
     public void setJobManagerMemory(int memoryMb) {
         if (memoryMb < MIN_JM_MEMORY) {
             throw new IllegalArgumentException("The JobManager memory (" + memoryMb + ") is below the minimum required memory amount "
@@ -126,7 +123,6 @@ public class FlinkYarnRunnerBuilder {
         this.jobManagerQueue = queue;
     }
     
-    //@Override
     public void setTaskManagerMemory(int memoryMb) {
         if (memoryMb < MIN_TM_MEMORY) {
             throw new IllegalArgumentException("The TaskManager memory (" + memoryMb + ") is below the minimum required memory amount "
@@ -135,8 +131,6 @@ public class FlinkYarnRunnerBuilder {
         this.taskManagerMemoryMb = memoryMb;
     }
 
-
-    //@Override
     public void setTaskManagerSlots(int slots) {
         if (slots <= 0) {
             throw new IllegalArgumentException("Number of TaskManager slots must be positive");
@@ -144,17 +138,14 @@ public class FlinkYarnRunnerBuilder {
         this.taskManagerSlots = slots;
     }
 
-    //@Override
     public int getTaskManagerSlots() {
         return this.taskManagerSlots;
     }
 
-    //@Override
     public void setQueue(String queue) {
         this.jobManagerQueue = queue;
     }
 
-    //@Override
     public void setLocalJarPath(Path localJarPath) {
         if (!localJarPath.toString().endsWith("jar")) {
             throw new IllegalArgumentException("The passed jar path ('" + localJarPath + "') does not end with the 'jar' extension");
@@ -162,7 +153,6 @@ public class FlinkYarnRunnerBuilder {
         this.flinkJarPath = localJarPath;
     }
 
-    //@Override
     public void setConfigurationFilePath(Path confPath) {
         flinkConfigurationPath = confPath;
     }
@@ -171,17 +161,14 @@ public class FlinkYarnRunnerBuilder {
         this.configurationDirectory = configurationDirectory;
     }
 
-    //@Override
     public void setFlinkLoggingConfigurationPath(Path logConfPath) {
         flinkLoggingConfigurationPath = logConfPath;
     }
 
-    //@Override
     public Path getFlinkLoggingConfigurationPath() {
         return flinkLoggingConfigurationPath;
     }
 
-    //@Override
     public void setTaskManagerCount(int tmCount) {
         if (tmCount < 1) {
             throw new IllegalArgumentException("The TaskManager count has to be at least 1.");
@@ -189,7 +176,6 @@ public class FlinkYarnRunnerBuilder {
         this.taskManagerCount = tmCount;
     }
 
-    //@Override
     public int getTaskManagerCount() {
         return this.taskManagerCount;
     }
@@ -202,12 +188,11 @@ public class FlinkYarnRunnerBuilder {
         this.streamingMode = streamingMode;
     }
     
-    //@Override
     public void setShipFiles(List<File> shipFiles) {
         for (File shipFile : shipFiles) {
 			// remove uberjar from ship list (by default everything in the lib/ folder is added to
             // the list of files to ship, but we handle the uberjar separately.
-            if (!(shipFile.getName().startsWith("flink-dist") && shipFile.getName().endsWith("jar"))) {
+            if ((!(shipFile.getName().startsWith("flink-dist") || !shipFile.getName().equals("flink")) && shipFile.getName().endsWith("jar"))) {
                 this.shipFiles.add(shipFile);
             }
         }
@@ -217,12 +202,10 @@ public class FlinkYarnRunnerBuilder {
         this.dynamicPropertiesEncoded = dynamicPropertiesEncoded;
     }
 
-    //@Override
     public String getDynamicPropertiesEncoded() {
         return this.dynamicPropertiesEncoded;
     }
 
-    //@Override
     public void setName(String name) {
         if (name == null) {
             throw new IllegalArgumentException("The passed name is null");
@@ -269,12 +252,10 @@ public class FlinkYarnRunnerBuilder {
         return false;
     }
 
-    //@Override
     public void setDetachedMode(boolean detachedMode) {
         this.detached = detachedMode;
     }
 
-    //@Override
     public boolean isDetached() {
         return detached;
     }
@@ -325,28 +306,6 @@ public class FlinkYarnRunnerBuilder {
           builder.addLocalResource(k.getKey(), k.getValue(), !k.getValue().
                   startsWith("hdfs:"));
         }
-        //Add log4j properties file
-//        builder.addLocalResource(Settings.FLINK_DEFAULT_LOG4J_FILE, "hdfs://10.0.2.15/user/glassfish/log4j.properties",
-//                false);
-//        //Add log4j properties file
-//        builder.addLocalResource(Settings.FLINK_DEFAULT_LOGBACK_FILE, "hdfs://10.0.2.15/user/glassfish/logback.xml",
-//                false);
-        //Add app jar
-//        builder.addLocalResource(Settings.FLINK_LOCRSC_APP_JAR, appJarPath,
-//            !appJarPath.startsWith("hdfs:"));
-//        
-        //String logbackFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/logback-yarn.xml";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
-//        boolean hasLogback = new File(logbackFile).exists();
-//        String log4jFile = "hdfs://"+nameNodeIpPort+"/user/glassfish/log4j.properties";//configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOG4J_NAME;
-//
-//        boolean hasLog4j = new File(log4jFile).exists();
-//        if (hasLogback) {
-//            shipFiles.add(new File(logbackFile));
-//        }
-//        if (hasLog4j) {
-//            shipFiles.add(new File(log4jFile));
-//        }
-
 
         //Set Flink ApplicationMaster env parameters
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_APP_ID, YarnRunner.APPID_PLACEHOLDER);

@@ -23,7 +23,6 @@ public class FlinkJob extends YarnJob {
     private final FlinkJobConfiguration jobconfig;
     private final String flinkDir;
     private final String flinkUser;
-    private final String JOBTYPE_BATCH = "Batch";
     private final String JOBTYPE_STREAMING = "Streaming";
     /**
      *
@@ -62,7 +61,8 @@ public class FlinkJob extends YarnJob {
             jobconfig.setAppName("Untitled Flink Job");
         }
         
-        FlinkYarnRunnerBuilder flinkBuilder = new FlinkYarnRunnerBuilder(jobconfig.getJarPath(), jobconfig.getMainClass());
+        FlinkYarnRunnerBuilder flinkBuilder = new FlinkYarnRunnerBuilder(
+                jobconfig.getJarPath(), jobconfig.getMainClass());
         //https://ci.apache.org/projects/flink/flink-docs-release-0.10/setup/yarn_setup.html
         /*If you do not want to keep the Flink YARN client running all the time, 
          its also possible to start a detached YARN session. The parameter for
@@ -72,22 +72,21 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setDetachedMode(false);
         flinkBuilder.setName(jobconfig.getAppName());
         flinkBuilder.setConfigurationDirectory(jobconfig.getFlinkConfDir());
-        flinkBuilder.setConfigurationFilePath(new Path(jobconfig.getFlinkConfFile()));
+        flinkBuilder.setConfigurationFilePath(new Path(
+                jobconfig.getFlinkConfFile()));
         //Flink specific conf object
-        flinkBuilder.setFlinkLoggingConfigurationPath(new Path(jobconfig.getFlinkConfDir()));
-        //TODO: Remove fixed path
-        flinkBuilder.setLocalJarPath(new Path("hdfs://"+nameNodeIpPort+"/user/glassfish/flink.jar"));
+        flinkBuilder.setFlinkLoggingConfigurationPath(new Path(
+                jobconfig.getFlinkConfDir()));
+        flinkBuilder.setLocalJarPath(new Path("hdfs://"+nameNodeIpPort+
+                "/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR));
         //flinkBuilder.setDynamicPropertiesEncoded("log4j.configuration=/srv/flink/conf/log4j.properties,logback.configurationFile=/srv/flink/conf/logback.xml");
         
         flinkBuilder.setTaskManagerMemory(jobconfig.getTaskManagerMemory());
         flinkBuilder.setTaskManagerSlots(jobconfig.getSlots());
         flinkBuilder.setTaskManagerCount(jobconfig.getNumberOfTaskManagers());
-//        if(jobconfig.getFlinkJobType().equals(JOBTYPE_BATCH)){
-//            flinkBuilder.setStreamingMode(false);
-//        } else {
-//            flinkBuilder.setStreamingMode(true);
-//        }
-        flinkBuilder.setStreamingMode(false);
+        if(jobconfig.getFlinkjobtype().equals(JOBTYPE_STREAMING)){
+            flinkBuilder.setStreamingMode(true);
+        }
         flinkBuilder.setParallelism(jobconfig.getParallelism());
         flinkBuilder.setJobManagerMemory(jobconfig.getAmMemory());
         flinkBuilder.setJobManagerCores(jobconfig.getAmVCores());
