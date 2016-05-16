@@ -9,7 +9,6 @@ and open the template in the editor.
 */
 
 .ui-widget, .ui-widget .ui-widget .ui-widget-content {
-  //font-size: 70% !important;
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size: 12px;
   min-height: 0;
@@ -114,7 +113,6 @@ and open the template in the editor.
   width: 85px;
   height: 22px;
   display: inline-block;
-  //line-height: 0.6em;
   margin-top: 2px;
   margin-right: 2px;
   margin-bottom: 2px;
@@ -124,7 +122,6 @@ and open the template in the editor.
   vertical-align: middle;
   text-align: match-parent;
   cursor: pointer;
-  //background-repeat: repeat-x;
 }
 
 .span4 .ui-button .ui-button-text{

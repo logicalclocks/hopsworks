@@ -52,7 +52,7 @@ import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
 
 @Path("/project")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)

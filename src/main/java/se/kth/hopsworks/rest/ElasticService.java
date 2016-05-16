@@ -57,7 +57,7 @@ import org.elasticsearch.threadpool.ThreadPool;
  * @author vangelis
  */
 @Path("/elastic")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -120,16 +120,25 @@ public class ElasticService {
               getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
     }
 
-    logger.log(Level.INFO, "Found elastic index, now executing the query.");
+        //check if the indices are up and running
+        if (!this.indexExists(client, Settings.META_PROJECT_INDEX) || !this.
+            indexExists(client, Settings.META_DATASET_INDEX)) {
 
-    /*
+            logger.log(Level.INFO, ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
+            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
+        }
+
+        logger.log(Level.INFO, "Found elastic index, now executing the query.");
+
+        /*
      * If projects contain a searchable field then the client can hit both
      * indices (projects, datasets) with a single query. Right now the single
      * query fails because of the lack of a searchable field in the projects.
      * ADDED MANUALLY A SEARCHABLE FIELD IN THE RIVER. MAKES A PROJECT
      * SEARCHABLE BY DEFAULT. NEEDS REFACTORING
-     */
-    //hit the indices - execute the queries
+         */
+        //hit the indices - execute the queries
 //    SearchResponse response
 //        = client.prepareSearch(Settings.META_PROJECT_INDEX,
 //            Settings.META_DATASET_INDEX).
@@ -139,6 +148,7 @@ public class ElasticService {
 //        //.setQuery(this.getDatasetComboQuery(searchTerm))
 //        .addHighlightedField("name")
 //        .execute().actionGet();
+
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_PROJECT_INDEX,
             Settings.META_DATASET_INDEX);
     srb = srb.setTypes(Settings.META_PROJECT_PARENT_TYPE,
@@ -231,7 +241,7 @@ public class ElasticService {
               getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
     }
 
-    //hit the indices - execute the queries
+        //hit the indices - execute the queries
 //    SearchResponse response
 //        = client.prepareSearch(Settings.META_PROJECT_INDEX)
 //        .setTypes(Settings.META_PROJECT_CHILD_TYPE)
@@ -239,6 +249,7 @@ public class ElasticService {
 //            Settings.META_PROJECT_PARENT_TYPE, searchTerm))
 //        .addHighlightedField("name")
 //        .execute().actionGet();
+
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_PROJECT_INDEX);
     srb = srb.setTypes(Settings.META_PROJECT_PARENT_TYPE);
     srb = srb.setQuery(this.matchChildQuery(projectName,
@@ -313,9 +324,7 @@ public class ElasticService {
             .addTransportAddress(new InetSocketTransportAddress(
                     new InetSocketAddress(getElasticIpAsString(),
                             Settings.ELASTIC_PORT)));
-
-    //check if the indices are up and running
-    if (!this.indexExists(client, Settings.META_DATASET_INDEX)) {
+        Client client = getClient();
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
@@ -372,14 +381,26 @@ public class ElasticService {
    * @return
    */
   private QueryBuilder matchProjectsDatasetsQuery(String searchTerm) {
+        //first part is the base condition
+        QueryBuilder firstPart = this.getParentBasePart();
+        QueryBuilder secondPart = this.getDescMetaPart(searchTerm);
 
-    //first part is the base condition
-    QueryBuilder firstPart = this.getParentBasePart();
-    QueryBuilder secondPart = this.getDescMetaPart(searchTerm);
-
-    /*
+        /*
      * The following boolean query is being applied in the parent documents
      * (operation && searchable) && (name || description || metadata)
+         */
+        QueryBuilder query = boolQuery()
+            .must(firstPart)
+            .must(secondPart);
+
+        return query;
+    }
+
+    /**
+     * Creates the base condition every matched document has to satisfy. It has to be an added document (operation = 0)
+     * and it has to be searchable (searchable = 1)
+     * <p/>
+     * @return
      */
     QueryBuilder query = boolQuery()
             .must(firstPart)
@@ -643,11 +664,47 @@ public class ElasticService {
         logger.log(Level.SEVERE, ResponseMessages.ELASTIC_SERVER_NOT_AVAILABLE);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_AVAILABLE);
-
-      }
+        return response.isExists();
     }
 
-    return addr;
-  }
+    /**
+     * Shuts down the client and clears the cache
+     * <p/>
+     * @param client
+     */
+    private void clientShutdown(Client client) {
+
+        client.admin().indices().clearCache(new ClearIndicesCacheRequest(
+            Settings.META_PROJECT_INDEX, Settings.META_DATASET_INDEX));
+
+        client.close();
+    }
+
+    /**
+     * Boots up a previously closed index
+     */
+    private void bootIndices(Client client) {
+
+        client.admin().indices().open(new OpenIndexRequest(
+            Settings.META_PROJECT_INDEX, Settings.META_DATASET_INDEX));
+    }
+
+    private String getElasticIpAsString() throws AppException {
+        String addr = settings.getElasticIp();
+
+        // Validate the ip address pulled from the variables
+        if (Ip.validIp(addr) == false) {
+            try {
+                InetAddress.getByName(addr);
+            } catch (UnknownHostException ex) {
+                logger.log(Level.SEVERE, ResponseMessages.ELASTIC_SERVER_NOT_AVAILABLE);
+                throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                    getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_AVAILABLE);
+
+            }
+        }
+
+        return addr;
+    }
 
 }
