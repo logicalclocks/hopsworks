@@ -28,7 +28,7 @@ import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.users.UserProjectDTO;
 
 @Path("/user")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserService {

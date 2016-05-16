@@ -14,8 +14,6 @@
 
 .BbcMainLayoutTeam .ui-widget-content {
   border-width: 0px;  
-  //overflow-y: auto;
-  // overflow-x: hidden;
   height: auto !important;
 }
 .BbcMainLayoutTeam::-webkit-scrollbar {
@@ -36,7 +34,6 @@
 .BbcMainLayout {
   text-align: center;
   /*min-height: 100%;*/
-  //height: auto !important;
 
   /*    display: -webkit-box;
       display: -moz-box;
@@ -49,8 +46,6 @@
   overflow-y: hidden;
   overflow-x: hidden;
   /*height: auto !important;*/
-  //overflow-y: auto;
-  //////////////////////
   /*    display: -webkit-box;
       display: -moz-box;
       display: -webkit-flex;
@@ -159,8 +154,6 @@
   display: inline-block;   
   vertical-align: middle;
   background-color: #2b2;
-  //background-image: linear-gradient(to bottom, #62c462, #51a351);
-  //color: #fff;
   text-shadow: 0 -1px 0 rgba(0,0,0,0.25);
   padding:4px 10px;
   border-radius:5px;
@@ -237,7 +230,6 @@
   width: 85px;
   height: 22px;
   display: inline-block;
-  //line-height: 0.6em;
   margin-top: 2px;
   margin-right: 2px;
   margin-bottom: 2px;
@@ -247,7 +239,6 @@
   vertical-align: middle;
   text-align: match-parent;
   cursor: pointer;
-  //background-repeat: repeat-x;
 }
 
 .page_title .button-add {
@@ -331,7 +322,6 @@
       -webkit-margin-start: 0px;
       -webkit-margin-end: 0px;
       -webkit-padding-start: 0px;*/
-  //float: left;
   /*    -webkit-margin-before: 1em;
       -webkit-margin-after: 1em;
       -webkit-margin-start: 0px;
@@ -368,7 +358,6 @@
 
 /*.span4 .nav {
     display:block;
-    //list-style-type: disc;
     -webkit-margin-before: 0px;
     -webkit-margin-after: 0px;
     -webkit-margin-start: 0px;
@@ -403,7 +392,6 @@
 
 /*.span4 ul {
     display:block;
-    //list-style-type: disc;
     -webkit-margin-before: 0px;
     -webkit-margin-after: 0px;
     -webkit-margin-start: 0px;
@@ -655,7 +643,6 @@ h6{
   border-color: rgba(0,0,0,0.1) rgba(0,0,0,0.1) rgba(0,0,0,0.25);
   filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
   border: 1px solid #bbb;
-  //border-bottom-color: #a2a2a2;
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
   border-radius: 4px;
@@ -721,7 +708,6 @@ h6{
     
     display: inline-block;
     width: 1168px !important;
-    //min-height: 401px;
     height: auto !important;
     padding: 0 0 0 0;
     margin: 0 0 0 0;
@@ -949,7 +935,6 @@ label{
 }*/
 
 .event-item {
-  //border-bottom: 1px solid #eee;
   width: 100%;
   height: 18px;
   border-bottom-width: 1px;
@@ -1044,7 +1029,6 @@ a:-webkit-any-link {
   max-width: 100%;
   width: auto;
   height: auto;
-  //vertical-align: middle;
   /*    border: 0;
       -ms-interpolation-mode: bicubic;*/
   width: 24px;
@@ -1166,7 +1150,6 @@ img .browser .s16 {
 
 /* #active li {
     display: list-item;
-    //text-align: -webkit-match-parent;
     padding-top: 0px;
     padding-right: 0px;
     padding-bottom: 0px;
@@ -1189,7 +1172,6 @@ img .browser .s16 {
 /*#nav li {
     
     display: list-item;
-    //text-align: -webkit-match-parent;
     padding-top: 0px;
     padding-right: 0px;
     padding-bottom: 0px;
@@ -1225,7 +1207,6 @@ img .browser .s16 {
   min-height: 20px;
   width: auto;
   height: auto;
-  //border-color: #CCC;
   border-bottom: 1px solid;
   border-bottom-color: rgba(0, 0, 0, 0.0470588);
   border-top: 1px solid #DDD;
@@ -1279,8 +1260,6 @@ img .browser .s16 {
 
   margin: 0 0 0 0;
   display: inline-block;
-  //list-style-type: disc;
-  //position: relative;
   float: left;
   width: 368px;
   height: 54px;
@@ -1298,8 +1277,6 @@ img .browser .s16 {
 
 .container{
   display: block;
-  //min-height: 2880px;
-  //min-height: 100%;
   height: auto !important;
   /*    margin-left: 300px;
       margin-right: 367.5px;*/
@@ -1322,8 +1299,6 @@ img .browser .s16 {
 .content{
   display: inline-block;
   width:100%;
-  //min-height: 2802px;
-  //min-height: 100%;
   height: auto !important;
   margin-top: 0px;
   margin-right: 0px;
@@ -1369,7 +1344,6 @@ img .browser .s16 {
 
 .study_content_list{
   display: block;
-  //height: 2802px;
   min-height: 100%;
   height: auto;
   margin-top: 0px;
@@ -1402,7 +1376,6 @@ img .browser .s16 {
 }
 
 .left{
-  //float: left;
   display: inline-block;
   width: 170px;
   height: 46px;
@@ -1517,7 +1490,6 @@ img .browser .s16 {
 .span8{
   display: block;
   width: 66%;
-  //min-height: 2802px;
   min-height: 100%;
   height: auto;
   float: left;
@@ -1528,7 +1500,6 @@ img .browser .s16 {
 .span9{
   display: block;
   width: 90%;
-  //min-height: 2802px;
   min-height: 600px;
   height: auto !important;
   float: left;
@@ -1557,7 +1528,6 @@ img .browser .s16 {
 }
 
 .filter-icon{
-  //background-position:-408px -144px
   display: block;
 }
 
@@ -1612,7 +1582,6 @@ img .browser .s16 {
   border-top-width: 1px;
   border: 1px solid #ccc;
   box-shadow: 0 0 0 3px #f1f1f1;
-  //float: left;
   position:initial;
   background-position-x: initial;
   background-position-y: initial;
@@ -1630,7 +1599,6 @@ img .browser .s16 {
 
 .study_panelGrid {
   display: block;
-  //background: #F9F9F9;
   width:470px;
   /*    min-height: 368px;*/
   min-height: 470px;
@@ -1660,7 +1628,6 @@ img .browser .s16 {
   border-top-width: 1px;
   border: 1px solid #ccc;
   box-shadow: 0 0 0 3px #f1f1f1;
-  //float: left;
   position:initial;
   background-position-x: initial;
   background-position-y: initial;
@@ -1697,7 +1664,6 @@ form {
 
 /*h3 {
     display: block;
-    //font-size: 0.83em;
     -webkit-margin-before: 1.67em;
     -webkit-margin-after: 1.67em;
     -webkit-margin-start: 0px;
@@ -1762,7 +1728,6 @@ a {
 }
 
 /*a:-webkit-any-link {
-    //color: -webkit-link;
     text-decoration: underline;
     cursor: auto;
 }*/
@@ -1961,7 +1926,6 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
   float: right !important;
   margin-left: 0px;
   display: inline-block;
-  //clear: both;
 }
 
 

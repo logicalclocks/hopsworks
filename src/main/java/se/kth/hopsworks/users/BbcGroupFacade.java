@@ -1,5 +1,7 @@
 package se.kth.hopsworks.users;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -28,6 +30,19 @@ public class BbcGroupFacade extends AbstractFacade<BbcGroup> {
   public BbcGroup findByGroupName(String name) {
     return em.createNamedQuery("BbcGroup.findByGroupName", BbcGroup.class)
             .setParameter("groupName", name).getSingleResult();
+  }
+  
+  public List<BbcGroup> findAll() {
+    List<BbcGroup> allGroups = em.createNamedQuery("BbcGroup.findAll", BbcGroup.class).getResultList();
+    List<BbcGroup> updated = new ArrayList<>();
+    if (allGroups != null) {
+        for (BbcGroup g : allGroups) {
+            if (g.getGroupName().compareTo("AGENT") != 0) {
+                updated.add(g);
+            }
+        }
+    }
+    return updated;
   }
 
 }
