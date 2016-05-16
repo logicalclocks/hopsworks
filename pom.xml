@@ -196,9 +196,6 @@
         </configuration>
       </plugin>
 
-      <!--start yeoman-maven-plugin -->
-
-      <!--end yeoman-maven-plugin -->
 <!--
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -289,6 +286,9 @@
 <profiles>
   <profile>
     <id>dist</id>
+    <activation>
+      <activeByDefault>true</activeByDefault>
+    </activation>    
     <!-- Profile for generating all maven artifacts and documentation. -->
     <build>
       <plugins>
