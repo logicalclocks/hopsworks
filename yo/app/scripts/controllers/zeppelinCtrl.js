@@ -29,7 +29,7 @@ angular.module('hopsWorksApp')
                   self.interpreters.push({interpreter: success.data.body[k], statusMsg: statusMsgs[(success.data.body[k].notRunning ? 0 : 1)]});
                 }
               }, function (error) {
-                console.log(error);
+                console.log('getInterpreterStatus-->',error);
               });
             };
 
@@ -40,7 +40,7 @@ angular.module('hopsWorksApp')
                 self.notesRefreshing = false;
               }, function (error) {
                 self.notesRefreshing = false;
-                console.log(error);
+                console.log('getNotesInProject-->',error);
               });
             };
 
@@ -71,15 +71,15 @@ angular.module('hopsWorksApp')
                 self.interpretersRefreshing = false;
               }, function (error) {
                 self.interpretersRefreshing = false;
-                console.log(error);
+                console.log('refresh-->',error);
               });
             };
 
             var init = function () {
+              self.connectedStatus = ZeppelinService.websocket().isConnected();
               getInterpreterStatus();
               getNotesInProject();
               $scope.tgState = true;
-              self.connectedStatus = ZeppelinService.websocket().isConnected();
             };
 
             self.stopInterpreter = function (interpreter) {
@@ -140,28 +140,16 @@ angular.module('hopsWorksApp')
               var op = payload.op;
               var data = payload.data;
               if (op === 'NOTE') {
+                init();
                 console.log('NOTE', data.note);
-              } else if (op === 'NEW_NOTE') {
-                console.log('NEW_NOTE', data.note.id);
               } else if (op === 'NOTES_INFO') {
+                init();
                 console.log('NOTES_INFO', data.note);
-              } else if (op === 'PARAGRAPH') {
-                console.log('PARAGRAPH', data);
-              } else if (op === 'PROGRESS') {
-                console.log('PROGRESS', data);
-              } else if (op === 'COMPLETION_LIST') {
-                console.log('COMPLETION_LIST', data);
-              } else if (op === 'ANGULAR_OBJECT_UPDATE') {
-                console.log('ANGULAR_OBJECT_UPDATE', data);
-              } else if (op === 'ANGULAR_OBJECT_REMOVE') {
-                console.log('ANGULAR_OBJECT_REMOVE', data);
-              }
+              } 
             });
-
+            
             ZeppelinService.websocket().ws.onOpen(function () {
               console.log('Websocket created');
-              //self.connectedStatus=true;
-              init();
             });
 
             ZeppelinService.websocket().ws.onError(function (event) {
@@ -172,6 +160,8 @@ angular.module('hopsWorksApp')
             ZeppelinService.websocket().ws.onClose(function (event) {
               console.log('close message: ', event);
               self.connectedStatus = false;
-            });
+            });  
+            
+            ZeppelinService.websocket().sendNewEvent({op: 'LIST_NOTES'});
 
           }]);

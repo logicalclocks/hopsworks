@@ -9,8 +9,8 @@ angular.module('hopsWorksApp')
             websocketCalls.sendNewEvent = function (data) {
               console.log('Send >> %o, %o', data.op, data);
               websocketCalls.ws.send(JSON.stringify(data));
-            };
-
+            };  
+            
             websocketCalls.isConnected = function () {
               return (websocketCalls.ws.socket.readyState === 1);
             };

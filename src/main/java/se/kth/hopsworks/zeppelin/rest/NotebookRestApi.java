@@ -634,6 +634,8 @@ public class NotebookRestApi {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not create notebook" + ex.getMessage());
     }
+    zeppelinConf.getNotebookServer().broadcastNote(note);
+    zeppelinConf.getNotebookServer().broadcastNoteList();
     return new JsonResponse(Status.OK, "", noteInfo).build();
   }
 }

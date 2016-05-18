@@ -797,6 +797,7 @@ public class NotebookServer implements
         p.setStatus(Status.ERROR);
       }
     }
+    broadcastNoteList();
   }
 
   /**
