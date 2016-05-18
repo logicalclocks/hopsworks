@@ -81,8 +81,7 @@ public final class SparkSetEnvironmentCommand extends YarnSetupCommand {
       env.put("SPARK_YARN_CACHE_FILES_FILE_SIZES", fileSizes.substring(0,
               fileSizes.length() - 1));
       env.put("SPARK_YARN_CACHE_FILES_VISIBILITIES", fileVisibilities.substring(
-              0,
-              fileVisibilities.length() - 1));
+              0, fileVisibilities.length() - 1));
     }
     if (archiveUris.length() > 1) {
       env.put("SPARK_YARN_CACHE_ARCHIVES", archiveUris.substring(0, archiveUris.
@@ -97,6 +96,7 @@ public final class SparkSetEnvironmentCommand extends YarnSetupCommand {
               substring(0,
                       archiveVisibilities.length() - 1));
     }
+    
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
             launchContext.getLocalResources(), env, launchContext.getCommands(),
             null, null, null);
