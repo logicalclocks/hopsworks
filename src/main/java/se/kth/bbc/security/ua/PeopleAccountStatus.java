@@ -3,7 +3,6 @@ package se.kth.bbc.security.ua;
 public enum PeopleAccountStatus {
 
 // Status of new Mobile users requests
-// Status of new Mobile users requests
   NEW_MOBILE_ACCOUNT(1),
 
   // Status of new Yubikey users requests

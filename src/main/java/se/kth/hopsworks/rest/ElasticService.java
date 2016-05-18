@@ -3,7 +3,6 @@ package se.kth.hopsworks.rest;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.security.CodeSource;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -50,14 +49,13 @@ import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.util.Ip;
 import se.kth.hopsworks.util.Settings;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import org.elasticsearch.threadpool.ThreadPool;
 
 /**
  *
  * @author vangelis
  */
 @Path("/elastic")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -81,7 +79,6 @@ public class ElasticService {
    * @param req
    * @return
    * @throws AppException
-   * @throws java.net.UnknownHostException
    */
   @GET
   @Path("globalsearch/{searchTerm}")
@@ -90,8 +87,7 @@ public class ElasticService {
   public Response globalSearch(
           @PathParam("searchTerm") String searchTerm,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException,
-          UnknownHostException {
+          @Context HttpServletRequest req) throws AppException {
 
     if (searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -99,17 +95,7 @@ public class ElasticService {
     }
 
     //some necessary client settings
-    final org.elasticsearch.common.settings.Settings settings
-            = org.elasticsearch.common.settings.Settings.settingsBuilder()
-            .put("client.transport.sniff", true) //being able to inspect other nodes 
-            .put("cluster.name", "hops")
-            .build();
-
-    String addr = getElasticIpAsString();
-    Client client = TransportClient.builder().settings(settings).build()
-            .addTransportAddress(new InetSocketTransportAddress(
-                    new InetSocketAddress(addr,
-                            Settings.ELASTIC_PORT)));
+    Client client = getClient();
 
     //check if the indices are up and running
     if (!this.indexExists(client, Settings.META_PROJECT_INDEX) || !this.
@@ -130,15 +116,6 @@ public class ElasticService {
      * SEARCHABLE BY DEFAULT. NEEDS REFACTORING
      */
     //hit the indices - execute the queries
-//    SearchResponse response
-//        = client.prepareSearch(Settings.META_PROJECT_INDEX,
-//            Settings.META_DATASET_INDEX).
-//        setTypes(Settings.META_PROJECT_PARENT_TYPE,
-//            Settings.META_DATASET_PARENT_TYPE)
-//        .setQuery(this.matchProjectsDatasetsQuery(searchTerm))
-//        //.setQuery(this.getDatasetComboQuery(searchTerm))
-//        .addHighlightedField("name")
-//        .execute().actionGet();
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_PROJECT_INDEX,
             Settings.META_DATASET_INDEX);
     srb = srb.setTypes(Settings.META_PROJECT_PARENT_TYPE,
@@ -150,10 +127,6 @@ public class ElasticService {
     SearchResponse response = futureResponse.actionGet();
 
     if (response.status().getStatus() == 200) {
-      //logger.log(Level.INFO, "Matched number of documents: {0}", response.
-      //getHits().
-      //totalHits());
-
       //construct the response
       List<ElasticHit> elasticHits = new LinkedList<>();
       if (response.getHits().getHits().length > 0) {
@@ -171,14 +144,23 @@ public class ElasticService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(searchResults).build();
     }
-
-    logger.log(Level.WARNING, "Elasticsearch error code: {0}",
-            response.status().getStatus());
-
+    logger.log(Level.WARNING, "Elasticsearch error code: {0}", response.status().getStatus());
     //something went wrong so throw an exception
     this.clientShutdown(client);
     throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
+  }
+
+  private Client getClient() throws AppException {
+    final org.elasticsearch.common.settings.Settings settings
+            = org.elasticsearch.common.settings.Settings.settingsBuilder()
+            .put("client.transport.sniff", true) //being able to retrieve other nodes 
+            .put("cluster.name", "hops").build();
+
+    return TransportClient.builder().settings(settings).build()
+            .addTransportAddress(new InetSocketTransportAddress(
+                    new InetSocketAddress(getElasticIpAsString(),
+                            Settings.ELASTIC_PORT)));
   }
 
   /**
@@ -190,7 +172,6 @@ public class ElasticService {
    * @param req
    * @return
    * @throws AppException
-   * @throws java.net.UnknownHostException
    */
   @GET
   @Path("projectsearch/{projectName}/{searchTerm}")
@@ -200,45 +181,22 @@ public class ElasticService {
           @PathParam("projectName") String projectName,
           @PathParam("searchTerm") String searchTerm,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException,
-          UnknownHostException {
-
+          @Context HttpServletRequest req) throws AppException {
     if (projectName == null || searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-
-    final org.elasticsearch.common.settings.Settings settings
-            = org.elasticsearch.common.settings.Settings.settingsBuilder()
-            .put("client.transport.sniff", true) //being able to retrieve other nodes 
-            .put("cluster.name", "hops").build();
-
-    //initialize the client
-    Client client = TransportClient.builder().settings(settings).build()
-            .addTransportAddress(new InetSocketTransportAddress(
-                    new InetSocketAddress(getElasticIpAsString(),
-                            Settings.ELASTIC_PORT)));
+    Client client = getClient();
     //check if the indices are up and running
     if (!this.indexExists(client, Settings.META_PROJECT_INDEX)) {
-
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
     } else if (!this.typeExists(client, Settings.META_PROJECT_INDEX,
             Settings.META_PROJECT_PARENT_TYPE)) {
-//        Settings.META_PROJECT_CHILD_TYPE)) {
-
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
     }
 
-    //hit the indices - execute the queries
-//    SearchResponse response
-//        = client.prepareSearch(Settings.META_PROJECT_INDEX)
-//        .setTypes(Settings.META_PROJECT_CHILD_TYPE)
-//        .setQuery(this.matchChildQuery(projectName,
-//            Settings.META_PROJECT_PARENT_TYPE, searchTerm))
-//        .addHighlightedField("name")
-//        .execute().actionGet();
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_PROJECT_INDEX);
     srb = srb.setTypes(Settings.META_PROJECT_PARENT_TYPE);
     srb = srb.setQuery(this.matchChildQuery(projectName,
@@ -249,9 +207,6 @@ public class ElasticService {
     SearchResponse response = futureResponse.actionGet();
 
     if (response.status().getStatus() == 200) {
-      //logger.log(Level.INFO, "Matched number of documents: {0}", response.
-      //getHits().
-      //totalHits());
 
       //construct the response
       List<ElasticHit> elasticHits = new LinkedList<>();
@@ -285,7 +240,6 @@ public class ElasticService {
    * @param req
    * @return
    * @throws AppException
-   * @throws java.net.UnknownHostException
    */
   @GET
   @Path("datasetsearch/{datasetName}/{searchTerm}")
@@ -295,25 +249,14 @@ public class ElasticService {
           @PathParam("datasetName") String datasetName,
           @PathParam("searchTerm") String searchTerm,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException,
-          UnknownHostException {
+          @Context HttpServletRequest req) throws AppException {
 
     if (datasetName == null || searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
 
-    final org.elasticsearch.common.settings.Settings settings
-            = org.elasticsearch.common.settings.Settings.settingsBuilder()
-            .put("client.transport.sniff", true) //being able to retrieve other nodes 
-            .put("cluster.name", "hops").build();
-
-    //initialize the client
-    Client client = TransportClient.builder().settings(settings).build()
-            .addTransportAddress(new InetSocketTransportAddress(
-                    new InetSocketAddress(getElasticIpAsString(),
-                            Settings.ELASTIC_PORT)));
-
+    Client client = getClient();
     //check if the indices are up and running
     if (!this.indexExists(client, Settings.META_DATASET_INDEX)) {
 
@@ -337,10 +280,6 @@ public class ElasticService {
     SearchResponse response = futureResponse.actionGet();
 
     if (response.status().getStatus() == 200) {
-      //logger.log(Level.INFO, "Matched number of documents: {0}", response.
-      //getHits().
-      //totalHits());
-
       //construct the response
       List<ElasticHit> elasticHits = new LinkedList<>();
       if (response.getHits().getHits().length > 0) {
@@ -358,7 +297,6 @@ public class ElasticService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(searchResults).build();
     }
-
     this.clientShutdown(client);
     throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
