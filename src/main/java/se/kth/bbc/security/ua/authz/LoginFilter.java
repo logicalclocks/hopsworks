@@ -53,8 +53,7 @@ public class LoginFilter extends PolicyDecisionPoint implements Filter {
       } else if (isInAuditorRole(user)) {
         response.sendRedirect(contextPath
                 + "/security/protected/audit/adminAuditIndex.xhtml");
-      } else if (isInDataProviderRole(user) || isInResearcherRole(user)
-              || isInGuestRole(user)) {
+      } else if (isInUserRole(user)) {
         response.sendRedirect(contextPath + "/#home");
       }
     } else {

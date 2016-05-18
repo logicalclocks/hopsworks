@@ -161,6 +161,7 @@ public class ResetPassword implements Serializable {
       // make the account pending until it will be reset by user upon first login
       // mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
       // update the status of user to active
+
       people.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
 
       // reset the old password with a new one
@@ -212,9 +213,7 @@ public class ResetPassword implements Serializable {
       // Reset the old password with a new one
       mgr.resetPassword(people, DigestUtils.sha256Hex(passwd1));
 
-      mgr.
-              updateStatus(people, PeopleAccountStatus.ACTIVATED_ACCOUNT.
-                      getValue());
+      mgr.updateStatus(people, PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
 
       // Send email    
       String message = UserAccountsEmailMessages.buildResetMessage();

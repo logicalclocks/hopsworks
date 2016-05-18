@@ -24,7 +24,7 @@
             <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
         </ui:insert>
 
-        <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.SYSAdmin}">
+        <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">
 
             <p:layoutUnit id="centerLayout" position="center">
 
@@ -211,9 +211,6 @@
                             </p:dataTable>
                         </h:form>
 
-                        <script>
-                            userMgmtTabview.select(#{roleEnforcementPoint.tabIndex});
-                        </script>
                     </div>
                 </div>
             </p:layoutUnit>

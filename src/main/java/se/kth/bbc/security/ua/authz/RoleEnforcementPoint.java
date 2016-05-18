@@ -71,10 +71,10 @@ public class RoleEnforcementPoint implements Serializable {
    * <p>
    * @return
    */
-  public boolean isSYSAdmin() {
+  public boolean isAdmin() {
     if (getRequest().getRemoteUser()!= null) {
       Users p = userManager.findByEmail(getRequest().getRemoteUser());
-        return userManager.findGroups(p.getUid()).contains("SYS_ADMIN");
+        return userManager.findGroups(p.getUid()).contains("HOPS_ADMIN");
     } return false;
   }
 
@@ -83,37 +83,18 @@ public class RoleEnforcementPoint implements Serializable {
    * <p>
    * @return
    */
-  public boolean isResearcher() {
-    Users p = userManager.findByEmail(getRequest().getRemoteUser());
-    List<String> roles = userManager.findGroups(p.getUid());
-    return (roles.contains("BBC_RESEARCHER") || roles.contains("BBC_ADMIN")
-            || roles.contains("BBC_USER"));
-  }
-
-  /**
-   * Return study owner role
-   * <p>
-   * @return
-   */
-  public boolean isBBCAdmin() {
-    Users p = userManager.findByEmail(getRequest().getRemoteUser());
-    return userManager.findGroups(p.getUid()).contains("BBC_ADMIN");
-  }
-
-  public boolean isAnyAuthorizedResearcherRole() {
+  public boolean isUser() {
 
     Users p = userManager.findByEmail(getRequest().getRemoteUser());
     List<String> roles = userManager.findGroups(p.getUid());
-    return (roles.contains("BBC_ADMIN") || roles.
-            contains("BBC_RESEARCHER") || roles.contains("BBC_USER") || roles.
-            contains("BBC_GUEST"));
+    return (roles.contains("HOPS_USER"));
   }
 
   public boolean isAuditorRole() {
 
     Users p = userManager.findByEmail(getRequest().getRemoteUser());
     List<String> roles = userManager.findGroups(p.getUid());
-    return (roles.contains("AUDITOR") || roles.contains("SYS_ADMIN"));
+    return (roles.contains("AUDITOR") || roles.contains("HOPS_ADMIN"));
   }
   
   public boolean isAgentRole() {
@@ -128,14 +109,14 @@ public class RoleEnforcementPoint implements Serializable {
 
     Users p = userManager.findByEmail(getRequest().getRemoteUser());
     List<String> roles = userManager.findGroups(p.getUid());
-    return (roles.contains("AUDITOR") && ! roles.contains("SYS_ADMIN"));
+    return (roles.contains("AUDITOR") && ! roles.contains("HOPS_ADMIN"));
   }
   /**
    *
    * @return
    */
   public boolean checkForRequests() {
-    if (isSYSAdmin()) {
+    if (isAdmin()) {
       //return false if no requests
       open_requests = !(userManager.findAllByStatus(
               PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()).isEmpty())

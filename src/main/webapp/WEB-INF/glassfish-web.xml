@@ -10,13 +10,13 @@
   -->
   <property name="allowLinking" value="true"/>
   <security-role-mapping>
-    <role-name>SYS_ADMIN</role-name>
-    <group-name>SYS_ADMIN</group-name>
-    <principal-name>CN=Ali Gholami,OU=PDC,O=KTH,L=Stockholm,ST=Stockholm,C=SE</principal-name>
+    <role-name>HOPS_ADMIN</role-name>
+    <group-name>HOPS_ADMIN</group-name>
+    <principal-name>CN=Hopsworks,OU=PDC,O=KTH,L=Stockholm,ST=Stockholm,C=SE</principal-name>
   </security-role-mapping>
   <security-role-mapping>
-    <role-name>BBC_USER</role-name>
-    <group-name>BBC_USER</group-name>
+    <role-name>HOPS_USER</role-name>
+    <group-name>HOPS_USER</group-name>
   </security-role-mapping>
   <security-role-mapping>
     <role-name>AGENT</role-name>
@@ -24,23 +24,7 @@
   </security-role-mapping>
   <parameter-encoding default-charset="UTF-8"/>
   <security-role-mapping>
-    <role-name>BBC_RESEARCHER</role-name>
-    <group-name>BBC_RESEARCHER</group-name>
-  </security-role-mapping>
-  <security-role-mapping>
-    <role-name>BBC_GUEST</role-name>
-    <group-name>BBC_GUEST</group-name>
-  </security-role-mapping>
-  <security-role-mapping>
     <role-name>AUDITOR</role-name>
     <group-name>AUDITOR</group-name>
-  </security-role-mapping>
-  <security-role-mapping>
-    <role-name>BBC_ADMIN</role-name>
-    <group-name>BBC_ADMIN</group-name>
-  </security-role-mapping>
-  <security-role-mapping>
-    <role-name>ETHICS_BOARD</role-name>
-    <group-name>ETHICS_BOARD</group-name>
   </security-role-mapping>
 </glassfish-web-app>

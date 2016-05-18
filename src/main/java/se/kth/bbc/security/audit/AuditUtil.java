@@ -201,11 +201,11 @@ public class AuditUtil {
   public static String getUserURL(HttpServletRequest req){
   
     String domain = req.getRequestURL().toString();
-    String cpath = req.getContextPath().toString();
+    String cpath = req.getContextPath();
 
     String url = domain.substring(0, domain.indexOf(cpath));
     return url + cpath;
-  }
+  } 
   
   
   

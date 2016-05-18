@@ -18,6 +18,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String jarPath;
   private String mainClass;
   private String args;
+  private String historyServerIp;
 
   private int numberOfExecutors = 1;
   private int executorCores = 1;
@@ -29,6 +30,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   protected static final String KEY_NUMEXECS = "NUMEXECS";
   protected static final String KEY_EXECCORES = "EXECCORES";
   protected static final String KEY_EXECMEM = "EXECMEM";
+  protected static final String KEY_HISTORYSERVER = "HISTORYSERVER";
 
   public SparkJobConfiguration() {
     super();
@@ -154,6 +156,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     obj.set(KEY_EXECMEM, ""+executorMemory);
     obj.set(KEY_NUMEXECS, "" + numberOfExecutors);
     obj.set(KEY_TYPE, JobType.SPARK.name());
+    obj.set(KEY_HISTORYSERVER, getHistoryServerIp());
     return obj;
   }
 
@@ -162,7 +165,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
           IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
-    String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs;
+    String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs, hs;
     int jsonExecmem, jsonExeccors;
     try {
       String jsonType = json.getString(KEY_TYPE);
@@ -178,6 +181,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       jsonExeccors = Integer.parseInt(json.getString(KEY_EXECCORES));
       jsonExecmem = Integer.parseInt(json.getString(KEY_EXECMEM));
       jsonNumexecs = json.getString(KEY_NUMEXECS);
+      hs = json.getString(KEY_HISTORYSERVER);
     } catch (Exception e) {
       throw new IllegalArgumentException(
               "Cannot convert object into SparkJobConfiguration.", e);
@@ -192,6 +196,15 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.jarPath = jsonJarpath;
     this.mainClass = jsonMainclass;
     this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
+    this.historyServerIp = hs;
+  }
+
+  public String getHistoryServerIp() {
+    return historyServerIp;
+  }
+
+  public void setHistoryServerIp(String historyServerIp) {
+    this.historyServerIp = historyServerIp;
   }
 
 }

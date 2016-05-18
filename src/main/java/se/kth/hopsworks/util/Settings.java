@@ -25,6 +25,7 @@ public class Settings {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_SPARK_HISTORY_SERVER_IP = "spark_history_server_ip";
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
@@ -108,6 +109,7 @@ public class Settings {
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
+      SPARK_HISTORY_SERVER_IP = setIpVar(VARIABLE_SPARK_HISTORY_SERVER_IP, SPARK_HISTORY_SERVER_IP);	
       ZK_IP = setIpVar(VARIABLE_ZK_IP, ZK_IP);
       ZK_USER = setUserVar(VARIABLE_ZK_USER, ZK_USER);
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
@@ -422,7 +424,7 @@ public class Settings {
   public static String getSparkDefaultClasspath(String sparkDir) {
     return sparkDefaultClasspath(sparkDir);
   }
-  
+
   public static String getHdfsRootPath(String projectname) {
     return "/" + DIR_ROOT + "/" + projectname + "/";
   }
@@ -463,8 +465,16 @@ public class Settings {
     checkCache();
     return ELASTIC_IP;
   }
-
+	
   public static final int ELASTIC_PORT = 9300;
+
+   // Spark
+  private String SPARK_HISTORY_SERVER_IP = "127.0.0.1";
+
+  public synchronized String getSparkHistoryServerIp() {
+    checkCache();
+    return SPARK_HISTORY_SERVER_IP;
+  }  
   
   public static final int ZK_IP_PORT = 2181; 
  
