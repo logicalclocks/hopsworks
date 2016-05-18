@@ -20,9 +20,11 @@ import java.util.Collections;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import se.kth.bbc.jobs.yarn.YarnRunner;
+import se.kth.hopsworks.util.Settings;
 
 public class HopsKafkaConsumer extends ShutdownableThread {
     private static final Logger logger = Logger.getLogger(HopsKafkaConsumer.class.getName());
@@ -30,6 +32,9 @@ public class HopsKafkaConsumer extends ShutdownableThread {
     private final KafkaConsumer<Integer, String> consumer;
     private final String topic;
 
+    @EJB
+    Settings settings;
+    
     public HopsKafkaConsumer(String topic) {
         super("KafkaConsumerExample", false);
         
@@ -43,13 +48,11 @@ public class HopsKafkaConsumer extends ShutdownableThread {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
         
         //configure the ssl parameters
-//        props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-//        props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/var/private/client/kafka.client.truststore.jks");
-//        props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "kafka1");
-//        props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "kafka1");
-//        props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/var/private/client/kafka.client.keystore.jks");
-//        props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "kafka1");
-//        
+        props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+        props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, Settings.KAFKA_T_CERTIFICATE_LOCATION);
+        props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "pass:adminpw");
+        props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, Settings.KAFKA_K_CERTIFICATE_LOCATION);
+        props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "pass:adminpw"); 
         
 
         consumer = new KafkaConsumer<>(props);

@@ -38,13 +38,12 @@ public class HopsKafkaProducer extends Thread {
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         
         //configure the ssl parameters
-//        props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-//        props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/var/private/client/kafka.client.truststore.jks");
-//        props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "kafka1");
-//        props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "kafka1");        
-//        props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/var/private/client/kafka.client.keystore.jks");
-//        props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "kafka1");
-        
+        props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+        props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, Settings.KAFKA_T_CERTIFICATE_LOCATION);
+        props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "pass:adminpw");
+        props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, Settings.KAFKA_K_CERTIFICATE_LOCATION);
+        props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "pass:adminpw");        
+
         producer = new KafkaProducer<>(props);
         this.topic = topic;
         this.isAsync = isAsync;

@@ -555,6 +555,9 @@ public class Settings {
   //Kakfa certificate
   public static final String KAFKA_K_CERTIFICATE = "kafka_k_certificate";
   public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
+
+  public static String KAFKA_K_CERTIFICATE_LOCATION="";
+  public static String KAFKA_T_CERTIFICATE_LOCATION="";
   
   //Project creation: default datasets
   public static enum DefaultDataset {

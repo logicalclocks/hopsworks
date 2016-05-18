@@ -1,10 +1,10 @@
 package io.hops.kafka;
 
-import io.hops.metadata.hdfs.entity.User;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import se.kth.bbc.project.*;
@@ -14,8 +14,14 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.ejb.Remote;
+import javax.ejb.Schedule;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.ejb.Timeout;
+import javax.ejb.Timer;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
@@ -38,6 +44,11 @@ import se.kth.hopsworks.user.model.Users;
 
 @Stateless
 public class KafkaFacade {
+
+    private final static Logger logger = Logger.getLogger(KafkaFacade.class.
+            getName());
+    
+//    private final static zookTimer = 
 
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
@@ -237,13 +248,13 @@ public class KafkaFacade {
     }
 
     public TopicDefaultValueDTO topicDefaultValues() throws AppException {
-        
+
         Set<String> brokers = getBrokerList();
 
         TopicDefaultValueDTO valueDto = new TopicDefaultValueDTO(
                 settings.getKafkaDefaultNumReplicas(),
                 settings.getKafkaDefaultNumPartitions(),
-                brokers.size()+"");
+                brokers.size() + "");
 
         return valueDto;
     }
@@ -301,7 +312,7 @@ public class KafkaFacade {
 
         em.remove(pt);
         // remove the associated acl from database; 
-        
+
         
     }
 
@@ -325,13 +336,13 @@ public class KafkaFacade {
 
         return shareProjectDtos;
     }
- 
+
     public List<HdfsUserDTO> aclUsers(Integer projectId, String topicName) throws AppException {
 
         List<HdfsUserDTO> aclUsers = new ArrayList<>();
         Set<String> allTopicProjects = new HashSet();
         String projectName;
-     
+
         //get the owner project name 
         Project project = em.find(Project.class, projectId);
         if (project == null) {
@@ -389,12 +400,12 @@ public class KafkaFacade {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
                     "Topic does not belong to the project.");
         }
-        
+
         //fetch the user name from database       
         TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail", Users.class);
         query.setParameter("email", userEmail);
         List<Users> users = query.getResultList();
-        
+
         if (users == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "User email does not exist.");
@@ -498,7 +509,7 @@ public class KafkaFacade {
     }
 
     private Set<String> getTopicList() throws Exception {
-        
+
         zkBrokerList = getBrokerList();
 
         for (String seed : zkBrokerList) {
@@ -612,11 +623,80 @@ public class KafkaFacade {
 
         String ip = endpoint.split(":")[1];
         return Integer.parseInt(ip);
-
+        
     }
 
+    @Stateless
+    public class ZKTimer implements TimerService {
+        
+        @Resource
+        private SessionContext sessionContext;
+
+        @Override
+        public void scheduleTimer(long interval) {
+            sessionContext.getTimerService()
+                    .createTimer(interval, "monitors topic in zk and db");
+        }
+
+        @Schedule(second="*/10", minute="*", hour="*")
+        public void execute(Timer timer) throws AppException {
+
+            Set<String> zkTopics = Collections.EMPTY_SET;
+
+            try {
+                zkTopics = getTopicList();
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Cannot retrieve topic list from Zookeeper");
+            }
+
+            List<ProjectTopics> dbProjectTopics = em.createNamedQuery(
+                    "ProjectTopics.findAll").getResultList();
+
+            Set<String> dbTopics = Collections.EMPTY_SET;
+
+            for (ProjectTopics pt : dbProjectTopics) {
+                dbTopics.add(pt.getProjectTopicsPK().getTopicName());
+            }
+
+            Set<String> temp = zkTopics;
+            zkTopics.removeAll(dbTopics);
+
+            //remove topics from database which do not exist in zookeeper
+            if (!zkTopics.isEmpty()) {
+                for (String topicName : zkTopics) {
+                    ProjectTopics removeTopic = em.createNamedQuery(
+                            "ProjectTopics.findByTopicName", ProjectTopics.class)
+                            .setParameter("topicName", topicName).getSingleResult();
+                    em.remove(removeTopic);
+                }
+            }
+
+            //remove topics from zookeeper which do not exist in database
+            dbTopics.removeAll(temp);
+
+            if (!dbTopics.isEmpty()) {
+                for (String topicName : dbTopics) {
+                    ZkClient zkClient = new ZkClient(getIp(settings.getZkIp()).getHostName(),
+                            10 * 1000, 29 * 1000, ZKStringSerializer$.MODULE$);
+                    ZkConnection zkConnection = new ZkConnection(settings.getZkIp());
+                    ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
+
+                    try {
+                        AdminUtils.deleteTopic(zkUtils, topicName);
+                    } catch (TopicAlreadyMarkedForDeletionException ex) {
+                        logger.log(Level.SEVERE, "************************** "
+                                + "{0} is already marked for deletion", new Object[]{topicName});
+                    } finally {
+                        zkClient.close();
+                    }
+                }
+            }
+        }
+    }
+
+    @Remote
+    public interface TimerService {
+
+        void scheduleTimer(long interval);
+    }
 }
-
-
-
-

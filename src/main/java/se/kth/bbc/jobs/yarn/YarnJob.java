@@ -163,16 +163,22 @@ public abstract class YarnJob extends HopsJob {
                    
               }
               try{
-                kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(
-                        "/srv/glassfish/kafkacerts/" +
+                
+                String keyStorePath = "/srv/glassfish/kafkacerts/" +
                                 projectService.getProject().getId()+ "__" +
                                 projectService.getProject().getOwner().getUid() +
-                                "__kstore.jks"));
-                kafkaCerts.put(Settings.KAFKA_T_CERTIFICATE, new File(
-                        "/srv/glassfish/kafkacerts/" +
+                                "__kstore.jks";
+                String trustStorePath = "/srv/glassfish/kafkacerts/" +
                                 projectService.getProject().getId()+ "__" +
                                 projectService.getProject().getOwner().getUid() +
-                                "__tstore.jks"));
+                                "__tstore.jks";
+                  
+                kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(keyStorePath));                         
+                kafkaCerts.put(Settings.KAFKA_T_CERTIFICATE, new File(trustStorePath));
+
+                Settings.KAFKA_K_CERTIFICATE_LOCATION = keyStorePath;
+                Settings.KAFKA_T_CERTIFICATE_LOCATION = trustStorePath;
+                
                 if(projectLocalResources == null){
                    projectLocalResources = new HashMap<>();
                 }

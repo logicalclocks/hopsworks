@@ -296,7 +296,7 @@ public class KafkaService {
     @Path("/aclUsers/topic/{topicName}")
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-    public Response aclUsers( @PathParam("toipcName") String topicName,
+    public Response aclUsers( @PathParam("topicName") String topicName,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
 
