@@ -25,6 +25,7 @@ public class Settings {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_SPARK_HISTORY_SERVER_IP = "spark_history_server_ip";
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
@@ -100,6 +101,7 @@ public class Settings {
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
+      SPARK_HISTORY_SERVER_IP = setIpVar(VARIABLE_SPARK_HISTORY_SERVER_IP, SPARK_HISTORY_SERVER_IP);
       CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
       HIWAY_DIR = setDirVar(VARIABLE_HIWAY_DIR, HIWAY_DIR);
       YARN_DEFAULT_QUOTA = setDirVar(VARIABLE_YARN_DEFAULT_QUOTA, YARN_DEFAULT_QUOTA);
@@ -443,10 +445,20 @@ public class Settings {
 
   public static final int ELASTIC_PORT = 9300;
 
+  
+  // Spark
+  private String SPARK_HISTORY_SERVER_IP = "127.0.0.1";
+
+  public synchronized String getSparkHistoryServerIp() {
+    checkCache();
+    return SPARK_HISTORY_SERVER_IP;
+  }  
+  
   // Hopsworks
   public static final Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERNAME_SEPARATOR = "__";
   public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
+  public static final String CA_DIR = "/srv/glassfish/domain1/config/ca/intermediate/";
   public static final int USERNAME_LEN = 8;
   public static final int MAX_USERNAME_SUFFIX = 99;
   public static final int MAX_RETRIES = 500;

@@ -20,25 +20,22 @@ import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.hopsworks.util.Settings;
 
 /**
-* All classes in this package contain code taken from
-* https://github.com/apache/hadoop-common/blob/trunk/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-distributedshell/src/main/java/org/apache/hadoop/yarn/applications/distributedshell/Client.java?source=cc
-* and
-* https://github.com/hortonworks/simple-yarn-app
-* and
-* https://github.com/yahoo/storm-yarn/blob/master/src/main/java/com/yahoo/storm/yarn/StormOnYarn.java
-*
-* The Flink jar is uploaded to HDFS by this client.
-* The application master and all the TaskManager containers get the jar file downloaded
-* by YARN into their local fs.
-*
-*/
+ * All classes in this package contain code taken from
+ * https://github.com/apache/hadoop-common/blob/trunk/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-distributedshell/src/main/java/org/apache/hadoop/yarn/applications/distributedshell/Client.java?source=cc
+ * and https://github.com/hortonworks/simple-yarn-app and
+ * https://github.com/yahoo/storm-yarn/blob/master/src/main/java/com/yahoo/storm/yarn/StormOnYarn.java
+ *
+ * The Flink jar is uploaded to HDFS by this client. The application master and all the TaskManager containers get the
+ * jar file downloaded by YARN into their local fs.
+ *
+ */
 public class FlinkYarnRunnerBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(FlinkYarnRunnerBuilder.class);
 
     /**
-     * Constants, all starting with ENV_ are used as environment variables to
-     * pass values from the Client to the Application Master.
+     * Constants, all starting with ENV_ are used as environment variables to pass values from the Client to the
+     * Application Master.
      */
     public final static String ENV_TM_MEMORY = "_CLIENT_TM_MEMORY";
     public final static String ENV_TM_COUNT = "_CLIENT_TM_COUNT";
@@ -51,9 +48,9 @@ public class FlinkYarnRunnerBuilder {
     public static final String ENV_DETACHED = "_DETACHED";
     public static final String ENV_STREAMING_MODE = "_STREAMING_MODE";
     public static final String ENV_DYNAMIC_PROPERTIES = "_DYNAMIC_PROPERTIES";
-	private static final String CONFIG_FILE_NAME = "flink-conf.yaml";
-	public static final String CONFIG_FILE_LOGBACK_NAME = "logback.xml";
-	public static final String CONFIG_FILE_LOG4J_NAME = "log4j.properties";
+    private static final String CONFIG_FILE_NAME = "flink-conf.yaml";
+    public static final String CONFIG_FILE_LOGBACK_NAME = "logback.xml";
+    public static final String CONFIG_FILE_LOG4J_NAME = "log4j.properties";
     /**
      * Minimum memory requirements, checked by the Client.
      */
@@ -61,12 +58,12 @@ public class FlinkYarnRunnerBuilder {
     private static final int MIN_TM_MEMORY = 768;
 
     //Jar paths for AM and app
-     private final String appJarPath, mainClass;
-     //Optional parameters
-     private final List<String> jobArgs = new ArrayList<>();
+    private final String appJarPath, mainClass;
+    //Optional parameters
+    private final List<String> jobArgs = new ArrayList<>();
     /**
-     * Files (usually in a distributed file system) used for the YARN session of
-     * Flink. Contains configuration files and jar files.
+     * Files (usually in a distributed file system) used for the YARN session of Flink. Contains configuration files and
+     * jar files.
      */
     private Path sessionFilesDir;
 
@@ -91,15 +88,15 @@ public class FlinkYarnRunnerBuilder {
     public FlinkYarnRunnerBuilder(String appJarPath, String mainClass) {
         if (appJarPath == null || appJarPath.isEmpty()) {
             throw new IllegalArgumentException(
-              "Path to application jar cannot be empty!");
-         }
+                "Path to application jar cannot be empty!");
+        }
         if (mainClass == null || mainClass.isEmpty()) {
             throw new IllegalArgumentException(
-                  "Name of the main class cannot be empty!");
+                "Name of the main class cannot be empty!");
         }
         this.appJarPath = appJarPath;
         this.mainClass = mainClass;
-        
+
     }
 
     public FlinkYarnRunnerBuilder addAllJobArgs(String[] jobArgs) {
@@ -107,10 +104,11 @@ public class FlinkYarnRunnerBuilder {
         return this;
     }
     //@Override
+
     public void setJobManagerMemory(int memoryMb) {
         if (memoryMb < MIN_JM_MEMORY) {
             throw new IllegalArgumentException("The JobManager memory (" + memoryMb + ") is below the minimum required memory amount "
-                    + "of " + MIN_JM_MEMORY + " MB");
+                + "of " + MIN_JM_MEMORY + " MB");
         }
         this.jobManagerMemoryMb = memoryMb;
     }
@@ -119,11 +117,10 @@ public class FlinkYarnRunnerBuilder {
     public void setTaskManagerMemory(int memoryMb) {
         if (memoryMb < MIN_TM_MEMORY) {
             throw new IllegalArgumentException("The TaskManager memory (" + memoryMb + ") is below the minimum required memory amount "
-                    + "of " + MIN_TM_MEMORY + " MB");
+                + "of " + MIN_TM_MEMORY + " MB");
         }
         this.taskManagerMemoryMb = memoryMb;
     }
-
 
     //@Override
     public void setTaskManagerSlots(int slots) {
@@ -186,7 +183,7 @@ public class FlinkYarnRunnerBuilder {
     //@Override
     public void setShipFiles(List<File> shipFiles) {
         for (File shipFile : shipFiles) {
-			// remove uberjar from ship list (by default everything in the lib/ folder is added to
+            // remove uberjar from ship list (by default everything in the lib/ folder is added to
             // the list of files to ship, but we handle the uberjar separately.
             if (!(shipFile.getName().startsWith("flink-dist") && shipFile.getName().endsWith("jar"))) {
                 this.shipFiles.add(shipFile);
@@ -210,7 +207,7 @@ public class FlinkYarnRunnerBuilder {
         }
         customName = name;
     }
-    
+
     public void isReadyForDeployment() throws YarnDeploymentException {
         if (taskManagerCount <= 0) {
             throw new YarnDeploymentException("Taskmanager count must be positive");
@@ -227,10 +224,10 @@ public class FlinkYarnRunnerBuilder {
 
         // check if required Hadoop environment variables are set. If not, warn user
         if (System.getenv(Settings.ENV_KEY_HADOOP_CONF_DIR) == null
-                && System.getenv(Settings.ENV_KEY_YARN_CONF) == null) {
+            && System.getenv(Settings.ENV_KEY_YARN_CONF) == null) {
             LOG.warn("Neither the HADOOP_CONF_DIR nor the YARN_CONF_DIR environment variable is set."
-                    + "The Flink YARN Client needs one of these to be set to properly load the Hadoop "
-                    + "configuration for accessing YARN.");
+                + "The Flink YARN Client needs one of these to be set to properly load the Hadoop "
+                + "configuration for accessing YARN.");
         }
     }
 
@@ -254,26 +251,25 @@ public class FlinkYarnRunnerBuilder {
         return detached;
     }
 
-    
     /**
-     * This method will block until the ApplicationMaster/JobManager have been
-     * deployed on YARN.
+     * This method will block until the ApplicationMaster/JobManager have been deployed on YARN.
+     *
      * @param project
      * @param hadoopDir
      * @param flinkUser
      * @param flinkDir
      * @param nameNodeIpPort
-     * @return 
-     * @throws java.io.IOException 
+     * @return
+     * @throws java.io.IOException
      */
     protected YarnRunner getYarnRunner(String project, final String flinkUser,
-            String hadoopDir, final String flinkDir, 
-            final String nameNodeIpPort) throws IOException {
+        String hadoopDir, final String flinkDir,
+        final String nameNodeIpPort) throws IOException {
         isReadyForDeployment();
 
         //Create the YarnRunner builder for Flink, proceed with setting values
-        YarnRunner.Builder builder = new YarnRunner.Builder(flinkDir+"/flink.jar", "flink.jar");
-         
+        YarnRunner.Builder builder = new YarnRunner.Builder(flinkDir + "/flink.jar", "flink.jar");
+
         //Set Classpath and Jar Path
         String flinkClasspath = Settings.getFlinkDefaultClasspath(flinkDir);
         String hdfsFlinkJarPath = Settings.getHdfsFlinkJarPath(flinkUser);
@@ -283,25 +279,21 @@ public class FlinkYarnRunnerBuilder {
             + Settings.PROJECT_STAGING_DIR + File.separator
             + YarnRunner.APPID_PLACEHOLDER;
         builder.localResourcesBasePath(stagingPath);
-        
+
         //Add Flink jar
         builder.addLocalResource(Settings.FLINK_LOCRSC_SPARK_JAR, hdfsFlinkJarPath,
-                false);
+            false);
         //Add app jar
         builder.addLocalResource(Settings.FLINK_LOCRSC_APP_JAR, appJarPath,
             !appJarPath.startsWith("hdfs:"));
-    
-    
-    	// ------------------ Add dynamic properties to local flinkConfiguraton ------
+
+        // ------------------ Add dynamic properties to local flinkConfiguraton ------
 //        List<Tuple2<String, String>> dynProperties = CliFrontend.getDynamicProperties(dynamicPropertiesEncoded);
 //        for (Tuple2<String, String> dynProperty : dynProperties) {
 //            flinkConfiguration.setString(dynProperty.f0, dynProperty.f1);
 //        }
-
-	
-
-		// ------------------ Check if the YARN Cluster has the requested resources --------------
-		// the yarnMinAllocationMB specifies the smallest possible container allocation size.
+        // ------------------ Check if the YARN Cluster has the requested resources --------------
+        // the yarnMinAllocationMB specifies the smallest possible container allocation size.
         // all allocations below this value are automatically set to this value.
 //        final int yarnMinAllocationMB = conf.getInt("yarn.scheduler.minimum-allocation-mb", 0);
 //        if (jobManagerMemoryMb < yarnMinAllocationMB || taskManagerMemoryMb < yarnMinAllocationMB) {
@@ -318,7 +310,6 @@ public class FlinkYarnRunnerBuilder {
 //        if (taskManagerMemoryMb < yarnMinAllocationMB) {
 //            taskManagerMemoryMb = yarnMinAllocationMB;
 //        }
-
         String logbackFile = configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOGBACK_NAME;
         boolean hasLogback = new File(logbackFile).exists();
         String log4jFile = configurationDirectory + File.separator + FlinkYarnRunnerBuilder.CONFIG_FILE_LOG4J_NAME;
@@ -331,7 +322,6 @@ public class FlinkYarnRunnerBuilder {
             shipFiles.add(new File(log4jFile));
         }
 
-
         // Setup jar for ApplicationMaster
         LocalResource appMasterJar = Records.newRecord(LocalResource.class);
         LocalResource flinkConf = Records.newRecord(LocalResource.class);
@@ -339,7 +329,6 @@ public class FlinkYarnRunnerBuilder {
         localResources.put("flink.jar", appMasterJar);
         localResources.put("flink-conf.yaml", flinkConf);
 
-               
         StringBuilder envShipFileList = new StringBuilder();
         // upload ship files
         for (int i = 0; i < shipFiles.size(); i++) {
@@ -347,7 +336,6 @@ public class FlinkYarnRunnerBuilder {
             //TODO: Check if we need absolute or relative path of shipFile
             builder.addLocalResource(shipFile.getName(), shipFile.getAbsolutePath());
         }
-
 
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_COUNT, String.valueOf(taskManagerCount));
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_MEMORY, String.valueOf(taskManagerMemoryMb));
@@ -367,10 +355,9 @@ public class FlinkYarnRunnerBuilder {
         }
 
         // Set up resource type requirements for ApplicationMaster
-
         builder.amMemory(jobManagerMemoryMb);
         builder.amVCores(1);
-        
+
         String name;
         if (customName == null) {
             name = "Flink session with " + taskManagerCount + " TaskManagers";
@@ -380,7 +367,7 @@ public class FlinkYarnRunnerBuilder {
         } else {
             name = customName;
         }
-        
+
         //HOPS YarnRunner 
         builder.appName(name);
         //TODO: Confirm this is the correct AM class
@@ -390,13 +377,12 @@ public class FlinkYarnRunnerBuilder {
         amargs.append(" -yn ").append(taskManagerCount);
         //TODO: Pass arguments according to flink 
         for (String s : jobArgs) {
-          amargs.append(" --arg ").append(s);
+            amargs.append(" --arg ").append(s);
         }
         builder.amArgs(amargs.toString());
         return builder.build(hadoopDir, flinkDir, nameNodeIpPort);
     }
-    
-   
+
     public static class YarnDeploymentException extends RuntimeException {
 
         private static final long serialVersionUID = -812040641215388943L;

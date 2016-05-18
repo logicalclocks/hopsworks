@@ -143,6 +143,8 @@ public class ResponseMessages {
           = "DataSet not found.";
   public final static String DATASET_ALREADY_PUBLIC
           = "DataSet is already public.";
+  public final static String DATASET_NOT_PUBLIC
+          = "DataSet is not public.";
 
   //Metadata
   public final static String TEMPLATE_INODEID_EMPTY

@@ -11,6 +11,8 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -138,6 +140,7 @@ public class DistributedFsService {
    * @param path
    * @return
    */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public boolean isDir(String path) {
     Inode i = inodes.getInodeAtPath(path);
     if (i != null) {
@@ -152,6 +155,7 @@ public class DistributedFsService {
    * @param path
    * @return
    */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public Inode getInode(String path) {
     Inode i = inodes.getInodeAtPath(path);
     return i;
@@ -165,6 +169,7 @@ public class DistributedFsService {
    * @return A list of filenames, empty if the given path does not have
    * children.
    */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public List<String> getChildNames(String path) {
     Inode inode = inodes.getInodeAtPath(path);
     if (inode.isDir()) {

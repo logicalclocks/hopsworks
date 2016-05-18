@@ -37,11 +37,11 @@ public class UserManager {
    * @param gidNumber
    * @return
    */
-  public boolean registerGroup(Users uid, int gidNumber) {
+  public void registerGroup(Users uid, int gidNumber) {
     PeopleGroup p = new PeopleGroup();
     p.setPeopleGroupPK(new PeopleGroupPK(uid.getUid(), gidNumber));
-    em.persist(p);
-    return true;
+    em.merge(p);
+//    em.persist(p);
   }
 
   /**
@@ -50,7 +50,7 @@ public class UserManager {
    * @param user
    * @return
    */
-  public boolean registerAddress(Users user) {
+  public void registerAddress(Users user) {
     Address add = new Address();
     add.setUid(user);
     add.setAddress1("-");
@@ -61,75 +61,73 @@ public class UserManager {
     add.setCountry("-");
     add.setPostalcode("-");
     em.persist(add);
-    return true;
+    
   }
 
-  public boolean increaseLockNum(int id, int val) {
+  public void increaseLockNum(int id, int val) {
     Users p = (Users) em.find(Users.class, id);
     if (p != null) {
       p.setFalseLogin(val);
       em.merge(p);
     }
-    return true;
+    
   }
 
-  public boolean setOnline(int id, int val) {
+  public void setOnline(int id, int val) {
     Users p = (Users) em.find(Users.class, id);
     p.setIsonline(val);
     em.merge(p);
-    return true;
+    
   }
 
-  public boolean resetLock(int id) {
+  public void resetLock(int id) {
     Users p = (Users) em.find(Users.class, id);
     p.setFalseLogin(0);
     em.merge(p);
-    return true;
+    
   }
 
-  public boolean changeAccountStatus(int id, String note, int status) {
+  public void changeAccountStatus(int id, String note, int status) {
     Users p = (Users) em.find(Users.class, id);
     if (p != null) {
       p.setNotes(note);
       p.setStatus(status);
       em.merge(p);
     }
-    return true;
+    
   }
 
-  public boolean resetKey(int id) {
+  public void resetKey(int id) {
     Users p = (Users) em.find(Users.class, id);
     p.setValidationKey(SecurityUtils.getRandomPassword(64));
     em.merge(p);
-    return true;
+    
   }
 
-  public boolean resetPassword(Users p, String pass) {
+  public void resetPassword(Users p, String pass) {
     p.setPassword(pass);
     p.setPasswordChanged(new Timestamp(new Date().getTime()));
     em.merge(p);
-    return true;
+    
   }
 
-  public boolean resetSecQuestion(int id, SecurityQuestion question, String ans) {
+  public void resetSecQuestion(int id, SecurityQuestion question, String ans) {
     Users p = (Users) em.find(Users.class, id);
     p.setSecurityQuestion(question);
     p.setSecurityAnswer(ans);
     em.merge(p);
-    return true;
+    
   }
 
-  public boolean updateStatus(Users id, int stat) {
+  public void updateStatus(Users id, int stat) {
     id.setStatus(stat);
     em.merge(id);
-    return true;
   }
 
-  public boolean updateSecret(int id, String sec) {
+  public void updateSecret(int id, String sec) {
     Users p = (Users) em.find(Users.class, id);
     p.setSecret(sec);
     em.merge(p);
-    return true;
   }
   
   public List<Users> findInactivateUsers() {
@@ -178,13 +176,20 @@ public class UserManager {
   }
 
   
-    public List<Users> findMobileRequests() {
+    
+  public List<Users> findMobileRequests() {
     
     TypedQuery<Users> query  = em.createQuery(
             "SELECT p FROM Users p WHERE (p.status ="+ 
                     PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
                     + "  AND p.mode = " + PeopleAccountStatus.M_ACCOUNT_TYPE.getValue() + " )", Users.class);
-    return query.getResultList();
+    TypedQuery<Users> query2  = em.createQuery(
+            "SELECT p FROM Users p WHERE (p.status ="+ 
+                    PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.M_ACCOUNT_TYPE.getValue() + " )", Users.class);
+    List<Users> res = query.getResultList();
+    res.addAll(query2.getResultList());
+    return res;
   }
     
   
@@ -193,8 +198,14 @@ public class UserManager {
             "SELECT p FROM Users p WHERE (p.status = "
             + PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
                     + "  AND p.mode = " + PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue() +" )", Users.class);
+    TypedQuery<Users> query2  = em.createQuery(
+            "SELECT p FROM Users p WHERE (p.status ="+ 
+                    PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue() + " )", Users.class);
+    List<Users> res = query.getResultList();
+    res.addAll(query2.getResultList());
 
-    return query.getResultList();
+    return res;
   }
 
   public Yubikey findYubikey(int uid) {
@@ -324,18 +335,18 @@ public class UserManager {
     em.persist(user);
   }
 
-  public boolean updatePeople(Users user) {
+  public void updatePeople(Users user) {
     em.merge(user);
-    return true;
+    
   }
 
   public void updateYubikey(Yubikey yubi) {
     em.merge(yubi);
   }
 
-  public boolean updateAddress(Address add) {
+  public void updateAddress(Address add) {
     em.merge(add);
-    return true;
+    
   }
 
   /**
@@ -344,9 +355,7 @@ public class UserManager {
    * @param u
    * @return
    */
-  public boolean deleteUserRequest(Users u) {
-    boolean success = false;
-
+  public void deleteUserRequest(Users u) {
     if (u != null) {
         
       TypedQuery<RolesAudit> query4 = em.createNamedQuery(
@@ -373,13 +382,10 @@ public class UserManager {
         }
       u = em.merge(u);
       em.remove(u);
-      success = true;
     }
-
-    return success;
   }
 
-  public boolean registerOrg(Users uid, String org, String department) {
+  public void registerOrg(Users uid, String org, String department) {
 
     Organization organization = new Organization();
     organization.setUid(uid);
@@ -391,13 +397,13 @@ public class UserManager {
     organization.setFax(checkDefaultValue(""));
     organization.setPhone(checkDefaultValue(""));
     em.persist(organization);
-    return true;
+    
 
   }
 
-  public boolean updateOrganization(Organization org) {
+  public void updateOrganization(Organization org) {
     em.merge(org);
-    return true;
+    
   }
 
   /**
@@ -414,10 +420,10 @@ public class UserManager {
     return query.getResultList();
   }
 
-    public boolean updateMaxNumProjs(Users id, int maxNumProjs) {
+    public void updateMaxNumProjs(Users id, int maxNumProjs) {
     id.setMaxNumProjects(maxNumProjs);
     em.merge(id);
-    return true;
+    
   }
 
   
