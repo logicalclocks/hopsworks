@@ -71,7 +71,6 @@ public final class SparkJob extends YarnJob {
     runnerbuilder.addExtraFiles(jobconfig.getLocalResources());
     //Set project specific resources
     runnerbuilder.addExtraFiles(projectLocalResources);
-    //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
     try {
       runner = runnerbuilder.
           getYarnRunner(jobDescription.getProject().getName(),

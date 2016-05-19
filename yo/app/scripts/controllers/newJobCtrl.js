@@ -44,6 +44,14 @@ angular.module('hopsWorksApp')
             this.jobtype; //Will hold the selection of which job to create.
             this.jobname; //Will hold the name of the job
             this.localResources = {"entry": []}; //Will hold extra libraries
+            this.libDetails = {
+                "name" : null,
+                "path" : null,
+                "visibility" : null,
+                "type" : null,
+                "pattern" : null
+            }
+           
             this.phase = 0; //The phase of creation we are in.
             this.runConfig; //Will hold the job configuration
             this.sparkState = {//Will hold spark-specific state
@@ -440,6 +448,9 @@ angular.module('hopsWorksApp')
                     if (reason.toUpperCase() === "ADAM") {
                         self.adamState.processparameter = parameter;
                     }
+                    //Add localresource into localresources lists
+                    this.localResources.push(self.libDetails);
+                    
                     ModalService.selectFile('lg', self.selectFileRegexes[reason],
                             self.selectFileErrorMsgs[reason]).then(
                             function (success) {
@@ -522,7 +533,7 @@ angular.module('hopsWorksApp')
                             self.sparkState = stored.sparkState;
                         } else if (self.jobtype === 2) {
                             self.adamState = stored.adamState;
-			} else  if (self.jobtype == 3) {
+			} else  if (self.jobtype === 3) {
 			    self.flinkState = stored.flinkState;
 			}
                         //GUI state

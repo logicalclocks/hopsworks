@@ -190,13 +190,32 @@
               </h3>
               <div ng-show="newJobCtrl.localResources.entry.length > 0">
                 <div class="row">
-                  <div class="col-md-4">
+                  <div class="col-md-4" ng-model="newJobCtrl.libDetails.name">
                     <strong>Name</strong> <i class="fa fa-info-circle" tooltip="The name of the jar as it will appear in the Yarn distributed cache. By default, the filename of the resource." style="margin-left: 10px"></i>
                   </div>
-                  <div class="col-md-8">
+                  <div class="col-md-4" ng-model="newJobCtrl.libDetails.path">
                     <strong>Path</strong> <i class="fa fa-info-circle" tooltip="The HDFS path to the selected jar file." style="margin-left: 10px"></i>
                   </div>
-                  <div></div>
+                 <div class="col-md-2">
+                    <label class="control-label">Resource Type</label>
+                             <select name="type" ng-model="newJobCtrl.libDetails.type">
+                               <option value="archive">Archive</option>
+                               <option value="file">File</option>
+                               <option value="pattern">Pattern</option>
+                             </select>
+                     </div>  
+                  </div>
+                  <div class="col-md-3">
+                     <label class="control-label">Visibility</label>
+                             <select name="visibility" ng-model="newJobCtrl.libDetails.visibility">
+                               <option value="public">Public</option>
+                               <option value="private">Private</option>
+                               <option value="application">Application</option>
+                             </select>
+                     </div>  
+                  <div class="col-md-4" ng-model="newJobCtrl.libDetails.pattern">
+                    <strong>Path</strong> <i class="fa fa-info-circle" tooltip="The HDFS path to the selected jar file." style="margin-left: 10px"></i>
+                  </div>
                 </div>
                 <div class="row" ng-repeat="jar in newJobCtrl.localResources.entry">
                   <div class="col-md-4">
