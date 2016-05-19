@@ -40,8 +40,8 @@ public class UserManager {
   public void registerGroup(Users uid, int gidNumber) {
     PeopleGroup p = new PeopleGroup();
     p.setPeopleGroupPK(new PeopleGroupPK(uid.getUid(), gidNumber));
-    em.merge(p);
-//    em.persist(p);
+//    em.merge(p);
+    em.persist(p);
   }
 
   /**
