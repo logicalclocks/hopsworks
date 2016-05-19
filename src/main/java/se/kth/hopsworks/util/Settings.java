@@ -25,6 +25,8 @@ public class Settings {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_JHS_IP = "jhs_ip";
+  private static final String VARIABLE_OOZIE_IP = "oozie_ip";
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP = "spark_history_server_ip";
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
   private static final String VARIABLE_SPARK_USER = "spark_user";
@@ -101,6 +103,8 @@ public class Settings {
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
+      JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
+      OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
       SPARK_HISTORY_SERVER_IP = setIpVar(VARIABLE_SPARK_HISTORY_SERVER_IP, SPARK_HISTORY_SERVER_IP);
       CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
       HIWAY_DIR = setDirVar(VARIABLE_HIWAY_DIR, HIWAY_DIR);
@@ -453,6 +457,23 @@ public class Settings {
     checkCache();
     return SPARK_HISTORY_SERVER_IP;
   }  
+  
+  // Oozie
+  private String OOZIE_IP = "127.0.0.1";
+
+  public synchronized String getOozieIp() {
+    checkCache();
+    return OOZIE_IP;
+  }    
+  
+  // MapReduce Job History Server
+  private String JHS_IP = "127.0.0.1";
+
+  public synchronized String getJhsIp() {
+    checkCache();
+    return JHS_IP;
+  }   
+  
   
   // Hopsworks
   public static final Charset ENCODING = StandardCharsets.UTF_8;
