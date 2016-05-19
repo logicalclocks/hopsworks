@@ -5,8 +5,12 @@
  */
 package se.kth.hopsworks.rest;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import io.hops.kafka.CsrDTO;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
@@ -20,8 +24,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 import se.kth.hopsworks.util.PKIUtils;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -41,7 +47,7 @@ public class AgentService {
   @Path("/register")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response sign(@Context HttpServletRequest req, String jsonString) throws AppException {
+  public Response sign(@Context HttpServletRequest req, String jsonString) throws AppException, IOException {
       JSONObject json = new JSONObject(jsonString);
       String agentPubCert = "no certificate";
       if (json.has("csr")) {
@@ -53,9 +59,8 @@ public class AgentService {
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.toString());
         }
       }
-
-      String caPubCert= "";
       
+      String caPubCert = Files.toString(new File(Settings.CA_DIR + "/certs/intermediate.cert.pem"), Charsets.UTF_8);
       CsrDTO dto = new CsrDTO(caPubCert, agentPubCert);
 
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
