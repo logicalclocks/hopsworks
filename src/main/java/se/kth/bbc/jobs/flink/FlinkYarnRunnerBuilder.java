@@ -281,11 +281,11 @@ public class FlinkYarnRunnerBuilder {
         builder.localResourcesBasePath(stagingPath);
 
         //Add Flink jar
-        builder.addLocalResource(Settings.FLINK_LOCRSC_SPARK_JAR, hdfsFlinkJarPath,
-            false);
-        //Add app jar
-        builder.addLocalResource(Settings.FLINK_LOCRSC_APP_JAR, appJarPath,
-            !appJarPath.startsWith("hdfs:"));
+//        builder.addLocalResource(Settings.FLINK_LOCRSC_SPARK_JAR, hdfsFlinkJarPath,
+//            false);
+//        //Add app jar
+//        builder.addLocalResource(Settings.FLINK_LOCRSC_APP_JAR, appJarPath,
+//            !appJarPath.startsWith("hdfs:"));
 
         // ------------------ Add dynamic properties to local flinkConfiguraton ------
 //        List<Tuple2<String, String>> dynProperties = CliFrontend.getDynamicProperties(dynamicPropertiesEncoded);
@@ -334,7 +334,7 @@ public class FlinkYarnRunnerBuilder {
         for (int i = 0; i < shipFiles.size(); i++) {
             File shipFile = shipFiles.get(i);
             //TODO: Check if we need absolute or relative path of shipFile
-            builder.addLocalResource(shipFile.getName(), shipFile.getAbsolutePath());
+            //builder.addLocalResource(shipFile.getName(), shipFile.getAbsolutePath());
         }
 
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_COUNT, String.valueOf(taskManagerCount));

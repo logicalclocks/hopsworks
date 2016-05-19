@@ -1,13 +1,18 @@
 package se.kth.bbc.jobs.yarn;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.apache.hadoop.yarn.api.records.LocalResourceType;
+import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
+import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -24,13 +29,19 @@ public class YarnJobConfiguration extends JobConfiguration {
   //Number of cores for appMaster
   private int amVCores = 1;
   //List of paths to be added to local resources
-  private Map<String, String> localResources = Collections.EMPTY_MAP;
+  private List<LocalResourceDTO> localResources = Collections.EMPTY_LIST;
 
   protected final static String KEY_TYPE = "type";
   protected final static String KEY_QUEUE = "QUEUE";
   protected final static String KEY_AMMEM = "AMMEM";
   protected final static String KEY_AMCORS = "AMCORS";
   protected final static String KEY_RESOURCES = "RESOURCES";
+  
+  public final static String KEY_RESOURCESPATH = "RESOURCESPATH";
+  public final static String KEY_RESOURCESVISIBILITY = "RESOURCESVISIBILITY";
+  public final static String KEY_RESOURCESTYPE = "RESOURCESTYPE";
+  public final static String KEY_RESOURCESPATTERN = "RESOURCESPATTERN";
+  public final static String KEY_RESOURCESNAME = "RESOURCESNAME";
 
   public YarnJobConfiguration() {
     super();
@@ -81,34 +92,24 @@ public class YarnJobConfiguration extends JobConfiguration {
   /**
    * Add a file to the local resources.
    * <p/>
-   * @param name
-   * @param path
+   * @param dto
    */
-  public final void addLocalResource(String name, String path) {
+  public final void addLocalResource(LocalResourceDTO dto) {
     if (localResources == null) {
-      localResources = new HashMap<>();
+      localResources = new ArrayList<>();
     }
-    localResources.put(name, path);
+    localResources.add(dto);
   }
 
-  /**
-   * Set the local resources.
-   * <p/>
-   * @param localResources
-   */
-  public final void setLocalResources(Map<String, String> localResources) {
-    this.localResources = new HashMap(localResources);
-  }
+    public List<LocalResourceDTO> getLocalResources() {
+        return localResources;
+    }
 
-  /**
-   * Return a view on the current local resources. The Map returned is not
-   * backed by this object.
-   * <p/>
-   * @return
-   */
-  public final Map<String, String> getLocalResources() {
-    return new HashMap<>(localResources);
-  }
+    public void setLocalResources(List<LocalResourceDTO> localResources) {
+        this.localResources = localResources;
+    }
+
+  
 
   @Override
   public JobType getType() {
@@ -121,9 +122,15 @@ public class YarnJobConfiguration extends JobConfiguration {
     //First: fields that can be empty or null:
     if (localResources != null && !localResources.isEmpty()) {
       MutableJsonObject resources = new MutableJsonObject();
-      for (Entry<String, String> e : localResources.entrySet()) {
-        resources.set(e.getKey(), e.getValue());
-      }
+      for (LocalResourceDTO dto : localResources) {
+         MutableJsonObject localResourceJson = new MutableJsonObject();
+         localResourceJson.set(KEY_RESOURCESNAME, dto.getName());
+         localResourceJson.set(KEY_RESOURCESPATH, dto.getPath());
+         localResourceJson.set(KEY_RESOURCESTYPE, dto.getType().toString());
+         localResourceJson.set(KEY_RESOURCESVISIBILITY, dto.getVisibility().toString());
+         localResourceJson.set(KEY_RESOURCESPATTERN, dto.getPattern());    
+         resources.set(dto.getName(), localResourceJson);
+     }
       obj.set(KEY_RESOURCES, resources);
     }
     //Then: fields that cannot be null or emtpy:
@@ -140,7 +147,7 @@ public class YarnJobConfiguration extends JobConfiguration {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
     String jsonCors, jsonMem, jsonQueue;
-    Map<String,String> jsonResources = Collections.EMPTY_MAP;
+    List<LocalResourceDTO> jsonResources = Collections.EMPTY_LIST;
     try {
       String jsonType = json.getString(KEY_TYPE);
       type = JobType.valueOf(jsonType);
@@ -149,10 +156,16 @@ public class YarnJobConfiguration extends JobConfiguration {
       }
       //First: fields that can be null or empty:
       if(json.containsKey(KEY_RESOURCES)){
-        jsonResources = new HashMap<>();
+        jsonResources = new ArrayList<>();
         MutableJsonObject resources = json.getJsonObject(KEY_RESOURCES);
         for(String key:resources.keySet()){
-          jsonResources.put(key, resources.getString(key));
+            MutableJsonObject resource = resources.getJsonObject(key);
+            jsonResources.add( new LocalResourceDTO(
+                    resource.getString(KEY_RESOURCESNAME),
+                    resource.getString(KEY_RESOURCESPATH), 
+                    LocalResourceVisibility.valueOf(resource.getString(KEY_RESOURCESVISIBILITY)),
+                    LocalResourceType.valueOf(resource.getString(KEY_RESOURCESTYPE)), 
+                    resource.getString(KEY_RESOURCESPATTERN)));
         }
       }
       //Then: fields that cannot be null or empty

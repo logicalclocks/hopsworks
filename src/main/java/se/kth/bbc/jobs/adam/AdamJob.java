@@ -6,11 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.hadoop.yarn.api.records.LocalResourceType;
+import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.lims.Utils;
+import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.Settings;
 
@@ -204,7 +207,7 @@ public class AdamJob extends YarnJob {
         Settings.ADAM_DEFAULT_HDFS_REPO);
     for (String jarname : jars) {
       String sourcePath = "hdfs://" + Settings.ADAM_DEFAULT_HDFS_REPO + jarname;
-      builder.addExtraFile(jarname, sourcePath);
+      builder.addExtraFile(new LocalResourceDTO(jarname, sourcePath, LocalResourceVisibility.PUBLIC, LocalResourceType.FILE, null));
     }
   }
 

@@ -68,7 +68,9 @@ public final class SparkJob extends YarnJob {
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
     runnerbuilder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
-
+    runnerbuilder.addExtraFiles(jobconfig.getLocalResources());
+    //Set project specific resources
+    runnerbuilder.addExtraFiles(projectLocalResources);
     //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
     try {
       runner = runnerbuilder.
