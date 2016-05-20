@@ -21,7 +21,10 @@ public class TopicDTO implements Serializable {
     
     private Integer numOfPartitions;
 
-    // TODO - put in all the name details here
+    private String schemaName;
+    
+    private int schemaVersion;
+    
     public TopicDTO() {
     }
 
@@ -33,6 +36,14 @@ public class TopicDTO implements Serializable {
         this.name = name;
         this.numOfReplicas = numOfReplicas;
         this.numOfPartitions = numOfPartitions;
+    }
+
+    public TopicDTO(String name, Integer numOfReplicas, Integer numOfPartitions, String schemaName, int schemaVersion) {
+        this.name = name;
+        this.numOfReplicas = numOfReplicas;
+        this.numOfPartitions = numOfPartitions;
+        this.schemaName = schemaName;
+        this.schemaVersion = schemaVersion;
     }
 
     public String getName() {
@@ -59,4 +70,19 @@ public class TopicDTO implements Serializable {
         this.numOfReplicas = numOfReplicas;
     }
 
+    public String getSchemaName() {
+        return schemaName;
+    }
+
+    public int getSchemaVersion() {
+        return schemaVersion;
+    }
+
+    public void setSchemaName(String schemaName) {
+        this.schemaName = schemaName;
+    }
+
+    public void setSchemaVersion(int schemaVersion) {
+        this.schemaVersion = schemaVersion;
+    }
 }

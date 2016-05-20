@@ -411,6 +411,26 @@ public class KafkaService {
         json.setSuccessMessage("TopicAcl updated successfuly");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
     }
+    
+    @PUT
+    @Path("/schema/add")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response updateTopicSchema(SchemaDTO schamaData,
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException, Exception {
+        JsonResponse json = new JsonResponse();
+
+        if (projectId == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Incomplete request!");
+        }
+
+        kafkaFacade.updateSchemaForTopics(schamaData);
+
+        json.setSuccessMessage("Schema for Topic created/updated successfuly");
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    }
 
     //when do we need this api?
     @GET
@@ -478,24 +498,5 @@ public class KafkaService {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 json).build();
     }
-
-    @PUT
-    @Path("/schema/add")
-    @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-    public Response updateTopicSchema(SchemaDTO schamaData,
-            @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
-        JsonResponse json = new JsonResponse();
-
-        if (projectId == null) {
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    "Incomplete request!");
-        }
-
-        kafkaFacade.updateSchemaForTopics(projectId, schamaData);
-
-        json.setSuccessMessage("Schema for Topic created/updated successfuly");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-    }
+    
 }

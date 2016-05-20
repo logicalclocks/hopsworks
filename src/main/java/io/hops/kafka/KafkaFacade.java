@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import se.kth.bbc.project.*;
@@ -49,9 +50,8 @@ public class KafkaFacade {
 
     private final static Logger logger = Logger.getLogger(KafkaFacade.class.
             getName());
-    
-//    private final static zookTimer = 
 
+//    private final static zookTimer = 
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
 
@@ -215,7 +215,9 @@ public class KafkaFacade {
             zkClient.close();
         }
         //persist topic into database
-        ProjectTopics pt = new ProjectTopics(topicName, projectId);
+        ProjectTopics pt = new ProjectTopics(topicName, projectId, 
+                topicDto.getSchemaName(), topicDto.getSchemaVersion());
+        
         em.merge(pt);
         em.persist(pt);
         em.flush();
@@ -315,7 +317,6 @@ public class KafkaFacade {
         em.remove(pt);
         // remove the associated acl from database; 
 
-        
     }
 
     public List<SharedProjectDTO> topicIsSharedTo(String topicName, Integer projectId) {
@@ -479,35 +480,78 @@ public class KafkaFacade {
         em.persist(ta);
         em.flush();
     }
-    
-    public List<SchemaDTO> listSchemasForTopics(){
-    //get all schemas, and return the DTO
-    List<SchemaDTO> schemaDtos = Collections.EMPTY_LIST;
-    
-    return schemaDtos;
-    
+
+    public void updateSchemaForTopics(SchemaDTO schemaDto) {
+        //create the schema bean and persist it.
+        
+        Schemas schema = new Schemas(new SchemasPK(schemaDto.getName(), schemaDto.getVersion()),
+                schemaDto.getContents(), new Date());
+        
+        em.merge(schema);
+        em.persist(schema);
+        em.flush();
+
     }
-    
-    public List<SchemaDTO> getSchemaForTopic(String topicName){
-    
-    List<SchemaDTO> schemaDtos = Collections.EMPTY_LIST;
-    
-    return schemaDtos;
-    
+
+    public List<SchemaDTO> getSchemaForTopic(String topicName) throws AppException {
+
+        List<SchemaDTO> schemaDtos = Collections.EMPTY_LIST;
+        
+        ProjectTopics topic =  em.createNamedQuery(
+                "ProjectTopics.findByTopicName", ProjectTopics.class)
+                .setParameter("topicName", topicName).getSingleResult();
+
+        if(topic == null){
+           throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "topic not found in database");
+        }
+
+        Schemas schema = em.find(Schemas.class, 
+                new SchemasPK(topic.getSchemaName(), topic.getSchemaVersion()));
+        
+        if(schema == null){
+           throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "topic has not schema");
+        }
+        
+        schemaDtos.add(new SchemaDTO(schema.getSchemasPK().getName(),
+                schema.getContents(), schema.getSchemasPK().getVersion()));
+
+        return schemaDtos;
+
     }
-    
-    public void deleteSchemaForTopics(String schemaName, Integer version){
-    //get the bean and remove it
-    
-    
+
+    public List<SchemaDTO> listSchemasForTopics() {
+        //get all schemas, and return the DTO
+        List<SchemaDTO> schemaDtos = Collections.EMPTY_LIST;
+
+        TypedQuery<Schemas> query = em.createNamedQuery("Schema.findAll", Schemas.class);
+
+        for (Schemas schema : query.getResultList()) {
+
+            schemaDtos.add(new SchemaDTO( schema.getSchemasPK().getName(), 
+                    schema.getContents(), schema.getSchemasPK().getVersion()));
+
+        }
+
+        return schemaDtos;
+
     }
-    
-    public void updateSchemaForTopics(Integer projectId, SchemaDTO data){
-    //create the schema bean and persist it.
-    
-    
+
+    public void deleteSchemaForTopics(String schemaName, Integer version) throws AppException {
+        //get the bean and remove it
+
+        Schemas schema = em.find(Schemas.class, new SchemasPK(schemaName, version));
+
+        if (schema == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "Schema: " + schemaName + " not found in database");
+        }
+
+        em.remove(schema);
+
     }
-    
+
     public Set<String> getBrokerList() throws AppException {
 
         int sessionTimeoutMs = 10 * 1000;//10 seconds
@@ -538,7 +582,7 @@ public class KafkaFacade {
         return brokerList;
     }
 
-    public  Set<String> getTopicList() throws Exception {
+    public Set<String> getTopicList() throws Exception {
 
         zkBrokerList = getBrokerList();
 
@@ -653,7 +697,7 @@ public class KafkaFacade {
 
         String ip = endpoint.split(":")[1];
         return Integer.parseInt(ip);
-        
+
     }
-    
+
 }
