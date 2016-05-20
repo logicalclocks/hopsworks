@@ -5,11 +5,11 @@
  */
 package io.hops.kafka;
 
-/**
- *
- * @author misdess
- */
-public class AclDTO {
+import java.io.Serializable;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
+public class AclDTO implements Serializable {
 
     private Integer id;
     private String username;

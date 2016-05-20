@@ -5,11 +5,12 @@
  */
 package io.hops.kafka;
 
+import java.io.Serializable;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class TopicDetailsDTO {
+public class TopicDetailsDTO implements Serializable{
 
     private String name;
 
