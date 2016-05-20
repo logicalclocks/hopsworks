@@ -1,15 +1,18 @@
 package se.kth.hopsworks.controller;
 
+import java.io.Serializable;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
+import se.kth.bbc.jobs.MutableJsonObject;
+import se.kth.bbc.jobs.model.JsonReduceable;
 
 /**
  * Class containing LocalResource properties required by YarnJobs.
  * 
  */
 @XmlRootElement
-public class LocalResourceDTO {
+public class LocalResourceDTO implements JsonReduceable {
     private String name;
     private String path;
     private LocalResourceVisibility visibility;
@@ -17,6 +20,9 @@ public class LocalResourceDTO {
     //User provided pattern is used if the LocalResource is of type Pattern
     private String pattern;
 
+    public LocalResourceDTO() {
+    }
+    
     public LocalResourceDTO(String name, String path, LocalResourceVisibility visibility, LocalResourceType type, String pattern) {
         this.name = name;
         this.path = path;
@@ -63,6 +69,16 @@ public class LocalResourceDTO {
 
     public void setPattern(String pattern) {
         this.pattern = pattern;
+    }
+
+    @Override
+    public MutableJsonObject getReducedJsonObject() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void updateFromJson(MutableJsonObject json) throws IllegalArgumentException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     

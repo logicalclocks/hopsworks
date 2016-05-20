@@ -30,7 +30,6 @@ public class YarnJobConfiguration extends JobConfiguration {
   private int amVCores = 1;
   //List of paths to be added to local resources
   private List<LocalResourceDTO> localResources = Collections.EMPTY_LIST;
-
   protected final static String KEY_TYPE = "type";
   protected final static String KEY_QUEUE = "QUEUE";
   protected final static String KEY_AMMEM = "AMMEM";
@@ -89,19 +88,7 @@ public class YarnJobConfiguration extends JobConfiguration {
     this.amVCores = amVCores;
   }
 
-  /**
-   * Add a file to the local resources.
-   * <p/>
-   * @param dto
-   */
-  public final void addLocalResource(LocalResourceDTO dto) {
-    if (localResources == null) {
-      localResources = new ArrayList<>();
-    }
-    localResources.add(dto);
-  }
-
-    public List<LocalResourceDTO> getLocalResources() {
+     public List<LocalResourceDTO> getLocalResources() {
         return localResources;
     }
 
