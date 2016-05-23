@@ -86,8 +86,8 @@ public class AuthService {
         req.getServletContext().log("email: " + email);
         req.getServletContext().log("SESSIONID@login: " + req.getSession().getId());
         req.getServletContext().log("SecurityContext: " + sc.getUserPrincipal());
-        req.getServletContext().log("SecurityContext in user role: " + sc.isUserInRole("BBC_USER"));
-        req.getServletContext().log("SecurityContext in sysadmin role: " + sc.isUserInRole("SYS_ADMIN"));
+        req.getServletContext().log("SecurityContext in user role: " + sc.isUserInRole("HOPS_USER"));
+        req.getServletContext().log("SecurityContext in sysadmin role: " + sc.isUserInRole("HOPS_ADMIN"));
         JsonResponse json = new JsonResponse();
         if (email == null || email.isEmpty()) {
             throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
