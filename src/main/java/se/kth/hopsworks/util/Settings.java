@@ -145,6 +145,8 @@ public class Settings {
    * Default Directory locations
    */
   private String SPARK_DIR = "/srv/spark";
+  public static final String SPARK_VERSION = "1.6.1";
+  public static final String HOPS_VERSION = "2.4.0";
 
   public synchronized String getSparkDir() {
     checkCache();
