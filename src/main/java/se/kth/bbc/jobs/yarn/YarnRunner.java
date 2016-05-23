@@ -617,9 +617,9 @@ public class YarnRunner {
       this.amMemory = config.getAmMemory();
       this.amVCores = config.getAmVCores();
       this.appName = config.getAppName();
-      for (LocalResourceDTO dto : config.getLocalResources()) {
-        addLocalResource(dto,false);
-      }
+//      for (LocalResourceDTO dto : config.getLocalResources()) {
+//        addLocalResource(dto,false);
+//      }
       return this;
     }
 
