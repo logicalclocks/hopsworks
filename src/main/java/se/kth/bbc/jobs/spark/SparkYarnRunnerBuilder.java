@@ -134,6 +134,7 @@ public class SparkYarnRunnerBuilder {
     
     // TODO: vasilis
     //amargs.append(" --conf ").append(sparkHistoryServerIp);
+    //amargs.append(" --spark-history-server ").append(sparkHistoryServerIp);
     //builder.addToAppMasterEnvironment("SPARK_HISTORY_SERVER_ADDRESS", sparkHistoryServerIp);
     
      //amargs.append(" --conf spark.eventLog.enabled=").append(enableLogDir);
