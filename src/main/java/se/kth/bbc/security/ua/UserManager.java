@@ -19,6 +19,7 @@ import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.PeopleGroup;
 import se.kth.bbc.security.ua.model.PeopleGroupPK;
 import se.kth.bbc.security.ua.model.Yubikey;
+import se.kth.hopsworks.user.model.BbcGroup;
 import se.kth.hopsworks.user.model.Users;
 
 @Stateless
@@ -38,10 +39,9 @@ public class UserManager {
    * @return
    */
   public void registerGroup(Users uid, int gidNumber) {
-    PeopleGroup p = new PeopleGroup();
-    p.setPeopleGroupPK(new PeopleGroupPK(uid.getUid(), gidNumber));
-    em.merge(p);
-//    em.persist(p);
+    BbcGroup bbcGroup = em.find(BbcGroup.class, gidNumber);
+    uid.getBbcGroupCollection().add(bbcGroup);
+    em.merge(uid);
   }
 
   /**

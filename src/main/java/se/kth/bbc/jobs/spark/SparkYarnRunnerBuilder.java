@@ -35,6 +35,7 @@ public class SparkYarnRunnerBuilder {
   private final Map<String, String> envVars = new HashMap<>();
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
+  private String sparkHistoryServerIp;
 
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass) {
     if (appJarPath == null || appJarPath.isEmpty()) {
@@ -98,6 +99,7 @@ public class SparkYarnRunnerBuilder {
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
     builder.addToAppMasterEnvironment("SPARK_USER", sparkUser);
+//    builder.addToAppMasterEnvironment("SPARK_USER", );
     // TODO - Change spark user here
 //    builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
     if (classPath == null || classPath.isEmpty()) {
@@ -127,6 +129,13 @@ public class SparkYarnRunnerBuilder {
     // amargs.append(" --num-executors ").append(numberOfExecutors);
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);
+    
+    // TODO: vasilis
+    //amargs.append(" --spark-history-server ").append(sparkHistoryServerIp);
+    //builder.addToAppMasterEnvironment("SPARK_HISTORY_SERVER_ADDRESS", sparkHistoryServerIp);
+    
+    
+    
     for (String s : jobArgs) {
       amargs.append(" --arg ").append(s);
     }
@@ -273,6 +282,10 @@ public class SparkYarnRunnerBuilder {
     this.driverQueue = driverQueue;
   }
 
+  public void setSparkHistoryServerIp(String sparkHistoryServerIp) {
+    this.sparkHistoryServerIp = sparkHistoryServerIp;
+  }
+
   public SparkYarnRunnerBuilder addEnvironmentVariable(String name, String value) {
     envVars.put(name, value);
     return this;
@@ -327,4 +340,5 @@ public class SparkYarnRunnerBuilder {
     }
   }
 
+ 
 }

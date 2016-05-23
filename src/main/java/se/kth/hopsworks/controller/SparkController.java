@@ -204,10 +204,12 @@ public class SparkController {
 	Manifest mf = jis.getManifest();
 	Attributes atts = mf.getMainAttributes();
 	SparkJobConfiguration config = new SparkJobConfiguration();
+  
 	if (atts.containsKey(Name.MAIN_CLASS)) {
 	  config.setMainClass(atts.getValue(Name.MAIN_CLASS));
 	}
 	config.setJarPath(path);
+  config.setHistoryServerIp(settings.getSparkHistoryServerIp());
 	return config;
   }
 
