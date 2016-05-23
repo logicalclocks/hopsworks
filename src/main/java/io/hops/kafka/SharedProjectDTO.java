@@ -5,11 +5,15 @@
  */
 package io.hops.kafka;
 
+import java.io.Serializable;
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  *
  * @author misdess
  */
-public class SharedProjectDTO {
+@XmlRootElement
+public class SharedProjectDTO implements Serializable{
     
     private String name;
     private Integer id;

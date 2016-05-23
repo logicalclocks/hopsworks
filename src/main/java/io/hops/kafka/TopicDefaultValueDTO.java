@@ -5,6 +5,7 @@
  */
 package io.hops.kafka;
 
+import java.io.Serializable;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -12,7 +13,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author misdess
  */
 @XmlRootElement
-public class TopicDefaultValueDTO {
+public class TopicDefaultValueDTO implements Serializable{
     
     private String numOfReplicas;
     

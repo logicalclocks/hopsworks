@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import se.kth.bbc.project.*;
@@ -19,6 +20,7 @@ import javax.ejb.EJB;
 import javax.ejb.Remote;
 import javax.ejb.Schedule;
 import javax.ejb.SessionContext;
+import javax.ejb.Singleton;
 import javax.ejb.Stateless;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
@@ -39,6 +41,7 @@ import org.apache.zookeeper.ZooKeeper;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkConnection;
+import org.slf4j.LoggerFactory;
 import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
 import se.kth.hopsworks.user.model.Users;
 
@@ -47,9 +50,8 @@ public class KafkaFacade {
 
     private final static Logger logger = Logger.getLogger(KafkaFacade.class.
             getName());
-    
-//    private final static zookTimer = 
 
+//    private final static zookTimer = 
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
 
@@ -131,7 +133,7 @@ public class KafkaFacade {
         return zkPort;
     }
 
-    private InetAddress getIp(String zkIp) throws AppException {
+    public InetAddress getIp(String zkIp) throws AppException {
         String[] split = zkIp.split(SEPARATOR, 2);
         String ip = split[0];
         try {
@@ -213,7 +215,9 @@ public class KafkaFacade {
             zkClient.close();
         }
         //persist topic into database
-        ProjectTopics pt = new ProjectTopics(topicName, projectId);
+        ProjectTopics pt = new ProjectTopics(topicName, projectId, 
+                topicDto.getSchemaName(), topicDto.getSchemaVersion());
+        
         em.merge(pt);
         em.persist(pt);
         em.flush();
@@ -313,7 +317,6 @@ public class KafkaFacade {
         em.remove(pt);
         // remove the associated acl from database; 
 
-        
     }
 
     public List<SharedProjectDTO> topicIsSharedTo(String topicName, Integer projectId) {
@@ -478,6 +481,77 @@ public class KafkaFacade {
         em.flush();
     }
 
+    public void updateSchemaForTopics(SchemaDTO schemaDto) {
+        //create the schema bean and persist it.
+        
+        Schemas schema = new Schemas(new SchemasPK(schemaDto.getName(), schemaDto.getVersion()),
+                schemaDto.getContents(), new Date());
+        
+        em.merge(schema);
+        em.persist(schema);
+        em.flush();
+
+    }
+
+    public List<SchemaDTO> getSchemaForTopic(String topicName) throws AppException {
+
+        List<SchemaDTO> schemaDtos = Collections.EMPTY_LIST;
+        
+        ProjectTopics topic =  em.createNamedQuery(
+                "ProjectTopics.findByTopicName", ProjectTopics.class)
+                .setParameter("topicName", topicName).getSingleResult();
+
+        if(topic == null){
+           throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "topic not found in database");
+        }
+
+        Schemas schema = em.find(Schemas.class, 
+                new SchemasPK(topic.getSchemaName(), topic.getSchemaVersion()));
+        
+        if(schema == null){
+           throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "topic has not schema");
+        }
+        
+        schemaDtos.add(new SchemaDTO(schema.getSchemasPK().getName(),
+                schema.getContents(), schema.getSchemasPK().getVersion()));
+
+        return schemaDtos;
+
+    }
+
+    public List<SchemaDTO> listSchemasForTopics() {
+        //get all schemas, and return the DTO
+        List<SchemaDTO> schemaDtos = Collections.EMPTY_LIST;
+
+        TypedQuery<Schemas> query = em.createNamedQuery("Schema.findAll", Schemas.class);
+
+        for (Schemas schema : query.getResultList()) {
+
+            schemaDtos.add(new SchemaDTO( schema.getSchemasPK().getName(), 
+                    schema.getContents(), schema.getSchemasPK().getVersion()));
+
+        }
+
+        return schemaDtos;
+
+    }
+
+    public void deleteSchemaForTopics(String schemaName, Integer version) throws AppException {
+        //get the bean and remove it
+
+        Schemas schema = em.find(Schemas.class, new SchemasPK(schemaName, version));
+
+        if (schema == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "Schema: " + schemaName + " not found in database");
+        }
+
+        em.remove(schema);
+
+    }
+
     public Set<String> getBrokerList() throws AppException {
 
         int sessionTimeoutMs = 10 * 1000;//10 seconds
@@ -508,7 +582,7 @@ public class KafkaFacade {
         return brokerList;
     }
 
-    private Set<String> getTopicList() throws Exception {
+    public Set<String> getTopicList() throws Exception {
 
         zkBrokerList = getBrokerList();
 
@@ -525,8 +599,8 @@ public class KafkaFacade {
                 kafka.javaapi.TopicMetadataResponse resp = simpleConsumer.send(req);
                 List<kafka.javaapi.TopicMetadata> topicMetadata = resp.topicsMetadata();
 
-                for (kafka.javaapi.TopicMetadata metadata : topicMetadata) {
-                    topicList.add(metadata.topic());
+                for (kafka.javaapi.TopicMetadata item : topicMetadata) {
+                    topicList.add(item.topic());
                 }
 
             } catch (Exception ex) {
@@ -544,7 +618,7 @@ public class KafkaFacade {
     private List<PartitionDetailsDTO> getTopicDetailsfromKafkaCluster(String topicName)
             throws Exception {
 
-        Set<String> zkBrokerList = getBrokerList();
+        zkBrokerList = getBrokerList();
 
         Map<Integer, List<String>> replicas = new HashMap<>();
         Map<Integer, List<String>> inSyncReplicas = new HashMap<>();
@@ -623,80 +697,7 @@ public class KafkaFacade {
 
         String ip = endpoint.split(":")[1];
         return Integer.parseInt(ip);
-        
+
     }
 
-    @Stateless
-    public class ZKTimer implements TimerService {
-        
-        @Resource
-        private SessionContext sessionContext;
-
-        @Override
-        public void scheduleTimer(long interval) {
-            sessionContext.getTimerService()
-                    .createTimer(interval, "monitors topic in zk and db");
-        }
-
-        @Schedule(second="*/10", minute="*", hour="*")
-        public void execute(Timer timer) throws AppException {
-
-            Set<String> zkTopics = Collections.EMPTY_SET;
-
-            try {
-                zkTopics = getTopicList();
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Cannot retrieve topic list from Zookeeper");
-            }
-
-            List<ProjectTopics> dbProjectTopics = em.createNamedQuery(
-                    "ProjectTopics.findAll").getResultList();
-
-            Set<String> dbTopics = Collections.EMPTY_SET;
-
-            for (ProjectTopics pt : dbProjectTopics) {
-                dbTopics.add(pt.getProjectTopicsPK().getTopicName());
-            }
-
-            Set<String> temp = zkTopics;
-            zkTopics.removeAll(dbTopics);
-
-            //remove topics from database which do not exist in zookeeper
-            if (!zkTopics.isEmpty()) {
-                for (String topicName : zkTopics) {
-                    ProjectTopics removeTopic = em.createNamedQuery(
-                            "ProjectTopics.findByTopicName", ProjectTopics.class)
-                            .setParameter("topicName", topicName).getSingleResult();
-                    em.remove(removeTopic);
-                }
-            }
-
-            //remove topics from zookeeper which do not exist in database
-            dbTopics.removeAll(temp);
-
-            if (!dbTopics.isEmpty()) {
-                for (String topicName : dbTopics) {
-                    ZkClient zkClient = new ZkClient(getIp(settings.getZkIp()).getHostName(),
-                            10 * 1000, 29 * 1000, ZKStringSerializer$.MODULE$);
-                    ZkConnection zkConnection = new ZkConnection(settings.getZkIp());
-                    ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
-
-                    try {
-                        AdminUtils.deleteTopic(zkUtils, topicName);
-                    } catch (TopicAlreadyMarkedForDeletionException ex) {
-                        logger.log(Level.SEVERE, "************************** "
-                                + "{0} is already marked for deletion", new Object[]{topicName});
-                    } finally {
-                        zkClient.close();
-                    }
-                }
-            }
-        }
-    }
-
-    @Remote
-    public interface TimerService {
-
-        void scheduleTimer(long interval);
-    }
 }

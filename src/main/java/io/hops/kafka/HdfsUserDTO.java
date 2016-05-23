@@ -5,6 +5,7 @@
  */
 package io.hops.kafka;
 
+import java.io.Serializable;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -12,7 +13,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author misdess
  */
 @XmlRootElement
-public class HdfsUserDTO {
+public class HdfsUserDTO implements Serializable {
     private String userName;
 
     public HdfsUserDTO() {

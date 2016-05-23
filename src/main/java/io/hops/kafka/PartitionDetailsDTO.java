@@ -5,6 +5,7 @@
  */
 package io.hops.kafka;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -15,7 +16,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 
 @XmlRootElement
-public class PartitionDetailsDTO {
+public class PartitionDetailsDTO implements Serializable {
 
     private int id;
     private String leader;

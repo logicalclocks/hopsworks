@@ -6,11 +6,18 @@
 package io.hops.kafka;
 
 import java.io.Serializable;
+import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -26,6 +33,16 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "ProjectTopics.findByProjectId", query = "SELECT p FROM ProjectTopics p WHERE p.projectTopicsPK.projectId = :projectId")})
 public class ProjectTopics implements Serializable {
 
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "schema_version")
+    private int schemaVersion;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "schema_name")
+    private String schemaName;
+
     private static final long serialVersionUID = 1L;
     @EmbeddedId
     protected ProjectTopicsPK projectTopicsPK;
@@ -37,16 +54,40 @@ public class ProjectTopics implements Serializable {
         this.projectTopicsPK = projectTopicsPK;
     }
 
-    public ProjectTopics(String topicName, int projectId) {
+    public ProjectTopics(String topicName, int projectId, String schemaName, int schemaVersion) {
         this.projectTopicsPK = new ProjectTopicsPK(topicName, projectId);
+        this.schemaName = schemaName;
+        this.schemaVersion = schemaVersion;
     }
 
+    public ProjectTopics( String schemaName, int schemaVersion, ProjectTopicsPK projectTopicsPK) {
+        this.schemaVersion = schemaVersion;
+        this.schemaName = schemaName;
+        this.projectTopicsPK = projectTopicsPK;
+    }
+    
     public ProjectTopicsPK getProjectTopicsPK() {
         return projectTopicsPK;
     }
 
     public void setProjectTopicsPK(ProjectTopicsPK projectTopicsPK) {
         this.projectTopicsPK = projectTopicsPK;
+    }
+
+    public String getSchemaName() {
+        return schemaName;
+    }
+
+    public int getSchemaVersion() {
+        return schemaVersion;
+    }
+
+    public void setSchemaName(String schemaName) {
+        this.schemaName = schemaName;
+    }
+
+    public void setSchemaVersion(int schemaVersion) {
+        this.schemaVersion = schemaVersion;
     }
 
     @Override
