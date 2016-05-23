@@ -180,6 +180,8 @@ public class ZeppelinConfigFactory {
                 instantiateFromTemplate(
                         ConfigFileGenerator.ZEPPELIN_CONFIG_TEMPLATE,
                         "zeppelin_home", settings.getZeppelinDir(),
+                        "livy_url", settings.getLivyUrl(),
+                        "livy_master", settings.getLivyYarnMode(),
                         "zeppelin_home_dir", "");
         ConfigFileGenerator.createConfigFile(zeppelinConfig, zeppelin_site_xml.
                 toString());

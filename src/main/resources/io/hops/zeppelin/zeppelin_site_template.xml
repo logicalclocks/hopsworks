@@ -191,4 +191,18 @@
   <description>Allowed sources for REST and WebSocket requests (i.e. http://onehost:8080,http://otherhost.com). If you leave * you are vulnerable to https://issues.apache.org/jira/browse/ZEPPELIN-173</description>
 </property>
 
+
+<property>
+  <name>zeppelin.livy.url</name>
+  <value>%%livy_url%%</value>
+  <description>Endpoint for the livy server</description>
+</property>
+
+<property>
+  <name>zeppelin.livy.url</name>
+  <value>%%livy_master%%</value>
+  <description>Endpoint for the livy server</description>
+</property>
+
+
 </configuration>
