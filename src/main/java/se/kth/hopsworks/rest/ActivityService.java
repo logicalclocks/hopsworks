@@ -26,7 +26,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
 
 @Path("/activity")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -56,6 +56,27 @@ public class ActivityService {
     return r;
   }
 
+  @GET
+  @Path("/inode")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response findByInode(@QueryParam("inodeId") int inodeId, 
+          @QueryParam("from") int from,
+          @QueryParam("to") int to,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) {
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
+    GenericEntity<List<Activity>> projectActivities
+            = new GenericEntity<List<Activity>>(activityDetails) {
+            };
+
+    Response r = noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            projectActivities).build();
+    return r;
+  }
+  
+  
+  
   @GET
   @Path("/query")
   @Produces(MediaType.APPLICATION_JSON)

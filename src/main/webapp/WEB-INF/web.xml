@@ -17,10 +17,6 @@
     <param-value>server</param-value>
   </context-param>
   <context-param>
-    <param-name>Webhdfs-http</param-name>
-    <param-value>http://snurran.sics.se:50070/webhdfs/v1</param-value>
-  </context-param>
-  <context-param>
     <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
     <param-value>true</param-value>
   </context-param>
@@ -37,10 +33,6 @@
     <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
-  <servlet-mapping>
-    <servlet-name>Faces Servlet</servlet-name>
-    <url-pattern>/faces/*</url-pattern>
-  </servlet-mapping>
   <servlet-mapping>
     <servlet-name>Faces Servlet</servlet-name>
     <url-pattern>*.xhtml</url-pattern>
@@ -67,76 +59,24 @@
   </servlet-mapping>
   <!-- declare the roles relevant for our webapp -->
   <security-role>
-    <role-name>SYS_ADMIN</role-name>
+    <role-name>HOPS_ADMIN</role-name>
   </security-role>
   <security-role>
-    <role-name>BBC_ADMIN</role-name>
-  </security-role>
-  <security-role>
-    <role-name>BBC_RESEARCHER</role-name>
-  </security-role>
-  <security-role>
-    <role-name>BBC_GUEST</role-name>
-  </security-role>
-  <security-role>
-    <role-name>BBC_USER</role-name>
+    <role-name>HOPS_USER</role-name>
   </security-role>
   <security-role>
     <role-name>AUDITOR</role-name>
   </security-role>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>BiobankCloud Public Pages</web-resource-name>
-      <url-pattern>/bbc/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>BBC_ADMIN</role-name>
-      <role-name>BBC_RESEARCHER</role-name>
-      <role-name>BBC_USER</role-name>
-      <role-name>SYS_ADMIN</role-name>
-      <role-name>AUDITOR</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>BiobankCloud Lab Info Mgmt System (LIMS)</web-resource-name>
-      <url-pattern>/bbc/lims/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>BBC_ADMIN</role-name>
-      <role-name>BBC_RESEARCHER</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>BiobankCloud Lab Info Mgmt System (LIMS)</web-resource-name>
-      <url-pattern>/bbc/lims/index.xhtml</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>BBC_ADMIN</role-name>
-      <role-name>BBC_RESEARCHER</role-name>
-      <role-name>SYS_ADMIN</role-name>
-      <role-name>AUDITOR</role-name>
-      <role-name>BBC_GUEST</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>BiobankCloud Researcher Private pages</web-resource-name>
-      <url-pattern>/wf/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>BBC_ADMIN</role-name>
-      <role-name>SYS_ADMIN</role-name>
-    </auth-constraint>
-  </security-constraint>
+  <security-role>
+    <role-name>AGENT</role-name>
+  </security-role>
   <security-constraint>
     <web-resource-collection>
       <web-resource-name>User Management</web-resource-name>
       <url-pattern>/security/protected/admin/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
-      <role-name>SYS_ADMIN</role-name>
+      <role-name>HOPS_ADMIN</role-name>
     </auth-constraint>
   </security-constraint>
   <security-constraint>
@@ -145,20 +85,8 @@
       <url-pattern>/security/protected/audit/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
-      <role-name>SYS_ADMIN</role-name>
+      <role-name>HOPS_ADMIN</role-name>
       <role-name>AUDITOR</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>Researcher Profile</web-resource-name>
-      <url-pattern>/security/protected/researcher/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>SYS_ADMIN</role-name>
-      <role-name>BBC_RESEARCHER</role-name>
-      <role-name>AUDITOR</role-name>
-      <role-name>BBC_GUEST</role-name>
     </auth-constraint>
   </security-constraint>
   <security-constraint>		
@@ -171,33 +99,11 @@
     </web-resource-collection>		
     <auth-constraint>		
       <description>definition of which roles  may access the quote endpoint</description>		
-      <role-name>SYS_ADMIN</role-name>		
-      <role-name>BBC_USER</role-name>		
+      <role-name>HOPS_ADMIN</role-name>		
+      <role-name>HOPS_USER</role-name>		
     </auth-constraint>		
-    <!--user-data-constraint>		
-        <description>WSS required</description>		
-        <transport-guarantee>CONFIDENTIAL</transport-guarantee>		
-    </user-data-constraint-->		
   </security-constraint>		
     		
-  <security-constraint>		
-    <display-name>Zeppelin SocketConstraint</display-name>		
-    <web-resource-collection>		
-      <web-resource-name>ZeppelinWebSocket</web-resource-name>		
-      <description>Security constraint for  Zeppelin websocket endpoint</description>		
-      <url-pattern>/websocket/*</url-pattern>		
-      <http-method>GET</http-method>		
-    </web-resource-collection>		
-    <auth-constraint>		
-      <description>definition of which roles  may access the endpoint</description>		
-      <role-name>SYS_ADMIN</role-name>		
-      <role-name>BBC_USER</role-name>		
-    </auth-constraint>		
-    <!--user-data-constraint>		
-        <description>WSS required</description>		
-        <transport-guarantee>CONFIDENTIAL</transport-guarantee>		
-    </user-data-constraint-->		
-  </security-constraint> 
   <security-constraint>
     <web-resource-collection>
       <web-resource-name>Viewpoint Secure URLs</web-resource-name>
@@ -241,8 +147,6 @@
   <filter-mapping>
     <filter-name>LoginFilter</filter-name>
     <url-pattern>/security/*</url-pattern>
-    <url-pattern>/bbc/*</url-pattern>
-    <url-pattern>/views/*</url-pattern>
     <url-pattern>/index.xhtml</url-pattern>
   </filter-mapping>
 </web-app>

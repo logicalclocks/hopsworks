@@ -28,7 +28,7 @@ import se.kth.hopsworks.users.UserFacade;
 
 @Path("/message")
 @Stateless
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class MessageService {
 

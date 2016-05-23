@@ -22,7 +22,7 @@
       <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
     </ui:insert>
 
-    <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.SYSAdmin}">  
+    <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">  
 
       <p:growl autoUpdate="true" showDetail="true"/>
       <p:layoutUnit id="centerLayout" position="center">
@@ -45,7 +45,7 @@
                            paginator="true"
                            paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
                            rowsPerPageTemplate="15,25,35,45,55">
-                          
+
 
                 <p:column id="nameColumn" headerText="First Name"  
                           filterBy="#{req.fname}">
@@ -61,13 +61,9 @@
                   <h:outputText value="#{req.email}" />
                 </p:column>
 
-                <p:column id="orgColumn" headerText="Organization"  
-                          filterBy="#{req.organization.orgName}">
-                  <h:outputText value="#{req.organization.orgName}" />
-                </p:column>
-
                 <p:column id="roleColumn" headerText="Role">
                   <p:selectOneMenu id="roleChoose" 
+                                   rendered="#{peopleAdministration.notVerified(req) == false}"
                                    value="#{peopleAdministration.sgroup}" 
                                    editable="false">
                     <f:selectItem itemLabel="Select Role"
@@ -78,21 +74,31 @@
                 </p:column>
 
                 <p:column id="actionColumn" headerText="Action">
-                  <h:panelGrid columns="2" style="width: auto">                                                    
+                  <h:panelGrid columns="3" style="width: auto">                                                    
                     <p:commandLink styleClass="ui-button-remove fa fa-ban" 
                                    action="#{peopleAdministration.rejectUser(req)}"
                                    update="@form">
                       <p:confirm header="Reject user" 
-                                 message="Are you sure you want to reject this user?" 
+                                 message="Are you sure you want to reject #{req.email} ?" 
                                  icon="ui-icon-alert"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-check" 
+                                   rendered="#{peopleAdministration.notVerified(req) == false}"
                                    actionListener="#{peopleAdministration.activateUser(req)}" 
                                    update="@form">
                       <p:confirm header="Activate user" 
-                                 message="Activate selected user?" 
+                                 message="Activate #{req.email} ?" 
                                  icon="ui-icon-alert"/>
                     </p:commandLink>
+                    <p:commandLink styleClass="ui-button-allow fa fa-envelope" 
+                                   rendered="#{peopleAdministration.notVerified(req)}"
+                                   actionListener="#{peopleAdministration.resendAccountVerificationEmail(req)}" 
+                                   update="@form">
+                      <p:confirm header="Resend Email" 
+                                 message="Resend Account Validation Email to #{req.email} ?"
+                                 icon="ui-icon-alert"/>
+                    </p:commandLink> 
+
                   </h:panelGrid>
                 </p:column>
               </p:dataTable>
@@ -104,9 +110,6 @@
 
             </h:form>
 
-<!--            <script>
-                    userMgmtTabview.select(#{roleEnforcementPoint.tabIndex});
-            </script>-->
           </div>
         </div> 
       </p:layoutUnit>

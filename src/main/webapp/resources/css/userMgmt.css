@@ -11,7 +11,6 @@ and open the template in the editor.
 
 
 .ui-widget, .ui-widget .ui-widget .ui-widget-content {
-  //font-size: 70% !important;
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size: 12px;
 
@@ -78,12 +77,9 @@ and open the template in the editor.
 }
 
 .ui-tabs .ui-widget-content{
-  //min-height: 100%;
   height: auto !important; 
   margin: 0 !important;
   padding: 0 !important;
-  //visibility: visible;
-
 }
 
 .ui-tabs-panel.disabled{color:#888;}
@@ -147,9 +143,7 @@ and open the template in the editor.
 
 .BbcMainLayoutUser .ui-widget-content {
   border-width: 0px;  
-  //overflow-y: auto;
   overflow-y: auto;
-  //////////////////////
 }
 
 .BbcMainLayoutUser::-webkit-scrollbar {

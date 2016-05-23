@@ -25,6 +25,7 @@ public class Settings {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_SPARK_HISTORY_SERVER_IP = "spark_history_server_ip";
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
@@ -100,6 +101,7 @@ public class Settings {
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
+      SPARK_HISTORY_SERVER_IP = setIpVar(VARIABLE_SPARK_HISTORY_SERVER_IP, SPARK_HISTORY_SERVER_IP);
       CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
       HIWAY_DIR = setDirVar(VARIABLE_HIWAY_DIR, HIWAY_DIR);
       YARN_DEFAULT_QUOTA = setDirVar(VARIABLE_YARN_DEFAULT_QUOTA, YARN_DEFAULT_QUOTA);
@@ -149,6 +151,20 @@ public class Settings {
   public synchronized String getSparkDir() {
     checkCache();
     return SPARK_DIR;
+  }
+  
+  private String SPARK_CONF_DIR = SPARK_DIR + "/conf";
+  
+  public synchronized String getSparkConfDir(){
+      checkCache();
+      return SPARK_CONF_DIR;
+  }
+  
+  private String SPARK_CONF_FILE = SPARK_CONF_DIR + "/spark-defaults.conf";
+ 
+  public synchronized String getSparkConfFile() {
+    //checkCache();
+    return SPARK_CONF_FILE;
   }
 
   private String ADAM_USER = "glassfish";
@@ -309,12 +325,14 @@ public class Settings {
   public static final String DEFAULT_YARN_CONFFILE_NAME = "yarn-site.xml";
   public static final String DEFAULT_HADOOP_CONFFILE_NAME = "core-site.xml";
   public static final String DEFAULT_HDFS_CONFFILE_NAME = "hdfs-site.xml";
+  public static final String DEFAULT_SPARK_CONFFILE_NAME = "spark-defaults.conf";
 
   //Environment variable keys
   //TODO: Check if ENV_KEY_YARN_CONF_DIR should be replaced with ENV_KEY_YARN_CONF
   public static final String ENV_KEY_YARN_CONF_DIR = "hdfs";
   public static final String ENV_KEY_HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
   public static final String ENV_KEY_YARN_CONF = "YARN_CONF_DIR";
+  public static final String ENV_KEY_SPARK_CONF_DIR = "SPARK_CONF_DIR";
   //YARN constants
   public static final int YARN_DEFAULT_APP_MASTER_MEMORY = 512;
   public static final String YARN_DEFAULT_OUTPUT_PATH = "Logs/Yarn/";
@@ -328,6 +346,7 @@ public class Settings {
 //  public static final String HADOOP_CONF_DIR_VALUE = HADOOP_CONF_DIR;
 
   public static final String HADOOP_CONF_RELATIVE_DIR = "etc/hadoop";
+  public static final String SPARK_CONF_RELATIVE_DIR = "conf";
   public static final String YARN_CONF_RELATIVE_DIR = HADOOP_CONF_RELATIVE_DIR;
 
   //Spark constants
@@ -443,10 +462,20 @@ public class Settings {
 
   public static final int ELASTIC_PORT = 9300;
 
+  
+  // Spark
+  private String SPARK_HISTORY_SERVER_IP = "127.0.0.1:18080";
+
+  public synchronized String getSparkHistoryServerIp() {
+    checkCache();
+    return SPARK_HISTORY_SERVER_IP;
+  }  
+  
   // Hopsworks
   public static final Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERNAME_SEPARATOR = "__";
   public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
+  public static final String CA_DIR = "/srv/glassfish/domain1/config/ca/intermediate/";
   public static final int USERNAME_LEN = 8;
   public static final int MAX_USERNAME_SUFFIX = 99;
   public static final int MAX_RETRIES = 500;
