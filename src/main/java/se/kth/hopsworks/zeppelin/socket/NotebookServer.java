@@ -52,18 +52,17 @@ import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.Paragraph;
 import org.apache.zeppelin.scheduler.Job;
-import org.apache.zeppelin.scheduler.Job.Status;
 import org.apache.zeppelin.scheduler.JobListener;
-import org.quartz.JobListener;
+import org.apache.zeppelin.user.AuthenticationInfo;
 import org.quartz.SchedulerException;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 import se.kth.hopsworks.zeppelin.socket.Message.OP;
-import se.kth.hopsworks.zeppelin.user.AuthenticationInfo;
 
 /**
  * Zeppelin websocket service.
