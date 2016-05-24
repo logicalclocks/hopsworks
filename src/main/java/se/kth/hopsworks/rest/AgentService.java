@@ -47,19 +47,19 @@ public class AgentService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response sign(@Context HttpServletRequest req, String jsonString) throws AppException {
     JSONObject json = new JSONObject(jsonString);
-    String agentPubCert = "no certificate";
+    String pubAgentCert = "no certificate";
     String caPubCert = "no certificate";
     if (json.has("csr")) {
       String csr = json.getString("csr");
       try {
-        agentPubCert = PKIUtils.signWithServerCertificate(csr);
+        pubAgentCert = PKIUtils.signWithServerCertificate(csr);
         caPubCert = Files.toString(new File(Settings.CA_DIR + "/certs/intermediate.cert.pem"), Charsets.UTF_8);
       } catch (IOException | InterruptedException ex) {
         Logger.getLogger(AgentService.class.getName()).log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.toString());
       }
     }
-    CsrDTO dto = new CsrDTO(caPubCert, agentPubCert);
+    CsrDTO dto = new CsrDTO(caPubCert, pubAgentCert);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             dto).build();
   }
