@@ -11,6 +11,7 @@ import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.hopsworks.controller.LocalResourceDTO;
+import se.kth.hopsworks.controller.LocalResourceHopsWorks;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -27,7 +28,7 @@ public class SparkYarnRunnerBuilder {
   //Optional parameters
   private final List<String> jobArgs = new ArrayList<>();
   private String jobName = "Untitled Spark Job";
-  private List<LocalResourceDTO> extraFiles = new ArrayList<>();
+  private List<LocalResourceHopsWorks> extraFiles = new ArrayList<>();
 
   private int numberOfExecutors = 1;
   private int executorCores = 1;
@@ -86,19 +87,19 @@ public class SparkYarnRunnerBuilder {
     builder.localResourcesBasePath(stagingPath);
 
     //Add Spark jar
-    builder.addLocalResource(new LocalResourceDTO(
+    builder.addLocalResource(new LocalResourceHopsWorks(
             Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath,
             LocalResourceVisibility.PUBLIC, LocalResourceType.FILE, null),
             false);
     //Add app jar
-    builder.addLocalResource(new LocalResourceDTO(
+    builder.addLocalResource(new LocalResourceHopsWorks(
             Settings.SPARK_LOCRSC_APP_JAR, appJarPath, 
             LocalResourceVisibility.PUBLIC, LocalResourceType.FILE,null),
             !appJarPath.startsWith("hdfs:"));
 
      
     //Add extra files to local resources, use filename as key
-    for (LocalResourceDTO dto : extraFiles) {
+    for (LocalResourceHopsWorks dto : extraFiles) {
             builder.addLocalResource(dto, true);
     }
 
@@ -179,7 +180,7 @@ public class SparkYarnRunnerBuilder {
     return this;
   }
 
-  public SparkYarnRunnerBuilder setExtraFiles(List<LocalResourceDTO> extraFiles) {
+  public SparkYarnRunnerBuilder setExtraFiles(List<LocalResourceHopsWorks> extraFiles) {
     if (extraFiles == null) {
       throw new IllegalArgumentException("Map of extra files cannot be null.");
     }
@@ -187,7 +188,7 @@ public class SparkYarnRunnerBuilder {
     return this;
   }
 
-  public SparkYarnRunnerBuilder addExtraFile(LocalResourceDTO dto) {
+  public SparkYarnRunnerBuilder addExtraFile(LocalResourceHopsWorks dto) {
     if (dto.getName() == null || dto.getName().isEmpty()) {
       throw new IllegalArgumentException(
               "Filename in extra file mapping cannot be null or empty.");
@@ -199,7 +200,7 @@ public class SparkYarnRunnerBuilder {
     this.extraFiles.add(dto);
     return this;
   }
-   public SparkYarnRunnerBuilder addExtraFiles(List<LocalResourceDTO> projectLocalResources) {
+   public SparkYarnRunnerBuilder addExtraFiles(List<LocalResourceHopsWorks> projectLocalResources) {
     if(projectLocalResources != null &&!projectLocalResources.isEmpty()){
         this.extraFiles.addAll(projectLocalResources);
     }

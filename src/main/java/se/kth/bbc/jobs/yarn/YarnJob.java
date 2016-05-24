@@ -20,6 +20,7 @@ import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.hopsworks.controller.LocalResourceDTO;
+import se.kth.hopsworks.controller.LocalResourceHopsWorks;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -42,7 +43,7 @@ public abstract class YarnJob extends HopsJob {
   private boolean started = false;
 
   private JobState finalState = null;
-  protected List<LocalResourceDTO> projectLocalResources;
+  protected List<LocalResourceHopsWorks> projectLocalResources;
   /**
    *
    * @param job

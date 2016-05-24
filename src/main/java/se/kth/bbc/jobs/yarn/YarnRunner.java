@@ -36,6 +36,7 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.controller.LocalResourceDTO;
+import se.kth.hopsworks.controller.LocalResourceHopsWorks;
 import se.kth.hopsworks.util.IoUtils;
 import se.kth.hopsworks.util.Settings;
 
@@ -63,8 +64,8 @@ public class YarnRunner {
   private String appName;
   private final String amMainClass;
   private String amArgs;
-  private final Map<String, LocalResourceDTO> amLocalResourcesToCopy;
-  private final Map<String, LocalResourceDTO> amLocalResourcesOnHDFS;
+  private final Map<String, LocalResourceHopsWorks> amLocalResourcesToCopy;
+  private final Map<String, LocalResourceHopsWorks> amLocalResourcesOnHDFS;
   private final Map<String, String> amEnvironment;
   private String localResourcesBasePath;
   private String aggregatedLogPath;
@@ -200,7 +201,7 @@ public class YarnRunner {
     amArgs = amArgs.replaceAll(APPID_REGEX, id);
     stdOutPath = stdOutPath.replaceAll(APPID_REGEX, id);
     stdErrPath = stdErrPath.replaceAll(APPID_REGEX, id);
-    for (Entry<String, LocalResourceDTO> entry : amLocalResourcesToCopy.entrySet()) {
+    for (Entry<String, LocalResourceHopsWorks> entry : amLocalResourcesToCopy.entrySet()) {
       entry.getValue().setName(entry.getValue().getName().replaceAll(APPID_REGEX, id));
     }
     //TODO: thread-safety?
@@ -236,9 +237,9 @@ public class YarnRunner {
         && !amJarPath.isEmpty()
         ) {
       if (amJarPath.startsWith("hdfs:")) {
-        amLocalResourcesOnHDFS.put(amJarLocalName, new LocalResourceDTO(amJarLocalName, amJarPath, LocalResourceVisibility.PUBLIC, LocalResourceType.FILE, null));
+        amLocalResourcesOnHDFS.put(amJarLocalName, new LocalResourceHopsWorks(amJarLocalName, amJarPath, LocalResourceVisibility.PUBLIC, LocalResourceType.FILE, null));
       } else {
-        amLocalResourcesToCopy.put(amJarLocalName, new LocalResourceDTO(amJarLocalName, amJarPath, LocalResourceVisibility.PUBLIC, LocalResourceType.FILE, null));
+        amLocalResourcesToCopy.put(amJarLocalName, new LocalResourceHopsWorks(amJarLocalName, amJarPath, LocalResourceVisibility.PUBLIC, LocalResourceType.FILE, null));
       }
     }
     //Get filesystem
@@ -248,7 +249,7 @@ public class YarnRunner {
     String basePath = hdfsPrefix + localResourcesBasePath;
     logger.log(Level.FINER, "Base path: {0}", basePath);
     //For all local resources with local path: copy and add local resource
-    for (Entry<String, LocalResourceDTO> entry : amLocalResourcesToCopy.entrySet()) {
+    for (Entry<String, LocalResourceHopsWorks> entry : amLocalResourcesToCopy.entrySet()) {
       String key = entry.getKey();
       String source = entry.getValue().getPath();
       String filename = Utils.getFileName(source);
@@ -266,7 +267,7 @@ public class YarnRunner {
       localResources.put(key, scRsrc);
     }
     //For all local resources with hdfs path: add local resource
-    for (Entry<String, LocalResourceDTO> entry : amLocalResourcesOnHDFS.entrySet()) {
+    for (Entry<String, LocalResourceHopsWorks> entry : amLocalResourcesOnHDFS.entrySet()) {
       String key = entry.getKey();
       String pathToResource = entry.getValue().getPath();
 //      pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
@@ -500,9 +501,9 @@ public class YarnRunner {
     //Arguments to pass on in invocation of Application master
     private String amArgs;
     //List of paths to resources that should be copied to application master
-    private Map<String, LocalResourceDTO> amLocalResourcesToCopy = new HashMap<>();
+    private Map<String, LocalResourceHopsWorks> amLocalResourcesToCopy = new HashMap<>();
     //List of paths to resources that are already in HDFS, but AM should know about
-    private Map<String, LocalResourceDTO> amLocalResourcesOnHDFS = new HashMap<>();
+    private Map<String, LocalResourceHopsWorks> amLocalResourcesOnHDFS = new HashMap<>();
     //Application master environment
     private Map<String, String> amEnvironment = new HashMap<>();
     //Path where the application master expects its local resources to be (added to fs.getHomeDirectory)
@@ -707,7 +708,7 @@ public class YarnRunner {
      * @param dto
      * @return
      */
-    public Builder addLocalResource(LocalResourceDTO dto) {
+    public Builder addLocalResource(LocalResourceHopsWorks dto) {
       return addLocalResource(dto, true);
     }
 
@@ -722,7 +723,7 @@ public class YarnRunner {
      * @param removeAfterCopy
      * @return
      */
-    public Builder addLocalResource(LocalResourceDTO dto,
+    public Builder addLocalResource(LocalResourceHopsWorks dto,
         boolean removeAfterCopy) {
       if (dto.getPath().startsWith("hdfs")) {
         amLocalResourcesOnHDFS.put(dto.getName(), dto);

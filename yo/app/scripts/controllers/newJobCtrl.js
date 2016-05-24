@@ -43,14 +43,15 @@ angular.module('hopsWorksApp')
             //Create variables for user-entered information
             this.jobtype; //Will hold the selection of which job to create.
             this.jobname; //Will hold the name of the job
-            this.localResources = {"entry": []}; //Will hold extra libraries
-            this.libDetails = {
-                "name" : null,
-                "path" : null,
-                "visibility" : null,
-                "type" : null,
-                "pattern" : null
-            }
+            this.localResources = {"localResourcesAttrs" : []}; //Will hold extra libraries
+//            //this.localResources = [];
+//            this.localResourceDTO = {
+//                "name" : null,
+//                "path" : null,
+//                "visibility" : null,
+//                "type" : null,
+//                "pattern" : null
+//            }
            
             this.phase = 0; //The phase of creation we are in.
             this.runConfig; //Will hold the job configuration
@@ -411,7 +412,25 @@ angular.module('hopsWorksApp')
                   });
                   break;
                 case "LIBRARY":
-                  self.localResources.entry.push({"key": filename, "value": path});
+//                  self.localResources.entry.push({"key": "test_filename", "value": "test_path"});
+//                  self.localResourceDTO.name = "testfilename";
+//                  self.localResourceDTO.path = "testpath";
+//                  self.localResourceDTO.type = "type_demo";
+//                  self.localResourceDTO.visibility = "visibility_demo";
+                  self.localResources.localResourcesAttrs.push({
+                      'name': "demo_name",
+                      'path': "demo_path", 
+                      'type': "type_demo",
+                      'visibility': "visibility_demo",
+                      'pattern': "pattern_demo"});
+//                  self.localResources.entry.push({"key" : filename, 
+//                      "value" : self.libDetails});
+//                  self.localResources.entry.push({"key": "filename_demo", "value": {"name" : "demo_name",
+//                          "path" : "demo_path", 
+//                      "type": "type_demo",
+//                      "visibility": "visibility_demo",
+//                      "pattern": "pattern_demo"}
+//                  });
                   break;
                 case "CUNEIFORM":
                   CuneiformService.inspectStoredWorkflow(self.projectId, path).then(
@@ -449,7 +468,7 @@ angular.module('hopsWorksApp')
                         self.adamState.processparameter = parameter;
                     }
                     //Add localresource into localresources lists
-                    this.localResources.push(self.libDetails);
+                    //this.localResources.push(self.libDetails);
                     
                     ModalService.selectFile('lg', self.selectFileRegexes[reason],
                             self.selectFileErrorMsgs[reason]).then(
