@@ -13,6 +13,7 @@ import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.hopsworks.controller.LocalResourceDTO;
+import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.controller.LocalResourceHopsWorks;
 import se.kth.hopsworks.util.Settings;
 

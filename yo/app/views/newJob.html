@@ -190,10 +190,10 @@
               </h3>
               <div ng-show="newJobCtrl.localResources.length > 0">
                 <div class="row">
-                  <div class="col-md-4" ng-model="newJobCtrl.localResources.name">
+                    <div class="col-md-4">
                     <strong>Name</strong> <i class="fa fa-info-circle" tooltip="The name of the jar as it will appear in the Yarn distributed cache. By default, the filename of the resource." style="margin-left: 10px"></i>
                   </div>
-                  <div class="col-md-4" ng-model="newJobCtrl.localResources.path">
+                  <div class="col-md-4" >
                     <strong>Path</strong> <i class="fa fa-info-circle" tooltip="The HDFS path to the selected jar file." style="margin-left: 10px"></i>
                   </div>
                  <div class="col-md-2">
@@ -213,7 +213,7 @@
                                <option value="application">Application</option>
                              </select>
                      </div>  
-                  <div class="col-md-4" ng-model="newJobCtrl.localResources.pattern">
+                  <div class="col-md-4" >
                     <strong>Pattern</strong> <i class="fa fa-info-circle" tooltip="The HDFS path to the selected jar file." style="margin-left: 10px"></i>
                   </div>
                 </div>

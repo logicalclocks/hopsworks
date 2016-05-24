@@ -43,8 +43,8 @@ angular.module('hopsWorksApp')
             //Create variables for user-entered information
             this.jobtype; //Will hold the selection of which job to create.
             this.jobname; //Will hold the name of the job
-            this.localResources = {"localResourcesAttrs" : []}; //Will hold extra libraries
-//            //this.localResources = [];
+           // this.localResources = {"localResourcesAttrs" : []}; //Will hold extra libraries
+            this.localResources = [];
 //            this.localResourceDTO = {
 //                "name" : null,
 //                "path" : null,
@@ -417,7 +417,7 @@ angular.module('hopsWorksApp')
 //                  self.localResourceDTO.path = "testpath";
 //                  self.localResourceDTO.type = "type_demo";
 //                  self.localResourceDTO.visibility = "visibility_demo";
-                  self.localResources.localResourcesAttrs.push({
+                  self.localResources.push({
                       'name': "demo_name",
                       'path': "demo_path", 
                       'type': "type_demo",
