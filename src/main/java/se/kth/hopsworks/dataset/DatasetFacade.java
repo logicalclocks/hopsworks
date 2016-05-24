@@ -97,7 +97,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
             Dataset.class);
     List<Dataset> datasets = query.getResultList();
     
-    List<DataSetDTO> ds = new ArrayList<DataSetDTO>();
+    List<DataSetDTO> ds = new ArrayList<>();
     for (Dataset d : datasets) {
         DataSetDTO dto = new DataSetDTO();
         dto.setDescription(d.getDescription());
