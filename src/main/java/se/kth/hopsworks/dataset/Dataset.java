@@ -65,6 +65,12 @@ public class Dataset implements Serializable {
   })
   @ManyToOne(optional = false)
   private Inode inode;
+  
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "inode_id")
+  private int inodeId;  
+  
   @Size(max = 3000)
   @Column(name = "description")
   private String description;
@@ -103,11 +109,13 @@ public class Dataset implements Serializable {
   public Dataset(Integer id, Inode inode) {
     this.id = id;
     this.inode = inode;
+    this.inodeId = inode.getId();    
   }
 
   public Dataset(Inode inode, Project project) {
     this.inode = inode;
     this.projectId = project;
+    this.inodeId = inode.getId();
   }
   
   public Integer getId() {
@@ -204,6 +212,18 @@ public class Dataset implements Serializable {
     return true;
   }
 
+  /**
+   * DO NOT USE THIS - used by ePipe
+   * @return 
+   */
+  public int getInodeId() {
+    return inodeId;
+  }
+
+  public void setInodeId(int inodeId) {
+    this.inodeId = inodeId;
+  }
+  
   @Override
   public String toString() {
     return "se.kth.hopsworks.dataset.Dataset[ id=" + id + " ]";
