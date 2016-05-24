@@ -5,9 +5,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -19,9 +16,6 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 import se.kth.hopsworks.rest.AppException;
-import se.kth.bbc.project.Project;
-import se.kth.hopsworks.user.model.Users;
-import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -49,7 +43,7 @@ public class UserCertsFacade {
             UserCerts res = query.getSingleResult();
             return res;
         } catch (EntityNotFoundException e) {
-            e.printStackTrace();
+            Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, e);
         }
         return new UserCerts();
     }
@@ -61,7 +55,7 @@ public class UserCertsFacade {
             List<UserCerts> res = query.getResultList();
             return res;
         } catch (EntityNotFoundException e) {
-            e.printStackTrace();
+            Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, e);
         }
         return new ArrayList<>();
     }
@@ -74,7 +68,7 @@ public class UserCertsFacade {
             List<UserCerts> res = query.getResultList();      
             return res;
         } catch (EntityNotFoundException e) {
-            e.printStackTrace();
+            Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, e);
         }
         return new ArrayList<>();
     }
@@ -87,7 +81,7 @@ public class UserCertsFacade {
             List<UserCerts> res = query.getResultList();      
             return res;
         } catch (EntityNotFoundException e) {
-            e.printStackTrace();
+            Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, e);
         }
         return new ArrayList<>();
     } 
@@ -97,17 +91,9 @@ public class UserCertsFacade {
     }
     
     public void putUserCerts(int projectId, int userId){
-        
-     File kStore = new File("/tmp/tempstores/" + projectId + "__" + userId + "__kstore.jks");
-     File tStore = new File("/tmp/tempstores/" + projectId + "__" + userId + "__tstore.jks");
-     
-     FileInputStream kfin = null;
-     FileInputStream tfin = null;
-        
-        try {
-            kfin = new FileInputStream(kStore);
-            tfin = new FileInputStream(tStore);
-            
+      try(FileInputStream kfin = new FileInputStream(new File("/tmp/tempstores/" + projectId + "__" + userId + "__kstore.jks"));
+          FileInputStream tfin = new FileInputStream(new File("/tmp/tempstores/" + projectId + "__" + userId + "__tstore.jks"))){
+       
             byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
             byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
             
@@ -116,8 +102,8 @@ public class UserCertsFacade {
             uc.setUserCert(tStoreBlob);
             em.merge(uc);
             em.persist(uc);
-            em.flush();
-            
+            em.flush();    
+      
         } catch (FileNotFoundException e) {
             Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, e);
         } catch (IOException ex) {
