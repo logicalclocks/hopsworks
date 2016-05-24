@@ -214,10 +214,12 @@ public class KafkaFacade {
         } finally {
             zkClient.close();
         }
+
+        //if schema is empty, select a default schema
         //persist topic into database
-        ProjectTopics pt = new ProjectTopics(topicName, projectId, 
+        ProjectTopics pt = new ProjectTopics(topicName, projectId,
                 topicDto.getSchemaName(), topicDto.getSchemaVersion());
-        
+
         em.merge(pt);
         em.persist(pt);
         em.flush();
@@ -483,10 +485,10 @@ public class KafkaFacade {
 
     public void updateSchemaForTopics(SchemaDTO schemaDto) {
         //create the schema bean and persist it.
-        
-        Schemas schema = new Schemas(new SchemasPK(schemaDto.getName(), schemaDto.getVersion()),
+
+        SchemaTopics schema = new SchemaTopics(schemaDto.getName(), schemaDto.getVersion(),
                 schemaDto.getContents(), new Date());
-        
+
         em.merge(schema);
         em.persist(schema);
         em.flush();
@@ -496,26 +498,26 @@ public class KafkaFacade {
     public List<SchemaDTO> getSchemaForTopic(String topicName) throws AppException {
 
         List<SchemaDTO> schemaDtos = Collections.EMPTY_LIST;
-        
-        ProjectTopics topic =  em.createNamedQuery(
+
+        ProjectTopics topic = em.createNamedQuery(
                 "ProjectTopics.findByTopicName", ProjectTopics.class)
                 .setParameter("topicName", topicName).getSingleResult();
 
-        if(topic == null){
-           throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+        if (topic == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "topic not found in database");
         }
 
-        Schemas schema = em.find(Schemas.class, 
-                new SchemasPK(topic.getSchemaName(), topic.getSchemaVersion()));
-        
-        if(schema == null){
-           throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+        SchemaTopics schema = em.find(SchemaTopics.class,
+                new SchemaTopicsPK(topic.getSchemaName(), topic.getSchemaVersion()));
+
+        if (schema == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "topic has not schema");
         }
-        
-        schemaDtos.add(new SchemaDTO(schema.getSchemasPK().getName(),
-                schema.getContents(), schema.getSchemasPK().getVersion()));
+
+        schemaDtos.add(new SchemaDTO(schema.getSchemaTopicsPK().getName(),
+                schema.getContents(), schema.getSchemaTopicsPK().getVersion()));
 
         return schemaDtos;
 
@@ -523,25 +525,32 @@ public class KafkaFacade {
 
     public List<SchemaDTO> listSchemasForTopics() {
         //get all schemas, and return the DTO
-        List<SchemaDTO> schemaDtos = Collections.EMPTY_LIST;
+        Map<String, List<Integer>> schemas = new HashMap<String, List<Integer>>();
+        List<SchemaDTO> schemaDtos = new ArrayList<SchemaDTO>();
+        String schemaName;
 
-        TypedQuery<Schemas> query = em.createNamedQuery("Schema.findAll", Schemas.class);
+        TypedQuery<SchemaTopics> query = em.createNamedQuery("SchemaTopics.findAll", SchemaTopics.class);
 
-        for (Schemas schema : query.getResultList()) {
+        for (SchemaTopics schema : query.getResultList()) {
+            schemaName = schema.getSchemaTopicsPK().getName();
 
-            schemaDtos.add(new SchemaDTO( schema.getSchemasPK().getName(), 
-                    schema.getContents(), schema.getSchemasPK().getVersion()));
+            if (schemas.get(schemaName) == null) {
+                schemas.put(schemaName, new ArrayList<Integer>());
+            }
 
+            schemas.get(schemaName).add(schema.getSchemaTopicsPK().getVersion());
+        }
+        for (Map.Entry<String, List<Integer>> schema : schemas.entrySet()) {
+            schemaDtos.add(new SchemaDTO(schema.getKey(), schema.getValue()));
         }
 
         return schemaDtos;
-
     }
 
     public void deleteSchemaForTopics(String schemaName, Integer version) throws AppException {
+        
         //get the bean and remove it
-
-        Schemas schema = em.find(Schemas.class, new SchemasPK(schemaName, version));
+        SchemaTopics schema = em.find(SchemaTopics.class, new SchemaTopicsPK(schemaName, version));
 
         if (schema == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
@@ -549,7 +558,6 @@ public class KafkaFacade {
         }
 
         em.remove(schema);
-
     }
 
     public Set<String> getBrokerList() throws AppException {

@@ -533,6 +533,30 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },              
+              createSchema: function (size, projectId) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/createSchema.html',
+                  controller: 'CreateSchemaCtrl as createSchemaCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projectId: function () {
+                      return projectId;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },     
               createTopic: function (size, projectId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/createTopic.html',

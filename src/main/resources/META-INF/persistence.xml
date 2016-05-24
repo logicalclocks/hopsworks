@@ -68,6 +68,7 @@
     <class>io.hops.kafka.ProjectTopics</class>
     <class>io.hops.kafka.SharedTopics</class>
     <class>io.hops.kafka.Users</class>
+    <class>io.hops.kafka.SchemaTopics</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

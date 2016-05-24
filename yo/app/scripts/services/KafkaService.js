@@ -47,6 +47,28 @@ angular.module('hopsWorksApp')
               defaultTopicValues: function (projectId){
                 return $http.get('/api/project/' + projectId + '/kafka/topic/defaultValues');
               },
+              
+              getSchemasForTopics: function (projectId){
+                return $http.get('/api/project/' + projectId + '/kafka/schemas');
+              },
+              /**
+               * Create a new schema for topics in the given project, of the given type. 
+               * @param {type} projectId 
+               * @param {type} type
+               * @param {type} schemaDetails The configuration of the newly created topic.
+               * @returns {undefined} The newly created topic object.
+               */
+              createSchema: function (projectId, schemaDetails) {
+                var req = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/kafka/schema/add',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: schemaDetails
+                };
+                return $http(req);
+              },
               /**
                * Create a new Topic in the given project, of the given type. 
                * @param {type} projectId 

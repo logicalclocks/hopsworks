@@ -13,16 +13,27 @@ angular.module('hopsWorksApp')
             self.replication_wrong_value = 1;
             self.wrong_values = 1;
             
+            self.schemas = [];
+            self.schemaName;
+            self.schemaVersion;
+            self.schemForTopic_new;
+            
             self.init = function() {
                 KafkaService.defaultTopicValues(self.projectId).then(
                     function (success) {
                     self.num_partitions = success.data.numOfPartitions;
                     self.num_replicas = success.data.numOfReplicas;
                     self.max_num_replicas = success.data.maxNumOfReplicas;
-                                  
                 }, function (error) {
                     growl.error(error.data.errorMsg, {title: 'Could not get defualt topic values', ttl: 5000, referenceId: 21});
                    });
+                   
+               KafkaService.getSchemasForTopics(self.projectId).then(
+                    function (success){
+                      self.schemas = success;
+                    }, function (error) {
+                      growl.error(error.data.errorMsg, {title: 'Could not get schemas for topic', ttl: 5000, referenceId: 21});
+                      });
             };
             
             self.init();            
@@ -53,6 +64,8 @@ angular.module('hopsWorksApp')
               topicDetails.name=self.topicName;
               topicDetails.numOfPartitions =self.num_partitions;
               topicDetails.numOfReplicas =self.num_replicas;
+              topicDetails.schemaName = self.schemaName;
+              topicDetails.schemaVersion = self.schemaVersion;                                  
 
               KafkaService.createTopic(self.projectId, topicDetails).then(
                       function (success) {

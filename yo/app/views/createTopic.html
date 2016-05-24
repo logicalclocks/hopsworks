@@ -32,6 +32,18 @@
                 </div>
             </div>
             <div ng-if="createTopicCtrl.replication_wrong_value === -1" style="color: red">{{"Currently, maximum number of replicas should be "+createTopicCtrl.max_num_replicas}}</div>
+            
+            <div class="col-md-12">
+                <label class="control-label">Topic schema </label><br>
+                <div class="col-sm-6">
+                    <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.schemaName" placeholder="schema name">
+                </div>
+                <div class="col-sm-6">
+                    <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.schemaVersion" placeholder="schema version">
+                </div>
+            </div>
+            
+            
             <br>
         </div>
         <div class="row"></div>

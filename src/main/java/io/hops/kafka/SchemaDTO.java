@@ -6,6 +6,7 @@
 package io.hops.kafka;
 
 import java.io.Serializable;
+import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
@@ -15,7 +16,8 @@ public class SchemaDTO implements Serializable {
     private String name;
     private String contents;
     private int version;
-
+    private List<Integer> versions;
+    
     public SchemaDTO() {
     }
 
@@ -25,6 +27,11 @@ public class SchemaDTO implements Serializable {
         this.version = version;
     }
 
+    public SchemaDTO(String name, List<Integer> versions) {
+        this.name = name;
+        this.versions = versions;
+    }
+    
     public String getContents() {
         return contents;
     }
@@ -47,6 +54,14 @@ public class SchemaDTO implements Serializable {
 
     public void setVersion(int version) {
         this.version = version;
+    }
+
+    public List<Integer> getVersions() {
+        return versions;
+    }
+
+    public void setVersions(List<Integer> versions) {
+        this.versions = versions;
     }
     
 }

@@ -2,13 +2,13 @@
 <div class="modal-header">
     <button class="close" ng-click="createAclCtrl.close()" data-dismiss="modal" aria-hidden="true"
             type="button">&times;</button>
-    <h2 class="modal-title">Enter Topic Details</h2>
+    <h2 class="modal-title">Enter ACL Details</h2>
 </div>
 <div growl reference="21" class="pull-right"></div>
 <div class="modal-body">
 
 
-    <form role="form" name="pickProjectForm" 
+    <form role="form" name="pickUserForm" 
           ng-submit="createAclCtrl.createTopicAcl()" novalidate
           class="form-validate">                                                                                                                              
         <div class="view-info">
@@ -85,21 +85,21 @@
               <ui-select name="project_name" theme="select2" style="margin-left: 10px"
                  ng-model="createAclCtrl.username" style="min-width: 500px;" required>
 
-              <ui-select-match placeholder="Select a user: ">{{$select.createAclCntrl.username}}</ui-select-match>
+              <ui-select-match placeholder="Select a user: ">{{$select.selected.user.userName}}</ui-select-match>
 
-              <ui-select-choices repeat="member in createAclCntrl.project_members | filter: $select.search">
-                <div ng-bind-html="member.userName | highlight: $select.search"></div>
+              <ui-select-choices repeat="item.user.userName as item in createAclCtrl.users | filter: $select.search">
+                <div ng-bind-html="item.user.userName | highlight: $select.search"></div>
                 <small>
-                  User: {{member.userName}}
+                  User: {{item.user.userName}}
                 </small>
               </ui-select-choices>
 
               </ui-select><br>
-<!--              <span ng-show="(pickProjectForm.$submitted || pickProjectForm.project_name.$dirty) & amp;
+<!--              <span ng-show="(pickUserForm.$submitted || pickUserForm.project_name.$dirty) & amp;
                & amp;
                pickProjectForm.project_name.$error.required"
             class="text-danger ng-hide">
-        Choose a project.
+        Choose a user.
       </span>-->
     </div>
 

@@ -412,8 +412,9 @@ public class KafkaService {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
     }
     
-    @PUT
+    @POST
     @Path("/schema/add")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
     public Response updateTopicSchema(SchemaDTO schamaData,
@@ -456,7 +457,7 @@ public class KafkaService {
     }
 
     @GET
-    @Path("/schema")
+    @Path("/schemas")
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response listSchemasForTopics(
@@ -493,7 +494,7 @@ public class KafkaService {
         }
 
         kafka.deleteSchemaForTopics(schemaName, version);
-        json.setSuccessMessage("Schem for topic removed successfuly");
+        json.setSuccessMessage("Schema for topic removed successfuly");
 
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 json).build();

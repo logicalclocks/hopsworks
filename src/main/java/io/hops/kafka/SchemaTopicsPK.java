@@ -17,7 +17,7 @@ import javax.validation.constraints.Size;
  * @author misdess
  */
 @Embeddable
-public class SchemasPK implements Serializable {
+public class SchemaTopicsPK implements Serializable {
 
     @Basic(optional = false)
     @NotNull
@@ -29,10 +29,10 @@ public class SchemasPK implements Serializable {
     @Column(name = "version")
     private int version;
 
-    public SchemasPK() {
+    public SchemaTopicsPK() {
     }
 
-    public SchemasPK(String name, int version) {
+    public SchemaTopicsPK(String name, int version) {
         this.name = name;
         this.version = version;
     }
@@ -64,10 +64,10 @@ public class SchemasPK implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof SchemasPK)) {
+        if (!(object instanceof SchemaTopicsPK)) {
             return false;
         }
-        SchemasPK other = (SchemasPK) object;
+        SchemaTopicsPK other = (SchemaTopicsPK) object;
         if ((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name))) {
             return false;
         }
@@ -79,7 +79,7 @@ public class SchemasPK implements Serializable {
 
     @Override
     public String toString() {
-        return "io.hops.kafka.SchemasPK[ name=" + name + ", version=" + version + " ]";
+        return "io.hops.kafka.SchemaTopicsPK[ name=" + name + ", version=" + version + " ]";
     }
     
 }

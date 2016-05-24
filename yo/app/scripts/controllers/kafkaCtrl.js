@@ -116,6 +116,22 @@ angular.module('hopsWorksApp')
              * Navigate to the new job page.
              * @returns {undefined}
              */
+            self.createSchema = function () {
+
+              ModalService.createSchema('lg', self.projectId).then(
+                      function (success) {
+                          growl.success(success.data.successMessage, {title: 'New schema added successfully project.', ttl: 2000});
+                          self.getAllTopics();
+
+                      }, function (error) {
+                //The user changed their mind.
+              });
+
+            };
+            /**
+             * Navigate to the new job page.
+             * @returns {undefined}
+             */
             self.createTopic = function () {
 
               if(self.topics.length >10){
