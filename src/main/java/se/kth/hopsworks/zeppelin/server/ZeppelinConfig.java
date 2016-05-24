@@ -14,9 +14,12 @@ import java.util.logging.Logger;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
+import org.apache.zeppelin.notebook.JobListenerFactory;
+import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
+import org.apache.zeppelin.scheduler.JobListener;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import se.kth.hopsworks.util.ConfigFileGenerator;
 import se.kth.hopsworks.util.Settings;
@@ -40,7 +43,8 @@ public class ZeppelinConfig {
 
     private Notebook notebook;
     private NotebookServer notebookServer;
-    private InterpreterFactory replFactory;
+    private InterpreterFactory interpreterFactory;
+    private JobListenerFactory jobListenerFactory;
     private NotebookRepo notebookRepo;
     private final Settings settings;
     private final String projectName;
@@ -91,10 +95,16 @@ public class ZeppelinConfig {
             this.conf = loadConfig();
             this.notebookServer = setupNotebookServer();
             this.schedulerFactory = SchedulerFactory.singleton();
-            this.replFactory = new InterpreterFactory(conf, notebookServer);
+            this.interpreterFactory = new InterpreterFactory(conf, notebookServer);
+            this.jobListenerFactory = new JobListenerFactory() {
+              @Override
+              public JobListener getParagraphJobListener(Note note) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+              }
+            };
             this.notebookRepo = new NotebookRepoSync(conf);
             this.notebook = new Notebook(conf, notebookRepo, schedulerFactory,
-                    replFactory, notebookServer);
+                    interpreterFactory, jobListenerFactory, notebookServer);
         } catch (Exception e) {
             if (newDir) { // if the folder was newly created delete it
                 removeProjectDirRecursive();
@@ -134,7 +144,7 @@ public class ZeppelinConfig {
     }
 
     public InterpreterFactory getReplFactory() {
-        return this.replFactory;
+        return this.interpreterFactory;
     }
 
     public String getProjectName() {
@@ -347,8 +357,8 @@ public class ZeppelinConfig {
     public void clean() {
         LOGGGER.log(Level.INFO, "Cleanup of zeppelin resources for project ==> {0}",
                 this.projectName);
-        if (this.replFactory != null) {
-            this.replFactory.close();
+        if (this.interpreterFactory != null) {
+            this.interpreterFactory.close();
         }
         if (this.schedulerFactory != null) {
             this.schedulerFactory.destroy();

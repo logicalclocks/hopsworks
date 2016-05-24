@@ -19,8 +19,8 @@ package se.kth.hopsworks.zeppelin.socket;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -52,6 +52,7 @@ import org.apache.zeppelin.notebook.Paragraph;
 import org.apache.zeppelin.scheduler.Job;
 import org.apache.zeppelin.scheduler.Job.Status;
 import org.apache.zeppelin.scheduler.JobListener;
+import org.apache.zeppelin.search.SearchService;
 import org.quartz.SchedulerException;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
@@ -67,7 +68,7 @@ import se.kth.hopsworks.zeppelin.socket.Message.OP;
 @ServerEndpoint(value = "/zeppelin/ws",
         configurator = ZeppelinEndpointConfig.class)
 public class NotebookServer implements
-        JobListenerFactory, AngularObjectRegistryListener {
+        JobListenerFactory, AngularObjectRegistryListener, SearchService {
 
   private static final Logger logger = Logger.getLogger(NotebookServer.class.
           getName());
@@ -797,6 +798,41 @@ public class NotebookServer implements
         p.setStatus(Status.ERROR);
       }
     }
+  }
+
+  @Override
+  public List<Map<String, String>> query(String string) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void updateIndexDoc(Note note) throws IOException {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void addIndexDocs(Collection<Note> clctn) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void addIndexDoc(Note note) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void deleteIndexDocs(Note note) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void deleteIndexDoc(Note note, Paragraph prgrph) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void close() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 
   /**

@@ -107,24 +107,24 @@
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin</artifactId>
-      <version>0.6.0-incubating-SNAPSHOT</version>
+      <version>0.5.6-incubating</version>
       <type>pom</type>
     </dependency>
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-interpreter</artifactId>
-      <version>0.6.0-incubating-SNAPSHOT</version>
+      <version>0.5.6-incubating</version>
       <type>jar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-zengine</artifactId>
-      <version>0.6.0-incubating-SNAPSHOT</version>
+      <version>0.5.6-incubating</version>
     </dependency>
     <dependency>		
       <groupId>org.apache.zeppelin</groupId>		
       <artifactId>zeppelin-web</artifactId>		
-      <version>0.6.0-incubating-SNAPSHOT</version>		
+      <version>0.5.6-incubating</version>		
       <type>war</type>		
     </dependency>
     
