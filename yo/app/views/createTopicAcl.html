@@ -89,9 +89,9 @@
 
               <ui-select-choices repeat="item.user.userName as item in createAclCtrl.users | filter: $select.search">
                 <div ng-bind-html="item.user.userName | highlight: $select.search"></div>
-                <small>
+<!--                <small>
                   User: {{item.user.userName}}
-                </small>
+                </small>-->
               </ui-select-choices>
 
               </ui-select><br>

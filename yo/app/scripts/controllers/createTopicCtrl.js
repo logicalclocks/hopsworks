@@ -14,9 +14,8 @@ angular.module('hopsWorksApp')
             self.wrong_values = 1;
             
             self.schemas = [];
-            self.schemaName;
+            self.schema;
             self.schemaVersion;
-            self.schemForTopic_new;
             
             self.init = function() {
                 KafkaService.defaultTopicValues(self.projectId).then(
@@ -30,14 +29,13 @@ angular.module('hopsWorksApp')
                    
                KafkaService.getSchemasForTopics(self.projectId).then(
                     function (success){
-                      self.schemas = success;
+                      self.schemas = success.data;
                     }, function (error) {
                       growl.error(error.data.errorMsg, {title: 'Could not get schemas for topic', ttl: 5000, referenceId: 21});
                       });
             };
             
             self.init();            
-            
             
             self.createTopic = function () {
               
@@ -64,7 +62,7 @@ angular.module('hopsWorksApp')
               topicDetails.name=self.topicName;
               topicDetails.numOfPartitions =self.num_partitions;
               topicDetails.numOfReplicas =self.num_replicas;
-              topicDetails.schemaName = self.schemaName;
+              topicDetails.schemaName = self.schema.name;
               topicDetails.schemaVersion = self.schemaVersion;                                  
 
               KafkaService.createTopic(self.projectId, topicDetails).then(
