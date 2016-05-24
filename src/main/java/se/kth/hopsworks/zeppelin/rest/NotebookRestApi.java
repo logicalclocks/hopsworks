@@ -1,5 +1,6 @@
 package se.kth.hopsworks.zeppelin.rest;
 
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,7 +31,10 @@ import se.kth.hopsworks.zeppelin.rest.message.NewParagraphRequest;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.apache.zeppelin.notebook.NoteInfo;
@@ -59,6 +63,46 @@ public class NotebookRestApi {
     this.project = project;
     this.zeppelinConf = zeppelinConf;
     this.roleInProject = userRole;
+  }
+
+  /**
+   * get note authorization information
+   *
+   * @param noteId
+   * @return
+   */
+  @GET
+  @Path("{noteId}/permissions")
+  public Response getNotePermissions(@PathParam("noteId") String noteId) {
+    HashMap<String, Set<String>> permissionsMap = new HashMap();
+    return new JsonResponse<>(Status.OK, "", permissionsMap).build();
+  }
+
+  String ownerPermissionError(Set<String> current,
+          Set<String> allowed) throws IOException {
+    LOG.info(
+            "Cannot change permissions. Connection owners {}. Allowed owners {}",
+            current.toString(), allowed.toString());
+    return "Insufficient privileges to change permissions.\n\n"
+            + "Allowed owners: " + allowed.toString() + "\n\n"
+            + "User belongs to: " + current.toString();
+  }
+
+  /**
+   * set note authorization information
+   *
+   * @param noteId
+   * @param req
+   * @return
+   * @throws java.io.IOException
+   */
+  @PUT
+  @Path("{noteId}/permissions")
+  public Response putNotePermissions(@PathParam("noteId") String noteId,
+          String req)
+          throws IOException {
+
+    return new JsonResponse<>(Status.OK).build();
   }
 
   /**
@@ -99,7 +143,7 @@ public class NotebookRestApi {
               setting.id(),
               setting.getName(),
               setting.getGroup(),
-              setting.getInterpreterGroup(),
+              setting.getInterpreterInfos(),
               true)
       );
     }
@@ -120,19 +164,18 @@ public class NotebookRestApi {
                 setting.id(),
                 setting.getName(),
                 setting.getGroup(),
-                setting.getInterpreterGroup(),
+                setting.getInterpreterInfos(),
                 false)
         );
       }
     }
-    return new JsonResponse(Status.OK, "", settingList).build();
+    return new JsonResponse<>(Status.OK, "", settingList).build();
   }
 
   @GET
-  public Response getNotebookList() throws
-          IOException {
+  public Response getNotebookList() throws IOException {
     List<NoteInfo> notesInfo = zeppelinConf.getNotebookRepo().list();
-    return new JsonResponse(Status.OK, "", notesInfo).build();
+    return new JsonResponse<>(Status.OK, "", notesInfo).build();
   }
 
   @GET
@@ -145,6 +188,35 @@ public class NotebookRestApi {
     }
 
     return new JsonResponse<>(Status.OK, "", note).build();
+  }
+
+  /**
+   * export note REST API
+   *
+   * @param
+   * @return note JSON with status.OK
+   * @throws IOException
+   */
+  @GET
+  @Path("export/{id}")
+  public Response exportNoteBook(@PathParam("id") String noteId) throws
+          IOException {
+    String exportJson = zeppelinConf.getNotebook().exportNote(noteId);
+    return new JsonResponse(Status.OK, "", exportJson).build();
+  }
+
+  /**
+   * import new note REST API
+   *
+   * @param req - notebook Json
+   * @return JSON with new note ID
+   * @throws IOException
+   */
+  @POST
+  @Path("import")
+  public Response importNotebook(String req) throws IOException {
+    Note newNote = zeppelinConf.getNotebook().importNote(req, null);
+    return new JsonResponse<>(Status.CREATED, "", newNote.getId()).build();
   }
 
   /**
@@ -223,7 +295,7 @@ public class NotebookRestApi {
     Note newNote = zeppelinConf.getNotebook().cloneNote(notebookId, newNoteName);
     zeppelinConf.getNotebookServer().broadcastNote(newNote);
     zeppelinConf.getNotebookServer().broadcastNoteList();
-    return new JsonResponse(Status.CREATED, "", newNote.getId()).build();
+    return new JsonResponse<>(Status.CREATED, "", newNote.getId()).build();
   }
 
   /**
@@ -323,6 +395,7 @@ public class NotebookRestApi {
       zeppelinConf.getNotebookServer().broadcastNote(note);
       return new JsonResponse(Status.OK, "").build();
     } catch (IndexOutOfBoundsException e) {
+      LOG.error("Exception in NotebookRestApi while moveParagraph ", e);
       return new JsonResponse(Status.BAD_REQUEST,
               "paragraph's new index is out of bound").build();
     }
@@ -415,8 +488,7 @@ public class NotebookRestApi {
   @GET
   @Path("job/{notebookId}")
   public Response getNoteJobStatus(@PathParam("notebookId") String notebookId)
-          throws
-          IOException, IllegalArgumentException {
+          throws IOException, IllegalArgumentException {
     LOG.info("get notebook job status.");
     Note note = zeppelinConf.getNotebook().getNote(notebookId);
     if (note == null) {
@@ -597,6 +669,15 @@ public class NotebookRestApi {
     LOG.info("Searching notebooks for: {}", queryTerm);
     List<Map<String, String>> notebooksFound = zeppelinConf.getNotebookIndex().
             query(queryTerm);
+// TODO check if notes in other projects are returned 
+//    for (int i = 0; i < notebooksFound.size(); i++) {
+//      String[] Id = notebooksFound.get(i).get("id").split("/", 2);
+//      String noteId = Id[0];
+//      if () {
+//        notebooksFound.remove(i);
+//        i--;
+//      }
+//    }
     LOG.info("{} notbooks found", notebooksFound.size());
     return new JsonResponse<>(Status.OK, notebooksFound).build();
   }

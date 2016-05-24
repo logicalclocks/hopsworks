@@ -13,15 +13,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
+import org.apache.zeppelin.dep.DependencyResolver;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
 import org.apache.zeppelin.notebook.Notebook;
+import org.apache.zeppelin.notebook.NotebookAuthorization;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import org.apache.zeppelin.search.LuceneSearch;
 import org.apache.zeppelin.search.SearchService;
 import org.quartz.SchedulerException;
+import org.sonatype.aether.RepositoryException;
 import se.kth.hopsworks.util.ConfigFileGenerator;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.socket.NotebookServer;
@@ -46,6 +49,8 @@ public class ZeppelinConfig {
   private NotebookServer notebookServer;
   private InterpreterFactory replFactory;
   private NotebookRepo notebookRepo;
+  private DependencyResolver depResolver;
+  private NotebookAuthorization notebookAuthorization;
   private SearchService notebookIndex;
   private final Settings settings;
   private final String projectName;
@@ -94,9 +99,13 @@ public class ZeppelinConfig {
       createSymLinks();//interpreter and lib
       newFile = createZeppelinConfFiles();//create project specific configurations for zeppelin 
       this.conf = loadConfig();
+      this.depResolver = new DependencyResolver(
+              conf.getString(
+                      ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_LOCALREPO));
       this.schedulerFactory = SchedulerFactory.singleton();
       this.notebookRepo = new NotebookRepoSync(conf);
       this.notebookIndex = new LuceneSearch();
+      this.notebookAuthorization = new NotebookAuthorization(conf);
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectDirRecursive();
@@ -132,14 +141,27 @@ public class ZeppelinConfig {
     return this.conf;
   }
 
+  /*
+   * new Notebook(conf,
+   * notebookRepo, schedulerFactory, replFactory, notebookWsServer,
+   * notebookIndex, notebookAuthorization);
+   */
   private void setNotebookServer(NotebookServer nbs) {
     this.notebookServer = nbs;
     try {
-      this.replFactory = new InterpreterFactory(this.conf, this.notebookServer);
-      this.notebook = new Notebook(this.conf, this.notebookRepo,
+      this.replFactory = new InterpreterFactory(this.conf,
+              this.notebookServer,
+              this.notebookServer,
+              this.depResolver);
+      this.notebook = new Notebook(this.conf,
+              this.notebookRepo,
               this.schedulerFactory,
-              this.replFactory, this.notebookServer, this.notebookIndex);
-    } catch (InterpreterException | IOException | SchedulerException ex) {
+              this.replFactory,
+              this.notebookServer,
+              this.notebookIndex,
+              this.notebookAuthorization);
+    } catch (InterpreterException | IOException | RepositoryException |
+            SchedulerException ex) {
       LOGGGER.log(Level.SEVERE, null, ex);
     }
   }
@@ -174,6 +196,14 @@ public class ZeppelinConfig {
 
   public SearchService getNotebookIndex() {
     return notebookIndex;
+  }
+
+  public DependencyResolver getDepResolver() {
+    return depResolver;
+  }
+
+  public void setDepResolver(DependencyResolver depResolver) {
+    this.depResolver = depResolver;
   }
 
   public Settings getSettings() {
