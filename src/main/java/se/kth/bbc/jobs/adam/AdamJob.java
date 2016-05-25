@@ -14,7 +14,6 @@ import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.controller.LocalResourceDTO;
-import se.kth.hopsworks.controller.LocalResourceHopsWorks;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.Settings;
 
@@ -208,7 +207,9 @@ public class AdamJob extends YarnJob {
         Settings.ADAM_DEFAULT_HDFS_REPO);
     for (String jarname : jars) {
       String sourcePath = "hdfs://" + Settings.ADAM_DEFAULT_HDFS_REPO + jarname;
-      builder.addExtraFile(new LocalResourceHopsWorks(jarname, sourcePath, LocalResourceVisibility.PUBLIC, LocalResourceType.FILE, null));
+      builder.addExtraFile(new LocalResourceDTO(jarname, sourcePath, 
+              LocalResourceVisibility.PUBLIC.toString(), 
+              LocalResourceType.FILE.toString(), null));
     }
   }
 

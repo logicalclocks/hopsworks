@@ -2,6 +2,7 @@ package se.kth.bbc.jobs.spark;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
@@ -32,6 +33,7 @@ public final class SparkJob extends YarnJob {
    * @param services
    * @param hadoopDir
    * @param sparkDir
+   * @param nameNodeIpPort
    * @param sparkUser
    */
   public SparkJob(JobDescription job, AsynchronousJobExecutor services,
@@ -68,7 +70,7 @@ public final class SparkJob extends YarnJob {
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
     runnerbuilder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
-    //runnerbuilder.addExtraFiles(jobconfig.getLocalResources());
+    runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
     //Set project specific resources
     runnerbuilder.addExtraFiles(projectLocalResources);
     try {
