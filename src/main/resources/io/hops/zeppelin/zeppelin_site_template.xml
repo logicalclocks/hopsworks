@@ -199,9 +199,9 @@
 </property>
 
 <property>
-  <name>zeppelin.livy.url</name>
+  <name>zeppelin.livy.master</name>
   <value>%%livy_master%%</value>
-  <description>Endpoint for the livy server</description>
+  <description>Spark master for Livy (yarn, yarn-client, spark://localhost:8908)</description>
 </property>
 
 
