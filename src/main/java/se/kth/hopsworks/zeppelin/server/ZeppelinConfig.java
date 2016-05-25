@@ -311,6 +311,8 @@ public class ZeppelinConfig {
               instantiateFromTemplate(
                       ConfigFileGenerator.ZEPPELIN_CONFIG_TEMPLATE,
                       "zeppelin_home", home,
+                      "livy_url", settings.getLivyUrl(),
+                      "livy_master", settings.getLivyYarnMode(),              
                       "zeppelin_home_dir", home);
       createdXml = ConfigFileGenerator.createConfigFile(zeppelin_site_xml_file,
               zeppelin_site_xml.
