@@ -1,12 +1,10 @@
 package se.kth.bbc.jobs.flink;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.util.Records;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.hopsworks.util.Settings;
 
@@ -31,8 +30,8 @@ import se.kth.hopsworks.util.Settings;
  */
 public class FlinkYarnRunnerBuilder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FlinkYarnRunnerBuilder.class);
-
+     private static final Logger logger = Logger.
+      getLogger(FlinkYarnRunnerBuilder.class.getName());
     /**
      * Constants, all starting with ENV_ are used as environment variables to pass values from the Client to the
      * Application Master.
@@ -225,7 +224,7 @@ public class FlinkYarnRunnerBuilder {
         // check if required Hadoop environment variables are set. If not, warn user
         if (System.getenv(Settings.ENV_KEY_HADOOP_CONF_DIR) == null
             && System.getenv(Settings.ENV_KEY_YARN_CONF) == null) {
-            LOG.warn("Neither the HADOOP_CONF_DIR nor the YARN_CONF_DIR environment variable is set."
+            logger.log(Level.WARNING,  "Neither the HADOOP_CONF_DIR nor the YARN_CONF_DIR environment variable is set."
                 + "The Flink YARN Client needs one of these to be set to properly load the Hadoop "
                 + "configuration for accessing YARN.");
         }
@@ -344,7 +343,7 @@ public class FlinkYarnRunnerBuilder {
         try {
             builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, UserGroupInformation.getCurrentUser().getShortUserName());
         } catch (IOException ex) {
-            LOG.error("Error while getting Flink client username", ex);
+            logger.log(Level.SEVERE,"Error while getting Flink client username", ex);
         }
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_SLOTS, String.valueOf(slots));
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DETACHED, String.valueOf(detached));
