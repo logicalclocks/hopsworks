@@ -18,13 +18,13 @@
                 <span>{{createAclCtrl.topicName}}</span>
             </div>
             
-            <div class="col-md-12">
+<!--            <div class="col-md-12">
                 <label class="control-label">Username</label><br>
                     <input type="text" class="form-control" id="aclUsername" ng-model="createAclCtrl.username" placeholder="Username">
 
                     
 
-<!--        <ui-select ng-model="createAclCtrl.username"
+        <ui-select ng-model="createAclCtrl.username"
                    theme="select2"
                    style="min-width: 300px;">
 
@@ -75,20 +75,20 @@
                   </button>
                 </td>
 
-              </tr>-->
+              </tr>
 
 
-            </div>
+            </div>-->
             
             <div class="row" style="padding-left: 30px">
-              <label class="control-label">Principal name</label>
-              <ui-select name="project_name" theme="select2" style="margin-left: 10px"
+                <label class="control-label">Principal name</label><br>
+              <ui-select style="min-width: 200px;" name="project_name" theme="select2" style="margin-left: 10px"
                  ng-model="createAclCtrl.username" style="min-width: 500px;" required>
 
-              <ui-select-match placeholder="Select a user: ">{{$select.selected.user.userName}}</ui-select-match>
+              <ui-select-match placeholder="Select a user: ">{{$select.selected.userName}}</ui-select-match>
 
-              <ui-select-choices repeat="item.user.userName as item in createAclCtrl.users | filter: $select.search">
-                <div ng-bind-html="item.user.userName | highlight: $select.search"></div>
+              <ui-select-choices repeat=" item in createAclCtrl.users | filter: $select.search">
+                <div ng-bind-html="item.userName | highlight: $select.search"></div>
 <!--                <small>
                   User: {{item.user.userName}}
                 </small>-->

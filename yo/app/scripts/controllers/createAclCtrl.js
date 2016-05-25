@@ -18,7 +18,7 @@ angular.module('hopsWorksApp')
             self.init = function() {
                 KafkaService.aclUsers(self.projectId, self.topicName).then(
                     function (success) {
-                        self.users = success;
+                        self.users = success.data;
                 }, function (error) {
                     growl.error(error.data.errorMsg, {title: 'Could not load ACL users', ttl: 5000, referenceId: 21});
                    });
@@ -32,7 +32,7 @@ angular.module('hopsWorksApp')
 //              acl.topic_name = self.topicName;
 //              acl.project_id = self.projectId;
               acl.role = self.role;
-              acl.username = self.username;
+              acl.username = self.username.userName;
               acl.permissionType = self.permission_type;
               acl.operationType = self.operation_type;
               acl.host = self.host;

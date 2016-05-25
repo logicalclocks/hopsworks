@@ -372,9 +372,11 @@ public class KafkaFacade {
         TypedQuery<HdfsUsers> hdfsUsers = em.createNamedQuery(
                 "HdfsUsers.findAll", HdfsUsers.class);
         for (HdfsUsers user : hdfsUsers.getResultList()) {
-            projectName = user.getName().split("__")[0];
-            if (allTopicProjects.contains(projectName)) {
-                aclUsers.add(new HdfsUserDTO(user.getName()));
+            if (user.getName().contains("__")) {
+                projectName = user.getName().split("__")[0];
+                if (allTopicProjects.contains(projectName)) {
+                    aclUsers.add(new HdfsUserDTO(user.getName()));
+                }
             }
         }
 
@@ -388,7 +390,7 @@ public class KafkaFacade {
                 dto.getOperationType(), dto.getHost(), dto.getRole());
     }
 
-    private void addAclsToTopic(String topicName, String userEmail,
+    private void addAclsToTopic(String topicName, String username,
             Integer projectId, String permission_type, String operation_type,
             String host, String role) throws AppException {
 
@@ -407,17 +409,17 @@ public class KafkaFacade {
         }
 
         //fetch the user name from database       
-        TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail", Users.class);
-        query.setParameter("email", userEmail);
-        List<Users> users = query.getResultList();
+        TypedQuery<HdfsUsers> query = em.createNamedQuery("HdfsUsers.findByName", HdfsUsers.class);
+        query.setParameter("name", username);
+        List<HdfsUsers> users = query.getResultList();
 
         if (users == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    "User email does not exist.");
+                    "User does not exist.");
         }
-        Users user = users.get(0);
+        HdfsUsers user = users.get(0);
 
-        TopicAcls ta = new TopicAcls(topicName, projectId, user.getUsername(),
+        TopicAcls ta = new TopicAcls(topicName, projectId, user.getName(),
                 permission_type, operation_type, host, role);
         em.merge(ta);
         em.persist(ta);
@@ -566,7 +568,7 @@ public class KafkaFacade {
         Set<String> brokerList = new HashSet<>();
 
         try {
-            ZooKeeper zk = new ZooKeeper("10.0.2.15:2181", sessionTimeoutMs, null);
+            ZooKeeper zk = new ZooKeeper(settings.getZkIp(), sessionTimeoutMs, null);
             List<String> ids = zk.getChildren("/brokers/ids", false);
             for (String id : ids) {
                 String brokerInfo = new String(zk.getData("/brokers/ids/" + id,
