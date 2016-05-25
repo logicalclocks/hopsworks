@@ -480,7 +480,7 @@ public class Settings {
   
   // Livy Server
   private String LIVY_IP        = "127.0.0.1";
-  private String LIVY_YARN_MODE = "yarn-cluster";
+  private String LIVY_YARN_MODE = "yarn";
 
   public synchronized String getLivyIp() {
     checkCache();
