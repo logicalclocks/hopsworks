@@ -24,16 +24,22 @@
   </properties>
 
   <dependencies>
-    <!-- Thrift is included because of a CDI bug. Zeppelin-interpreter includes org.sonatype.guice.**
+    <!-- CDI bug. Zeppelin-interpreter includes org.sonatype.guice.**
     which has CDI annotated beans, causing deployment of hopsworks to fail. Because Zeppelin-interpreter
     is a 3rd party jar, Glassfish won't exclude from scanning beans/paths we put in beans.xml 
     -->
-    <dependency>
-      <groupId>org.apache.thrift</groupId>
-      <artifactId>libthrift</artifactId>
-      <version>0.9.3</version>
-      <type>pom</type>    
+
+<!--    <dependency> 
+      <groupId>org.sonatype.sisu</groupId>
+      <artifactId>sisu-inject-bean</artifactId>
+      <version>2.2.2</version>
     </dependency>
+    
+    <dependency>
+      <groupId>org.sonatype.sisu</groupId>
+      <artifactId>sisu-inject-plexus</artifactId>
+      <version>2.2.2</version>
+    </dependency>-->
 
     <dependency>
       <groupId>de.hu-berlin.wbi.cuneiform</groupId>
@@ -125,7 +131,6 @@
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-interpreter</artifactId>
       <version>0.6.0-incubating-SNAPSHOT</version>      
-      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
@@ -146,11 +151,6 @@
       <version>2.2.1</version>
     </dependency>
 
-    <!--    <dependency>
-      <groupId>org.apache.flink</groupId>
-      <artifactId>flink-yarn</artifactId>
-      <version>0.10.0</version>
-    </dependency>-->
     <!--End of Zeppelin dependencies -->
     <!--Elastic dependency-->
     <dependency>
