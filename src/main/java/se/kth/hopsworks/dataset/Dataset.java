@@ -66,10 +66,9 @@ public class Dataset implements Serializable {
   @ManyToOne(optional = false)
   private Inode inode;
   
-  @Basic(optional = false)
-  @NotNull
+  @Basic(optional = true)
   @Column(name = "inode_id")
-  private int inodeId;  
+  private int idForInode = 0;  
   
   @Size(max = 3000)
   @Column(name = "description")
@@ -109,13 +108,13 @@ public class Dataset implements Serializable {
   public Dataset(Integer id, Inode inode) {
     this.id = id;
     this.inode = inode;
-    this.inodeId = inode.getId();    
+    this.idForInode = inode.getId();    
   }
 
   public Dataset(Inode inode, Project project) {
     this.inode = inode;
     this.projectId = project;
-    this.inodeId = inode.getId();
+    this.idForInode = inode.getId();
   }
   
   public Integer getId() {
@@ -212,17 +211,19 @@ public class Dataset implements Serializable {
     return true;
   }
 
+
   /**
    * DO NOT USE THIS - used by ePipe
    * @return 
    */
-  public int getInodeId() {
-    return inodeId;
+  public int getIdForInode() {
+    return idForInode;
   }
 
-  public void setInodeId(int inodeId) {
-    this.inodeId = inodeId;
+  public void setIdForInode(int idForInode) {
+    this.idForInode = idForInode;
   }
+
   
   @Override
   public String toString() {

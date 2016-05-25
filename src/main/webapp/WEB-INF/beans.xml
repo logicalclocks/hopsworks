@@ -10,6 +10,7 @@
     <exclude name="com.sun.jersey.guice.**" />
     <exclude name="org.jclouds.**" />
     <exclude name="com.google.inject.**" />     
+    <exclude name="org.sonatype.guice.**" />     
     <exclude name="com.sun.jersey.guice.**" />
   </scan>
     
