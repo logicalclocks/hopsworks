@@ -135,6 +135,7 @@ public class ZeppelinConfig {
     this.interpreterDirPath = zConf.getInterpreterDirPath();
     this.libDirPath = zConf.getLibDirPath();
     this.conf = zConf.getConf();
+    this.depResolver = zConf.getDepResolver();
     this.schedulerFactory = zConf.getSchedulerFactory();
     this.notebookRepo = zConf.getNotebookRepo();
     this.notebookIndex = zConf.getNotebookIndex();
