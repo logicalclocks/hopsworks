@@ -22,7 +22,7 @@ import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 @Path("/notebook")
 @Produces("application/json")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class NotebookService {
   Logger logger = LoggerFactory.getLogger(NotebookService.class);
   

@@ -21,7 +21,7 @@ import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 @Path("/interpreter")
 @Produces("application/json")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class InterpreterService {
   Logger logger = LoggerFactory.getLogger(InterpreterService.class);
   

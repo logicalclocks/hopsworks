@@ -1,6 +1,5 @@
 package se.kth.hopsworks.zeppelin.rest;
 
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,7 +31,6 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.QueryParam;

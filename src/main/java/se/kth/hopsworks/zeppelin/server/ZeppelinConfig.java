@@ -16,13 +16,10 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.dep.DependencyResolver;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
-import org.apache.zeppelin.notebook.JobListenerFactory;
-import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.NotebookAuthorization;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
-import org.apache.zeppelin.scheduler.JobListener;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import org.apache.zeppelin.search.LuceneSearch;
 import org.apache.zeppelin.search.SearchService;
@@ -146,11 +143,6 @@ public class ZeppelinConfig {
     return this.conf;
   }
 
-  /*
-   * new Notebook(conf,
-   * notebookRepo, schedulerFactory, replFactory, notebookWsServer,
-   * notebookIndex, notebookAuthorization);
-   */
   private void setNotebookServer(NotebookServer nbs) {
     this.notebookServer = nbs;
     try {
