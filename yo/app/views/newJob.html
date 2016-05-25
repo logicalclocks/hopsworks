@@ -190,11 +190,11 @@
               </h3>
               <div ng-show="newJobCtrl.localResources.length > 0">
                   <!--Define localresource table columns -->
-                  <div class="col-md-4">
+                  <div class="col-md-3">
                      <strong>Name</strong><i class="fa fa-info-circle" tooltip="The name of the jar as it will appear in the Yarn distributed cache. By default, the filename of the resource." style="margin-left: 10px"></i>
                       
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                       <strong>Path</strong> <i class="fa fa-info-circle" tooltip="The HDFS path to the selected jar file." style="margin-left: 10px"></i>
                       
                     </div>
@@ -210,43 +210,36 @@
                        <label class="control-label">Pattern</label>
                     </div>
                   <div class="row" ng-repeat="resource in newJobCtrl.localResources">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                      {{resource.name}}
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                       {{resource.path}}
                     </div>
                     <div class="col-md-1">
-                       
-                               <select name="visibility" ng-model="resource.visibility" >
+                               <select name="visibility" ng-model="resource.visibility" ng-init="resource.visibility = 'public'">
                                  <option value="public">Public</option>
                                  <option value="private">Private</option>
                                  <option value="application">Application</option>
                                </select>
                     </div> 
-                      <div class="col-md-1"  >
-                     
-                               <select name="type" ng-model="resource.type">
+                      <div class="col-md-1">
+                               <select name="type" ng-model="resource.type" ng-init="resource.type = 'file'">
                                  <option value="archive">Archive</option>
                                  <option value="file">File</option>
                                  <option value="pattern">Pattern</option>
                                </select>
                     </div>
                     <div class="col-md-2" ng-show="resource.type=='pattern'">
-                       
                         <input type="text" ng-model="resource.pattern">
                     </div>
+                      <div class="col-md-2">
+                       <i class="fa fa-times-circle pull-right" tooltip="Remove this library." style="margin-left: 10px" ng-click="newJobCtrl.removeLibrary(resource.name)"></i>
+                      </div>
                   </div>
                   
                 </div>
-                <div class="row" ng-repeat="jar in newJobCtrl.localResources">
-                  <div class="col-md-4">
-                      <strong> {{jar.name}}</strong>
-                  </div>
-                  <div class="col-md-8">
-                    {{jar.path}} <i class="fa fa-times-circle pull-right" tooltip="Remove this library." style="margin-left: 10px" ng-click="newJobCtrl.removeLibrary(jar)"></i>
-                  </div>
-                </div>
+                
               </div>
             </div>
             <div>

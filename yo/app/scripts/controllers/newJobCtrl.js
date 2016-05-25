@@ -477,10 +477,10 @@ angular.module('hopsWorksApp')
                  * @param {type} lib
                  * @returns {undefined}
                  */
-                this.removeLibrary = function (lib) {
+                this.removeLibrary = function (name) {
                     var arlen = self.localResources.length;
                     for (var i = 0; i < arlen; i++) {
-                        if (self.localResources[i].name === lib.name) {
+                        if (self.localResources[i].name === name) {
                             self.localResources.splice(i, 1);
                             return;
                         }
