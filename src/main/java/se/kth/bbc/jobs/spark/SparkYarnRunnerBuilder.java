@@ -99,7 +99,7 @@ public class SparkYarnRunnerBuilder {
 
     //Add extra files to local resources, use filename as key
     for (LocalResourceDTO dto : extraFiles) {
-            builder.addLocalResource(dto, true);
+            builder.addLocalResource(dto, false);
     }
 
     //Set Spark specific environment variables

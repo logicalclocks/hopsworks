@@ -266,10 +266,11 @@ public class YarnRunner {
       FileStatus scFileStat = fs.getFileStatus(dst);
       LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
           getYarnUrlFromPath(dst),
-          LocalResourceType.valueOf(entry.getValue().getType()), 
-          LocalResourceVisibility.valueOf(entry.getValue().getVisibility()),
+          LocalResourceType.valueOf(entry.getValue().getType().toUpperCase()), 
+          LocalResourceVisibility.valueOf(entry.getValue().getVisibility().toUpperCase()),
           scFileStat.getLen(),
-          scFileStat.getModificationTime());
+          scFileStat.getModificationTime(),
+          entry.getValue().getPattern());
       localResources.put(key, scRsrc);
     }
     //For all local resources with hdfs path: add local resource
@@ -284,10 +285,11 @@ public class YarnRunner {
       FileStatus scFileStat = fs.getFileStatus(src);
       LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
           getYarnUrlFromPath(src),
-          LocalResourceType.valueOf(entry.getValue().getType()), 
-          LocalResourceVisibility.valueOf(entry.getValue().getVisibility()),
+          LocalResourceType.valueOf(entry.getValue().getType().toUpperCase()), 
+          LocalResourceVisibility.valueOf(entry.getValue().getVisibility().toUpperCase()),
           scFileStat.getLen(),
-          scFileStat.getModificationTime());
+          scFileStat.getModificationTime(),
+          entry.getValue().getPattern());
       localResources.put(key, scRsrc);
     }
     return localResources;

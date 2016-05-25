@@ -44,10 +44,6 @@ angular.module('hopsWorksApp')
             this.jobtype; //Will hold the selection of which job to create.
             this.jobname; //Will hold the name of the job
             
-            //LocalResource attributes set by user
-            //this.resourceVisibility;
-            //this.resourceType;
-            //this.resourcePattern;
             this.localResources = [];//Will hold extra libraries
            
             this.phase = 0; //The phase of creation we are in.
@@ -111,7 +107,7 @@ angular.module('hopsWorksApp')
                     self.undoable = true;
                     self.jobtype = null;
                     self.jobname = null;
-                    self.localResources = {"entry": []};
+                    self.localResources = [];
                     self.phase = 0;
                     self.runConfig = null;
                     self.sparkState = {
@@ -171,7 +167,7 @@ angular.module('hopsWorksApp')
               self.undoable = true;
               self.jobtype = null;
               self.jobname = null;
-              self.localResources = {"entry": []};
+              self.localResources = [];
               self.phase = 0;
               self.runConfig = null;
               self.sparkState = {
@@ -238,24 +234,6 @@ angular.module('hopsWorksApp')
                  */
                 this.createJob = function () {
                     self.runConfig.appName = self.jobname;
-//                    if(self.localResources!== null && 
-//                            self.localResources.length > 0){
-//                        if(self.resourceType !== null){
-//                            var resCount = self.localResources.length - 1;
-//                            self.localResources[resCount].type = self.resourceType;
-//                            self.resourceType = null;
-//                        }
-//                        if(self.resourceVisibility !== null){
-//                            var resCount = self.localResources.length - 1;
-//                            self.localResources[resCount].type = self.resourceVisibility;
-//                            self.resourceVisibility = null;
-//                        }
-//                        if(self.resourcePattern !== null){
-//                            var resCount = self.localResources.length - 1;
-//                            self.localResources[resCount].type = self.resourcePattern;
-//                            self.resourcePattern = null;
-//                        }
-//                    }
                     self.runConfig.localResources = self.localResources;
                     if(self.tourService.currentStep_TourFour > -1){
                                     self.tourService.resetTours();
@@ -427,6 +405,7 @@ angular.module('hopsWorksApp')
                   });
                   break;
                 case "LIBRARY":
+                  //Push the new library into the localresources array
                   self.localResources.push({
                       'name': filename,
                       'path': path, 
@@ -470,28 +449,6 @@ angular.module('hopsWorksApp')
                     if (reason.toUpperCase() === "ADAM") {
                         self.adamState.processparameter = parameter;
                     }
-                    //Add localresource into localresources lists
-                    //this.localResources.push(self.libDetails);
-                    //if user has provided localresource attrs,
-                    //add them into the localResources array
-//                    if(self.localResources!== null && 
-//                            self.localResources.length > 0){
-//                        if(self.resourceType !== null){
-//                            var resCount = self.localResources.length - 1;
-//                            self.localResources[resCount].type = self.resourceType;
-//                            self.resourceType = null;
-//                        }
-//                        if(self.resourceVisibility !== null){
-//                            var resCount = self.localResources.length - 1;
-//                            self.localResources[resCount].type = self.resourceVisibility;
-//                            self.resourceVisibility = null;
-//                        }
-//                        if(self.resourcePattern !== null){
-//                            var resCount = self.localResources.length - 1;
-//                            self.localResources[resCount].type = self.resourcePattern;
-//                            self.resourcePattern = null;
-//                        }
-//                    }
                     ModalService.selectFile('lg', self.selectFileRegexes[reason],
                             self.selectFileErrorMsgs[reason]).then(
                             function (success) {
@@ -521,10 +478,10 @@ angular.module('hopsWorksApp')
                  * @returns {undefined}
                  */
                 this.removeLibrary = function (lib) {
-                    var arlen = self.localResources.entry.length;
+                    var arlen = self.localResources.length;
                     for (var i = 0; i < arlen; i++) {
-                        if (self.localResources.entry[i].key === lib.key) {
-                            self.localResources.entry.splice(i, 1);
+                        if (self.localResources[i].name === lib.name) {
+                            self.localResources.splice(i, 1);
                             return;
                         }
                     }

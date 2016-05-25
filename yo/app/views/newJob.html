@@ -221,12 +221,12 @@
                   </div>
                   
                 </div>
-                <div class="row" ng-repeat="jar in newJobCtrl.localResources.entry">
+                <div class="row" ng-repeat="jar in newJobCtrl.localResources">
                   <div class="col-md-4">
-                    <input type="text" ng-model="jar.key" class="form-control">
+                    <input type="text" ng-model="jar.name" class="form-control">
                   </div>
                   <div class="col-md-8">
-                    {{jar.value}} <i class="fa fa-times-circle pull-right" tooltip="Remove this library." style="margin-left: 10px" ng-click="newJobCtrl.removeLibrary(jar)"></i>
+                    {{jar.path}} <i class="fa fa-times-circle pull-right" tooltip="Remove this library." style="margin-left: 10px" ng-click="newJobCtrl.removeLibrary(jar)"></i>
                   </div>
                 </div>
               </div>
