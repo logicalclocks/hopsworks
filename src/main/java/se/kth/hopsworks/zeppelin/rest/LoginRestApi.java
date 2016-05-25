@@ -117,8 +117,8 @@ public class LoginRestApi {
   public Response logout() {
     JsonResponse response;
     
-    Subject currentUser = org.apache.shiro.SecurityUtils.getSubject();
-    currentUser.logout();
+//    Subject currentUser = org.apache.shiro.SecurityUtils.getSubject();
+//    currentUser.logout();
 
     Map<String, String> data = new HashMap<>();
     data.put("principal", "anonymous");
