@@ -137,12 +137,6 @@ public class SparkYarnRunnerBuilder {
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);
     
-    // TODO: vasilis
-    amargs.append(" --spark-history-server ").append(sparkHistoryServerIp);
-    builder.addToAppMasterEnvironment("SPARK_HISTORY_SERVER_ADDRESS", sparkHistoryServerIp);
-    
-    
-    
     for (String s : jobArgs) {
       amargs.append(" --arg ").append(s);
     }

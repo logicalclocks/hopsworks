@@ -189,33 +189,51 @@
                 <i class="fa fa-info-circle" tooltip="Select jar files that should be added to the classpath for this job." style="margin-left: 10px"></i>
               </h3>
               <div ng-show="newJobCtrl.localResources.length > 0">
-                  <div class="row" ng-repeat="resource in newJobCtrl.localResources">
-                    <div class="col-md-4">
-                     <strong>Name</strong> <i class="fa fa-info-circle" tooltip="The name of the jar as it will appear in the Yarn distributed cache. By default, the filename of the resource." style="margin-left: 10px"></i>
-                      {{resource.name}}
+                  <!--Define localresource table columns -->
+                  <div class="col-md-4">
+                     <strong>Name</strong><i class="fa fa-info-circle" tooltip="The name of the jar as it will appear in the Yarn distributed cache. By default, the filename of the resource." style="margin-left: 10px"></i>
+                      
                     </div>
                     <div class="col-md-4">
                       <strong>Path</strong> <i class="fa fa-info-circle" tooltip="The HDFS path to the selected jar file." style="margin-left: 10px"></i>
+                      
+                    </div>
+                    <div class="col-md-1">
+                       <label class="control-label">Visibility</label>
+                               
+                    </div> 
+                      <div class="col-md-1"  >
+                      <label class="control-label">Resource Type</label>
+                               
+                    </div>
+                    <div class="col-md-2">
+                       <label class="control-label">Pattern</label>
+                    </div>
+                  <div class="row" ng-repeat="resource in newJobCtrl.localResources">
+                    <div class="col-md-4">
+                     {{resource.name}}
+                    </div>
+                    <div class="col-md-4">
                       {{resource.path}}
                     </div>
-                    <div class="col-md-2"  >
-                      <label class="control-label">Resource Type</label>
+                    <div class="col-md-1">
+                       
+                               <select name="visibility" ng-model="resource.visibility" >
+                                 <option value="public">Public</option>
+                                 <option value="private">Private</option>
+                                 <option value="application">Application</option>
+                               </select>
+                    </div> 
+                      <div class="col-md-1"  >
+                     
                                <select name="type" ng-model="resource.type">
                                  <option value="archive">Archive</option>
                                  <option value="file">File</option>
                                  <option value="pattern">Pattern</option>
                                </select>
                     </div>
-                    <div class="col-md-3">
-                       <label class="control-label">Visibility</label>
-                               <select name="visibility" ng-model="resource.visibility" >
-                                 <option value="public">Public</option>
-                                 <option value="private">Private</option>
-                                 <option value="application">Application</option>
-                               </select>
-                    </div>  
-                    <div class="col-md-4" ng-show="resource.type=='pattern'">
-                       <label class="control-label">Pattern</label>
+                    <div class="col-md-2" ng-show="resource.type=='pattern'">
+                       
                         <input type="text" ng-model="resource.pattern">
                     </div>
                   </div>
@@ -223,7 +241,7 @@
                 </div>
                 <div class="row" ng-repeat="jar in newJobCtrl.localResources">
                   <div class="col-md-4">
-                    <input type="text" ng-model="jar.name" class="form-control">
+                      <strong> {{jar.name}}</strong>
                   </div>
                   <div class="col-md-8">
                     {{jar.path}} <i class="fa fa-times-circle pull-right" tooltip="Remove this library." style="margin-left: 10px" ng-click="newJobCtrl.removeLibrary(jar)"></i>

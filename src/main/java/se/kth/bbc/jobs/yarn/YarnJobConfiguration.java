@@ -1,8 +1,5 @@
 package se.kth.bbc.jobs.yarn;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;
@@ -31,11 +28,11 @@ public class YarnJobConfiguration extends JobConfiguration {
     protected final static String KEY_AMCORS = "AMCORS";
     protected final static String KEY_RESOURCES = "RESOURCES";
 
-    public final static String KEY_RESOURCESPATH = "RESOURCESPATH";
-    public final static String KEY_RESOURCESVISIBILITY = "RESOURCESVISIBILITY";
-    public final static String KEY_RESOURCESTYPE = "RESOURCESTYPE";
-    public final static String KEY_RESOURCESPATTERN = "RESOURCESPATTERN";
-    public final static String KEY_RESOURCESNAME = "RESOURCESNAME";
+    public final static String KEY_RESOURCESNAME = "NAME";
+    public final static String KEY_RESOURCESPATH = "PATH";
+    public final static String KEY_RESOURCESVISIBILITY = "VISIBILITY";
+    public final static String KEY_RESOURCESTYPE = "TYPE";
+    public final static String KEY_RESOURCESPATTERN = "PATTERN";
 
     public YarnJobConfiguration() {
         super();
@@ -108,7 +105,9 @@ public class YarnJobConfiguration extends JobConfiguration {
                 localResourceJson.set(KEY_RESOURCESPATH, localResource.getPath());
                 localResourceJson.set(KEY_RESOURCESTYPE, localResource.getType());
                 localResourceJson.set(KEY_RESOURCESVISIBILITY, localResource.getVisibility());
-                localResourceJson.set(KEY_RESOURCESPATTERN, localResource.getPattern());    
+                if(localResource.getPattern()!= null){
+                    localResourceJson.set(KEY_RESOURCESPATTERN, localResource.getPattern());    
+                }
                 resources.set(localResource.getName(), localResourceJson);
             }
             obj.set(KEY_RESOURCES, resources);
@@ -141,12 +140,21 @@ public class YarnJobConfiguration extends JobConfiguration {
                 int i = 0;
                 for(String key:resources.keySet()){
                     MutableJsonObject resource = resources.getJsonObject(key);
+                    if(resource.containsKey(KEY_RESOURCESPATTERN)){
                     jsonResources[i] = new LocalResourceDTO(
                             resource.getString(KEY_RESOURCESNAME),
                             resource.getString(KEY_RESOURCESPATH), 
                             resource.getString(KEY_RESOURCESVISIBILITY),
                             resource.getString(KEY_RESOURCESTYPE), 
                             resource.getString(KEY_RESOURCESPATTERN));
+                    } else {
+                        jsonResources[i] = new LocalResourceDTO(
+                            resource.getString(KEY_RESOURCESNAME),
+                            resource.getString(KEY_RESOURCESPATH), 
+                            resource.getString(KEY_RESOURCESVISIBILITY),
+                            resource.getString(KEY_RESOURCESTYPE),
+                            null);
+                    }
                     i++;
                 }
             }
