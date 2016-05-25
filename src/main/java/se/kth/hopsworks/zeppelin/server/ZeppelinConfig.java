@@ -16,10 +16,13 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.dep.DependencyResolver;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
+import org.apache.zeppelin.notebook.JobListenerFactory;
+import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.NotebookAuthorization;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
+import org.apache.zeppelin.scheduler.JobListener;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import org.apache.zeppelin.search.LuceneSearch;
 import org.apache.zeppelin.search.SearchService;
@@ -30,6 +33,7 @@ import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.socket.NotebookServer;
 
 public class ZeppelinConfig {
+
 
   private static final Logger LOGGGER = Logger.getLogger(ZeppelinConfig.class.
           getName());
@@ -108,9 +112,9 @@ public class ZeppelinConfig {
       this.notebookAuthorization = new NotebookAuthorization(conf);
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
-        removeProjectDirRecursive();
+	  //        removeProjectDirRecursive();
       } else if (newFile) { // if the conf files were newly created delete them
-        removeProjectConfFiles();
+	  //        removeProjectConfFiles();
       }
       LOGGGER.log(Level.SEVERE,
               "Error in initializing ZeppelinConfig for project: {0}. {1}",
@@ -265,6 +269,7 @@ public class ZeppelinConfig {
       Files.copy(file.toPath(), destinationPath,
               StandardCopyOption.REPLACE_EXISTING);
     }
+
     return binDir.list().length == sourceDir.list().length;
   }
 

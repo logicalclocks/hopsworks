@@ -19,6 +19,8 @@ package se.kth.hopsworks.zeppelin.socket;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -59,6 +61,8 @@ import org.apache.zeppelin.notebook.ParagraphJobListener;
 import org.apache.zeppelin.scheduler.Job;
 import org.apache.zeppelin.scheduler.Job.Status;
 import org.apache.zeppelin.user.AuthenticationInfo;
+import org.apache.zeppelin.scheduler.JobListener;
+import org.apache.zeppelin.search.SearchService;
 import org.quartz.SchedulerException;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
@@ -79,8 +83,8 @@ import se.kth.hopsworks.zeppelin.socket.Message.OP;
         configurator = ZeppelinEndpointConfig.class)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class NotebookServer implements
-        JobListenerFactory, AngularObjectRegistryListener,
-        RemoteInterpreterProcessListener {
+    SearchService,
+    JobListenerFactory, AngularObjectRegistryListener,  RemoteInterpreterProcessListener{
 
   private static final Logger LOG = Logger.getLogger(NotebookServer.class.
           getName());
@@ -1075,6 +1079,7 @@ public class NotebookServer implements
     }
   }
 
+
   private void sendAllConfigurations(Session conn,
           Notebook notebook) throws IOException {
     ZeppelinConfiguration conf = notebook.getConf();
@@ -1098,6 +1103,41 @@ public class NotebookServer implements
     String noteId = (String) fromMessage.get("noteId");
     String commitMessage = (String) fromMessage.get("commitMessage");
     notebook.checkpointNote(noteId, commitMessage);
+  }
+  
+  @Override
+  public List<Map<String, String>> query(String string) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void updateIndexDoc(Note note) throws IOException {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void addIndexDocs(Collection<Note> clctn) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void addIndexDoc(Note note) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void deleteIndexDocs(Note note) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void deleteIndexDoc(Note note, Paragraph prgrph) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void close() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 
   /**
