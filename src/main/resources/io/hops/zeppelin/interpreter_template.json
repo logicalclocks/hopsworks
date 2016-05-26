@@ -273,6 +273,40 @@
         "remote": true
       }
     },
+    "2BN395SS2": {
+      "id": "2BN395SS2",
+      "name": "livy",
+      "group": "livy",
+      "properties": {
+        "zeppelin.livy.master": "yarn",
+        "zeppelin.livy.spark.maxResult": "1000",
+        "zeppelin.livy.url": "http://10.0.2.15:8998"
+      },
+      "interpreterGroup": [
+        {
+          "class": "org.apache.zeppelin.livy.LivySparkInterpreter",
+          "name": "spark"
+        },
+        {
+          "class": "org.apache.zeppelin.livy.LivySparkSQLInterpreter",
+          "name": "sql"
+        },
+        {
+          "class": "org.apache.zeppelin.livy.LivyPySparkInterpreter",
+          "name": "pyspark"
+        },
+        {
+          "class": "org.apache.zeppelin.livy.LivySparkRInterpreter",
+          "name": "sparkr"
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false
+      }
+    },    
     "2BGUXW9ZV": {
       "id": "2BGUXW9ZV",
       "name": "cassandra",
