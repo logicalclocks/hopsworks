@@ -34,6 +34,7 @@ public class ZeppelinConfig {
 
   private static final Logger LOGGGER = Logger.getLogger(ZeppelinConfig.class.
           getName());
+  private static final String LOG4J_PROPS = "/log4j.properties";
   private static final String ZEPPELIN_SITE_XML = "/zeppelin-site.xml";
   private static final String ZEPPELIN_ENV_SH = "/zeppelin-env.sh";
   private static final String HIVE_SITE_XML = "/hive-site.xml";
@@ -285,12 +286,19 @@ public class ZeppelinConfig {
   private boolean createZeppelinConfFiles() throws IOException {
     File zeppelin_env_file = new File(confDirPath + ZEPPELIN_ENV_SH);
     File zeppelin_site_xml_file = new File(confDirPath + ZEPPELIN_SITE_XML);
+    File log4j_file = new File(confDirPath + LOG4J_PROPS);
     File hive_site_xml_file = new File(confDirPath + HIVE_SITE_XML);
     File interpreter_file = new File(confDirPath + INTERPRETER_JSON);
     String home = settings.getZeppelinDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName;
     boolean createdSh = false;
+    boolean createdLog4j = false;
     boolean createdXml = false;
+    if (!log4j_file.exists()) {
+      StringBuilder log4j = ConfigFileGenerator.instantiateFromTemplate(
+              ConfigFileGenerator.LOG4J_TEMPLATE);
+      createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.toString());
+    }
     if (!zeppelin_env_file.exists()) {
       StringBuilder zeppelin_env = ConfigFileGenerator.instantiateFromTemplate(
               ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE,
@@ -336,7 +344,7 @@ public class ZeppelinConfig {
       createdXml = ConfigFileGenerator.createConfigFile(interpreter_file,
               interpreter_json.toString());
     }
-    return createdSh || createdXml;
+    return createdSh || createdXml || createdLog4j;
   }
 
   // loads configeration from project specific zeppelin-site.xml
