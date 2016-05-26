@@ -107,9 +107,9 @@ public class ZeppelinConfig {
                     interpreterFactory, jobListenerFactory, notebookServer);
         } catch (Exception e) {
             if (newDir) { // if the folder was newly created delete it
-                removeProjectDirRecursive();
+                //removeProjectDirRecursive();
             } else if (newFile) { // if the conf files were newly created delete them
-                removeProjectConfFiles();
+                //removeProjectConfFiles();
             }
             LOGGGER.log(Level.SEVERE,
                     "Error in initializing ZeppelinConfig for project: {0}. {1}",
