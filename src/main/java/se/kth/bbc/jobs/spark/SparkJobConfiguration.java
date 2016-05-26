@@ -19,6 +19,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String mainClass;
   private String args;
   private String historyServerIp;
+  private String sparkConfDir;
 
   private int numberOfExecutors = 1;
   private int executorCores = 1;
@@ -31,6 +32,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   protected static final String KEY_EXECCORES = "EXECCORES";
   protected static final String KEY_EXECMEM = "EXECMEM";
   protected static final String KEY_HISTORYSERVER = "HISTORYSERVER";
+  protected static final String SPARK_CONF_DIR = "SPARKCONFDIR";
 
   public SparkJobConfiguration() {
     super();
@@ -157,6 +159,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     obj.set(KEY_NUMEXECS, "" + numberOfExecutors);
     obj.set(KEY_TYPE, JobType.SPARK.name());
     obj.set(KEY_HISTORYSERVER, getHistoryServerIp());
+    obj.set(SPARK_CONF_DIR, getSparkConfDir());
     return obj;
   }
 
@@ -165,7 +168,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
           IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
-    String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs, hs;
+    String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs, jsonHistoryServer, jsonSparkConfDir;
     int jsonExecmem, jsonExeccors;
     try {
       String jsonType = json.getString(KEY_TYPE);
@@ -181,7 +184,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       jsonExeccors = Integer.parseInt(json.getString(KEY_EXECCORES));
       jsonExecmem = Integer.parseInt(json.getString(KEY_EXECMEM));
       jsonNumexecs = json.getString(KEY_NUMEXECS);
-      hs = json.getString(KEY_HISTORYSERVER);
+      jsonHistoryServer = json.getString(KEY_HISTORYSERVER);
+      jsonSparkConfDir = json.getString(SPARK_CONF_DIR);
     } catch (Exception e) {
       throw new IllegalArgumentException(
               "Cannot convert object into SparkJobConfiguration.", e);
@@ -196,7 +200,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.jarPath = jsonJarpath;
     this.mainClass = jsonMainclass;
     this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
-    this.historyServerIp = hs;
+    this.historyServerIp = jsonHistoryServer;
+    this.sparkConfDir = jsonSparkConfDir;
   }
 
   public String getHistoryServerIp() {
@@ -206,5 +211,13 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   public void setHistoryServerIp(String historyServerIp) {
     this.historyServerIp = historyServerIp;
   }
-
+  
+  public String getSparkConfDir(){
+      return sparkConfDir;
+  }
+  
+  public void setSparkConfDir(String sparkConfDir){
+     this.sparkConfDir =  sparkConfDir;
+  }
+  
 }

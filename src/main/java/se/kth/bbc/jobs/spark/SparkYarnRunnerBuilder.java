@@ -36,6 +36,8 @@ public class SparkYarnRunnerBuilder {
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
   private String sparkHistoryServerIp;
+  private boolean enableLogDir = true;
+  private String eventLogDir;
 
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass) {
     if (appJarPath == null || appJarPath.isEmpty()) {
@@ -132,10 +134,18 @@ public class SparkYarnRunnerBuilder {
     amargs.append(" --executor-memory ").append(executorMemory);
     
     // TODO: vasilis
+    //amargs.append(" --conf ").append(sparkHistoryServerIp);
     //amargs.append(" --spark-history-server ").append(sparkHistoryServerIp);
     //builder.addToAppMasterEnvironment("SPARK_HISTORY_SERVER_ADDRESS", sparkHistoryServerIp);
     
+     //amargs.append(" --conf spark.eventLog.enabled=").append(enableLogDir);
+    // amargs.append(" --conf spark.eventLog.compress=true");
+    // amargs.append(" --conf 10.0.2.15:18080");
+    //amargs.append(" --conf ").append("spark.eventLog.dir=hdfs://10.0.2.15:8020/user/glassfish/sparkApplicationHistory");
+    //amargs.append(" --conf ").append("spark.yarn.historyServer.address=10.0.2.15:18080");
     
+    //String sp = "hdfs://10.0.2.15:8020/user/glassfish/sparkApplicationHistory";
+    //builder.addAllToAppMasterEnvironment("SPARK_EVENT_LOG_DIR", sp);
     
     for (String s : jobArgs) {
       amargs.append(" --arg ").append(s);
@@ -341,5 +351,4 @@ public class SparkYarnRunnerBuilder {
     }
   }
 
- 
 }

@@ -156,6 +156,20 @@ public class Settings {
     checkCache();
     return SPARK_DIR;
   }
+  
+  private String SPARK_CONF_DIR = SPARK_DIR + "/conf";
+  
+  public synchronized String getSparkConfDir(){
+      checkCache();
+      return SPARK_CONF_DIR;
+  }
+  
+  private String SPARK_CONF_FILE = SPARK_CONF_DIR + "/spark-defaults.conf";
+ 
+  public synchronized String getSparkConfFile() {
+    //checkCache();
+    return SPARK_CONF_FILE;
+  }
 
   private String ADAM_USER = "glassfish";
 
@@ -315,12 +329,14 @@ public class Settings {
   public static final String DEFAULT_YARN_CONFFILE_NAME = "yarn-site.xml";
   public static final String DEFAULT_HADOOP_CONFFILE_NAME = "core-site.xml";
   public static final String DEFAULT_HDFS_CONFFILE_NAME = "hdfs-site.xml";
+  public static final String DEFAULT_SPARK_CONFFILE_NAME = "spark-defaults.conf";
 
   //Environment variable keys
   //TODO: Check if ENV_KEY_YARN_CONF_DIR should be replaced with ENV_KEY_YARN_CONF
   public static final String ENV_KEY_YARN_CONF_DIR = "hdfs";
   public static final String ENV_KEY_HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
   public static final String ENV_KEY_YARN_CONF = "YARN_CONF_DIR";
+  public static final String ENV_KEY_SPARK_CONF_DIR = "SPARK_CONF_DIR";
   //YARN constants
   public static final int YARN_DEFAULT_APP_MASTER_MEMORY = 512;
   public static final String YARN_DEFAULT_OUTPUT_PATH = "Logs/Yarn/";
@@ -334,6 +350,7 @@ public class Settings {
 //  public static final String HADOOP_CONF_DIR_VALUE = HADOOP_CONF_DIR;
 
   public static final String HADOOP_CONF_RELATIVE_DIR = "etc/hadoop";
+  public static final String SPARK_CONF_RELATIVE_DIR = "conf";
   public static final String YARN_CONF_RELATIVE_DIR = HADOOP_CONF_RELATIVE_DIR;
 
   //Spark constants
@@ -458,7 +475,7 @@ public class Settings {
 
   
   // Spark
-  private String SPARK_HISTORY_SERVER_IP = "127.0.0.1";
+  private String SPARK_HISTORY_SERVER_IP = "127.0.0.1:18080";
 
   public synchronized String getSparkHistoryServerIp() {
     checkCache();

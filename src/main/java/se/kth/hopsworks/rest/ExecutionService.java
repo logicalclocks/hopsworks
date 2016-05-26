@@ -19,11 +19,14 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.slf4j.LoggerFactory;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
+import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.controller.ExecutionController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
@@ -37,8 +40,11 @@ import se.kth.hopsworks.users.UserFacade;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExecutionService {
 
-  private static final Logger logger = Logger.getLogger(ExecutionService.class.
+ private static final Logger logger = Logger.getLogger(ExecutionService.class.
           getName());
+  
+ private static final org.slf4j.Logger debugger = LoggerFactory.getLogger(ExecutionController.class);
+
 
   @EJB
   private ExecutionFacade executionFacade;
@@ -52,6 +58,10 @@ public class ExecutionService {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private ExecutionController executionController;
+  @EJB
+  private InodeFacade inodes;
+  @EJB
+  private ExecutionInputfilesFacade execInputFilesFacade;
 
   private JobDescription job;
 

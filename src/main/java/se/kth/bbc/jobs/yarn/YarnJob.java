@@ -206,6 +206,9 @@ public abstract class YarnJob extends HopsJob {
         return false;
       }
       finalState = JobState.getJobState(appState);
+//      if(finalState == JobState.FINISHED){
+//          updateJobHistoryApp(monitor.getApplicationId().toString());
+//      }
       return true;
     }
   }

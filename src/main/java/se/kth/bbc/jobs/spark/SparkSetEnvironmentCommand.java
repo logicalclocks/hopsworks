@@ -96,7 +96,6 @@ public final class SparkSetEnvironmentCommand extends YarnSetupCommand {
               substring(0,
                       archiveVisibilities.length() - 1));
     }
-    
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
             launchContext.getLocalResources(), env, launchContext.getCommands(),
             null, null, null);

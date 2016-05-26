@@ -104,7 +104,6 @@ public class FlinkYarnRunnerBuilder {
         return this;
     }
     //@Override
-
     public void setJobManagerMemory(int memoryMb) {
         if (memoryMb < MIN_JM_MEMORY) {
             throw new IllegalArgumentException("The JobManager memory (" + memoryMb + ") is below the minimum required memory amount "

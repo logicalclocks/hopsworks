@@ -5,7 +5,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
+import se.kth.bbc.jobs.jobhistory.JobsHistoryFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.project.fb.Inode;
@@ -31,7 +36,14 @@ public class ExecutionController {
   private FlinkController flinkController;
   @EJB
   private InodeFacade inodes;
-
+  @EJB
+  private ExecutionInputfilesFacade execInputFilesFacade;
+  @EJB
+  private ActivityFacade activityFacade;
+  @EJB
+  private JobsHistoryFacade jobHistoryFac;
+  
+  final Logger logger = LoggerFactory.getLogger(ExecutionController.class);
 
   public Execution start(JobDescription job, Users user) throws IOException {
     Execution exec = null;
@@ -52,15 +64,21 @@ public class ExecutionController {
         }
         int execId = exec.getId();
         SparkJobConfiguration config = (SparkJobConfiguration) job.getJobConfig();
-        String args = config.getArgs();
+        String path = config.getJarPath();
         String patternString = "hdfs://(.*)\\s";
         Pattern p = Pattern.compile(patternString);
-        Matcher m = p.matcher(args);
-        for (int i = 0; i < m.groupCount(); i++) { // for each filename, resolve Inode from HDFS filename
-//          String filename = m.group(i);
-//           Inode inode = inodes.getInodeAtPath("hdfs://" + filename);
-          // insert into inputfiles_executions (inode, execId).
-        }
+        Matcher m = p.matcher(path);
+        String[] parts = path.split("/");
+        String pathOfInode = path.replace("hdfs://" + parts[2], "");
+        
+        Inode inode = inodes.getInodeAtPath(pathOfInode);
+        int inodePid = inode.getInodePK().getParentId();
+        String inodeName = inode.getInodePK().getName();
+        
+        execInputFilesFacade.create(execId, inodePid, inodeName);
+        jobHistoryFac.persist(job, execId, exec.getAppId());
+        activityFacade.persistActivity(activityFacade.EXECUTED_JOB + inodeName, job.getProject(), user);
+        
         break;
       default:
         throw new IllegalArgumentException(
