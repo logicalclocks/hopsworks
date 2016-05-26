@@ -368,7 +368,7 @@
       <layout>default</layout>
     </repository>             
     <repository>
-      <id>sics-release</id>
+      <id>sics-snapshot-repository</id>
       <name>SICS Release Repository</name>
       <url>http://kompics.sics.se/maven/snapshotrepository</url>
       <releases>
@@ -376,6 +376,13 @@
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
+    </repository>
+    <repository>
+      <id>sics-release-repository</id>
+      <name>SICS Release Repository</name>
+      <url>http://kompics.sics.se/maven/repository</url>
+      <releases>
+      </releases>
     </repository>
     <repository>  
       <id>maven2-repository.dev.java.net</id>

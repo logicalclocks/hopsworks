@@ -66,7 +66,7 @@ public class Dataset implements Serializable {
   @ManyToOne(optional = false)
   private Inode inode;
   
-  @Basic(optional = true)
+  @Basic(optional = false)
   @Column(name = "inode_id")
   private int idForInode = 0;  
   
