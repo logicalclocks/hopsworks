@@ -1,0 +1,60 @@
+<!-- Displays the defined jobs in the current project -->
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div id="wrapper" class="toggled" ng-controller="HistoryCtrl as historyCtrl">
+    <div class="overlay"></div>
+
+    <div ng-include="'navProject.html'"></div>
+
+    <section>
+      <div class="content-wrapper">
+        <h3> Jobs</h3>
+
+
+        <!-- Page Content -->
+        <div style="min-width: 1420px">
+          <div style="height: 60%">
+            <div style="max-height: 95%;overflow-y: auto;">
+              <div style="float: left;width: 90%;">
+                <label style="float: left; margin-top: 5px;margin-right:
+                       5px;">jobs per page:</label>
+              </div>
+              <table class="table table-hover">
+                <thead>
+                <th style="width: 5%">
+                </th>
+                <th style="width: 10%">
+                  Name
+                </th>
+                <th style="width: 10%">
+                  Created on
+                </th>
+                
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      1
+                    </td>
+                    <td>
+                      2
+                    </td>
+                      <td>
+                      3
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+    </section>
+  </div>
+  <!-- /#wrapper -->
+</div>
+
+
