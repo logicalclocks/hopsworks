@@ -53,7 +53,8 @@ angular.module('hopsWorksApp')
                 return true;
               if (group.indexOf("angular") > -1)
                 return true;
-
+              if (group.indexOf("livy") > -1) 
+                return true;
               return false;
             };
 
