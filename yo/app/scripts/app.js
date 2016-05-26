@@ -393,6 +393,10 @@ angular.module('hopsWorksApp', [
                   }]
               }
             })
+            .when('/history', {
+              templateUrl: 'views/history.html',
+              controller: 'HistoryCtrl as historyCtrl'
+            })
             .otherwise({
               redirectTo: '/'
             });

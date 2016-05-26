@@ -68,7 +68,12 @@ public final class SparkJob extends YarnJob {
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
     runnerbuilder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
-
+    runnerbuilder.addSystemProperty("spark.eventLog.enabled", Settings.SPARK_EVENT_LOG_DIR_ENABLE);
+    runnerbuilder.addSystemProperty("spark.eventLog.dir", Settings.SPARK_EVENT_LOG_DIR);
+    runnerbuilder.addSystemProperty("spark.eventLog.compress", Settings.SPARK_EVENT_LOG_COMPRESS);
+    runnerbuilder.addSystemProperty("spark.yarn.historyServer.address", Settings.SPARK_YARN_HISTORY_SERVER_ADDRESS);
+    runnerbuilder.addSystemProperty("spark.history.fs.logDirectory", Settings.SPARK_HISTORY_FS_LOG_DIR);
+    
     //TODO: runnerbuilder.setExtraFiles(config.getExtraFiles());
     try {
       runner = runnerbuilder.

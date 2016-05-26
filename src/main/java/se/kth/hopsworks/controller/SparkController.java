@@ -202,12 +202,14 @@ public class SparkController {
 	
 	JarInputStream jis = new JarInputStream(dfs.getDfsOps(username).open(path));
 	Manifest mf = jis.getManifest();
-	Attributes atts = mf.getMainAttributes();
-	SparkJobConfiguration config = new SparkJobConfiguration();
-  
-	if (atts.containsKey(Name.MAIN_CLASS)) {
-	  config.setMainClass(atts.getValue(Name.MAIN_CLASS));
-	}
+        SparkJobConfiguration config = new SparkJobConfiguration();
+
+        if (mf!=null){
+            Attributes atts = mf.getMainAttributes();
+            if (atts.containsKey(Name.MAIN_CLASS)) {
+                config.setMainClass(atts.getValue(Name.MAIN_CLASS));
+            }
+        }
 	config.setJarPath(path);
   config.setHistoryServerIp(settings.getSparkHistoryServerIp());
 	return config;

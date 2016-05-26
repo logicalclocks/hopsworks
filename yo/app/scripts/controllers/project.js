@@ -230,6 +230,10 @@ angular.module('hopsWorksApp')
                 self.goToDatasets = function () {
                     $location.path('project/' + self.pId + '/datasets');
                 };
+                
+                self.goToHistory = function () {
+                    $location.path('history');
+                };
 
                 self.goToJobs = function () {
                     $location.path('project/' + self.pId + '/jobs');
@@ -317,6 +321,10 @@ angular.module('hopsWorksApp')
 
                 self.showBiobanking = function () {
                     return showService("Biobanking");
+                };
+                
+                self.showHistory = function () {
+                    return showService("History");
                 };
 
                 self.getRole = function () {

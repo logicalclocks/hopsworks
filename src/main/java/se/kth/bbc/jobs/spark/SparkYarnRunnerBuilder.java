@@ -66,8 +66,9 @@ public class SparkYarnRunnerBuilder {
           throws IOException {
 
     String sparkClasspath = Settings.getSparkDefaultClasspath(sparkDir);
-    String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
-
+    //String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
+    String hdfsSparkJarPath = "hdfs://10.0.2.15:8020/user/glassfish/spark.jar";
+    
     //TODO: include driver memory as am memory
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
@@ -83,7 +84,7 @@ public class SparkYarnRunnerBuilder {
     builder.localResourcesBasePath(stagingPath);
 
     //Add Spark jar
-    builder.addLocalResource(Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath,
+    builder.addLocalResource(Settings.SPARK_LOCRSC_SPARK_JAR, "hdfs://10.0.2.15:8020/user/glassfish/spark.jar",
             false);
     //Add app jar
     builder.addLocalResource(Settings.SPARK_LOCRSC_APP_JAR, appJarPath,
