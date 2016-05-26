@@ -277,10 +277,10 @@ public class YarnRunner {
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesOnHDFS.entrySet()) {
       String key = entry.getKey();
       String pathToResource = entry.getValue().getPath();
-//      pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
-//          "hdfs://" + nameNodeIpPort + "/Projects");
-//      pathToResource = pathToResource.replaceFirst("hdfs:/*user",
-//          "hdfs://" + nameNodeIpPort + "/user");
+      pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
+          "hdfs://" + nameNodeIpPort + "/Projects");
+      pathToResource = pathToResource.replaceFirst("hdfs:/*user",
+          "hdfs://" + nameNodeIpPort + "/user");
       Path src = new Path(pathToResource);
       FileStatus scFileStat = fs.getFileStatus(src);
       LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
