@@ -125,7 +125,7 @@ public class DistributedFileSystemOps {
    * @throws java.io.IOException
    */
   public void touchz(Path location) throws IOException {
-    dfs.create(location);
+    dfs.create(location).close();
   }
   
   /**
