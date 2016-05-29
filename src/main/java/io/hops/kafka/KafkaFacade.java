@@ -196,9 +196,9 @@ public class KafkaFacade {
         }
 
         // create the topic in kafka 
-        ZkClient zkClient = new ZkClient(getIp(settings.getZkIp()).getHostName(),
+        ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).getHostName(),
                 10 * 1000, 29 * 1000, ZKStringSerializer$.MODULE$);
-        ZkConnection zkConnection = new ZkConnection(settings.getZkIp());
+        ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
         ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
 
         try {
@@ -238,9 +238,9 @@ public class KafkaFacade {
         //remove from database
         em.remove(pt);
         //remove from zookeeper
-        ZkClient zkClient = new ZkClient(getIp(settings.getZkIp()).getHostName(),
+        ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).getHostName(),
                 10 * 1000, 29 * 1000, ZKStringSerializer$.MODULE$);
-        ZkConnection zkConnection = new ZkConnection(settings.getZkIp());
+        ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
         ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
 
         try {
@@ -568,7 +568,7 @@ public class KafkaFacade {
         Set<String> brokerList = new HashSet<>();
 
         try {
-            ZooKeeper zk = new ZooKeeper(settings.getZkIp(), sessionTimeoutMs, null);
+            ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(), sessionTimeoutMs, null);
             List<String> ids = zk.getChildren("/brokers/ids", false);
             for (String id : ids) {
                 String brokerInfo = new String(zk.getData("/brokers/ids/" + id,

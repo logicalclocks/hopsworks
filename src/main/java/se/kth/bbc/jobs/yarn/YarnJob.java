@@ -152,7 +152,7 @@ public abstract class YarnJob extends HopsJob {
               kafkaCertFiles.put(Settings.KAFKA_T_CERTIFICATE, userCert.getUserKey());
               Map<String, File> kafkaCerts = new HashMap<>();
               //Create tmp cert directory if not exists
-              File certDir = new File("/srv/glassfish/kafkacerts");
+              File certDir = new File(Settings.getGlassfishDir() + "/kafkacerts");
               if (!certDir.exists()) {
                     try{
                         certDir.mkdir();
@@ -164,11 +164,11 @@ public abstract class YarnJob extends HopsJob {
               }
               try{
                 
-                String keyStorePath = "/srv/glassfish/kafkacerts/" +
+                String keyStorePath = Settings.getGlassfishDir() + "/kafkacerts/" +
                                 projectService.getProject().getId()+ "__" +
                                 projectService.getProject().getOwner().getUid() +
                                 "__kstore.jks";
-                String trustStorePath = "/srv/glassfish/kafkacerts/" +
+                String trustStorePath = Settings.getGlassfishDir() + "/kafkacerts/" +
                                 projectService.getProject().getId()+ "__" +
                                 projectService.getProject().getOwner().getUid() +
                                 "__tstore.jks";
@@ -176,8 +176,8 @@ public abstract class YarnJob extends HopsJob {
                 kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(keyStorePath));                         
                 kafkaCerts.put(Settings.KAFKA_T_CERTIFICATE, new File(trustStorePath));
 
-                Settings.KAFKA_K_CERTIFICATE_LOCATION = keyStorePath;
-                Settings.KAFKA_T_CERTIFICATE_LOCATION = trustStorePath;
+//                Settings.KAFKA_K_CERTIFICATE_LOCATION = keyStorePath;
+//                Settings.KAFKA_T_CERTIFICATE_LOCATION = trustStorePath;
                 
                 if(projectLocalResources == null){
                    projectLocalResources = new HashMap<>();

@@ -53,6 +53,7 @@ public class Settings {
   private static final String VARIABLE_ZK_DIR = "zk_dir";
   private static final String VARIABLE_ZK_USER = "zk_user";
   private static final String VARIABLE_ZK_IP = "zk_ip";
+  private static final String VARIABLE_KAFKA_IP = "kafka_ip";
   
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
   
@@ -117,6 +118,7 @@ public class Settings {
       ZK_IP = setIpVar(VARIABLE_ZK_IP, ZK_IP);
       ZK_USER = setUserVar(VARIABLE_ZK_USER, ZK_USER);
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
+      KAFKA_IP = setIpVar(VARIABLE_KAFKA_IP, KAFKA_IP);
       KAFKA_USER = setUserVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
       KAFKA_DEFAULT_NUM_PARTITIONS = setDirVar(VARIABLE_KAFKA_NUM_PARTITIONS, KAFKA_DEFAULT_NUM_PARTITIONS);
@@ -153,10 +155,9 @@ public class Settings {
   }
 
 
-  private String GLASSFISH_DIR = "/srv/glassfish";
+  private static String GLASSFISH_DIR = "/srv/glassfish";
 
-  public synchronized String getGlassfishDir() {
-    // todo - checkCache()
+  public static synchronized String getGlassfishDir() {
     return GLASSFISH_DIR;
   }
 
@@ -497,14 +498,14 @@ public class Settings {
   }   
   
   
-  public static final int ZK_IP_PORT = 2181; 
+  public static final int ZK_PORT = 2181; 
  
   // Zookeeper 
   private String ZK_IP = "127.0.0.1";
 
-  public synchronized String getZkIp() {
+  public synchronized String getZkConnectStr() {
     checkCache();
-    return ZK_IP+":"+ZK_IP_PORT;
+    return ZK_IP+":"+ZK_PORT;
   }
 
   private String ZK_USER = "zk";
@@ -512,6 +513,17 @@ public class Settings {
     checkCache();
     return ZK_USER;
   }
+  
+  
+  // Kafka
+  private String KAFKA_IP = "127.0.0.1";
+  public static final int KAFKA_PORT = 9092;
+
+  public synchronized String getKafkaConnectStr() {
+    checkCache();
+    return KAFKA_IP+":"+KAFKA_PORT;
+  }
+  
   private String KAFKA_USER = "kafka";
   public synchronized String getKafkaUser() {
     checkCache();
@@ -586,9 +598,6 @@ public class Settings {
   //Kakfa certificate
   public static final String KAFKA_K_CERTIFICATE = "kafka_k_certificate";
   public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
-
-  public static String KAFKA_K_CERTIFICATE_LOCATION="";
-  public static String KAFKA_T_CERTIFICATE_LOCATION="";
   
   //Project creation: default datasets
   public static enum DefaultDataset {

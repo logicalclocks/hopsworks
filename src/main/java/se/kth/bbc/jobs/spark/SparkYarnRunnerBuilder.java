@@ -100,18 +100,18 @@ public class SparkYarnRunnerBuilder {
     for (Map.Entry<String, String> k : extraFiles.entrySet()) {
         
         //If the LocalResource is the Kafka certificate, retrieve it from
-        if(k.getKey().equals(Settings.KAFKA_K_CERTIFICATE) || 
-                k.getKey().equals(Settings.KAFKA_T_CERTIFICATE)  ){
-            builder.addLocalResource(new LocalResourceDTO(k.getKey(), 
-                    k.getValue(), LocalResourceVisibility.APPLICATION, 
-                    LocalResourceType.FILE, null), 
-                    true);
-        } else {
+//        if(k.getKey().equals(Settings.KAFKA_K_CERTIFICATE) || 
+//                k.getKey().equals(Settings.KAFKA_T_CERTIFICATE)  ){
+//            builder.addLocalResource(new LocalResourceDTO(k.getKey(), 
+//                    k.getValue(), LocalResourceVisibility.APPLICATION, 
+//                    LocalResourceType.FILE, null), 
+//                    true);
+//        } else {
             builder.addLocalResource(new LocalResourceDTO(k.getKey(),
                     k.getValue(), LocalResourceVisibility.PUBLIC, 
                     LocalResourceType.FILE, null),
                     !k.getValue().startsWith("hdfs:"));
-        }
+//        }
     }
   
 
