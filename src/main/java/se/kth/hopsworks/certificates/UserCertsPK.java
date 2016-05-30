@@ -21,15 +21,16 @@ public class UserCertsPK implements Serializable {
   private String projectname;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "user_id")
-  private int userId;
+  @Size(min = 1, max = 10)
+  @Column(name = "username")
+  private String username;
 
   public UserCertsPK() {
   }
 
-  public UserCertsPK(String projectname, int userId) {
+  public UserCertsPK(String projectname, String username) {
     this.projectname = projectname;
-    this.userId = userId;
+    this.username = username;
   }
 
   public String getProjectname() {
@@ -40,19 +41,19 @@ public class UserCertsPK implements Serializable {
     this.projectname = projectname;
   }
 
-  public int getUserId() {
-    return userId;
+  public String getUsername() {
+    return username;
   }
 
-  public void setUserId(int userId) {
-    this.userId = userId;
+  public void setUsername(String username) {
+    this.username = username;
   }
 
   @Override
   public int hashCode() {
     int hash = 0;
     hash += (projectname != null ? projectname.hashCode() : 0);
-    hash += (int) userId;
+    hash += (username != null ? username.hashCode() : 0);
     return hash;
   }
 
@@ -66,7 +67,7 @@ public class UserCertsPK implements Serializable {
     if ((this.projectname == null && other.projectname != null) || (this.projectname != null && !this.projectname.equals(other.projectname))) {
       return false;
     }
-    if (this.userId != other.userId) {
+    if (this.username != other.username) {
       return false;
     }
     return true;
@@ -74,7 +75,7 @@ public class UserCertsPK implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.hopsworks.certificates.UserCertsPK[ projectname=" + projectname + ", userId=" + userId + " ]";
+    return "se.kth.hopsworks.certificates.UserCertsPK[ projectname=" + projectname + ", username=" + username + " ]";
   }
   
 }

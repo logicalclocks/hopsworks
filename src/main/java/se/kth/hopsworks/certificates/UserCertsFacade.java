@@ -34,11 +34,11 @@ public class UserCertsFacade {
       
     public UserCertsFacade() throws AppException, Exception {}
     
-    public UserCerts findUserCert(String projectName, int uid){
+    public UserCerts findUserCert(String projectName, String username){
         TypedQuery<UserCerts> query = em.createNamedQuery(
         "UserCerts.findUserProjectCert", UserCerts.class);
         query.setParameter("projectname", projectName);
-        query.setParameter("userId", uid);
+        query.setParameter("username", username);
         try{
             UserCerts res = query.getSingleResult();
             return res;
@@ -60,10 +60,10 @@ public class UserCertsFacade {
         return new ArrayList<>();
     }
     
-    public List<UserCerts> findUserCertsByProjectId(int projectId) {
+    public List<UserCerts> findUserCertsByProjectId(String projectname) {
         TypedQuery<UserCerts> query = em.createNamedQuery(
-                "UserCerts.findByProjectId", UserCerts.class);
-        query.setParameter("projectId", projectId);
+                "UserCerts.findByProjectname", UserCerts.class);
+        query.setParameter("projectname", projectname);
         try {
             List<UserCerts> res = query.getResultList();      
             return res;
@@ -73,10 +73,10 @@ public class UserCertsFacade {
         return new ArrayList<>();
     }
     
-    public List<UserCerts> findUserCertsByUid(int uid){
+    public List<UserCerts> findUserCertsByUid(String username){
         TypedQuery<UserCerts> query = em.createNamedQuery(
-            "UserCerts.findByUserId", UserCerts.class);
-        query.setParameter("userId", uid);
+            "UserCerts.findByUsername", UserCerts.class);
+        query.setParameter("username", username);
         try {
             List<UserCerts> res = query.getResultList();      
             return res;
@@ -90,14 +90,14 @@ public class UserCertsFacade {
         em.persist(uc);
     }
     
-    public void putUserCerts(String projectName, int userId){
-      try(FileInputStream kfin = new FileInputStream(new File("/tmp/tempstores/" + projectName + "__" + userId + "__kstore.jks"));
-          FileInputStream tfin = new FileInputStream(new File("/tmp/tempstores/" + projectName + "__" + userId + "__tstore.jks"))){
+    public void putUserCerts(String projectname, String username){
+      try(FileInputStream kfin = new FileInputStream(new File("/tmp/tempstores/" + projectname + "__" + username + "__kstore.jks"));
+          FileInputStream tfin = new FileInputStream(new File("/tmp/tempstores/" + projectname + "__" + username + "__tstore.jks"))){
        
             byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
             byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
             
-            UserCerts uc = new UserCerts(projectName, userId);
+            UserCerts uc = new UserCerts(projectname, username);
             uc.setUserKey(kStoreBlob);
             uc.setUserCert(tStoreBlob);
             em.merge(uc);
@@ -119,16 +119,16 @@ public class UserCertsFacade {
         em.remove(uc);
     }
    
-    public void removeUserProjectCerts(String projectName, int uid) {
-        UserCerts item = findUserCert(projectName, uid);
+    public void removeUserProjectCerts(String projectname, String username) {
+        UserCerts item = findUserCert(projectname, username);
            if(item != null){
                 UserCerts tmp = em.merge(item);
                 remove(tmp);
            }          
     } 
     
-    public void removeAllCertsOfAUser(int uid){
-        List<UserCerts> items = findUserCertsByUid(uid);
+    public void removeAllCertsOfAUser(String username){
+        List<UserCerts> items = findUserCertsByUid(username);
         if(items != null){
             for(UserCerts uc : items){
                 UserCerts tmp = em.merge(uc);
@@ -137,8 +137,8 @@ public class UserCertsFacade {
         }
     }
     
-    public void removeAllCertsOfAProject(int projectId){
-        List<UserCerts> items = findUserCertsByProjectId(projectId);
+    public void removeAllCertsOfAProject(String projectname){
+        List<UserCerts> items = findUserCertsByProjectId(projectname);
         if(items != null){
             for(UserCerts uc : items){
                 UserCerts tmp = em.merge(uc);

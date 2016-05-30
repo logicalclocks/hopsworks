@@ -25,8 +25,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
   @NamedQuery(name = "UserCerts.findAll", query = "SELECT u FROM UserCerts u"),
   @NamedQuery(name = "UserCerts.findByProjectname", query = "SELECT u FROM UserCerts u WHERE u.userCertsPK.projectname = :projectname"),
-  @NamedQuery(name = "UserCerts.findByUserId", query = "SELECT u FROM UserCerts u WHERE u.userCertsPK.userId = :userId"),
-  @NamedQuery(name = "UserCerts.findUserProjectCert", query = "SELECT u FROM UserCerts u WHERE u.userCertsPK.userId = :userId AND u.userCertsPK.projectname = :projectname")
+  @NamedQuery(name = "UserCerts.findByUsername", query = "SELECT u FROM UserCerts u WHERE u.userCertsPK.username = :username"),
+  @NamedQuery(name = "UserCerts.findUserProjectCert", query = "SELECT u FROM UserCerts u WHERE u.userCertsPK.username = :username AND u.userCertsPK.projectname = :projectname")
 })
 public class UserCerts implements Serializable {
 
@@ -47,8 +47,8 @@ public class UserCerts implements Serializable {
     this.userCertsPK = userCertsPK;
   }
 
-  public UserCerts(String projectname, int userId) {
-    this.userCertsPK = new UserCertsPK(projectname, userId);
+  public UserCerts(String projectname, String username) {
+    this.userCertsPK = new UserCertsPK(projectname, username);
   }
 
   public UserCertsPK getUserCertsPK() {

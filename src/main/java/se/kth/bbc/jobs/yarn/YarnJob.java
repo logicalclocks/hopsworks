@@ -145,7 +145,7 @@ public abstract class YarnJob extends HopsJob {
               //Pull the certificate of the client
               UserCerts userCert = services.getUserCerts().findUserCert(
                   projectService.getProject().getName(),
-                  projectService.getProject().getOwner().getUid());
+                  projectService.getProject().getOwner().getUsername());
               //Retrieve certificates from the database
               Map<String, byte[]> kafkaCertFiles = new HashMap<>();
               kafkaCertFiles.put(Settings.KAFKA_K_CERTIFICATE, userCert.getUserCert());
@@ -166,11 +166,11 @@ public abstract class YarnJob extends HopsJob {
                 
                 String keyStorePath = Settings.getGlassfishDir() + "/kafkacerts/" +
                                 projectService.getProject().getName()+ "__" +
-                                projectService.getProject().getOwner().getUid() +
+                                projectService.getProject().getOwner().getUsername() +
                                 "__kstore.jks";
                 String trustStorePath = Settings.getGlassfishDir() + "/kafkacerts/" +
                                 projectService.getProject().getName()+ "__" +
-                                projectService.getProject().getOwner().getUid() +
+                                projectService.getProject().getOwner().getUsername() +
                                 "__tstore.jks";
                   
                 kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(keyStorePath));                         
