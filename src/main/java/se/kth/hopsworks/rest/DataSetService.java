@@ -153,8 +153,8 @@ public class DataSetService {
           .getInodePK().getName());
       user = userfacade.findByUsername(inodeView.getOwner());
       if (user != null) {
-//        inodeView.setOwner(user.getFname() + " " + user.getLname());
         inodeView.setEmail(user.getEmail());
+        inodeView.setOwner(hdfsUsersBean.getHdfsUserName(this.project, user));
       }
       kids.add(inodeView);
     }
