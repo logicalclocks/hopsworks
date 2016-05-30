@@ -34,10 +34,10 @@ public class UserCertsFacade {
       
     public UserCertsFacade() throws AppException, Exception {}
     
-    public UserCerts findUserCert(int projectId, int uid){
+    public UserCerts findUserCert(String projectName, int uid){
         TypedQuery<UserCerts> query = em.createNamedQuery(
         "UserCerts.findUserProjectCert", UserCerts.class);
-        query.setParameter("projectId", projectId);
+        query.setParameter("projectname", projectName);
         query.setParameter("userId", uid);
         try{
             UserCerts res = query.getSingleResult();
@@ -90,14 +90,14 @@ public class UserCertsFacade {
         em.persist(uc);
     }
     
-    public void putUserCerts(int projectId, int userId){
-      try(FileInputStream kfin = new FileInputStream(new File("/tmp/tempstores/" + projectId + "__" + userId + "__kstore.jks"));
-          FileInputStream tfin = new FileInputStream(new File("/tmp/tempstores/" + projectId + "__" + userId + "__tstore.jks"))){
+    public void putUserCerts(String projectName, int userId){
+      try(FileInputStream kfin = new FileInputStream(new File("/tmp/tempstores/" + projectName + "__" + userId + "__kstore.jks"));
+          FileInputStream tfin = new FileInputStream(new File("/tmp/tempstores/" + projectName + "__" + userId + "__tstore.jks"))){
        
             byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
             byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
             
-            UserCerts uc = new UserCerts(projectId, userId);
+            UserCerts uc = new UserCerts(projectName, userId);
             uc.setUserKey(kStoreBlob);
             uc.setUserCert(tStoreBlob);
             em.merge(uc);
@@ -119,8 +119,8 @@ public class UserCertsFacade {
         em.remove(uc);
     }
    
-    public void removeUserProjectCerts(int projectId, int uid) {
-        UserCerts item = findUserCert(projectId, uid);
+    public void removeUserProjectCerts(String projectName, int uid) {
+        UserCerts item = findUserCert(projectName, uid);
            if(item != null){
                 UserCerts tmp = em.merge(item);
                 remove(tmp);

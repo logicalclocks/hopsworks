@@ -77,10 +77,10 @@ public class LocalhostServices {
     return stdout;
   }
   //Make this asynchronous and call back UserCertsFacade.putUSer()
-  public static String createUserCertificates(int projectId, int userId) throws IOException {
+  public static String createUserCertificates(String projectName, int userId) throws IOException {
     
-    String sslCertFile = Settings.CA_CERT_DIR + projectId + "__" + userId + ".cert.pem";
-    String sslKeyFile = Settings.CA_KEY_DIR + projectId + "__" + userId + ".key.pem";
+    String sslCertFile = Settings.CA_CERT_DIR + projectName + "__" + userId + ".cert.pem";
+    String sslKeyFile = Settings.CA_KEY_DIR + projectName + "__" + userId + ".key.pem";
 
     if (new File(sslCertFile).exists() || new File(sslKeyFile).exists()) {
       throw new IOException("Certs exist already: " + sslCertFile + " & " + sslKeyFile);
@@ -92,7 +92,7 @@ public class LocalhostServices {
     List<String> commands = new ArrayList<>();
     commands.add("/bin/bash");
     commands.add("-c");   
-    commands.add("sudo /srv/glassfish/domain1/config/ca/intermediate" + "/" + Settings.SSL_CREATE_CERT_SCRIPTNAME + " " + projectId + "__" + userId);
+    commands.add("sudo /srv/glassfish/domain1/config/ca/intermediate" + "/" + Settings.SSL_CREATE_CERT_SCRIPTNAME + " " + projectName + "__" + userId);
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
     String stdout = "", stderr = "";
