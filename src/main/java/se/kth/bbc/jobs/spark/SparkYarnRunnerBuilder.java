@@ -109,12 +109,12 @@ public class SparkYarnRunnerBuilder {
 //    builder.addToAppMasterEnvironment("SPARK_USER", );
     // TODO - Change spark user here
 //    builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
-    if (classPath == null || classPath.isEmpty()) {
-      builder.addToAppMasterEnvironment("CLASSPATH", sparkClasspath);
-    } else {
-      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
-              + sparkClasspath);
-    }
+//    if (classPath == null || classPath.isEmpty()) {
+//      builder.addToAppMasterEnvironment("CLASSPATH", sparkClasspath);
+//    } else {
+//      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
+//              + sparkClasspath);
+//    }
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
