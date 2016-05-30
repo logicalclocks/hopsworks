@@ -71,7 +71,7 @@ public class FileSystemOperations {
    * @throws java.io.IOException When an error occurs upon HDFS opening.
    */
   public InputStream getInputStream(Path location) throws IOException {
-    return dfs.open(location, 1048576); //TODO: undo hard coding of weird constant here...
+    return dfs.open(location); //TODO: undo hard coding of weird constant here...
   }
 
   /**

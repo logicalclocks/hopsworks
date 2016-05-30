@@ -325,6 +325,7 @@ public class Settings {
   public static final int YARN_DEFAULT_APP_MASTER_MEMORY = 512;
   public static final String YARN_DEFAULT_OUTPUT_PATH = "Logs/Yarn/";
   public static final String HADOOP_COMMON_HOME_KEY = "HADOOP_COMMON_HOME";
+  public static final String HADOOP_HOME_KEY = "HADOOP_HOME";
 //  private static String HADOOP_COMMON_HOME_VALUE = HADOOP_DIR;
   public static final String HADOOP_HDFS_HOME_KEY = "HADOOP_HDFS_HOME";
 //  private static final String HADOOP_HDFS_HOME_VALUE = HADOOP_DIR;
@@ -345,9 +346,12 @@ public class Settings {
 
   //Flink constants
   public static final String FLINK_DEFAULT_OUTPUT_PATH = "Logs/Flink/";
-  public static final String FLINK_LOCRSC_SPARK_JAR = "__flink__.jar";
-  public static final String FLINK_LOCRSC_APP_JAR = "__app__.jar";
-  
+  public static final String FLINK_DEFAULT_CONF_FILE = "flink-conf.yaml";
+  public static final String FLINK_DEFAULT_LOG4J_FILE = "log4j.properties";
+  public static final String FLINK_DEFAULT_LOGBACK_FILE = "logback.xml";
+  public static final String FLINK_LOCRSC_FLINK_JAR = "flink.jar";
+  public static final String FLINK_LOCRSC_APP_JAR = "app.jar";
+  public static final String FLINK_AM_MAIN = "org.apache.flink.yarn.ApplicationMaster";
   
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir()+ "/flink.jar";
@@ -370,7 +374,7 @@ public class Settings {
   }
 
   private static String flinkDefaultClasspath(String flinkDir) {
-    return flinkDir + "/conf:" + flinkDir + "/lib/*";
+    return flinkDir + "/lib/*";
   }
 
   public static String getFlinkDefaultClasspath(String flinkDir) {

@@ -80,7 +80,24 @@ public class FlinkController {
                     "Job configuration is not a Flink job configuration.");
         } else if (!isFlinkJarAvailable()) {
             throw new IllegalStateException("Flink is not installed on this system.");
+        }   
+        //If it is a flink job, copy the app jar locally for use by the Flink 
+        //client
+        if(job.getJobConfig().getType() == JobType.FLINK){
+            String appJarPath = ((FlinkJobConfiguration)job.getJobConfig()).getJarPath();
+            //String localPathAppJar = "/tmp/"+appJarPath.substring(appJarPath.indexOf("Projects"), appJarPath.length()-4);
+            String localPathAppJar = "/tmp/"+appJarPath.substring(appJarPath.indexOf("Projects"), appJarPath.lastIndexOf("/"));
+            String appJarName = appJarPath.substring(appJarPath.lastIndexOf("/")).replace("/","");
+            File tmpDir = new File(localPathAppJar);
+            if(!tmpDir.exists()){
+                tmpDir.mkdir();
+            }
+            //Copy job jar locaclly so that Flink client has access to it
+            //in YarnRunner
+            fops.copyToLocal(appJarPath, localPathAppJar+"/"+appJarName);
+            ((FlinkJobConfiguration)job.getJobConfig()).setAppJarPath( localPathAppJar+"/"+appJarName);
         }
+
         String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
         UserGroupInformation proxyUser = ugiService.getProxyUser(username);
         FlinkJob flinkjob = null;
@@ -196,6 +213,7 @@ public class FlinkController {
 	}
 	HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
 	// If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
+        
 	path = path.replaceFirst("hdfs:/*Projects",
 			"hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
 	logger.log(Level.INFO, "Really executing Flink job by {0} at path: {1}", new Object[]{username, path});
