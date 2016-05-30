@@ -12,6 +12,7 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 public class FlinkJobConfiguration extends YarnJobConfiguration {
 
     private String jarPath;
+    private String localJarPath;
     private String appJarPath;
     private String mainClass;
     private String args;
@@ -59,6 +60,15 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         this.jarPath = jarPath;
     }
 
+    public String getLocalJarPath() {
+        return localJarPath;
+    }
+
+    public void setLocalJarPath(String localJarPath) {
+        this.localJarPath = localJarPath;
+    }
+
+    
     /**
      * Get the name of the main class to be executed.
      * @return 

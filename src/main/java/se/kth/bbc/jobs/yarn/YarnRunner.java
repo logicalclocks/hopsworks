@@ -23,6 +23,7 @@ import org.apache.flink.client.program.Client;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
 import org.apache.flink.configuration.ConfigConstants;
+import org.apache.flink.runtime.yarn.FlinkYarnClusterStatus;
 import org.apache.flink.yarn.FlinkYarnCluster;
 
 
@@ -74,6 +75,7 @@ public class YarnRunner {
   //The parallelism parameter of Flink
   private int parallelism;
   private String appJarPath;
+  private String localJarPath; //Used by flink
   private final String amJarLocalName;
   private final String amJarPath;
   private final String amQueue;
@@ -203,20 +205,45 @@ public class YarnRunner {
             }
             //app.jar path 
             File file = new File(appJarPath);
-            //TODO: Remove hard-coded parallelism
-            
+         
             Path sessionFilesDir = new Path(localResourcesBasePath);
             org.apache.flink.configuration.Configuration flinkConf = new org.apache.flink.configuration.Configuration();
             FlinkYarnCluster cluster = new FlinkYarnCluster(yarnClient, appId, conf, flinkConf, sessionFilesDir, false);
             cluster.connectToCluster();
             InetSocketAddress jobManagerAddress = cluster.getJobManagerAddress();
+            //Wait for slots to be allocated
+            int slotWait = 0;
+            while(cluster.getClusterStatus() == null && slotWait < 60){
+                try {
+                    Thread.sleep(1000);
+                    logger.log(Level.INFO, "Waiting for Flink cluster to be allocated");
+                    slotWait++;
+                } catch (InterruptedException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+            }
+            slotWait = 0;
+            while(cluster.getClusterStatus().getNumberOfSlots() < 1 && slotWait < 60){
+                try {
+                    Thread.sleep(1000);
+                    logger.log(Level.INFO, "Waiting for Flink slots to be allocated");
+                    slotWait++;
+                } catch (InterruptedException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+
+            }
 
             org.apache.flink.configuration.Configuration clientConf = new org.apache.flink.configuration.Configuration();
             clientConf.setInteger(ConfigConstants.JOB_MANAGER_IPC_PORT_KEY, jobManagerAddress.getPort());
             clientConf.setString(ConfigConstants.JOB_MANAGER_IPC_ADDRESS_KEY, jobManagerAddress.getHostName());
             Client client = new Client(clientConf);
             try {
-                PackagedProgram program = new PackagedProgram(file,args);
+                List<URL> classpaths = new ArrayList<>();
+                //Copy Flink jar to local machine and pass it to the classpath
+                URL flinkURL = new File(localJarPath).toURI().toURL();
+                classpaths.add(flinkURL);
+                PackagedProgram program = new PackagedProgram(file, classpaths, args);
                 client.setPrintStatusDuringExecution(false);
 
                 JobSubmissionResult res =  client.runDetached(program, parallelism);
@@ -224,13 +251,10 @@ public class YarnRunner {
                 cluster.stopAfterJob(jobId);
             } catch (ProgramInvocationException ex) {
                 logger.log(Level.SEVERE, "Error while Flink Client submits jobs: {0}", ex.getMessage());
-            } 
-        } 
-       
+            }
+        }
         yarnClient.close();
         
-    
-
     //Clean up some
     removeAllNecessary();
     yarnClient = null;
@@ -494,6 +518,7 @@ public class YarnRunner {
     this.jobType = builder.jobType;
     this.parallelism = builder.parallelism;
     this.appJarPath = builder.appJarPath;
+    this.localJarPath = builder.localJarPath;
     this.amQueue = builder.amQueue;
     this.amMemory = builder.amMemory;
     this.amVCores = builder.amVCores;
@@ -583,6 +608,7 @@ public class YarnRunner {
     //Flink parallelism
     private int parallelism;
     private String appJarPath;
+    private String localJarPath;//USed by Flink streaming job
     //Optional attributes
     // Queue for App master
     private String amQueue = "default"; //TODO: enable changing this, or infer from user data
@@ -720,6 +746,12 @@ public class YarnRunner {
     public void setAppJarPath(String path){
         this.appJarPath = path;
     }
+
+    public void setLocalJarPath(String localJarPath) {
+        this.localJarPath = localJarPath;
+    }
+    
+    
     /**
      * Set the configuration of the Yarn Application to the values contained in the YarnJobConfiguration object. This
      * overrides any defaults or previously set values contained in the config file.

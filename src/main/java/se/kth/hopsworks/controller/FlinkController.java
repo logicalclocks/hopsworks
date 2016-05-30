@@ -95,9 +95,15 @@ public class FlinkController {
             //Copy job jar locaclly so that Flink client has access to it
             //in YarnRunner
             fops.copyToLocal(appJarPath, localPathAppJar+"/"+appJarName);
-            ((FlinkJobConfiguration)job.getJobConfig()).setAppJarPath( localPathAppJar+"/"+appJarName);
+            ((FlinkJobConfiguration)job.getJobConfig()).setAppJarPath(localPathAppJar+"/"+appJarName);
+            
+            //If it is a streaming job, copy Flink.jar locally so it can be 
+            //used by the PackagedProgram flink class
+            ((FlinkJobConfiguration)job.getJobConfig()).setLocalJarPath("hdfs:///user/glassfish/"+Settings.FLINK_LOCRSC_FLINK_JAR);
+            fops.copyToLocal(((FlinkJobConfiguration)job.getJobConfig()).getLocalJarPath(), localPathAppJar+"/"+Settings.FLINK_LOCRSC_FLINK_JAR);
+            ((FlinkJobConfiguration)job.getJobConfig()).setLocalJarPath(localPathAppJar+"/"+Settings.FLINK_LOCRSC_FLINK_JAR);
         }
-
+        
         String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
         UserGroupInformation proxyUser = ugiService.getProxyUser(username);
         FlinkJob flinkjob = null;
@@ -213,7 +219,6 @@ public class FlinkController {
 	}
 	HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
 	// If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
-        
 	path = path.replaceFirst("hdfs:/*Projects",
 			"hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
 	logger.log(Level.INFO, "Really executing Flink job by {0} at path: {1}", new Object[]{username, path});

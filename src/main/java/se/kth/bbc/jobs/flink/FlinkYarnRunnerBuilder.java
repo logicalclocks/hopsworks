@@ -1,21 +1,20 @@
 package se.kth.bbc.jobs.flink;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.yarn.api.records.LocalResource;
-import org.apache.hadoop.yarn.util.Records;
 
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.hadoop.yarn.api.records.LocalResourceType;
+import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
+import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -61,10 +60,10 @@ public class FlinkYarnRunnerBuilder {
     
     //Jar paths for AM and app
     private String appJarPath;
+    private String localJarPath;
     //Optional parameters
     private final List<String> jobArgs = new ArrayList<>();
-    private Map<String, String> extraFiles = new HashMap<>();
-
+    private List<LocalResourceDTO> extraFiles = new ArrayList<>();
 
     /**
      * If the user has specified a different number of slots, we store them here
@@ -81,13 +80,12 @@ public class FlinkYarnRunnerBuilder {
     private Path flinkLoggingConfigurationPath; // optional
     private Path flinkJarPath;
     private String dynamicPropertiesEncoded;
-    private List<File> shipFiles = new ArrayList<>();
     private boolean detached;
     private boolean streamingMode;
     private int parallelism;
     private String customName = null;
 
-    public FlinkYarnRunnerBuilder(String appJarPath, String mainClass) {
+    public FlinkYarnRunnerBuilder(String appJarPath, String mainClass, String localJarPath) {
         if (appJarPath == null || appJarPath.isEmpty()) {
             throw new IllegalArgumentException(
               "Path to application jar cannot be empty!");
@@ -97,6 +95,7 @@ public class FlinkYarnRunnerBuilder {
                   "Name of the main class cannot be empty!");
         }
         this.appJarPath = appJarPath;
+        this.localJarPath = localJarPath;
     }
 
     public FlinkYarnRunnerBuilder addAllJobArgs(String[] jobArgs) {
@@ -105,6 +104,10 @@ public class FlinkYarnRunnerBuilder {
     }
     public void setAppJarPath(String appJarPath){
         this.appJarPath = appJarPath;
+    }
+
+    public void setLocalJarPath(String localJarPath) {
+        this.localJarPath = localJarPath;
     }
     
     public void setJobManagerMemory(int memoryMb) {
@@ -191,16 +194,6 @@ public class FlinkYarnRunnerBuilder {
         this.streamingMode = streamingMode;
     }
     
-    public void setShipFiles(List<File> shipFiles) {
-        for (File shipFile : shipFiles) {
-			// remove uberjar from ship list (by default everything in the lib/ folder is added to
-            // the list of files to ship, but we handle the uberjar separately.
-            if ((!(shipFile.getName().startsWith("flink-dist") || !shipFile.getName().equals("flink")) && shipFile.getName().endsWith("jar"))) {
-                this.shipFiles.add(shipFile);
-            }
-        }
-    }
-
     public void setDynamicPropertiesEncoded(String dynamicPropertiesEncoded) {
         this.dynamicPropertiesEncoded = dynamicPropertiesEncoded;
     }
@@ -216,11 +209,31 @@ public class FlinkYarnRunnerBuilder {
         customName = name;
     }
     
-    public void setExtraFiles(Map<String, String> extraFiles) {
+    public FlinkYarnRunnerBuilder setExtraFiles(List<LocalResourceDTO> extraFiles) {
         if (extraFiles == null) {
           throw new IllegalArgumentException("Map of extra files cannot be null.");
         }
         this.extraFiles = extraFiles;
+        return this;
+    }
+
+    public FlinkYarnRunnerBuilder addExtraFile(LocalResourceDTO dto) {
+        if (dto.getName() == null || dto.getName().isEmpty()) {
+          throw new IllegalArgumentException(
+                  "Filename in extra file mapping cannot be null or empty.");
+        }
+        if (dto.getPath() == null || dto.getPath().isEmpty()) {
+          throw new IllegalArgumentException(
+                  "Location in extra file mapping cannot be null or empty.");
+        }
+        this.extraFiles.add(dto);
+        return this;
+    }
+    public FlinkYarnRunnerBuilder addExtraFiles(List<LocalResourceDTO> projectLocalResources) {
+        if(projectLocalResources != null &&!projectLocalResources.isEmpty()){
+            this.extraFiles.addAll(projectLocalResources);
+        }
+        return this;
     }
     public void isReadyForDeployment() throws YarnDeploymentException {
         if (taskManagerCount <= 0) {
@@ -286,12 +299,9 @@ public class FlinkYarnRunnerBuilder {
             String hadoopDir, final String flinkDir, 
             final String nameNodeIpPort) throws IOException {
               
-        //Set Classpath and Jar Path
-        String flinkClasspath = Settings.getFlinkDefaultClasspath(flinkDir);
+        //Set Jar Path
         //Create the YarnRunner builder for Flink, proceed with setting values
         YarnRunner.Builder builder = new YarnRunner.Builder(Settings.FLINK_AM_MAIN);
-         
-        builder.addToAppMasterEnvironment("CLASSPATH", flinkClasspath);
         String stagingPath = File.separator + "Projects" + File.separator + project
             + File.separator
             + Settings.PROJECT_STAGING_DIR + File.separator
@@ -299,15 +309,24 @@ public class FlinkYarnRunnerBuilder {
         builder.localResourcesBasePath(stagingPath);
         
         //Add Flink jar
-        builder.addLocalResource(Settings.FLINK_LOCRSC_FLINK_JAR, "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR,
-                false);
+        builder.addLocalResource(new LocalResourceDTO(
+                Settings.FLINK_LOCRSC_FLINK_JAR, 
+                "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/"+
+                        Settings.FLINK_LOCRSC_FLINK_JAR,
+                LocalResourceVisibility.PUBLIC.toString(), 
+                LocalResourceType.FILE.toString(), null), false);
+                
         //Add Flink conf file
-        builder.addLocalResource(Settings.FLINK_DEFAULT_CONF_FILE, "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/"+Settings.FLINK_DEFAULT_CONF_FILE,
-                false);
+        builder.addLocalResource(new LocalResourceDTO(
+                Settings.FLINK_DEFAULT_CONF_FILE, 
+                "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/"+
+                        Settings.FLINK_DEFAULT_CONF_FILE,
+                LocalResourceVisibility.PUBLIC.toString(), 
+                LocalResourceType.FILE.toString(), null), false);
+               
         //Add extra files to local resources, use filename as key
-        for (Map.Entry<String, String> k : extraFiles.entrySet()) {
-          builder.addLocalResource(k.getKey(), k.getValue(), !k.getValue().
-                  startsWith("hdfs:"));
+        for (LocalResourceDTO dto : extraFiles) {
+                builder.addLocalResource(dto, false);
         }
 
         //Set Flink ApplicationMaster env parameters
@@ -334,6 +353,7 @@ public class FlinkYarnRunnerBuilder {
         
         builder.setJobType(JobType.FLINK);
         builder.setAppJarPath(appJarPath);
+        builder.setLocalJarPath(localJarPath);
         builder.setParallelism(parallelism);
         String name;
         if (customName == null) {
