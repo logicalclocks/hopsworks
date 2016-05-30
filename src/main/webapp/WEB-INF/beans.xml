@@ -2,15 +2,18 @@
 <beans xmlns="http://xmlns.jcp.org/xml/ns/javaee"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
-                       http://xmlns.jcp.org/xml/ns/javaee/beans_1_1.xsd"
-       version="1.1" bean-discovery-mode="annotated">
-  <!-- Don't allow jee7 to scann for classes from guice or jclouds -->
-  <!--See bug here: https://blogs.oracle.com/theaquarium/entry/default_cdi_enablement_in_java-->
+                       http://xmlns.jcp.org/xml/ns/javaee/beans_1_2.xsd"
+       version="1.2" bean-discovery-mode="annotated">
+  <!-- Don't allow jee7 to scan for classes from guice or jclouds -->
+  <!--See bug here: https://blogs.oracle.com/theaquarium/entry/default_cdi_enablement_in_java -->
   <scan>
     <exclude name="com.sun.jersey.guice.**" />
     <exclude name="org.jclouds.**" />
     <exclude name="com.google.inject.**" />     
+    <exclude name="org.sonatype.guice.plexus.shim.PseudoPlexusContainer" />     
+    <exclude name="org.sonatype.guice.plexus.converters.PlexusXmlBeanConverter" />     
     <exclude name="com.sun.jersey.guice.**" />
+    <exclude name="org.sonatype.guice.**" />     
   </scan>
-    
+
 </beans>

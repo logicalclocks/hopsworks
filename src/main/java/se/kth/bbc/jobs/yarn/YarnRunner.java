@@ -255,6 +255,7 @@ public class YarnRunner {
     logger.log(Level.FINER, "Base path: {0}", basePath);
     //For all local resources with local path: copy and add local resource
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesToCopy.entrySet()) {
+      logger.log(Level.INFO, "LocalResourceDTO to upload is :{0}", entry.toString());  
       String key = entry.getKey();
       String source = entry.getValue().getPath();
       String filename = Utils.getFileName(source);
@@ -275,6 +276,7 @@ public class YarnRunner {
     }
     //For all local resources with hdfs path: add local resource
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesOnHDFS.entrySet()) {
+      logger.log(Level.INFO, "LocalResourceDTO to upload is :{0}", entry.toString());  
       String key = entry.getKey();
       String pathToResource = entry.getValue().getPath();
       pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",

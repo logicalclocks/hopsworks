@@ -153,7 +153,7 @@ public class DataSetService {
           .getInodePK().getName());
       user = userfacade.findByUsername(inodeView.getOwner());
       if (user != null) {
-        inodeView.setOwner(user.getFname() + " " + user.getLname());
+//        inodeView.setOwner(user.getFname() + " " + user.getLname());
         inodeView.setEmail(user.getEmail());
       }
       kids.add(inodeView);
