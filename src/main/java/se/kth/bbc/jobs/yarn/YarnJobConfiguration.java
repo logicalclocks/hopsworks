@@ -23,6 +23,8 @@ public class YarnJobConfiguration extends JobConfiguration {
   private int amMemory = Settings.YARN_DEFAULT_APP_MASTER_MEMORY;
   //Number of cores for appMaster
   private int amVCores = 1;
+  //SESSINID required by KakfaUtil 
+  String sessionId;
   //List of paths to be added to local resources
   private Map<String, String> localResources = Collections.EMPTY_MAP;
 
@@ -78,6 +80,15 @@ public class YarnJobConfiguration extends JobConfiguration {
     this.amVCores = amVCores;
   }
 
+  public String getSessionId() {
+      return sessionId;
+  }
+
+  public void setSessionId(String sessionId) {
+      this.sessionId = sessionId;
+  }
+
+  
   /**
    * Add a file to the local resources.
    * <p/>

@@ -118,6 +118,8 @@ public class SparkService {
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     try {
       SparkJobConfiguration config = sparkController.inspectJar(path, username);
+      //Add SESSIONID to config so that the Job can access Kafka endpoint
+      config.setSessionId(req.getSession().getId());
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity(config).build();
     } catch (AccessControlException ex) {
