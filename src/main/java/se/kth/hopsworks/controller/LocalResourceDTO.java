@@ -66,5 +66,10 @@ public class LocalResourceDTO {
     public void setPattern(String pattern) {
         this.pattern = pattern;
     }
-    
+
+    @Override
+    public String toString() {
+        return "LocalResourceDTO{" + "name=" + name + ", path=" + path + ", visibility=" + visibility + ", type=" + type + ", pattern=" + pattern + '}';
+    }
+        
 }
