@@ -58,7 +58,12 @@ public class TopicAcls implements Serializable {
     @NotNull
     @Size(min = 1, max = 1000)
     @Column(name = "username")
-    private String username;
+    private String userEmail;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "principal")
+    private String principal;
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 255)
@@ -87,28 +92,31 @@ public class TopicAcls implements Serializable {
         this.id = id;
     }
 
-    public TopicAcls(String topicName, Integer projectId, String username, String permissionType, 
-            String operationType, String host, String role) {
+    public TopicAcls(String topicName, Integer projectId, String userEmail, 
+            String princpal, String permissionType,  String operationType,
+            String host, String role) {
         this.topicName = topicName;
         this.projectId = projectId;
-        this.username = username;
+        this.userEmail = userEmail;
+        this.principal = princpal;
         this.permissionType = permissionType;
         this.operationType = operationType;
         this.host = host;
         this.role = role;
     }
 
-     public TopicAcls(Integer id, String topicName, Integer projectId, String username,
-             String permissionType, String operationType, String host, String role) {
-        this.id = id;
-        this.topicName = topicName;
-        this.projectId = projectId;
-        this.username = username;
-        this.permissionType = permissionType;
-        this.operationType = operationType;
-        this.host = host;
-        this.role = role;
-    }
+//     public TopicAcls(Integer id, String topicName, Integer projectId,
+//             String userEmail, String permissionType,
+//             String operationType, String host, String role) {
+//        this.id = id;
+//        this.topicName = topicName;
+//        this.projectId = projectId;
+//        this.userEmail = userEmail;
+//        this.permissionType = permissionType;
+//        this.operationType = operationType;
+//        this.host = host;
+//        this.role = role;
+//    }
      
     public Integer getId() {
         return id;
@@ -134,12 +142,20 @@ public class TopicAcls implements Serializable {
         this.projectId = projectId;
     }
 
-    public String getUsername() {
-        return username;
+    public String getUserEmail() {
+        return userEmail;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
+    }
+
+    public String getPrincipal() {
+        return principal;
+    }
+
+    public void setPrincipal(String principal) {
+        this.principal = principal;
     }
 
     public String getPermissionType() {

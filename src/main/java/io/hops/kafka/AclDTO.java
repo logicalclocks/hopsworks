@@ -12,7 +12,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class AclDTO implements Serializable {
 
     private Integer id;
-    private String username;
+    private String projectName;
+    private String userEmail;
     private String permissionType;
     private String operationType;
     private String host;
@@ -24,7 +25,7 @@ public class AclDTO implements Serializable {
     AclDTO(Integer id, String username, String permissionType,
             String operationType, String host, String role) {
         this.id = id;
-        this.username = username;
+        this.userEmail = username;
         this.permissionType = permissionType;
         this.operationType = operationType;
         this.host = host;
@@ -37,6 +38,14 @@ public class AclDTO implements Serializable {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectId(String projectName) {
+        this.projectName = projectName;
     }
 
     public String getHost() {
@@ -55,8 +64,8 @@ public class AclDTO implements Serializable {
         return role;
     }
 
-    public String getUsername() {
-        return username;
+    public String getUserEmail() {
+        return userEmail;
     }
 
     public void setHost(String host) {
@@ -75,7 +84,7 @@ public class AclDTO implements Serializable {
         this.role = role;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 }

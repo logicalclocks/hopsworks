@@ -147,8 +147,8 @@ public class YarnRunner {
     for (YarnSetupCommand c : commands) {
       c.execute(this);
     }
-    
-    
+  
+
     //And submit
     logger.log(Level.INFO, "Submitting application {0} to applications manager.", appId); 
     yarnClient.submitApplication(appContext);

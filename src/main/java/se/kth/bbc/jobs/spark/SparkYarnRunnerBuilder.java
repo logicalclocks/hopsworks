@@ -38,6 +38,7 @@ public class SparkYarnRunnerBuilder {
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
   private String sparkHistoryServerIp;
+  private String jSessionId;
 
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass) {
     if (appJarPath == null || appJarPath.isEmpty()) {
@@ -89,6 +90,7 @@ public class SparkYarnRunnerBuilder {
             Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath,
             LocalResourceVisibility.PUBLIC, LocalResourceType.FILE, null),
             false);
+    
     //Add app jar
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_LOCRSC_APP_JAR, appJarPath, 
@@ -100,25 +102,25 @@ public class SparkYarnRunnerBuilder {
     for (Map.Entry<String, String> k : extraFiles.entrySet()) {
         
         //If the LocalResource is the Kafka certificate, retrieve it from
-//        if(k.getKey().equals(Settings.KAFKA_K_CERTIFICATE) || 
-//                k.getKey().equals(Settings.KAFKA_T_CERTIFICATE)  ){
-//            builder.addLocalResource(new LocalResourceDTO(k.getKey(), 
-//                    k.getValue(), LocalResourceVisibility.APPLICATION, 
-//                    LocalResourceType.FILE, null), 
-//                    true);
-//        } else {
+        if(k.getKey().equals(Settings.KAFKA_K_CERTIFICATE) || 
+                k.getKey().equals(Settings.KAFKA_T_CERTIFICATE)  ){
+            builder.addLocalResource(new LocalResourceDTO(k.getKey(), 
+                    k.getValue(), LocalResourceVisibility.APPLICATION, 
+                    LocalResourceType.FILE, null), 
+                    false);
+        } else {
             builder.addLocalResource(new LocalResourceDTO(k.getKey(),
                     k.getValue(), LocalResourceVisibility.PUBLIC, 
                     LocalResourceType.FILE, null),
                     !k.getValue().startsWith("hdfs:"));
-//        }
+        }
     }
   
 
     //Set Spark specific environment variables
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
-    builder.addToAppMasterEnvironment("SPARK_USER", sparkUser);
+    builder.addToAppMasterEnvironment("SPARK_USER", sparkUser); 
 //    builder.addToAppMasterEnvironment("SPARK_USER", );
     // TODO - Change spark user here
 //    builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
@@ -151,9 +153,10 @@ public class SparkYarnRunnerBuilder {
     amargs.append(" --executor-memory ").append(executorMemory);
     
     // TODO: vasilis
-    amargs.append(" --spark-history-server ").append(sparkHistoryServerIp);
-    builder.addToAppMasterEnvironment("SPARK_HISTORY_SERVER_ADDRESS", sparkHistoryServerIp);
-    
+    //amargs.append(" --spark-history-server ").append(sparkHistoryServerIp);
+    //builder.addToAppMasterEnvironment("SPARK_HISTORY_SERVER_ADDRESS", sparkHistoryServerIp);
+   // builder.addToAppMasterEnvironment("JSESSION_ID", getjSessionId());
+   
     
     
     for (String s : jobArgs) {
@@ -366,5 +369,12 @@ public class SparkYarnRunnerBuilder {
     }
   }
 
- 
+    public String getjSessionId() {
+        return jSessionId;
+    }
+
+    public void setjSessionId(String jSessionId) {
+        this.jSessionId = jSessionId;
+    }
+
 }

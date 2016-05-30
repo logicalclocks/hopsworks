@@ -1,7 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import io.hops.kafka.AclDTO;
-import io.hops.kafka.HdfsUserDTO;
+import io.hops.kafka.AclUserDTO;
 import io.hops.kafka.TopicDTO;
 import java.io.File;
 import java.util.List;
@@ -299,11 +299,11 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        List<HdfsUserDTO> aclUsersDtos
+        List<AclUserDTO> aclUsersDtos
                 = kafkaFacade.aclUsers(projectId, topicName);
 
-        GenericEntity<List<HdfsUserDTO>> aclUsers
-                = new GenericEntity<List<HdfsUserDTO>>(aclUsersDtos) {
+        GenericEntity<List<AclUserDTO>> aclUsers
+                = new GenericEntity<List<AclUserDTO>>(aclUsersDtos) {
         };
 
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

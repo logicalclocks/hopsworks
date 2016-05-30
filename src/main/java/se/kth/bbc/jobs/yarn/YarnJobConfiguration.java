@@ -26,6 +26,8 @@ public class YarnJobConfiguration extends JobConfiguration {
   //List of paths to be added to local resources
   private Map<String, String> localResources = Collections.EMPTY_MAP;
 
+  private String jSessionId;
+  
   protected final static String KEY_TYPE = "type";
   protected final static String KEY_QUEUE = "QUEUE";
   protected final static String KEY_AMMEM = "AMMEM";
@@ -170,4 +172,11 @@ public class YarnJobConfiguration extends JobConfiguration {
     this.amVCores = Integer.parseInt(jsonCors);
   }
 
+    public String getjSessionId() {
+        return jSessionId;
+    }
+
+    public void setjSessionId(String jSessionId) {
+        this.jSessionId = jSessionId;
+    }
 }

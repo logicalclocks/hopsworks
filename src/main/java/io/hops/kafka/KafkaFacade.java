@@ -342,10 +342,12 @@ public class KafkaFacade {
         return shareProjectDtos;
     }
 
-    public List<HdfsUserDTO> aclUsers(Integer projectId, String topicName) throws AppException {
+    public List<AclUserDTO> aclUsers(Integer projectId, String topicName) throws AppException {
 
-        List<HdfsUserDTO> aclUsers = new ArrayList<>();
-        Set<String> allTopicProjects = new HashSet();
+        List<AclUserDTO> aclUsers = new ArrayList<>();
+        
+        //contains project and its members
+        Map<String, List<String>> projectMembers = new HashMap<>();
         String projectName;
 
         //get the owner project name 
@@ -354,7 +356,8 @@ public class KafkaFacade {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "The owner project does not exist in database.");
         }
-        allTopicProjects.add(project.getName());
+
+        projectMembers.put(project.getName(), new ArrayList<String>());
 
         //get all the projects this topic is shared with
         TypedQuery<SharedTopics> query = em.createNamedQuery(
@@ -363,21 +366,21 @@ public class KafkaFacade {
 
         for (SharedTopics sharedTopics : query.getResultList()) {
             project = em.find(Project.class, sharedTopics.getSharedTopicsPK().getProjectId());
-            allTopicProjects.add(project.getName());
+
+            projectMembers.put(project.getName(), new ArrayList<String>());
         }
 
         //So far, we got the project names that this topic is shared with and
-        // the owner. Next is to find all the HdfsUsers and filter all the 
+        // the owner. Next is to find all the user and filter all the 
         //users for the topic project which will be the acl users.
-        TypedQuery<HdfsUsers> hdfsUsers = em.createNamedQuery(
-                "HdfsUsers.findAll", HdfsUsers.class);
-        for (HdfsUsers user : hdfsUsers.getResultList()) {
-            if (user.getName().contains("__")) {
-                projectName = user.getName().split("__")[0];
-                if (allTopicProjects.contains(projectName)) {
-                    aclUsers.add(new HdfsUserDTO(user.getName()));
-                }
+        TypedQuery<Project> projects = em.createNamedQuery(
+                "Project.findAll", Project.class);
+        for (Project p : projects.getResultList()) {
+                    projectMembers.get(p.getName()).add(p.getOwner().getUsername());
             }
+        
+        for (Map.Entry<String, List<String>> user : projectMembers.entrySet()) {
+            aclUsers.add(new AclUserDTO(user.getKey(), user.getValue()));
         }
 
         return aclUsers;
@@ -386,13 +389,14 @@ public class KafkaFacade {
     public void addAclsToTopic(String topicName, Integer projectId, AclDTO dto)
             throws AppException {
 
-        addAclsToTopic(topicName, dto.getUsername(), projectId, dto.getPermissionType(),
+        addAclsToTopic(topicName, projectId, dto.getProjectName(),
+                dto.getUserEmail(), dto.getPermissionType(), 
                 dto.getOperationType(), dto.getHost(), dto.getRole());
     }
 
-    private void addAclsToTopic(String topicName, String username,
-            Integer projectId, String permission_type, String operation_type,
-            String host, String role) throws AppException {
+    private void addAclsToTopic(String topicName, Integer projectId, 
+            String selectedProjectName, String userEmail, String permission_type,
+            String operation_type, String host, String role) throws AppException {
 
         //get the project id
         Project project = em.find(Project.class, projectId);
@@ -409,17 +413,19 @@ public class KafkaFacade {
         }
 
         //fetch the user name from database       
-        TypedQuery<HdfsUsers> query = em.createNamedQuery("HdfsUsers.findByName", HdfsUsers.class);
-        query.setParameter("name", username);
-        List<HdfsUsers> users = query.getResultList();
+        TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail", Users.class);
+        query.setParameter("email", userEmail);
+        List<Users> users = query.getResultList();
+        
 
         if (users == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "User does not exist.");
         }
-        HdfsUsers user = users.get(0);
+        Users selectedUser = users.get(0);
+        String principalName = selectedProjectName+"__"+selectedUser.getUsername();
 
-        TopicAcls ta = new TopicAcls(topicName, projectId, user.getName(),
+        TopicAcls ta = new TopicAcls(topicName, projectId, principalName, userEmail,
                 permission_type, operation_type, host, role);
         em.merge(ta);
         em.persist(ta);
@@ -457,7 +463,7 @@ public class KafkaFacade {
 
         List<AclDTO> aclDtos = new ArrayList<>();
         for (TopicAcls ta : acls) {
-            aclDtos.add(new AclDTO(ta.getId(), ta.getUsername(), ta.getPermissionType(),
+            aclDtos.add(new AclDTO(ta.getId(), ta.getUserEmail(), ta.getPermissionType(),
                     ta.getOperationType(), ta.getHost(), ta.getRole()));
 
         }
@@ -475,12 +481,26 @@ public class KafkaFacade {
         //remove previous acl
         em.remove(ta);
         //update acl
+        //fetch the user name from database       
+        TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail", Users.class);
+        query.setParameter("email", aclDto.getUserEmail());
+        List<Users> users = query.getResultList();
+        
+
+        if (users == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "User does not exist.");
+        }
+        Users selectedUser = users.get(0);
+        String principalName = aclDto.getProjectName()+"__"+selectedUser.getUsername();
+        
         ta.setHost(aclDto.getHost());
         ta.setOperationType(aclDto.getOperationType());
         ta.setPermissionType(aclDto.getPermissionType());
         ta.setRole(aclDto.getRole());
-        ta.setUsername(aclDto.getUsername());
-
+        ta.setUserEmail(aclDto.getUserEmail());
+        ta.setPrincipal(principalName); 
+        
         em.persist(ta);
         em.flush();
     }

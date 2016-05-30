@@ -117,7 +117,9 @@ public class SparkService {
     Users user = userFacade.findByEmail(email);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     try {
+          
       SparkJobConfiguration config = sparkController.inspectJar(path, username);
+      //SparkJobConfiguration config = sparkController.inspectJar(path, username, req.getSession().getId());
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity(config).build();
     } catch (AccessControlException ex) {
