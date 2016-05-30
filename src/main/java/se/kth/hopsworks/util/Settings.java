@@ -25,6 +25,7 @@ public class Settings {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_LIVY_IP = "livy_ip";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP = "spark_history_server_ip";
@@ -104,6 +105,7 @@ public class Settings {
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
+      LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
       SPARK_HISTORY_SERVER_IP = setIpVar(VARIABLE_SPARK_HISTORY_SERVER_IP, SPARK_HISTORY_SERVER_IP);
       CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
@@ -151,6 +153,8 @@ public class Settings {
    * Default Directory locations
    */
   private String SPARK_DIR = "/srv/spark";
+  public static final String SPARK_VERSION = "1.6.1";
+  public static final String HOPS_VERSION = "2.4.0";
 
   public synchronized String getSparkDir() {
     checkCache();
@@ -478,6 +482,23 @@ public class Settings {
     return JHS_IP;
   }   
   
+  // Livy Server
+  private String LIVY_IP        = "127.0.0.1";
+  private String LIVY_YARN_MODE = "yarn";
+
+  public synchronized String getLivyIp() {
+    checkCache();
+    return LIVY_IP;
+  }   
+  
+  public synchronized String getLivyUrl() {
+    return "http://" + getLivyIp() + ":8998";
+  }   
+  
+  public synchronized String getLivyYarnMode() {
+    checkCache();
+    return LIVY_YARN_MODE;
+  }     
   
   // Hopsworks
   public static final Charset ENCODING = StandardCharsets.UTF_8;

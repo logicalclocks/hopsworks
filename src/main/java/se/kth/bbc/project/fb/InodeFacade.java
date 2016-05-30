@@ -151,8 +151,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Inode getRootNode(String name) {
-    TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName",
-            Inode.class);
+    TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName", Inode.class);
     query.setParameter("name", name);
     try {
       return query.getSingleResult(); //Sure to give a single result because all children of same parent "null" so name is unique

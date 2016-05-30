@@ -21,7 +21,7 @@ import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 @Path("/interpreter")
 @Produces("application/json")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class InterpreterService {
   Logger logger = LoggerFactory.getLogger(InterpreterService.class);
   
@@ -42,10 +42,16 @@ public class InterpreterService {
     Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
     if (project == null) {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-                            "Cookies appear to be disabled. You need to enable them to use Zeppelin.");        
+                            "Could not find project. Make sure cookies are enabled.");        
     }
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.getName());
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
+    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
+            getName(), user.getEmail());
+    if (zeppelinConf == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                            "Could not connect to web socket.");
+    }
+
     String userRole = projectTeamBean.findCurrentRole(project, user);
 
     if (userRole == null) {

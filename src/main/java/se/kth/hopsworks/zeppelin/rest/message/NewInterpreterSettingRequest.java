@@ -16,18 +16,24 @@
  */
 package se.kth.hopsworks.zeppelin.rest.message;
 
+import java.util.List;
 import java.util.Map;
+
+import org.apache.zeppelin.dep.Dependency;
+import org.apache.zeppelin.interpreter.InterpreterOption;
 
 /**
  * NewInterpreterSetting rest api request message
- *
+ * <p>
  */
 public class NewInterpreterSettingRequest {
 
   String name;
   String group;
-  // option was deprecated
+
   Map<String, String> properties;
+  List<Dependency> dependencies;
+  InterpreterOption option;
 
   public NewInterpreterSettingRequest() {
 
@@ -43,5 +49,13 @@ public class NewInterpreterSettingRequest {
 
   public Map<String, String> getProperties() {
     return properties;
+  }
+
+  public List<Dependency> getDependencies() {
+    return dependencies;
+  }
+
+  public InterpreterOption getOption() {
+    return option;
   }
 }
