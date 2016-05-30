@@ -59,8 +59,11 @@ public final class SparkJob extends YarnJob {
     SparkYarnRunnerBuilder runnerbuilder = new SparkYarnRunnerBuilder(
         jobconfig.getJarPath(), jobconfig.getMainClass());
     runnerbuilder.setJobName(jobconfig.getAppName());
-    String[] jobArgs = jobconfig.getArgs().trim().split(" ");
-    runnerbuilder.addAllJobArgs(jobArgs);
+    //Check if the user provided application arguments
+    if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){
+            String[] jobArgs = jobconfig.getArgs().trim().split(" ");
+            runnerbuilder.addAllJobArgs(jobArgs);
+    }  
     //Set spark runner options
     runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
     runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
