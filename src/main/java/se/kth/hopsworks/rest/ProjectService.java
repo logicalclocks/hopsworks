@@ -409,8 +409,8 @@ public class ProjectService {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
       }
-      LocalhostServices.createUserCertificates(project.getId(), user.getUid());
-      certificateBean.putUserCerts(project.getId(), user.getUid());
+      LocalhostServices.createUserCertificates(project.getName(), user.getUsername());
+      certificateBean.putUserCerts(project.getName(), user.getUsername());
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);

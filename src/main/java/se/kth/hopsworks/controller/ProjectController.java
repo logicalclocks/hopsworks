@@ -534,9 +534,9 @@ public class ProjectController {
               throw new EJBException("Could not add member to HDFS.");
             }
         
-            LocalhostServices.createUserCertificates(project.getId(), newMember.getUid());
+            LocalhostServices.createUserCertificates(project.getName(), newMember.getUsername());
             
-            certificateBean.putUserCerts(project.getId(), newMember.getUid());
+            certificateBean.putUserCerts(project.getName(), newMember.getUsername());
        
             logger.log(Level.FINE, "{0} - member added to project : {1}.",
                 new Object[]{newMember.getEmail(),
