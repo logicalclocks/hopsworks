@@ -30,7 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "TopicAcls.findAll", query = "SELECT t FROM TopicAcls t"),
     @NamedQuery(name = "TopicAcls.findById", query = "SELECT t FROM TopicAcls t WHERE t.id = :id"),
     @NamedQuery(name = "TopicAcls.findByTopicName", query = "SELECT t FROM TopicAcls t WHERE t.topicName = :topicName"),
-    @NamedQuery(name = "TopicAcls.findByUsername", query = "SELECT t FROM TopicAcls t WHERE t.username = :username"),
+    @NamedQuery(name = "TopicAcls.findByUsername", query = "SELECT t FROM TopicAcls t WHERE t.userEmail = :userEmail"),
     @NamedQuery(name = "TopicAcls.findByPermissionType", query = "SELECT t FROM TopicAcls t WHERE t.permissionType = :permissionType"),
     @NamedQuery(name = "TopicAcls.findByOperationType", query = "SELECT t FROM TopicAcls t WHERE t.operationType = :operationType"),
     @NamedQuery(name = "TopicAcls.findByHost", query = "SELECT t FROM TopicAcls t WHERE t.host = :host"),
