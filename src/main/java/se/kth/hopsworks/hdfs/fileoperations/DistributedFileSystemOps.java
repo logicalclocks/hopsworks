@@ -412,6 +412,10 @@ public class DistributedFileSystemOps {
    */
   public FsPermission getParentPermission(Path path) throws IOException {
     Path location = new Path(path.toUri());
+    if (dfs.exists(location)) {
+      location = location.getParent();
+      return dfs.getFileStatus(location).getPermission();
+    }
     while (!dfs.exists(location)) {
       location = location.getParent();
     }

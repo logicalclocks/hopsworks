@@ -86,7 +86,7 @@ public class ResponseMessages {
   public final static String FOLDER_NAME_NOT_SET
           = "Name cannot be empty.";
   public final static String FOLDER_NAME_TOO_LONG
-          = "Name cannot be longer than 24 characters.";
+          = "Name cannot be longer than 88 characters.";
   public final static String FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
           = "Name cannot contain any of the characters ";
   public final static String FOLDER_NAME_ENDS_WITH_DOT

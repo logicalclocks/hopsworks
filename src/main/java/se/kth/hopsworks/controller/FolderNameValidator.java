@@ -30,7 +30,7 @@ public class FolderNameValidator {
     if (name == null || name.isEmpty()) {
       valid = false;
       reason = ResponseMessages.FOLDER_NAME_NOT_SET;
-    } else if (name.length() > 24) {
+    } else if (name.length() > 88) {
       valid = false;
       reason = ResponseMessages.FOLDER_NAME_TOO_LONG;
     } else if (name.endsWith(".")) {
