@@ -167,17 +167,30 @@
                 <div class="col-md-8"><input type="number" min="0" ng-model="newJobCtrl.runConfig.executorMemory" class="form-control"></div>
               </div>
               <!-- Flink -->
-              <div class="row" ng-show="newJobCtrl.jobtype == 3">
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
                 <div class="text-right col-md-4">Number of TaskManagers <i class="fa fa-info-circle" tooltip="The number of Flink TaskManagers that should be requested for this job." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numberOfTaskManagers" class="form-control"></div>
               </div>
-              <div class="row" ng-show="newJobCtrl.jobtype == 3">
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
                 <div class="text-right col-md-4">Number of slots <i class="fa fa-info-circle" tooltip="The number of slots per TaskManager that should be requested for this job." style="margin-left: 10px"></i></div>
-                <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numberOfSlots" class="form-control"></div>
+                <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.slots" class="form-control"></div>
               </div>
-              <div class="row" ng-show="newJobCtrl.jobtype == 3">
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
                 <div class="text-right col-md-4">TaskManager memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for each TaskManager." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="number" min="768" ng-model="newJobCtrl.runConfig.taskManagerMemory" class="form-control"></div>
+              </div>
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
+                <div class="text-right col-md-4">Job Parallelism <i class="fa fa-info-circle" tooltip="In Flink programs, the parallelism determines how operations are split into individual tasks which are assigned to task slots. " style="margin-left: 10px"></i></div>
+                <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.parallelism" class="form-control"></div>
+              </div>
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
+                <div class="text-right col-md-4">Job Type <i class="fa fa-info-circle" tooltip="Choose between Streaming or Batch job." style="margin-left: 10px"></i></div>
+                <div class="col-md-1">
+                    <select name="flinkjobtype" 
+                            ng-options="flinkjobtype for flinkjobtype in newJobCtrl.flinkjobtype"
+                            ng-model="newJobCtrl.runConfig.flinkjobtype" class="form-control">
+                    </select>
+                </div>
               </div>
             </div>
             <!-- Add libraries -->
@@ -188,26 +201,65 @@
                 </button>
                 <i class="fa fa-info-circle" tooltip="Select jar files that should be added to the classpath for this job." style="margin-left: 10px"></i>
               </h3>
-              <div ng-show="newJobCtrl.localResources.entry.length > 0">
-                <div class="row">
-                  <div class="col-md-4">
-                    <strong>Name</strong> <i class="fa fa-info-circle" tooltip="The name of the jar as it will appear in the Yarn distributed cache. By default, the filename of the resource." style="margin-left: 10px"></i>
-                  </div>
-                  <div class="col-md-8">
-                    <strong>Path</strong> <i class="fa fa-info-circle" tooltip="The HDFS path to the selected jar file." style="margin-left: 10px"></i>
-                  </div>
-                  <div></div>
-                </div>
-                <div class="row" ng-repeat="jar in newJobCtrl.localResources.entry">
-                  <div class="col-md-4">
-                    <input type="text" ng-model="jar.key" class="form-control">
-                  </div>
-                  <div class="col-md-8">
-                    {{jar.value}} <i class="fa fa-times-circle pull-right" tooltip="Remove this library." style="margin-left: 10px" ng-click="newJobCtrl.removeLibrary(jar)"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
+                <table class="table table-hover" ng-show="newJobCtrl.localResources.length > 0">
+                    <thead>
+                        <tr>
+                    <th style="width: 20%">
+                     <strong>Name</strong><i class="fa fa-info-circle" tooltip="The name of the jar as it will appear in the Yarn distributed cache. By default, the filename of the resource." style="margin-left: 10px"></i>  
+                    </th>
+                    <th style="width: 30%">
+                      <strong>Path</strong> <i class="fa fa-info-circle" tooltip="The HDFS path to the selected jar file." style="margin-left: 10px"></i>
+                    </th>
+                    <th style="width: 10%">
+                      <label class="control-label">Visibility</label>
+                        <i class="fa fa-info-circle" tooltip="The Visibility of your Local Resource. Default is 'Public'." style="margin-left: 10px"></i>
+                    </th> 
+                    <th style="width: 10%">
+                      <label class="control-label">Resource Type</label>    
+                      <i class="fa fa-info-circle" tooltip="The Type of your Local Resource. Default is 'File'." style="margin-left: 10px"></i>
+                    </th>
+                    <th style="width: 30%">
+                       <label class="control-label">Pattern</label>
+                       <i class="fa fa-info-circle" tooltip="The Pattern of your Local Resource, provide it when 'Type' is 'Pattern'." style="margin-left: 10px"></i>
+
+                    </th>
+                    <th style="width: 10%">
+                        <label class="control-label">Remove</label>
+                    </th>
+                    </tr>
+                    </thead>
+                  <!--Define localresource table columns -->
+                <tbody ng-repeat="resource in newJobCtrl.localResources">
+                    <tr>
+                    <td>
+                     {{resource.name}}
+                    </td>
+                    <td>
+                      {{resource.path}}
+                    </td>
+                    <td>
+                               <select name="visibility" ng-model="resource.visibility" ng-init="resource.visibility = 'public'">
+                                 <option value="public">Public</option>
+                                 <option value="private">Private</option>
+                                 <option value="application">Application</option>
+                               </select>
+                    </td> 
+                    <td>
+                               <select name="type" ng-model="resource.type" ng-init="resource.type = 'file'">
+                                 <option value="archive">Archive</option>
+                                 <option value="file">File</option>
+                                 <option value="pattern">Pattern</option>
+                               </select>
+                    </td>
+                    <td >
+                        <input type="text" ng-model="resource.pattern" ng-show="resource.type=='pattern'">
+                    </td>
+                      <td>
+                       <i class="fa fa-times-circle" tooltip="Remove this library." ng-click="newJobCtrl.removeLibrary(resource.name)"></i>
+                      </td>
+                </tr>
+                </tbody>               
+            </table>
             <div>
               <!-- Creation button -->
               <button ng-click="newJobCtrl.createJob()" class="btn btn-warning">
@@ -261,7 +313,7 @@
             tourtip-element="#selectFileButton"
             tourtip-placement="bottom"
             tourtip-next-label="Next"
-            on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples-1.5.2-hadoop2.4.0.jar')"
+            on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples-1.6.1-hadoop2.4.0.jar')"
             tourtip-offset-vertical="-13"
             tourtip-offset-horizontal="-5"
             ng-if="newJobCtrl.accordion3.visible"

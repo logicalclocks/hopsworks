@@ -182,6 +182,10 @@
           <div class="text-right col-md-4">TaskManager memory (MB)<i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for each Flink TaskManager in this job." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.taskManagerMemory}}</div>
         </div>
+        <div class="row">
+          <div class="text-right col-md-4">Job Type <i class="fa fa-info-circle" tooltip="Choose between Streaming or Batch job." style="margin-left: 10px"></i></div>
+          <div class="col-md-1">{{jobDetailCtrl.job.runConfig.flinkjobtype}}</div>
+        </div>
       </div>
       <!-- Adam configuration -->
       <div ng-show="jobDetailCtrl.job.runConfig.type == 'adamJobConfiguration'">

@@ -121,7 +121,7 @@ public class SparkService {
       SparkJobConfiguration config = sparkController.inspectJar(path, username);
       //SparkJobConfiguration config = sparkController.inspectJar(path, username, req.getSession().getId());
       //Add SESSIONID to config so that the Job can access Kafka endpoint
-      config.setSessionId(req.getSession().getId());
+      config.setjSessionId(req.getSession().getId());
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity(config).build();
     } catch (AccessControlException ex) {

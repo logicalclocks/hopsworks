@@ -95,7 +95,11 @@ public final class InodeView {
     this.owningProjectName = parent.inodePK.getName();
     this.description = ds.getDescription();
     this.status = ds.getStatus();
-    this.owner = ds.getInode().getHdfsUser().getUsername();
+    if (ds.getInode().getHdfsUser() != null) {
+      this.owner = ds.getInode().getHdfsUser().getUsername();
+    } else {
+      this.owner = "";
+    }
     this.permission = FsPermission.createImmutable(ds.getInode().getPermission()).toString();
     this.publicDs = ds.isPublicDs();
   }

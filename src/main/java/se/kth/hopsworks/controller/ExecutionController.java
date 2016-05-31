@@ -52,14 +52,16 @@ public class ExecutionController {
         }
         int execId = exec.getId();
         SparkJobConfiguration config = (SparkJobConfiguration) job.getJobConfig();
-        String args = config.getArgs();
-        String patternString = "hdfs://(.*)\\s";
-        Pattern p = Pattern.compile(patternString);
-        Matcher m = p.matcher(args);
-        for (int i = 0; i < m.groupCount(); i++) { // for each filename, resolve Inode from HDFS filename
-//          String filename = m.group(i);
-//           Inode inode = inodes.getInodeAtPath("hdfs://" + filename);
-          // insert into inputfiles_executions (inode, execId).
+        //Check if application arguments are null
+        if(config.getArgs() != null){
+            String patternString = "hdfs://(.*)\\s";
+            Pattern p = Pattern.compile(patternString);
+            Matcher m = p.matcher(config.getArgs());
+            for (int i = 0; i < m.groupCount(); i++) { // for each filename, resolve Inode from HDFS filename
+    //          String filename = m.group(i);
+    //           Inode inode = inodes.getInodeAtPath("hdfs://" + filename);
+              // insert into inputfiles_executions (inode, execId).
+            }
         }
         break;
       default:

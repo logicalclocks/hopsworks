@@ -2,6 +2,7 @@ package se.kth.bbc.jobs.spark;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
@@ -32,6 +33,7 @@ public final class SparkJob extends YarnJob {
    * @param services
    * @param hadoopDir
    * @param sparkDir
+   * @param nameNodeIpPort
    * @param sparkUser
    */
   public SparkJob(JobDescription job, AsynchronousJobExecutor services,
@@ -50,7 +52,6 @@ public final class SparkJob extends YarnJob {
 
   @Override
   protected boolean setupJob() {
-    super.setupJob();
     //Then: actually get to running.
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled Spark Job");
@@ -58,8 +59,11 @@ public final class SparkJob extends YarnJob {
     SparkYarnRunnerBuilder runnerbuilder = new SparkYarnRunnerBuilder(
         jobconfig.getJarPath(), jobconfig.getMainClass());
     runnerbuilder.setJobName(jobconfig.getAppName());
-    String[] jobArgs = jobconfig.getArgs().trim().split(" ");
-    runnerbuilder.addAllJobArgs(jobArgs);
+    //Check if the user provided application arguments
+    if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){
+            String[] jobArgs = jobconfig.getArgs().trim().split(" ");
+            runnerbuilder.addAllJobArgs(jobArgs);
+    }  
     //Set spark runner options
     runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
     runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
@@ -69,11 +73,9 @@ public final class SparkJob extends YarnJob {
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
     runnerbuilder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
-  //  runnerbuilder.setjSessionId(jobconfig.getjSessionId());
-    runnerbuilder.addExtraFiles(jobconfig.getLocalResources());
+    runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
     //Set project specific resources
     runnerbuilder.addExtraFiles(projectLocalResources);
-    
     try {
       runner = runnerbuilder.
           getYarnRunner(jobDescription.getProject().getName(),

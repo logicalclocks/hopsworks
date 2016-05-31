@@ -382,7 +382,29 @@ fieldset[disabled] #tourColumn .btn-danger.active {
     display:         flex;
 }
 
-
 .selectedTopic {
     background-color: yellow; 
+}
+.server-status {
+  font-size: 14px;
+  margin-top: 6px;
+}
+.server-connected {
+  color: #00CC00;
+}
+
+.server-disconnected {
+  color: rgba(240, 48, 0, 1);
+  font-size: 12px !important;
+  font-weight: bold !important;
+}
+
+.connected-space {
+  margin-top: -10px;  
+  margin-right: 40px;
+}
+
+.disconnected-space {
+  margin-top: -10px;  
+  margin-right: 25px;
 }

@@ -18,6 +18,7 @@ angular.module('hopsWorksApp')
                   CuneiformService, AdamService, FlinkService, TourService) {
                 var self = this;
                 self.tourService = TourService;
+                self.flinkjobtype = ["Streaming", "Batch"];
                 //Set services as attributes 
                 this.ModalService = ModalService;
                 this.growl = growl;
@@ -43,7 +44,9 @@ angular.module('hopsWorksApp')
             //Create variables for user-entered information
             this.jobtype; //Will hold the selection of which job to create.
             this.jobname; //Will hold the name of the job
-            this.localResources = {"entry": []}; //Will hold extra libraries
+            
+            this.localResources = [];//Will hold extra libraries
+           
             this.phase = 0; //The phase of creation we are in.
             this.runConfig; //Will hold the job configuration
             this.sparkState = {//Will hold spark-specific state
@@ -105,7 +108,7 @@ angular.module('hopsWorksApp')
                     self.undoable = true;
                     self.jobtype = null;
                     self.jobname = null;
-                    self.localResources = {"entry": []};
+                    self.localResources = [];
                     self.phase = 0;
                     self.runConfig = null;
                     self.sparkState = {
@@ -165,7 +168,7 @@ angular.module('hopsWorksApp')
               self.undoable = true;
               self.jobtype = null;
               self.jobname = null;
-              self.localResources = {"entry": []};
+              self.localResources = [];
               self.phase = 0;
               self.runConfig = null;
               self.sparkState = {
@@ -403,7 +406,14 @@ angular.module('hopsWorksApp')
                   });
                   break;
                 case "LIBRARY":
-                  self.localResources.entry.push({"key": filename, "value": path});
+                  //Push the new library into the localresources array
+                  self.localResources.push({
+                      'name': filename,
+                      'path': path, 
+                      'type': null,
+                      'visibility': null,
+                      'pattern': null
+                  });
                   break;
                 case "CUNEIFORM":
                   CuneiformService.inspectStoredWorkflow(self.projectId, path).then(
@@ -468,11 +478,11 @@ angular.module('hopsWorksApp')
                  * @param {type} lib
                  * @returns {undefined}
                  */
-                this.removeLibrary = function (lib) {
-                    var arlen = self.localResources.entry.length;
+                this.removeLibrary = function (name) {
+                    var arlen = self.localResources.length;
                     for (var i = 0; i < arlen; i++) {
-                        if (self.localResources.entry[i].key === lib.key) {
-                            self.localResources.entry.splice(i, 1);
+                        if (self.localResources[i].name === name) {
+                            self.localResources.splice(i, 1);
                             return;
                         }
                     }
@@ -522,9 +532,9 @@ angular.module('hopsWorksApp')
                             self.sparkState = stored.sparkState;
                         } else if (self.jobtype === 2) {
                             self.adamState = stored.adamState;
-                        } else  if (self.jobtype == 3) {
-                            self.flinkState = stored.flinkState;
-                        }copy
+			} else  if (self.jobtype === 3) {
+			    self.flinkState = stored.flinkState;
+			}
                         //GUI state
                         self.accordion1 = stored.accordion1;
                         self.accordion2 = stored.accordion2;

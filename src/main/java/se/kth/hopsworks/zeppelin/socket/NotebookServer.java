@@ -22,12 +22,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.websocket.CloseReason;
 import javax.websocket.EndpointConfig;
@@ -42,15 +47,20 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
 import org.apache.zeppelin.display.AngularObject;
 import org.apache.zeppelin.display.AngularObjectRegistry;
 import org.apache.zeppelin.display.AngularObjectRegistryListener;
-import org.apache.zeppelin.display.Input;
+import org.apache.zeppelin.interpreter.InterpreterGroup;
+import org.apache.zeppelin.interpreter.InterpreterOutput;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
+import org.apache.zeppelin.interpreter.remote.RemoteAngularObjectRegistry;
+import org.apache.zeppelin.interpreter.remote.RemoteInterpreterProcessListener;
 import org.apache.zeppelin.notebook.JobListenerFactory;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.Paragraph;
+import org.apache.zeppelin.notebook.ParagraphJobListener;
 import org.apache.zeppelin.scheduler.Job;
 import org.apache.zeppelin.scheduler.Job.Status;
+import org.apache.zeppelin.user.AuthenticationInfo;
 import org.apache.zeppelin.scheduler.JobListener;
 import org.apache.zeppelin.search.SearchService;
 import org.quartz.SchedulerException;
@@ -58,36 +68,47 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.UserFacade;
+import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 import se.kth.hopsworks.zeppelin.socket.Message.OP;
 
 /**
  * Zeppelin websocket service.
- *
+ * <p>
  */
 @ServerEndpoint(value = "/zeppelin/ws",
         configurator = ZeppelinEndpointConfig.class)
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class NotebookServer implements
-        JobListenerFactory, AngularObjectRegistryListener, SearchService {
+    SearchService,
+    JobListenerFactory, AngularObjectRegistryListener,  RemoteInterpreterProcessListener{
 
-  private static final Logger logger = Logger.getLogger(NotebookServer.class.
+  private static final Logger LOG = Logger.getLogger(NotebookServer.class.
           getName());
 
   Gson gson = new Gson();
-  private static final Map<String, List<Session>> noteSocketMap
-          = new HashMap<>();
-  private static final List<Session> connectedSockets = new LinkedList<>();
+  static final Map<String, List<Session>> noteSocketMap = new HashMap<>();
+  static final Queue<Session> connectedSockets = new ConcurrentLinkedQueue<>();
   private String sender;
   private Project project;
   private String userRole;
+  private String hdfsUsername;
   private Notebook notebook;
   private Session session;
+  private ZeppelinConfig conf;
   @EJB
   private ProjectTeamFacade projectTeamBean;
+  @EJB
+  private UserFacade userBean;
   @EJB
   private ProjectFacade projectBean;
   @EJB
   private ZeppelinConfigFactory zeppelin;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
 
   public NotebookServer() {
   }
@@ -98,7 +119,7 @@ public class NotebookServer implements
 
   @OnOpen
   public void open(Session conn, EndpointConfig config) {
-    logger.log(Level.INFO, "Create zeppelin websocket on port {0}:{1}",
+    LOG.log(Level.INFO, "Create zeppelin websocket on port {0}:{1}",
             new Object[]{conn.getRequestURI().getHost(), conn.getRequestURI().
               getPort()});
     this.session = conn;
@@ -107,12 +128,13 @@ public class NotebookServer implements
             "projectID"));
     authenticateUser(conn, this.project, this.sender);
     if (this.userRole == null) {
-      logger.log(Level.INFO, "User not authorized for Zeepelin Access: {0}",
+      LOG.log(Level.INFO, "User not authorized for Zeepelin Access: {0}",
               this.sender);
       return;
     }
-    this.notebook = zeppelin.getZeppelinConfig(this.project.getName()).
-            getNotebook();
+    this.conf = zeppelin.getZeppelinConfig(this.project.getName(),
+            this.sender, this);
+    this.notebook = this.conf.getNotebook();
     synchronized (connectedSockets) {
       connectedSockets.add(conn);
     }
@@ -124,14 +146,20 @@ public class NotebookServer implements
     Notebook notebook = notebook();
     try {
       Message messagereceived = deserializeMessage(msg);
-      logger.log(Level.INFO, "RECEIVE << {0}", messagereceived.op);
+      LOG.log(Level.INFO, "RECEIVE << {0}", messagereceived.op);
+      LOG.log(Level.INFO, "RECEIVE PRINCIPAL << {0}", messagereceived.principal);
+      LOG.log(Level.INFO, "RECEIVE TICKET << {0}", messagereceived.ticket);
+      LOG.log(Level.INFO, "RECEIVE ROLES << {0}", messagereceived.roles);
+
       /**
        * Lets be elegant here
        */
       switch (messagereceived.op) {
         case LIST_NOTES:
-          broadcastNoteList();
-          //sendNoteList(conn);
+          unicastNoteList(conn);
+          break;
+        case RELOAD_NOTES_FROM_REPO:
+          broadcastReloadedNoteList();
           break;
         case GET_HOME_NOTE:
           sendHomeNote(conn, notebook);
@@ -179,44 +207,49 @@ public class NotebookServer implements
           completion(conn, notebook, messagereceived);
           break;
         case PING:
-          pong();
-          break;
+          break; //do nothing
         case ANGULAR_OBJECT_UPDATED:
           angularObjectUpdated(conn, notebook, messagereceived);
           break;
+        case ANGULAR_OBJECT_CLIENT_BIND:
+          angularObjectClientBind(conn, notebook, messagereceived);
+          break;
+        case ANGULAR_OBJECT_CLIENT_UNBIND:
+          angularObjectClientUnbind(conn, notebook, messagereceived);
+          break;
+        case LIST_CONFIGURATIONS:
+          sendAllConfigurations(conn, notebook);
+          break;
+        case CHECKPOINT_NOTEBOOK:
+          checkpointNotebook(conn, notebook, messagereceived);
+          break;
         default:
-          broadcastNoteList();
           break;
       }
     } catch (Exception e) {
-      logger.log(Level.SEVERE, "Can't handle message", e);
+      LOG.log(Level.SEVERE, "Can't handle message", e);
     }
   }
 
   @OnClose
   public void onClose(Session conn, CloseReason reason) {
-    logger.log(Level.INFO, "Closed connection to {0} : {1}. Reason: {2}",
+    LOG.log(Level.INFO, "Closed connection to {0} : {1}. Reason: {2}",
             new Object[]{
               conn.getRequestURI().getHost(),
               conn.getRequestURI().getPort(),
               reason});
     removeConnectionFromAllNote(conn);
-    synchronized (connectedSockets) {
-      connectedSockets.remove(conn);
-    }
+    connectedSockets.remove(conn);
   }
 
   @OnError
   public void onError(Session conn, Throwable exc) {
     removeConnectionFromAllNote(conn);
-    synchronized (connectedSockets) {
-      connectedSockets.remove(conn);
-    }
+    connectedSockets.remove(conn);
   }
 
   private Message deserializeMessage(String msg) {
-    Message m = gson.fromJson(msg, Message.class);
-    return m;
+    return gson.fromJson(msg, Message.class);
   }
 
   private String serializeMessage(Message m) {
@@ -272,6 +305,7 @@ public class NotebookServer implements
         }
       }
     }
+
     return id;
   }
 
@@ -296,12 +330,12 @@ public class NotebookServer implements
       if (socketLists == null || socketLists.isEmpty()) {
         return;
       }
-      logger.log(Level.INFO, "SEND >> {0}", m.op);
+      LOG.log(Level.INFO, "SEND >> {0}", m.op);
       for (Session conn : socketLists) {
         try {
           conn.getBasicRemote().sendText(serializeMessage(m));
         } catch (IOException ex) {
-          logger.log(Level.SEVERE, "Unable to send message " + m, ex);
+          LOG.log(Level.SEVERE, "Unable to send message " + m, ex);
         }
       }
     }
@@ -313,7 +347,7 @@ public class NotebookServer implements
       if (socketLists == null || socketLists.isEmpty()) {
         return;
       }
-      logger.log(Level.INFO, "SEND >> {0}", m.op);
+      LOG.log(Level.INFO, "SEND >> {0}", m.op);
       for (Session conn : socketLists) {
         if (exclude.equals(conn)) {
           continue;
@@ -321,7 +355,7 @@ public class NotebookServer implements
         try {
           conn.getBasicRemote().sendText(serializeMessage(m));
         } catch (IOException ex) {
-          logger.log(Level.SEVERE, "Unable to send message " + m, ex);
+          LOG.log(Level.SEVERE, "Unable to send message " + m, ex);
         }
       }
     }
@@ -329,17 +363,23 @@ public class NotebookServer implements
 
   //broadcast to every one in the same project as this.project.id
   private void broadcastAll(Message m) {
-    synchronized (connectedSockets) {
-      for (Session conn : connectedSockets) {
-        try {
-          if (conn.getUserProperties().get("projectID").equals(
-                  this.project.getId())) {
-            conn.getBasicRemote().sendText(serializeMessage(m));
-          }
-        } catch (IOException ex) {
-          logger.log(Level.SEVERE, "Unable to send message " + m, ex);
+    for (Session conn : connectedSockets) {
+      try {
+        if (conn.getUserProperties().get("projectID").equals(
+                this.project.getId())) {
+          conn.getBasicRemote().sendText(serializeMessage(m));
         }
+      } catch (IOException ex) {
+        LOG.log(Level.SEVERE, "Unable to send message " + m, ex);
       }
+    }
+  }
+
+  private void unicast(Message m, Session conn) {
+    try {
+      conn.getBasicRemote().sendText(serializeMessage(m));
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "socket error", e);
     }
   }
 
@@ -351,6 +391,14 @@ public class NotebookServer implements
             ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN);
     boolean hideHomeScreenNotebookFromList = conf
             .getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN_HIDE);
+
+    if (needsReload) {
+      try {
+        notebook.reloadAllNotes();
+      } catch (IOException e) {
+        LOG.severe("Fail to reload notes from repository");
+      }
+    }
 
     List<Note> notes = notebook.getAllNotes();
     List<Map<String, String>> notesInfo = new LinkedList<>();
@@ -374,6 +422,57 @@ public class NotebookServer implements
     broadcast(note.id(), new Message(OP.NOTE).put("note", note));
   }
 
+  public void broadcastNoteList() {
+    List<Map<String, String>> notesInfo = generateNotebooksInfo(false);
+    broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
+  }
+
+  public void unicastNoteList(Session conn) {
+    List<Map<String, String>> notesInfo = generateNotebooksInfo(false);
+    unicast(new Message(OP.NOTES_INFO).put("notes", notesInfo), conn);
+  }
+
+  public void broadcastReloadedNoteList() {
+    List<Map<String, String>> notesInfo = generateNotebooksInfo(true);
+    broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
+  }
+
+  void permissionError(Session conn, String op, String userAndRoles,
+          String allowed) throws IOException {
+    LOG.log(Level.INFO,
+            "Cannot {0}. Connection readers {1}. Allowed readers{2}",
+            new Object[]{op,
+              userAndRoles, allowed});
+    Users user = userBean.findByEmail(this.sender);
+    conn.getBasicRemote().sendText(serializeMessage(new Message(OP.AUTH_INFO).
+            put("info",
+                    "Insufficient privileges to " + op + " notebook.\n\n"
+                    + "Allowed users or roles: " + allowed + "\n\n"
+                    + "But the user " + user.getFname() + " " + user.getLname()
+                    + " belongs to: " + userAndRoles)));
+  }
+
+  private void sendNote(Session conn, Notebook notebook,
+          Message fromMessage) throws IOException {
+    String noteId = (String) fromMessage.get("id");
+    if (noteId == null) {
+      return;
+    }
+
+    Note note = notebook.getNote(noteId);
+    if (note != null) {
+      if (this.userRole == null) {
+        permissionError(conn, "read", this.userRole, AllowedRoles.DATA_OWNER
+                + ", " + AllowedRoles.DATA_SCIENTIST);
+        return;
+      }
+      addConnectionToNote(note.id(), conn);
+      conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).put(
+              "note", note)));
+      sendAllAngularObjects(note, conn);
+    }
+  }
+
   private void sendHomeNote(Session conn, Notebook notebook) throws IOException {
     String noteId = notebook.getConf().getString(
             ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN);
@@ -384,6 +483,11 @@ public class NotebookServer implements
     }
 
     if (note != null) {
+      if (this.userRole == null) {
+        permissionError(conn, "read", this.userRole, AllowedRoles.DATA_OWNER
+                + ", " + AllowedRoles.DATA_SCIENTIST);
+        return;
+      }
       addConnectionToNote(note.id(), conn);
       conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).put(
               "note", note)));
@@ -392,40 +496,6 @@ public class NotebookServer implements
       removeConnectionFromAllNote(conn);
       conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).put(
               "note", null)));
-    }
-  }
-
-  public void broadcastNoteList() {
-    Notebook notebook = notebook();
-    List<Note> notes = notebook.getAllNotes();//returns notes in project
-    List<Map<String, String>> notesInfo = new LinkedList<>();
-    for (Note note : notes) {
-      Map<String, String> info = new HashMap<>();
-      info.put("id", note.id());
-      info.put("name", note.getName());
-      notesInfo.add(info);
-    }
-    broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
-  }
-
-  private void sendNote(Session conn, Notebook notebook, Message fromMessage) {
-    String noteId = (String) fromMessage.get("id");
-    if (noteId == null) {
-      return;
-    }
-
-    Note note = notebook.getNote(noteId);
-    if (note != null) {
-      addConnectionToNote(note.id(), conn);
-      try {
-        conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).
-                put("note", note)));
-      } catch (IOException ex) {
-        logger.log(Level.SEVERE, "Unable to send message " + new Message(
-                Message.OP.NOTE).put("note",
-                        note), ex);
-      }
-      sendAllAngularObjects(note, conn);
     }
   }
 
@@ -438,6 +508,12 @@ public class NotebookServer implements
       return;
     }
     if (config == null) {
+      return;
+    }
+
+    if (this.userRole == null) {
+      permissionError(conn, "update", this.userRole, AllowedRoles.DATA_OWNER
+              + ", " + AllowedRoles.DATA_SCIENTIST);
       return;
     }
 
@@ -485,21 +561,24 @@ public class NotebookServer implements
 
     note.persist();
     addConnectionToNote(note.id(), conn);
-    broadcastNote(note);
+    conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NEW_NOTE).
+            put("note", note)));
     broadcastNoteList();
   }
 
   private void removeNote(Session conn, Notebook notebook, Message fromMessage)
           throws IOException {
-    if (!this.userRole.equals(AllowedRoles.DATA_OWNER)) {
-      return;
-    }
     String noteId = (String) fromMessage.get("id");
     if (noteId == null) {
       return;
     }
 
     Note note = notebook.getNote(noteId);
+    if (!this.userRole.equals(AllowedRoles.DATA_OWNER)) {
+      permissionError(conn, "remove", this.userRole, AllowedRoles.DATA_OWNER);
+      return;
+    }
+
     notebook.removeNote(noteId);
     removeNote(noteId);
     broadcastNoteList();
@@ -512,9 +591,20 @@ public class NotebookServer implements
     if (paragraphId == null) {
       return;
     }
-    Map<String, Object> params = (Map<String, Object>) fromMessage.get("params");
-    Map<String, Object> config = (Map<String, Object>) fromMessage.get("config");
-    final Note note = notebook.getNote(getOpenNoteId(conn));
+
+    Map<String, Object> params = (Map<String, Object>) fromMessage
+            .get("params");
+    Map<String, Object> config = (Map<String, Object>) fromMessage
+            .get("config");
+    String noteId = getOpenNoteId(conn);
+    final Note note = notebook.getNote(noteId);
+
+    if (this.userRole == null) {
+      permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
+              + ", " + AllowedRoles.DATA_SCIENTIST);
+      return;
+    }
+
     Paragraph p = note.getParagraph(paragraphId);
     p.settings.setParams(params);
     p.setConfig(config);
@@ -530,78 +620,41 @@ public class NotebookServer implements
     String name = (String) fromMessage.get("name");
     Note newNote = notebook.cloneNote(noteId, name);
     addConnectionToNote(newNote.id(), conn);
-    broadcastNote(newNote);
+    conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NEW_NOTE).
+            put("note", newNote)));
     broadcastNoteList();
   }
 
   protected Note importNote(Session conn, Notebook notebook, Message fromMessage)
           throws IOException {
-
-    Note note = notebook.createNote();
+    Note note = null;
     if (fromMessage != null) {
       String noteName = (String) ((Map) fromMessage.get("notebook")).get("name");
-      if (noteName == null || noteName.isEmpty()) {
-        noteName = "Note " + note.getId();
-      }
-      note.setName(noteName);
-      ArrayList<Map> paragraphs = ((Map<String, ArrayList>) fromMessage.get(
-              "notebook"))
-              .get("paragraphs");
-      if (paragraphs.size() > 0) {
-        for (Map paragraph : paragraphs) {
-          try {
-            Paragraph p = note.addParagraph();
-            String text = (String) paragraph.get("text");
-            p.setText(text);
-            p.setTitle((String) paragraph.get("title"));
-            Map<String, Object> params = (Map<String, Object>) ((Map) paragraph
-                    .get("settings")).get("params");
-            Map<String, Input> forms = (Map<String, Input>) ((Map) paragraph
-                    .get("settings")).get("forms");
-            if (params != null) {
-              p.settings.setParams(params);
-            }
-            if (forms != null) {
-              p.settings.setForms(forms);
-            }
-            Map<String, Object> result = (Map) paragraph.get("result");
-            if (result != null) {
-              InterpreterResult.Code code = InterpreterResult.Code
-                      .valueOf((String) result.get("code"));
-              InterpreterResult.Type type = InterpreterResult.Type
-                      .valueOf((String) result.get("type"));
-              String msg = (String) result.get("msg");
-              p.setReturn(new InterpreterResult(code, type, msg), null);
-            }
-
-            Map<String, Object> config = (Map<String, Object>) paragraph
-                    .get("config");
-            p.setConfig(config);
-          } catch (Exception e) {
-            logger.log(Level.SEVERE,
-                    "Exception while setting parameter in paragraph", e);
-          }
-        }
-      }
+      String noteJson = gson.toJson(fromMessage.get("notebook"));
+      note = notebook.importNote(noteJson, noteName);
+      note.persist();
+      broadcastNote(note);
+      broadcastNoteList();
     }
-
-    note.persist();
-    broadcastNote(note);
-    broadcastNoteList();
     return note;
   }
 
   private void removeParagraph(Session conn, Notebook notebook,
           Message fromMessage)
           throws IOException {
-    if (!this.userRole.equals(AllowedRoles.DATA_OWNER)) {
-      return;
-    }
+
     final String paragraphId = (String) fromMessage.get("id");
     if (paragraphId == null) {
       return;
     }
-    final Note note = notebook.getNote(getOpenNoteId(conn));
+    String noteId = getOpenNoteId(conn);
+    final Note note = notebook.getNote(noteId);
+
+    if (!this.userRole.equals(AllowedRoles.DATA_OWNER)) {
+      permissionError(conn, "remove", this.userRole, AllowedRoles.DATA_OWNER);
+      return;
+    }
+
     /**
      * We dont want to remove the last paragraph
      */
@@ -618,34 +671,33 @@ public class NotebookServer implements
     if (paragraphId == null) {
       return;
     }
+    String noteId = getOpenNoteId(conn);
+    final Note note = notebook.getNote(noteId);
+    if (this.userRole == null) {
+      permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
+              + ", " + AllowedRoles.DATA_SCIENTIST);
+      return;
+    }
 
-    final Note note = notebook.getNote(getOpenNoteId(conn));
     note.clearParagraphOutput(paragraphId);
     broadcastNote(note);
   }
 
-  private void completion(Session conn, Notebook notebook, Message fromMessage) {
+  private void completion(Session conn, Notebook notebook, Message fromMessage)
+          throws IOException {
     String paragraphId = (String) fromMessage.get("id");
     String buffer = (String) fromMessage.get("buf");
     int cursor = (int) Double.parseDouble(fromMessage.get("cursor").toString());
     Message resp = new Message(OP.COMPLETION_LIST).put("id", paragraphId);
     if (paragraphId == null) {
-      try {
-        conn.getBasicRemote().sendText(serializeMessage(resp));
-      } catch (IOException ex) {
-        logger.log(Level.SEVERE, "Unable to send message " + resp, ex);
-      }
+      conn.getBasicRemote().sendText(serializeMessage(resp));
       return;
     }
 
     final Note note = notebook.getNote(getOpenNoteId(conn));
     List<String> candidates = note.completion(paragraphId, buffer, cursor);
     resp.put("completions", candidates);
-    try {
-      conn.getBasicRemote().sendText(serializeMessage(resp));
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Unable to send message " + resp, ex);
-    }
+    conn.getBasicRemote().sendText(serializeMessage(resp));
   }
 
   /**
@@ -658,6 +710,7 @@ public class NotebookServer implements
   private void angularObjectUpdated(Session conn, Notebook notebook,
           Message fromMessage) {
     String noteId = (String) fromMessage.get("noteId");
+    String paragraphId = (String) fromMessage.get("paragraphId");
     String interpreterGroupId = (String) fromMessage.get("interpreterGroupId");
     String varName = (String) fromMessage.get("name");
     Object varValue = fromMessage.get("value");
@@ -666,74 +719,271 @@ public class NotebookServer implements
     // propagate change to (Remote) AngularObjectRegistry
     Note note = notebook.getNote(noteId);
     if (note != null) {
-      List<InterpreterSetting> settings = note.getNoteReplLoader().
-              getInterpreterSettings();
+      List<InterpreterSetting> settings = note.getNoteReplLoader()
+              .getInterpreterSettings();
       for (InterpreterSetting setting : settings) {
-        if (setting.getInterpreterGroup() == null) {
+        if (setting.getInterpreterGroup(note.id()) == null) {
           continue;
         }
-        if (interpreterGroupId.equals(setting.getInterpreterGroup().getId())) {
+        if (interpreterGroupId.equals(setting.getInterpreterGroup(note.id()).
+                getId())) {
           AngularObjectRegistry angularObjectRegistry = setting
-                  .getInterpreterGroup().getAngularObjectRegistry();
+                  .getInterpreterGroup(note.id()).getAngularObjectRegistry();
           // first trying to get local registry
-          ao = angularObjectRegistry.get(varName, noteId);
+          ao = angularObjectRegistry.get(varName, noteId, paragraphId);
           if (ao == null) {
-            logger.log(Level.WARNING, "Object {} is not binded", varName);
+            // then try notebook scope registry
+            ao = angularObjectRegistry.get(varName, noteId, null);
+            if (ao == null) {
+              // then try global scope registry
+              ao = angularObjectRegistry.get(varName, null, null);
+              if (ao == null) {
+                LOG.log(Level.WARNING, "Object {0} is not binded", varName);
+              } else {
+                // path from client -> server
+                ao.set(varValue, false);
+                global = true;
+              }
+            } else {
+              // path from client -> server
+              ao.set(varValue, false);
+              global = false;
+            }
           } else {
-            // path from client -> server
             ao.set(varValue, false);
-            global = true;
+            global = false;
           }
-        } else {
-          // path from client -> server
-          ao.set(varValue, false);
-          global = false;
+          break;
         }
-        break;
       }
     }
-    if (global) {
-      // broadcast change to all web session that uses related
+
+    if (global) { // broadcast change to all web session that uses related
       // interpreter.
       for (Note n : notebook.getAllNotes()) {
-        List<InterpreterSetting> settings = note.getNoteReplLoader().
-                getInterpreterSettings();
+        List<InterpreterSetting> settings = note.getNoteReplLoader()
+                .getInterpreterSettings();
         for (InterpreterSetting setting : settings) {
-          if (setting.getInterpreterGroup() == null) {
+          if (setting.getInterpreterGroup(n.id()) == null) {
             continue;
           }
-          if (interpreterGroupId.equals(setting.getInterpreterGroup().getId())) {
+          if (interpreterGroupId.equals(setting.getInterpreterGroup(n.id()).
+                  getId())) {
             AngularObjectRegistry angularObjectRegistry = setting
-                    .getInterpreterGroup().getAngularObjectRegistry();
-            ao = angularObjectRegistry.get(varName, noteId);
-            this.broadcastExcept(n.id(),
-                    new Message(OP.ANGULAR_OBJECT_UPDATE)
-                    .put("angularObject", ao)
+                    .getInterpreterGroup(n.id()).getAngularObjectRegistry();
+            this.broadcastExcept(
+                    n.id(),
+                    new Message(OP.ANGULAR_OBJECT_UPDATE).put("angularObject",
+                            ao)
                     .put("interpreterGroupId", interpreterGroupId)
-                    .put("noteId", n.id()), conn);
+                    .put("noteId", n.id())
+                    .put("paragraphId", ao.getParagraphId()),
+                    conn);
           }
         }
       }
     } else { // broadcast to all web session for the note
-      this.broadcastExcept(note.id(),
+      this.broadcastExcept(
+              note.id(),
               new Message(OP.ANGULAR_OBJECT_UPDATE).put("angularObject", ao)
               .put("interpreterGroupId", interpreterGroupId)
-              .put("noteId", note.id()),
+              .put("noteId", note.id())
+              .put("paragraphId", ao.getParagraphId()),
+              conn);
+    }
+  }
+
+  /**
+   * Push the given Angular variable to the target
+   * interpreter angular registry given a noteId
+   * and a paragraph id
+   *
+   * @param conn
+   * @param notebook
+   * @param fromMessage
+   * @throws Exception
+   */
+  protected void angularObjectClientBind(Session conn,
+          Notebook notebook, Message fromMessage)
+          throws Exception {
+    String noteId = fromMessage.getType("noteId");
+    String varName = fromMessage.getType("name");
+    Object varValue = fromMessage.get("value");
+    String paragraphId = fromMessage.getType("paragraphId");
+    Note note = notebook.getNote(noteId);
+
+    if (paragraphId == null) {
+      throw new IllegalArgumentException("target paragraph not specified for "
+              + "angular value bind");
+    }
+
+    if (note != null) {
+      final InterpreterGroup interpreterGroup
+              = findInterpreterGroupForParagraph(note,
+                      paragraphId);
+
+      final AngularObjectRegistry registry = interpreterGroup.
+              getAngularObjectRegistry();
+      if (registry instanceof RemoteAngularObjectRegistry) {
+
+        RemoteAngularObjectRegistry remoteRegistry
+                = (RemoteAngularObjectRegistry) registry;
+        pushAngularObjectToRemoteRegistry(noteId, paragraphId, varName, varValue,
+                remoteRegistry,
+                interpreterGroup.getId(), conn);
+
+      } else {
+        pushAngularObjectToLocalRepo(noteId, paragraphId, varName, varValue,
+                registry,
+                interpreterGroup.getId(), conn);
+      }
+    }
+  }
+
+  /**
+   * Remove the given Angular variable to the target
+   * interpreter(s) angular registry given a noteId
+   * and an optional list of paragraph id(s)
+   *
+   * @param conn
+   * @param notebook
+   * @param fromMessage
+   * @throws Exception
+   */
+  protected void angularObjectClientUnbind(Session conn,
+          Notebook notebook, Message fromMessage)
+          throws Exception {
+    String noteId = fromMessage.getType("noteId");
+    String varName = fromMessage.getType("name");
+    String paragraphId = fromMessage.getType("paragraphId");
+    Note note = notebook.getNote(noteId);
+
+    if (paragraphId == null) {
+      throw new IllegalArgumentException("target paragraph not specified for "
+              + "angular value unBind");
+    }
+
+    if (note != null) {
+      final InterpreterGroup interpreterGroup
+              = findInterpreterGroupForParagraph(note,
+                      paragraphId);
+
+      final AngularObjectRegistry registry = interpreterGroup.
+              getAngularObjectRegistry();
+
+      if (registry instanceof RemoteAngularObjectRegistry) {
+        RemoteAngularObjectRegistry remoteRegistry
+                = (RemoteAngularObjectRegistry) registry;
+        removeAngularFromRemoteRegistry(noteId, paragraphId, varName,
+                remoteRegistry,
+                interpreterGroup.getId(), conn);
+      } else {
+        removeAngularObjectFromLocalRepo(noteId, paragraphId, varName, registry,
+                interpreterGroup.getId(), conn);
+      }
+    }
+  }
+
+  private InterpreterGroup findInterpreterGroupForParagraph(Note note,
+          String paragraphId)
+          throws Exception {
+    final Paragraph paragraph = note.getParagraph(paragraphId);
+    if (paragraph == null) {
+      throw new IllegalArgumentException("Unknown paragraph with id : "
+              + paragraphId);
+    }
+    return paragraph.getCurrentRepl().getInterpreterGroup();
+  }
+
+  private void pushAngularObjectToRemoteRegistry(String noteId,
+          String paragraphId,
+          String varName, Object varValue,
+          RemoteAngularObjectRegistry remoteRegistry,
+          String interpreterGroupId, Session conn) {
+
+    final AngularObject ao = remoteRegistry.addAndNotifyRemoteProcess(varName,
+            varValue,
+            noteId, paragraphId);
+
+    this.broadcastExcept(
+            noteId,
+            new Message(OP.ANGULAR_OBJECT_UPDATE).put("angularObject", ao)
+            .put("interpreterGroupId", interpreterGroupId)
+            .put("noteId", noteId)
+            .put("paragraphId", paragraphId),
+            conn);
+  }
+
+  private void removeAngularFromRemoteRegistry(String noteId, String paragraphId,
+          String varName, RemoteAngularObjectRegistry remoteRegistry,
+          String interpreterGroupId, Session conn) {
+    final AngularObject ao = remoteRegistry.
+            removeAndNotifyRemoteProcess(varName, noteId,
+                    paragraphId);
+    this.broadcastExcept(
+            noteId,
+            new Message(OP.ANGULAR_OBJECT_REMOVE).put("angularObject", ao)
+            .put("interpreterGroupId", interpreterGroupId)
+            .put("noteId", noteId)
+            .put("paragraphId", paragraphId),
+            conn);
+  }
+
+  private void pushAngularObjectToLocalRepo(String noteId, String paragraphId,
+          String varName,
+          Object varValue, AngularObjectRegistry registry,
+          String interpreterGroupId, Session conn) {
+    AngularObject angularObject = registry.get(varName, noteId, paragraphId);
+    if (angularObject == null) {
+      angularObject = registry.add(varName, varValue, noteId, paragraphId);
+    } else {
+      angularObject.set(varValue, true);
+    }
+
+    this.broadcastExcept(
+            noteId,
+            new Message(OP.ANGULAR_OBJECT_UPDATE).put("angularObject",
+                    angularObject)
+            .put("interpreterGroupId", interpreterGroupId)
+            .put("noteId", noteId)
+            .put("paragraphId", paragraphId),
+            conn);
+  }
+
+  private void removeAngularObjectFromLocalRepo(String noteId,
+          String paragraphId, String varName,
+          AngularObjectRegistry registry, String interpreterGroupId,
+          Session conn) {
+    final AngularObject removed = registry.remove(varName, noteId, paragraphId);
+    if (removed != null) {
+      this.broadcastExcept(
+              noteId,
+              new Message(OP.ANGULAR_OBJECT_REMOVE).
+              put("angularObject", removed)
+              .put("interpreterGroupId", interpreterGroupId)
+              .put("noteId", noteId)
+              .put("paragraphId", paragraphId),
               conn);
     }
   }
 
   private void moveParagraph(Session conn, Notebook notebook,
-          Message fromMessage)
-          throws IOException {
+          Message fromMessage) throws IOException {
     final String paragraphId = (String) fromMessage.get("id");
     if (paragraphId == null) {
       return;
     }
 
-    final int newIndex = (int) Double.parseDouble(fromMessage.get("index").
-            toString());
-    final Note note = notebook.getNote(getOpenNoteId(conn));
+    final int newIndex = (int) Double.parseDouble(fromMessage.get("index")
+            .toString());
+    String noteId = getOpenNoteId(conn);
+    final Note note = notebook.getNote(noteId);
+    if (this.userRole == null) {
+      permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
+              + ", " + AllowedRoles.DATA_SCIENTIST);
+      return;
+    }
+
     note.moveParagraph(paragraphId, newIndex);
     note.persist();
     broadcastNote(note);
@@ -744,8 +994,14 @@ public class NotebookServer implements
           throws IOException {
     final int index = (int) Double.parseDouble(fromMessage.get("index").
             toString());
+    String noteId = getOpenNoteId(conn);
+    final Note note = notebook.getNote(noteId);
+    if (this.userRole == null) {
+      permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
+              + ", " + AllowedRoles.DATA_SCIENTIST);
+      return;
+    }
 
-    final Note note = notebook.getNote(getOpenNoteId(conn));
     note.insertParagraph(index);
     note.persist();
     broadcastNote(note);
@@ -759,7 +1015,14 @@ public class NotebookServer implements
       return;
     }
 
-    final Note note = notebook.getNote(getOpenNoteId(conn));
+    String noteId = getOpenNoteId(conn);
+    final Note note = notebook.getNote(noteId);
+    if (this.userRole == null) {
+      permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
+              + ", " + AllowedRoles.DATA_SCIENTIST);
+      return;
+    }
+
     Paragraph p = note.getParagraph(paragraphId);
     p.abort();
   }
@@ -771,11 +1034,26 @@ public class NotebookServer implements
       return;
     }
 
-    final Note note = notebook.getNote(getOpenNoteId(conn));
+    String noteId = getOpenNoteId(conn);
+    final Note note = notebook.getNote(noteId);
+    if (this.userRole == null) {
+      permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
+              + ", " + AllowedRoles.DATA_SCIENTIST);
+      return;
+    }
+
     Paragraph p = note.getParagraph(paragraphId);
     String text = (String) fromMessage.get("paragraph");
     p.setText(text);
     p.setTitle((String) fromMessage.get("title"));
+
+    // This AuthenticationInfo object is used for secure impersonation by the Livy Interpreter to
+    // execute the Spark job as the hdfsUserName. It sets a property called "ProxyUser" in Livy
+    // Right now, an empty password is ok as a parameter
+    AuthenticationInfo authenticationInfo = new AuthenticationInfo(
+            this.hdfsUsername, "");
+    p.setAuthenticationInfo(authenticationInfo);
+
     Map<String, Object> params = (Map<String, Object>) fromMessage.get("params");
     p.settings.setParams(params);
     Map<String, Object> config = (Map<String, Object>) fromMessage.get("config");
@@ -791,15 +1069,42 @@ public class NotebookServer implements
     try {
       note.run(paragraphId);
     } catch (Exception ex) {
-      logger.log(Level.SEVERE, "Exception from run", ex);
+      LOG.log(Level.SEVERE, "Exception from run", ex);
       if (p != null) {
         p.setReturn(new InterpreterResult(
                 InterpreterResult.Code.ERROR, ex.getMessage()), ex);
         p.setStatus(Status.ERROR);
+        broadcast(note.id(), new Message(OP.PARAGRAPH).put("paragraph", p));
       }
     }
   }
 
+
+  private void sendAllConfigurations(Session conn,
+          Notebook notebook) throws IOException {
+    ZeppelinConfiguration conf = notebook.getConf();
+    Map<String, String> configurations = conf.dumpConfigurations(conf,
+            new ZeppelinConfiguration.ConfigurationKeyPredicate() {
+      @Override
+      public boolean apply(String key) {
+        return !key.contains("password") && !key.equals(
+                ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING.
+                getVarName());
+      }
+    });
+
+    conn.getBasicRemote().sendText(serializeMessage(new Message(
+            OP.CONFIGURATIONS_INFO)
+            .put("configurations", configurations)));
+  }
+
+  private void checkpointNotebook(Session conn, Notebook notebook,
+          Message fromMessage) throws IOException {
+    String noteId = (String) fromMessage.get("noteId");
+    String commitMessage = (String) fromMessage.get("commitMessage");
+    notebook.checkpointNote(noteId, commitMessage);
+  }
+  
   @Override
   public List<Map<String, String>> query(String string) {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -836,24 +1141,59 @@ public class NotebookServer implements
   }
 
   /**
-   * Need description here.
+   * This callback is for the paragraph that runs on ZeppelinServer
    *
+   * @param noteId
+   * @param paragraphId
+   * @param output output to append
    */
-  public static class ParagraphJobListener implements JobListener {
+  @Override
+  public void onOutputAppend(String noteId, String paragraphId, String output) {
+    Message msg = new Message(OP.PARAGRAPH_APPEND_OUTPUT)
+            .put("noteId", noteId)
+            .put("paragraphId", paragraphId)
+            .put("data", output);
+    Paragraph paragraph = notebook().getNote(noteId).getParagraph(paragraphId);
+    broadcast(noteId, msg);
+  }
 
-    private final NotebookServer notebookServer;
-    private final Note note;
+  /**
+   * This callback is for the paragraph that runs on ZeppelinServer
+   *
+   * @param noteId
+   * @param paragraphId
+   * @param output output to update (replace)
+   */
+  @Override
+  public void onOutputUpdated(String noteId, String paragraphId, String output) {
+    Message msg = new Message(OP.PARAGRAPH_UPDATE_OUTPUT)
+            .put("noteId", noteId)
+            .put("paragraphId", paragraphId)
+            .put("data", output);
+    Paragraph paragraph = notebook().getNote(noteId).getParagraph(paragraphId);
+    broadcast(noteId, msg);
+  }
 
-    public ParagraphJobListener(NotebookServer notebookServer, Note note) {
+  /**
+   * Need description here.
+   * <p>
+   */
+  public static class ParagraphListenerImpl implements ParagraphJobListener {
+
+    private NotebookServer notebookServer;
+    private Note note;
+
+    public ParagraphListenerImpl(NotebookServer notebookServer, Note note) {
       this.notebookServer = notebookServer;
       this.note = note;
     }
 
     @Override
     public void onProgressUpdate(Job job, int progress) {
-      notebookServer.broadcast(note.id(),
+      notebookServer.broadcast(
+              note.id(),
               new Message(OP.PROGRESS).put("id", job.getId()).put("progress",
-                      job.progress()));
+              job.progress()));
     }
 
     @Override
@@ -864,12 +1204,12 @@ public class NotebookServer implements
     public void afterStatusChange(Job job, Status before, Status after) {
       if (after == Status.ERROR) {
         if (job.getException() != null) {
-          logger.log(Level.INFO, "Error", job.getException());
+          LOG.log(Level.INFO, "Error", job.getException());
         }
       }
 
       if (job.isTerminated()) {
-        logger.log(Level.INFO, "Job {0} is finished", job.getId());
+        LOG.log(Level.INFO, "Job {0} is finished", job.getId());
         try {
           note.persist();
         } catch (IOException e) {
@@ -878,17 +1218,51 @@ public class NotebookServer implements
       }
       notebookServer.broadcastNote(note);
     }
+
+    /**
+     * This callback is for praragraph that runs on RemoteInterpreterProcess
+     *
+     * @param paragraph
+     * @param out
+     * @param output
+     */
+    @Override
+    public void onOutputAppend(Paragraph paragraph, InterpreterOutput out,
+            String output) {
+      Message msg = new Message(OP.PARAGRAPH_APPEND_OUTPUT)
+              .put("noteId", paragraph.getNote().getId())
+              .put("paragraphId", paragraph.getId())
+              .put("data", output);
+
+      notebookServer.broadcast(paragraph.getNote().getId(), msg);
+    }
+
+    /**
+     * This callback is for paragraph that runs on RemoteInterpreterProcess
+     *
+     * @param paragraph
+     * @param out
+     * @param output
+     */
+    @Override
+    public void onOutputUpdate(Paragraph paragraph, InterpreterOutput out,
+            String output) {
+      Message msg = new Message(OP.PARAGRAPH_UPDATE_OUTPUT)
+              .put("noteId", paragraph.getNote().getId())
+              .put("paragraphId", paragraph.getId())
+              .put("data", output);
+
+      notebookServer.broadcast(paragraph.getNote().getId(), msg);
+    }
+
   }
 
   @Override
-  public JobListener getParagraphJobListener(Note note) {
-    return new ParagraphJobListener(this, note);
+  public ParagraphJobListener getParagraphJobListener(Note note) {
+    return new ParagraphListenerImpl(this, note);
   }
 
-  private void pong() {
-  }
-
-  private void sendAllAngularObjects(Note note, Session conn) {
+  private void sendAllAngularObjects(Note note, Session conn) throws IOException {
     List<InterpreterSetting> settings = note.getNoteReplLoader().
             getInterpreterSettings();
     if (settings == null || settings.isEmpty()) {
@@ -896,22 +1270,19 @@ public class NotebookServer implements
     }
 
     for (InterpreterSetting intpSetting : settings) {
-      AngularObjectRegistry registry = intpSetting.getInterpreterGroup()
+      AngularObjectRegistry registry = intpSetting.
+              getInterpreterGroup(note.id())
               .getAngularObjectRegistry();
       List<AngularObject> objects = registry.getAllWithGlobal(note.id());
       for (AngularObject object : objects) {
-        try {
-          conn.getBasicRemote().sendText(serializeMessage(new Message(
-                  OP.ANGULAR_OBJECT_UPDATE)
-                  .put("angularObject", object)
-                  .put("interpreterGroupId", intpSetting.getInterpreterGroup().
-                          getId())
-                  .put("noteId", note.id())));
-        } catch (IOException ex) {
-          logger.log(Level.SEVERE, "Unable to send message " + new Message(
-                  Message.OP.NOTE).put("note",
-                          note), ex);
-        }
+        conn.getBasicRemote().sendText(serializeMessage(new Message(
+                OP.ANGULAR_OBJECT_UPDATE)
+                .put("angularObject", object)
+                .put("interpreterGroupId",
+                        intpSetting.getInterpreterGroup(note.id()).getId())
+                .put("noteId", note.id())
+                .put("paragraphId", object.getParagraphId())
+        ));
       }
     }
   }
@@ -936,13 +1307,15 @@ public class NotebookServer implements
 
       List<InterpreterSetting> intpSettings = note.getNoteReplLoader()
               .getInterpreterSettings();
-
       if (intpSettings.isEmpty()) {
         continue;
       }
       for (InterpreterSetting setting : intpSettings) {
-        if (setting.getInterpreterGroup().getId().equals(interpreterGroupId)) {
-          broadcast(note.id(), new Message(OP.ANGULAR_OBJECT_UPDATE)
+        if (setting.getInterpreterGroup(note.id()).getId().equals(
+                interpreterGroupId)) {
+          broadcast(
+                  note.id(),
+                  new Message(OP.ANGULAR_OBJECT_UPDATE)
                   .put("angularObject", object)
                   .put("interpreterGroupId", interpreterGroupId)
                   .put("noteId", note.id()));
@@ -952,7 +1325,8 @@ public class NotebookServer implements
   }
 
   @Override
-  public void onRemove(String interpreterGroupId, String name, String noteId) {
+  public void onRemove(String interpreterGroupId, String name, String noteId,
+          String paragraphId) {
     Notebook notebook = notebook();
     List<Note> notes = notebook.getAllNotes();
     for (Note note : notes) {
@@ -966,7 +1340,7 @@ public class NotebookServer implements
           broadcast(
                   note.id(),
                   new Message(OP.ANGULAR_OBJECT_REMOVE).put("name", name).put(
-                          "noteId", noteId));
+                  "noteId", noteId));
         }
       }
     }
@@ -975,16 +1349,17 @@ public class NotebookServer implements
   private void authenticateUser(Session session, Project project, String user) {
     //returns the user role in project. Null if the user has no role in project
     this.userRole = projectTeamBean.findCurrentRole(project, user);
-    logger.log(Level.SEVERE, "User role in this projuct {0}", this.userRole);
-
-    if (this.userRole == null) {
+    LOG.log(Level.SEVERE, "User role in this project {0}", this.userRole);
+    Users users = userBean.findByEmail(user);
+    if (users == null || this.userRole == null) {
       try {
         session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY,
                 "You do not have a role in this project."));
       } catch (IOException ex) {
-        logger.log(Level.SEVERE, null, ex);
+        LOG.log(Level.SEVERE, null, ex);
       }
     }
+    this.hdfsUsername = hdfsUsersController.getHdfsUserName(project, users);
   }
 
   private Project getProject(String projectId) {
@@ -999,26 +1374,4 @@ public class NotebookServer implements
     return proj;
   }
 
-//  private Notebook setupNotebook(Project project) {
-//    ZeppelinConfiguration conf = zeppelin.getZeppelinConfig(project.getName()).
-//            getConf();
-//    Class<?> notebookStorageClass;
-//    NotebookRepo notebookRepo;
-//    Notebook notebook = null;
-//    try {
-//      notebookStorageClass = Class.forName(conf.getString(
-//              ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE));
-//      Constructor<?> constructor = notebookStorageClass.getConstructor(
-//              ZeppelinConfiguration.class, Project.class
-//      );
-//      notebookRepo = (NotebookRepo) constructor.newInstance(conf, project);
-//
-//      //notebook = new Notebook(notebookRepo, zeppelin.getZeppelinConfig(project.
-//              //getName()).getNotebookIndex());
-//    } catch (Exception ex) {
-//      logger.log(Level.SEVERE, "Could not instantiate notebook", ex);
-//    }
-//
-//    return notebook;
-//  }
 }

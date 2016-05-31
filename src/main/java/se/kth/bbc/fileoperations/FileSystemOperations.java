@@ -69,7 +69,9 @@ public class FileSystemOperations {
    * @throws java.io.IOException When an error occurs upon HDFS opening.
    */
   public InputStream getInputStream(Path location) throws IOException {
-    return dfs.open(location, 1048576); //TODO: undo hard coding of weird constant here...
+    //Modifed dfs.open method call to be compliant with hdfs Flink client 
+    //required version
+    return dfs.open(location);
   }
 
   /**

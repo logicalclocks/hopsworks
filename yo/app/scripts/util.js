@@ -89,8 +89,8 @@ var sortObject = function(filter, predicate, template){
   return filter('orderBy')(template.columns, predicate, false);
 };
 
-function getLocationBase() {
-  var port = Number(location.port);
+function getPort() {
+    var port = Number(location.port);
   if (port === 'undefined' || port === 0) {
     port = 80;
     if (location.protocol === 'https:') {
@@ -101,11 +101,19 @@ function getLocationBase() {
   if (port === 3333 || port === 9000) {
     port = 8080;
   }
-  return location.protocol + "//" + location.hostname +":" + port + skipTrailingSlash(location.pathname);
+  return port;
+};
+
+function getLocationBase() {
+  return location.protocol + "//" + location.hostname +":" + getPort() + skipTrailingSlash(location.pathname);
 };
 
 function getWsProtocol() {
   return location.protocol === 'https:' ? 'wss:' : 'ws:';
+};
+
+function getZeppelinWsBaseURL() {
+  return getWsProtocol() +"//" + location.hostname + ":" + getPort() + skipTrailingSlash(location.pathname) + "/zeppelin/ws";
 };
 
 function skipTrailingSlash(path) {

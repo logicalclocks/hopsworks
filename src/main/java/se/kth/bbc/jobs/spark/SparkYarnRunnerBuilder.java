@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.Map;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
-import se.kth.bbc.jobs.yarn.LocalResourceDTO;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
+import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -27,7 +28,7 @@ public class SparkYarnRunnerBuilder {
   //Optional parameters
   private final List<String> jobArgs = new ArrayList<>();
   private String jobName = "Untitled Spark Job";
-  private Map<String, String> extraFiles = new HashMap<>();
+  private List<LocalResourceDTO> extraFiles = new ArrayList<>();
   private int numberOfExecutors = 1;
   private int executorCores = 1;
   private String executorMemory = "512m";
@@ -88,32 +89,19 @@ public class SparkYarnRunnerBuilder {
     //Add Spark jar
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath,
-            LocalResourceVisibility.PUBLIC, LocalResourceType.FILE, null),
-            false);
-    
+            LocalResourceVisibility.PUBLIC.toString(), 
+            LocalResourceType.FILE.toString(), null), false);
     //Add app jar
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_LOCRSC_APP_JAR, appJarPath, 
-            LocalResourceVisibility.PUBLIC, LocalResourceType.FILE,null),
+            LocalResourceVisibility.PUBLIC.toString(), 
+            LocalResourceType.FILE.toString(), null), 
             !appJarPath.startsWith("hdfs:"));
 
      
     //Add extra files to local resources, use filename as key
-    for (Map.Entry<String, String> k : extraFiles.entrySet()) {
-        
-        //If the LocalResource is the Kafka certificate, retrieve it from
-        if(k.getKey().equals(Settings.KAFKA_K_CERTIFICATE) || 
-                k.getKey().equals(Settings.KAFKA_T_CERTIFICATE)  ){
-            builder.addLocalResource(new LocalResourceDTO(k.getKey(), 
-                    k.getValue(), LocalResourceVisibility.APPLICATION, 
-                    LocalResourceType.FILE, null), 
-                    false);
-        } else {
-            builder.addLocalResource(new LocalResourceDTO(k.getKey(),
-                    k.getValue(), LocalResourceVisibility.PUBLIC, 
-                    LocalResourceType.FILE, null),
-                    !k.getValue().startsWith("hdfs:"));
-        }
+    for (LocalResourceDTO dto : extraFiles) {
+            builder.addLocalResource(dto, false);
     }
   
 
@@ -124,12 +112,13 @@ public class SparkYarnRunnerBuilder {
 //    builder.addToAppMasterEnvironment("SPARK_USER", );
     // TODO - Change spark user here
 //    builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
-    if (classPath == null || classPath.isEmpty()) {
-      builder.addToAppMasterEnvironment("CLASSPATH", sparkClasspath);
-    } else {
-      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
-              + sparkClasspath);
-    }
+      //Removed local Spark classpath
+//    if (classPath == null || classPath.isEmpty()) {
+//      builder.addToAppMasterEnvironment("CLASSPATH", sparkClasspath);
+//    } else {
+//      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
+//              + sparkClasspath);
+//    }
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
@@ -152,13 +141,6 @@ public class SparkYarnRunnerBuilder {
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);
     
-    // TODO: vasilis
-    //amargs.append(" --spark-history-server ").append(sparkHistoryServerIp);
-    //builder.addToAppMasterEnvironment("SPARK_HISTORY_SERVER_ADDRESS", sparkHistoryServerIp);
-   // builder.addToAppMasterEnvironment("JSESSION_ID", getjSessionId());
-   
-    
-    
     for (String s : jobArgs) {
       amargs.append(" --arg ").append(s);
     }
@@ -172,7 +154,7 @@ public class SparkYarnRunnerBuilder {
     //Set app name
     builder.appName(jobName);
 
-    return builder.build(hadoopDir, sparkDir, nameNodeIpPort);
+    return builder.build(hadoopDir, sparkDir, nameNodeIpPort, JobType.SPARK);
   }
 
   public SparkYarnRunnerBuilder setJobName(String jobName) {
@@ -195,7 +177,7 @@ public class SparkYarnRunnerBuilder {
     return this;
   }
 
-  public SparkYarnRunnerBuilder setExtraFiles(Map<String, String> extraFiles) {
+  public SparkYarnRunnerBuilder setExtraFiles(List<LocalResourceDTO> extraFiles) {
     if (extraFiles == null) {
       throw new IllegalArgumentException("Map of extra files cannot be null.");
     }
@@ -203,24 +185,25 @@ public class SparkYarnRunnerBuilder {
     return this;
   }
 
-  public SparkYarnRunnerBuilder addExtraFile(String filename, String location) {
-    if (filename == null || filename.isEmpty()) {
+  public SparkYarnRunnerBuilder addExtraFile(LocalResourceDTO dto) {
+    if (dto.getName() == null || dto.getName().isEmpty()) {
       throw new IllegalArgumentException(
               "Filename in extra file mapping cannot be null or empty.");
     }
-    if (location == null || location.isEmpty()) {
+    if (dto.getPath() == null || dto.getPath().isEmpty()) {
       throw new IllegalArgumentException(
               "Location in extra file mapping cannot be null or empty.");
     }
-    this.extraFiles.put(filename, location);
+    this.extraFiles.add(dto);
     return this;
   }
-   public SparkYarnRunnerBuilder addExtraFiles(Map<String, String> projectLocalResources) {
+   public SparkYarnRunnerBuilder addExtraFiles(List<LocalResourceDTO> projectLocalResources) {
     if(projectLocalResources != null &&!projectLocalResources.isEmpty()){
-        this.extraFiles.putAll(projectLocalResources);
+        this.extraFiles.addAll(projectLocalResources);
     }
     return this;
   }
+
   
   public SparkYarnRunnerBuilder setNumberOfExecutors(int numberOfExecutors) {
     if (numberOfExecutors < 1) {
