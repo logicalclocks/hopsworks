@@ -175,7 +175,7 @@
             <i style="width: 20px; margin-right: 10px; font-size: 20px; color: #9d261d"
                class="fa fa-ban fa-2 pull-left"></i>
           </div>
-          {{project.project.name}}
+          {{ project.project.name | limitTo: 17 }}{{project.project.name.length > 17 ? '...' : ''}}
           <span ng-if="project.project.name.substr(0, 5) === 'demo_'" class="glyphicon glyphicon-play-circle pull-right" style="margin-top: 5px;"></span>
         </a>
         <div class="dropdown position-fixed" id="menu-{{$index}}">
