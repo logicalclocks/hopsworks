@@ -32,15 +32,34 @@ import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
+import se.kth.bbc.security.audit.AuditManager;
+import se.kth.bbc.security.audit.UserAuditActions;
+import se.kth.bbc.security.auth.AuthenticationConstants;
+import se.kth.hopsworks.controller.UsersController;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.UserFacade;
 
 /**
  * Created for org.apache.zeppelin.rest.message on 17/03/16.
  */
-
 @Path("/login")
 @Produces("application/json")
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class LoginRestApi {
+
   private static final Logger LOG = LoggerFactory.getLogger(LoginRestApi.class);
+
+  @EJB
+  private UserFacade userBean;
+  @EJB
+  private UsersController userController;
+  @EJB
+  private AuditManager am;
 
   /**
    * Required by Swagger.
@@ -48,7 +67,6 @@ public class LoginRestApi {
   public LoginRestApi() {
     super();
   }
-
 
   /**
    * Post Login
@@ -62,7 +80,7 @@ public class LoginRestApi {
    */
   @POST
   public Response postLogin(@FormParam("userName") String userName,
-                            @FormParam("password") String password) {
+          @FormParam("password") String password) {
     JsonResponse response = null;
     // ticket set to anonymous for anonymous user. Simplify testing.
     Subject currentUser = org.apache.shiro.SecurityUtils.getSubject();
@@ -71,16 +89,18 @@ public class LoginRestApi {
     }
     if (!currentUser.isAuthenticated()) {
       try {
-        UsernamePasswordToken token = new UsernamePasswordToken(userName, password);
+        UsernamePasswordToken token = new UsernamePasswordToken(userName,
+                password);
         //      token.setRememberMe(true);
         currentUser.login(token);
         HashSet<String> roles = SecurityUtils.getRoles();
         String principal = SecurityUtils.getPrincipal();
         String ticket;
-        if ("anonymous".equals(principal))
+        if ("anonymous".equals(principal)) {
           ticket = "anonymous";
-        else
+        } else {
           ticket = TicketContainer.instance.getTicket(principal);
+        }
 
         Map<String, String> data = new HashMap<>();
         data.put("principal", principal);
@@ -111,20 +131,31 @@ public class LoginRestApi {
     LOG.warn(response.toString());
     return response.build();
   }
-  
+
   @POST
   @Path("logout")
-  public Response logout() {
+  public Response logout(@Context HttpServletRequest req) {
     JsonResponse response;
-    
-//    Subject currentUser = org.apache.shiro.SecurityUtils.getSubject();
-//    currentUser.logout();
 
     Map<String, String> data = new HashMap<>();
     data.put("principal", "anonymous");
     data.put("roles", "");
     data.put("ticket", "anonymous");
-   
+    Users user = userBean.findByEmail(req.getRemoteUser());
+    try {
+      req.logout();
+      req.getSession().invalidate();
+      if (user != null) {
+        userController.setUserIsOnline(user, AuthenticationConstants.IS_OFFLINE);
+        am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
+                UserAuditActions.SUCCESS.name(), req);
+        TicketContainer.instance.invalidate(user.getEmail());
+      }
+    } catch (ServletException e) {
+      am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
+              UserAuditActions.FAILED.name(), req);
+    }
+
     response = new JsonResponse(Response.Status.OK, "", data);
     LOG.warn(response.toString());
     return response.build();

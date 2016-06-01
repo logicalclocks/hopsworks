@@ -23,8 +23,9 @@ import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class InterpreterService {
+
   Logger logger = LoggerFactory.getLogger(InterpreterService.class);
-  
+
   @EJB
   private ZeppelinResource zeppelinResource;
   @EJB
@@ -37,26 +38,31 @@ public class InterpreterService {
   private InterpreterRestApi interpreterRestApi;
 
   @Path("/")
+  @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
   public InterpreterRestApi interpreter(@Context HttpServletRequest httpReq)
           throws AppException {
     Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
     if (project == null) {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-                            "Could not find project. Make sure cookies are enabled.");        
+              "Could not find project. Make sure cookies are enabled.");
     }
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
+    if (user == null) {
+      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+              "Could not find remote user.");
+    }
     ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
             getName(), user.getEmail());
     if (zeppelinConf == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                            "Could not connect to web socket.");
+              "Could not connect to web socket.");
     }
 
     String userRole = projectTeamBean.findCurrentRole(project, user);
 
     if (userRole == null) {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-                            "You curently have no role in this project!");
+              "You curently have no role in this project!");
     }
     interpreterRestApi.setParms(project, userRole, zeppelinConf);
     return interpreterRestApi;

@@ -19,7 +19,6 @@ package se.kth.hopsworks.zeppelin.socket;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -59,7 +58,6 @@ import org.apache.zeppelin.notebook.ParagraphJobListener;
 import org.apache.zeppelin.scheduler.Job;
 import org.apache.zeppelin.scheduler.Job.Status;
 import org.apache.zeppelin.user.AuthenticationInfo;
-import org.apache.zeppelin.search.SearchService;
 import org.quartz.SchedulerException;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
@@ -71,6 +69,7 @@ import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 import se.kth.hopsworks.zeppelin.socket.Message.OP;
+import se.kth.hopsworks.zeppelin.util.TicketContainer;
 
 /**
  * Zeppelin websocket service.
@@ -80,8 +79,8 @@ import se.kth.hopsworks.zeppelin.socket.Message.OP;
         configurator = ZeppelinEndpointConfig.class)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class NotebookServer implements
-    SearchService,
-    JobListenerFactory, AngularObjectRegistryListener,  RemoteInterpreterProcessListener{
+        JobListenerFactory, AngularObjectRegistryListener,
+        RemoteInterpreterProcessListener {
 
   private static final Logger LOG = Logger.getLogger(NotebookServer.class.
           getName());
@@ -147,6 +146,21 @@ public class NotebookServer implements
       LOG.log(Level.INFO, "RECEIVE PRINCIPAL << {0}", messagereceived.principal);
       LOG.log(Level.INFO, "RECEIVE TICKET << {0}", messagereceived.ticket);
       LOG.log(Level.INFO, "RECEIVE ROLES << {0}", messagereceived.roles);
+
+      String ticket = TicketContainer.instance.getTicket(
+              messagereceived.principal);
+      if (ticket != null && !ticket.equals(messagereceived.ticket)) {
+        try {
+          session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE,
+                  "Invalid ticket " + messagereceived.ticket + " != "
+                  + ticket));
+        } catch (IOException ex) {
+          LOG.log(Level.SEVERE, null, ex);
+        }
+        LOG.log(Level.INFO, "Invalid ticket {0} != {1}", new Object[]{
+          messagereceived.ticket,
+          ticket});
+      }
 
       /**
        * Lets be elegant here
@@ -1076,7 +1090,6 @@ public class NotebookServer implements
     }
   }
 
-
   private void sendAllConfigurations(Session conn,
           Notebook notebook) throws IOException {
     ZeppelinConfiguration conf = notebook.getConf();
@@ -1100,41 +1113,6 @@ public class NotebookServer implements
     String noteId = (String) fromMessage.get("noteId");
     String commitMessage = (String) fromMessage.get("commitMessage");
     notebook.checkpointNote(noteId, commitMessage);
-  }
-  
-  @Override
-  public List<Map<String, String>> query(String string) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void updateIndexDoc(Note note) throws IOException {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void addIndexDocs(Collection<Note> clctn) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void addIndexDoc(Note note) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void deleteIndexDocs(Note note) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void deleteIndexDoc(Note note, Paragraph prgrph) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void close() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 
   /**

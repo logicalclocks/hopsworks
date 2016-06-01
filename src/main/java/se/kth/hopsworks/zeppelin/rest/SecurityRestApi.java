@@ -31,6 +31,7 @@ import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 
@@ -40,6 +41,7 @@ import javax.ws.rs.core.Context;
  */
 @Path("/security")
 @Produces("application/json")
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class SecurityRestApi {
   private static final Logger LOG = LoggerFactory.getLogger(SecurityRestApi.class);
 
@@ -68,7 +70,7 @@ public class SecurityRestApi {
     JsonResponse response;
     // ticket set to anonymous for anonymous user. Simplify testing.
     String ticket;
-    if ("anonymous".equals(principal))
+    if (principal == null || "anonymous".equals(principal))
       ticket = "anonymous";
     else
       ticket = TicketContainer.instance.getTicket(principal);

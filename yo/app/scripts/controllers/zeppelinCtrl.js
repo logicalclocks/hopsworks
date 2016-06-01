@@ -163,6 +163,6 @@ angular.module('hopsWorksApp')
               self.connectedStatus = false;
             });  
             
-            ZeppelinService.websocket().sendNewEvent({op: 'LIST_NOTES'});
+            ZeppelinService.websocket().sendNewEvent({principal: 'anonymous', ticket:'anonymous', op: 'LIST_NOTES'});
 
           }]);
