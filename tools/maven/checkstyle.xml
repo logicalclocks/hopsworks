@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+          "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
+          "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+  <module name="TreeWalker">
+    <property name="tabWidth" value="2"/>
+    <module name="LineLength">
+      <property name="max" value="120"/>
+    </module>
+    <module name="Indentation">
+      <property name="lineWrappingIndentation" value="2"/>
+      <property name="basicOffset" value="2"/>
+      <property name="caseIndent" value="2"/>
+    </module>
+    <module name="RegexpSinglelineJava">
+      <property name="format" value="^\s*\t+\s*\S*"/>
+      <property name="message" value="Line has leading tab characters; indentation should be performed with space only."/>
+      <property name="ignoreComments" value="true"/>
+    </module>
+    <module name="AvoidStarImport"/>
+    <module name="IllegalImport">
+      <property name="illegalPkgs" value="java.util.logging"/>
+    </module>
+    <module name="RedundantImport"/>
+    <module name="UnusedImports"/>
+    <module name="Regexp">
+      <property name="format" value="System\.out\.print(?:ln)?|System\.err\.print(?:ln)?"/>
+      <property name="illegalPattern" value="true"/>
+    </module>
+  </module>
+</module>
