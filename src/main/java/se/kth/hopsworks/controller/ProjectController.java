@@ -153,8 +153,6 @@ public class ProjectController {
       String projectPath = mkProjectDIR(newProject.getProjectName());
       if (projectPath != null) {
 
-        fileOps.setMetaEnabled(projectPath);
-
         //Create a new project object
         Date now = new Date();
         Project project = new Project(newProject.getProjectName(), user, now);
@@ -399,7 +397,6 @@ public class ProjectController {
       FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
               FsAction.ALL); // permission 777 so any one can creat a project.
       fsOps.setPermission(location, fsPermission);
-      fileOps.setMetaEnabled(File.separator + rootDir);
     } else {
       rootDirCreated = true;
     }
