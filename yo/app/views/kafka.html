@@ -65,7 +65,7 @@
                     <table ng-if="row.isSelected" st-table="rowCollection" class="table table-striped col-sm-12">
                       <thead >
                         <tr>
-                          <th class="col-sm-2">Username</th>
+                          <th class="col-sm-2">UserEmail</th>
                           <th class="col-sm-2">Permission Type</th>
                           <th class="col-sm-2">Operation Type</th>
                           <th class="col-sm-2">Host</th>
@@ -75,7 +75,7 @@
                         </tr>
                       </thead>
                       <tr ng-repeat="acl in row.acls">
-                        <td ng-if="kafkaCtrl.activeId === -1">{{acl.username}}</td>
+                        <td ng-if="kafkaCtrl.activeId === -1">{{acl.userEmail}}</td>
                         <td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.username" placeholder="Username"></td>
                         <td ng-if="kafkaCtrl.activeId === -1">{{acl.permissionType}}</td>
                         <td ng-if="kafkaCtrl.activeId === acl.id">
