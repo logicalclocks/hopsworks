@@ -161,4 +161,7 @@ public class ResponseMessages {
           = "Elasticsearch type does not exist";
   public final static String ELASTIC_SERVER_NOT_AVAILABLE
           = "The Elasticsearch Server is either down or misconfigured.";
+  
+  public final static String JOB_DETAILS
+          = "Details for a job";
 }

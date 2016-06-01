@@ -232,7 +232,7 @@ angular.module('hopsWorksApp')
                 };
                 
                 self.goToHistory = function () {
-                    $location.path('history');
+                    $location.path('history/' + self.pId + '/history');
                 };
 
                 self.goToJobs = function () {

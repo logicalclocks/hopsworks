@@ -83,4 +83,5 @@
     <jdbc-resource enabled="true" jndi-name="hopsworks_connection" object-type="user" pool-name="mysql_hopsworks_kthfsPool_5"/>
     <jdbc-resource enabled="true" jndi-name="som" object-type="user" pool-name="mysql_hopsworks_kthfsPool_5"/>
     <jdbc-resource enabled="true" jndi-name="NdbVas" object-type="user" pool-name="mysql_hopsworks_kthfsPool_5"/>
+    <jdbc-resource enabled="true" jndi-name="vasilis_db" object-type="user" pool-name="mysql_hopsworks_kthfsPool_5"/>
 </resources>

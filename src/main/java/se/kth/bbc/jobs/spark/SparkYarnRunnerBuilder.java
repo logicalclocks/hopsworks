@@ -115,16 +115,25 @@ public class SparkYarnRunnerBuilder {
 //    builder.addToAppMasterEnvironment("SPARK_USER", );
     // TODO - Change spark user here
 //    builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
-    if (classPath == null || classPath.isEmpty()) {
-      builder.addToAppMasterEnvironment("CLASSPATH", sparkClasspath);
-    } else {
-      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
-              + sparkClasspath);
-    }
+//    if (classPath == null || classPath.isEmpty()) {
+//      builder.addToAppMasterEnvironment("CLASSPATH", sparkClasspath);
+//    } else {
+//      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
+//              + sparkClasspath);
+//    }
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
 
+//    addSystemProperty("spark.history.fs.logDirectory" , "hdfs://10.0.2.15:8020/user/glassfish/sparkApplicationHistory");
+//    addSystemProperty("spark.eventLog.dir" , "hdfs://10.0.2.15:8020/user/glassfish/sparkApplicationHistory");
+//    addSystemProperty("spark.history.fs.cleaner.enabled" , "true");
+//    addSystemProperty("spark.history.fs.cleaner.interval" , "1d");
+//    addSystemProperty("spark.history.fs.cleaner.maxAge" , "7d");
+//    addSystemProperty("spark.eventLog.compress" , "true");
+//    addSystemProperty("spark.yarn.historyServer.address" , "10.0.2.15:18088");
+    
+    
     for (String s : sysProps.keySet()) {
       String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
       builder.addJavaOption(option);
@@ -136,7 +145,7 @@ public class SparkYarnRunnerBuilder {
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
-
+    
     // spark 1.5.x replaced --num-executors with --properties-file
     // https://fossies.org/diffs/spark/1.4.1_vs_1.5.0/
     // amargs.append(" --num-executors ").append(numberOfExecutors);

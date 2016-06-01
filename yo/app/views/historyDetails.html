@@ -1,0 +1,142 @@
+<!-- A dialog presenting job details that are stored in the . -->
+
+<div class="modal-header">
+  <button class="close" ng-click="historyDetailCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">History details - {{historyDetailCtrl.job.id}}</h2>
+</div>
+<div class="modal-body">
+
+  <accordion close-others="false">
+    <accordion-group heading="Job Details" ng-click="historyDetailCtrl.getDetails();">
+      <!-- Cuneiform configuration -->
+        <div>
+          <div class="row">
+            <div class="text-right col-md-4">Application Id <i class="fa fa-info-circle" style="margin-left: 10px"></i></div>
+            <div  class="col-md-8">
+              {{historyDetailCtrl.details.id}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="text-right col-md-4">Application name <i class="fa fa-info-circle" style="margin-left: 10px"></i></div>
+            <div class="col-md-8">
+              {{historyDetailCtrl.details.name}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="text-right col-md-4">Queue name <i class="fa fa-info-circle" style="margin-left: 10px"></i></div>
+            <div class="col-md-8">
+              {{historyDetailCtrl.details.queueName}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="text-right col-md-4">Application Severity <i class="fa fa-info-circle" style="margin-left: 10px"></i></div>
+            <div class="col-md-8">
+            <span
+                ng-if="historyDetailCtrl.details.severity == 'NONE'"
+                style="color: #3090C7 ">
+                {{historyDetailCtrl.details.severity}}
+            </span>
+            <span
+                ng-if="historyDetailCtrl.details.severity == 'LOW'"
+                style="color: #41A317 ">
+                {{historyDetailCtrl.details.severity}}
+            </span>
+            </div>
+          </div>
+        </div>
+    </accordion-group>
+    <accordion-group heading="Heuristic Results" ng-click="historyDetailCtrl.getDetails();">    
+      <table class="table chrome-table">
+        <thead>
+          <tr>
+            <th style="width: 10%">
+              Heuristic Name
+            </th>
+            <th>
+              Severity
+            </th>
+            <th>
+              Score
+            </th>
+            <th>
+              Name
+            </th>
+            <th>
+              Value
+            </th>
+            <th>
+              Details
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="heuristic in historyDetailCtrl.details.yarnAppHeuristicResults">
+            <td>
+              {{heuristic.heuristicName}}
+            </td>
+            <td>
+              {{heuristic.severity}}
+            </td>
+            <td>
+              {{heuristic.score}}
+            </td>
+            <td ng-repeat="(key, value) in heuristic.yarnAppHeuristicResultDetails">{{value.name}}</td>
+            <td ng-repeat="(key, value) in heuristic.yarnAppHeuristicResultDetails">{{value.value}}</td>
+            <td ng-repeat="(key, value) in heuristic.yarnAppHeuristicResultDetails">{{value.details}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </accordion-group>
+      
+    <accordion-group heading="Details">
+      <table class="table chrome-table">
+        <thead>
+          <tr>
+            <th>
+              Submission time
+            </th>
+            <th>
+              Current state
+            </th>
+            <th>
+              Execution duration (ms)
+            </th>
+            <th>
+              Stdout
+            </th>
+            <th>
+              Stderr
+            </th>
+            <th>
+              Output files
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              1
+            </td>
+            <td>
+              2
+            </td>
+            <td>
+              3
+            </td>
+            <td>
+              4
+            </td>
+            <td>
+              5
+            </td>
+            <td>
+              6
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </accordion-group>
+  </accordion>
+</div>
+

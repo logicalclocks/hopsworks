@@ -6,11 +6,12 @@
   <div id="wrapper" class="toggled" ng-controller="HistoryCtrl as historyCtrl">
     <div class="overlay"></div>
 
+    <div ng-controller="ProjectCtrl as projectCtrl">
     <div ng-include="'navProject.html'"></div>
-
+    </div>
     <section>
       <div class="content-wrapper">
-        <h3> Jobs</h3>
+        <h3> History </h3>
 
 
         <!-- Page Content -->
@@ -18,31 +19,77 @@
           <div style="height: 60%">
             <div style="max-height: 95%;overflow-y: auto;">
               <div style="float: left;width: 90%;">
-                <label style="float: left; margin-top: 5px;margin-right:
-                       5px;">jobs per page:</label>
               </div>
               <table class="table table-hover">
                 <thead>
-                <th style="width: 5%">
+                <th ng-click="sort('jodId')" style="width: 15%">
+                  Job ID
+                  <span class="glyphicon sort-icon" ng-show="sortKey == 'jodId'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th style="width: 10%">
+                <th ng-click="sort('jobName')" style="width: 10%">
                   Name
+                  <span class="glyphicon sort-icon" ng-show="sortKey == 'jobName'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                </th>
+                <th ng-click="sort('jobUsername')" style="width: 10%">
+                  Username
+                  <span class="glyphicon sort-icon" ng-show="sortKey == 'jobUsername'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                </th>
+                <th ng-click="sort('jobRunningTime')" style="width: 10%">
+                  Running Time (ms)
+                <span class="glyphicon sort-icon" ng-show="sortKey == 'jobRunningTime'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                </th>
+                <th ng-click="sort('jobSeverity')" style="width: 10%">
+                  Job Type
+                <span class="glyphicon sort-icon" ng-show="sortKey == 'jobSeverity'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                </th>
+                <th ng-click="sort('jobSeverity')" style="width: 10%">
+                  Job Severity
+                <span class="glyphicon sort-icon" ng-show="sortKey == 'jobSeverity'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                </th>
+                <th ng-click="sort('jobScore')" style="width: 10%">
+                  Heuristic scores
+                <span class="glyphicon sort-icon" ng-show="sortKey == 'jobScore'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
                 <th style="width: 10%">
-                  Created on
+                  Actions
                 </th>
-                
                 </thead>
                 <tbody>
-                  <tr>
+                  <tr ng-repeat="job in historyCtrl.jobs">
                     <td>
-                      1
+                        {{job.id}}
                     </td>
                     <td>
-                      2
+                        {{job.name}}
                     </td>
-                      <td>
-                      3
+                    <td>
+                        {{job.username}}
+                    </td>
+                     <td>
+                        {{job.finishTime - job.startTime }}
+                    </td>
+                    <td>
+                        {{job.jobType}}
+                    </td>
+                    <td>
+                        <div class="text-right col-md-4" style="margin-top: 8px">
+                        <span ng-if="job.severity == '0'" class="label label-primary">NONE</span>
+                        <span ng-if="job.severity == '1'" class="label label-success">LOW</span>
+                        <span ng-if="job.severity == '2'" class="label label-info">MODERATE</span>
+                        <span ng-if="job.severity == '3'" class="label label-warning">CRITICAL</span>
+                        <span ng-if="job.severity == '4'" class="label label-danger">SEVERE</span>
+                        </div>
+                    </td>
+                    <td>
+                        {{job.score}}
+                    </td>
+                    <td>
+                        <span class="field-info" tooltip="Job Details" style="padding-top: 5px;padding-left:3px">
+                        <button style=""
+                                ng-click="historyCtrl.showDetails(job);"
+                                class="btn btn-info glyphicon glyphicon-list-alt">
+                        </button>
+                      </span>
                     </td>
                   </tr>
                 </tbody>

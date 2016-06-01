@@ -360,13 +360,6 @@ public class Settings {
   public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
   
-  //Spark History Server Constants
-  public static final String SPARK_EVENT_LOG_DIR_ENABLE = "true";
-  public static final String SPARK_EVENT_LOG_DIR = "";
-  public static final String SPARK_EVENT_LOG_COMPRESS = "true";
-  public static final String SPARK_YARN_HISTORY_SERVER_ADDRESS = "";
-  public static final String SPARK_HISTORY_FS_LOG_DIR = "";
-
   //Flink constants
   public static final String FLINK_DEFAULT_OUTPUT_PATH = "Logs/Flink/";
   public static final String FLINK_LOCRSC_SPARK_JAR = "__flink__.jar";
