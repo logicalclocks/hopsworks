@@ -132,7 +132,6 @@ public abstract class YarnJob extends HopsJob {
     }
   }
 
-  
    @Override
   protected boolean setupJob(){
       //Check if this job is using Kakfa, and include certificate
