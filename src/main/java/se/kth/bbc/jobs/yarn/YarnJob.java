@@ -1,7 +1,11 @@
 package se.kth.bbc.jobs.yarn;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
@@ -18,8 +22,12 @@ import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.project.services.ProjectServiceEnum;
+import se.kth.bbc.project.services.ProjectServices;
+import se.kth.hopsworks.certificates.UserCerts;
 import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -42,6 +50,7 @@ public abstract class YarnJob extends HopsJob {
 
   private JobState finalState = null;
   protected List<LocalResourceDTO> projectLocalResources;
+  protected Map<String,String> jobSystemProperties;
   /**
    *
    * @param job
@@ -123,6 +132,32 @@ public abstract class YarnJob extends HopsJob {
     }
   }
 
+   @Override
+  protected boolean setupJob(){
+      //Check if this job is using Kakfa, and include certificate
+      //in local resources
+      Collection<ProjectServices> projectServices =
+              jobDescription.getProject().getProjectServicesCollection();
+      Iterator<ProjectServices> iter = projectServices.iterator();
+      while(iter.hasNext()){
+          ProjectServices projectService = iter.next();
+          //If the project is of type KAFKA
+          if(projectService.getProjectServicesPK().getService() == ProjectServiceEnum.KAFKA){
+              //Pull the certificate of the client
+              UserCerts userCert = services.getUserCerts().findUserCert(
+                  projectService.getProject().getName(),
+                  projectService.getProject().getOwner().getUsername());
+              //Retrieve certificates from the database
+              if(jobSystemProperties == null){
+                  jobSystemProperties = new HashMap<>();
+              }
+              jobSystemProperties.put(Settings.KAFKA_K_CERTIFICATE, new String(userCert.getUserCert()));
+              jobSystemProperties.put(Settings.KAFKA_T_CERTIFICATE, new String(userCert.getUserKey()));
+          }
+      }
+      return true;
+  }
+  
   /**
    * Monitor the state of the job.
    * <p/>
