@@ -43,11 +43,16 @@ import static org.elasticsearch.index.query.QueryBuilders.hasParentQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
+import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import org.elasticsearch.search.SearchHit;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.util.Ip;
 import se.kth.hopsworks.util.Settings;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
+import se.kth.hopsworks.dataset.Dataset;
+import se.kth.hopsworks.dataset.DatasetFacade;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
 /**
@@ -70,6 +75,12 @@ public class ElasticService {
   @EJB
   private Settings settings;
 
+  @EJB
+  private ProjectFacade projectFacade;
+  
+  @EJB
+  private DatasetFacade datasetFacade;
+  
   /**
    * Searches for content composed of projects and datasets. Hits two elastic
    * indices: 'project' and 'dataset'
@@ -97,9 +108,8 @@ public class ElasticService {
     //some necessary client settings
     Client client = getClient();
 
-    //check if the indices are up and running
-    if (!this.indexExists(client, Settings.META_PROJECT_INDEX) || !this.
-            indexExists(client, Settings.META_DATASET_INDEX)) {
+    //check if the index are up and running
+    if (!this.indexExists(client, Settings.META_INDEX)) {
 
       logger.log(Level.INFO, ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -116,11 +126,10 @@ public class ElasticService {
      * SEARCHABLE BY DEFAULT. NEEDS REFACTORING
      */
     //hit the indices - execute the queries
-    SearchRequestBuilder srb = client.prepareSearch(Settings.META_PROJECT_INDEX,
-            Settings.META_DATASET_INDEX);
-    srb = srb.setTypes(Settings.META_PROJECT_PARENT_TYPE,
-            Settings.META_DATASET_PARENT_TYPE);
-    srb = srb.setQuery(this.matchProjectsDatasetsQuery(searchTerm));
+    SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
+    srb = srb.setTypes(Settings.META_PROJECT_TYPE,
+            Settings.META_DATASET_TYPE);
+    srb = srb.setQuery(this.globalSearchQuery(searchTerm));
     srb = srb.addHighlightedField("name");
     logger.log(Level.INFO, "Global search Elastic query is: {0}", srb.toString());
     ListenableActionFuture<SearchResponse> futureResponse = srb.execute();
@@ -187,21 +196,25 @@ public class ElasticService {
               "Incomplete request!");
     }
     Client client = getClient();
-    //check if the indices are up and running
-    if (!this.indexExists(client, Settings.META_PROJECT_INDEX)) {
+    //check if the index are up and running
+    if (!this.indexExists(client, Settings.META_INDEX)) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
-    } else if (!this.typeExists(client, Settings.META_PROJECT_INDEX,
-            Settings.META_PROJECT_PARENT_TYPE)) {
+    } else if (!this.typeExists(client, Settings.META_INDEX,
+            Settings.META_INODE_TYPE)) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
-    }
+    } 
 
-    SearchRequestBuilder srb = client.prepareSearch(Settings.META_PROJECT_INDEX);
-    srb = srb.setTypes(Settings.META_PROJECT_PARENT_TYPE);
-    srb = srb.setQuery(this.matchChildQuery(projectName,
-            Settings.META_PROJECT_PARENT_TYPE, searchTerm));
+    Project project = projectFacade.findByName(projectName);
+    final int projectId = project.getId();
+    
+    SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
+    srb = srb.setTypes(Settings.META_INODE_TYPE);
+    srb = srb.setQuery(projectSearchQuery(searchTerm));
     srb = srb.addHighlightedField("name");
+    srb = srb.setRouting(String.valueOf(projectId));
+    
     logger.log(Level.INFO, "Project Elastic query is: {0}", srb.toString());
     ListenableActionFuture<SearchResponse> futureResponse = srb.execute();
     SearchResponse response = futureResponse.actionGet();
@@ -258,23 +271,28 @@ public class ElasticService {
 
     Client client = getClient();
     //check if the indices are up and running
-    if (!this.indexExists(client, Settings.META_DATASET_INDEX)) {
+    if (!this.indexExists(client, Settings.META_INDEX)) {
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
-    } else if (!this.typeExists(client, Settings.META_DATASET_INDEX,
-            Settings.META_DATASET_PARENT_TYPE)) {
+    } else if (!this.typeExists(client, Settings.META_INDEX,
+            Settings.META_INODE_TYPE)) {
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
     }
 
+    //FIXME: fix projectID and datasetID
+    final int projectId = -1;
+    final int datasetId = -1;
+    
     //hit the indices - execute the queries
-    SearchRequestBuilder srb = client.prepareSearch(Settings.META_DATASET_INDEX);
-    srb = srb.setTypes(Settings.META_DATASET_PARENT_TYPE);
-    srb = srb.setQuery(this.matchChildQuery(datasetName,
-            Settings.META_DATASET_PARENT_TYPE, searchTerm));
+    SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
+    srb = srb.setTypes(Settings.META_INODE_TYPE);
+    srb = srb.setQuery(this.datasetSearchQuery(datasetId, searchTerm));
     srb = srb.addHighlightedField("name");
+    //srb = srb.setRouting(String.valueOf(projectId));
+    
     logger.log(Level.INFO, "Dataset Elastic query is: {0}", srb.toString());
     ListenableActionFuture<SearchResponse> futureResponse = srb.execute();
     SearchResponse response = futureResponse.actionGet();
@@ -303,74 +321,70 @@ public class ElasticService {
   }
 
   /**
-   * Gathers the query filters applied on projects and datasets. Projects and
-   * datasets are parent documents
+   * Global search on datasets and projects.
    * <p/>
    * @param searchTerm
    * @return
    */
-  private QueryBuilder matchProjectsDatasetsQuery(String searchTerm) {
-
-    //first part is the base condition
-    QueryBuilder firstPart = this.getParentBasePart();
-    QueryBuilder secondPart = this.getDescMetaPart(searchTerm);
-
-    /*
-     * The following boolean query is being applied in the parent documents
-     * (operation && searchable) && (name || description || metadata)
-     */
-
+  private QueryBuilder globalSearchQuery(String searchTerm) {
+    //FIXME: consider metadata search as well
+    QueryBuilder nameDescQuery = getNameDescriptionQuery(searchTerm);
+    
     QueryBuilder query = boolQuery()
-            .must(firstPart)
-            .must(secondPart);
+            .must(nameDescQuery);
 
     return query;
   }
 
-  /**
-   * Creates the base condition every matched document has to satisfy. It has to
-   * be an added document (operation = 0)
-   * and it has to be searchable (searchable = 1)
-   * <p/>
-   * @return
-   */
-  private QueryBuilder getParentBasePart() {
 
-    //build the project base condition queries
-    QueryBuilder operationMatch = matchQuery(
-            Settings.META_INODE_OPERATION_FIELD,
-            Settings.META_INODE_OPERATION_ADD);
-
-    //match searchable
-    QueryBuilder searchableMatch = matchQuery(
-            Settings.META_INODE_SEARCHABLE_FIELD, 1);
-
-    QueryBuilder baseCondition = boolQuery()
-            .must(operationMatch)
-            .must(searchableMatch);
-
-    return baseCondition;
-  }
-
-  /**
-   * Creates the main query condition. Applies filters on the texts describing a
-   * document i.e. on the description and
-   * metadata fields
+   /**
+   * Project specific search.
    * <p/>
    * @param searchTerm
    * @return
    */
-  private QueryBuilder getDescMetaPart(String searchTerm) {
+  private QueryBuilder projectSearchQuery(String searchTerm) {
+    //FIXME: consider metadata search as well
+    QueryBuilder query = getNameDescriptionQuery(searchTerm);
+    
+    return query;
+  }
+  
+    /**
+   * Dataset specific search.
+   * <p/>
+   * @param searchTerm
+   * @return
+   */
+  private QueryBuilder datasetSearchQuery(int datasetId, String searchTerm) {
+    //FIXME: consider metadata search as well
+    QueryBuilder hasParent = hasParentQuery(
+            Settings.META_DATASET_TYPE, matchQuery(Settings.META_ID, datasetId));
+      
+    QueryBuilder query = getNameDescriptionQuery(searchTerm);
+    
+    QueryBuilder cq = boolQuery()
+            .must(hasParent)
+            .must(query);
+    return cq;
+  }
+  
+  
+  /**
+   * Creates the main query condition. Applies filters on the texts describing a
+   * document i.e. on the description
+   * <p/>
+   * @param searchTerm
+   * @return
+   */
+  private QueryBuilder getNameDescriptionQuery(String searchTerm) {
 
-    //apply a prefix filter on the name field
-    QueryBuilder namePart = this.getNameQuery(searchTerm);
-    //apply several text filters on the description and metadata fields
-    QueryBuilder descMetaPart = this.getDescMetaQuery(searchTerm);
-
+    QueryBuilder nameQuery = getNameQuery(searchTerm);
+    QueryBuilder descriptionQuery = getDescriptionQuery(searchTerm);
     QueryBuilder textCondition = boolQuery()
-            .should(namePart)
-            .should(descMetaPart);
-
+            .should(nameQuery)
+            .should(descriptionQuery);
+    
     return textCondition;
   }
 
@@ -389,21 +403,25 @@ public class ElasticService {
     QueryBuilder namePhraseMatch = matchPhraseQuery(Settings.META_NAME_FIELD,
             searchTerm);
 
+    QueryBuilder nameFuzzyQuery = fuzzyQuery(
+            Settings.META_NAME_FIELD, searchTerm);
+     
     QueryBuilder nameQuery = boolQuery()
             .should(namePrefixMatch)
-            .should(namePhraseMatch);
+            .should(namePhraseMatch)
+            .should(nameFuzzyQuery);
 
     return nameQuery;
   }
 
   /**
    * Creates the query that is applied on the text fields of a document. Hits
-   * the description and metadata fields
+   * the description fields
    * <p/>
    * @param searchTerm
    * @return
    */
-  private QueryBuilder getDescMetaQuery(String searchTerm) {
+  private QueryBuilder getDescriptionQuery(String searchTerm) {
 
     //do a prefix query on the description field in case the user starts writing 
     //a full sentence
@@ -419,95 +437,19 @@ public class ElasticService {
             Settings.META_DESCRIPTION_FIELD, searchTerm);
 
     //add a fuzzy search on description field
-    //QueryBuilder descriptionFuzzyQuery = fuzzyQuery(
-    //        Settings.META_DESCRIPTION_FIELD, searchTerm);
-    //do a prefix query on the metadata first in case the user starts typing a 
-    //full sentence
-    QueryBuilder metadataPrefixMatch = prefixQuery(Settings.META_DATA_FIELD,
-            searchTerm);
-
-    //apply phrase filter on user metadata
-    QueryBuilder metadataMatch = termsQuery(
-            Settings.META_DATA_FIELD, searchTerm);
-
-    //add a phrase match query to enable results to popup while typing phrases
-    QueryBuilder metadataPhraseMatch = matchPhraseQuery(
-            Settings.META_DATA_FIELD, searchTerm);
-
-    //add a fuzzy search on metadata field
-    //QueryBuilder metadataFuzzyQuery = fuzzyQuery(Settings.META_DATA_FIELD,
-    //        searchTerm);
-    QueryBuilder datasetsQuery = boolQuery()
+    QueryBuilder descriptionFuzzyQuery = fuzzyQuery(
+            Settings.META_DESCRIPTION_FIELD, searchTerm);
+    
+     QueryBuilder descriptionQuery = boolQuery()
             .should(descriptionPrefixMatch)
             .should(descriptionMatch)
             .should(descriptionPhraseMatch)
-            .should(metadataPrefixMatch)
-            .should(metadataMatch)
-            .should(metadataPhraseMatch);
-
-    return datasetsQuery;
+            .should(descriptionFuzzyQuery);
+     
+     return descriptionQuery;
   }
-
-  /**
-   * Gathers the query filters applied on common files and folders. Common files
-   * and folders are child documents
-   * <p/>
-   * @param searchTerm
-   * @return
-   */
-  private QueryBuilder matchChildQuery(String parentName,
-          String parentType, String searchTerm) {
-
-    //get the base conditions query
-    QueryBuilder childBase = this.getChildBasePart(parentName, parentType);
-    //get the text conditions query
-    QueryBuilder childRest = this.getDescMetaPart(searchTerm);
-
-    /*
-     * The following boolean query is being applied in the child documents
-     * (hasParent && operation && searchable) && (name || description ||
-     * metadata)
-     */
-    QueryBuilder union = boolQuery()
-            .must(childBase)
-            .must(childRest);
-
-//    return union;
-    return childRest;
-  }
-
-  /**
-   * Creates the base condition every matched document has to satisfy. It has to
-   * have a specific parent type
-   * (hasParent), it must be an added document (operation = 0) and it has to be
-   * searchable (searchable = 1)
-   * <p/>
-   * @return
-   */
-  private QueryBuilder getChildBasePart(String parentName, String parentType) {
-
-    //TODO: ADD SEARCHABLE FIELD IN CHILD DOCUMENTS. 1 BY DEFAULT BY THE INDEXING SCRIPTS
-    QueryBuilder hasParentPart = hasParentQuery(
-            parentType,
-            matchQuery(Settings.META_NAME_FIELD, parentName));
-
-    //build the base conditions query for the child documents
-    QueryBuilder operationMatch = matchQuery(
-            Settings.META_INODE_OPERATION_FIELD,
-            Settings.META_INODE_OPERATION_ADD);
-
-    //match searchable
-    QueryBuilder searchableMatch = matchQuery(
-            Settings.META_INODE_SEARCHABLE_FIELD, 1);
-
-    QueryBuilder baseCondition = boolQuery()
-            .must(hasParentPart)
-            .must(operationMatch);
-    //.must(searchableMatch);
-
-    return baseCondition;
-  }
-
+  
+ 
   /**
    * Checks if a given index exists in elastic
    * <p/>
@@ -557,7 +499,7 @@ public class ElasticService {
   private void clientShutdown(Client client) {
 
     client.admin().indices().clearCache(new ClearIndicesCacheRequest(
-            Settings.META_PROJECT_INDEX, Settings.META_DATASET_INDEX));
+            Settings.META_INDEX));
 
     client.close();
   }
@@ -568,7 +510,7 @@ public class ElasticService {
   private void bootIndices(Client client) {
 
     client.admin().indices().open(new OpenIndexRequest(
-            Settings.META_PROJECT_INDEX, Settings.META_DATASET_INDEX));
+            Settings.META_INDEX));
   }
 
   private String getElasticIpAsString() throws AppException {

@@ -510,19 +510,14 @@ public class Settings {
   public static final int MAX_RETRIES = 500;
   public static final String META_NAME_FIELD = "name";
   public static final String META_DESCRIPTION_FIELD = "description";
-  public static final String META_DATA_FIELD = "EXTENDED_METADATA";
-  public static final String META_PROJECT_INDEX = "project";
-  public static final String META_DATASET_INDEX = "dataset";
-  public static final String META_PROJECT_PARENT_TYPE = "site";
-  public static final String META_PROJECT_CHILD_TYPE = "proj";
-  public static final String META_DATASET_PARENT_TYPE = "ds";
-  public static final String META_DATASET_CHILD_TYPE = "inode";
+  public static final String META_INDEX = "projects";
+  public static final String META_PROJECT_TYPE = "proj";
+  public static final String META_DATASET_TYPE = "ds";
+  public static final String META_INODE_TYPE = "inode";
   public static final String META_INODE_SEARCHABLE_FIELD = "searchable";
-  public static final String META_INODE_OPERATION_FIELD = "operation";
-
-  public static final int META_INODE_OPERATION_ADD = 0;
-  public static final int META_INODE_OPERATION_DELETE = 1;
-
+  public static final String META_PROJECT_ID_FIELD = "project_id";
+  public static final String META_ID = "_id";
+  
   //Filename conventions
   public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#";
   public static final String PRINT_FILENAME_DISALLOWED_CHARS
