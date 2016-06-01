@@ -20,6 +20,11 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String args;
   private String historyServerIp;
 
+  //Kafka properties
+  private String sessionId;
+  private String kStore;
+  private String tStore;
+  
   private int numberOfExecutors = 1;
   private int executorCores = 1;
   private int executorMemory = 1024;
@@ -133,6 +138,38 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.executorMemory = executorMemory;
   }
 
+  public String getHistoryServerIp() {
+    return historyServerIp;
+  }
+
+  public void setHistoryServerIp(String historyServerIp) {
+    this.historyServerIp = historyServerIp;
+  }
+
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
+
+    public String getkStore() {
+        return kStore;
+    }
+
+    public void setkStore(String kStore) {
+        this.kStore = kStore;
+    }
+
+    public String gettStore() {
+        return tStore;
+    }
+
+    public void settStore(String tStore) {
+        this.tStore = tStore;
+    } 
+
   @Override
   public JobType getType() {
     return JobType.SPARK;
@@ -197,14 +234,6 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.mainClass = jsonMainclass;
     this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
     this.historyServerIp = hs;
-  }
-
-  public String getHistoryServerIp() {
-    return historyServerIp;
-  }
-
-  public void setHistoryServerIp(String historyServerIp) {
-    this.historyServerIp = historyServerIp;
   }
 
 }

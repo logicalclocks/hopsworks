@@ -522,7 +522,7 @@ public class KafkaFacade {
 
     public List<SchemaDTO> getSchemaForTopic(String topicName) throws AppException {
 
-        List<SchemaDTO> schemaDtos = Collections.EMPTY_LIST;
+        List<SchemaDTO> schemaDtos = new ArrayList<>();
 
         ProjectTopics topic = em.createNamedQuery(
                 "ProjectTopics.findByTopicName", ProjectTopics.class)
