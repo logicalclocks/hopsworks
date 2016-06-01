@@ -217,8 +217,16 @@ public class KafkaFacade {
 
         //if schema is empty, select a default schema
         //persist topic into database
-        ProjectTopics pt = new ProjectTopics(topicName, projectId,
-                topicDto.getSchemaName(), topicDto.getSchemaVersion());
+        SchemaTopics schema = em.find(SchemaTopics.class,
+                new SchemaTopicsPK(topicDto.getSchemaName(),
+                        topicDto.getSchemaVersion()));
+
+        if (schema == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "topic has not schema");
+        }
+        
+        ProjectTopics pt = new ProjectTopics(topicName, projectId, schema);
 
         em.merge(pt);
         em.persist(pt);
@@ -375,9 +383,12 @@ public class KafkaFacade {
         //users for the topic project which will be the acl users.
         TypedQuery<Project> projects = em.createNamedQuery(
                 "Project.findAll", Project.class);
+        Set<String> keySet = projectMembers.keySet();
         for (Project p : projects.getResultList()) {
-                    projectMembers.get(p.getName()).add(p.getOwner().getUsername());
+            if (keySet.contains(p.getName())) {
+                projectMembers.get(p.getName()).add(p.getOwner().getEmail());
             }
+        }
         
         for (Map.Entry<String, List<String>> user : projectMembers.entrySet()) {
             aclUsers.add(new AclUserDTO(user.getKey(), user.getValue()));
@@ -389,7 +400,8 @@ public class KafkaFacade {
     public void addAclsToTopic(String topicName, Integer projectId, AclDTO dto)
             throws AppException {
 
-        addAclsToTopic(topicName, projectId, dto.getProjectName(),
+        addAclsToTopic(topicName, projectId,
+                dto.getProjectName(),
                 dto.getUserEmail(), dto.getPermissionType(), 
                 dto.getOperationType(), dto.getHost(), dto.getRole());
     }
@@ -425,9 +437,9 @@ public class KafkaFacade {
         Users selectedUser = users.get(0);
         String principalName = selectedProjectName+"__"+selectedUser.getUsername();
 
-        TopicAcls ta = new TopicAcls(topicName, projectId, principalName, userEmail,
-                permission_type, operation_type, host, role);
-        em.merge(ta);
+        TopicAcls ta = new TopicAcls(pt, selectedUser, 
+                permission_type, operation_type, host, role, principalName);
+      //  em.merge(ta);
         em.persist(ta);
         em.flush();
     }
@@ -440,7 +452,7 @@ public class KafkaFacade {
                     "aclId not found in database");
         }
 
-        if (!ta.getTopicName().equals(topicName)) {
+        if (!ta.getProjectTopics().getProjectTopicsPK().getTopicName().equals(topicName)) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "aclId does not belong the specified topic");
         }
@@ -463,7 +475,7 @@ public class KafkaFacade {
 
         List<AclDTO> aclDtos = new ArrayList<>();
         for (TopicAcls ta : acls) {
-            aclDtos.add(new AclDTO(ta.getId(), ta.getUserEmail(), ta.getPermissionType(),
+            aclDtos.add(new AclDTO(ta.getId(), ta.getUser().getEmail(), ta.getPermissionType(),
                     ta.getOperationType(), ta.getHost(), ta.getRole()));
 
         }
@@ -498,7 +510,7 @@ public class KafkaFacade {
         ta.setOperationType(aclDto.getOperationType());
         ta.setPermissionType(aclDto.getPermissionType());
         ta.setRole(aclDto.getRole());
-        ta.setUserEmail(aclDto.getUserEmail());
+        ta.setUser(selectedUser);
         ta.setPrincipal(principalName); 
         
         em.persist(ta);
@@ -531,7 +543,8 @@ public class KafkaFacade {
         }
 
         SchemaTopics schema = em.find(SchemaTopics.class,
-                new SchemaTopicsPK(topic.getSchemaName(), topic.getSchemaVersion()));
+                new SchemaTopicsPK(topic.getSchemaTopics().getSchemaTopicsPK().getName(),
+                        topic.getSchemaTopics().getSchemaTopicsPK().getVersion()));
 
         if (schema == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),

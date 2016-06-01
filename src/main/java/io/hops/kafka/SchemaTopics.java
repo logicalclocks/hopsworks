@@ -6,19 +6,24 @@
 package io.hops.kafka;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
@@ -34,6 +39,9 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "SchemaTopics.findByContents", query = "SELECT s FROM SchemaTopics s WHERE s.contents = :contents"),
     @NamedQuery(name = "SchemaTopics.findByCreatedOn", query = "SELECT s FROM SchemaTopics s WHERE s.createdOn = :createdOn")})
 public class SchemaTopics implements Serializable {
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "schemaTopics")
+    private Collection<ProjectTopics> projectTopicsCollection;
 
     private static final long serialVersionUID = 1L;
     @EmbeddedId
@@ -109,6 +117,16 @@ public class SchemaTopics implements Serializable {
     @Override
     public String toString() {
         return "io.hops.kafka.SchemaTopics[ schemaTopicsPK=" + schemaTopicsPK + " ]";
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<ProjectTopics> getProjectTopicsCollection() {
+        return projectTopicsCollection;
+    }
+
+    public void setProjectTopicsCollection(Collection<ProjectTopics> projectTopicsCollection) {
+        this.projectTopicsCollection = projectTopicsCollection;
     }
     
 }

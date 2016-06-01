@@ -8,12 +8,13 @@ angular.module('hopsWorksApp')
             self.topicName = topicName;
             self.permission_type;
             
-            self.username = "admin@kth.se";
+            self.project;
+            self.user_email = "admin@kth.se";
             self.permission_type = "Allow";
             self.operation_type = "Read";
             self.host = "*";
             self.role = "*";
-            self.selectedProjectName="";
+            
             
             self.init = function() {
                 KafkaService.aclUsers(self.projectId, self.topicName).then(
@@ -31,8 +32,9 @@ angular.module('hopsWorksApp')
                 var acl = {};
 //              acl.topic_name = self.topicName;
 //              acl.project_id = self.projectId;
+              acl.projectName = self.project.projectName;
               acl.role = self.role;
-              acl.username = self.username.userName;
+              acl.userEmail = self.userEmail;
               acl.permissionType = self.permission_type;
               acl.operationType = self.operation_type;
               acl.host = self.host;

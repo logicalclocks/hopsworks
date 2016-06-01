@@ -380,14 +380,15 @@ public class KafkaService {
             aclDto = kafkaFacade.getTopicAcls(topicName, projectId);
         } catch (Exception e) {
         }
-        if (aclDto == null) {
-            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    "Topic has not ACLs");
-        }
+//        if (aclDto == null) {
+//            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+//                    "Topic has not ACLs");
+//        }
 
         GenericEntity<List<AclDTO>> aclDtos
                 = new GenericEntity<List<AclDTO>>(aclDto) {
         };
+        
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(aclDtos).build();
     }
 
