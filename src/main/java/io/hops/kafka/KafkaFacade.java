@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import se.kth.bbc.project.*;
 import java.util.List;
 import java.util.Map;
@@ -661,6 +662,16 @@ public class KafkaFacade {
         List<PartitionDetailsDTO> partitionDetailsDto = new ArrayList<>();
         PartitionDetailsDTO pd = new PartitionDetailsDTO();
 
+        //Simple Consumer cannot connect to a secured kafka cluster,
+        //try connnecting only to plaintext endpoints
+        Iterator<String> iter = zkBrokerList.iterator();
+        while (iter.hasNext()) {
+            String seed = iter.next();
+            if (seed.split(":")[0].equalsIgnoreCase("SSL")) {
+                iter.remove();
+            }
+        }
+
         for (String seed : zkBrokerList) {
             kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
             try {
@@ -700,10 +711,11 @@ public class KafkaFacade {
                     }
                 }
             } catch (Exception ex) {
-                throw new Exception("Error communicating to broker: " + seed, ex);
+                throw new Exception("Error communicating to broker: Kafka SimpleConsumer cant connect to secured cluster - " + seed, ex);
             } finally {
                 if (simpleConsumer != null) {
                     simpleConsumer.close();
+                    break;
                 }
             }
         }
