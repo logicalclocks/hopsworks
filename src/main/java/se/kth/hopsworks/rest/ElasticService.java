@@ -282,16 +282,17 @@ public class ElasticService {
               getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
     }
 
-    //FIXME: fix projectID and datasetID
-    final int projectId = -1;
-    final int datasetId = -1;
+    Dataset dataset = datasetFacade.findByName(datasetName);
+    final int projectId = dataset.getProjectId().getId();
+    final int datasetId = dataset.getIdForInode();
     
     //hit the indices - execute the queries
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
     srb = srb.setTypes(Settings.META_INODE_TYPE);
     srb = srb.setQuery(this.datasetSearchQuery(datasetId, searchTerm));
-    srb = srb.addHighlightedField("name");
-    //srb = srb.setRouting(String.valueOf(projectId));
+    //FIXME: https://github.com/elastic/elasticsearch/issues/14999 
+    //srb = srb.addHighlightedField("name");
+    srb = srb.setRouting(String.valueOf(projectId));
     
     logger.log(Level.INFO, "Dataset Elastic query is: {0}", srb.toString());
     ListenableActionFuture<SearchResponse> futureResponse = srb.execute();

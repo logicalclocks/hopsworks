@@ -46,7 +46,10 @@ import se.kth.bbc.project.fb.Inode;
           = "SELECT d FROM Dataset d WHERE d.publicDs = 1"),
   @NamedQuery(name = "Dataset.findByDescription",
           query
-          = "SELECT d FROM Dataset d WHERE d.description = :description")})
+          = "SELECT d FROM Dataset d WHERE d.description = :description"),
+  @NamedQuery(name = "Dataset.findByName",
+          query
+          = "SELECT d FROM Dataset d WHERE d.name = :name")})
 public class Dataset implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -66,6 +69,10 @@ public class Dataset implements Serializable {
   @ManyToOne(optional = false)
   private Inode inode;
   
+  @Basic(optional = false)
+  @Column(name = "inode_name", updatable = false, insertable = false)
+  private String name;  
+    
   @Basic(optional = false)
   @Column(name = "inode_id")
   private int idForInode = 0;  
@@ -108,13 +115,15 @@ public class Dataset implements Serializable {
   public Dataset(Integer id, Inode inode) {
     this.id = id;
     this.inode = inode;
-    this.idForInode = inode.getId();    
+    this.idForInode = inode.getId();
+    this.name = inode.getInodePK().getName();
   }
 
   public Dataset(Inode inode, Project project) {
     this.inode = inode;
     this.projectId = project;
     this.idForInode = inode.getId();
+    this.name = inode.getInodePK().getName();
   }
   
   public Integer getId() {
@@ -180,7 +189,7 @@ public class Dataset implements Serializable {
   public void setPublicDs(boolean publicDs) {
     this.publicDs = publicDs;
   }
-
+    
   public Collection<DatasetRequest> getDatasetRequestCollection() {
     return datasetRequestCollection;
   }
