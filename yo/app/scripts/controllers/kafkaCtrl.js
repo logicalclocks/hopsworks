@@ -13,7 +13,7 @@ angular.module('hopsWorksApp')
             self.projectId = $routeParams.projectID;
             self.topics = [];
 //                    [{"name": "myTopic", 
-//                'acls': [{'id': '4563', 'username': "bbb", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}, {'id': '999', 'username': "hdhd", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}],
+//                'acls': [{'id': '4563', 'userEmail': "bbb", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}, {'id': '999', 'userEmail': "hdhd", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}],
 //                'shares': [{'proj_name': 'shareOne'},{'proj_name': 'shareTwo'}],
 //                'partitionDetails': [{ 'id' : "21212",
 //                                            'leader': "1.2.3.4:8484",
@@ -39,8 +39,9 @@ angular.module('hopsWorksApp')
             self.topicName = "";
             self.numReplicas = "";
             self.numPartitions = "";
-//            self.username = "admin@kth.se";
-            self.username = "";
+//            self.userEmail = "admin@kth.se";
+            self.projectName = "";
+            self.userEmail = "";
             self.permission_type = "Allow";
             self.operation_type = "Read";
             self.host = "*";
@@ -57,7 +58,7 @@ angular.module('hopsWorksApp')
 //                self.activeId = -1;
                 return;
               }
-              self.username = acl.username;
+              self.userEmail = acl.userEmail;
               self.permission_type = acl.permission_type;
               self.operation_type = acl.operation_type;
               self.host = acl.host;
@@ -67,8 +68,9 @@ angular.module('hopsWorksApp')
 
             self.updateAcl = function (topicName, aclId){
               var acl ={};
+              acl.projectName = self.projectName;
               acl.role = self.role;
-              acl.username = self.username;
+              acl.userEmail = self.userEmail;
               acl.permissionType = self.permission_type;
               acl.operationType = self.operation_type;
               acl.host = self.host;
@@ -111,7 +113,7 @@ angular.module('hopsWorksApp')
                               }
                           }
                         }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                    growl.error(error.data.errorMsg, {title: 'Error  dfjdsfjldfj', ttl: 5000});
                });
             };
                 

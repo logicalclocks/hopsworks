@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import se.kth.bbc.project.*;
 import java.util.List;
 import java.util.Map;
@@ -15,15 +16,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.ejb.Remote;
-import javax.ejb.Schedule;
-import javax.ejb.SessionContext;
-import javax.ejb.Singleton;
 import javax.ejb.Stateless;
-import javax.ejb.Timeout;
-import javax.ejb.Timer;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
@@ -41,8 +35,6 @@ import org.apache.zookeeper.ZooKeeper;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkConnection;
-import org.slf4j.LoggerFactory;
-import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
 import se.kth.hopsworks.user.model.Users;
 
 @Stateless
@@ -217,8 +209,16 @@ public class KafkaFacade {
 
         //if schema is empty, select a default schema
         //persist topic into database
-        ProjectTopics pt = new ProjectTopics(topicName, projectId,
-                topicDto.getSchemaName(), topicDto.getSchemaVersion());
+        SchemaTopics schema = em.find(SchemaTopics.class,
+                new SchemaTopicsPK(topicDto.getSchemaName(),
+                        topicDto.getSchemaVersion()));
+
+        if (schema == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "topic has not schema");
+        }
+        
+        ProjectTopics pt = new ProjectTopics(topicName, projectId, schema);
 
         em.merge(pt);
         em.persist(pt);
@@ -375,9 +375,12 @@ public class KafkaFacade {
         //users for the topic project which will be the acl users.
         TypedQuery<Project> projects = em.createNamedQuery(
                 "Project.findAll", Project.class);
+        Set<String> keySet = projectMembers.keySet();
         for (Project p : projects.getResultList()) {
-                    projectMembers.get(p.getName()).add(p.getOwner().getUsername());
+            if (keySet.contains(p.getName())) {
+                projectMembers.get(p.getName()).add(p.getOwner().getEmail());
             }
+        }
         
         for (Map.Entry<String, List<String>> user : projectMembers.entrySet()) {
             aclUsers.add(new AclUserDTO(user.getKey(), user.getValue()));
@@ -389,7 +392,8 @@ public class KafkaFacade {
     public void addAclsToTopic(String topicName, Integer projectId, AclDTO dto)
             throws AppException {
 
-        addAclsToTopic(topicName, projectId, dto.getProjectName(),
+        addAclsToTopic(topicName, projectId,
+                dto.getProjectName(),
                 dto.getUserEmail(), dto.getPermissionType(), 
                 dto.getOperationType(), dto.getHost(), dto.getRole());
     }
@@ -425,9 +429,9 @@ public class KafkaFacade {
         Users selectedUser = users.get(0);
         String principalName = selectedProjectName+"__"+selectedUser.getUsername();
 
-        TopicAcls ta = new TopicAcls(topicName, projectId, principalName, userEmail,
-                permission_type, operation_type, host, role);
-        em.merge(ta);
+        TopicAcls ta = new TopicAcls(pt, selectedUser, 
+                permission_type, operation_type, host, role, principalName);
+      //  em.merge(ta);
         em.persist(ta);
         em.flush();
     }
@@ -440,7 +444,7 @@ public class KafkaFacade {
                     "aclId not found in database");
         }
 
-        if (!ta.getTopicName().equals(topicName)) {
+        if (!ta.getProjectTopics().getProjectTopicsPK().getTopicName().equals(topicName)) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "aclId does not belong the specified topic");
         }
@@ -462,16 +466,17 @@ public class KafkaFacade {
         List<TopicAcls> acls = query.getResultList();
 
         List<AclDTO> aclDtos = new ArrayList<>();
+        String projectName;
         for (TopicAcls ta : acls) {
-            aclDtos.add(new AclDTO(ta.getId(), ta.getUserEmail(), ta.getPermissionType(),
+            projectName = ta.getPrincipal().split("__")[0];
+            aclDtos.add(new AclDTO(ta.getId(),projectName,ta.getUser().getEmail(), ta.getPermissionType(),
                     ta.getOperationType(), ta.getHost(), ta.getRole()));
-
         }
 
         return aclDtos;
     }
 
-    public void updateTopicAcl(Integer projectId, Integer aclId, AclDTO aclDto) throws AppException {
+    public void updateTopicAcl(Integer projectId, String topicName, Integer aclId, AclDTO aclDto) throws AppException {
 
         TopicAcls ta = em.find(TopicAcls.class, aclId);
         if (ta == null) {
@@ -498,8 +503,12 @@ public class KafkaFacade {
         ta.setOperationType(aclDto.getOperationType());
         ta.setPermissionType(aclDto.getPermissionType());
         ta.setRole(aclDto.getRole());
-        ta.setUserEmail(aclDto.getUserEmail());
-        ta.setPrincipal(principalName); 
+        ta.setUser(selectedUser);
+        ta.setPrincipal(principalName);
+        
+        Project pt = em.createNamedQuery("Project.findByName", Project.class)
+                .setParameter("name", aclDto.getProjectName()).getSingleResult();
+        ta.setProjectTopics(new ProjectTopics(new ProjectTopicsPK(topicName, pt.getId())));
         
         em.persist(ta);
         em.flush();
@@ -519,7 +528,7 @@ public class KafkaFacade {
 
     public List<SchemaDTO> getSchemaForTopic(String topicName) throws AppException {
 
-        List<SchemaDTO> schemaDtos = Collections.EMPTY_LIST;
+        List<SchemaDTO> schemaDtos = new ArrayList<>();
 
         ProjectTopics topic = em.createNamedQuery(
                 "ProjectTopics.findByTopicName", ProjectTopics.class)
@@ -531,7 +540,8 @@ public class KafkaFacade {
         }
 
         SchemaTopics schema = em.find(SchemaTopics.class,
-                new SchemaTopicsPK(topic.getSchemaName(), topic.getSchemaVersion()));
+                new SchemaTopicsPK(topic.getSchemaTopics().getSchemaTopicsPK().getName(),
+                        topic.getSchemaTopics().getSchemaTopicsPK().getVersion()));
 
         if (schema == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
@@ -657,6 +667,16 @@ public class KafkaFacade {
         List<PartitionDetailsDTO> partitionDetailsDto = new ArrayList<>();
         PartitionDetailsDTO pd = new PartitionDetailsDTO();
 
+        //Simple Consumer cannot connect to a secured kafka cluster,
+        //try connnecting only to plaintext endpoints
+        Iterator<String> iter = zkBrokerList.iterator();
+        while (iter.hasNext()) {
+            String seed = iter.next();
+            if (seed.split(":")[0].equalsIgnoreCase("SSL")) {
+                iter.remove();
+            }
+        }
+
         for (String seed : zkBrokerList) {
             kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
             try {
@@ -696,10 +716,11 @@ public class KafkaFacade {
                     }
                 }
             } catch (Exception ex) {
-                throw new Exception("Error communicating to broker: " + seed, ex);
+                throw new Exception("Error communicating to broker: Kafka SimpleConsumer cant connect to secured cluster - " + seed, ex);
             } finally {
                 if (simpleConsumer != null) {
                     simpleConsumer.close();
+                    break;
                 }
             }
         }

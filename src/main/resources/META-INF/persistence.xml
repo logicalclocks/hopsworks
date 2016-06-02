@@ -64,11 +64,10 @@
     <class>se.kth.bbc.jobs.quota.YarnProjectsQuota</class>
     <class>se.kth.bbc.jobs.quota.YarnRunningPrice</class>
     <class>se.kth.bbc.jobs.quota.YarnProjectsDailyCost</class>
-    <class>io.hops.kafka.TopicAcls</class>
     <class>io.hops.kafka.ProjectTopics</class>
     <class>io.hops.kafka.SharedTopics</class>
-    <class>io.hops.kafka.Users</class>
     <class>io.hops.kafka.SchemaTopics</class>
+    <class>io.hops.kafka.TopicAcls</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

@@ -11,6 +11,7 @@ angular.module('hopsWorksApp')
             self.max_num_replicas;
             self.topicName_wrong_value = 1;
             self.replication_wrong_value = 1;
+            self.wrong_schema
             self.wrong_values = 1;
             
             self.schemas = [];

@@ -53,7 +53,7 @@ public class AgentService {
       String csr = json.getString("csr");
       try {
         pubAgentCert = PKIUtils.signWithServerCertificate(csr);
-        caPubCert = Files.toString(new File(Settings.CA_DIR + "/certs/intermediate.cert.pem"), Charsets.UTF_8);
+        caPubCert = Files.toString(new File(Settings.CA_DIR + "/certs/ca-chain.cert.pem"), Charsets.UTF_8);
       } catch (IOException | InterruptedException ex) {
         Logger.getLogger(AgentService.class.getName()).log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.toString());

@@ -12,12 +12,16 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -29,12 +33,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name = "TopicAcls.findAll", query = "SELECT t FROM TopicAcls t"),
     @NamedQuery(name = "TopicAcls.findById", query = "SELECT t FROM TopicAcls t WHERE t.id = :id"),
-    @NamedQuery(name = "TopicAcls.findByTopicName", query = "SELECT t FROM TopicAcls t WHERE t.topicName = :topicName"),
-    @NamedQuery(name = "TopicAcls.findByUsername", query = "SELECT t FROM TopicAcls t WHERE t.userEmail = :userEmail"),
+    @NamedQuery(name = "TopicAcls.findByTopicName", query = "SELECT t FROM TopicAcls t WHERE t.projectTopics.projectTopicsPK.topicName = :topicName"),
     @NamedQuery(name = "TopicAcls.findByPermissionType", query = "SELECT t FROM TopicAcls t WHERE t.permissionType = :permissionType"),
     @NamedQuery(name = "TopicAcls.findByOperationType", query = "SELECT t FROM TopicAcls t WHERE t.operationType = :operationType"),
     @NamedQuery(name = "TopicAcls.findByHost", query = "SELECT t FROM TopicAcls t WHERE t.host = :host"),
-    @NamedQuery(name = "TopicAcls.findByRole", query = "SELECT t FROM TopicAcls t WHERE t.role = :role")})
+    @NamedQuery(name = "TopicAcls.findByRole", query = "SELECT t FROM TopicAcls t WHERE t.role = :role"),
+    @NamedQuery(name = "TopicAcls.findByPrincipal", query = "SELECT t FROM TopicAcls t WHERE t.principal = :principal")})
 public class TopicAcls implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -43,27 +47,6 @@ public class TopicAcls implements Serializable {
     @Basic(optional = false)
     @Column(name = "id")
     private Integer id;
-    
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 1000)
-    @Column(name = "topic_name")
-    private String topicName;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 1000)
-    @Column(name = "project_id")
-    private Integer projectId;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 1000)
-    @Column(name = "username")
-    private String userEmail;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Column(name = "principal")
-    private String principal;
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 255)
@@ -84,6 +67,19 @@ public class TopicAcls implements Serializable {
     @Size(min = 1, max = 255)
     @Column(name = "role")
     private String role;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 100)
+    @Column(name = "principal")
+    private String principal;
+    @JoinColumns({
+        @JoinColumn(name = "topic_name", referencedColumnName = "topic_name"),
+        @JoinColumn(name = "project_id", referencedColumnName = "project_id")})
+    @ManyToOne(optional = false)
+    private ProjectTopics projectTopics;
+    @JoinColumn(name = "username", referencedColumnName = "email")
+    @ManyToOne(optional = false)
+    private Users user;
 
     public TopicAcls() {
     }
@@ -92,70 +88,22 @@ public class TopicAcls implements Serializable {
         this.id = id;
     }
 
-    public TopicAcls(String topicName, Integer projectId, String userEmail, 
-            String princpal, String permissionType,  String operationType,
-            String host, String role) {
-        this.topicName = topicName;
-        this.projectId = projectId;
-        this.userEmail = userEmail;
-        this.principal = princpal;
+    public TopicAcls(ProjectTopics pt, Users user, String permissionType, String operationType, String host, String role, String principal) {
+        this.projectTopics = pt;
+        this.user = user;
         this.permissionType = permissionType;
         this.operationType = operationType;
         this.host = host;
         this.role = role;
+        this.principal = principal;
     }
 
-//     public TopicAcls(Integer id, String topicName, Integer projectId,
-//             String userEmail, String permissionType,
-//             String operationType, String host, String role) {
-//        this.id = id;
-//        this.topicName = topicName;
-//        this.projectId = projectId;
-//        this.userEmail = userEmail;
-//        this.permissionType = permissionType;
-//        this.operationType = operationType;
-//        this.host = host;
-//        this.role = role;
-//    }
-     
     public Integer getId() {
         return id;
     }
 
     public void setId(Integer id) {
         this.id = id;
-    }
-
-    public String getTopicName() {
-        return topicName;
-    }
-
-    public void setTopicName(String topicName) {
-        this.topicName = topicName;
-    }
-
-    public Integer getProjectId() {
-        return projectId;
-    }
-
-    public void setProjectId(Integer projectId) {
-        this.projectId = projectId;
-    }
-
-    public String getUserEmail() {
-        return userEmail;
-    }
-
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
-    }
-
-    public String getPrincipal() {
-        return principal;
-    }
-
-    public void setPrincipal(String principal) {
-        this.principal = principal;
     }
 
     public String getPermissionType() {
@@ -190,6 +138,30 @@ public class TopicAcls implements Serializable {
         this.role = role;
     }
 
+    public String getPrincipal() {
+        return principal;
+    }
+
+    public void setPrincipal(String principal) {
+        this.principal = principal;
+    }
+
+    public ProjectTopics getProjectTopics() {
+        return projectTopics;
+    }
+
+    public void setProjectTopics(ProjectTopics projectTopics) {
+        this.projectTopics = projectTopics;
+    }
+
+    public Users getUser() {
+        return user;
+    }
+
+    public void setUser(Users user) {
+        this.user = user;
+    }
+
     @Override
     public int hashCode() {
         int hash = 0;
@@ -212,7 +184,7 @@ public class TopicAcls implements Serializable {
 
     @Override
     public String toString() {
-        return "io.hops.kafka.TopicAcls[ id=" + id + " for topic = "+topicName+"]";
+        return "io.hops.kafka.TopicAcls[ id=" + id + " ]";
     }
     
 }

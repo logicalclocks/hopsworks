@@ -6,7 +6,9 @@
 package io.hops.kafka;
 
 import java.io.Serializable;
+import java.util.Collection;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
@@ -15,10 +17,14 @@ import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.bbc.project.Project;
 
 /**
  *
@@ -33,16 +39,20 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "ProjectTopics.findByProjectId", query = "SELECT p FROM ProjectTopics p WHERE p.projectTopicsPK.projectId = :projectId")})
 public class ProjectTopics implements Serializable {
 
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Column(name = "schema_version")
-    private int schemaVersion;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "schema_name")
-    private String schemaName;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "projectTopics")
+    private Collection<TopicAcls> topicAclsCollection;
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "projectTopics")
+    private Collection<TopicAcls> topicAcls1Collection;
+    @JoinColumns({
+        @JoinColumn(name = "schema_name", referencedColumnName = "name"),
+        @JoinColumn(name = "schema_version", referencedColumnName = "version")})
+    @ManyToOne(optional = false)
+    private SchemaTopics schemaTopics;
+    @JoinColumn(name = "project_id", referencedColumnName = "id", insertable = false, updatable = false)
+    @ManyToOne(optional = false)
+    private Project project;
+    
     private static final long serialVersionUID = 1L;
     @EmbeddedId
     protected ProjectTopicsPK projectTopicsPK;
@@ -54,15 +64,13 @@ public class ProjectTopics implements Serializable {
         this.projectTopicsPK = projectTopicsPK;
     }
 
-    public ProjectTopics(String topicName, int projectId, String schemaName, int schemaVersion) {
+    public ProjectTopics(String topicName, int projectId, SchemaTopics schemaTopics) {
         this.projectTopicsPK = new ProjectTopicsPK(topicName, projectId);
-        this.schemaName = schemaName;
-        this.schemaVersion = schemaVersion;
+        this.schemaTopics =schemaTopics;
     }
 
-    public ProjectTopics( String schemaName, int schemaVersion, ProjectTopicsPK projectTopicsPK) {
-        this.schemaVersion = schemaVersion;
-        this.schemaName = schemaName;
+    public ProjectTopics(SchemaTopics schemaTopics, ProjectTopicsPK projectTopicsPK) {
+        this.schemaTopics =schemaTopics;
         this.projectTopicsPK = projectTopicsPK;
     }
     
@@ -74,21 +82,44 @@ public class ProjectTopics implements Serializable {
         this.projectTopicsPK = projectTopicsPK;
     }
 
-    public String getSchemaName() {
-        return schemaName;
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<TopicAcls> getTopicAcls1Collection() {
+        return topicAcls1Collection;
     }
 
-    public int getSchemaVersion() {
-        return schemaVersion;
+    public void setTopicAcls1Collection(Collection<TopicAcls> topicAcls1Collection) {
+        this.topicAcls1Collection = topicAcls1Collection;
     }
 
-    public void setSchemaName(String schemaName) {
-        this.schemaName = schemaName;
+    public SchemaTopics getSchemaTopics() {
+        return schemaTopics;
     }
 
-    public void setSchemaVersion(int schemaVersion) {
-        this.schemaVersion = schemaVersion;
+    public void setSchemaTopics(SchemaTopics schemaTopics) {
+        this.schemaTopics = schemaTopics;
     }
+
+    public Project getProject() {
+        return project;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<TopicAcls> getTopicAclsCollection() {
+        return topicAclsCollection;
+    }
+
+    public void setTopicAclsCollection(Collection<TopicAcls> topicAclsCollection) {
+        this.topicAclsCollection = topicAclsCollection;
+    }
+    
+    
 
     @Override
     public int hashCode() {

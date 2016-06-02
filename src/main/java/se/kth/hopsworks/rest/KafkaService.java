@@ -380,14 +380,15 @@ public class KafkaService {
             aclDto = kafkaFacade.getTopicAcls(topicName, projectId);
         } catch (Exception e) {
         }
-        if (aclDto == null) {
-            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    "Topic has not ACLs");
-        }
+//        if (aclDto == null) {
+//            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+//                    "Topic has not ACLs");
+//        }
 
         GenericEntity<List<AclDTO>> aclDtos
                 = new GenericEntity<List<AclDTO>>(aclDto) {
         };
+        
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(aclDtos).build();
     }
 
@@ -406,7 +407,7 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        kafkaFacade.updateTopicAcl(projectId, Integer.parseInt(aclId), aclDto);
+        kafkaFacade.updateTopicAcl(projectId, topicName, Integer.parseInt(aclId), aclDto);
 
         json.setSuccessMessage("TopicAcl updated successfuly");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();

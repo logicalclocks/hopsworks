@@ -32,6 +32,17 @@ public class AclDTO implements Serializable {
         this.role = role;
     }
 
+    public AclDTO(Integer id, String projectName, String userEmail,
+            String permissionType, String operationType, String host, String role) {
+        this.id = id;
+        this.projectName = projectName;
+        this.userEmail = userEmail;
+        this.permissionType = permissionType;
+        this.operationType = operationType;
+        this.host = host;
+        this.role = role;
+    }
+
     public Integer getId() {
         return id;
     }
@@ -44,7 +55,7 @@ public class AclDTO implements Serializable {
         return projectName;
     }
 
-    public void setProjectId(String projectName) {
+    public void setProjectName(String projectName) {
         this.projectName = projectName;
     }
 

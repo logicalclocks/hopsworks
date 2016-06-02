@@ -80,29 +80,7 @@
 
             </div>-->
             
-            <div class="row" style="padding-left: 30px">
-                <label class="control-label">Principal name</label><br>
-              <ui-select style="min-width: 200px;" name="project_name" theme="select2" style="margin-left: 10px"
-                 ng-model="createAclCtrl.username" style="min-width: 500px;" required>
-
-              <ui-select-match placeholder="Select a user: ">{{$select.selected.userName}}</ui-select-match>
-
-              <ui-select-choices repeat=" item in createAclCtrl.users | filter: $select.search">
-                <div ng-bind-html="item.userName | highlight: $select.search"></div>
-<!--                <small>
-                  User: {{item.user.userName}}
-                </small>-->
-              </ui-select-choices>
-
-              </ui-select><br>
-<!--              <span ng-show="(pickUserForm.$submitted || pickUserForm.project_name.$dirty) & amp;
-               & amp;
-               pickProjectForm.project_name.$error.required"
-            class="text-danger ng-hide">
-        Choose a user.
-      </span>-->
-    </div>
-
+         
             <div class="col-md-12">
                 <label class="control-label">Permission Type</label><br>
                         <select name="permission_type" ng-model="createAclCtrl.permission_type">
@@ -120,11 +98,6 @@
                         </select>
             </div>
             
-              <div class="col-md-12">
-                <label class="control-label">Host</label><br>
-                    <input type="text" class="form-control" id="aclHost" ng-model="createAclCtrl.host" placeholder="Hostname (or * or subnet)">
-            </div>
-            
             <div class="col-md-12">
                 <label class="control-label">Role</label><br>
                         <select name="role_type" ng-model="createAclCtrl.role">
@@ -132,6 +105,38 @@
                           <option value="Data Owner">Data owner</option>
                           <option value="*">*</option>
                         </select>
+            </div>
+            <div class="col-md-12">
+                <label class="control-label">Host</label><br>
+                    <input type="text" class="form-control" id="aclHost" ng-model="createAclCtrl.host" placeholder="Hostname (or * or subnet)">
+            </div>
+            <div class="row" style="padding-left: 15px">
+                <div class="col-sm-6">
+                     <label class="control-label">Project name</label><br>
+                   <ui-select style="min-width: 400px;" name="project_name" theme="select2"
+                              ng-model="createAclCtrl.project"  required>
+
+                    <ui-select-match placeholder="Select a schema for this topic">{{$select.selected.projectName}}</ui-select-match>
+
+                    <ui-select-choices repeat="item in createAclCtrl.users | filter: $select.search">
+                    <div ng-bind-html="item.projectName | highlight: $select.search"></div>
+                    </ui-select-choices>
+
+                </ui-select><br>
+                </div><br>
+            <div class="col-sm-6">
+                <label class="control-label">Member email</label><br>
+                   <ui-select style="min-width: 200px;" name="project_member" theme="select2"
+                      ng-model="createAclCtrl.userEmail"  required>
+
+                    <ui-select-match placeholder="Select a version">{{$select.selected}}</ui-select-match>
+
+                    <ui-select-choices repeat="item in createAclCtrl.project.userEmails | filter: $select.search">
+                    <div ng-bind-html="item | highlight: $select.search"></div>
+                    </ui-select-choices>
+
+                </ui-select><br>
+              </div>
             </div>
             <br>
         </div>
