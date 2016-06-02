@@ -1,0 +1,53 @@
+
+<div class="modal-header">
+  <button class="close" ng-click="selectProjectCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Select a Project</h2>
+</div>
+<div growl reference="21" class="pull-right"></div>
+<div class="modal-body">
+
+
+  <form role="form" name="pickProjectForm" 
+        ng-submit="selectProjectCtrl.selectProject()" novalidate
+        class="form-validate">                                                                                                                              
+    <div class="view-info">
+      <div class="col-md-12">
+        <label class="control-label">{{selectProjectCtrl.msg}}</label><br>
+      </div>
+      <br>
+    </div>
+    <div class="row"></div>
+    <hr />
+    <div class="row" style="padding-left: 30px">
+      <label class="control-label">Projects</label>
+      <ui-select name="project_name" theme="select2" style="margin-left: 10px"
+                 ng-model="selectProjectCtrl.selectedProjectName" style="min-width: 500px;" required>
+
+        <ui-select-match placeholder="Select a project: ">{{$select.selected.project.name}}</ui-select-match>
+
+        <ui-select-choices repeat="item.project.name as item in selectProjectCtrl.projects | filter: $select.search">
+          <div ng-bind-html="item.project.name | highlight: $select.search"></div>
+          <small>
+            Owner: {{item.project.owner.fname}} {{item.project.owner.lname}}
+          </small>
+        </ui-select-choices>
+
+      </ui-select><br>
+      <span ng-show="(pickProjectForm.$submitted || pickProjectForm.project_name.$dirty) & amp;
+          & amp;
+          pickProjectForm.project_name.$error.required"
+            class="text-danger ng-hide">
+        Choose a project.
+      </span>
+    </div>
+    <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
+
+      <button class="btn btn-default" type="button" ng-click="selectProjectCtrl.close()">Cancel</button>
+      <button class="btn btn-primary" type="submit" ng-disabled="pickProjectForm.project_name.$error.required">
+        Select
+      </button>
+
+    </div>
+  </form>
+</div>

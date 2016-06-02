@@ -1,0 +1,154 @@
+
+<div class="modal-header">
+    <button class="close" ng-click="createAclCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;</button>
+    <h2 class="modal-title">Enter ACL Details</h2>
+</div>
+<div growl reference="21" class="pull-right"></div>
+<div class="modal-body">
+
+
+    <form role="form" name="pickUserForm" 
+          ng-submit="createAclCtrl.createTopicAcl()" novalidate
+          class="form-validate">                                                                                                                              
+        <div class="view-info">
+            
+            <div class="col-md-12">
+                <label class="control-label">Topic name</label><br>
+                <span>{{createAclCtrl.topicName}}</span>
+            </div>
+            
+<!--            <div class="col-md-12">
+                <label class="control-label">Username</label><br>
+                    <input type="text" class="form-control" id="aclUsername" ng-model="createAclCtrl.username" placeholder="Username">
+
+                    
+
+        <ui-select ng-model="createAclCtrl.username"
+                   theme="select2"
+                   style="min-width: 300px;">
+
+          <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
+          <ui-select-choices
+            repeat="card in memberCtrl.cards">
+
+            <div ng-bind-html="memberCtrl.card.email | highlight: $select.search"></div>
+            <small>
+              <i class="fa fa-user-plus"></i>
+              <span style="font-size: 14px;;"
+                    ng-bind-html="''+card.email | highlight: $select.search">
+              </span>
+              <br/>
+              <span ng-bind-html="''+card.firstname | highlight: $select.search"></span>
+              <span ng-bind-html="''+card.lastname | highlight: $select.search"></span>
+            </small>
+          </ui-select-choices>
+        </ui-select>
+
+              <tr ng-repeat="newMember in memberCtrl.newMembers.projectTeam">
+
+                <td>
+                  <div class="media">
+                    <div class="media-body" style="padding-top:8px;">
+                      <h4 class="media-heading" style="margin-bottom:0px;">
+                        <b>{{newMember.projectTeamPK.teamMember}}</b>
+                      </h4>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <select name="role"
+                          ng-model="newMember.teamRole"
+                          class="form-control">
+                    <option ng-repeat="role in memberCtrl.roles"
+                            value="{{role}}">
+                      {{role}}
+                    </option>
+                  </select>
+                </td>
+                <td>
+                  <button type="button"
+                          style="width:32px; height: 32px; border-radius: 16px;"
+                          ng-click="memberCtrl.removeMember(newMember.projectTeamPK.teamMember)"
+                          class="btn btn-danger pull-right">
+                    <em class="fa fa-trash"></em>
+                  </button>
+                </td>
+
+              </tr>
+
+
+            </div>-->
+            
+         
+            <div class="col-md-12">
+                <label class="control-label">Permission Type</label><br>
+                        <select name="permission_type" ng-model="createAclCtrl.permission_type">
+                          <option value="allow">Allow</option>
+                          <option value="deny">Deny</option>
+                        </select>
+            </div>
+            <div class="col-md-12">
+                <label class="control-label">Operation Type</label><br>
+                        <select name="operation_type" ng-model="createAclCtrl.operation_type">
+                          <option value="read">read</option>
+                          <option value="write">write</option>
+                          <option value="details">details</option>
+                          <option value="*">*</option>
+                        </select>
+            </div>
+            
+            <div class="col-md-12">
+                <label class="control-label">Role</label><br>
+                        <select name="role_type" ng-model="createAclCtrl.role">
+                          <option value="Data Scientist">Data scientist</option>
+                          <option value="Data Owner">Data owner</option>
+                          <option value="*">*</option>
+                        </select>
+            </div>
+            <div class="col-md-12">
+                <label class="control-label">Host</label><br>
+                    <input type="text" class="form-control" id="aclHost" ng-model="createAclCtrl.host" placeholder="Hostname (or * or subnet)">
+            </div>
+            <div class="row" style="padding-left: 15px">
+                <div class="col-sm-6">
+                     <label class="control-label">Project name</label><br>
+                   <ui-select style="min-width: 400px;" name="project_name" theme="select2"
+                              ng-model="createAclCtrl.project"  required>
+
+                    <ui-select-match placeholder="Select a schema for this topic">{{$select.selected.projectName}}</ui-select-match>
+
+                    <ui-select-choices repeat="item in createAclCtrl.users | filter: $select.search">
+                    <div ng-bind-html="item.projectName | highlight: $select.search"></div>
+                    </ui-select-choices>
+
+                </ui-select><br>
+                </div><br>
+            <div class="col-sm-6">
+                <label class="control-label">Member email</label><br>
+                   <ui-select style="min-width: 200px;" name="project_member" theme="select2"
+                      ng-model="createAclCtrl.userEmail"  required>
+
+                    <ui-select-match placeholder="Select a version">{{$select.selected}}</ui-select-match>
+
+                    <ui-select-choices repeat="item in createAclCtrl.project.userEmails | filter: $select.search">
+                    <div ng-bind-html="item | highlight: $select.search"></div>
+                    </ui-select-choices>
+
+                </ui-select><br>
+              </div>
+            </div>
+            <br>
+        </div>
+        <div class="row"></div>
+        <hr />
+        <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
+
+            <button class="btn btn-default" type="button" ng-click="createAclCtrl.close()">Cancel</button>
+            <button class="btn btn-primary" type="submit">
+                Create
+            </button>
+
+        </div>
+    </form>
+</div>

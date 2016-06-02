@@ -12,6 +12,7 @@ import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 
 import java.io.IOException;
+import se.kth.hopsworks.certificates.UserCertsFacade;
 
 /**
  * Utility class for executing a HopsJob asynchronously. Passing the Hopsjob to
@@ -33,6 +34,8 @@ public class AsynchronousJobExecutor {
   private FileOperations fileOperations;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private UserCertsFacade userCerts;
 
   @Asynchronous
   public void startExecution(HopsJob job) {
@@ -63,4 +66,9 @@ public class AsynchronousJobExecutor {
           IOException {
     return dfs.getDfsOps(hdfsUser);
   }
+
+  public UserCertsFacade getUserCerts() {
+    return userCerts;
+  }
+  
 }
