@@ -466,16 +466,17 @@ public class KafkaFacade {
         List<TopicAcls> acls = query.getResultList();
 
         List<AclDTO> aclDtos = new ArrayList<>();
+        String projectName;
         for (TopicAcls ta : acls) {
-            aclDtos.add(new AclDTO(ta.getId(), ta.getUser().getEmail(), ta.getPermissionType(),
+            projectName = ta.getPrincipal().split("__")[0];
+            aclDtos.add(new AclDTO(ta.getId(),projectName,ta.getUser().getEmail(), ta.getPermissionType(),
                     ta.getOperationType(), ta.getHost(), ta.getRole()));
-
         }
 
         return aclDtos;
     }
 
-    public void updateTopicAcl(Integer projectId, Integer aclId, AclDTO aclDto) throws AppException {
+    public void updateTopicAcl(Integer projectId, String topicName, Integer aclId, AclDTO aclDto) throws AppException {
 
         TopicAcls ta = em.find(TopicAcls.class, aclId);
         if (ta == null) {
@@ -503,7 +504,11 @@ public class KafkaFacade {
         ta.setPermissionType(aclDto.getPermissionType());
         ta.setRole(aclDto.getRole());
         ta.setUser(selectedUser);
-        ta.setPrincipal(principalName); 
+        ta.setPrincipal(principalName);
+        
+        Project pt = em.createNamedQuery("Project.findByName", Project.class)
+                .setParameter("name", aclDto.getProjectName()).getSingleResult();
+        ta.setProjectTopics(new ProjectTopics(new ProjectTopicsPK(topicName, pt.getId())));
         
         em.persist(ta);
         em.flush();

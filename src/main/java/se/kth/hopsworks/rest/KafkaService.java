@@ -407,7 +407,7 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        kafkaFacade.updateTopicAcl(projectId, Integer.parseInt(aclId), aclDto);
+        kafkaFacade.updateTopicAcl(projectId, topicName, Integer.parseInt(aclId), aclDto);
 
         json.setSuccessMessage("TopicAcl updated successfuly");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
