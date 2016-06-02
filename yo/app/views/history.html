@@ -11,8 +11,6 @@
     </div>
     <section>
       <div class="content-wrapper">
-        <h3> History </h3>
-
 
         <!-- Page Content -->
         <div style="min-width: 1420px">
@@ -20,42 +18,84 @@
             <div style="max-height: 95%;overflow-y: auto;">
               <div style="float: left;width: 90%;">
               </div>
+                <div style="float: left;width: 90%;">
+                <div>
+                <input style="float: left;width: 60%;margin: 0px 10px;"
+                       type="text"
+                       ng-model="historyCtrl.searchFilter"
+                       placeholder="Search Field" class="form-control" autofocus/>
+                </div>
+                <div class="input-group-btn search-panel pull-left" style="width: 150px;">
+                    <button type="button" style="width: 100%;"
+                            class="btn btn-default dropdown-toggle"
+                            data-toggle="dropdown" id="filterByButton">
+                            <span id="search_concept">{{name}}</span>
+                            <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li ng-repeat="choice in searchChoices">                            
+                            <a ng-click="historyCtrl.selectFirstForm(choice.name, choice.searchName);">{{choice.name}}</a>        
+                        </li>               
+                    </ul>
+                </div>
+                    <div class="input-group-btn search-panel pull-left" style="width: 150px; margin-left: 10px" ng-show="fisrtFormSelected">
+                    <li ng-repeat="choice in searchChoices" ng-if="choice.searchName == searchName">                                     
+                    <button type="button" style="width: 100%;"
+                            class="btn btn-default dropdown-toggle"
+                            data-toggle="dropdown" id="filterByType">
+                            <span id="search_concept">{{valueType}}</span>
+                            <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li ng-repeat="(key, value) in choice.values">                            
+                            <a ng-click="historyCtrl.selectSecondForm(value.type, value.id);">{{value.type}}</a>        
+                        </li> 
+                    </ul>
+                    </li>
+                </div>   
+                <div>
+                    <div class="btn-group" style="float: left;width: 10%; margin-bottom: 0px;margin-left: 10px" id="buttonSearch" ng-show="secondFormSelected">
+                        <button style="width: 100%;" ng-click="historyCtrl.search()" class="btn btn-success glyphicon glyphicon-search">  Search  </button>
+                    </div>
+                </div>
+                </div>
+                <div style="height: 12%"></div>
               <table class="table table-hover">
                 <thead>
-                <th ng-click="sort('jodId')" style="width: 15%">
+                <th ng-click="sort('id')" style="width: 15%">
                   Job ID
-                  <span class="glyphicon sort-icon" ng-show="sortKey == 'jodId'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                  <span class="glyphicon sort-icon" ng-show="sortType == 'id'" ng-class="{'glyphicon-chevron-up':sortReverse,'glyphicon-chevron-down':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('jobName')" style="width: 10%">
+                <th ng-click="sort('name')" style="width: 10%">
                   Name
-                  <span class="glyphicon sort-icon" ng-show="sortKey == 'jobName'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                  <span class="glyphicon sort-icon" ng-show="sortType == 'name'" ng-class="{'glyphicon-chevron-up':sortReverse,'glyphicon-chevron-down':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('jobUsername')" style="width: 10%">
+                <th ng-click="sort('username')" style="width: 10%">
                   Username
-                  <span class="glyphicon sort-icon" ng-show="sortKey == 'jobUsername'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                  <span class="glyphicon sort-icon" ng-show="sortType == 'username'" ng-class="{'glyphicon-chevron-up':sortReverse,'glyphicon-chevron-down':!sortReverse}"></span>
                 </th>
                 <th ng-click="sort('jobRunningTime')" style="width: 10%">
                   Running Time (ms)
-                <span class="glyphicon sort-icon" ng-show="sortKey == 'jobRunningTime'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                <span class="glyphicon sort-icon" ng-show="sortType == 'jobRunningTime'" ng-class="{'glyphicon-chevron-up':sortReverse,'glyphicon-chevron-down':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('jobSeverity')" style="width: 10%">
+                <th ng-click="sort('jobType')" style="width: 10%">
                   Job Type
-                <span class="glyphicon sort-icon" ng-show="sortKey == 'jobSeverity'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                <span class="glyphicon sort-icon" ng-show="sortType == 'jobType'" ng-class="{'glyphicon-chevron-up':sortReverse,'glyphicon-chevron-down':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('jobSeverity')" style="width: 10%">
+                <th ng-click="sort('severity')" style="width: 10%">
                   Job Severity
-                <span class="glyphicon sort-icon" ng-show="sortKey == 'jobSeverity'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                <span class="glyphicon sort-icon" ng-show="sortType == 'severity'" ng-class="{'glyphicon-chevron-up':sortReverse,'glyphicon-chevron-down':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('jobScore')" style="width: 10%">
+                <th ng-click="sort('score')" style="width: 10%">
                   Heuristic scores
-                <span class="glyphicon sort-icon" ng-show="sortKey == 'jobScore'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+                <span class="glyphicon sort-icon" ng-show="sortType == 'score'" ng-class="{'glyphicon-chevron-up':sortReverse,'glyphicon-chevron-down':!sortReverse}"></span>
                 </th>
                 <th style="width: 10%">
                   Actions
                 </th>
                 </thead>
                 <tbody>
-                  <tr ng-repeat="job in historyCtrl.jobs">
+                  <tr ng-repeat="job in historyCtrl.jobs | orderBy:sortType:sortReverse | filter:historyCtrl.searchFilter">
                     <td>
                         {{job.id}}
                     </td>
@@ -97,6 +137,7 @@
             </div>
           </div>
 
+        </div>
         </div>
 
     </section>

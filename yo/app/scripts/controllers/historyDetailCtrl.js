@@ -23,7 +23,7 @@ angular.module('hopsWorksApp')
                 function (success) {
                     var str = success.data.data;
                     self.details= JSON.parse(str);
-                    console.log("Job ID: " + job.id);
+                    console.log(self.details);
                 });
             };
 

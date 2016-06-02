@@ -12,25 +12,25 @@
       <!-- Cuneiform configuration -->
         <div>
           <div class="row">
-            <div class="text-right col-md-4">Application Id <i class="fa fa-info-circle" style="margin-left: 10px"></i></div>
+            <div class="text-right col-md-4">Application Id</div>
             <div  class="col-md-8">
               {{historyDetailCtrl.details.id}}
             </div>
           </div>
           <div class="row">
-            <div class="text-right col-md-4">Application name <i class="fa fa-info-circle" style="margin-left: 10px"></i></div>
+            <div class="text-right col-md-4">Application name</div>
             <div class="col-md-8">
               {{historyDetailCtrl.details.name}}
             </div>
           </div>
           <div class="row">
-            <div class="text-right col-md-4">Queue name <i class="fa fa-info-circle" style="margin-left: 10px"></i></div>
+            <div class="text-right col-md-4">Queue name</div>
             <div class="col-md-8">
               {{historyDetailCtrl.details.queueName}}
             </div>
           </div>
           <div class="row">
-            <div class="text-right col-md-4">Application Severity <i class="fa fa-info-circle" style="margin-left: 10px"></i></div>
+            <div class="text-right col-md-4">Application Severity</div>
             <div class="col-md-8">
             <span
                 ng-if="historyDetailCtrl.details.severity == 'NONE'"
@@ -50,22 +50,22 @@
       <table class="table chrome-table">
         <thead>
           <tr>
-            <th style="width: 10%">
+            <th style="width: 25%">
               Heuristic Name
             </th>
-            <th>
+            <th style="width: 10%">
               Severity
             </th>
-            <th>
+            <th style="width: 10%">
               Score
             </th>
-            <th>
+            <th style="width: 20%">
               Name
             </th>
-            <th>
+            <th style="width: 25%">
               Value
             </th>
-            <th>
+            <th style="width: 10%">
               Details
             </th>
           </tr>
@@ -84,55 +84,6 @@
             <td ng-repeat="(key, value) in heuristic.yarnAppHeuristicResultDetails">{{value.name}}</td>
             <td ng-repeat="(key, value) in heuristic.yarnAppHeuristicResultDetails">{{value.value}}</td>
             <td ng-repeat="(key, value) in heuristic.yarnAppHeuristicResultDetails">{{value.details}}</td>
-          </tr>
-        </tbody>
-      </table>
-    </accordion-group>
-      
-    <accordion-group heading="Details">
-      <table class="table chrome-table">
-        <thead>
-          <tr>
-            <th>
-              Submission time
-            </th>
-            <th>
-              Current state
-            </th>
-            <th>
-              Execution duration (ms)
-            </th>
-            <th>
-              Stdout
-            </th>
-            <th>
-              Stderr
-            </th>
-            <th>
-              Output files
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>
-              1
-            </td>
-            <td>
-              2
-            </td>
-            <td>
-              3
-            </td>
-            <td>
-              4
-            </td>
-            <td>
-              5
-            </td>
-            <td>
-              6
-            </td>
           </tr>
         </tbody>
       </table>
