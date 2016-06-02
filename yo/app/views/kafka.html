@@ -15,14 +15,14 @@
             <div class="form-group"  style="margin-left: 15px;">
               <div class="row"/>
               <div class="row">
-                <div class="col-sm-1">
+                <div class="col-sm-2">
                   <button type="button" ng-disabled="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0" 
                           ng-click="kafkaCtrl.createTopic()" class="btn btn-default btn-success control-label">
                     New Topic<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
                     </i> 
                   </button>
                 </div>
-                <div class="col-sm-6">
+                <div class="col-sm-2">
                   <button type="button"  
                           ng-click="kafkaCtrl.createSchema()" class="btn btn-default btn-success control-label">
                     New Schema<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
