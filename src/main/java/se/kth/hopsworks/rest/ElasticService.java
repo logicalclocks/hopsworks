@@ -38,6 +38,7 @@ import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.QueryBuilder;
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.hasParentQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
@@ -53,6 +54,8 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
 /**
@@ -329,7 +332,7 @@ public class ElasticService {
    */
   private QueryBuilder globalSearchQuery(String searchTerm) {
     //FIXME: consider metadata search as well
-    QueryBuilder nameDescQuery = getNameDescriptionQuery(searchTerm);
+    QueryBuilder nameDescQuery = getNameDescriptionMetadataQuery(searchTerm);
     
     QueryBuilder query = boolQuery()
             .must(nameDescQuery);
@@ -346,7 +349,7 @@ public class ElasticService {
    */
   private QueryBuilder projectSearchQuery(String searchTerm) {
     //FIXME: consider metadata search as well
-    QueryBuilder query = getNameDescriptionQuery(searchTerm);
+    QueryBuilder query = getNameDescriptionMetadataQuery(searchTerm);
     
     return query;
   }
@@ -362,7 +365,7 @@ public class ElasticService {
     QueryBuilder hasParent = hasParentQuery(
             Settings.META_DATASET_TYPE, matchQuery(Settings.META_ID, datasetId));
       
-    QueryBuilder query = getNameDescriptionQuery(searchTerm);
+    QueryBuilder query = getNameDescriptionMetadataQuery(searchTerm);
     
     QueryBuilder cq = boolQuery()
             .must(hasParent)
@@ -378,13 +381,16 @@ public class ElasticService {
    * @param searchTerm
    * @return
    */
-  private QueryBuilder getNameDescriptionQuery(String searchTerm) {
+  private QueryBuilder getNameDescriptionMetadataQuery(String searchTerm) {
 
     QueryBuilder nameQuery = getNameQuery(searchTerm);
     QueryBuilder descriptionQuery = getDescriptionQuery(searchTerm);
+    QueryBuilder metadataQuery = getMetadataQuery(searchTerm);
+    
     QueryBuilder textCondition = boolQuery()
             .should(nameQuery)
-            .should(descriptionQuery);
+            .should(descriptionQuery)
+            .should(metadataQuery);
     
     return textCondition;
   }
@@ -450,7 +456,22 @@ public class ElasticService {
      return descriptionQuery;
   }
   
- 
+ /**
+   * Creates the query that is applied on the text fields of a document. Hits
+   * the xattr fields
+   * <p/>
+   * @param searchTerm
+   * @return
+   */
+  private QueryBuilder getMetadataQuery(String searchTerm) {
+
+    QueryBuilder metadataQuery = queryStringQuery(searchTerm)
+            .lenient(Boolean.TRUE)
+            .field(Settings.META_DATA_FIELDS);
+      
+     return metadataQuery;
+  }
+  
   /**
    * Checks if a given index exists in elastic
    * <p/>

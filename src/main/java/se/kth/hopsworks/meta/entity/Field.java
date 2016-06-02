@@ -108,12 +108,12 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
   @Basic(optional = false)
   @NotNull
   @Column(name = "searchable")
-  private short searchable;
+  private boolean searchable;
 
   @Basic(optional = false)
   @NotNull
   @Column(name = "required")
-  private short required;
+  private boolean required;
 
   @Basic(optional = false)
   @NotNull
@@ -134,7 +134,7 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
   }
 
   public Field(Integer id, int tableid, String name, String type, int maxsize,
-          short searchable, short required, String description, int fieldtypeid,
+          boolean searchable, boolean required, String description, int fieldtypeid,
           int position) {
     this.id = id;
     this.tableid = tableid;
@@ -159,8 +159,8 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
     this.name = f.getName();
     this.type = f.getType();
     this.maxsize = f.getMaxsize();
-    this.searchable = f.getSearchable() ? (short) 1 : (short) 0;
-    this.required = f.getRequired() ? (short) 1 : (short) 0;
+    this.searchable = f.getSearchable();
+    this.required = f.getRequired();
     this.raw = f.getRawData();
     this.description = f.getDescription();
     this.fieldtypeid = f.getFieldTypeId();
@@ -300,10 +300,10 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
   }
 
   public boolean getSearchable() {
-    return searchable == 1;
+    return searchable;
   }
 
-  public void setSearchable(short searchable) {
+  public void setSearchable(boolean searchable) {
     this.searchable = searchable;
   }
 
@@ -316,10 +316,10 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
   }
 
   public boolean getRequired() {
-    return required == 1;
+    return required;
   }
 
-  public void setRequired(short required) {
+  public void setRequired(boolean required) {
     this.required = required;
   }
 

@@ -45,7 +45,7 @@ public class Metadata implements EntityIntf, Serializable {
   @NotNull
   @Lob
   @Size(min = 1,
-          max = 65535)
+          max = 12000)
   @Column(name = "data")
   private String data;
 

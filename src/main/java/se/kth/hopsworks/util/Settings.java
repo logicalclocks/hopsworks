@@ -517,6 +517,7 @@ public class Settings {
   public static final String META_INODE_SEARCHABLE_FIELD = "searchable";
   public static final String META_PROJECT_ID_FIELD = "project_id";
   public static final String META_ID = "_id";
+  public static final String META_DATA_FIELDS = "xattr.*";
   
   //Filename conventions
   public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#";
