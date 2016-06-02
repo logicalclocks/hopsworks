@@ -180,6 +180,8 @@ public class Settings {
   public static final String SPARK_VERSION = "1.6.1";
   public static final String HOPS_VERSION = "2.4.0";
 
+  public static final String SPARK_HISTORY_SERVER_ENV = "spark.yarn.historyServer.address";
+  
   public synchronized String getSparkDir() {
     checkCache();
     return SPARK_DIR;
@@ -618,7 +620,13 @@ public class Settings {
 
   public static final String KAFKA_K_CERTIFICATE = "kafka_k_certificate";
   public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
-
+  
+  public static final String KAFKA_SESSIONID_ENV_VAR = "kafka.sessionid";
+  public static final String KAFKA_PROJECTID_ENV_VAR = "kafka.projectid";
+  
+//  public static final String KAFKA_K_CERTIFICATE_ENV_VAR = "kafka.key.certificate";
+//  public static final String KAFKA_T_CERTIFICATE_ENV_VAR = "kafka.trusted.certificate";
+//  
   // QUOTA
   public static final float DEFAULT_YARN_PRICE = 1.0f;
 

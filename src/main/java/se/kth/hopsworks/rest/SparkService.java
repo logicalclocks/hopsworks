@@ -1,7 +1,6 @@
 package se.kth.hopsworks.rest;
 
 import com.google.common.base.Strings;
-import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import java.io.IOException;
 import java.util.List;
@@ -36,6 +35,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Service offering functionality to run a Spark fatjar job.
@@ -65,7 +65,7 @@ public class SparkService {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
-
+  
   private Project project;
 
   SparkService setProject(Project project) {
@@ -178,6 +178,7 @@ public class SparkService {
       if (Strings.isNullOrEmpty(config.getAppName())) {
         config.setAppName("Untitled Spark job");
       }
+      
       JobDescription created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
