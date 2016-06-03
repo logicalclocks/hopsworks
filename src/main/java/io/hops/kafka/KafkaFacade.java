@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,7 +42,6 @@ public class KafkaFacade {
     private final static Logger logger = Logger.getLogger(KafkaFacade.class.
             getName());
 
-//    private final static zookTimer = 
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
 
@@ -348,7 +346,6 @@ public class KafkaFacade {
         
         //contains project and its members
         Map<String, List<String>> projectMembers = new HashMap<>();
-        String projectName;
 
         //get the owner project name 
         Project project = em.find(Project.class, projectId);
@@ -431,7 +428,7 @@ public class KafkaFacade {
 
         TopicAcls ta = new TopicAcls(pt, selectedUser, 
                 permission_type, operation_type, host, role, principalName);
-      //  em.merge(ta);
+
         em.persist(ta);
         em.flush();
     }
@@ -497,7 +494,8 @@ public class KafkaFacade {
                     "User does not exist.");
         }
         Users selectedUser = users.get(0);
-        String principalName = aclDto.getProjectName()+"__"+selectedUser.getUsername();
+        String projectName = aclDto.getProjectName();
+        String principalName = projectName+"__"+selectedUser.getUsername();
         
         ta.setHost(aclDto.getHost());
         ta.setOperationType(aclDto.getOperationType());
@@ -507,9 +505,9 @@ public class KafkaFacade {
         ta.setPrincipal(principalName);
         
         TypedQuery<Project> queryProject = em.createNamedQuery("Project.findByName", Project.class)
-                .setParameter("name", aclDto.getProjectName());
+                .setParameter("name", projectName);
         List<Project> projects = queryProject.getResultList();
-       
+    
         if (projects == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "project does not exist.");
@@ -568,8 +566,8 @@ public class KafkaFacade {
 
     public List<SchemaDTO> listSchemasForTopics() {
         //get all schemas, and return the DTO
-        Map<String, List<Integer>> schemas = new HashMap<String, List<Integer>>();
-        List<SchemaDTO> schemaDtos = new ArrayList<SchemaDTO>();
+        Map<String, List<Integer>> schemas = new HashMap<>();
+        List<SchemaDTO> schemaDtos = new ArrayList<>();
         String schemaName;
 
         TypedQuery<SchemaTopics> query = em.createNamedQuery("SchemaTopics.findAll", SchemaTopics.class);
