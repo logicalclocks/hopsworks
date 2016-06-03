@@ -79,8 +79,8 @@
             <button class="btn btn-default" type="button" ng-click="createTopicCtrl.close()">Cancel</button>
             <button class="btn btn-primary" type="submit">
                 Create
+            <i ng-if="createTopicCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
             </button>
-
         </div>
     </form>
 </div>
