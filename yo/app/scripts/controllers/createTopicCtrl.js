@@ -13,6 +13,7 @@ angular.module('hopsWorksApp')
             self.replication_wrong_value = 1;
             self.wrong_schema
             self.wrong_values = 1;
+            self.working = false;
             
             self.schemas = [];
             self.schema;
@@ -39,6 +40,7 @@ angular.module('hopsWorksApp')
             self.init();            
             
             self.createTopic = function () {
+              self.working = true;
               
               if(self.max_num_replicas < self.num_replicas){
                 self.replication_wrong_value =-1;
@@ -68,9 +70,11 @@ angular.module('hopsWorksApp')
 
               KafkaService.createTopic(self.projectId, topicDetails).then(
                       function (success) {
+                        self.working = false;
                           $modalInstance.close(success);
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to create topic', ttl: 5000});
+                        self.working = false;
               });      
             };
 
