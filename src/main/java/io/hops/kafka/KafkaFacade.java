@@ -599,9 +599,9 @@ public class KafkaFacade {
 
         try {
             ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(), sessionTimeoutMs, null);
-            List<String> ids = zk.getChildren("/brokers/ids", false);
+            List<String> ids = zk.getChildren("/kafka/brokers/ids", false);
             for (String id : ids) {
-                String brokerInfo = new String(zk.getData("/brokers/ids/" + id,
+                String brokerInfo = new String(zk.getData("/kafka/brokers/ids/" + id,
                         false, null));
                 String delim = "[\"]";
                 String[] tokens = brokerInfo.split(delim);
