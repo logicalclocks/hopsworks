@@ -39,7 +39,7 @@
             </div>
           </form>
 
-          <div ng-show="kafkaCtrl.topics.length > 0">
+          <div ng-show="kafkaCtrl.topics.length > 0 || kafkaCtrl.sharedTopics.length > 0">
             <table st-table="rowCollection" class="table table-striped">
               <thead>
                 <tr>
@@ -77,9 +77,31 @@
                       </thead>
                       <tr ng-repeat="acl in row.acls">
                         <td ng-if="kafkaCtrl.activeId === -1">{{acl.projectName}}</td>
-                        <td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.projectName" placeholder="project name"></td>
+                        <td ng-if="kafkaCtrl.activeId === acl.id">
+                            <ui-select style="min-width: 100px;" name="project_name" theme="select2"
+                              ng-model="kafkaCtrl.project"  required>
+
+                            <ui-select-match placeholder="Select a project for this acl">{{$select.selected.projectName}}</ui-select-match>
+
+                            <ui-select-choices repeat="item in kafkaCtrl.users | filter: $select.search">
+                            <div ng-bind-html="item.projectName | highlight: $select.search"></div>
+                            </ui-select-choices>
+                             </ui-select><br>
+                        </td>
+                        <!--<td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.projectName" placeholder="project name"></td>-->
                         <td ng-if="kafkaCtrl.activeId === -1">{{acl.userEmail}}</td>
-                        <td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.userEmail" placeholder="user email "></td>
+                        <td  ng-if="kafkaCtrl.activeId === acl.id">        
+                            <ui-select style="min-width: 200px;" name="project_member" theme="select2"
+                            ng-model="kafkaCtrl.userEmail"  required>
+
+                            <ui-select-match placeholder="Select a version">{{$select.selected}}</ui-select-match>
+
+                            <ui-select-choices repeat="item in kafkaCtrl.project.userEmails | filter: $select.search">
+                            <div ng-bind-html="item | highlight: $select.search"></div>
+                            </ui-select-choices>
+                            </ui-select><br>
+                        </td>
+                        <!--<td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.userEmail" placeholder="user email "></td>-->
                         <td ng-if="kafkaCtrl.activeId === -1">{{acl.permissionType}}</td>
                         <td ng-if="kafkaCtrl.activeId === acl.id">
                           <select name="permission_type" ng-model="kafkaCtrl.permission_type">
@@ -122,7 +144,7 @@
                           <button ng-show="kafkaCtrl.activeId === acl.id" type="button" ng-click="kafkaCtrl.activeId = -1;kafkaCtrl.updateAcl(row.name, acl.id)" class="btn btn-sm btn-warning">
                             Save ACL
                           </button>
-                          <button ng-show="kafkaCtrl.activeId === -1" type="button" ng-click="kafkaCtrl.selectAcl(acl);" class="btn btn-sm btn-primary">
+                          <button ng-show="kafkaCtrl.activeId === -1" type="button" ng-click="kafkaCtrl.selectAcl(acl, row.name);" class="btn btn-sm btn-primary">
                             Edit ACL
                           </button>
                         </td>

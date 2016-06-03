@@ -50,25 +50,37 @@ angular.module('hopsWorksApp')
             self.activeShare = -1;
             self.selectedProjectName="";
             
+            self.users =[];
+            self.project;
+            
 
             
 
-            self.selectAcl = function (acl) {
+            self.selectAcl = function (acl, topicName) {
               if (self.activeId === acl.id) { //unselect the current selected ACL
 //                self.activeId = -1;
                 return;
               }
+              self.projectName = acl.projectName;
               self.userEmail = acl.userEmail;
               self.permission_type = acl.permission_type;
               self.operation_type = acl.operation_type;
               self.host = acl.host;
               self.role = acl.role;
               self.activeId = acl.id;
+              
+              KafkaService.aclUsers(self.projectId, topicName).then(
+                    function (success) {
+                        self.users = success.data;
+                }, function (error) {
+                    growl.error(error.data.errorMsg, {title: 'Could not load ACL users', ttl: 5000, referenceId: 21});
+                   });
+              
             };
 
             self.updateAcl = function (topicName, aclId){
               var acl ={};
-              acl.projectName = self.projectName;
+              acl.projectName = self.project.projectName;
               acl.role = self.role;
               acl.userEmail = self.userEmail;
               acl.permissionType = self.permission_type;

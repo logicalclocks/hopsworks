@@ -506,9 +506,17 @@ public class KafkaFacade {
         ta.setUser(selectedUser);
         ta.setPrincipal(principalName);
         
-        Project pt = em.createNamedQuery("Project.findByName", Project.class)
-                .setParameter("name", aclDto.getProjectName()).getSingleResult();
-        ta.setProjectTopics(new ProjectTopics(new ProjectTopicsPK(topicName, pt.getId())));
+        TypedQuery<Project> queryProject = em.createNamedQuery("Project.findByName", Project.class)
+                .setParameter("name", aclDto.getProjectName());
+        List<Project> projects = queryProject.getResultList();
+       
+        if (projects == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "project does not exist.");
+        }
+        
+        Project selectedProject = projects.get(0);
+        ta.setProjectTopics(new ProjectTopics(new ProjectTopicsPK(topicName, selectedProject.getId())));
         
         em.persist(ta);
         em.flush();
@@ -530,14 +538,17 @@ public class KafkaFacade {
 
         List<SchemaDTO> schemaDtos = new ArrayList<>();
 
-        ProjectTopics topic = em.createNamedQuery(
+        List<ProjectTopics> topics = em.createNamedQuery(
                 "ProjectTopics.findByTopicName", ProjectTopics.class)
-                .setParameter("topicName", topicName).getSingleResult();
+                .setParameter("topicName", topicName).getResultList();
 
-        if (topic == null) {
+        
+        if (topics == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "topic not found in database");
         }
+
+        ProjectTopics topic = topics.get(0);
 
         SchemaTopics schema = em.find(SchemaTopics.class,
                 new SchemaTopicsPK(topic.getSchemaTopics().getSchemaTopicsPK().getName(),
