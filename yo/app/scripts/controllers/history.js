@@ -10,7 +10,7 @@ angular.module('hopsWorksApp')
             $scope.searchChoices=[
                 {
                     id : 0, 
-                    name : "-- Please Select --", 
+                    name : "-- Select --", 
                     searchName: "none", 
                     values:[
                         { ind:"none" , id: "null" , type: "null" }
@@ -21,11 +21,11 @@ angular.module('hopsWorksApp')
                     name : "Job Type", 
                     searchName: "jobType",
                     values:[
-                        { ind:"jobType" , id: "null" , type: "-- Please Select --" },
+                        { ind:"jobType" , id: "null" , type: "-- Select --" },
                         { ind:"jobType" , id: "Spark" , type: "Spark" },
                         { ind:"jobType" , id: "Flink" , type: "Flink" },
                         { ind:"jobType" , id: "Adam" , type: "Adam" },
-                        { ind:"jobType" , id: "Hadoop Java" , type: "Hadoop Java" },
+                        { ind:"jobType" , id: "HadoopJava" , type: "Hadoop Java" },
                         { ind:"jobType" , id: "Map Reduce" , type: "Map Reduce" }
                     ]
                 },
@@ -34,7 +34,7 @@ angular.module('hopsWorksApp')
                     name : "Severity", 
                     searchName: "severity",
                     values:[
-                        { ind:"severity" , id: "null" , type: "-- Please Select --" },
+                        { ind:"severity" , id: "null" , type: "-- Select --" },
                         { ind:"severity" , id: 0 , type: "None" },
                         { ind:"severity" , id: 1 , type: "Low" },
                         { ind:"severity" , id: 2 , type: "Moderate" },
@@ -47,7 +47,7 @@ angular.module('hopsWorksApp')
                     name : "Score", 
                     searchName: "score",
                     values:[
-                        { ind:"score" , id: "null" , type: "-- Please Select --" },
+                        { ind:"score" , id: "null" , type: "-- Select --" },
                         { ind:"score" , id: 0 , type: "0" },
                         { ind:"score" , id: 1 , type: "1" },
                         { ind:"score" , id: 2 , type: "2" },
@@ -65,13 +65,12 @@ angular.module('hopsWorksApp')
             $scope.enableSearch = false;
             
             // Attributes for the Search - Drop Down Menus
-            $scope.name = '-- Please Select --';
+            $scope.name = '-- Select --';
             $scope.searchName = 'none';
             $scope.fisrtFormSelected = false;
             
             $scope.valueId = 'null';
-            $scope.valueType = '-- Please Select --';
-            $scope.secondFormSelected = false;
+            $scope.valueType = '-- Select --';
             
             $scope.sort = function (keyname) {
               $scope.sortType = keyname;   //set the sortKey to the param passed
@@ -87,7 +86,6 @@ angular.module('hopsWorksApp')
               $scope.searchName = searchName;
               if (searchName === "none") {
                     $scope.fisrtFormSelected = false;
-                    $scope.secondFormSelected = false;
               } else {
                     $scope.fisrtFormSelected = true;
               }
@@ -96,26 +94,28 @@ angular.module('hopsWorksApp')
             self.selectSecondForm = function (type, id) {
               $scope.valueType = type;
               $scope.valueId = id;
-              if (id === "null") {
-                    $scope.secondFormSelected = false;
-              } 
-              else {
-                    $scope.secondFormSelected = true;
-              }
             };
             
-            self.search = function () {
-
+            self.clear = function () {
+                $scope.name = '-- Select --';
+                $scope.searchName = 'none';
+                $scope.fisrtFormSelected = false;
+            
+                $scope.valueId = 'null';
+                $scope.valueType = '-- Select --';
             };
             
             $scope.filterJobs = function(job){
-                if($scope.searchName === 'jobType' && $scope.valueId !== 'null'){
+                if($scope.searchName === "jobType" && $scope.valueId !== "null"){
+                    console.log("jobType = " + $scope.valueId);
                     return job.jobType === $scope.valueId;
                 }
-                else if($scope.searchName === 'severity' && $scope.valueId !== 'null'){
+                else if($scope.searchName === "severity" && $scope.valueId !== "null"){
+                    console.log("severity = " + $scope.valueId);
                     return job.severity === $scope.valueId;
                 }
-                else if($scope.searchName === 'score' && $scope.valueId !== 'null'){
+                else if($scope.searchName === "score" && $scope.valueId !== "null"){
+                    console.log("score = " + $scope.valueId);
                     return job.score === $scope.valueId;
                 }
                 else{
