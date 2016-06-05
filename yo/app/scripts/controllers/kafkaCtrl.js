@@ -223,7 +223,7 @@ angular.module('hopsWorksApp')
             
             
             self.shareTopic = function(topicName) {
-              ModalService.selectProject('lg', "/[^]*/",
+              ModalService.selectProject('lg', true, "/[^]*/",
                       "Select a Project to share the topic with.").then(
                       function (success) {
                         var destProj = success.projectId;
