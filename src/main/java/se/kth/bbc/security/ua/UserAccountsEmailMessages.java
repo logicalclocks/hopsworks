@@ -7,49 +7,44 @@ public class UserAccountsEmailMessages {
   /*
    * Subject of account request
    */
-  public final static String ACCOUNT_REQUEST_SUBJECT = "account verification email";
+  public final static String ACCOUNT_REQUEST_SUBJECT = "Your HopsWorks account needs verification";
 
   /*
-   * Subject of account confirmation
+   * Subject of account activation email
    */
   public final static String ACCOUNT_CONFIRMATION_SUBJECT
-          = "Account Confirmation";
-
-  /*
-   * Subject of password reset
-   */
-  public final static String ACCOUNT_PASSWORD_SUBJECT = "Password Reset";
+          = "Welcome to HopsWorks!";
 
   /*
    * Subject of device lost
    */
-  public final static String DEVICE_LOST_SUBJECT = "Login Issue";
+  public final static String DEVICE_LOST_SUBJECT = "Login issue";
 
   /*
    * Subject of blocked acouunt
    */
-  public final static String ACCOUNT_BLOCKED__SUBJECT = "Account Locked";
+  public final static String ACCOUNT_BLOCKED__SUBJECT = "Your account is locked";
 
   /*
    * Subject of blocked acouunt
    */
   public final static String BIOBANKCLOUD_SUPPORT_EMAIL
-          = "support@biobankcloud.com";
+          = "support@hops.io";
 
   /*
    * Subject of profile update
    */
-  public final static String ACCOUNT_PROFILE_UPDATE = "Profile Update";
+  public final static String ACCOUNT_PROFILE_UPDATE = "Your profile has been updated";
 
   /*
    * Subject of password rest
    */
-  public final static String ACCOUNT_PASSWORD_RESET = "Password Reset";
+  public final static String ACCOUNT_PASSWORD_RESET = "Your password has been reset";
 
   /*
    * Subject of rejected accounts
    */
-  public final static String ACCOUNT_REJECT = "Account Rejected";
+  public final static String ACCOUNT_REJECT = "Your HopsWorks account request has been rejected";
 
   /*
    * Default accpount acitvation period
@@ -61,7 +56,7 @@ public class UserAccountsEmailMessages {
   /*
    * Account deactivation
    */
-  public final static String ACCOUNT_DEACTIVATED = "Account Deactivated";
+  public final static String ACCOUNT_DEACTIVATED = "Your HopsWorks account has expired";
 
   /**
    * Build an email message for Yubikey users upon registration.
@@ -75,7 +70,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We receieved your Yubikey account request for the BiobankCloud.\n\n";
+            + "We receieved your Yubikey account request for HopsWorks.\n\n";
     String l2
             = "Please click on the following link to verify your email address. Afterwards we will activate your account within 48 hours and send you a Yubikey stick to your address.\n\n\n";
 
@@ -103,8 +98,8 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received a mobile account request for the BiobankCloud in your behalf.\n\n";
-    String l2 = "Please click on the following link to verify your email address. Afterwards we will activate your account within "
+            + "We received a smartphone account request for HopsWorks on your behalf.\n\n";
+    String l2 = "Please click on the following link to verify your email address. We will activate your account within "
             + ACCOUNT_ACITVATION_PERIOD
             + " hours after validating your email address.\n\n\n";
 
@@ -123,9 +118,9 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "Your account in the Biobankcloud has been blocked.\n\n";
+            + "Your HopsWorks account has been blocked.\n\n";
     String l2
-            = "If you have any questions please contact support@biobankcloud.com";
+            = "If you have any questions please visit www.hops.io or contact support@hops.io";
     String l3 = "If you have any questions please contact "
             + BIOBANKCLOUD_SUPPORT_EMAIL;
 
@@ -165,7 +160,7 @@ public class UserAccountsEmailMessages {
 
     String message;
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We receieved an account deactivation request and your BiobankCloud account has been deactivated.\n\n";
+            + "We receieved an account deactivation request and your HopsWorks account has been deactivated.\n\n";
     String l2 = "If you have any questions please contact "
             + BIOBANKCLOUD_SUPPORT_EMAIL;
 
@@ -196,7 +191,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "Your account request to access the BiobankCloud has been approved.\n\n";
+            + "Your account request to access HopsWorks has been approved.\n\n";
     String l2 = "You can login with your username: " + username + " and other credentials you setup.\n\n\n";
     String l3 = "If you have any questions please contact "
             + BIOBANKCLOUD_SUPPORT_EMAIL;
@@ -210,7 +205,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "Your account request to access the BiobankCloud has been approved.\n\n";
+            + "Your account request to access HopsWorks has been approved.\n\n";
    
     String l2 = "We sent a Yubikey device to your postal address. You can use that device in addition to usename/password to login to the platform. \n\n\n";
     String l3 = "If you have any questions please contact "
@@ -224,7 +219,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "Your Biobankcloud account request has been rejected.\n\n";
+            + "Your HopsWorks account request has been rejected.\n\n";
     String l2 = "If you have any questions please contact "
             + BIOBANKCLOUD_SUPPORT_EMAIL;
     message = l1 + l2;
@@ -255,7 +250,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received an Yubikey request reset for the BiobankCloud in your behalf.\n\n";
+            + "We received an Yubikey request reset for HopsWorks in your behalf.\n\n";
     String l2 = "Your account will be reset within "
             + ACCOUNT_ACITVATION_PERIOD + " hours and a new device will be sent to your postal address.\n\n\n";
     String l3 = "If you have any questions please contact "

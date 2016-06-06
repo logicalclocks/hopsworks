@@ -1,0 +1,260 @@
+<div ng-controller="KafkaCtrl as kafkaCtrl">
+  <div ng-include="'nav.html'"></div>
+  <div id="wrapper" class="toggled">
+    <div class="overlay"></div>
+
+    <div ng-include="'navProject.html'"></div>
+
+    <section>
+      <div class="content-wrapper">
+        <!--<h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Kafka</h3>-->
+        <div growl reference="10" class="pull-right" ></div>
+
+        <div>
+          <form class="form-horizontal">
+            <div class="form-group"  style="margin-left: 15px;">
+              <div class="row"/>
+              <div class="row">
+                <div class="col-sm-2">
+                  <button type="button" ng-disabled="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0" 
+                          ng-click="kafkaCtrl.createTopic()" class="btn btn-default btn-success control-label">
+                    New Topic<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
+                    </i> 
+                  </button>
+                </div>
+                <div class="col-sm-2">
+                  <button type="button"  
+                          ng-click="kafkaCtrl.createSchema()" class="btn btn-default btn-success control-label">
+                    New Schema<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
+                    </i> 
+                  </button>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-2">
+                  <span class="text-muted" ng-show="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed > 0">{{kafkaCtrl.numTopicsUsed}} of {{kafkaCtrl.maxNumTopics}} topics in use</span>
+                  <span style="color: red;" class="text" ng-show="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0">All available {{kafkaCtrl.maxNumTopics}} topics are in use.</span>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <div ng-show="kafkaCtrl.topics.length > 0">
+            <table st-table="rowCollection" class="table table-striped">
+              <thead>
+                <tr>
+                  <th st-sort="topicName" class="col-sm-10">Topic Name</th>
+                  <th class="col-sm-1">Remove Topic</th>
+                  <th class="col-sm-1">Advanced</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.topics" ng-class="{'selectedTopic': row.isSelected === true}">
+                  <td class="col-sm-10">
+                    <div class="row" style="margin-left: 10px;">{{row.name}}</div>
+
+                    <div class="col-sm-2">
+                      <button style="margin-left: -20px" ng-show="row.isSelected" type="button" 
+                              ng-click="kafkaCtrl.addAcl(row.name)" class="btn btn-default btn-success btn-block">
+                        New ACL <i style="margin-left: 10px" class="glyphicon glyphicon-plus">
+                        </i>
+                      </button>
+                    </div>
+                    <br ng-show="row.isSelected">
+                    <br ng-show="row.isSelected">
+                    <table ng-if="row.isSelected" st-table="rowCollection" class="table table-striped col-sm-12">
+                      <thead >
+                        <tr>
+                          <th class="col-sm-2">Project</th>
+                          <th class="col-sm-2">UserEmail</th>
+                          <th class="col-sm-2">Permission Type</th>
+                          <th class="col-sm-2">Operation Type</th>
+                          <th class="col-sm-2">Host</th>
+                          <th class="col-sm-1">Role</th>
+                          <th class="col-sm-1">Remove</th>
+                          <th class="col-sm-1">Edit ACL</th>
+                        </tr>
+                      </thead>
+                      <tr ng-repeat="acl in row.acls">
+                        <td ng-if="kafkaCtrl.activeId === -1">{{acl.projectName}}</td>
+                        <td ng-if="kafkaCtrl.activeId === acl.id">
+                            <ui-select style="min-width: 100px;" name="project_name" theme="select2"
+                              ng-model="kafkaCtrl.project"  required>
+
+                            <ui-select-match placeholder="Select a project for this acl">{{$select.selected.projectName}}</ui-select-match>
+
+                            <ui-select-choices repeat="item in kafkaCtrl.users | filter: $select.search">
+                            <div ng-bind-html="item.projectName | highlight: $select.search"></div>
+                            </ui-select-choices>
+                             </ui-select><br>
+                        </td>
+                        <!--<td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.projectName" placeholder="project name"></td>-->
+                        <td ng-if="kafkaCtrl.activeId === -1">{{acl.userEmail}}</td>
+                        <td  ng-if="kafkaCtrl.activeId === acl.id">        
+                            <ui-select style="min-width: 200px;" name="project_member" theme="select2"
+                            ng-model="kafkaCtrl.userEmail"  required>
+
+                            <ui-select-match placeholder="Select a version">{{$select.selected}}</ui-select-match>
+
+                            <ui-select-choices repeat="item in kafkaCtrl.project.userEmails | filter: $select.search">
+                            <div ng-bind-html="item | highlight: $select.search"></div>
+                            </ui-select-choices>
+                            </ui-select><br>
+                        </td>
+                        <!--<td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.userEmail" placeholder="user email "></td>-->
+                        <td ng-if="kafkaCtrl.activeId === -1">{{acl.permissionType}}</td>
+                        <td ng-if="kafkaCtrl.activeId === acl.id">
+                          <select name="permission_type" ng-model="kafkaCtrl.permission_type">
+                            <option value="allow">Allow</option>
+                            <option value="deny">Deny</option>
+                          </select>
+                        </td>
+                        <td ng-if="kafkaCtrl.activeId === -1">{{acl.operationType}}</td>
+                        <td ng-if="kafkaCtrl.activeId === acl.id">
+                          <select name="operation_type" ng-model="kafkaCtrl.operation_type">
+                            <option value="read">read</option>
+                            <option value="write">write</option>
+                            <option value="details">details</option>
+                            <option value="*">*</option>
+                          </select>
+                        </td>
+                        <td ng-if="kafkaCtrl.activeId === -1">{{acl.host}}</td>
+                        <td ng-if="kafkaCtrl.activeId === acl.id">
+                          <input type="text" class="form-control" id="aclHost" ng-model="kafkaCtrl.host" placeholder="Hostname (or * or subnet)">
+                        </td>
+                        <td ng-if="kafkaCtrl.activeId === -1">{{acl.role}}</td>
+                        <td ng-if="kafkaCtrl.activeId === acl.id">
+                          <select name="role_type" ng-model="kafkaCtrl.role">
+                            <option value="Data Scientist">Data scientist</option>
+                            <option value="Data Owner">Data owner</option>
+                            <option value="*">*</option>
+                          </select>
+                        </td>
+                        <td>
+                          <button ng-if="kafkaCtrl.activeId === -1" type="button" ng-click="kafkaCtrl.removeAcl(row.name, acl.id)" class="btn btn-sm btn-danger">
+                            <i class="glyphicon glyphicon-remove">
+                            </i>
+                          </button>
+                          <button ng-if="kafkaCtrl.activeId === acl.id" type="button" ng-click="kafkaCtrl.removeAcl(row.name, acl.id)" class="btn btn-sm btn-danger">
+                            <i class="glyphicon glyphicon-remove">
+                            </i>
+                          </button>
+                        </td>
+                        <td ng-if="kafkaCtrl.activeId === -1 || kafkaCtrl.activeId === acl.id">
+                          <button ng-show="kafkaCtrl.activeId === acl.id" type="button" ng-click="kafkaCtrl.activeId = -1;kafkaCtrl.updateAcl(row.name, acl.id)" class="btn btn-sm btn-warning">
+                            Save ACL
+                          </button>
+                          <button ng-show="kafkaCtrl.activeId === -1" type="button" ng-click="kafkaCtrl.selectAcl(acl, row.name);" class="btn btn-sm btn-primary">
+                            Edit ACL
+                          </button>
+                        </td>
+                      </tr>
+                    </table>
+                    <br ng-show="row.isSelected">
+                    <br ng-show="row.isSelected">
+                    <div class="col-sm-2">
+                      <button style="margin-left: -20px" ng-show="row.isSelected" type="button" 
+                              ng-click="kafkaCtrl.shareTopic(row.name)" class="btn btn-default btn-success btn-block">
+                        Share<i style="margin-left: 10px" class="glyphicon glyphicon-share-alt">
+                        </i>
+                      </button>
+                    </div>
+                    <br ng-show="row.isSelected">
+                    <br ng-show="row.isSelected">
+
+                    <table ng-show="row.isSelected" st-table="rowCollection" class="table table-striped col-sm-4">
+                      <thead>
+                        <tr>
+                          <th class="col-sm-10">Shared with Project</th>
+                          <th class="col-sm-1">Unshare</th>
+                        </tr>
+                      </thead>
+                      <thead ng-show="row.shares.length > 0">
+                        <tr ng-repeat="proj in row.shares">
+                          <td>{{proj.name}}</td>
+                          <td>
+                            <button type="button" ng-click="kafkaCtrl.unshareTopic(row.name, proj)" class="btn btn-sm btn-danger">
+                              <i class="glyphicon glyphicon-remove">
+                              </i>
+                            </button>
+                          </td>
+                        </tr>
+                      </thead>
+                    </table>
+                    <br ng-show="row.isSelected">
+                    <br ng-show="row.isSelected">
+                    <table ng-show="row.isSelected" st-table="rowCollection" class="table table-striped col-sm-4">
+                      <thead>
+                        <tr>
+                          <th class="col-sm-2">Partition details</th> 
+                        </tr>
+                        <tr>
+                          <th class="col-sm-2">Partition id</th>
+                          <th class="col-sm-2">Partition leader</th>
+                          <th class="col-sm-2">Partition replicas</th>
+                          <th class="col-sm-2">Partition insync replicas</th>
+                        </tr>
+                      </thead>
+                      <thead ng-show="row.partitionDetails.length > 0">
+                        <tr ng-repeat="partition in row.partitionDetails">
+                          <td ng-if="kafkaCtrl.activeId === -1">{{partition.id}}</td>
+                          <td ng-if="kafkaCtrl.activeId === -1">{{partition.leader}}</td>
+                          <td ng-if="kafkaCtrl.activeId === -1">{{partition.replicas}}</td>
+                          <td ng-if="kafkaCtrl.activeId === -1">{{partition.inSyncReplicas}}</td>
+                        </tr>
+                      </thead>
+                    </table>
+
+                  </td>
+                  <td class="col-sm-1">
+                    <button  type="button" ng-click="kafkaCtrl.removeTopic(row.name)" class="btn btn-sm btn-danger">
+                      <i class="glyphicon glyphicon-remove-circle">
+                      </i>
+                    </button>
+
+                  </td>
+                  <td class="col-sm-1">
+                    <button type="button" ng-show="!row.isSelected" ng-click="row.isSelected = !row.isSelected; kafkaCtrl.activeId = -1; kafkaCtrl.getTopicDetails(row.name);
+                      kafkaCtrl.topicIsSharedTo(row.name);kafkaCtrl.getAclsForTopic(row.name);
+                            " class="btn btn-sm btn-primary">
+                      Select
+                    </button>
+                    <button type="button" ng-show="row.isSelected" ng-click="row.isSelected = !row.isSelected; kafkaCtrl.activeId = -1;" class="btn btn-sm btn-warning">
+                      Deselect
+                    </button>
+
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <table st-table="rowCollection" class="table table-striped" ng-show="kafkaCtrl.sharedTopics.length > 0"> 
+              <thead>
+                <tr>
+                  <th class="col-sm-10">Shared Topics</th>
+                  <th class="col-sm-1">Unshare</th>
+                </tr>
+              </thead>
+              <tbody>
+              <thead>
+                <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.sharedTopics">
+
+                  <td>{{row.name}}</td>
+                  <td>
+                    <button type="button" ng-click="kafkaCtrl.unshareTopicFromProject(row.name)" class="btn btn-sm btn-danger">
+                      <i class="glyphicon glyphicon-remove">
+                      </i>
+                    </button>
+                  </td>
+                </tr>
+              </thead>
+              </tbody>
+
+            </table>
+
+
+          </div>              
+        </div>              
+    </section>
+  </div>
+</div>

@@ -98,6 +98,23 @@ angular.module('hopsWorksApp')
                 removeDataSetDir: function (fileName) {
                   return $http.delete('/api/project/' + id + '/dataset/' + fileName);
                 },
+                move: function (srcInodeId, fullPath) {
+                  
+                  var moveOp = { 
+                    inodeId: srcInodeId, 
+                    destPath: fullPath 
+                  };
+
+                  var moveReq = {
+                    method: 'POST',
+                    url: '/api/project/' + id + '/dataset/move',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    data: moveOp
+                  };
+                  return $http(moveReq);                  
+                },
                 attachTemplate: function (fileTemplateData) {
                   var regReq = {
                     method: 'POST',
@@ -122,6 +139,12 @@ angular.module('hopsWorksApp')
                 detachTemplate: function(inodeid, templateid){
                   return $http.get('/api/metadata/detachtemplate/' + inodeid + '/' + templateid);
                 },
+                makePublic: function (inodeId) {
+                  return $http.get('/api/project/' + id + '/dataset/makePublic/' + inodeId);
+                },             
+                removePublic: function (inodeId) {
+                  return $http.get('/api/project/' + id + '/dataset/removePublic/' + inodeId);
+                },             
                 fetchMetadata: function (inodePid, inodeName, tableId) {
                   return $http.get('/api/metadata/fetchmetadata/' + inodePid + '/' + inodeName + '/' + tableId);
                 }

@@ -20,7 +20,7 @@
     </h:head>
 
     <h:body>
-      <c:if test="#{roleEnforcementPoint.SYSAdmin}">
+      <c:if test="#{roleEnforcementPoint.admin}">
         <ui:insert name="adminTitleBar">
           <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
         </ui:insert>

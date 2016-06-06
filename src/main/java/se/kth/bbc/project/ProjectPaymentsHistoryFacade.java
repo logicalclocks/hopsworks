@@ -17,7 +17,7 @@
  */
 package se.kth.bbc.project;
 
-import se.kth.hopsworks.user.model.Users;
+import java.util.List;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 import javax.ejb.Stateless;
@@ -51,7 +51,9 @@ public class ProjectPaymentsHistoryFacade extends
         createNamedQuery("ProjectPaymentsHistory.findByProjectname",
             ProjectPaymentsHistory.class).setParameter("projectname", projectname);
     try {
-      return query.getSingleResult();
+//      return query.getSingleResult();
+        List<ProjectPaymentsHistory> res = query.getResultList();
+        return res.get(0);
     } catch (NoResultException e) {
       return null;
     }

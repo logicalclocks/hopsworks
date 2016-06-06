@@ -23,7 +23,7 @@
       <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
     </ui:insert>
 
-    <p:layout styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.SYSAdmin}">  
+    <p:layout styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">  
 
       <p:layoutUnit  position="center">
 
@@ -41,7 +41,12 @@
                            rowKey="#{req.email}" 
                            selection="#{peopleAdministration.selectedUsers}"
                            editable="true" 
-                           editMode="cell">
+                           editMode="cell"
+                           rows="25"
+                           paginator="true"
+                           paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                           rowsPerPageTemplate="15,25,35,45,55"
+                           >
 
                 <p:column id="snameColumn" headerText="First Name"  
                           filterBy="#{req.fname}">
@@ -89,10 +94,6 @@
 
             </h:form>
 
-            <script>
-                    userMgmtTabview.select(#{roleEnforcementPoint.tabIndex});
-          
-            </script>
           </div>
         </div> 
       </p:layoutUnit>

@@ -178,6 +178,8 @@ public class UploadService {
       }
       //test if the user have permission to create a file in the path.
       //the file will be overwriten by the uploaded 
+      //TODO: *** WARNING ***
+      //Check permissions before creating file
       if (this.username != null) {
         try {
           dfs.getDfsOps(username).touchz(new org.apache.hadoop.fs.Path(this.path

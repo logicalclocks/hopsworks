@@ -8,6 +8,7 @@ public enum ProjectServiceEnum {
 
   ZEPPELIN("Zeppelin"),
   SSH("Ssh"),
+  KAFKA("Kafka"),
   //  BIOBANKING("Biobanking"),
   //  CHARON("Charon"),
   JOBS("Jobs");

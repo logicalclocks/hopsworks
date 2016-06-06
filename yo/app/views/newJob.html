@@ -1,6 +1,4 @@
 <!-- Create a new job -->
-<link rel="stylesheet" href="styles/timeline.css">
-<link rel="stylesheet" href="styles/cuneiform.css">
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
 
@@ -23,7 +21,7 @@
         <accordion close-others="false">
           <accordion-group heading="{{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" is-open="newJobCtrl.accordion1.isOpen">
             <md-input-container style="height: 50px">
-              <label for="jobname" style="color: black;">Job name</label>
+              <label id="inputJobName" for="jobname" style="color: black;">Job name</label>
               <input name="jobname" type="text" id="jobname"
                      ng-model="newJobCtrl.jobname" ng-change="newJobCtrl.nameFilledIn()"  autofocus>
             </md-input-container>
@@ -35,8 +33,9 @@
                            ng-show="newJobCtrl.accordion2.visible">
             <div class="btn-group">
               <!--<label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="0" ng-change="newJobCtrl.jobTypeChosen()">Cuneiform</label>-->
-              <label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
+              <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
               <label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>
+              <label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>
             </div>
           </accordion-group>
 
@@ -45,12 +44,12 @@
           <accordion-group heading="{{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}" 
                            is-open="newJobCtrl.accordion3.isOpen" 
                            ng-show="newJobCtrl.accordion3.visible">
-            <!-- Cuneiform and Spark -->
-            <button class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 0 || newJobCtrl.jobtype == 1">
+            <!-- Cuneiform, Spark and Flink  -->
+            <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 0 || newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3">
               <span>Select...</span>
             </button>
             <!-- ADAM -->
-            <table ng-show="newJobCtrl.jobtype == 2">
+            <table ng-show="newJobCtrl.jobtype === 2">
               <tr ng-repeat="command in newJobCtrl.adamState.commandList">
                 <td>
                   <button class="btn btn-default" ng-click="newJobCtrl.selectCommand(command.name)" style="width:100%">{{command.name}}</button> 
@@ -66,9 +65,10 @@
           <!-- Set up the job details -->
           <accordion-group heading="{{newJobCtrl.accordion4.title}} {{newJobCtrl.accordion4.value}}" 
                            is-open="newJobCtrl.accordion4.isOpen" 
-                           ng-show="newJobCtrl.accordion4.visible">
+                           ng-show="newJobCtrl.accordion4.visible"
+                           id="chooseParametersAndArguments">
             <!-- Cuneiform -->
-            <div ng-show="newJobCtrl.jobtype == 0">
+            <div ng-show="newJobCtrl.jobtype === 0">
               <div class="row">
                 <div class="text-right col-md-4">
                   <strong>Parameter</strong> 
@@ -83,19 +83,19 @@
                 <div class="col-md-8"> <input type="text" ng-model="param.value" class="form-control"></div>
               </div>
             </div>
-            <!-- Spark -->
-            <div ng-show="newJobCtrl.jobtype == 1">
+            <!-- Spark, Flink-->
+            <div ng-show="newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3">
               <div class="row">
                 <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
-                <div class="col-md-8"><input type="text" ng-model="newJobCtrl.runConfig.mainClass" class="form-control"></div>
+                <div class="col-md-8"><input type="text" ng-model="newJobCtrl.runConfig.mainClass" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
               </div>
               <div class="row">
                 <div class="text-right col-md-4">Job arguments <i class="fa fa-info-circle" tooltip="The arguments to be passed to the main method of the class entered above." style="margin-left: 10px"></i></div>
-                <div class="col-md-8"><input type="text" ng-model="newJobCtrl.runConfig.args" class="form-control"></div>
+                <div class="col-md-8"><input type="text" ng-model="newJobCtrl.runConfig.args" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
               </div>
             </div>
             <!-- Adam -->
-            <div ng-show="newJobCtrl.jobtype == 2">
+            <div ng-show="newJobCtrl.jobtype === 2">
               {{newJobCtrl.runConfig.selectedCommand.description}}
               <div>
                 <strong>Arguments</strong>
@@ -126,11 +126,13 @@
                 </div>
               </div>
             </div>
+            
           </accordion-group>
           <!-- Set some run configuration -->
           <accordion-group heading="{{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}" 
                            is-open="newJobCtrl.accordion5.isOpen" 
-                           ng-show="newJobCtrl.accordion5.visible">
+                           ng-show="newJobCtrl.accordion5.visible"
+                           id="moreConfigs">
             <!-- Common -->
             <div>
               <div class="row">
@@ -152,17 +154,43 @@
                 </div>
               </div>
               <!-- Spark -->
-              <div class="row" ng-show="newJobCtrl.jobtype == 1">
+              <div class="row" ng-show="newJobCtrl.jobtype === 1">
                 <div class="text-right col-md-4">Number of executors <i class="fa fa-info-circle" tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="number" ng-model="newJobCtrl.runConfig.numberOfExecutors" class="form-control"></div>
               </div>
-              <div class="row" ng-show="newJobCtrl.jobtype == 1">
+              <div class="row" ng-show="newJobCtrl.jobtype === 1">
                 <div class="text-right col-md-4">Number of executor cores <i class="fa fa-info-circle" tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="number" ng-model="newJobCtrl.runConfig.executorCores" class="form-control"></div>
               </div>
-              <div class="row" ng-show="newJobCtrl.jobtype == 1">
+              <div class="row" ng-show="newJobCtrl.jobtype === 1">
                 <div class="text-right col-md-4">Executor memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="number" min="0" ng-model="newJobCtrl.runConfig.executorMemory" class="form-control"></div>
+              </div>
+              <!-- Flink -->
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
+                <div class="text-right col-md-4">Number of TaskManagers <i class="fa fa-info-circle" tooltip="The number of Flink TaskManagers that should be requested for this job." style="margin-left: 10px"></i></div>
+                <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numberOfTaskManagers" class="form-control"></div>
+              </div>
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
+                <div class="text-right col-md-4">Number of slots <i class="fa fa-info-circle" tooltip="The number of slots per TaskManager that should be requested for this job." style="margin-left: 10px"></i></div>
+                <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.slots" class="form-control"></div>
+              </div>
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
+                <div class="text-right col-md-4">TaskManager memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for each TaskManager." style="margin-left: 10px"></i></div>
+                <div class="col-md-8"><input type="number" min="768" ng-model="newJobCtrl.runConfig.taskManagerMemory" class="form-control"></div>
+              </div>
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
+                <div class="text-right col-md-4">Job Parallelism <i class="fa fa-info-circle" tooltip="In Flink programs, the parallelism determines how operations are split into individual tasks which are assigned to task slots. " style="margin-left: 10px"></i></div>
+                <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.parallelism" class="form-control"></div>
+              </div>
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
+                <div class="text-right col-md-4">Job Type <i class="fa fa-info-circle" tooltip="Choose between Streaming or Batch job." style="margin-left: 10px"></i></div>
+                <div class="col-md-1">
+                    <select name="flinkjobtype" 
+                            ng-options="flinkjobtype for flinkjobtype in newJobCtrl.flinkjobtype"
+                            ng-model="newJobCtrl.runConfig.flinkjobtype" class="form-control">
+                    </select>
+                </div>
               </div>
             </div>
             <!-- Add libraries -->
@@ -173,26 +201,65 @@
                 </button>
                 <i class="fa fa-info-circle" tooltip="Select jar files that should be added to the classpath for this job." style="margin-left: 10px"></i>
               </h3>
-              <div ng-show="newJobCtrl.localResources.entry.length > 0">
-                <div class="row">
-                  <div class="col-md-4">
-                    <strong>Name</strong> <i class="fa fa-info-circle" tooltip="The name of the jar as it will appear in the Yarn distributed cache. By default, the filename of the resource." style="margin-left: 10px"></i>
-                  </div>
-                  <div class="col-md-8">
-                    <strong>Path</strong> <i class="fa fa-info-circle" tooltip="The HDFS path to the selected jar file." style="margin-left: 10px"></i>
-                  </div>
-                  <div></div>
-                </div>
-                <div class="row" ng-repeat="jar in newJobCtrl.localResources.entry">
-                  <div class="col-md-4">
-                    <input type="text" ng-model="jar.key" class="form-control">
-                  </div>
-                  <div class="col-md-8">
-                    {{jar.value}} <i class="fa fa-times-circle pull-right" tooltip="Remove this library." style="margin-left: 10px" ng-click="newJobCtrl.removeLibrary(jar)"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
+                <table class="table table-hover" ng-show="newJobCtrl.localResources.length > 0">
+                    <thead>
+                        <tr>
+                    <th style="width: 20%">
+                     <strong>Name</strong><i class="fa fa-info-circle" tooltip="The name of the jar as it will appear in the Yarn distributed cache. By default, the filename of the resource." style="margin-left: 10px"></i>  
+                    </th>
+                    <th style="width: 30%">
+                      <strong>Path</strong> <i class="fa fa-info-circle" tooltip="The HDFS path to the selected jar file." style="margin-left: 10px"></i>
+                    </th>
+                    <th style="width: 10%">
+                      <label class="control-label">Visibility</label>
+                        <i class="fa fa-info-circle" tooltip="The Visibility of your Local Resource. Default is 'Public'." style="margin-left: 10px"></i>
+                    </th> 
+                    <th style="width: 10%">
+                      <label class="control-label">Resource Type</label>    
+                      <i class="fa fa-info-circle" tooltip="The Type of your Local Resource. Default is 'File'." style="margin-left: 10px"></i>
+                    </th>
+                    <th style="width: 30%">
+                       <label class="control-label">Pattern</label>
+                       <i class="fa fa-info-circle" tooltip="The Pattern of your Local Resource, provide it when 'Type' is 'Pattern'." style="margin-left: 10px"></i>
+
+                    </th>
+                    <th style="width: 10%">
+                        <label class="control-label">Remove</label>
+                    </th>
+                    </tr>
+                    </thead>
+                  <!--Define localresource table columns -->
+                <tbody ng-repeat="resource in newJobCtrl.localResources">
+                    <tr>
+                    <td>
+                     {{resource.name}}
+                    </td>
+                    <td>
+                      {{resource.path}}
+                    </td>
+                    <td>
+                               <select name="visibility" ng-model="resource.visibility" ng-init="resource.visibility = 'public'">
+                                 <option value="public">Public</option>
+                                 <option value="private">Private</option>
+                                 <option value="application">Application</option>
+                               </select>
+                    </td> 
+                    <td>
+                               <select name="type" ng-model="resource.type" ng-init="resource.type = 'file'">
+                                 <option value="archive">Archive</option>
+                                 <option value="file">File</option>
+                                 <option value="pattern">Pattern</option>
+                               </select>
+                    </td>
+                    <td >
+                        <input type="text" ng-model="resource.pattern" ng-show="resource.type=='pattern'">
+                    </td>
+                      <td>
+                       <i class="fa fa-times-circle" tooltip="Remove this library." ng-click="newJobCtrl.removeLibrary(resource.name)"></i>
+                      </td>
+                </tr>
+                </tbody>               
+            </table>
             <div>
               <!-- Creation button -->
               <button ng-click="newJobCtrl.createJob()" class="btn btn-warning">
@@ -204,6 +271,83 @@
         <!-- /#page-content-wrapper -->
       </div>
     </section>
+    <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourFour" post-tour="closeTour()" ng-if="projectCtrl.loadedView">
+            <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR name the job yourself by typing in the field below"
+            tourtip-step="0"
+            tourtip-element="#inputJobName"
+            tourtip-placement="top"
+            tourtip-next-label="Next"
+            on-proceed="newJobCtrl.nameFilledIn()"
+            tourtip-offset-vertical="16"
+            ></virtual-step>
+            <virtual-step
+            ng-hide="true"    
+            class="ng-scope"
+            tourtip="invisible"
+            tourtip-step="1"
+            ></virtual-step>
+            <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR SPARK"
+            tourtip-step="2"
+            tourtip-element="#sparkJobType"
+            tourtip-placement="bottom"
+            tourtip-next-label="Next"
+            on-proceed="newJobCtrl.jobTypeSpark()"
+            tourtip-offset-vertical="-13"
+            tourtip-offset-horizontal="-6"
+            ng-if="newJobCtrl.accordion2.visible"
+            ></virtual-step>
+            <virtual-step
+            ng-hide="true"    
+            class="ng-scope"
+            tourtip="invisible"
+            tourtip-step="3"
+            ></virtual-step>
+            <virtual-step
+            class="ng-scope"
+            tourtip="Browse(select your own .jar) or let us choose one for you (Next)"
+            tourtip-step="4"
+            tourtip-element="#selectFileButton"
+            tourtip-placement="bottom"
+            tourtip-next-label="Next"
+            on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples-1.6.1-hadoop2.4.0.jar')"
+            tourtip-offset-vertical="-13"
+            tourtip-offset-horizontal="-5"
+            ng-if="newJobCtrl.accordion3.visible"
+            ></virtual-step>
+            <virtual-step
+            ng-hide="true"    
+            class="ng-scope"
+            tourtip="invisible"
+            tourtip-step="5"
+            ></virtual-step>
+            <virtual-step
+            class="ng-scope"
+            tourtip="Choose parameters on you own or click Next and let us choose for you"
+            tourtip-step="6"
+            tourtip-element="#chooseParametersAndArguments"
+            tourtip-placement="top"
+            tourtip-next-label="Next"
+            on-proceed="newJobCtrl.chooseParameters()"
+            tourtip-offset-vertical="10"
+            ng-if="newJobCtrl.accordion4.visible"
+            ></virtual-step>
+            <virtual-step
+            class="ng-scope"
+            tourtip="Click the 'Configure and create' link for further configuration, otherwise click Create Job"
+            tourtip-step="7"
+            tourtip-element="#moreConfigs"
+            tourtip-placement="top"
+            tourtip-next-label="Create Job"
+            on-proceed="newJobCtrl.createJob()"
+            tourtip-offset-vertical="10"
+            tourtip-offset-horizontal="-10"
+            ng-if="newJobCtrl.accordion5.visible"
+            ></virtual-step>
+    </tour>
   </div>
   <!-- /#wrapper -->
 </div>

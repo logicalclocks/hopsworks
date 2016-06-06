@@ -33,10 +33,12 @@
     <class>se.kth.bbc.project.fb.Inode</class>
     <class>se.kth.bbc.jobs.jobhistory.Execution</class>
     <class>se.kth.bbc.jobs.jobhistory.YarnApplicationstate</class>
+    <class>se.kth.bbc.jobs.jobhistory.YarnApplicationattemptstate</class>
     <class>se.kth.bbc.jobs.model.description.JobDescription</class>
     <class>se.kth.bbc.jobs.model.configuration.JsonReduceableConverter</class>
     <class>se.kth.hopsworks.user.model.SshKeys</class>
     <class>se.kth.hopsworks.users.AuthorizedSshkeys</class>
+    <class>se.kth.hopsworks.certificates.UserCerts</class>
     <class>se.kth.hopsworks.meta.entity.TupleToFile</class>
     <class>se.kth.hopsworks.meta.entity.Metadata</class>
     <class>se.kth.hopsworks.meta.entity.RawData</class>
@@ -47,6 +49,7 @@
     <class>se.kth.hopsworks.meta.entity.Field</class>
     <class>se.kth.hopsworks.meta.entity.Template</class>
     <class>se.kth.hopsworks.meta.entity.InodeBasicMetadata</class>
+    <class>se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes</class>
     <class>se.kth.hopsworks.hdfsUsers.model.HdfsGroups</class>
     <class>se.kth.hopsworks.hdfsUsers.model.HdfsUsers</class>
     <class>se.kth.hopsworks.util.Variables</class>
@@ -56,9 +59,15 @@
     <class>se.kth.bbc.project.ProjectPaymentsHistory</class>
     <class>se.kth.bbc.project.CharonRegisteredSites</class>
     <class>se.kth.bbc.project.CharonRepoShared</class>
-    <class>se.kth.bbc.project.YarnProjectsQuota</class>
     <class>io.hops.bbc.charon.CharonRepoShared</class>
     <class>io.hops.bbc.charon.CharonRegisteredSites</class>
+    <class>se.kth.bbc.jobs.quota.YarnProjectsQuota</class>
+    <class>se.kth.bbc.jobs.quota.YarnRunningPrice</class>
+    <class>se.kth.bbc.jobs.quota.YarnProjectsDailyCost</class>
+    <class>io.hops.kafka.ProjectTopics</class>
+    <class>io.hops.kafka.SharedTopics</class>
+    <class>io.hops.kafka.SchemaTopics</class>
+    <class>io.hops.kafka.TopicAcls</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

@@ -4,13 +4,12 @@
     <title>HopsWorks</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
-    <link rel="icon" type="image/png" href="images/Hops.png" />
+    <link rel="icon" type="image/png" href="images/hops-black.png" />
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Lobster'>
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Varela+Round'>
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:500'>
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Source+Sans+Pro'>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"/>
-
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
@@ -26,6 +25,7 @@
     <link rel="stylesheet" href="bower_components/ng-sortable/dist/ng-sortable.style.css" />
     <link rel="stylesheet" href="bower_components/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css" />
     <link rel="stylesheet" href="bower_components/angular-multi-select/isteven-multi-select.css" />
+    <link rel="stylesheet" href="bower_components/angular-hamburger-toggle/dist/angular-hamburger-toggle.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
@@ -37,6 +37,10 @@
     <link rel="stylesheet" href="styles/filebrowser.css">
     <link rel="stylesheet" href="styles/board.css">
     <link rel="stylesheet" href="styles/message.css">
+    <link rel="stylesheet" href="styles/angular-tour.css"/>
+    <link rel="stylesheet" href="styles/timeline.css">
+    <link rel="stylesheet" href="styles/cuneiform.css">
+    <link rel="stylesheet" href="styles/ExampleProjectLoaderFix.css">
     <!-- endbuild -->
   </head>
   <body  ng-app="hopsWorksApp">
@@ -50,8 +54,8 @@
 
     <!-- build:js(.) scripts/vendor.js -->
     <!-- bower:js -->
-    <script src="bower_components/jquery/jquery.js"></script>
     <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/jquery/jquery.js"></script>
     <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
     <script src="bower_components/angular-animate/angular-animate.js"></script>
     <script src="bower_components/angular-aria/angular-aria.js"></script>
@@ -80,7 +84,12 @@
     <script src="bower_components/ng-sortable/dist/ng-sortable.js"></script>
     <script src="bower_components/bootstrap-switch/dist/js/bootstrap-switch.js"></script>
     <script src="bower_components/angular-multi-select/isteven-multi-select.js"></script>
+    <script src="bower_components/angular-tour/dist/angular-tour-tpls.min.js"></script>
+    <script src="bower_components/angular-hamburger-toggle/dist/angular-hamburger-toggle.js"></script>
+    <script src="bower_components/clipboard/dist/clipboard.js"></script>
+    <script src="bower_components/ngclipboard/dist/ngclipboard.js"></script>
     <script src="bower_components/angular-utils-pagination/dirPagination.js"></script>
+    <script src="bower_components/angular-smart-table/dist/smart-table.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
@@ -101,21 +110,24 @@
     <script src="scripts/controllers/home.js"></script>
     <script src="scripts/controllers/login.js"></script>
     <script src="scripts/controllers/main.js"></script>
-    <script src="scripts/controllers/modal.js"></script>
+    <script src="scripts/controllers/modalCtrl.js"></script>
     <script src="scripts/controllers/alert.js"></script>
     <script src="scripts/controllers/newFieldCtrl.js"></script>
     <script src="scripts/controllers/newTableCtrl.js"></script>
     <script src="scripts/controllers/profile.js"></script>
     <script src="scripts/controllers/project.js"></script>
     <script src="scripts/controllers/projectCreator.js"></script>
+    <script src="scripts/controllers/projectSettings.js"></script>
     <script src="scripts/controllers/recoverCtrl.js"></script>
     <script src="scripts/controllers/newlistCtrl.js"></script>
+    <script src="scripts/controllers/enterNameCtrl.js"></script>
     <script src="scripts/controllers/modifyFieldCtrl.js"></script>
     <script src="scripts/controllers/registration.js"></script>
     <script src="scripts/controllers/selectFileCtrl.js"></script>
     <script src="scripts/controllers/selectFileCharonCtrl.js"></script>
     <script src="scripts/controllers/attachTemplateCtrl.js"></script>
     <script src="scripts/controllers/shareDatasetCtrl.js"></script>
+    <script src="scripts/controllers/viewPublicDatasetCtrl.js"></script>
     <script src="scripts/controllers/viewSearchResultCtrl.js"></script>
     <script src="scripts/controllers/jobsCtrl.js"></script>
     <script src="scripts/controllers/newJobCtrl.js"></script>
@@ -129,6 +141,13 @@
     <script src="scripts/controllers/detachTemplateCtrl.js"></script>
     <script src="scripts/controllers/charonCtrl.js"></script>
     <script src="scripts/controllers/localFsCtrl.js"></script>
+    <script src="scripts/controllers/inputModalCtrl.js"></script>
+    <script src="scripts/controllers/uberCtrl.js"></script>    
+    <script src="scripts/controllers/kafkaCtrl.js"></script>    
+    <script src="scripts/controllers/selectProjectCtrl.js"></script>    
+    <script src="scripts/controllers/createTopicCtrl.js"></script>    
+    <script src="scripts/controllers/createAclCtrl.js"></script> 
+    <script src="scripts/controllers/createSchemaCtrl.js"></script>
 
     <!-- Services -->
     <script src="scripts/services/AuthInterceptorService.js"></script>
@@ -152,6 +171,7 @@
     <script src="scripts/services/CuneiformService.js"></script>
     <script src="scripts/services/SparkService.js"></script>
     <script src="scripts/services/AdamService.js"></script>
+    <script src="scripts/services/FlinkService.js"></script>
     <script src="scripts/services/JobService.js"></script>
     <script src="scripts/services/RequestService.js"></script>
     <script src="scripts/services/MetadataHelperService.js"></script>
@@ -162,6 +182,8 @@
     <script src="scripts/services/BiobankingService.js"></script>
     <script src="scripts/services/CharonService.js"></script>
     <script src="scripts/services/LocalFsService.js"></script>
+    <script src="scripts/services/TourService.js"></script>
+    <script src="scripts/services/KafkaService.js"></script>
     
     <!-- endbuild -->
 

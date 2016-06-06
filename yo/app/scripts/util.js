@@ -18,6 +18,9 @@ var getFileName = function (path) {
  * @param {long} size in bytes
  */
 var convertSize = function (fileSizeInBytes) {
+  if (fileSizeInBytes === -1) {
+    return "unlimited";
+  }
   if (fileSizeInBytes === 0) {
     return 0;
   }
@@ -30,7 +33,49 @@ var convertSize = function (fileSizeInBytes) {
 
   return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
 };
-  
+
+
+var convertNs = function (numFiles) {
+  if (numFiles === -1) {
+    return "unlimited";
+  }
+  if (numFiles === 0) {
+    return 0;
+  }
+  var i = -1;
+  var byteUnits = ['K', ' M'];
+  do {
+    numFiles = numFiles / 1000;
+    i++;
+  } while (numFiles > 1000);
+
+  return Math.max(numFiles, 0.1).toFixed(1) + byteUnits[i];
+};
+
+/**
+ * Change time in seconds to minutes, hours
+ * @param {long} time in seconds
+ */
+var convertSeconds = function (timeInSeconds) {
+  if (timeInSeconds === 0) {
+    return 0;
+  }
+  var mins = timeInSeconds / 60;
+  mins = Math.floor(mins);
+  if (mins > 60) {
+    var hours = mins / 60;
+    hours = Math.floor(hours);
+    mins = mins - (hours * 60);
+    return hours + "hrs " + mins + "mins";
+  } else {
+    timeInSeconds = timeInSeconds - (mins * 60);
+    return mins + "mins " + timeInSeconds + "secs";    
+  }
+
+};
+
+
+
 /**
  * Sorts an object (a list) based on a predicate
  * 
@@ -44,8 +89,8 @@ var sortObject = function(filter, predicate, template){
   return filter('orderBy')(template.columns, predicate, false);
 };
 
-function getLocationBase() {
-  var port = Number(location.port);
+function getPort() {
+    var port = Number(location.port);
   if (port === 'undefined' || port === 0) {
     port = 80;
     if (location.protocol === 'https:') {
@@ -56,11 +101,19 @@ function getLocationBase() {
   if (port === 3333 || port === 9000) {
     port = 8080;
   }
-  return location.protocol + "//" + location.hostname +":" + port + skipTrailingSlash(location.pathname);
+  return port;
+};
+
+function getLocationBase() {
+  return location.protocol + "//" + location.hostname +":" + getPort() + skipTrailingSlash(location.pathname);
 };
 
 function getWsProtocol() {
   return location.protocol === 'https:' ? 'wss:' : 'ws:';
+};
+
+function getZeppelinWsBaseURL() {
+  return getWsProtocol() +"//" + location.hostname + ":" + getPort() + skipTrailingSlash(location.pathname) + "/zeppelin/ws";
 };
 
 function skipTrailingSlash(path) {

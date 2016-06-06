@@ -1,5 +1,7 @@
 package se.kth.hopsworks.controller;
 
+import io.hops.hdfs.HdfsLeDescriptors;
+import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
@@ -21,6 +23,7 @@ import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
+import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.UserGroupInformationService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
@@ -36,22 +39,24 @@ import se.kth.hopsworks.util.Settings;
 public class SparkController {
 
   private static final Logger logger = Logger.getLogger(SparkController.class.
-          getName());
+      getName());
 
-  @EJB
-  private FileOperations fops;
-  @EJB
-  private AsynchronousJobExecutor submitter;
-  @EJB
-  private ActivityFacade activityFacade;
-  @EJB
-  private DistributedFsService dfs;
-  @EJB
-  private UserGroupInformationService ugiService;
-  @EJB
-  private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private Settings settings;
+    @EJB
+    private FileOperations fops;
+    @EJB
+    private AsynchronousJobExecutor submitter;
+    @EJB
+    private ActivityFacade activityFacade;
+    @EJB
+    private DistributedFsService dfs;
+    @EJB
+    private UserGroupInformationService ugiService;
+    @EJB
+    private HdfsUsersController hdfsUsersBean;
+    @EJB
+    private Settings settings;
+    @EJB
+    private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
 
   /**
    * Start the Spark job as the given user.
@@ -62,12 +67,11 @@ public class SparkController {
    * @throws IllegalStateException If Spark is not set up properly.
    * @throws IOException If starting the job fails.
    * @throws NullPointerException If job or user is null.
-   * @throws IllegalArgumentException If the given job does not represent a
-   * Spark job.
+   * @throws IllegalArgumentException If the given job does not represent a Spark job.
    */
   public Execution startJob(final JobDescription job, final Users user) throws
-          IllegalStateException,
-          IOException, NullPointerException, IllegalArgumentException {
+      IllegalStateException,
+      IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.
     if (job == null) {
       throw new NullPointerException("Cannot run a null job.");
@@ -75,7 +79,7 @@ public class SparkController {
       throw new NullPointerException("Cannot run a job as a null user.");
     } else if (job.getJobType() != JobType.SPARK) {
       throw new IllegalArgumentException(
-              "Job configuration is not a Spark job configuration.");
+          "Job configuration is not a Spark job configuration.");
     } else if (!isSparkJarAvailable()) {
       throw new IllegalStateException("Spark is not installed on this system.");
     }
@@ -85,10 +89,10 @@ public class SparkController {
     try {
       sparkjob = proxyUser.doAs(new PrivilegedExceptionAction<SparkJob>() {
         @Override
-        public SparkJob run() throws Exception {           
+        public SparkJob run() throws Exception {
           return new SparkJob(job, submitter, user, settings.
-            getHadoopDir(), settings.getSparkDir(),
-            settings.getSparkUser());
+              getHadoopDir(), settings.getSparkDir(), hdfsLeDescriptorsFacade.getSingleEndpoint(),
+              settings.getSparkUser());
         }
       });
     } catch (InterruptedException ex) {
@@ -102,11 +106,11 @@ public class SparkController {
       submitter.startExecution(sparkjob);
     } else {
       logger.log(Level.SEVERE,
-              "Failed to persist JobHistory. Aborting execution.");
+          "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
-            user.asUser());
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.getProject(),
+        user.asUser());
     return jh;
   }
 
@@ -126,15 +130,14 @@ public class SparkController {
     }
 
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
-        settings.getSparkUser());
+        hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser());
 
     submitter.stopExecution(sparkjob, appid);
 
-  }
+    }
 
   /**
-   * Check if the Spark jars are in HDFS. If it's not, try and copy it there
-   * from the local filesystem. If it's still
+   * Check if the Spark jars are in HDFS. If it's not, try and copy it there from the local filesystem. If it's still
    * not there, then return false.
    * <p/>
    * @return
@@ -142,10 +145,14 @@ public class SparkController {
   public boolean isSparkJarAvailable() {
     boolean isInHdfs;
     try {
-      isInHdfs = fops.exists(settings.getHdfsSparkJarPath());
+      String sparkInHdfsPath = settings.getHdfsSparkJarPath();
+      // don't need the NN ip:port here - just going to DB
+//    sparkInHdfsPath = sparkInHdfsPath.replaceFirst("hdfs:/*user",
+//          "hdfs://" + hdfsLeDescriptorsFacade.getSingleEndpoint() + "/user");
+      isInHdfs = fops.exists(sparkInHdfsPath);
     } catch (IOException e) {
       logger.log(Level.WARNING, "Cannot get Spark jar file from HDFS: {0}",
-              settings.getHdfsSparkJarPath());
+          settings.getHdfsSparkJarPath());
       //Can't connect to HDFS: return false
       return false;
     }
@@ -158,21 +165,20 @@ public class SparkController {
       try {
         String hdfsJarPath = settings.getHdfsSparkJarPath();
         fops.copyToHDFSFromLocal(false, settings.getLocalSparkJarPath(),
-                hdfsJarPath);
+            hdfsJarPath);
       } catch (IOException e) {
         return false;
       }
     } else {
       logger.log(Level.WARNING, "Cannot find Spark jar file locally: {0}",
-              settings.getLocalSparkJarPath());
+          settings.getLocalSparkJarPath());
       return false;
     }
     return true;
   }
 
   /**
-   * Inspect the jar on the given path for execution. Returns a
-   * SparkJobConfiguration object with a default
+   * Inspect the jar on the given path for execution. Returns a SparkJobConfiguration object with a default
    * configuration for this job.
    * <p/>
    * @param path
@@ -182,19 +188,30 @@ public class SparkController {
    * @throws IOException
    */
   public SparkJobConfiguration inspectJar(String path, String username) throws
-          AccessControlException, IOException,
-          IllegalArgumentException {
+      AccessControlException, IOException,
+      IllegalArgumentException {
+    logger.log(Level.INFO, "Executing Spark job by {0} at path: {1}", new Object[]{username, path});
     if (!path.endsWith(".jar")) {
       throw new IllegalArgumentException("Path does not point to a jar file.");
     }
+    HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
+    // If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
+    path = path.replaceFirst("hdfs:/*Projects",
+        "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
+    logger.log(Level.INFO, "Really executing Spark job by {0} at path: {1}", new Object[]{username, path});
+
+    SparkJobConfiguration config = new SparkJobConfiguration();
     JarInputStream jis = new JarInputStream(dfs.getDfsOps(username).open(path));
     Manifest mf = jis.getManifest();
-    Attributes atts = mf.getMainAttributes();
-    SparkJobConfiguration config = new SparkJobConfiguration();
-    if (atts.containsKey(Name.MAIN_CLASS)) {
-      config.setMainClass(atts.getValue(Name.MAIN_CLASS));
+    if (mf != null) {
+      Attributes atts = mf.getMainAttributes();
+      if (atts.containsKey(Name.MAIN_CLASS)) {
+        config.setMainClass(atts.getValue(Name.MAIN_CLASS));
+      }
     }
+
     config.setJarPath(path);
+    config.setHistoryServerIp(settings.getSparkHistoryServerIp());
     return config;
   }
 

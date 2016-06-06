@@ -6,7 +6,7 @@ angular.module('hopsWorksApp')
               confirm: function (size, title, msg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/confirmModal.html',
-                  controller: 'ModalCtrl as ctrl',
+                  controller: 'ModalCtrl as modalCtrl',
                   size: size,
                   resolve: {
                     title: function () {
@@ -19,10 +19,29 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              uberPrice: function (size, title, msg, price) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/uberModal.html',
+                  controller: 'UberCtrl as uberCtrl',
+                  size: size,
+                  resolve: {
+                    title: function () {
+                      return title;
+                    },
+                    msg: function () {
+                      return msg;
+                    },
+                    price: function () {
+                      return price;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
               alert: function (size, title, msg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/alertModal.html',
-                  controller: 'AlertCtrl as ctrl',
+                  controller: 'AlertCtrl as alertCtrl',
                   size: size,
                   resolve: {
                     title: function () {
@@ -38,7 +57,7 @@ angular.module('hopsWorksApp')
               confirmShare: function (size, title, msg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/confirmShareModal.html',
-                  controller: 'ModalCtrl as ctrl',
+                  controller: 'ModalCtrl as modalCtrl',
                   size: size,
                   resolve: {
                     title: function () {
@@ -72,6 +91,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              
               createRepository: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/newRepositoryModal.html',
@@ -157,24 +177,17 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              projectSettings: function (size) {
+              projectSettings: function (size, projectId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/projectSettingsModal.html',
-                  controller: 'ProjectCtrl as projectCtrl',
-                  size: size,
+                  controller: 'ProjectSettingsCtrl as projectSettingsCtrl',
+                  size: size, 
                   resolve: {
-                    auth: ['$q', '$location', 'AuthService',
-                      function ($q, $location, AuthService) {
-                        return AuthService.session().then(
-                                function (success) {
-                                },
-                                function (err) {
-                                  $location.path('/login');
-                                  $location.replace();
-                                  return $q.reject(err);
-                                });
-                      }]
-                  }
+                    projectId: function () {
+                      return projectId;
+                    }
+                  }                  
+                  
                 });
                 return modalInstance.result;
               },
@@ -297,6 +310,33 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
+              },
+              viewPublicDataset: function (size, projects, datasetDto) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/viewPublicDataset.html',
+                  controller: 'ViewPublicDatasetCtrl as viewPublicDatasetCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projects: function () {
+                      return projects;
+                    },
+                    datasetDto: function () {
+                      return datasetDto;
+                    }
+                  }
+                });
+                return modalInstance.projects;
               },
               /**
                * Open a dialog to allow creating a new folder at the given path (excluding the new folder's name).
@@ -466,6 +506,108 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              selectProject: function (size, projectId, msg) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/selectProject.html',
+                  controller: 'SelectProjectCtrl as selectProjectCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projectId: function () {
+                      return projectId;
+                    },
+                    msg: function () {
+                      return msg;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },              
+              createSchema: function (size, projectId) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/createSchema.html',
+                  controller: 'CreateSchemaCtrl as createSchemaCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projectId: function () {
+                      return projectId;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },     
+              createTopic: function (size, projectId) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/createTopic.html',
+                  controller: 'CreateTopicCtrl as createTopicCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projectId: function () {
+                      return projectId;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },     
+              createTopicAcl: function (size, projectId, topicName) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/createTopicAcl.html',
+                  controller: 'CreateAclCtrl as createAclCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projectId: function () {
+                      return projectId;
+                    },
+                    topicName: function () {
+                      return topicName;
+                  }
+                  }
+                });
+                return modalInstance.result;
+              },                
               jobDetails: function (size, job, projectId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/jobDetails.html',
@@ -519,6 +661,34 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              enterName: function (size, title, newName) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/enterNameModal.html',
+                  controller: 'EnterNameCtrl as enterNameCtrl',
+                  size: size,
+                  backdrop: 'static',
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    title: function () {
+                      return title;
+                    },
+                    newName: function () {
+                      return newName;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },              
               importTemplate: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/importTemplate.html',
@@ -649,7 +819,7 @@ angular.module('hopsWorksApp')
               noteName: function (size, title, msg, val ) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/noteNameModal.html',
-                  controller: 'ModalCtrl as ctrl',
+                  controller: 'InputModalCtrl as ctrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',

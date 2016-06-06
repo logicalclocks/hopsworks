@@ -14,6 +14,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.AdamService.class);
     register(se.kth.hopsworks.rest.AppExceptionMapper.class);
     register(se.kth.hopsworks.rest.AuthExceptionMapper.class);
+    register(se.kth.hopsworks.rest.AgentService.class);
     register(se.kth.hopsworks.rest.AuthService.class);
     register(se.kth.hopsworks.rest.CuneiformService.class);
     register(se.kth.hopsworks.rest.DataSetService.class);
@@ -23,15 +24,21 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.ProjectService.class);
     register(se.kth.hopsworks.rest.RequestService.class);
     register(se.kth.hopsworks.rest.SparkService.class);
+    register(se.kth.hopsworks.rest.FlinkService.class);
     register(se.kth.hopsworks.rest.ThrowableExceptionMapper.class);
     register(se.kth.hopsworks.rest.TransactionExceptionMapper.class);
     register(se.kth.hopsworks.rest.AccessControlExceptionMapper.class);
     register(se.kth.hopsworks.rest.DownloadService.class);
     register(se.kth.hopsworks.rest.UploadService.class);
     register(se.kth.hopsworks.rest.UserService.class);
+    register(se.kth.hopsworks.zeppelin.rest.InterpreterService.class);
+    register(se.kth.hopsworks.zeppelin.rest.NotebookService.class);
     register(se.kth.hopsworks.zeppelin.rest.InterpreterRestApi.class);
     register(se.kth.hopsworks.zeppelin.rest.NotebookRestApi.class);
     register(se.kth.hopsworks.zeppelin.rest.ZeppelinRestApi.class);
+    register(se.kth.hopsworks.zeppelin.rest.LoginRestApi.class);
+    register(se.kth.hopsworks.zeppelin.rest.ConfigurationsRestApi.class);
+    register(se.kth.hopsworks.zeppelin.rest.SecurityRestApi.class);
     register(se.kth.hopsworks.rest.MetadataService.class);
     register(se.kth.hopsworks.rest.MessageService.class);
     register(se.kth.hopsworks.rest.ElasticService.class);
@@ -40,6 +47,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hdfs.EndpointService.class);
     register(se.kth.hopsworks.rest.LocalFsService.class);
     register(se.kth.hopsworks.rest.CharonService.class);
+    register(se.kth.hopsworks.rest.KafkaService.class);
     // register resources and features
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     //register(org.glassfish.jersey.filter.LoggingFilter.class);

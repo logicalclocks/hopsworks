@@ -18,7 +18,7 @@ angular.module('hopsWorksApp')
               securityQuestion: '',
               securityAnswer: '',
               ToS: '',
-              authType: '',
+              authType: 'Mobile',
               orgName: '',
               dep: '',
               street: '',

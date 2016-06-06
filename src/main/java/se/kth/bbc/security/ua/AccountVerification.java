@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.ua;
 
 import javax.annotation.PostConstruct;
@@ -11,127 +6,165 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
+import javax.persistence.PersistenceException;
+import javax.persistence.QueryTimeoutException;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.security.audit.AccountsAuditActions;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.hopsworks.user.model.Users;
 
-
 @ManagedBean
 @RequestScoped
 public class AccountVerification {
 
-  @EJB
-  private UserManager mgr;
+    @EJB
+    private UserManager mgr;
 
     @EJB
-  private AuditManager am;
+    private AuditManager am;
 
+    @ManagedProperty("#{param.key}")
+    private String key;
 
-  @ManagedProperty(value = "#{param.key}")
-  private String key;
+    private String username;
+    private boolean valid = false;
+    private boolean alreadyRegistered = false;
+    private boolean alreadyValidated = false;
+    private boolean dbDown = false;
+    private boolean userNotFound = false;
 
-  private String username;
-  private boolean valid;
+    @PostConstruct
+    public void init() {
+        username = key.substring(0, AuthenticationConstants.USERNAME_LENGTH);
+        // get the 8 char username
+        String secret = key.substring(AuthenticationConstants.USERNAME_LENGTH, key.length());
+        valid = validateKey(secret);
+    }
 
-  @PostConstruct
-  public void init() {
+    private boolean validateKey(String key) {
 
-    username = key.substring(0, 8);
+        // If user loged in invalidate session first  
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
 
-    // get the 8 char username
-    String secret = key.substring(8, key.length());
-    valid = validateKey(secret);
-  }
+        Users user = null;
 
-  private boolean validateKey(String key) {
+        try {
+            user = mgr.getUserByUsername(username);
+        } catch (QueryTimeoutException ex) {
+            dbDown = true;
+            return false;
+        } catch (PersistenceException ex) {
+            dbDown = true;
+            return false;
+        }
 
-    // If user loged in invalidate session first  
-    FacesContext ctx = FacesContext.getCurrentInstance();
-    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
-            getRequest();
+        if (user == null) {
+            userNotFound = true;
+            return false;
+        }
 
-    /*
-    if (req.getRemoteUser() != null) {
-      HttpSession session = (HttpSession) ctx.getExternalContext().getSession(
-              false);
+        if ((user.getStatus() != PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
+            && user.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue())
+            || (user.getStatus() != PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
+            && user.getMode() == PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue())) {
+            am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+                AccountsAuditActions.FAILED.name(), "Could not verify the account due to wrong status.", user);
+            
+            if (user.getStatus() == PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue()) {
+                this.alreadyRegistered = true;
+            }
+            if (user.getStatus() == PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()) {
+                this.alreadyValidated = true;
+            }
+            
+            return false;
+        }
 
-      if (null != session) {
-        session.invalidate();
+        if (key.equals(user.getValidationKey())) {
+            mgr.changeAccountStatus(user.getUid(), "",
+                PeopleAccountStatus.VERIFIED_ACCOUNT.getValue());
+            am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+                AccountsAuditActions.SUCCESS.name(), "Verified account email address.", user);
+            mgr.resetKey(user.getUid());
+            return true;
+        }
+
+        int val = user.getFalseLogin();
+        mgr.increaseLockNum(user.getUid(), val + 1);
+
+        // if more than 5 times false logins set as spam
+        if (val > AuthenticationConstants.ACCOUNT_VALIDATION_TRIES) {
+            mgr.changeAccountStatus(user.getUid(), PeopleAccountStatus.SPAM_ACCOUNT.toString(),
+                PeopleAccountStatus.SPAM_ACCOUNT.getValue());
+            mgr.resetKey(user.getUid());
+            am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+                AccountsAuditActions.FAILED.name(), "Too many false activation attemps.", user);
+
+        }
+
         return false;
-      }
-    } */
-
-    Users user = mgr.getUserByUsername(username);
-
-    if (user.getStatus() != PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()) {
-       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-              AccountsAuditActions.FAILED.name(), "Could not verify the account due to wrnong status.", user);
-
-      return false;
     }
 
-    if (key.equals(user.getValidationKey())) {
-      if (user.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
-
-        mgr.changeAccountStatus(user.getUid(), "",
-                PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
-
-      } else if (user.getMode() == PeopleAccountStatus.MOBILE_USER.
-              getValue()) {
-         
-
-        mgr.changeAccountStatus(user.getUid(), "",
-                PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
-      }
-              
-       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-              AccountsAuditActions.SUCCESS.name(), "Verified account email address.", user);
-
-      mgr.resetKey(user.getUid());
-      return true;
+    public String getKey() {
+        return key;
     }
 
-    int val = user.getFalseLogin();
-    mgr.increaseLockNum(user.getUid(), val + 1);
-
-    if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
-      mgr.changeAccountStatus(user.getUid(), "SPAM Acccount",
-              PeopleAccountStatus.SPAM_ACCOUNT.getValue());
-      mgr.resetKey(user.getUid());
-      mgr.resetKey(user.getUid());
-       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-              AccountsAuditActions.FAILED.name(), "Too many false activation attemps.", user);
-
-      
+    public void setKey(String key) {
+        this.key = key;
     }
 
-    return false;
-  }
+    public String getUsername() {
+        return username;
+    }
 
-  public String getKey() {
-    return key;
-  }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-  public void setKey(String key) {
-    this.key = key;
-  }
+    public boolean isValid() {
+        return valid;
+    }
 
-  public String getUsername() {
-    return username;
-  }
+    public void setValid(boolean valid) {
+        this.valid = valid;
+    }
 
-  public void setUsername(String username) {
-    this.username = username;
-  }
+    public void setDbDown(boolean dbDown) {
+        this.dbDown = dbDown;
+    }
 
-  public boolean isValid() {
-    return valid;
-  }
+    public boolean isDbDown() {
+        return dbDown;
+    }
 
-  public void setValid(boolean valid) {
-    this.valid = valid;
-  }
+    public boolean isUserNotFound() {
+        return userNotFound;
+    }
+
+    public void setUserNotFound(boolean userNotFound) {
+        this.userNotFound = userNotFound;
+    }
+
+    public boolean isAlreadyValidated() {
+        return alreadyValidated;
+    }
+
+    public void setAlreadyValidated(boolean alreadyValidated) {
+        this.alreadyValidated = alreadyValidated;
+    }
+
+    public String setLogin() {    
+        return ("welcome");
+    }
+
+    public boolean isAlreadyRegistered() {
+        return alreadyRegistered;
+    }
+
+    public void setAlreadyRegistered(boolean alreadyRegistered) {
+        this.alreadyRegistered = alreadyRegistered;
+    }
 
 }

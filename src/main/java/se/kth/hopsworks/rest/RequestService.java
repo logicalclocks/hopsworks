@@ -35,7 +35,7 @@ import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 
 @Path("/request")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -151,7 +151,7 @@ public class RequestService {
             + " wants access to a dataset in a project you own. \n\n"
             + "Dataset name: " + ds.getInode().getInodePK().getName() + "\n"
             + "Project name: " + proj.getName() + "\n"
-            + "Atached messag: " + requestDTO.getMessage() + "\n"
+            + "Atached message: " + requestDTO.getMessage() + "\n"
             + "After loging in to hopsworks go to : /project/" + proj.getId()
             + "/datasets "
             + " if you want to share this dataset. \n";
@@ -219,7 +219,7 @@ public class RequestService {
             + user.getFname() + " " + user.getLname()
             + " wants to join a project you own. \n\n"
             + "Project name: " + project.getName() + "\n"
-            + "Atached messag: " + requestDTO.getMessage() + "\n"
+            + "Atached message: " + requestDTO.getMessage() + "\n"
             + "After loging in to hopsworks go to : /project" + project.getId()
             + " and go to members tab "
             + "if you want to add this person as a member in your project. \n";

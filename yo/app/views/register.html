@@ -96,9 +96,6 @@
                     <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.minlength"
                           class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
                         one special character and/or alphanumeric characters. </span>                 
-                    <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.pattern"
-                          class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
-                        one special character and/or alphanumeric characters. </span>
                     <span ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) &amp;&amp; registerForm.user_password_confirm.$invalid"
                           class="text-danger ng-hide">The two passwords you entered do not match</span>
                   </div>
@@ -131,7 +128,7 @@
               </div>
             </div>
             <div ng-if="regCtrl.otp === 'true'">
-            <label class="text-muted">Authentication Choice</label>
+<!--            <label class="text-muted">Authentication Choice</label>
             <hr style="margin-top: 0px">
             <div class="row">
               <div class="col-xs-12 col-sm-12 col-md-12">
@@ -155,7 +152,7 @@
                   </div>
               </div>           
             </div>
-          <!--Yubikey fields -->
+          Yubikey fields 
           <div ng-if="regCtrl.newUser.authType === 'Yubikey'">
               <hr>
               <div class="row">
@@ -231,7 +228,7 @@
                   </div>
               </div>
           </div>
-            <hr>
+            <hr>-->
             </div>
             <div class="row">
               <div class="checkbox c-checkbox pull-left col-md-6">
@@ -278,9 +275,7 @@
 <modal id="tosModal" title="Terms & Conditions">
   <p><strong>Agreement</strong></p>
 
-  <p> The BiobankCloud is a platform-as-a-service (PaaS) for the storage and analysis of digitized 
-      genomic data. The platform provides secure storage and efficient analysis of large amounts of biomedical
-      data as well as the inter-connection of Biobanks.
+  <p> HopsWorks is software-as-a-service (SaaS) for Apache Hadoop, Apache Spark, Apache Flink, Apache Zeppelin, and Elasticsearch.
   </p>
   <b> Definitions</b>
 
@@ -289,11 +284,7 @@
         <i>User</i> – the data owner acting as the controller, the legally responsible party who uploads the data on the platform.
       </li>
       <li>
-        <i>BiobankCloud platform</i> – the processor who processes the data on behalf of the controller
-      </li>
-      <li>
-        <i>Ethics board or auditor</i> – party who is entrusted to monitor the processing conducted on
-        the platform on behalf of the platform or on the user. 
+        <i>HopsWorks platform</i> – the processor who processes the data on behalf of the controller
       </li>
     </ul>
 
@@ -306,8 +297,7 @@
         The user undertakes to strictly follow a research protocol and only act 
         within the limits of any given consent, alternatively any other legal ground within the applicable law, 
         for example a permission from an ethical review board to allow re-use of previously consented data.  
-        In order to secure the abovementioned, the user is to provide evidence of research approval for each study 
-        processed within the platform, according to the forms set out in the platform.
+        In order to secure the above mentioned, the user is to provide evidence of research approval for each study processed within the platform, according to the forms set out in the platform.
 
         <ul>
           <li>SRPA: Standard Research Project Approval</li>
@@ -328,18 +318,17 @@
       <br></br>
       <li>
         <b>Transparency:</b>
-        All processing of the data within the BioBankCloud platform is conducted by the 
-        platform itself. If any subcontractors will be involved in the future, the BiobankCloud Platform 
-        undertakes to inform the user in writing. If the user does not want to continue using the BiobankCloud 
-        Platform services under these conditions, the platform will take care to end its services under controlled forms, 
-        as set out in point 13. Termination of the contract. 
+        All processing of the data within the HopsWorks platform is conducted by the 
+        platform itself. If any subcontractors will be involved in the future, the HopsWorks Platform 
+        undertakes to inform the user in writing. If the user does not want to continue using the HopsWorks 
+        Platform services under these conditions, the platform will take care to end its services under controlled forms, as set out in point 13. Termination of the contract. 
       </li>
       <br></br>
 
       <li>
         <b>Changes in the Services:</b>
         If in the future changes will be made in the service that requires the installation of new software, libraries or 
-        hardware devices on the users systems, the BiobankCloud will inform the user about this, and in particular about its
+        hardware devices on the users systems, the HopsWorks will inform the user about this, and in particular about its
         implications from a data protection and data security point of view.
 
         The user agrees to provide the data subjects with information on where the data is being processed, in the event the
@@ -410,13 +399,6 @@
         An audit organ, either internal or external, may access the recordings of the processing. Both the user and the platform may require a report
         from the audit organ to ensure that all processing of the data has been carried out in accordance with this agreement. 
 
-      </li>
-      <br></br>
-
-      <li>
-        <b> Portability:</b> 
-        The data model representing metadata about biobank, samples and studies is based on MIABIS 2.0, which ensures interoperability with data 
-        collected within the BBMRI-ERIC. 
       </li>
       <br></br>
 

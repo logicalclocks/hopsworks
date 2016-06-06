@@ -1,9 +1,4 @@
-/**
- * Created by AMore on 2015-04-24.
- */
-
 'use strict';
-
 
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
@@ -18,16 +13,68 @@ angular.module('hopsWorksApp')
             self.files = []; //A list of files currently displayed to the user.
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
-            self.selected; //The index of the selected file in the files array.
+            self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
+            self.selected = null; //The index of the selected file in the files array.
+            self.selectedList = []; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
+            self.sharedPath; //The details about the currently selected file.
 
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
+
+            $scope.isPublic = true;
+            
+            $scope.tgState = true;
+
+            $scope.status = {
+              isopen: false
+            };
+
+            self.onSuccess = function (e) {
+              growl.success("Copied to clipboard", {title: '', ttl: 1000});
+              e.clearSelection();
+            };
+
+            $scope.toggleDropdown = function ($event) {
+              $event.preventDefault();
+              $event.stopPropagation();
+              $scope.status.isopen = !$scope.status.isopen;
+            };
+
 
             self.metadataView = {};
             self.availableTemplates = [];
             self.closeSlider = false;
 
-            $scope.sort = function(keyname){
+            self.breadcrumbLen = function () {
+              if (self.pathArray === undefined || self.pathArray === null) {
+                return 0;
+              }
+              var displayPathLen = 10;
+              if (self.pathArray.length <= displayPathLen) {
+                return self.pathArray.length - 1;
+              }
+              return displayPathLen;
+            }
+
+            self.cutBreadcrumbLen = function () {
+              if (self.pathArray === undefined || self.pathArray === null) {
+                return false;
+              }
+              if (self.pathArray.length - self.breadcrumbLen() > 0) {
+                return true;
+              }
+              return false;
+            }
+
+            self.selectInode = function (inode) {
+              // add to selectedList
+            }
+
+            self.selectInode = function (inode) {
+              // splice
+            }
+
+            $scope.sort = function (keyname) {
               $scope.sortKey = keyname;   //set the sortKey to the param passed
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
             }
@@ -41,12 +88,6 @@ angular.module('hopsWorksApp')
               }
             });
 
-            $scope.$watch(MetadataHelperService.getCloseSlider, function (response) {
-              if (response === "true") {
-                self.close();
-                MetadataHelperService.setCloseSlider("false");
-              }
-            });
 
             $scope.$watch(MetadataHelperService.getDirContents, function (response) {
               if (response === "true") {
@@ -54,6 +95,32 @@ angular.module('hopsWorksApp')
                 MetadataHelperService.setDirContents("false");
               }
             });
+
+            self.isShared = function () {
+              var top = self.pathArray[0].split("::");
+              if (top.length === 1) {
+                return false;
+              }
+              return true;
+            };
+            
+            self.sharedDatasetPath = function () {
+              var top = self.pathArray[0].split("::");
+              if (top.length === 1) {
+                self.sharedPathArray = [];
+                return;
+              }
+              // /proj::shared_ds/path/to  -> /proj/ds/path/to
+              // so, we add '1' to the pathLen
+              self.sharedPathArray = new Array(self.pathArray.length + 1);
+              self.sharedPathArray[0] = top[0];
+              self.sharedPathArray[1] = top[1];
+              for (var i=1; i<pathArray.length; i++ ) {
+                self.sharedPathArray[i+1] = pathArray[i];
+              }
+              return self.sharedPathArray;
+            };            
+
 
             /*
              * Get all datasets under the current project.
@@ -80,20 +147,20 @@ angular.module('hopsWorksApp')
               self.working = true;
               //Get the contents and load them
               dataSetService.getContents(newPath).then(
-                function (success) {
-                  //Reset the selected file
-                  self.selected = null;
-                  self.fileDetail = null;
-                  //Set the current files and path
-                  self.files = success.data;
-                  self.pathArray = newPathArray;
-                  self.working = false;
-                  console.log(success);
-                }, function (error) {
-                  self.working = false;
-                  console.log("Error getting the contents of the path " + getPath(newPathArray));
-                  console.log(error);
-                });
+                      function (success) {
+                        //Reset the selected file
+                        self.selected = null;
+                        self.fileDetail = null;
+                        //Set the current files and path
+                        self.files = success.data;
+                        self.pathArray = newPathArray;
+                        self.working = false;
+                        console.log(success);
+                      }, function (error) {
+                self.working = false;
+                console.log("Error getting the contents of the path " + getPath(newPathArray));
+                console.log(error);
+              });
             });
 
             /**
@@ -124,7 +191,7 @@ angular.module('hopsWorksApp')
                         self.working = false;
                         console.log(success);
                       }, function (error) {
-                        self.working = false;
+                self.working = false;
                 console.log("Error getting the contents of the path " + getPath(newPathArray));
                 console.log(error);
               });
@@ -140,6 +207,7 @@ angular.module('hopsWorksApp')
                 self.pathArray = [];
               }
               getDirContents();
+              $scope.tgState = true;
             };
 
             init();
@@ -188,7 +256,7 @@ angular.module('hopsWorksApp')
                         getDirContents();
                       }, function (error) {
                 //The user changed his/her mind. Don't really need to do anything.
-                getDirContents();
+//                getDirContents();
               });
             };
 
@@ -205,6 +273,97 @@ angular.module('hopsWorksApp')
             };
 
             /**
+             * Makes the dataset public for anybody within the local cluster or any outside cluster.
+             * @param id inodeId
+             */
+            self.makePublic = function (id) {
+
+              ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet public? \n\
+This will make all its files available for any registered user to download and process.').then(
+                      function (success) {
+                        dataSetService.makePublic(id).then(
+                                function (success) {
+                                  growl.success(success.data.successMessage, {title: 'The DataSet is now Public.', ttl: 1500});
+                                  getDirContents();
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 1000});
+                        });
+
+                      }
+              );
+
+            };
+            
+             self.removePublic = function (id) {
+
+              ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet private? \n\
+This will make all its files unavailable to other projects unless you share it explicitly.').then(
+                      function (success) {
+                        dataSetService.removePublic(id).then(
+                                function (success) {
+                                  growl.success(success.data.successMessage, {title: 'The DataSet is now Private.', ttl: 1500});
+                                  getDirContents();
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 1000});
+                        });
+
+                      }
+              );
+            };           
+            
+
+            self.parentPathArray = function () {
+              var newPathArray = self.pathArray.slice(0);
+              var clippedPath = newPathArray.splice(1, newPathArray.length - 1);
+              return clippedPath;
+            };
+
+            self.move = function (inodeId, name) {
+              ModalService.selectDir('lg', "/[^]*/",
+                      "problem selecting file").then(
+                      function (success) {
+                        var destPath = success;
+                        // Get the relative path of this DataSet, relative to the project home directory
+                        // replace only first occurrence 
+                        var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
+                        var finalPath = relPath + "/" + name;
+
+                        dataSetService.move(inodeId, finalPath).then(
+                                function (success) {
+//                                  self.openDir(relPath);
+                                  getDirContents();
+                                  growl.success(success.data.successMessage, {title: 'Moved successfully. Opened dest dir: ' + relPath, ttl: 2000});
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                        });
+
+
+                      }, function (error) {
+                //The user changed their mind.
+              });
+
+            };
+
+
+            self.rename = function (inodeId) {
+
+              var pathComponents = self.pathArray.slice(0);
+              var newPath = getPath(pathComponents);
+              var destPath = newPath + '/';
+              var newName = "New Name";
+              ModalService.enterName('lg', "Rename File or Directory", newName).then(
+                      function (success) {
+                        var fullPath = destPath + success.newName;
+                        dataSetService.move(inodeId, fullPath).then(
+                                function (success) {
+                                  getDirContents();
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                        });
+
+                      });
+            };
+            /**
              * Opens a modal dialog for file upload.
              * @returns {undefined}
              */
@@ -216,7 +375,7 @@ angular.module('hopsWorksApp')
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                         getDirContents();
                       }, function (error) {
-                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+//                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
                 getDirContents();
               });
             };
@@ -332,7 +491,9 @@ angular.module('hopsWorksApp')
                 getDirContents(newPathArray);
               }
             };
-
+            self.goToDataSetsDir = function () {
+              $location.path('/project/' + self.projectId + '/datasets');
+            }
             /**
              * Go to the folder at the index in the pathArray array.
              * @param {type} index
@@ -340,7 +501,7 @@ angular.module('hopsWorksApp')
              */
             self.goToFolder = function (index) {
               var newPathArray = self.pathArray.slice(0);
-              newPathArray.splice(index + 1, newPathArray.length - index - 1);
+              newPathArray.splice(index, newPathArray.length - index);
               getDirContents(newPathArray);
             };
 
@@ -353,6 +514,13 @@ angular.module('hopsWorksApp')
             self.select = function (selectedIndex, file) {
               self.selected = selectedIndex;
               self.fileDetail = file;
+
+            };
+
+            self.deselect = function () {
+              self.selected = null
+              self.fileDetail = null;
+              self.sharedPath = null;
             };
 
             self.toggleLeft = buildToggler('left');

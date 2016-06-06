@@ -76,6 +76,39 @@ public class LocalhostServices {
     }
     return stdout;
   }
+  //Make this asynchronous and call back UserCertsFacade.putUSer()
+  public static String createUserCertificates(String projectName, String userName) throws IOException {
+    
+    String sslCertFile = Settings.CA_CERT_DIR + projectName + "__" + userName + ".cert.pem";
+    String sslKeyFile = Settings.CA_KEY_DIR + projectName + "__" + userName + ".key.pem";
+
+    if (new File(sslCertFile).exists() || new File(sslKeyFile).exists()) {
+      throw new IOException("Certs exist already: " + sslCertFile + " & " + sslKeyFile);
+    }
+    
+    // Need to execute CreatingUserCerts.sh as 'root' using sudo. 
+    // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
+    // TODO: Hopswork-chef needs to put script in glassfish directory!
+    List<String> commands = new ArrayList<>();
+    commands.add("/bin/bash");
+    commands.add("-c");   
+    commands.add("sudo /srv/glassfish/domain1/config/ca/intermediate" + "/" + Settings.SSL_CREATE_CERT_SCRIPTNAME + " " + projectName + "__" + userName);
+
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+    String stdout = "", stderr = "";
+    try {
+      int result = commandExecutor.executeCommand();
+      // get the stdout and stderr from the command that was run
+      stdout = commandExecutor.getStandardOutputFromCommand();
+      stderr = commandExecutor.getStandardErrorFromCommand();
+      if (result != 0) {
+        throw new IOException(stderr);
+      }
+    } catch (InterruptedException e) {
+      throw new IOException("Interrupted. Could not generate the certificates: " + stderr);
+    }
+    return stdout;
+   }
 
   public static String getUsernameInProject(String username, String projectName) {
 
@@ -86,17 +119,5 @@ public class LocalhostServices {
     return username + Settings.HOPS_USERNAME_SEPARATOR + projectName;
   }
 
-  public static String getUsernameFromEmail(String email) {
-    String username = email.substring(0, email.lastIndexOf("@"));
-    if (username.contains(".")) {
-      username.replace(".", "_");
-    }
-    if (username.contains("__")) {
-      username.replace("__", "_");
-    }
-    if (username.length() > Settings.MAX_USERNME_LEN) {
-      username = username.substring(0,Settings.MAX_USERNME_LEN-1);
-    }
-    return username;
-  }
+
 }

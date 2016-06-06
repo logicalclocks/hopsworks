@@ -69,7 +69,9 @@ public class FileSystemOperations {
    * @throws java.io.IOException When an error occurs upon HDFS opening.
    */
   public InputStream getInputStream(Path location) throws IOException {
-    return dfs.open(location, 1048576); //TODO: undo hard coding of weird constant here...
+    //Modifed dfs.open method call to be compliant with hdfs Flink client 
+    //required version
+    return dfs.open(location);
   }
 
   /**
@@ -149,6 +151,10 @@ public class FileSystemOperations {
     //TODO: here we could use .get(Configuration conf, String user). 
     //FileSystem then will have to be instantiated, opened and closed on every 
     //method call. Now it's just done on EJB instance creation.
+
+// TODO - erasure coding is causing a problem here...    
+    conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+    
     FileSystem fs = FileSystem.get(conf);
     // FileSystem.get(FileSystem.getDefaultUri(conf), conf, )
     return (DistributedFileSystem) fs;
@@ -291,12 +297,12 @@ public class FileSystemOperations {
 
     //add the erasure coding configuration file
     File erasureCodingConfFile
-            = new File(hadoopConfDir, "erasure-coding-site.xml");
+            = new File(hadoopConfDir, Settings.ERASURE_CODING_CONFIG);
     if (!erasureCodingConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               erasureCodingConfFile);
       throw new IllegalStateException(
-              "No erasure coding conf file: erasure-coding-site.xml");
+              "No erasure coding conf file: " + Settings.ERASURE_CODING_CONFIG);
     }
 
     this.conf.addResource(new Path(erasureCodingConfFile.getAbsolutePath()));

@@ -5,6 +5,7 @@
  */
 package io.hops.hdfs;
 
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -32,10 +33,27 @@ public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
      */
     public HdfsLeDescriptors findEndpoint() {
         try {
-            return em.createNamedQuery("HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).getSingleResult();
+//            return em.createNamedQuery("HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).getSingleResult();
+            List<HdfsLeDescriptors> res = em.createNamedQuery("HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).getResultList();
+            if (res.isEmpty()) {
+              return null;
+            } else {
+              return res.get(0);
+            }
         } catch (NoResultException e) {
             return null;
         }
+    }
+    /**
+     * 
+     * @return "ip:port" for the first namenode found in the table.
+     */
+    public String getSingleEndpoint() {
+      HdfsLeDescriptors hdfs = findEndpoint();
+      if (hdfs == null) {
+        return "";
+      }
+      return hdfs.getHostname();
     }
     
 }
