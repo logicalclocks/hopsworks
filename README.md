@@ -1,6 +1,31 @@
 # HopsWorks
 HopsWorks Big data Management Platform
 
+
+#### Installing Hopsworks
+
+## Single-Machine Deployment
+We recommend that you use Vagrant/virtualbox/chef for deploying Hopsworks on a single host. 
+These are the instruction for getting started with an Ubuntu 14.04+ server:
+```
+  sudo apt-get install virtualbox vagrant git
+  wget https://packages.chef.io/stable/ubuntu/12.04/chefdk_0.9.0-1_amd64.deb
+  sudo dpkg -i chefdk_0.9.0-1_amd64.deb
+  git clone https://github.com/hopshadoop/hopsworks-chef.git
+  cd hopsworks-chef
+  ./run-vagrant.sh
+```
+When vagrant completes successfully, point your browser at:
+```
+  http://localhost:8080/hopsworks
+  usename: admin@kth.se
+  password: admin
+```
+
+## Distributed Deployment
+We recommend that you visit www.karamel.io (or www.hops.io) to deploy a Hopsworks cluster.
+
+
 #### Build Requirements (for Ubuntu)
 NodeJS server, bower.
 
