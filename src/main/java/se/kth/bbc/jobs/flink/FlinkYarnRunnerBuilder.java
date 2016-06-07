@@ -328,7 +328,6 @@ public class FlinkYarnRunnerBuilder {
         for (LocalResourceDTO dto : extraFiles) {
                 builder.addLocalResource(dto, false);
         }
-
         //Set Flink ApplicationMaster env parameters
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_APP_ID, YarnRunner.APPID_PLACEHOLDER);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_COUNT, String.valueOf(taskManagerCount));

@@ -43,6 +43,7 @@ import se.kth.bbc.project.fb.InodeView;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.bbc.security.ua.UserManager;
+import se.kth.hopsworks.certificates.UserCertsFacade;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
@@ -55,6 +56,7 @@ import se.kth.hopsworks.user.model.SshKeys;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.SshkeysFacade;
 import se.kth.hopsworks.util.ConfigFileGenerator;
+import se.kth.hopsworks.util.LocalhostServices;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 
@@ -62,49 +64,51 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectController {
 
-  private final static Logger logger = Logger.getLogger(ProjectController.class.
-          getName());
-  @EJB
-  private ProjectFacade projectFacade;
-  @EJB
-  private ProjectTeamFacade projectTeamFacade;
-  @EJB
-  private ProjectPaymentsHistoryFacade projectPaymentsHistoryFacade;
-  @EJB
-  private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
-  @EJB
-  private UserManager userBean;
-  @EJB
-  private ActivityFacade activityFacade;
-  @EJB
-  private FileOperations fileOps;
-  @EJB
-  private FileSystemOperations fsOps;
-  @EJB
-  private ProjectServiceFacade projectServicesFacade;
-  @EJB
-  private InodeFacade inodes;
-  @EJB
-  private DatasetController datasetController;
-  @EJB
-  private DatasetFacade datasetFacade;
-  @EJB
-  private SshkeysFacade sshKeysBean;
-  @EJB
-  private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private DistributedFsService dfs;
-  @EJB
-  private Settings settings;
-  @EJB
-  private ZeppelinConfigFactory zeppelinConfFactory;
-  @EJB
-  private HdfsLeDescriptorsFacade hdfsLeDescriptorFacade;
+    private final static Logger logger = Logger.getLogger(ProjectController.class.
+        getName());
+    @EJB
+    private ProjectFacade projectFacade;
+    @EJB
+    private ProjectTeamFacade projectTeamFacade;
+    @EJB
+    private ProjectPaymentsHistoryFacade projectPaymentsHistoryFacade;
+    @EJB
+    private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
+    @EJB
+    private UserManager userBean;
+    @EJB
+    private ActivityFacade activityFacade;
+    @EJB
+    private FileOperations fileOps;
+    @EJB
+    private FileSystemOperations fsOps;
+    @EJB
+    private ProjectServiceFacade projectServicesFacade;
+    @EJB
+    private InodeFacade inodes;
+    @EJB
+    private DatasetController datasetController;
+    @EJB
+    private DatasetFacade datasetFacade;
+    @EJB
+    private SshkeysFacade sshKeysBean;
+    @EJB
+    private HdfsUsersController hdfsUsersBean;
+    @EJB
+    private DistributedFsService dfs;
+    @EJB
+    private Settings settings;
+    @EJB
+    private ZeppelinConfigFactory zeppelinConfFactory;
+    @EJB
+    private HdfsLeDescriptorsFacade hdfsLeDescriptorFacade;
+    @EJB
+    private UserCertsFacade certificateBean;
+  
+    @PersistenceContext(unitName = "kthfsPU")
+    private EntityManager em;
 
-  @PersistenceContext(unitName = "kthfsPU")
-  private EntityManager em;
-
-  /**
+    /**
      * Creates a new project(project), the related DIR, the different services in the project, and the master of the
    * project.
    * <p>
@@ -152,8 +156,6 @@ public class ProjectController {
        */
       String projectPath = mkProjectDIR(newProject.getProjectName());
       if (projectPath != null) {
-
-        fileOps.setMetaEnabled(projectPath);
 
         //Create a new project object
         Date now = new Date();
@@ -399,7 +401,6 @@ public class ProjectController {
       FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
               FsAction.ALL); // permission 777 so any one can creat a project.
       fsOps.setPermission(location, fsPermission);
-      fileOps.setMetaEnabled(File.separator + rootDir);
     } else {
       rootDirCreated = true;
     }
@@ -499,31 +500,31 @@ public class ProjectController {
    * @param email
    * @param projectTeams
      * @return a list of user names that could not be added to the project team list.
-   */
+     */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<String> addMembers(Project project, String email,
-          List<ProjectTeam> projectTeams) {
+      List<ProjectTeam> projectTeams) {
     List<String> failedList = new ArrayList<>();
     Users user = userBean.getUserByEmail(email);
     Users newMember;
     for (ProjectTeam projectTeam : projectTeams) {
       try {
         if (!projectTeam.getProjectTeamPK().getTeamMember().equals(user.
-                getEmail())) {
+            getEmail())) {
 
           //if the role is not properly set set it to the default resercher.
           if (projectTeam.getTeamRole() == null || (!projectTeam.getTeamRole().
-                  equals(ProjectRoleTypes.DATA_SCIENTIST.getTeam())
-                  && !projectTeam.
-                  getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getTeam()))) {
+              equals(ProjectRoleTypes.DATA_SCIENTIST.getTeam())
+              && !projectTeam.
+              getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getTeam()))) {
             projectTeam.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getTeam());
           }
 
           projectTeam.setTimestamp(new Date());
           newMember = userBean.getUserByEmail(projectTeam.getProjectTeamPK().
-                  getTeamMember());
+              getTeamMember());
           if (newMember != null && !projectTeamFacade.isUserMemberOfProject(
-                  project, newMember)) {
+              project, newMember)) {
             //this makes sure that the member is added to the project sent as the
             //first param b/c the securty check was made on the parameter sent as path.
             projectTeam.getProjectTeamPK().setProjectId(project.getId());
@@ -534,10 +535,13 @@ public class ProjectController {
               projectTeamFacade.removeProjectTeam(project, newMember);
               throw new EJBException("Could not add member to HDFS.");
             }
+            LocalhostServices.createUserCertificates(project.getName(), newMember.getUsername());
+            
+            certificateBean.putUserCerts(project.getName(), newMember.getUsername());
+       
             logger.log(Level.FINE, "{0} - member added to project : {1}.",
-                    new Object[]{newMember.getEmail(),
-                      project.getName()});
-
+                new Object[]{newMember.getEmail(),
+                  project.getName()});
             List<SshKeys> keys = sshKeysBean.findAllById(newMember.getUid());
             List<String> publicKeys = new ArrayList<>();
             for (SshKeys k : keys) {
@@ -545,24 +549,26 @@ public class ProjectController {
             }
 
             logActivity(ActivityFacade.NEW_MEMBER + projectTeam.
-                    getProjectTeamPK().getTeamMember(),
-                    ActivityFacade.FLAG_PROJECT, user, project);
+                getProjectTeamPK().getTeamMember(),
+                ActivityFacade.FLAG_PROJECT, user, project);
 //            createUserAccount(project, projectTeam, publicKeys, failedList);
           } else if (newMember == null) {
             failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
-                    + " was not found in the system.");
+                + " was not found in the system.");
           } else {
             failedList.add(newMember.getEmail()
-                    + " is already a member in this project.");
+                + " is already a member in this project.");
           }
 
         }
       } catch (EJBException ejb) {
         failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
-                + "could not be added. Try again later.");
+            + "could not be added. Try again later.");
         logger.log(Level.SEVERE, "Adding  team member {0} to members failed",
-                projectTeam.getProjectTeamPK().getTeamMember());
-      }
+            projectTeam.getProjectTeamPK().getTeamMember());
+      } catch (IOException ex) {
+            Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     return failedList;
   }

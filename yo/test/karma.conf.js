@@ -51,6 +51,7 @@ module.exports = function (config) {
       'bower_components/clipboard/dist/clipboard.js',
       'bower_components/ngclipboard/dist/ngclipboard.js',
       'bower_components/angular-utils-pagination/dirPagination.js',
+      'bower_components/angular-smart-table/dist/smart-table.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',

@@ -44,8 +44,6 @@ public class FileSystemOperations {
   public void init() {
     try {
       hadoopConfDir = System.getenv("HADOOP_CONF_DIR");
-
-
       dfs = getDfs();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);

@@ -16,7 +16,6 @@
 package se.kth.bbc.project;
 
 import se.kth.bbc.jobs.quota.YarnProjectsQuotaFacade;
-import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.util.Settings;
 
 import javax.ejb.EJB;
@@ -27,6 +26,7 @@ import java.io.IOException;
 import java.util.List;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.rest.AppException;
 

@@ -214,9 +214,10 @@ angular.module('hopsWorksApp')
                         );
 
                       }, function (error) {
-                      growl.error(error.data.errorMsg, {title: 'Could not get the current YARN price.', ttl: 10000});
-                    }
-                )};
+                growl.error(error.data.errorMsg, {title: 'Could not get the current YARN price.', ttl: 10000});
+              }
+              )
+            };
 
             self.stopJob = function (jobId) {
               self.stopbuttonClickedToggle(jobId, true);
@@ -255,17 +256,6 @@ angular.module('hopsWorksApp')
               });
             };
 
-//            self.deleteJob=function (jobId){
-//
-//                  JobService.deleteJob(self.projectId, jobId).then(
-//                      function (success) {
-//                           getAllJobs();
-//                           self.hasSelectJob=false;
-//                           growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
-//                      }, function (error) {
-//                growl.error(error.data.errorMsg, {title: 'Failed to delete job', ttl: 15000});
-//              });
-//            };
             self.deleteJob = function (jobId, jobName) {
               ModalService.confirm("sm", "Delete Job (" + jobName + ")",
                       "Do you really want to delete this job?\n\
@@ -323,12 +313,11 @@ angular.module('hopsWorksApp')
                 self.jobFilter.jobType = "";
               }
             };
-            
+
             self.launchAppMasterUrl = function (trackingUrl) {
               window.open(trackingUrl);
-//              window.open(getLocationBase() + "/zeppelin/#/notebook/" + note.id);
             };
-            
+
 
             /**
              * Close the poller if the controller is destroyed.
