@@ -100,7 +100,7 @@
                                           filterBy="#{projectsmanagement.getHdfsQuota(project.projectname)}"
                                           sortBy="#{projectsmanagement.getHdfsQuota(project.projectname)}"
                                           filterMatchMode="contains"
-                                          headerText="Disk size quota"
+                                          headerText="Disk size quota (MB)"
                                           style=" font-size: 12px; text-align: center;">
                                     <p:cellEditor>
                                         <f:facet name="output">
@@ -121,7 +121,7 @@
                                           filterBy="#{projectsmanagement.getHdfsUsed(project.projectname)}"
                                           sortBy="#{projectsmanagement.getHdfsUsed(project.projectname)}"
                                           filterMatchMode="contains"
-                                          headerText="Disk Used"
+                                          headerText="Disk Used (MB)"
                                           style=" font-size: 12px; text-align: left;">
                                     <h:outputText value="#{projectsmanagement.getHdfsUsed(project.projectname)}" />
                                 </p:column>
@@ -151,7 +151,7 @@
                                           filterBy="#{projectsmanagement.getHdfsNsUsed(project.projectname)}"
                                           sortBy="#{projectsmanagement.getHdfsNsUsed(project.projectname)}"
                                           filterMatchMode="contains"
-                                          headerText="Num Files"
+                                          headerText="Num Files Used"
                                           style=" font-size: 12px; text-align: left;">
                                     <h:outputText value="#{projectsmanagement.getHdfsNsUsed(project.projectname)}" />
                                 </p:column>
