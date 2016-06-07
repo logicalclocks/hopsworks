@@ -24,37 +24,6 @@
   </properties>
 
   <dependencies>
-    <!-- CDI bug. Zeppelin-interpreter includes org.sonatype.guice.**
-    which has CDI annotated beans, causing deployment of hopsworks to fail. Because Zeppelin-interpreter
-    is a 3rd party jar, Glassfish won't exclude from scanning beans/paths we put in beans.xml 
-    -->
-
-    <!--
-	<dependency> 
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-bean</artifactId>
-      <version>2.2.2</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-plexus</artifactId>
-      <version>2.2.2</version>
-      </dependency>
-    -->
-    <dependency> 
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-bean</artifactId>
-      <version>2.6.0</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-plexus</artifactId>
-      <version>2.6.0</version>
-    </dependency>
-
-
     <dependency>
       <groupId>de.hu-berlin.wbi.cuneiform</groupId>
       <artifactId>cuneiform-core</artifactId>
