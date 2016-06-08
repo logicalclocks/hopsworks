@@ -16,13 +16,10 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.dep.DependencyResolver;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
-import org.apache.zeppelin.notebook.JobListenerFactory;
-import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.NotebookAuthorization;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
-import org.apache.zeppelin.scheduler.JobListener;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import org.apache.zeppelin.search.LuceneSearch;
 import org.apache.zeppelin.search.SearchService;
@@ -112,9 +109,9 @@ public class ZeppelinConfig {
       this.notebookAuthorization = new NotebookAuthorization(conf);
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
-	  //        removeProjectDirRecursive();
+        //        removeProjectDirRecursive();
       } else if (newFile) { // if the conf files were newly created delete them
-	  //        removeProjectConfFiles();
+        //        removeProjectConfFiles();
       }
       LOGGGER.log(Level.SEVERE,
               "Error in initializing ZeppelinConfig for project: {0}. {1}",
@@ -164,6 +161,11 @@ public class ZeppelinConfig {
             SchedulerException ex) {
       LOGGGER.log(Level.SEVERE, null, ex);
     }
+  }
+
+  public boolean isClosed() {
+    return this.replFactory == null || this.notebook == null
+            || this.notebookServer == null;
   }
 
   public Notebook getNotebook() {
@@ -299,7 +301,8 @@ public class ZeppelinConfig {
     if (!log4j_file.exists()) {
       StringBuilder log4j = ConfigFileGenerator.instantiateFromTemplate(
               ConfigFileGenerator.LOG4J_TEMPLATE);
-      createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.toString());
+      createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.
+              toString());
     }
     if (!zeppelin_env_file.exists()) {
       StringBuilder zeppelin_env = ConfigFileGenerator.instantiateFromTemplate(
@@ -322,7 +325,7 @@ public class ZeppelinConfig {
                       ConfigFileGenerator.ZEPPELIN_CONFIG_TEMPLATE,
                       "zeppelin_home", home,
                       "livy_url", settings.getLivyUrl(),
-                      "livy_master", settings.getLivyYarnMode(),              
+                      "livy_master", settings.getLivyYarnMode(),
                       "zeppelin_home_dir", home);
       createdXml = ConfigFileGenerator.createConfigFile(zeppelin_site_xml_file,
               zeppelin_site_xml.
@@ -437,6 +440,11 @@ public class ZeppelinConfig {
     if (this.schedulerFactory != null) {
       this.schedulerFactory.destroy();
     }
+    // will close repo and index
+    if (this.notebook != null) {
+      this.notebook.close();
+    }
+
     this.notebookServer = null;
     this.replFactory = null;
     this.notebook = null;
