@@ -39,8 +39,8 @@
             </div>
           </form>
 
-          <div ng-show="kafkaCtrl.topics.length > 0">
-            <table st-table="rowCollection" class="table table-striped">
+          <div>
+            <table st-table="rowCollection" class="table table-striped" ng-show="kafkaCtrl.topics.length > 0">
               <thead>
                 <tr>
                   <th st-sort="topicName" class="col-sm-10">Topic Name</th>
@@ -185,9 +185,9 @@
                     <br ng-show="row.isSelected">
                     <table ng-show="row.isSelected" st-table="rowCollection" class="table table-striped col-sm-4">
                       <thead>
-                        <tr>
+<!--                        <tr>
                           <th class="col-sm-2">Partition details</th> 
-                        </tr>
+                        </tr>-->
                         <tr>
                           <th class="col-sm-2">Partition id</th>
                           <th class="col-sm-2">Partition leader</th>

@@ -506,7 +506,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              selectProject: function (size, projectId, msg) {
+              selectProject: function (size, global, projectId, msg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/selectProject.html',
                   controller: 'SelectProjectCtrl as selectProjectCtrl',
@@ -525,6 +525,9 @@ angular.module('hopsWorksApp')
                       }],
                     projectId: function () {
                       return projectId;
+                    },
+                    global: function () {
+                      return global;
                     },
                     msg: function () {
                       return msg;
