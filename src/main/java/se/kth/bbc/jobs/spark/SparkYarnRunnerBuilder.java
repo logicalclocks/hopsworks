@@ -125,14 +125,6 @@ public class SparkYarnRunnerBuilder {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
 
-//    addSystemProperty("spark.history.fs.logDirectory" , "hdfs://10.0.2.15:8020/user/glassfish/sparkApplicationHistory");
-//    addSystemProperty("spark.eventLog.dir" , "hdfs://10.0.2.15:8020/user/glassfish/sparkApplicationHistory");
-//    addSystemProperty("spark.history.fs.cleaner.enabled" , "true");
-//    addSystemProperty("spark.history.fs.cleaner.interval" , "1d");
-//    addSystemProperty("spark.history.fs.cleaner.maxAge" , "7d");
-//    addSystemProperty("spark.eventLog.compress" , "true");
-//    addSystemProperty("spark.yarn.historyServer.address" , "10.0.2.15:18088");
-    
     
     for (String s : sysProps.keySet()) {
       String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
@@ -146,25 +138,15 @@ public class SparkYarnRunnerBuilder {
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
     
+    // Spark Configuration File. Needed for the Spark History Server
+    amargs.append(" --properties-file");
+    amargs.append(" /srv/spark/conf/spark-defaults.conf");
+    
     // spark 1.5.x replaced --num-executors with --properties-file
     // https://fossies.org/diffs/spark/1.4.1_vs_1.5.0/
     // amargs.append(" --num-executors ").append(numberOfExecutors);
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);
-    
-    // TODO: vasilis
-    //amargs.append(" --conf ").append(sparkHistoryServerIp);
-    //amargs.append(" --spark-history-server ").append(sparkHistoryServerIp);
-    //builder.addToAppMasterEnvironment("SPARK_HISTORY_SERVER_ADDRESS", sparkHistoryServerIp);
-    
-     //amargs.append(" --conf spark.eventLog.enabled=").append(enableLogDir);
-    // amargs.append(" --conf spark.eventLog.compress=true");
-    // amargs.append(" --conf 10.0.2.15:18080");
-    //amargs.append(" --conf ").append("spark.eventLog.dir=hdfs://10.0.2.15:8020/user/glassfish/sparkApplicationHistory");
-    //amargs.append(" --conf ").append("spark.yarn.historyServer.address=10.0.2.15:18080");
-    
-    //String sp = "hdfs://10.0.2.15:8020/user/glassfish/sparkApplicationHistory";
-    //builder.addAllToAppMasterEnvironment("SPARK_EVENT_LOG_DIR", sp);
 
     for (String s : jobArgs) {
       amargs.append(" --arg ").append(s);

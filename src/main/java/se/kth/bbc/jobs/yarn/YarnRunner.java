@@ -909,39 +909,16 @@ public class YarnRunner {
             "Unable to locate HDFS configuration file in {0}. Aborting exectution.",
             hdfsConf);
         throw new IllegalStateException("No HDFS conf file");
-      }
-      
-        //Also add the Spark config
-        String sparkConfDir = System.getenv(Settings.ENV_KEY_SPARK_CONF_DIR);
-        //If not found in environment variables: warn and use default
-        if (sparkConfDir == null) {
-            logger.log(Level.WARNING,
-                    "Environment variable "
-                    + Settings.ENV_KEY_SPARK_CONF_DIR
-                    + " not found, using default {0}",
-                    (sparkDir + "/"));
-            sparkConfDir = sparkDir + "/" + Settings.SPARK_CONF_RELATIVE_DIR;
-        }
-        confPath = new Path(sparkConfDir);
-        File sparkConf = new File(confPath + "/" + Settings.DEFAULT_SPARK_CONFFILE_NAME);
-        if (!sparkConf.exists()) {
-            logger.log(Level.SEVERE,
-                    "Unable to locate Spark configuration file in {0}. Aborting exectution.",
-                    sparkConf);
-            throw new IllegalStateException("No Spark conf file");
-        }
-      
+      }      
 
       //Set the Configuration object for the returned YarnClient
       conf = new Configuration();
       conf.addResource(new Path(confFile.getAbsolutePath()));
       conf.addResource(new Path(hadoopConf.getAbsolutePath()));
       conf.addResource(new Path(hdfsConf.getAbsolutePath()));
-      conf.addResource(new Path(sparkConf.getAbsolutePath()));
 
       addPathToConfig(conf, confFile);
       addPathToConfig(conf, hadoopConf);
-      addPathToConfig(conf, sparkConf);
       setDefaultConfValues(conf);
     }
 
