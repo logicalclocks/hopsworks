@@ -148,6 +148,7 @@ public abstract class YarnJob extends HopsJob {
           ProjectServices projectService = iter.next();
           //If the project is of type KAFKA
           if(projectService.getProjectServicesPK().getService() == ProjectServiceEnum.KAFKA){
+            // TODO - getting the cert can fail causing the transaction to abort
               //Pull the certificate of the client
               UserCerts userCert = services.getUserCerts().findUserCert(
                   projectService.getProject().getName(),

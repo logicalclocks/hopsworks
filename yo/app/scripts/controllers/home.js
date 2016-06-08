@@ -21,7 +21,7 @@ angular.module('hopsWorksApp')
             self.publicDatasets = [];
             self.getTours = function () {
               self.tours = [
-                {'name': 'Create Example Spark Project', 'tip': 'Take a tour of Hopsworks by creating a project and running a Spark job!'}
+                {'name': 'Take Spark Job Tour', 'tip': 'Take a tour of Hopsworks by creating a project and running a Spark job!'}
               ];
             };
 
