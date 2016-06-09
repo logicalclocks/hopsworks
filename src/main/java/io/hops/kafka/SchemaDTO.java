@@ -31,6 +31,11 @@ public class SchemaDTO implements Serializable {
         this.name = name;
         this.versions = versions;
     }
+
+    public SchemaDTO(String name, int version) {
+        this.name = name;
+        this.version = version;
+    }
     
     public String getContents() {
         return contents;

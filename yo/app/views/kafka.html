@@ -16,21 +16,19 @@
               <div class="row"/>
               <div class="row">
                 <div class="col-sm-2">
-                  <button type="button" ng-disabled="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0" 
-                          ng-click="kafkaCtrl.createTopic()" class="btn btn-default btn-success control-label">
-                    New Topic<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
-                    </i> 
+                  <button type="button"
+                          ng-click="kafkaCtrl.showTopic()" class="btn btn-default btn-success control-label">
+                    Topics<i style="margin-left: 10px"> </i> 
                   </button>
                 </div>
                 <div class="col-sm-2">
                   <button type="button"  
-                          ng-click="kafkaCtrl.createSchema()" class="btn btn-default btn-success control-label">
-                    New Schema<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
-                    </i> 
+                          ng-click="kafkaCtrl.showSchema()" class="btn btn-default btn-success control-label">
+                    Schemas<i style="margin-left: 10px"></i> 
                   </button>
                 </div>
               </div>
-              <div class="row">
+              <div class="row"  ng-show="kafkaCtrl.showTopics == 1">
                 <div class="col-sm-2">
                   <span class="text-muted" ng-show="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed > 0">{{kafkaCtrl.numTopicsUsed}} of {{kafkaCtrl.maxNumTopics}} topics in use</span>
                   <span style="color: red;" class="text" ng-show="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0">All available {{kafkaCtrl.maxNumTopics}} topics are in use.</span>
@@ -39,7 +37,13 @@
             </div>
           </form>
 
-          <div>
+          <div ng-show="kafkaCtrl.showTopics == 1">
+            <div class="col-sm-2">
+               <button type="button" ng-disabled="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0" 
+                       ng-click="kafkaCtrl.createTopic()" class="btn btn-default btn-success control-label">
+                  New Topic<i style="margin-left: 10px" class="glyphicon glyphicon-plus"></i> 
+               </button>
+              </div>
             <table st-table="rowCollection" class="table table-striped" ng-show="kafkaCtrl.topics.length > 0">
               <thead>
                 <tr>
@@ -253,7 +257,49 @@
             </table>
 
 
-          </div>              
+          </div>      
+            <div ng-show="kafkaCtrl.showSchemas == 1">
+                <br>
+                <div class="col-sm-2">
+                  <button type="button"  
+                          ng-click="kafkaCtrl.createSchema()" class="btn btn-default btn-success control-label">
+                    New Schema<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
+                    </i> 
+                  </button>
+                </div>
+                <br>
+                <br>
+            <table st-table="rowCollection" class="table table-striped">
+              <thead>
+                <tr>
+                  <th st-sort="schemaName" class="col-sm-2">Schema Name</th>
+                  <th class="col-sm-2">Version</th>
+                  <th class="col-sm-6">Content</th>
+                  <th class="col-sm-2">Remove</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.schemas" ng-class="{'selectedTopic': row.isSelected === true}">
+                  <td class="col-sm-2">
+                    <div class="row" style="margin-left: 10px;">{{row.name}}</div>
+                  </td>
+                  <td class="col-sm-2">
+                    <div class="row" style="margin-left: 10px;">{{row.version}}</div>
+                  </td>
+                  <td class="col-sm-6">
+                    <div class="row" style="margin-left: 10px;">{{row.contents}}</div>
+                  </td>
+                  <td class="col-sm-2">
+                    <button  type="button" ng-click="kafkaCtrl.deleteSchema(row.name, row.version)" class="btn btn-sm btn-danger">
+                      <i class="glyphicon glyphicon-remove-circle">
+                      </i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            </div>
+            
         </div>              
     </section>
   </div>
