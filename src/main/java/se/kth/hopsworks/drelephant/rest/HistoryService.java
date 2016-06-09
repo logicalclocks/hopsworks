@@ -11,6 +11,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -24,9 +25,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.jobhistory.YarnAppResult;
 import se.kth.bbc.jobs.jobhistory.YarnAppResultFacade;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.rest.AppException;
+import se.kth.hopsworks.rest.JobService;
 import se.kth.hopsworks.rest.JsonResponse;
 import se.kth.hopsworks.rest.NoCacheResponse;
 
@@ -41,16 +45,23 @@ public class HistoryService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private YarnAppResultFacade yarnAppResultFacade;
+  @EJB
+  private ProjectFacade projectFacade;
+  @Inject
+  private JobService jobs;
     
   
   @GET
-  @Path("all")
+  @Path("all/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.ALL})
-    public Response getAllProjects(@Context SecurityContext sc,
+    public Response getAllProjects(@PathParam("projectId") int projectId,   
+        @Context SecurityContext sc,
         @Context HttpServletRequest req) throws AppException{
         
-    List<YarnAppResult> appResults = yarnAppResultFacade.findAllHistory();
+    Project returnProject = projectFacade.find(projectId);
+        
+    List<YarnAppResult> appResults = yarnAppResultFacade.findByUsername(returnProject.getName() + "__meb10000");
     GenericEntity<List<YarnAppResult>> yarnApps
         = new GenericEntity<List<YarnAppResult>>(appResults) {
     };
@@ -69,6 +80,8 @@ public class HistoryService {
       @Context HttpServletRequest req,
       @HeaderParam("Access-Control-Request-Headers") String requestH) throws AppException{
         
+      
+        //TODO: Change the URL 
         try {
 		URL url = new URL("http://bbc1.sics.se:21001/rest/job?id=" + jobId );
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();

@@ -10,8 +10,8 @@ angular.module('hopsWorksApp')
                * Get all the History Records.
                * @returns {unresolved} A list of objects in the history server.
                */
-              getAllHistoryRecords: function () {
-                return $http.get('/api/history/all');
+              getAllHistoryRecords: function (projectId) {
+                return $http.get('/api/history/all/' + projectId);
               },
               
               getDetailsForJob: function (jobId) {

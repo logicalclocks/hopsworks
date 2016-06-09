@@ -50,11 +50,11 @@ public class YarnAppResultFacade extends AbstractFacade<YarnAppResult> {
         }
   }
 
-  public YarnAppResult findByUsername(String username) {
+  public List<YarnAppResult> findByUsername(String username) {
         try{
             return em.createNamedQuery("YarnAppResult.findByUsername",
             YarnAppResult.class).setParameter("username", username).
-            getSingleResult();
+            getResultList();
         }
         catch (NoResultException e){
             return null;

@@ -1,11 +1,12 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('HistoryCtrl', ['$scope' , 'HistoryService' , 'ModalService' ,
-          function ($scope  , HistoryService , ModalService) {
+        .controller('HistoryCtrl', ['$scope' , 'HistoryService' , 'ModalService' , '$routeParams' ,
+          function ($scope  , HistoryService , ModalService , $routeParams) {
 
             var self = this;
             self.jobs = [];
+            self.projectId = $routeParams.projectID;
             
             $scope.searchChoices=[
                 {
@@ -124,7 +125,8 @@ angular.module('hopsWorksApp')
             };
             
             var getAllHistory = function () {
-              HistoryService.getAllHistoryRecords().then(
+              console.log("Self Id: " + self.projectId.projectname);
+              HistoryService.getAllHistoryRecords(self.projectId).then(
                       function (success) {
                         self.jobs = success.data;
                       });
