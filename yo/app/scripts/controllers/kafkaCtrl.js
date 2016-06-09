@@ -52,8 +52,13 @@ angular.module('hopsWorksApp')
             
             self.users =[];
             self.project;
+           
+            self.showTopics= -1;
+            self.showSchemas =-1;
+            self.schemas = [];
+            self.schemaVersion;
             
-
+           
             
 
             self.selectAcl = function (acl, topicName) {
@@ -89,7 +94,6 @@ angular.module('hopsWorksApp')
                 KafkaService.updateTopicAcl(self.projectId, topicName, aclId, acl).then(
                         function(success){
                             self.getAclsForTopic(topicName);
-                            
                         }, function(error){
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                             
@@ -100,6 +104,7 @@ angular.module('hopsWorksApp')
               KafkaService.getTopics(self.projectId).then(
                       function (success) {
                         self.topics = success.data;
+                        self.numTopicsUsed = self.topics.length;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
@@ -128,7 +133,7 @@ angular.module('hopsWorksApp')
                     growl.error(error.data.errorMsg, {title: 'Error  dfjdsfjldfj', ttl: 5000});
                });
             };
-                
+            
             /**
              * Navigate to the new job page.
              * @returns {undefined}
@@ -145,6 +150,31 @@ angular.module('hopsWorksApp')
               });
 
             };
+            self.listSchemas = function () {
+
+                KafkaService.getSchemas(self.projectId).then(
+                 function (success) {
+                 self.schemas = success.data;
+                 }, function (error) {
+                 growl.error(error.data.errorMsg, {title: 'Could not get schemas for topic', ttl: 5000, referenceId: 21});
+                 });
+            };
+            
+            self.deleteSchema = function(schemaName, schemaVersion){
+                 ModalService.confirm("sm", "Delete Schema (" + schemaName + ")",
+                      "Do you really want to delete this Scehma? This action cannot be undone.")
+                      .then(function (success) {
+                          KafkaService.deleteSchema(self.projectId, schemaName, schemaVersion).then(
+                 function (success) {
+                     self.listSchemas();
+                 }, function (error) {
+                 growl.error(error.data.errorMsg, {title: 'Schema is not removed', ttl: 5000, referenceId: 21});
+                 });
+                }, function (cancelled) {
+                    growl.info("Delete aborted", {title: 'Info', ttl: 2000});
+                    });
+            };
+            
             /**
              * Navigate to the new job page.
              * @returns {undefined}
@@ -287,10 +317,22 @@ angular.module('hopsWorksApp')
 
              self.init = function(){
                 self.getAllTopics();
-                self.getAllSharedTopics();
+                self.getAllSharedTopics();              
              };
             
-            self.init();              
+            //self.init(); 
+            
+             self.showTopic = function(){
+              self.showSchemas = -1;
+              self.showTopics = 1;
+              self.init();
+            };
+            
+            self.showSchema = function(){
+              self.showSchemas = 1;
+              self.showTopics = -1;
+              self.listSchemas();
+            };
               
           }]);
 

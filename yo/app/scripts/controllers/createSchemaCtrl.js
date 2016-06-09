@@ -40,7 +40,7 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Failed to create the schema', ttl: 5000});
               });      
             };
-
+            
             self.close = function () {
               $modalInstance.dismiss('cancel');
             };
