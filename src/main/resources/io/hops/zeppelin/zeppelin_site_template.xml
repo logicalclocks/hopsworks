@@ -204,5 +204,62 @@
   <description>Spark master for Livy (yarn, yarn-client, spark://localhost:8908)</description>
 </property>
 
+<property>
+  <name>livy.spark.master</name>
+  <value>yarn</value>
+  <description>Livy spark master (e.g., yarn)</description>
+</property>
+
+<property>
+  <name>livy.spark.driver.cores</name>
+  <value>2</value>
+  <description>Number of driver cores</description>
+</property>
+<property>
+  <name>livy.spark.driver.memory</name>
+  <value>8g</value>
+  <description>Driver memory (e.g., 8g)</description>
+</property>
+<property>
+  <name>livy.spark.executor.instances</name>
+  <value>1</value>
+  <description>Number of spark executor instances</description>
+</property>
+<property>
+  <name>livy.spark.executor.cores</name>
+  <value>2</value>
+  <description>Number of executor cores</description>
+</property>
+<property>
+  <name>livy.spark.executor.memory</name>
+  <value>8g</value>
+  <description>Executor memory (e.g., 8g)</description>
+</property>
+<property>
+  <name>livy.spark.dynamicAllocation.enabled</name>
+  <value>true</value>
+  <description>Spark dynamic allocation is enabled (e.g., true)</description>
+</property>
+<property>
+  <name>livy.spark.dynamicAllocation.cachedExecutorIdleTimeout</name>
+  <value>300</value>
+  <description>Time in seconds for idle executors to timeout</description>
+</property>
+<property>
+  <name>livy.spark.dynamicAllocation.minExecutors</name>
+  <value>2</value>
+  <description>Minimum number of executors when dynamic allocation is on</description>
+</property>
+<property>
+  <name>livy.spark.dynamicAllocation.initialExecutors</name>
+  <value>2</value>
+  <description>Initial number of executors when dynamic allocation is on</description>
+</property>
+<property>
+  <name>livy.spark.dynamicAllocation.maxExecutors</name>
+  <value>100</value>
+  <description>Maximum number of executors when dynamic allocation is on</description>
+</property>
+
 
 </configuration>
