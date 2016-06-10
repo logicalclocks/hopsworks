@@ -100,7 +100,11 @@ public class Dataset implements Serializable {
   @NotNull
   @Column(name = "public_ds")
   private boolean publicDs;
-
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "shared")
+  private boolean shared = false;
+  
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "dataset")
   private Collection<DatasetRequest> datasetRequestCollection;
@@ -188,6 +192,14 @@ public class Dataset implements Serializable {
 
   public void setPublicDs(boolean publicDs) {
     this.publicDs = publicDs;
+  }
+
+  public boolean isShared() {
+    return shared;
+  }
+
+  public void setShared(boolean shared) {
+    this.shared = shared;
   }
     
   public Collection<DatasetRequest> getDatasetRequestCollection() {

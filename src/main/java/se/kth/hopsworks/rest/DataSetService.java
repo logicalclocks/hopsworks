@@ -262,6 +262,8 @@ public class DataSetService {
     DatasetRequest dsReq = datasetRequest.findByProjectAndDataset(proj, ds);
 
     Dataset newDS = new Dataset(inode, proj);
+    newDS.setShared(true);
+
     if (dataSet.getDescription() != null) {
       newDS.setDescription(dataSet.getDescription());
     }

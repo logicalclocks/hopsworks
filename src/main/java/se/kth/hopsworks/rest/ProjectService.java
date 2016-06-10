@@ -688,6 +688,8 @@ public class ProjectService {
     }
 
     Dataset newDS = new Dataset(inode, destProj);
+    newDS.setShared(true);
+    
     if (ds.getDescription() != null) {
       newDS.setDescription(ds.getDescription());
     }
