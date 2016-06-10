@@ -130,6 +130,8 @@ public class SparkYarnRunnerBuilder {
     }
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
     addSystemProperty(Settings.SPARK_HISTORY_SERVER_ENV, sparkHistoryServerIp);
+    addSystemProperty(Settings.SPARK_NUMBER_EXECUTORS, Integer.toString(
+            numberOfExecutors));
     for (String s : sysProps.keySet()) {
       String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
       builder.addJavaOption(option);

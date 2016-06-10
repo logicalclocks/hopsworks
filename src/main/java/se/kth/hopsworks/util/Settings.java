@@ -210,7 +210,7 @@ public class Settings {
   public static final String HOPS_VERSION = "2.4.0";
 
   public static final String SPARK_HISTORY_SERVER_ENV = "spark.yarn.historyServer.address";
-  
+  public static final String SPARK_NUMBER_EXECUTORS = "spark.executor.instances";
   public synchronized String getSparkDir() {
     checkCache();
     return SPARK_DIR;
