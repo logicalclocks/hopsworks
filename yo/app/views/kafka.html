@@ -38,7 +38,7 @@
           </form>
 
           <div ng-show="kafkaCtrl.showTopics == 1">
-            <div class="col-sm-2">
+            <div class="col-sm-12">
                <button type="button" ng-disabled="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0" 
                        ng-click="kafkaCtrl.createTopic()" class="btn btn-default btn-success control-label">
                   New Topic<i style="margin-left: 10px" class="glyphicon glyphicon-plus"></i> 
@@ -48,7 +48,7 @@
               <thead>
                 <tr>
                   <th st-sort="topicName" class="col-sm-10">Topic Name</th>
-                  <th class="col-sm-1">Remove Topic</th>
+                  <th class="col-sm-1">Remove</th>
                   <th class="col-sm-1">Advanced</th>
                 </tr>
               </thead>
@@ -274,28 +274,47 @@
                 <tr>
                   <th st-sort="schemaName" class="col-sm-2">Schema Name</th>
                   <th class="col-sm-2">Version</th>
-                  <th class="col-sm-6">Content</th>
+                  <th class="col-sm-4">Content</th>
+                  <th class="col-sm-2">Update</th>
                   <th class="col-sm-2">Remove</th>
                 </tr>
               </thead>
               <tbody>
-                <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.schemas" ng-class="{'selectedTopic': row.isSelected === true}">
-                  <td class="col-sm-2">
+                  
+                <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.schemas track by $index">
+                  <td class="col-sm-4">
                     <div class="row" style="margin-left: 10px;">{{row.name}}</div>
                   </td>
                   <td class="col-sm-2">
-                    <div class="row" style="margin-left: 10px;">{{row.version}}</div>
+                    <ui-select style="min-width: 70px;" name="schema_name" theme="select2" style="margin-left: 10px"
+                     ng-model="kafkaCtrl.schemaVersions[$index]"  required>
+                        
+                     <ui-select-match placeholder="version">{{$select.selected}}</ui-select-match>
+                     
+                     <ui-select-choices repeat="version in row.versions | filter: $select.search">
+                     <div ng-bind-html="version | highlight: $select.search"></div>
+                     </ui-select-choices>
+                    </ui-select><br>
                   </td>
-                  <td class="col-sm-6">
-                    <div class="row" style="margin-left: 10px;">{{row.contents}}</div>
+                  <td class="col-sm-4">
+                    <button type="button"
+                       ng-click="kafkaCtrl.displaySchemaContent(row.name, $index)" class="btn btn-sm btn-primary">
+                      View<i style="margin-left: 10px"></i> 
+                    </button>
                   </td>
                   <td class="col-sm-2">
-                    <button  type="button" ng-click="kafkaCtrl.deleteSchema(row.name, row.version)" class="btn btn-sm btn-danger">
+                    <button type="button"
+                       ng-click="kafkaCtrl.updateSchemaContent(row)" class="btn btn-sm btn-primary">
+                      Update<i style="margin-left: 10px"></i> 
+                    </button>
+                  </td>
+                  <td class="col-sm-2">
+                    <button  type="button" ng-click="kafkaCtrl.deleteSchema(row.name, $index)" class="btn btn-sm btn-danger">
                       <i class="glyphicon glyphicon-remove-circle">
                       </i>
                     </button>
                   </td>
-                </tr>
+                </tr>                
               </tbody>
             </table>
             </div>

@@ -1,0 +1,42 @@
+
+<div class="modal-header">
+    <button class="close" ng-click="schemaUpdateContentCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;</button>
+    <h2 class="modal-title">Enter Schema Details</h2>
+</div>
+<div growl reference="21" class="pull-right"></div>
+<div class="modal-body">
+    
+
+    <form role="form" name="pickProjectForm" 
+          ng-submit="schemaUpdateContentCtrl.createSchema()" novalidate
+          class="form-validate">                                                                                                                              
+        <div class="view-info">
+            <div class="col-md-12">
+                <label class="control-label">Schema name: {{schemaUpdateContentCtrl.schemaName}}</label><br>
+                
+            </div>
+           
+            <div class="col-md-12">
+                <label class="control-label">Schema version: {{schemaUpdateContentCtrl.schemaVersion}}</label><br> 
+            </div>
+            <div class="col-md-12">
+                <label class="control-label">Content</label><br>
+                <div class="col-sm-12">
+                    <textarea style="width: 807px; height: 303px;" type="text" class="form-control" id="schemaName" ng-model="schemaUpdateContentCtrl.content" placeholder="schema content"></textarea>
+                </div>
+                
+            </div>
+            <div ng-if="schemaUpdateContentCtrl.content_empty=== -1" style="color: red">{{"Content should not be empty"}}</div>
+        </div>
+        <div class="row"></div>
+        <hr />
+        <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
+
+            <button class="btn btn-default" type="button" ng-click="schemaUpdateContentCtrl.close()">Cancel</button>
+            <button class="btn btn-primary" type="submit">
+                Create
+            </button>
+        </div>
+    </form>
+</div>
