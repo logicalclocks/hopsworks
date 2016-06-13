@@ -270,8 +270,7 @@ public class UploadService {
         String fileContent = null;
 
         //if it is about a template file check its validity
-        if ((this.path + fileName).endsWith(".json")) {
-
+        if ((this.path + fileName).endsWith(".json.template")) {
           String filePath = stagingManager.getStagingPath() + this.path
                   + fileName;
 
@@ -315,12 +314,12 @@ public class UploadService {
         }
 
         //if it is about a template file persist it in the database as well
-        if ((this.path + fileName).endsWith(".json")) {
+        if ((this.path + fileName).endsWith(".json.template")) {
           //TODO. More checks needed to ensure the valid template format
           this.persistUploadedTemplate(fileContent);
         } //this is a common file being uploaded so add basic metadata to it
         //description and searchable
-        else if (!(this.path + fileName).endsWith(".json")) {
+        else if (!(this.path + fileName).endsWith(".json.template")) {
           //find the corresponding inode
           Inode parent = this.inodes.getInodeAtPath(this.path);
           Inode file = this.inodes.findByParentAndName(parent, fileName);

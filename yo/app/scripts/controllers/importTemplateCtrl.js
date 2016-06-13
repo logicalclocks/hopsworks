@@ -48,6 +48,7 @@ angular.module('hopsWorksApp')
 
                     self.fileAddedHandler = function (file, flow) {
                       console.log(file.name);
+                      file.name = file.name + '.template';
                       self.files[file.name] = '';
                     };
 
