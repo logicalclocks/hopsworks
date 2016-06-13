@@ -104,6 +104,7 @@ public class UserCertsFacade {
             em.persist(uc);
             em.flush();    
       
+            // TODO - DO NOT SWALLOW EXCEPTIONS!!!
         } catch (FileNotFoundException e) {
             Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, e);
         } catch (IOException ex) {

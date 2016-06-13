@@ -459,6 +459,7 @@ public class ProjectService {
               ResponseMessages.PROJECT_NAME_EXIST);
     }
     //add members of the project   
+    // TODO - handle failure if we add members and it fails. Catch an AppException and remove the project as above.
     failedMembers = projectController.addMembers(project, owner, projectDTO.getProjectTeam());
     //add the services for the project
     projectController.addServices(project, projectServices, owner);

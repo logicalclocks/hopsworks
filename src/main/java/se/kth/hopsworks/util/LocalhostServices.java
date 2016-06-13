@@ -121,7 +121,7 @@ public class LocalhostServices {
     List<String> commands = new ArrayList<>();
     commands.add("/bin/bash");
     commands.add("-c");   
-    commands.add("sudo " + hopsworksDir + "/config/ca/intermediate/" + Settings.SSL_CREATE_CERT_SCRIPTNAME + " " +
+    commands.add("sudo " + hopsworksDir + "/config/ca/intermediate/" + Settings.SSL_DELETE_CERT_SCRIPTNAME + " " +
         LocalhostServices.getUsernameInProject(userName, projectName));
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
