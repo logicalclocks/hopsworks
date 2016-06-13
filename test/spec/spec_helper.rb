@@ -7,8 +7,8 @@ Dotenv.load
 
 ActiveRecord::Base.establish_connection ({
   :adapter => "mysql2",
-  :host => "127.0.0.1",
-  :port => "3306",
+  :host => ENV['DB_HOST'],
+  :port => ENV['DB_PORT'],
   :username => "kthfs",
   :password => "kthfs",
   :database => "hopsworks"})

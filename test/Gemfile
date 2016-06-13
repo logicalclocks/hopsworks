@@ -13,7 +13,6 @@ group :development do
   gem 'dotenv'
   gem 'byebug'
   gem 'net-ssh-shell'
-  gem 'activerecord-mysql2-adapter'
 end
 
 # gem "factory_girl", "~> 4"
