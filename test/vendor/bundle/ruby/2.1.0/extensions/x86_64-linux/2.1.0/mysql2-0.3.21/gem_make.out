@@ -1,0 +1,38 @@
+current directory: /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/gems/mysql2-0.3.21/ext/mysql2
+/opt/chefdk/embedded/bin/ruby -r ./siteconf20160608-14018-bbb0cu.rb extconf.rb
+checking for ruby/thread.h... yes
+checking for rb_thread_call_without_gvl() in ruby/thread.h... yes
+checking for rb_thread_blocking_region()... yes
+checking for rb_wait_for_single_fd()... yes
+checking for rb_hash_dup()... yes
+checking for rb_intern3()... yes
+-----
+Using mysql_config at /usr/bin/mysql_config
+-----
+checking for mysql.h... yes
+checking for errmsg.h... yes
+checking for mysqld_error.h... yes
+-----
+Setting libpath to /usr/lib/x86_64-linux-gnu
+-----
+creating Makefile
+
+To see why this extension failed to compile, please check the mkmf.log which can be found here:
+
+  /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/extensions/x86_64-linux/2.1.0/mysql2-0.3.21/mkmf.log
+
+current directory: /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/gems/mysql2-0.3.21/ext/mysql2
+make "DESTDIR=" clean
+
+current directory: /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/gems/mysql2-0.3.21/ext/mysql2
+make "DESTDIR="
+compiling mysql2_ext.c
+compiling result.c
+compiling client.c
+compiling infile.c
+linking shared-object mysql2/mysql2.so
+
+current directory: /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/gems/mysql2-0.3.21/ext/mysql2
+make "DESTDIR=" install
+/usr/bin/install -c -m 0755 mysql2.so ./.gem.20160608-14018-1ard60l/mysql2
+installing default mysql2 libraries

@@ -1,0 +1,12 @@
+{
+	"name": "Alex",
+	"address": {
+		"street": "Area 51",
+		"city": "Roswell",
+		"state": "NM",
+		"coordinates":{
+			"lattitude": 33.3872,
+			"longitutde": 104.5281 
+		}
+	}
+}

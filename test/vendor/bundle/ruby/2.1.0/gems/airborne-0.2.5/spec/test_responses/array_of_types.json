@@ -1,0 +1,9 @@
+{
+  "array_of_ints": [1,2,3],
+  "array_of_floats": [1.2, 2.2, 3.3],
+  "array_of_strings": ["one", "two", "three"],
+  "array_of_bools": [true, false, true],
+  "array_of_objects": [{}, {}, {}],
+  "array_of_arrays": [[], [], []],
+  "nil_array": null
+}

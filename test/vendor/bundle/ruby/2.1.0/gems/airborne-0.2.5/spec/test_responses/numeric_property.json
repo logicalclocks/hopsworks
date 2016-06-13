@@ -1,0 +1,6 @@
+{
+	"cars": {
+		"0": {"make": "Tesla", "model": "Model S"},
+		"1": {"make": "Lamborghini", "model": "Aventador"}
+	}
+}

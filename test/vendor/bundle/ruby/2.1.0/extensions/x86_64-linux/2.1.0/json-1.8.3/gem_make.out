@@ -1,0 +1,14 @@
+current directory: /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/gems/json-1.8.3/ext/json
+/opt/chefdk/embedded/bin/ruby -r ./siteconf20160608-10045-9799g1.rb extconf.rb
+creating Makefile
+
+current directory: /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/gems/json-1.8.3/ext/json
+make "DESTDIR=" clean
+
+current directory: /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/gems/json-1.8.3/ext/json
+make "DESTDIR="
+make: Nothing to be done for 'all'.
+
+current directory: /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/gems/json-1.8.3/ext/json
+make "DESTDIR=" install
+installing default libraries

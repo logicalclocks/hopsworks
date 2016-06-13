@@ -1,0 +1,20 @@
+current directory: /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/gems/byebug-9.0.5/ext/byebug
+/opt/chefdk/embedded/bin/ruby -r ./siteconf20160608-10045-slwjkf.rb extconf.rb
+creating Makefile
+
+current directory: /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/gems/byebug-9.0.5/ext/byebug
+make "DESTDIR=" clean
+
+current directory: /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/gems/byebug-9.0.5/ext/byebug
+make "DESTDIR="
+compiling locker.c
+compiling byebug.c
+compiling context.c
+compiling threads.c
+compiling breakpoint.c
+linking shared-object byebug/byebug.so
+
+current directory: /home/ermiasg/NetBeansProjects/hopsworks/test/vendor/bundle/ruby/2.1.0/gems/byebug-9.0.5/ext/byebug
+make "DESTDIR=" install
+/usr/bin/install -c -m 0755 byebug.so ./.gem.20160608-10045-aylvii/byebug
+installing default byebug libraries

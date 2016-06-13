@@ -1,0 +1,8 @@
+{
+	"name": "Alex",
+	"address": {
+		"street": "Area 51",
+		"city": "Roswell",
+		"state": "NM"
+	}
+}
