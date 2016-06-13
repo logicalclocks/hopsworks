@@ -27,7 +27,8 @@ angular.module('hopsWorksApp', [
   'isteven-multi-select',
   'angularUtils.directives.dirPagination',
   'angular-tour',
-  'smart-table'
+  'smart-table',
+  'ngPrettyJson' 
 ])
     .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider',
       function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider) {

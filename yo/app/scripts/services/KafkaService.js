@@ -70,8 +70,8 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/kafka/schemas');
               },
               
-              getSchemas: function (projectId){
-                return $http.get('/api/project/' + projectId + '/kafka/listSchemas');
+              getSchemaContent: function (projectId, schemaName, schemaVersion){
+                return $http.get('/api/project/' + projectId + '/kafka/showSchema/'+schemaName+'/'+schemaVersion);
               },
               
               deleteSchema: function(projectId, schemaName, schemaVersion){

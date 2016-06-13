@@ -629,6 +629,26 @@ public class KafkaFacade {
 
         return schemaDtos;
     }
+    
+
+    public List<SchemaDTO> getSchemaContent(String schemaName,
+            Integer schemaVersion) throws AppException {
+
+        List<SchemaDTO> schemaDtos = new ArrayList<>();
+
+        SchemaTopics schemaTopic = em.find(SchemaTopics.class,
+                new SchemaTopicsPK(schemaName, schemaVersion));
+        if(schemaTopic == null){
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "Schema: " + schemaName + " not found in database");
+        }
+        
+        SchemaDTO sd = new SchemaDTO();
+        sd.setContents(schemaTopic.getContents());
+        schemaDtos.add(sd);
+
+        return schemaDtos;
+    }
 
     public void deleteSchema(String schemaName, Integer version)
             throws AppException {

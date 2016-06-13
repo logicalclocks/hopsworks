@@ -39,15 +39,13 @@ angular.module('hopsWorksApp')
             self.topicName = "";
             self.numReplicas = "";
             self.numPartitions = "";
-//            self.userEmail = "admin@kth.se";
             self.projectName = "";
             self.userEmail = "";
             self.permission_type = "Allow";
             self.operation_type = "Read";
             self.host = "*";
             self.role = "*";
-            self.activeId = -1;
-            self.activeShare = -1;
+           // self.activeId = -1;
             self.selectedProjectName="";
             
             self.users =[];
@@ -56,7 +54,8 @@ angular.module('hopsWorksApp')
             self.showTopics= -1;
             self.showSchemas =-1;
             self.schemas = [];
-            self.schemaVersion;
+           // self.schemaVersion;
+            self.schemaVersions = [];
             
            
             
@@ -110,7 +109,6 @@ angular.module('hopsWorksApp')
               });
             };
 
-
             self.getAllSharedTopics = function () {
               KafkaService.getSharedTopics(self.projectId).then(
                       function (success) {
@@ -143,16 +141,15 @@ angular.module('hopsWorksApp')
               ModalService.createSchema('lg', self.projectId).then(
                       function (success) {
                           growl.success(success.data.successMessage, {title: 'New schema added successfully project.', ttl: 2000});
-                          self.getAllTopics();
-
+                          self.listSchemas();
                       }, function (error) {
                 //The user changed their mind.
               });
-
             };
+            
             self.listSchemas = function () {
 
-                KafkaService.getSchemas(self.projectId).then(
+                KafkaService.getSchemasForTopics(self.projectId).then(
                  function (success) {
                  self.schemas = success.data;
                  }, function (error) {
@@ -160,11 +157,11 @@ angular.module('hopsWorksApp')
                  });
             };
             
-            self.deleteSchema = function(schemaName, schemaVersion){
+            self.deleteSchema = function(schemaName, index){
                  ModalService.confirm("sm", "Delete Schema (" + schemaName + ")",
                       "Do you really want to delete this Scehma? This action cannot be undone.")
                       .then(function (success) {
-                          KafkaService.deleteSchema(self.projectId, schemaName, schemaVersion).then(
+                          KafkaService.deleteSchema(self.projectId, schemaName, self.schemaVersions[index]).then(
                  function (success) {
                      self.listSchemas();
                  }, function (error) {
@@ -173,6 +170,29 @@ angular.module('hopsWorksApp')
                 }, function (cancelled) {
                     growl.info("Delete aborted", {title: 'Info', ttl: 2000});
                     });
+            };
+            
+            self.displaySchemaContent = function(schemaName, index){
+                
+               ModalService.displaySchemaContent('lg', self.projectId, schemaName, self.schemaVersions[index]).then(
+                      function (success) {
+                         
+                      }, function (error) {
+                //The user changed their mind.
+              });
+            };
+            
+            self.updateSchemaContent = function(schema){
+                
+                //increment the version number
+                self.version = Math.max.apply(null,schema.versions)+1;
+                
+                 ModalService.updateSchemaContent('lg', self.projectId, schema.name, self.version).then(
+                      function (success) {
+                         self.listSchemas();
+                      }, function (error) {
+                //The user changed their mind.
+              });
             };
             
             /**
@@ -189,7 +209,6 @@ angular.module('hopsWorksApp')
                       function (success) {
                           growl.success(success.data.successMessage, {title: 'New topic created successfully project.', ttl: 2000});
                           self.getAllTopics();
-
                       }, function (error) {
                 //The user changed their mind.
               });
@@ -211,7 +230,6 @@ angular.module('hopsWorksApp')
                         growl.info("Delete aborted", {title: 'Info', ttl: 2000});
                       });
             };
-
 
             self.getAclsForTopic = function (topicName) {
               KafkaService.getAclsForTopic(self.projectId, topicName).then(
@@ -237,7 +255,6 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 //The user changed their mind.
                 growl.error(error.data.errorMsg, {title: 'adding acl', ttl: 5000});
-
               });
             };
 
@@ -250,7 +267,6 @@ angular.module('hopsWorksApp')
               });
 
             };
-            
             
             self.shareTopic = function(topicName) {
               ModalService.selectProject('lg', true, "/[^]*/",
@@ -268,12 +284,10 @@ angular.module('hopsWorksApp')
 
                         }else{
                             growl.info(success.name+" is owner of topic.", {title:success.getname+"Topic not shared", ttl:500});
-                            
                         }
                       }, function (error) {
                 //The user changed their mind.
               });
-
             };
             
             //operation done from topic
@@ -286,8 +300,6 @@ angular.module('hopsWorksApp')
                                 }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
-
-
             };
             
             //operation done from project
@@ -319,8 +331,6 @@ angular.module('hopsWorksApp')
                 self.getAllTopics();
                 self.getAllSharedTopics();              
              };
-            
-            //self.init(); 
             
              self.showTopic = function(){
               self.showSchemas = -1;

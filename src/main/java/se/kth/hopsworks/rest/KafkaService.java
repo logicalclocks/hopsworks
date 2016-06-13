@@ -488,10 +488,11 @@ public class KafkaService {
     //This API used to select a schema and its version from the list
     //of available schemas when listing all the available schemas.
     @GET
-    @Path("/listSchemas")
+    @Path("/showSchema/{schemaName}/{schemaVersion}")
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-    public Response listSchemas(
+    public Response listSchemas( @PathParam("schemaName") String schemaName,
+            @PathParam("schemaVersion") Integer schemaVersion,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
         JsonResponse json = new JsonResponse();
@@ -501,7 +502,7 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        List<SchemaDTO> schemaDtos = kafka.listSchemas();
+        List<SchemaDTO> schemaDtos = kafka.getSchemaContent(schemaName, schemaVersion);
         GenericEntity<List<SchemaDTO>> schemas
                 = new GenericEntity<List<SchemaDTO>>(schemaDtos) {
         };
