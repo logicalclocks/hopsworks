@@ -618,7 +618,7 @@ public class Settings {
   public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
   
   public static final String KAFKA_TMP_CERT_STORE_LOCAL = "/srv/glassfish/kafkacerts";
-  public static final String KAFKA_TMP_CERT_STORE_REMOTE = "/tmp";
+  public static final String KAFKA_TMP_CERT_STORE_REMOTE = "/user/glassfish/kafkacerts";
   
   public static final String KAFKA_SESSIONID_ENV_VAR = "kafka.sessionid";
   public static final String KAFKA_PROJECTID_ENV_VAR = "kafka.projectid";
