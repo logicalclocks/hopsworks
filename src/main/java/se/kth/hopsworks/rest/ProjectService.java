@@ -2,7 +2,6 @@ package se.kth.hopsworks.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,7 +14,6 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -52,6 +50,7 @@ import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.LocalhostServices;
+import se.kth.hopsworks.util.Settings;
 
 @Path("/project")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -100,6 +99,8 @@ public class ProjectService {
   private UserManager userManager;
   @EJB
   private UserCertsFacade certificateBean;
+  @EJB
+  private Settings settings;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
           getName());
@@ -409,7 +410,7 @@ public class ProjectService {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
       }
-      LocalhostServices.createUserCertificates(project.getName(), user.getUsername());
+      LocalhostServices.createUserCertificates(settings.getHopsworksDir(), project.getName(), user.getUsername());
       certificateBean.putUserCerts(project.getName(), user.getUsername());
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
