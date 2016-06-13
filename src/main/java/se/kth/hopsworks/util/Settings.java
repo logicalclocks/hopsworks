@@ -55,6 +55,9 @@ public class Settings {
   private static final String VARIABLE_ZK_USER = "zk_user";
   private static final String VARIABLE_ZK_IP = "zk_ip";
   private static final String VARIABLE_KAFKA_IP = "kafka_ip";
+  private static final String VARIABLE_DRELEPHANT_IP = "drelephant_ip";
+  private static final String VARIABLE_DRELEPHANT_DB = "drelephant_db";
+  private static final String VARIABLE_DRELEPHANT_PORT = "drelephant_port";
   
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
   
@@ -94,6 +97,29 @@ public class Settings {
     return defaultValue;
   }
 
+  private String setDbVar(String varName, String defaultValue) {
+    Variables ip = findById(varName);
+    if (ip != null && ip.getValue() != null) {
+      // TODO - check this is a valid DB name
+      String val = ip.getValue();
+      if (val != null && val.isEmpty() == false) {
+        return val;
+      }
+    }
+    return defaultValue;
+  }
+  
+  private int setIntVar(String varName, int defaultValue) {
+    Variables ip = findById(varName);
+    if (ip != null && ip.getValue() != null) {
+      String val = ip.getValue();
+      if (val != null && val.isEmpty() == false) {
+        return Integer.parseInt(val);
+      }
+    }
+    return defaultValue;
+  }
+
   private boolean cached = false;
 
   private void populateCache() {
@@ -120,6 +146,9 @@ public class Settings {
       ZK_IP = setIpVar(VARIABLE_ZK_IP, ZK_IP);
       ZK_USER = setUserVar(VARIABLE_ZK_USER, ZK_USER);
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
+      DRELEPHANT_IP = setIpVar(VARIABLE_DRELEPHANT_IP, DRELEPHANT_IP);
+      DRELEPHANT_PORT = setIntVar(VARIABLE_DRELEPHANT_PORT, DRELEPHANT_PORT);
+      DRELEPHANT_DB = setDbVar(VARIABLE_DRELEPHANT_DB, DRELEPHANT_DB);
       KAFKA_IP = setIpVar(VARIABLE_KAFKA_IP, KAFKA_IP);
       KAFKA_USER = setUserVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
@@ -181,7 +210,7 @@ public class Settings {
   public static final String HOPS_VERSION = "2.4.0";
 
   public static final String SPARK_HISTORY_SERVER_ENV = "spark.yarn.historyServer.address";
-  
+  public static final String SPARK_NUMBER_EXECUTORS = "spark.executor.instances";
   public synchronized String getSparkDir() {
     checkCache();
     return SPARK_DIR;
@@ -581,6 +610,21 @@ public class Settings {
   public synchronized String getZkDir() {
     checkCache();
     return ZK_DIR;
+  }
+  
+  // Dr Elephant
+  private String DRELEPHANT_IP = "127.0.0.1";
+  private String DRELEPHANT_DB = "hopsworks";
+  public static int DRELEPHANT_PORT = 11000;
+
+  public synchronized String getDrElephantUrl() {
+    checkCache();
+    return "http://" + DRELEPHANT_IP+":"+DRELEPHANT_PORT;
+  }
+
+  public synchronized String getDrElephantDb() {
+    checkCache();
+    return DRELEPHANT_DB;
   }
  
   
