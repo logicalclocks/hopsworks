@@ -76,8 +76,9 @@ public class LocalhostServices {
     }
     return stdout;
   }
+  
   //Make this asynchronous and call back UserCertsFacade.putUSer()
-  public static String createUserCertificates(String projectName, String userName) throws IOException {
+  public static String createUserCertificates(String hopsworksDir, String projectName, String userName) throws IOException {
     
     String sslCertFile = Settings.CA_CERT_DIR + projectName + "__" + userName + ".cert.pem";
     String sslKeyFile = Settings.CA_KEY_DIR + projectName + "__" + userName + ".key.pem";
@@ -92,7 +93,7 @@ public class LocalhostServices {
     List<String> commands = new ArrayList<>();
     commands.add("/bin/bash");
     commands.add("-c");   
-    commands.add("sudo /srv/glassfish/domain1/config/ca/intermediate" + "/" + Settings.SSL_CREATE_CERT_SCRIPTNAME + " " + projectName + "__" + userName);
+    commands.add("sudo " + hopsworksDir + "/config/ca/intermediate/" + Settings.SSL_CREATE_CERT_SCRIPTNAME + " " + projectName + "__" + userName);
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
     String stdout = "", stderr = "";
@@ -110,6 +111,60 @@ public class LocalhostServices {
     return stdout;
    }
 
+  public static String deleteUserCertificates(String hopsworksDir, String projectName, String userName) throws IOException {
+    String sslCertFile = Settings.CA_CERT_DIR + projectName + "__" + userName + ".cert.pem";
+    String sslKeyFile = Settings.CA_KEY_DIR + projectName + "__" + userName + ".key.pem";
+
+   
+    // Need to execute DeleteUserCerts.sh as 'root' using sudo. 
+    // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
+    List<String> commands = new ArrayList<>();
+    commands.add("/bin/bash");
+    commands.add("-c");   
+    commands.add("sudo " + hopsworksDir + "/config/ca/intermediate/" + Settings.SSL_CREATE_CERT_SCRIPTNAME + " " +
+        LocalhostServices.getUsernameInProject(userName, projectName));
+
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+    String stdout = "", stderr = "";
+    try {
+      int result = commandExecutor.executeCommand();
+      // get the stdout and stderr from the command that was run
+      stdout = commandExecutor.getStandardOutputFromCommand();
+      stderr = commandExecutor.getStandardErrorFromCommand();
+      if (result != 0) {
+        throw new IOException(stderr);
+      }
+    } catch (InterruptedException e) {
+      throw new IOException("Interrupted. Could not generate the certificates: " + stderr);
+    }
+    return stdout;    
+  }    
+  
+  public static String deleteProjectCertificates(String hopsworksDir, String projectName) throws IOException {
+   
+    // Need to execute DeleteUserCerts.sh as 'root' using sudo. 
+    // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
+    List<String> commands = new ArrayList<>();
+    commands.add("/bin/bash");
+    commands.add("-c");   
+    commands.add("sudo " + hopsworksDir + "/config/ca/intermediate/" + Settings.SSL_DELETE_PROJECT_CERTS_SCRIPTNAME + " " + projectName);
+
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+    String stdout = "", stderr = "";
+    try {
+      int result = commandExecutor.executeCommand();
+      // get the stdout and stderr from the command that was run
+      stdout = commandExecutor.getStandardOutputFromCommand();
+      stderr = commandExecutor.getStandardErrorFromCommand();
+      if (result != 0) {
+        throw new IOException(stderr);
+      }
+    } catch (InterruptedException e) {
+      throw new IOException("Interrupted. Could not generate the certificates: " + stderr);
+    }
+    return stdout;    
+  }     
+  
   public static String getUsernameInProject(String username, String projectName) {
 
     if (username.contains("@")) {

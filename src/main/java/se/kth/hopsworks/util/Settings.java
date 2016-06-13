@@ -41,6 +41,7 @@ public class Settings {
   private static final String VARIABLE_NDB_DIR = "ndb_dir";
   private static final String VARIABLE_MYSQL_DIR = "mysql_dir";
   private static final String VARIABLE_HADOOP_DIR = "hadoop_dir";
+  private static final String VARIABLE_HOPSWORKS_DIR = "hopsworks_dir";
   private static final String VARIABLE_CHARON_DIR = "charon_dir";
   private static final String VARIABLE_HIWAY_DIR = "hiway_dir";
   private static final String VARIABLE_YARN_DEFAULT_QUOTA = "yarn_default_quota";
@@ -137,6 +138,7 @@ public class Settings {
       ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
+      HOPSWORKS_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR, HOPSWORKS_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
@@ -273,6 +275,13 @@ public class Settings {
   public synchronized String getHadoopDir() {
     checkCache();
     return HADOOP_DIR;
+  }
+
+  private static String HOPSWORKS_DIR = "/srv/glassfish/domain1";
+
+  public synchronized String getHopsworksDir() {
+    checkCache();
+    return HOPSWORKS_DIR;
   }
 
   //User under which yarn is run
@@ -632,11 +641,12 @@ public class Settings {
   public static final Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERNAME_SEPARATOR = "__";
   public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
-  public static final String HOMEDIR = "/home/glassfish/";
-  public static final String CA_DIR = "/srv/glassfish/domain1/config/ca/intermediate/";
+  public static String CA_DIR = Settings.HOPSWORKS_DIR + "/config/ca/intermediate/";
   public static final String CA_CERT_DIR = CA_DIR + "certs/";
   public static final String CA_KEY_DIR = CA_DIR + "private/";
   public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
+  public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";
+  public static final String SSL_DELETE_PROJECT_CERTS_SCRIPTNAME = "deleteprojectcerts.sh";
   public static final int USERNAME_LEN = 8;
   public static final int MAX_USERNAME_SUFFIX = 99;
   public static final int MAX_RETRIES = 500;

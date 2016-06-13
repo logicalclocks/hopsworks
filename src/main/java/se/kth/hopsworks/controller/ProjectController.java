@@ -103,7 +103,7 @@ public class ProjectController {
     @EJB
     private HdfsLeDescriptorsFacade hdfsLeDescriptorFacade;
     @EJB
-    private UserCertsFacade certificateBean;
+    private UserCertsFacade userCertsFacade;
   
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
@@ -486,6 +486,12 @@ public class ProjectController {
       //projectPaymentsHistoryFacade.remove(projectPaymentsHistory);
       yarnProjectsQuotaFacade.remove(yarnProjectsQuota);
     }
+    
+    // TODO: DELETE THE KAFKA TOPICS
+    // TODO: DELETE THE CERTS    
+    LocalhostServices.deleteProjectCertificates(settings.getHopsworksDir(), project.getName());
+    userCertsFacade.removeAllCertsOfAProject(project.getName());
+    
     logger.log(Level.FINE, "{0} - project removed.", project.getName());
 
     return success;
@@ -535,9 +541,10 @@ public class ProjectController {
               projectTeamFacade.removeProjectTeam(project, newMember);
               throw new EJBException("Could not add member to HDFS.");
             }
-            LocalhostServices.createUserCertificates(project.getName(), newMember.getUsername());
+            LocalhostServices.createUserCertificates(settings.getHopsworksDir(), 
+                project.getName(), newMember.getUsername());
             
-            certificateBean.putUserCerts(project.getName(), newMember.getUsername());
+            userCertsFacade.putUserCerts(project.getName(), newMember.getUsername());
        
             logger.log(Level.FINE, "{0} - member added to project : {1}.",
                 new Object[]{newMember.getEmail(),
