@@ -103,10 +103,10 @@ public class SparkYarnRunnerBuilder {
         if(dto.getName().equals(Settings.KAFKA_K_CERTIFICATE) ||
               dto.getName().equals(Settings.KAFKA_T_CERTIFICATE)){
             //TODO: Change to true, so that certs are removed
-            //Error with sticky bit on /user/glassfish
+            //Currently a FileNotFound is thrown when trying to delete the file
             builder.addLocalResource(dto, false);
         } else{
-            builder.addLocalResource(dto, false);
+            builder.addLocalResource(dto, !appJarPath.startsWith("hdfs:"));
         }
     }
   

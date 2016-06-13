@@ -503,7 +503,7 @@ public class YarnRunner {
   private void removeAllNecessary() throws IOException {
     FileSystem fs = FileSystem.get(conf);
     for (String s : filesToRemove) {
-      if (s.startsWith("hdfs:")) {
+      if (s.startsWith("hdfs:") && fs.exists(new Path(s))) {
         fs.delete(new Path(s), true);
       } else {
         Files.deleteIfExists(Paths.get(s));
