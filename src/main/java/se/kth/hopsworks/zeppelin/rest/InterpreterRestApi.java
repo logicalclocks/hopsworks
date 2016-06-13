@@ -212,7 +212,8 @@ public class InterpreterRestApi {
       }
     }
 
-    if (zeppelinResource.isInterpreterRunning(setting, project)) {
+    if (zeppelinResource.isInterpreterRunning(setting, project) && !setting.
+            getGroup().contains("livy")) {
       zeppelinResource.forceKillInterpreter(setting, project);
     }
     InterpreterDTO interpreter = new InterpreterDTO(setting,
