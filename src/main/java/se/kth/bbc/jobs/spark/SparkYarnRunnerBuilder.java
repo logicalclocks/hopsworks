@@ -40,6 +40,7 @@ public class SparkYarnRunnerBuilder {
   private String classPath;
   private String sparkHistoryServerIp;
   private String sessionId;//used by Kafka
+  private String kafkaAddress;
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass) {
     if (appJarPath == null || appJarPath.isEmpty()) {
       throw new IllegalArgumentException(
@@ -129,6 +130,7 @@ public class SparkYarnRunnerBuilder {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
+    addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
     addSystemProperty(Settings.SPARK_HISTORY_SERVER_ENV, sparkHistoryServerIp);
     addSystemProperty(Settings.SPARK_NUMBER_EXECUTORS, Integer.toString(
             numberOfExecutors));
@@ -313,6 +315,11 @@ public class SparkYarnRunnerBuilder {
   public void setSessionId(String sessionId) {
       this.sessionId = sessionId;
   }
+
+  public void setKafkaAddress(String kafkaAddress) {
+    this.kafkaAddress = kafkaAddress;
+  }
+  
 
   public SparkYarnRunnerBuilder addEnvironmentVariable(String name, String value) {
     envVars.put(name, value);
