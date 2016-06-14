@@ -230,11 +230,13 @@ public class ProjectService {
     }
 
     // Update the retention period if it have been chenged
-    if (project.getRetentionPeriod() == null || !project.getRetentionPeriod().equals(
-            projectDTO.getRetentionPeriod())) {
+    if (project.getRetentionPeriod() == null || !project.getRetentionPeriod().
+            equals(
+                    projectDTO.getRetentionPeriod())) {
       projectController.updateProject(project, projectDTO,
               userEmail);
-      activityController.persistActivity("Changed   retention period to " + projectDTO.getRetentionPeriod(), project, userEmail);
+      activityController.persistActivity("Changed   retention period to "
+              + projectDTO.getRetentionPeriod(), project, userEmail);
       json.setSuccessMessage(ResponseMessages.PROJECT_RETENTON_CHANGED);
       updated = true;
     }
@@ -320,12 +322,15 @@ public class ProjectService {
       project = projectController.createProject(projectDTO, owner);
       Users user = userManager.getUserByEmail(owner);
       if (user == null | project == null) {
-        logger.log(Level.SEVERE, "Problem finding the user {} or project", owner );
+        logger.
+                log(Level.SEVERE, "Problem finding the user {} or project",
+                        owner);
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
       }
       //Severe: java.io.FileNotFoundException: /tmp/tempstores/demo_admin000__meb10000__kstore.jks (No such file or directory)
-      LocalhostServices.createUserCertificates(settings.getHopsworksDir(), project.getName(), user.getUsername());
+      LocalhostServices.createUserCertificates(settings.getHopsworksDir(),
+              project.getName(), user.getUsername());
       certificateBean.putUserCerts(project.getName(), user.getUsername());
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
@@ -379,7 +384,8 @@ public class ProjectService {
     //add the services for the project
     projectController.addServices(project, projectServices, owner);
 
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(project).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
+            entity(project).build();
   }
 
   @POST
@@ -415,11 +421,14 @@ public class ProjectService {
       project = projectController.createProject(projectDTO, owner);
       Users user = userManager.getUserByEmail(owner);
       if (user == null | project == null) {
-        logger.log(Level.SEVERE, "Problem finding the user {} or project", owner );
+        logger.
+                log(Level.SEVERE, "Problem finding the user {} or project",
+                        owner);
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
       }
-      LocalhostServices.createUserCertificates(settings.getHopsworksDir(), project.getName(), user.getUsername());
+      LocalhostServices.createUserCertificates(settings.getHopsworksDir(),
+              project.getName(), user.getUsername());
       certificateBean.putUserCerts(project.getName(), user.getUsername());
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
@@ -469,7 +478,8 @@ public class ProjectService {
     }
     //add members of the project   
     // TODO - handle failure if we add members and it fails. Catch an AppException and remove the project as above.
-    failedMembers = projectController.addMembers(project, owner, projectDTO.getProjectTeam());
+    failedMembers = projectController.addMembers(project, owner, projectDTO.
+            getProjectTeam());
     //add the services for the project
     projectController.addServices(project, projectServices, owner);
 
@@ -620,13 +630,15 @@ public class ProjectService {
 
     ProjectDTO proj = projectController.getProjectByID(id);
     String yarnQuota = projectController.getYarnQuota(proj.getProjectName());
-    HdfsInodeAttributes inodeAttrs = projectController.getHdfsQuotas(proj.getInodeid());
+    HdfsInodeAttributes inodeAttrs = projectController.getHdfsQuotas(proj.
+            getInodeid());
 
     Long hdfsQuota = inodeAttrs.getDsquota().longValue();
     Long hdfsUsage = inodeAttrs.getDiskspace().longValue();
     Long hdfsNsQuota = inodeAttrs.getNsquota().longValue();
     Long hdfsNsCount = inodeAttrs.getNscount().longValue();
-    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount);
+    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage,
+            hdfsNsQuota, hdfsNsCount);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             quotas).build();
@@ -700,7 +712,7 @@ public class ProjectService {
 
     Dataset newDS = new Dataset(inode, destProj);
     newDS.setShared(true);
-    
+
     if (ds.getDescription() != null) {
       newDS.setDescription(ds.getDescription());
     }
