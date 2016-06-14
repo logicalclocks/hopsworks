@@ -233,14 +233,14 @@ angular.module('hopsWorksApp')
                         $scope.creating['spark'] = false;
                         growl.success("Created Example Project", {title: 'Success', ttl: 10000});
                         self.exampleProjectID = success.id;
-//                        updateUIAfterChange(true);
+                        updateUIAfterChange(true);
+                        // To make sure the new project is refreshed
+//                        self.showTours = false;
                         if (success.errorMsg) {
                           $scope.creating['spark'] = false;
                           growl.warning("some problem", {title: 'Error', ttl: 10000});
                         }
-                        // To make sure the new project is refreshed
-                        self.showTours = false;
-                        updateUIAfterChange(false);
+
 
                       },
                       function (error) {
