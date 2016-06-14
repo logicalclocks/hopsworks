@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.security.AccessControlException;
@@ -153,80 +156,101 @@ public abstract class YarnJob extends HopsJob {
               UserCerts userCert = services.getUserCerts().findUserCert(
                   projectService.getProject().getName(),
                   projectService.getProject().getOwner().getUsername());
-              //Setting of files as system params
-              if(jobSystemProperties == null){
-                  jobSystemProperties = new HashMap<>();
-              }
-              //Set projectId as java system property
-              jobSystemProperties.put(Settings.KAFKA_PROJECTID_ENV_VAR, String.valueOf(projectService.getProject().getId()));
-              Map<String, byte[]> kafkaCertFiles = new HashMap<>();
-              kafkaCertFiles.put(Settings.KAFKA_K_CERTIFICATE, userCert.getUserCert());
-              kafkaCertFiles.put(Settings.KAFKA_T_CERTIFICATE, userCert.getUserKey());
-              Map<String, File> kafkaCerts = new HashMap<>();
-              //Create tmp cert directory if not exists
-              File certDir = new File("/srv/glassfish/kafkacerts");
-              if (!certDir.exists()) {
-                    try{
-                        certDir.mkdir();
-                    } 
-                    catch(SecurityException ex){
-                        logger.log(Level.SEVERE, ex.getMessage());//handle it
-                    }        
-                   
-              }
-              try{
-                kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(
-                        "/srv/glassfish/kafkacerts/" +
-                                projectService.getProject().getName()+ "__" +
-                                projectService.getProject().getOwner().getUsername()+
-                                "__kstore.jks"));
-                kafkaCerts.put(Settings.KAFKA_T_CERTIFICATE, new File(
-                        "/srv/glassfish/kafkacerts/" +
-                                projectService.getProject().getName()+ "__" +
-                                projectService.getProject().getOwner().getUsername() +
-                                "__tstore.jks"));
-//                jobSystemProperties.put(Settings.KAFKA_K_CERTIFICATE, 
-//                        "./" +  projectService.getProject().getId()+ "__" +
-//                                projectService.getProject().getOwner().getUid() +
-//                                "__kstore.jks");
-//                jobSystemProperties.put(Settings.KAFKA_T_CERTIFICATE,
-//                        "./" +  projectService.getProject().getId()+ "__" +
-//                                projectService.getProject().getOwner().getUid() +
-//                                "__tstore.jks");
-                if(projectLocalResources == null){
-                   projectLocalResources = new ArrayList<>();
-                }
-                // if file doesnt exists, then create it
-                try {
-                  for(Map.Entry<String, File> entry : kafkaCerts.entrySet()){
-                    if (!entry.getValue().exists()) {
-                        entry.getValue().createNewFile();
-                   }
-                    //Write the actual file(cert) to localFS
-                    Files.write(kafkaCertFiles.get(entry.getKey()), entry.getValue());
-                    services.getFsService().getDfsOps().copyToHDFSFromLocal(true, entry.getValue().getAbsolutePath(), "/user/glassfish");
-                    projectLocalResources.add(new LocalResourceDTO(
-                            entry.getKey(), 
-                            "hdfs://"+nameNodeIpPort+"/user/glassfish/"+entry.getValue().getName(),
-                            LocalResourceVisibility.APPLICATION.toString(),
-                            LocalResourceType.FILE.toString(), null));
-                     jobSystemProperties.put(entry.getKey(), entry.getValue().getName());
-                  }
-                } catch (IOException ex) {
-                    logger.log(Level.SEVERE, 
-                            "Error writing Kakfa certificates to local fs", ex);
-                }
+              //Check if the user certificate was actually retrieved
+              if(userCert.getUserCert()!= null && 
+                      userCert.getUserCert().length>0 && 
+                      userCert.getUserKey()!= null &&
+                      userCert.getUserKey().length>0){
                 
-               } finally{
-                  //In case the certificates where not removed
-                  for(Map.Entry<String, File> entry : kafkaCerts.entrySet()){
-                      if(entry.getValue().exists()){
-                          entry.getValue().delete();
-                      }
+             
+                //Setting of files as system params
+                if(jobSystemProperties == null){
+                    jobSystemProperties = new HashMap<>();
+                }
+                //Set projectId as java system property
+                jobSystemProperties.put(Settings.KAFKA_PROJECTID_ENV_VAR, String.valueOf(projectService.getProject().getId()));
+                Map<String, byte[]> kafkaCertFiles = new HashMap<>();
+                kafkaCertFiles.put(Settings.KAFKA_K_CERTIFICATE, userCert.getUserCert());
+                kafkaCertFiles.put(Settings.KAFKA_T_CERTIFICATE, userCert.getUserKey());
+                Map<String, File> kafkaCerts = new HashMap<>();
+                //Create tmp cert directory if not exists
+                File certDir = new File(Settings.KAFKA_TMP_CERT_STORE_LOCAL);
+                if (!certDir.exists()) {
+                      try{
+                          certDir.mkdir();
+                      } 
+                      catch(SecurityException ex){
+                          logger.log(Level.SEVERE, ex.getMessage());//handle it
+                      }        
+
+                }
+                try{
+                  kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(
+                          Settings.KAFKA_TMP_CERT_STORE_LOCAL + "/" +
+                                  projectService.getProject().getName()+ "__" +
+                                  projectService.getProject().getOwner().getUsername()+
+                                  "__kstore.jks"));
+                  kafkaCerts.put(Settings.KAFKA_T_CERTIFICATE, new File(
+                          Settings.KAFKA_TMP_CERT_STORE_LOCAL + "/" +
+                                  projectService.getProject().getName()+ "__" +
+                                  projectService.getProject().getOwner().getUsername() +
+                                  "__tstore.jks"));
+                  
+                  if(projectLocalResources == null){
+                     projectLocalResources = new ArrayList<>();
                   }
-              }
+                  // if file doesnt exists, then create it
+                  try {
+                    for(Map.Entry<String, File> entry : kafkaCerts.entrySet()){
+                      if (!entry.getValue().exists()) {
+                          entry.getValue().createNewFile();
+                     }
+                      
+                      //Write the actual file(cert) to localFS
+                      //Create HDFS kafka certificate directory. This is done
+                      //So that the certificates can be used as LocalResources
+                      //by the YarnJob
+                      //TODO: Fix permissions on tmp hdfs directory
+                      if(!services.getFsService().getDfsOps().exists(
+                              Settings.KAFKA_TMP_CERT_STORE_REMOTE)){
+                        services.getFsService().getDfsOps().mkdir(
+                        new Path(Settings.KAFKA_TMP_CERT_STORE_REMOTE), new FsPermission(FsAction.ALL, FsAction.ALL,
+                                        FsAction.ALL));
+                        
+                      }
+                      Files.write(kafkaCertFiles.get(entry.getKey()), entry.getValue());
+                      services.getFsService().getDfsOps().copyToHDFSFromLocal(true, entry.getValue().getAbsolutePath(), 
+                              Settings.KAFKA_TMP_CERT_STORE_REMOTE);
+//                      services.getFsService().getDfsOps().setOwner(
+//                                new Path(Settings.KAFKA_TMP_CERT_STORE_REMOTE+"/"+entry.getValue().getName()),
+//                                projectService.getProject().getName()+ "__" +
+//                                  projectService.getProject().getOwner().getUsername(), "hadoop");
+                      services.getFsService().getDfsOps().setPermission(
+                              new Path(Settings.KAFKA_TMP_CERT_STORE_REMOTE+"/"+entry.getValue().getName()),
+                              new FsPermission(FsAction.ALL, FsAction.ALL,
+                                      FsAction.ALL));
+                      projectLocalResources.add(new LocalResourceDTO(
+                              entry.getKey(), 
+                              "hdfs://"+nameNodeIpPort+Settings.KAFKA_TMP_CERT_STORE_REMOTE+"/"+entry.getValue().getName(),
+                              LocalResourceVisibility.APPLICATION.toString(),
+                              LocalResourceType.FILE.toString(), null));
+                       jobSystemProperties.put(entry.getKey(), entry.getValue().getName());
+                    }
+                  } catch (IOException ex) {
+                      logger.log(Level.SEVERE, 
+                              "Error writing Kakfa certificates to local fs", ex);
+                  }
+
+                 } finally{
+                    //In case the certificates where not removed
+                    for(Map.Entry<String, File> entry : kafkaCerts.entrySet()){
+                        if(entry.getValue().exists()){
+                            entry.getValue().delete();
+                        }
+                    }
+                }
+            }
           }
-         
       }
       
       return true;
