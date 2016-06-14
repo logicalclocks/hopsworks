@@ -318,6 +318,15 @@ public class ProjectService {
     try {
       //save the project
       project = projectController.createProject(projectDTO, owner);
+      Users user = userManager.getUserByEmail(owner);
+      if (user == null | project == null) {
+        logger.log(Level.SEVERE, "Problem finding the user {} or project", owner );
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
+      }
+      //Severe: java.io.FileNotFoundException: /tmp/tempstores/demo_admin000__meb10000__kstore.jks (No such file or directory)
+      LocalhostServices.createUserCertificates(settings.getHopsworksDir(), project.getName(), user.getUsername());
+      certificateBean.putUserCerts(project.getName(), user.getUsername());
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);

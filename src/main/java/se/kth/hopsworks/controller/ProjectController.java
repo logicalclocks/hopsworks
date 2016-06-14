@@ -880,10 +880,10 @@ public class ProjectController {
             Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE, null, ex);
     }
     try {
-
+            String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
             HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorFacade.findEndpoint();
             File file = new File(settings.getSparkDir() + "/lib/spark-examples-" + Settings.SPARK_VERSION + "-hadoop" + Settings.HOPS_VERSION + ".jar");
-            fileOps.copyToHDFSFromLocal(false, file.getAbsolutePath(), "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects/" + project.getName() + "/TestJob/");
+            dfs.getDfsOps(hdfsUser).copyToHDFSFromLocal(false, file.getAbsolutePath(), File.separator + Settings.DIR_ROOT + File.separator + project.getName() + "/TestJob/");
 
     } catch (IOException ex) {
             Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE, null, ex);
