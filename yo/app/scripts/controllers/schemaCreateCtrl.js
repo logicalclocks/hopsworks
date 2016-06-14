@@ -30,7 +30,7 @@ angular.module('hopsWorksApp')
             var schemaDetail ={};
               schemaDetail.name=self.schemaName;
               schemaDetail.contents =self.content;
-              schemaDetail.version =self.version;
+              //schemaDetail.version =self.version;
               schemaDetail.versions =[];
 
               KafkaService.createSchema(self.projectId, schemaDetail).then(

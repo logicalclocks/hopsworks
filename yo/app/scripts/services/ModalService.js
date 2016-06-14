@@ -560,7 +560,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },     
-              displaySchemaContent: function (size, projectId, schemaName, schemaVersion) {
+              viewSchemaContent: function (size, projectId, schemaName, schemaVersion) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/schemaViewContent.html',
                   controller: 'SchemaViewContentCtrl as schemaViewContentCtrl',

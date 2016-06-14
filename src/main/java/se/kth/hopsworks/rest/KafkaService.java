@@ -452,16 +452,15 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        List<SchemaDTO> schemaDto = kafka.getSchemaForTopic(topicName);
-        GenericEntity<List<SchemaDTO>> schema
-                = new GenericEntity<List<SchemaDTO>>(schemaDto) {
-        };
+        SchemaDTO schemaDto = kafka.getSchemaForTopic(topicName);
+//        GenericEntity<List<SchemaDTO>> schema
+//                = new GenericEntity<List<SchemaDTO>>(schemaDto) {
+//        };
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-                schema).build();
+                schemaDto).build();
     }
     
-    
-    //This API used to select a schema and its version from the list
+    //This API used is to select a schema and its version from the list
     //of available schemas when creating a topic. 
     @GET
     @Path("/schemas")
@@ -491,7 +490,7 @@ public class KafkaService {
     @Path("/showSchema/{schemaName}/{schemaVersion}")
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-    public Response listSchemas( @PathParam("schemaName") String schemaName,
+    public Response getSchemaContent( @PathParam("schemaName") String schemaName,
             @PathParam("schemaVersion") Integer schemaVersion,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
@@ -502,12 +501,12 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        List<SchemaDTO> schemaDtos = kafka.getSchemaContent(schemaName, schemaVersion);
-        GenericEntity<List<SchemaDTO>> schemas
-                = new GenericEntity<List<SchemaDTO>>(schemaDtos) {
-        };
+        SchemaDTO schemaDtos = kafka.getSchemaContent(schemaName, schemaVersion);
+//        GenericEntity<List<SchemaDTO>> schemas
+//                = new GenericEntity<List<SchemaDTO>>(schemaDtos) {
+//        };
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-                schemas).build();
+                schemaDtos).build();
     }
 
     //delete the specified version of the given schema.
