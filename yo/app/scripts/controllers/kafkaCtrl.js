@@ -51,8 +51,8 @@ angular.module('hopsWorksApp')
             self.users =[];
             self.project;
            
-            self.showTopics= -1;
-            self.showSchemas =-1;
+            self.showTopics = 1;
+            self.showSchemas = -1;
             self.schemas = [];
            // self.schemaVersion;
             self.schemaVersions = [];
