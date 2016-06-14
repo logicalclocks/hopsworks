@@ -116,7 +116,8 @@ public class FlinkController {
                             settings.getFlinkConfDir(), 
                             settings.getFlinkConfFile(),
                             hdfsLeDescriptorsFacade.getSingleEndpoint(),
-                            settings.getFlinkUser());
+                            settings.getFlinkUser(), 
+                            settings.getKafkaConnectStr());
                 }
             });
         } catch (InterruptedException ex) {
@@ -157,7 +158,7 @@ public class FlinkController {
                 settings.getHadoopDir(), settings.getFlinkDir(),
                 settings.getFlinkConfDir(), settings.getFlinkConfFile(),
                 hdfsLeDescriptorsFacade.getSingleEndpoint(), 
-                settings.getFlinkUser());
+                settings.getFlinkUser(), settings.getKafkaConnectStr());
 
         submitter.stopExecution(flinkJob, appid);
 

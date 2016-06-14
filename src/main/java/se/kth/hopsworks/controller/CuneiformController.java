@@ -101,7 +101,7 @@ public class CuneiformController {
     //Then: create a CuneiformJob to run it
     CuneiformJob cfjob = new CuneiformJob(job, submitter, user, settings.getHadoopDir(), 
         settings.getSparkDir(), hdfsEndpoint.getSingleEndpoint(),
-        settings.getHiwayDir());
+        settings.getHiwayDir(), settings.getKafkaConnectStr());
     Execution jh = cfjob.requestExecutionId();
     if (jh != null) {
       submitter.startExecution(cfjob);

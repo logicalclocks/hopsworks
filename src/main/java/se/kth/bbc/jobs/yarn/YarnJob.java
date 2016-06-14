@@ -59,6 +59,9 @@ public abstract class YarnJob extends HopsJob {
   private JobState finalState = null;
   protected List<LocalResourceDTO> projectLocalResources;
   protected Map<String,String> jobSystemProperties;
+  
+  protected String kafkaAddress;
+  
   /**
    *
    * @param job
@@ -70,7 +73,8 @@ public abstract class YarnJob extends HopsJob {
    * YarnJobConfiguration object.
    */
   public YarnJob(JobDescription job, AsynchronousJobExecutor services,
-          Users user, String hadoopDir, String nameNodeIpPort) {
+          Users user, String hadoopDir, String nameNodeIpPort, 
+          String kafkaAddress) {
     super(job, services, user, hadoopDir, nameNodeIpPort);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
       throw new IllegalArgumentException(
@@ -78,6 +82,7 @@ public abstract class YarnJob extends HopsJob {
               + job.getJobConfig().getClass());
     }
     logger.log(Level.INFO, "Instantiating Yarn job as user: {0}", hdfsUser);
+    this.kafkaAddress = kafkaAddress;
   }
 
   public final void setStdOutFinalDestination(String stdOutFinalDestination) {
