@@ -331,11 +331,10 @@ angular.module('hopsWorksApp')
                 self.getAllTopics();
                 self.getAllSharedTopics();              
              };
-            
+             self.init();
              self.showTopic = function(){
               self.showSchemas = -1;
               self.showTopics = 1;
-              self.init();
             };
             
             self.showSchema = function(){

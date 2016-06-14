@@ -31,8 +31,8 @@ public class AdamJob extends YarnJob {
 
   public AdamJob(JobDescription job,
       AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir,
-      String nameNodeIpPort, String adamJarPath) {
-    super(job, services, user, hadoopDir, nameNodeIpPort);
+      String nameNodeIpPort, String adamJarPath, String kafkaAddress) {
+    super(job, services, user, hadoopDir, nameNodeIpPort, kafkaAddress);
     if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a AdamJobConfiguration object. Received: "
