@@ -12,7 +12,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class SchemaDTO implements Serializable {
 
-
     private String name;
     private String contents;
     private int version;
@@ -36,6 +35,11 @@ public class SchemaDTO implements Serializable {
         this.name = name;
         this.version = version;
     }
+    
+    public SchemaDTO(String contents) {
+        this.contents = contents;
+    }
+
     
     public String getContents() {
         return contents;

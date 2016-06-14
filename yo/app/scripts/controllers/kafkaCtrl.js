@@ -172,9 +172,9 @@ angular.module('hopsWorksApp')
                     });
             };
             
-            self.displaySchemaContent = function(schemaName, index){
+            self.viewSchemaContent = function(schemaName, index){
                 
-               ModalService.displaySchemaContent('lg', self.projectId, schemaName, self.schemaVersions[index]).then(
+               ModalService.viewSchemaContent('lg', self.projectId, schemaName, self.schemaVersions[index]).then(
                       function (success) {
                          
                       }, function (error) {
@@ -185,7 +185,7 @@ angular.module('hopsWorksApp')
             self.updateSchemaContent = function(schema){
                 
                 //increment the version number
-                self.version = Math.max.apply(null,schema.versions)+1;
+                self.version = Math.max.apply(null,schema.versions);
                 
                  ModalService.updateSchemaContent('lg', self.projectId, schema.name, self.version).then(
                       function (success) {
@@ -327,12 +327,14 @@ angular.module('hopsWorksApp')
                 });
             };
 
-             self.init = function(){
+            self.init = function(){
                 self.getAllTopics();
                 self.getAllSharedTopics();              
              };
              self.init();
-             self.showTopic = function(){
+            self.init();
+
+            self.showTopic = function(){
               self.showSchemas = -1;
               self.showTopics = 1;
             };

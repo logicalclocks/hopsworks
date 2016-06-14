@@ -23,11 +23,10 @@
             <div class="col-md-12">
                 <label class="control-label">Content</label><br>
                 <div class="col-sm-12">
-                    <textarea style="width: 807px; height: 303px;" type="text" class="form-control" id="schemaName" ng-model="schemaUpdateContentCtrl.content" placeholder="schema content"></textarea>
+                    <!--<pretty-json json="jsonObj" contenteditable="true"  ng-model="schemaUpdateContentCtrl.contents"></pretty-json>-->
+                    <pretty-json json="jsonObj" contenteditable="true" ></pretty-json>
                 </div>
-                
             </div>
-            <div ng-if="schemaUpdateContentCtrl.content_empty=== -1" style="color: red">{{"Content should not be empty"}}</div>
         </div>
         <div class="row"></div>
         <hr />
