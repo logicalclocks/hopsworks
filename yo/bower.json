@@ -1,6 +1,6 @@
 {
-  "name": "hopsworks-frontend",
-  "version": "0.0.0",
+  "name": "hopsworks",
+  "version": "0.0.1",
   "dependencies": {
     "angular": "1.3.16",
     "bootstrap": "3.3.4",

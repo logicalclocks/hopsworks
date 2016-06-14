@@ -331,7 +331,7 @@ angular.module('hopsWorksApp')
                 self.getAllTopics();
                 self.getAllSharedTopics();              
              };
-            
+             self.init();
             self.init();
 
             self.showTopic = function(){
