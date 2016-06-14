@@ -16,7 +16,13 @@ angular.module('hopsWorksApp')
               
               getDetailsForJob: function (jobId) {
                 return $http.get('/api/history/details/jobs/' + jobId);
-              }  
+              },
+              
+              getHeuristicsForJob: function (jobId) {
+                console.log("You are in getHeuristicsForJob");  
+                return $http.get('/api/history/heuristics/jobs/' + jobId);
+              }
+              
             };
             return service;
           }]);

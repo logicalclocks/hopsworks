@@ -1,5 +1,7 @@
 package se.kth.hopsworks.drelephant.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,6 +9,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -23,8 +27,11 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.bbc.jobs.jobhistory.HeuristicsBean;
 import se.kth.bbc.jobs.jobhistory.YarnAppResult;
 import se.kth.bbc.jobs.jobhistory.YarnAppResultFacade;
+import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.controller.ResponseMessages;
@@ -49,6 +56,8 @@ public class HistoryService {
   private ProjectFacade projectFacade;
   @Inject
   private JobService jobs;
+  @EJB
+  private JobDescriptionFacade jobFacade;
     
   
   @GET
@@ -115,6 +124,46 @@ public class HistoryService {
 		e.printStackTrace();
         }
         return null;
+    }
+  
+  
+  @GET
+  @Path("heuristics/jobs/{jobId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getHeuristic(@PathParam("jobId") Integer jobId,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req,
+      @HeaderParam("Access-Control-Request-Headers") String requestH) throws AppException{
+            
+        //Rerutn jsonObject with the response of the Heuristics
+        String jsonInString = "";
+        
+        HeuristicsBean hb = new HeuristicsBean();
+        hb.setMemory(15);
+        hb.setvCores(1);
+        hb.setName("HB_NAME");
+        hb.setSize(20);
+        hb.setClassName("CLASS_HB");
+        
+        JobDescription jd = jobFacade.findById(jobId);
+        hb.setJobType(jd.getJobType().getName());
+        
+        ObjectMapper om = new ObjectMapper();
+        
+        try {
+            jsonInString = om.writeValueAsString(hb);
+        } catch (JsonProcessingException ex) {
+            Logger.getLogger(HistoryService.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        JsonResponse json = new JsonResponse();
+        json.setData(jsonInString);
+        json.setStatus("OK");
+        json.setSuccessMessage(ResponseMessages.JOB_DETAILS);
+
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
     }
 }
     
