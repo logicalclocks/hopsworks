@@ -20,8 +20,6 @@ angular.module('hopsWorksApp')
                  }, function (error) {
                  growl.error(error.data.errorMsg, {title: 'Could not get schema for topic', ttl: 5000, referenceId: 21});
                  });
-              
-             
             };
             
             self.init();            
