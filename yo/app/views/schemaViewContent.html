@@ -1,0 +1,24 @@
+
+<div class="modal-header">
+  <button class="close" ng-click="schemaViewContentCtlr.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Schema Content</h2>
+</div>
+<div growl reference="21" class="pull-right"></div>
+<div class="modal-body">
+
+  <form role="form" name="displaySchemaContentForm"  novalidate
+        class="form-validate">                                                                                                                              
+    <div class="view-info">
+      <div class="col-md-12">
+        <!--<label class="control-label">{{displaySchemaContentCtrl.schemaContents}}</label><br>-->
+        <pretty-json json="jsonObj"></pretty-json>
+      </div>
+        
+    </div>
+    <hr />
+    <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
+      <button class="btn btn-default" type="button" ng-click="schemaViewContentCtlr.close()">Cancel</button>
+    </div>
+  </form>
+</div>

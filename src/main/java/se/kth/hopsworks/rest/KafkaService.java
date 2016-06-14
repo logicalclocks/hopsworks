@@ -276,7 +276,8 @@ public class KafkaService {
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
 
-        List<SharedProjectDTO> projectDtoList = kafkaFacade.topicIsSharedTo(topicName, this.projectId);
+        List<SharedProjectDTO> projectDtoList = kafkaFacade
+                .topicIsSharedTo(topicName, this.projectId);
 
         GenericEntity<List<SharedProjectDTO>> projectDtos
                 = new GenericEntity<List<SharedProjectDTO>>(projectDtoList) {
@@ -316,7 +317,8 @@ public class KafkaService {
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
     public Response addAclsToTopic(@PathParam("topic") String topicName,
-            AclDTO aclDto, @Context SecurityContext sc, @Context HttpServletRequest req)
+            AclDTO aclDto,
+            @Context SecurityContext sc, @Context HttpServletRequest req)
             throws AppException, Exception {
         JsonResponse json = new JsonResponse();
         if (projectId == null) {
@@ -418,7 +420,7 @@ public class KafkaService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-    public Response updateTopicSchema(SchemaDTO schamaData,
+    public Response addTopicSchema(SchemaDTO schamaData,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
         JsonResponse json = new JsonResponse();
@@ -428,13 +430,14 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        kafkaFacade.updateSchemaForTopics(schamaData);
+        kafkaFacade.addSchemaForTopics(schamaData);
 
         json.setSuccessMessage("Schema for Topic created/updated successfuly");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
     }
 
-    //when do we need this api?
+    //when do we need this api? It's used when the KafKa clients want to access
+    // the schema for a give topic which a message is published to and consumerd from
     @GET
     @Path("/schema/{topic}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -456,7 +459,10 @@ public class KafkaService {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 schema).build();
     }
-
+    
+    
+    //This API used to select a schema and its version from the list
+    //of available schemas when creating a topic. 
     @GET
     @Path("/schemas")
     @Produces(MediaType.APPLICATION_JSON)
@@ -478,12 +484,38 @@ public class KafkaService {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 schemas).build();
     }
-
-    @DELETE
-    @Path("/schema/{schema}/{version}")
+    
+    //This API used to select a schema and its version from the list
+    //of available schemas when listing all the available schemas.
+    @GET
+    @Path("/showSchema/{schemaName}/{schemaVersion}")
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-    public Response deleteSchemaForTopics(@PathParam("schema") String schemaName,
+    public Response listSchemas( @PathParam("schemaName") String schemaName,
+            @PathParam("schemaVersion") Integer schemaVersion,
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException, Exception {
+        JsonResponse json = new JsonResponse();
+
+        if (projectId == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Incomplete request!");
+        }
+
+        List<SchemaDTO> schemaDtos = kafka.getSchemaContent(schemaName, schemaVersion);
+        GenericEntity<List<SchemaDTO>> schemas
+                = new GenericEntity<List<SchemaDTO>>(schemaDtos) {
+        };
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                schemas).build();
+    }
+
+    //delete the specified version of the given schema.
+    @DELETE
+    @Path("/removeSchema/{schemaName}/{version}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+    public Response deleteSchema(@PathParam("schemaName") String schemaName,
             @PathParam("version") Integer version,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
@@ -494,11 +526,11 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        kafka.deleteSchemaForTopics(schemaName, version);
-        json.setSuccessMessage("Schema for topic removed successfuly");
+        kafka.deleteSchema(schemaName, version);
+        json.setSuccessMessage("Schema version for topic removed successfuly");
 
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 json).build();
     }
-    
+
 }
