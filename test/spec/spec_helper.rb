@@ -20,11 +20,10 @@ Dir[File.join(File.dirname(__FILE__), 'helpers', '**', '*.rb')].each { |f| requi
 RSpec.configure do |config|
   config.include SessionHelper
   config.include ProjectHelper
-  config.include WorkflowHelper
   config.include FactoryHelper
   config.before(:suite) do
     #clean_oozie
-    clean_database
+    #clean_database
   end
   #config.after(:all) { clean_database }
 end
@@ -75,14 +74,4 @@ def clean_database
     # sh.execute("vagrant ssh -c 'sudo cat /srv/oozie/oozie.sql | sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh --database=oozie' ")
     puts "Vagrant Database Cleaning finished"
   end
-end
-
-def bash_exec(cmd)
-  @bash.execute cmd do |stdout, stderr|
-  puts "STDOUT:\n#{ stdout }"
-  puts "STDERR:\n#{ stderr }"
-end
-
-  puts "STATUS: #{ @bash.status }"
-  puts "======== ======== ======== ========"
 end
