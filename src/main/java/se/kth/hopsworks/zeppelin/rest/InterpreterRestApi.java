@@ -48,9 +48,13 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 import com.google.gson.Gson;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import org.apache.zeppelin.dep.Repository;
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.repository.RemoteRepository;
+import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 
 /**
  * Interpreter Rest API
@@ -61,20 +65,24 @@ public class InterpreterRestApi {
 
   Logger logger = LoggerFactory.getLogger(InterpreterRestApi.class);
   Project project;
+  Users user;
   ZeppelinConfig zeppelinConf;
   String roleInProject;
 
   @EJB
   private ZeppelinResource zeppelinResource;
+  @EJB
+  private ZeppelinConfigFactory zeppelinConfFactory;
 
   Gson gson = new Gson();
 
   public InterpreterRestApi() {
   }
 
-  public void setParms(Project project, String userRole,
+  public void setParms(Project project, Users user, String userRole,
           ZeppelinConfig zeppelinConf) {
     this.project = project;
+    this.user = user;
     this.zeppelinConf = zeppelinConf;
     this.roleInProject = userRole;
   }
@@ -319,6 +327,14 @@ public class InterpreterRestApi {
               !zeppelinResource.isInterpreterRunning(interpreter, project)));
     }
     return interpreterDTO;
+  }
+  
+  @GET
+  @Path("removeFromCache")
+  public Response removeFromCache () {
+    zeppelinConfFactory.removeFromCache(this.project.getName());
+    zeppelinConfFactory.removeFromCache(this.project.getName(), this.user.getEmail());
+    return new JsonResponse(Status.OK, "").build();
   }
 
 }

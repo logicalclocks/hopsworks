@@ -64,7 +64,7 @@ public class InterpreterService {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
               "You curently have no role in this project!");
     }
-    interpreterRestApi.setParms(project, userRole, zeppelinConf);
+    interpreterRestApi.setParms(project, user, userRole, zeppelinConf);
     return interpreterRestApi;
   }
 

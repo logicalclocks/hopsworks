@@ -385,7 +385,7 @@ public class ZeppelinConfig {
     clean();
     return removeProjectDirRecursive();
   }
-
+  
   private boolean removeProjectDirRecursive() {
     File projectDir = new File(projectDirPath);
     if (!projectDir.exists()) {

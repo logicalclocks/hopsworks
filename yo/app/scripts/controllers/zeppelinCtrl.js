@@ -1,9 +1,9 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ZeppelinCtrl', ['$scope', '$routeParams',
+        .controller('ZeppelinCtrl', ['$scope', '$routeParams','$route',
           'growl', 'ModalService', 'ZeppelinService',
-          function ($scope, $routeParams, growl, ModalService, ZeppelinService) {
+          function ($scope, $routeParams, $route, growl, ModalService, ZeppelinService) {
 
             var self = this;
             self.interpretersRefreshing = false;
@@ -132,6 +132,14 @@ angular.module('hopsWorksApp')
                       function (error) {
                       });
 
+            };
+            
+            self.clearCache = function () {
+              ZeppelinService.cleanCache().then(function (success) {
+              $route.reload();
+            }, function (error) {
+              growl.error("Could not reset configerations.", {title: 'Error', ttl: 5000, referenceId: 10});
+            });
             };
 
             ZeppelinService.websocket().ws.onMessage(function (event) {

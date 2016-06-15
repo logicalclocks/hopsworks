@@ -88,10 +88,11 @@ public class ZeppelinConfigFactory {
     projectUserConfCache.put(hdfsUser, userConfig);
     return userConfig;
   }
-  
+
   /**
-   * Returns a unique zeppelin configuration for the project user. Null is 
+   * Returns a unique zeppelin configuration for the project user. Null is
    * returned when the user is not connected to web socket.
+   *
    * @param projectName
    * @param username
    * @return null if there is no configuration for the user
@@ -108,11 +109,13 @@ public class ZeppelinConfigFactory {
   }
 
   /**
-   * Returns conf for the project. This can not be used to call 
-   * notebook server, replFactory or notebook b/c a user specific notebook server
+   * Returns conf for the project. This can not be used to call
+   * notebook server, replFactory or notebook b/c a user specific notebook
+   * server
    * connection is needed to create those.
+   *
    * @param projectName
-   * @return 
+   * @return
    */
   public ZeppelinConfig getprojectConf(String projectName) {
     ZeppelinConfig config = projectConfCache.get(projectName);
@@ -135,19 +138,23 @@ public class ZeppelinConfigFactory {
    * @param projectName
    */
   public void removeFromCache(String projectName) {
-    projectConfCache.remove(projectName);
+    projectConfCache.remove(projectName).clean();
   }
-  
+
   /**
-   * Remove user configuration from cache. 
+   * Remove user configuration from cache.
+   *
    * @param projectName
-   * @param username 
+   * @param username
    */
   public void removeFromCache(String projectName, String username) {
     Project project = projectBean.findByName(projectName);
     Users user = userFacade.findByEmail(username);
+    if (project == null || user == null) {
+      return;
+    }
     String hdfsUser = hdfsUsername.getHdfsUserName(project, user);
-    projectUserConfCache.remove(hdfsUser);
+    projectUserConfCache.remove(hdfsUser).clean();
   }
 
   /**
