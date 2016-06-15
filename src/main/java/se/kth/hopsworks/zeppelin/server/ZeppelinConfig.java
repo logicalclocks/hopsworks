@@ -439,14 +439,12 @@ public class ZeppelinConfig {
     if (this.replFactory != null) {
       this.replFactory.close();
     }
-    if (this.schedulerFactory != null) {
-      this.schedulerFactory.destroy();
-    }
+
     // will close repo and index
     if (this.notebook != null) {
       this.notebook.close();
     }
-
+    this.schedulerFactory = null;
     this.notebookServer = null;
     this.replFactory = null;
     this.notebook = null;

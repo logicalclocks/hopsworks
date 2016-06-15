@@ -48,13 +48,12 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 import com.google.gson.Gson;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
 import org.apache.zeppelin.dep.Repository;
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.repository.RemoteRepository;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
+import se.kth.hopsworks.zeppelin.util.TicketContainer;
 
 /**
  * Interpreter Rest API
@@ -334,7 +333,8 @@ public class InterpreterRestApi {
   public Response removeFromCache () {
     zeppelinConfFactory.removeFromCache(this.project.getName());
     zeppelinConfFactory.removeFromCache(this.project.getName(), this.user.getEmail());
-    return new JsonResponse(Status.OK, "").build();
+    TicketContainer.instance.invalidate(this.user.getEmail());
+    return new JsonResponse(Status.OK, "Cache cleared.").build();
   }
 
 }

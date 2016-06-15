@@ -139,8 +139,14 @@
                                         </md-content>
                                     </md-tab>
                                    <md-tab label="Advanced">
-                                     <button ng-click="zeppelinCtrl.clearCache()" type="button" class="btn btn-danger btn-sm">
-                                                            <span class="glyphicon glyphicon-refresh" ></span></button>
+                                     <md-content>
+                                        <div class="row" style="padding-top: 20px;">
+                                          <label class="col-lg-6" style="font-weight: 500;"> Restart zeppelin </label>
+                                         <button ng-click="zeppelinCtrl.clearCache()" type="button" class="col-lg-2 btn btn-danger btn-sm">
+                                            <span class="glyphicon glyphicon-repeat" ></span>
+                                         </button>
+                                        </div>
+                                     </md-content>
                                    </md-tab>
                                 </md-tabs>
                             </md-content>

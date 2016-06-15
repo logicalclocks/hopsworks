@@ -135,11 +135,12 @@ angular.module('hopsWorksApp')
             };
             
             self.clearCache = function () {
-              ZeppelinService.cleanCache().then(function (success) {
-              $route.reload();
-            }, function (error) {
-              growl.error("Could not reset configerations.", {title: 'Error', ttl: 5000, referenceId: 10});
-            });
+              ZeppelinService.cleanCache().then( function (success) {
+                  //$route.reload();
+                }, function (error) {
+                  growl.error(error, {title: 'Error', ttl: 5000, referenceId: 10});
+                  //$route.reload();
+                });
             };
 
             ZeppelinService.websocket().ws.onMessage(function (event) {
