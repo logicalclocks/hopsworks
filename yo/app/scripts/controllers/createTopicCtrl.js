@@ -11,6 +11,7 @@ angular.module('hopsWorksApp')
             self.max_num_replicas;
             self.topicName_wrong_value = 1;
             self.replication_wrong_value = 1;
+            self.topicSchema_wrong_value = 1;
             self.wrong_values = 1;
             self.working = false;
             
@@ -56,7 +57,15 @@ angular.module('hopsWorksApp')
                 self.topicName_wrong_value = 1;
               }
               
-              if(self.wrong_values ===-1){
+              if(!self.schema || !self.schemaVersion){
+                self.topicSchema_wrong_value = -1;
+                self.wrong_values=-1;
+              }
+              else{
+                self.topicSchema_wrong_value = 1;
+              }
+              
+              if(self.wrong_values === -1){
                   return;
               }
               
@@ -81,4 +90,3 @@ angular.module('hopsWorksApp')
               $modalInstance.dismiss('cancel');
             };
           }]);
-
