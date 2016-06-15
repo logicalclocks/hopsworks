@@ -1,0 +1,31 @@
+<!-- A dialog presenting job UI. -->
+
+<div class="modal-header">
+  <button class="close" ng-click="jobUICtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Job UI - {{jobUICtrl.job.name}}</h2>
+</div>
+<div class="modal-body">
+  <script>jobUICtrl.getJobUI()</script>
+  <div style="padding-bottom: 10px">
+    <span class="field-info" tooltip="back to main page" style="padding-top: 5px;padding-left:3px">
+      <button style=""
+              ng-click="jobUICtrl.toggle();
+                jobUICtrl.backToHome();
+                $event.stopPropagation();"
+              class="btn btn-primary glyphicon glyphicon-home">
+      </button>
+    </span>
+    <span class="field-info" tooltip="Refresh" style="padding-top: 5px;padding-left:3px">
+      <button style=""
+              ng-click="jobUICtrl.refresh();
+                jobUICtrl.refresh();
+                $event.stopPropagation();"
+              class="btn btn-primary glyphicon glyphicon-refresh">
+      </button>
+    </span>
+  </div>
+  <iframe id="ui_iframe" ng-src="{{jobUICtrl.ui}}" width="1170" height ="1000" ng-if="jobUICtrl.ui !== ''"></iframe> 
+  <div ng-if="jobUICtrl.ui === ''">This job has not run yet</div>
+</div>
+

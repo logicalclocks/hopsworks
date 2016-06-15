@@ -275,6 +275,13 @@
                                 class="btn btn-danger glyphicon glyphicon-trash">
                         </button>
                       </span>
+                      <span class="field-info" tooltip="Job UI" style="padding-top: 5px;padding-left:3px">
+                        <button style="margin-left: 10px"
+                                ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showUI(job);
+                                        $event.stopPropagation();"
+                                class="btn btn-success glyphicon glyphicon-search">
+                        </button>
+                      </span>
                     </td>
                   </tr>
                 </tbody>

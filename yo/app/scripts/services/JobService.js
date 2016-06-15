@@ -110,6 +110,15 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/executions/' + executionId);
               },
               /**
+               * Get the job ui of the given job.
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {unresolved} The address of the job ui.
+               */
+              getExecutionUI: function (projectId, jobId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/ui');
+              },
+              /**
                * Get the current status of all jobs in the given project.
                * @param {type} projectId
                * @returns {unresolved}
