@@ -1,8 +1,0 @@
-CHANGELOG.rdoc
-lib/net/ssh/shell/process.rb
-lib/net/ssh/shell/subshell.rb
-lib/net/ssh/shell/version.rb
-lib/net/ssh/shell.rb
-Rakefile
-README.rdoc
-Manifest
