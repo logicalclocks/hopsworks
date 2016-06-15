@@ -8,7 +8,7 @@
 <div class="modal-body">
     
 
-    <form role="form" name="pickProjectForm" 
+    <form role="form" name="pickProjectForm" id="misganu"
           ng-submit="schemaUpdateContentCtrl.createSchema()" novalidate
           class="form-validate">                                                                                                                              
         <div class="view-info">
@@ -23,15 +23,15 @@
             <div class="col-md-12">
                 <label class="control-label">Content</label><br>
                 <div class="col-sm-12">
-                    <!--<pretty-json json="jsonObj" contenteditable="true"  ng-model="schemaUpdateContentCtrl.contents"></pretty-json>-->
-                    <pretty-json json="jsonObj" contenteditable="true" ></pretty-json>
+                    <!--<pretty-json json="{{jsonObj}}" id = "prettyJson" contenteditable="true"  ng-model="schemaUpdateContentCtrl.contents"></pretty-json>-->
+                    <pretty-json json="jsonObj" id="myPrettyJson" contenteditable="true" ></pretty-json>
                 </div>
             </div>
         </div>
         <div class="row"></div>
         <hr />
         <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
-
+ 
             <button class="btn btn-default" type="button" ng-click="schemaUpdateContentCtrl.close()">Cancel</button>
             <button class="btn btn-primary" type="submit">
                 Create

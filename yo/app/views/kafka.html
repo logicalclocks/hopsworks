@@ -287,9 +287,9 @@
             <table st-table="rowCollection" class="table table-striped">
               <thead>
                 <tr>
-                  <th st-sort="schemaName" class="col-sm-2">Schema Name</th>
+                  <th st-sort="schemaName" class="col-sm-4">Schema Name</th>
                   <th class="col-sm-2">Version</th>
-                  <th class="col-sm-4">Content</th>
+                  <th class="col-sm-2">Content</th>
                   <th class="col-sm-2">Update</th>
                   <th class="col-sm-2">Remove</th>
                 </tr>
@@ -306,12 +306,12 @@
 
                 <ui-select-match placeholder="version">{{$select.selected}}</ui-select-match>
 
-                <ui-select-choices repeat="version in row.versions | filter: $select.search">
+                <ui-select-choices repeat="version in row.versions | orderBy: version:true | filter: $select.search">
                   <div ng-bind-html="version | highlight: $select.search"></div>
                 </ui-select-choices>
               </ui-select><br>
               </td>
-              <td class="col-sm-4">
+              <td class="col-sm-2">
                 <button type="button"
                         ng-click="kafkaCtrl.viewSchemaContent(row.name, $index)" class="btn btn-sm btn-primary">
                   View<i style="margin-left: 10px"></i> 
