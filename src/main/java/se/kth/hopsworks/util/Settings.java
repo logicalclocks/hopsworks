@@ -41,6 +41,7 @@ public class Settings {
   private static final String VARIABLE_NDB_DIR = "ndb_dir";
   private static final String VARIABLE_MYSQL_DIR = "mysql_dir";
   private static final String VARIABLE_HADOOP_DIR = "hadoop_dir";
+  private static final String VARIABLE_HOPSWORKS_DIR = "hopsworks_dir";
   private static final String VARIABLE_CHARON_DIR = "charon_dir";
   private static final String VARIABLE_HIWAY_DIR = "hiway_dir";
   private static final String VARIABLE_YARN_DEFAULT_QUOTA = "yarn_default_quota";
@@ -55,6 +56,9 @@ public class Settings {
   private static final String VARIABLE_ZK_USER = "zk_user";
   private static final String VARIABLE_ZK_IP = "zk_ip";
   private static final String VARIABLE_KAFKA_IP = "kafka_ip";
+  private static final String VARIABLE_DRELEPHANT_IP = "drelephant_ip";
+  private static final String VARIABLE_DRELEPHANT_DB = "drelephant_db";
+  private static final String VARIABLE_DRELEPHANT_PORT = "drelephant_port";
   
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
   
@@ -94,6 +98,29 @@ public class Settings {
     return defaultValue;
   }
 
+  private String setDbVar(String varName, String defaultValue) {
+    Variables ip = findById(varName);
+    if (ip != null && ip.getValue() != null) {
+      // TODO - check this is a valid DB name
+      String val = ip.getValue();
+      if (val != null && val.isEmpty() == false) {
+        return val;
+      }
+    }
+    return defaultValue;
+  }
+  
+  private int setIntVar(String varName, int defaultValue) {
+    Variables ip = findById(varName);
+    if (ip != null && ip.getValue() != null) {
+      String val = ip.getValue();
+      if (val != null && val.isEmpty() == false) {
+        return Integer.parseInt(val);
+      }
+    }
+    return defaultValue;
+  }
+
   private boolean cached = false;
 
   private void populateCache() {
@@ -111,6 +138,7 @@ public class Settings {
       ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
+      HOPSWORKS_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR, HOPSWORKS_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
@@ -120,6 +148,9 @@ public class Settings {
       ZK_IP = setIpVar(VARIABLE_ZK_IP, ZK_IP);
       ZK_USER = setUserVar(VARIABLE_ZK_USER, ZK_USER);
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
+      DRELEPHANT_IP = setIpVar(VARIABLE_DRELEPHANT_IP, DRELEPHANT_IP);
+      DRELEPHANT_PORT = setIntVar(VARIABLE_DRELEPHANT_PORT, DRELEPHANT_PORT);
+      DRELEPHANT_DB = setDbVar(VARIABLE_DRELEPHANT_DB, DRELEPHANT_DB);
       KAFKA_IP = setIpVar(VARIABLE_KAFKA_IP, KAFKA_IP);
       KAFKA_USER = setUserVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
@@ -181,7 +212,7 @@ public class Settings {
   public static final String HOPS_VERSION = "2.4.0";
 
   public static final String SPARK_HISTORY_SERVER_ENV = "spark.yarn.historyServer.address";
-  
+  public static final String SPARK_NUMBER_EXECUTORS = "spark.executor.instances";
   public synchronized String getSparkDir() {
     checkCache();
     return SPARK_DIR;
@@ -244,6 +275,13 @@ public class Settings {
   public synchronized String getHadoopDir() {
     checkCache();
     return HADOOP_DIR;
+  }
+
+  private static String HOPSWORKS_DIR = "/srv/glassfish/domain1";
+
+  public synchronized String getHopsworksDir() {
+    checkCache();
+    return HOPSWORKS_DIR;
   }
 
   //User under which yarn is run
@@ -543,8 +581,8 @@ public class Settings {
   
   
   // Kafka
-  private String KAFKA_IP = "127.0.0.1";
-  public static final int KAFKA_PORT = 9092;
+  private String KAFKA_IP = "10.0.2.15";
+  public static final int KAFKA_PORT = 9091;
 
   public synchronized String getKafkaConnectStr() {
     checkCache();
@@ -582,17 +620,33 @@ public class Settings {
     checkCache();
     return ZK_DIR;
   }
+  
+  // Dr Elephant
+  private String DRELEPHANT_IP = "127.0.0.1";
+  private String DRELEPHANT_DB = "hopsworks";
+  public static int DRELEPHANT_PORT = 11000;
+
+  public synchronized String getDrElephantUrl() {
+    checkCache();
+    return "http://" + DRELEPHANT_IP+":"+DRELEPHANT_PORT;
+  }
+
+  public synchronized String getDrElephantDb() {
+    checkCache();
+    return DRELEPHANT_DB;
+  }
  
   
   // Hopsworks
   public static final Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERNAME_SEPARATOR = "__";
   public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
-  public static final String HOMEDIR = "/home/glassfish/";
-  public static final String CA_DIR = "/srv/glassfish/domain1/config/ca/intermediate/";
+  public static String CA_DIR = Settings.HOPSWORKS_DIR + "/config/ca/intermediate/";
   public static final String CA_CERT_DIR = CA_DIR + "certs/";
   public static final String CA_KEY_DIR = CA_DIR + "private/";
   public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
+  public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";
+  public static final String SSL_DELETE_PROJECT_CERTS_SCRIPTNAME = "deleteprojectcerts.sh";
   public static final int USERNAME_LEN = 8;
   public static final int MAX_USERNAME_SUFFIX = 99;
   public static final int MAX_RETRIES = 500;
@@ -617,9 +671,12 @@ public class Settings {
   public static final String KAFKA_K_CERTIFICATE = "kafka_k_certificate";
   public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
   
+  public static final String KAFKA_TMP_CERT_STORE_LOCAL = "/srv/glassfish/kafkacerts";
+  public static final String KAFKA_TMP_CERT_STORE_REMOTE = "/user/glassfish/kafkacerts";
+  
   public static final String KAFKA_SESSIONID_ENV_VAR = "kafka.sessionid";
   public static final String KAFKA_PROJECTID_ENV_VAR = "kafka.projectid";
-  
+  public static final String KAFKA_BROKERADDR_ENV_VAR = "kafka.brokeraddress";
 //  public static final String KAFKA_K_CERTIFICATE_ENV_VAR = "kafka.key.certificate";
 //  public static final String KAFKA_T_CERTIFICATE_ENV_VAR = "kafka.trusted.certificate";
 //  

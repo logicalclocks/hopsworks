@@ -538,8 +538,8 @@ angular.module('hopsWorksApp')
               },              
               createSchema: function (size, projectId) {
                 var modalInstance = $modal.open({
-                  templateUrl: 'views/createSchema.html',
-                  controller: 'CreateSchemaCtrl as createSchemaCtrl',
+                  templateUrl: 'views/schemaCreate.html',
+                  controller: 'SchemaCreateCtrl as schemaCreateCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',
@@ -560,6 +560,68 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },     
+              viewSchemaContent: function (size, projectId, schemaName, schemaVersion) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/schemaViewContent.html',
+                  controller: 'SchemaViewContentCtrl as schemaViewContentCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projectId: function () {
+                      return projectId;
+                    },
+                    schemaName: function () {
+                      return schemaName;
+                    },
+                    schemaVersion: function () {
+                      return schemaVersion;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },   
+              
+              updateSchemaContent: function (size, projectId, schemaName, schemaVersion) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/schemaUpdateContent.html',
+                  controller: 'SchemaUpdateContentCtrl as schemaUpdateContentCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projectId: function () {
+                      return projectId;
+                    },
+                    schemaName: function () {
+                      return schemaName;
+                    },
+                    schemaVersion: function () {
+                      return schemaVersion;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },   
+              
               createTopic: function (size, projectId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/createTopic.html',

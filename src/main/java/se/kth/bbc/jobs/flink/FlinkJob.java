@@ -36,13 +36,14 @@ public class FlinkJob extends YarnJob {
      * @param flinkConfFile
      * @param nameNodeIpPort
      * @param flinkUser
+     * @param kafkaAddress
      */
     public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
             Users user, final String hadoopDir,
             final String flinkDir, final String flinkConfDir, 
             final String flinkConfFile,final String nameNodeIpPort, 
-            String flinkUser) {
-        super(job, services, user, hadoopDir, nameNodeIpPort);
+            String flinkUser, String kafkaAddress) {
+        super(job, services, user, hadoopDir, nameNodeIpPort, kafkaAddress);
         if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
             throw new IllegalArgumentException(
                     "JobDescription must contain a FlinkJobConfiguration object. Received: "

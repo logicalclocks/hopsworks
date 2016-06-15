@@ -99,6 +99,7 @@ public class MetadataService {
     }
 
     this.uploader.setUploadPath(this.path);
+    this.uploader.setIsTemplate(true);
 
     return this.uploader;
   }

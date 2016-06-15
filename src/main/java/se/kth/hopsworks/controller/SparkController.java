@@ -92,7 +92,7 @@ public class SparkController {
         public SparkJob run() throws Exception {
           return new SparkJob(job, submitter, user, settings.
               getHadoopDir(), settings.getSparkDir(), hdfsLeDescriptorsFacade.getSingleEndpoint(),
-              settings.getSparkUser());
+              settings.getSparkUser(), settings.getKafkaConnectStr());
         }
       });
     } catch (InterruptedException ex) {
@@ -130,7 +130,8 @@ public class SparkController {
     }
 
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
-        hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser());
+        hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser(),
+    settings.getKafkaConnectStr());
 
     submitter.stopExecution(sparkjob, appid);
 

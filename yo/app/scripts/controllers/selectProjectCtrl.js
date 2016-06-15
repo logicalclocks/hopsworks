@@ -6,7 +6,7 @@ angular.module('hopsWorksApp')
             self.global = global;
             self.projectId = projectId;
             self.msg = msg;
-            self.selectedProjectName;
+            self.selectedProject;
             self.projects = [];
 
             self.init = function () {
@@ -30,12 +30,12 @@ angular.module('hopsWorksApp')
             self.init();
 
             self.selectProject = function () {
-              if (self.selectedProjectName === undefined || self.selectedProjectName === "") {
+              if (self.selectedProject === undefined || self.selectedProject === "") {
                 growl.error("Could not select a project", {title: 'Error', ttl: 5000, referenceId: 21});
                 return;
               }
 
-              ProjectService.getProjectInfo({projectName: self.selectedProjectName}).$promise.then(
+              ProjectService.getProjectInfo({projectName: self.selectedProject.name}).$promise.then(
                       function (success) {
                         $modalInstance.close(success);
                       }, function (error) {
