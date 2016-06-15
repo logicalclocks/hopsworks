@@ -64,7 +64,7 @@ public class YarnApplicationAttemptStateFacade extends AbstractFacade<YarnApplic
                     return "";
                 }
             }
-            return "http://" + trackingUrl;
+            return trackingUrl;
         }
         return "";
     }
