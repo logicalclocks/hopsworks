@@ -13,6 +13,8 @@ import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.hopsworks.certificates.UserCertsFacade;
+import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.user.model.Users;
 
 /**

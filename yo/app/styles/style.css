@@ -386,6 +386,9 @@ fieldset[disabled] #tourColumn .btn-danger.active {
     display:         flex;
 }
 
+.selectedTopic {
+    background-color: yellow; 
+}
 .server-status {
   font-size: 14px;
   margin-top: 6px;

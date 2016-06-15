@@ -32,6 +32,9 @@ import se.kth.hopsworks.rest.AppException;
 @ViewScoped
 public class ProjectsManagementBean {
 
+  private static final long GB = 1024*1024*1024;
+  private static final long MB = 1024*1024;
+  
   @EJB
   private ProjectsManagementController projectsManagementController;
 
@@ -86,6 +89,7 @@ public class ProjectsManagementBean {
       quotas = projectsManagementController.getHDFSQuotas(projectname);
       BigInteger sz = quotas.getDsquota();
       quota = sz.longValue();
+      quota /= MB;
       this.hdfsquota = String.valueOf(quota);
     } catch (AppException ex) {
       Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE, null, ex);
@@ -117,8 +121,6 @@ public class ProjectsManagementBean {
     } catch (AppException ex) {
       Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE, null, ex);
     }
-//    this.hdfsquota = String.valueOf(quota);
-//    return (int) quota;
     return quota;
   }
 
@@ -129,17 +131,14 @@ public class ProjectsManagementBean {
       quotas = projectsManagementController.getHDFSQuotas(projectname);
       BigInteger sz = quotas.getDiskspace();
       quota = sz.longValue();
+      // convert from bytes to GB
+      quota /= MB;
     } catch (AppException ex) {
       Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE, null, ex);
     }
     return quota;
-
-//    return (int) projectsManagementController.getHDFSUsedSpaceQuota(projectname);
   }
-//  public HdfsInodeAttributes getHDFSQuotas(String projectname) throws AppException {
-//    return (int) projectsManagementController.getHDFSUsedSpaceQuota(projectname);
-//    return projectsManagementController.getHDFSQuotas(projectname);
-//  }
+
 
   public String getAction() {
     return action;
@@ -171,8 +170,9 @@ public class ProjectsManagementBean {
     }
     projectsManagementController.changeYarnQuota(row.getProjectname(), row
         .getYarnQuotaRemaining());
+    // convert quota to MB from bytes (1024^2)
     projectsManagementController.setHdfsSpaceQuota(row.getProjectname(),
-        Long.parseLong(hdfsquota));
+        Long.parseLong(hdfsquota) * MB);
   }
 
   public void onRowCancel(RowEditEvent event) {

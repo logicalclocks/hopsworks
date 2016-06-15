@@ -96,6 +96,13 @@ public class RoleEnforcementPoint implements Serializable {
     List<String> roles = userManager.findGroups(p.getUid());
     return (roles.contains("AUDITOR") || roles.contains("HOPS_ADMIN"));
   }
+  
+  public boolean isAgentRole() {
+
+    Users p = userManager.findByEmail(getRequest().getRemoteUser());
+    List<String> roles = userManager.findGroups(p.getUid());
+    return (roles.contains("AGENT"));
+  }
 
    
   public boolean isOnlyAuditorRole() {

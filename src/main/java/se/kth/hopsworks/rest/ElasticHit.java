@@ -6,13 +6,6 @@ import java.util.Map.Entry;
 import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.elasticsearch.search.SearchHit;
-import static se.kth.hopsworks.rest.Index.DATASET;
-import static se.kth.hopsworks.rest.Index.DS;
-import static se.kth.hopsworks.rest.Index.INODE;
-import static se.kth.hopsworks.rest.Index.PROJ;
-import static se.kth.hopsworks.rest.Index.PROJECT;
-import static se.kth.hopsworks.rest.Index.UNKNOWN;
-import static se.kth.hopsworks.rest.Index.SITE;
 
 /**
  * Represents a JSONifiable version of the elastic hit object
@@ -42,32 +35,8 @@ public class ElasticHit {
     this.id = hit.getId();
     //the source of the retrieved record (i.e. all the indexed information)
     this.map = hit.getSource();
-    /*
-     * depending on the source index results were retrieved from, the parent type
-     * may be either 'project' or 'dataset'
-     */
-    Index index = Index.valueOf(hit.getIndex().toUpperCase());
-    switch (index) {
-      case PROJECT:
-        if (hit.getType().equalsIgnoreCase(SITE.toString())) {
-          this.type = PROJECT.toString().toLowerCase();
-        } else if (hit.getType().equalsIgnoreCase(PROJ.toString())) {
-          this.type = PROJ.toString().toLowerCase();
-        } else {
-          this.type = UNKNOWN.toString().toLowerCase();
-        }
-        break;
-      case DATASET:
-        if (hit.getType().equalsIgnoreCase(DS.toString())) {
-          this.type = DS.toString().toLowerCase();
-        } else if (hit.getType().equalsIgnoreCase(INODE.toString())) {
-          this.type = INODE.toString().toLowerCase();
-        } else {
-          this.type = UNKNOWN.toString().toLowerCase();
-        }
-        break;
-    }
-
+    this.type = hit.getType();
+    
     //export the name of the retrieved record from the list
     for (Entry<String, Object> entry : map.entrySet()) {
       //set the name explicitly so that it's easily accessible in the frontend

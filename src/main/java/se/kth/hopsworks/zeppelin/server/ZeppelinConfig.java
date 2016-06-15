@@ -16,10 +16,13 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.dep.DependencyResolver;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
+import org.apache.zeppelin.notebook.JobListenerFactory;
+import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.NotebookAuthorization;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
+import org.apache.zeppelin.scheduler.JobListener;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import org.apache.zeppelin.search.LuceneSearch;
 import org.apache.zeppelin.search.SearchService;
@@ -30,7 +33,6 @@ import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.socket.NotebookServer;
 
 public class ZeppelinConfig {
-
 
   private static final Logger LOGGGER = Logger.getLogger(ZeppelinConfig.class.
           getName());
@@ -340,7 +342,9 @@ public class ZeppelinConfig {
       StringBuilder interpreter_json = ConfigFileGenerator.
               instantiateFromTemplate(
                       ConfigFileGenerator.INTERPRETER_TEMPLATE,
-                      "projectName", this.projectName);
+                      "projectName", this.projectName,
+                      "livy_url", settings.getLivyUrl()
+              );
       createdXml = ConfigFileGenerator.createConfigFile(interpreter_file,
               interpreter_json.toString());
     }

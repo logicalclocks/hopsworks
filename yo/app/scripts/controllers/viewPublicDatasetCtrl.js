@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('ViewPublicDatasetCtrl', ['$modalInstance', 'ProjectService', 'DataSetService', 'growl', 'projects', 'datasetDto',
-          function ($modalInstance, ProjectService, DataSetService, growl, projects, datasetDto) {
+        .controller('ViewPublicDatasetCtrl', ['$modalInstance', 'ProjectService', 'growl', 'projects', 'datasetDto',
+          function ($modalInstance, ProjectService, growl, projects, datasetDto) {
 
             var self = this;
             self.projects = projects;
@@ -21,8 +21,6 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 21});
               });
             };
-
-            var dataSetService = DataSetService(self.projectId);
 
             self.close = function () {
               $modalInstance.dismiss('cancel');

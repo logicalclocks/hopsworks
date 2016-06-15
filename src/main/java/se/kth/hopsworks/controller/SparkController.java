@@ -41,22 +41,22 @@ public class SparkController {
   private static final Logger logger = Logger.getLogger(SparkController.class.
       getName());
 
-  @EJB
-  private FileOperations fops;
-  @EJB
-  private AsynchronousJobExecutor submitter;
-  @EJB
-  private ActivityFacade activityFacade;
-  @EJB
-  private DistributedFsService dfs;
-  @EJB
-  private UserGroupInformationService ugiService;
-  @EJB
-  private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private Settings settings;
-  @EJB
-  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
+    @EJB
+    private FileOperations fops;
+    @EJB
+    private AsynchronousJobExecutor submitter;
+    @EJB
+    private ActivityFacade activityFacade;
+    @EJB
+    private DistributedFsService dfs;
+    @EJB
+    private UserGroupInformationService ugiService;
+    @EJB
+    private HdfsUsersController hdfsUsersBean;
+    @EJB
+    private Settings settings;
+    @EJB
+    private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
 
   /**
    * Start the Spark job as the given user.
@@ -92,7 +92,7 @@ public class SparkController {
         public SparkJob run() throws Exception {
           return new SparkJob(job, submitter, user, settings.
               getHadoopDir(), settings.getSparkDir(), hdfsLeDescriptorsFacade.getSingleEndpoint(),
-              settings.getSparkUser());
+              settings.getSparkUser(), settings.getKafkaConnectStr());
         }
       });
     } catch (InterruptedException ex) {
@@ -130,11 +130,12 @@ public class SparkController {
     }
 
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
-        hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser());
+        hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser(),
+    settings.getKafkaConnectStr());
 
     submitter.stopExecution(sparkjob, appid);
 
-  }
+    }
 
   /**
    * Check if the Spark jars are in HDFS. If it's not, try and copy it there from the local filesystem. If it's still

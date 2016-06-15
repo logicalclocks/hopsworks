@@ -201,8 +201,7 @@ public class TemplateMessage extends ContentMessage {
           }
 
           Field f = new Field(fieldId, tableId, fieldName,
-                  "VARCHAR(50)", Integer.parseInt(maxsize),
-                  (short) ((searchable) ? 1 : 0), (short) ((required) ? 1 : 0),
+                  "VARCHAR(50)", Integer.parseInt(maxsize), searchable, required,
                   description, fieldtypeid, position);
           f.setFieldTypes(new FieldType(fieldtypeid));
 

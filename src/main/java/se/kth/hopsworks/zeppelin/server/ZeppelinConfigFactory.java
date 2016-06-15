@@ -53,6 +53,9 @@ public class ZeppelinConfigFactory {
 
   @PreDestroy
   public void preDestroy() {
+    for (ZeppelinConfig conf : projectUserConfCache.values()) {
+      conf.clean();
+    }
     for (ZeppelinConfig conf : projectConfCache.values()) {
       conf.clean();
     }

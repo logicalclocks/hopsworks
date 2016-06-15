@@ -153,8 +153,8 @@ public class DataSetService {
           .getInodePK().getName());
       user = userfacade.findByUsername(inodeView.getOwner());
       if (user != null) {
+        inodeView.setOwner(user.getFname() + " " + user.getLname());
         inodeView.setEmail(user.getEmail());
-        inodeView.setOwner(hdfsUsersBean.getHdfsUserName(this.project, user));
       }
       kids.add(inodeView);
     }
@@ -262,6 +262,8 @@ public class DataSetService {
     DatasetRequest dsReq = datasetRequest.findByProjectAndDataset(proj, ds);
 
     Dataset newDS = new Dataset(inode, proj);
+    newDS.setShared(true);
+
     if (dataSet.getDescription() != null) {
       newDS.setDescription(dataSet.getDescription());
     }
@@ -798,7 +800,7 @@ public class DataSetService {
 
     this.uploader.setPath(path);
     this.uploader.setUsername(username);
-
+    this.uploader.setIsTemplate(false);
     return this.uploader;
   }
 

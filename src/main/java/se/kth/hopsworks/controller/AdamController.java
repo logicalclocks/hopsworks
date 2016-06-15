@@ -70,7 +70,7 @@ public class AdamController {
     //Get to starting the job
     AdamJob adamjob = new AdamJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
         hdfsEndpoint.getSingleEndpoint(),
-        settings.getAdamJarHdfsPath());
+        settings.getAdamJarHdfsPath(), settings.getKafkaConnectStr());
     Execution jh = adamjob.requestExecutionId();
     if (jh != null) {
       submitter.startExecution(adamjob);
