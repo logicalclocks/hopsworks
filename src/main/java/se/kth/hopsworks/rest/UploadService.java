@@ -74,6 +74,7 @@ public class UploadService {
   private String path;
   private String username;
   private Inode fileParent;
+  private boolean isTemplate;
   private int templateId;
 
   public UploadService() {
@@ -116,6 +117,10 @@ public class UploadService {
 
   public void setUsername(String username) {
     this.username = username;
+  }
+
+  public void setIsTemplate(boolean isTemplate) {
+    this.isTemplate = isTemplate;
   }
 
   /**
@@ -270,8 +275,7 @@ public class UploadService {
         String fileContent = null;
 
         //if it is about a template file check its validity
-        if ((this.path + fileName).endsWith(".json")) {
-
+        if (this.isTemplate) {
           String filePath = stagingManager.getStagingPath() + this.path
                   + fileName;
 
@@ -308,19 +312,19 @@ public class UploadService {
         org.apache.hadoop.fs.Path location = new org.apache.hadoop.fs.Path(
                 this.path + fileName);
         dfsOps.setPermission(location, dfsOps.getParentPermission(location)); 
-       logger.log(Level.INFO, "Copied to HDFS");
+        logger.log(Level.INFO, "Copied to HDFS");
 
         if (templateid != 0 && templateid != -1) {
           this.attachTemplateToInode(info, this.path + fileName);
         }
 
         //if it is about a template file persist it in the database as well
-        if ((this.path + fileName).endsWith(".json")) {
+        if (this.isTemplate) {
           //TODO. More checks needed to ensure the valid template format
           this.persistUploadedTemplate(fileContent);
         } //this is a common file being uploaded so add basic metadata to it
         //description and searchable
-        else if (!(this.path + fileName).endsWith(".json")) {
+        else {
           //find the corresponding inode
           Inode parent = this.inodes.getInodeAtPath(this.path);
           Inode file = this.inodes.findByParentAndName(parent, fileName);

@@ -345,7 +345,9 @@ public class ZeppelinConfig {
       StringBuilder interpreter_json = ConfigFileGenerator.
               instantiateFromTemplate(
                       ConfigFileGenerator.INTERPRETER_TEMPLATE,
-                      "projectName", this.projectName);
+                      "projectName", this.projectName,
+                      "livy_url", settings.getLivyUrl()
+              );
       createdXml = ConfigFileGenerator.createConfigFile(interpreter_file,
               interpreter_json.toString());
     }

@@ -22,7 +22,6 @@
                      required
                      >
             </md-input-container>
-
             <span ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.required"
               class="text-danger ng-hide">This field is required</span>
@@ -52,7 +51,7 @@
             <div class="controls">
 
               <ui-select ng-model="projectCreatorCtrl.card.selected" theme="select2"
-                         style="min-width: 300px;" tabindex="3">
+                         style="min-wsnidth: 300px;" tabindex="3">
 
                 <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
                 <ui-select-choices

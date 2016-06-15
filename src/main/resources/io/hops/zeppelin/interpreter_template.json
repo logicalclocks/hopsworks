@@ -280,7 +280,18 @@
       "properties": {
         "zeppelin.livy.master": "yarn",
         "zeppelin.livy.spark.maxResult": "1000",
-        "zeppelin.livy.url": "http://10.0.2.15:8998"
+        "zeppelin.livy.url": "%%livy_url%%",
+        "livy.spark.master": "yarn",
+        "livy.spark.driver.cores": "2",
+        "livy.spark.driver.memory": "512m",
+        "livy.spark.executor.instances": "1",
+        "livy.spark.executor.cores": "1",
+        "livy.spark.executor.memory": "512m",
+        "livy.spark.dynamicAllocation.enabled": "true",
+        "livy.spark.dynamicAllocation.cachedExecutorIdleTimeout": "60s",
+        "livy.spark.dynamicAllocation.minExecutors": "1",
+        "livy.spark.dynamicAllocation.initialExecutors": "1",
+        "livy.spark.dynamicAllocation.maxExecutors": "500"
       },
       "interpreterGroup": [
         {

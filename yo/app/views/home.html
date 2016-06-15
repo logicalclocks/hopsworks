@@ -7,10 +7,10 @@
   </div>
 
 
-  <div ng-show="mainCtrl.searchReturned === ''" class="row" style="min-width: 1000px">
+  <div ng-show="mainCtrl.searchReturned === ''" class="row" ng-controller="HomeCtrl as homeCtrl">
 
-    <div class="col-sm-2 col-md-2" style="margin-left: -70px;">
-      <div class="col-md-10 sidebar pull-left" style="min-width: 280px; max-width: 280px">
+    <div class="col-sm-6 col-md-2 col-lg-2">
+      <div class="col-md-10 sidebar pull-left" style="min-width: 300px; max-width: 300px">
 
 
         <div class="list-group">
@@ -23,9 +23,9 @@
             <div ng-show="homeCtrl.showTours" ng-repeat="tour in homeCtrl.tours">              
               <button style="margin: 0px; padding-bottom: 5px; padding-top: 5px; padding-left: 0px; padding-right: 0px;" uib-popover="Take a tour of Hopsworks by creating a project and running a Spark job!"
                       type="button" class="btn btn-default btn-block" ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.createExampleProject()">
-                <span>{{tour.name}}</span>
-                <span style="margin-right: 5px" class="glyphicon glyphicon-play-circle pull-right" ng-hide="homeCtrl.creating === true"></span>
-                <span style="margin-right: 5px" class="fa fa-spinner fa-spin pull-right" ng-hide="homeCtrl.creating === false"></span>
+                <span style="margin-right: 5px" class="glyphicon glyphicon-play-circle pull-right" ng-hide="isCreating(tour.name) === true"></span>
+                <span style="margin-right: 5px" class="fa fa-spinner fa-spin pull-right" ng-hide="isCreating(tour.name) === false"></span>
+                <span class="button-text">{{tour.name}}</span>
               </button>
             </div>
           </a>
@@ -63,6 +63,11 @@
               </div>
             </div>
           </a>
+          <a href="https://groups.google.com/forum/#!forum/hopshadoop" class="list-group-item">
+            <span class="glyphicon glyphicon-user"></span>
+            Need support?
+            <span class="glyphicon glyphicon-earphone pull-right" style="margin-right: 1px;"></span>
+          </a>
         </div>
       </div>
 
@@ -70,7 +75,7 @@
     </div>
 
 
-    <div class="col-sm-6 col-md-6 col-lg-6" style="padding-left:56px; min-width: 500px">
+    <div class="col-sm-6 col-md-2 col-lg-5">
       <div class="widget-body">
         <div class="timeline clearfix">
 
@@ -114,7 +119,8 @@
 
       </div>
     </div>
-    <div class="col-sm-3 col-md-3 col-lg-3 sidebar" style="min-width: 390px; max-width: 390px; margin-left: 180px;">
+    <div class="col-sm-6 col-md-1 col-lg-1"></div>
+    <div class="col-sm-6 col-md-3 col-lg-3 sidebar">
 
       <span class="list-group-item active">
         <span class="badge pull-left" style="margin-right: 10px;">{{homeCtrl.projects.length}}</span> Projects

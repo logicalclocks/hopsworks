@@ -262,6 +262,8 @@ public class DataSetService {
     DatasetRequest dsReq = datasetRequest.findByProjectAndDataset(proj, ds);
 
     Dataset newDS = new Dataset(inode, proj);
+    newDS.setShared(true);
+
     if (dataSet.getDescription() != null) {
       newDS.setDescription(dataSet.getDescription());
     }
@@ -798,7 +800,7 @@ public class DataSetService {
 
     this.uploader.setPath(path);
     this.uploader.setUsername(username);
-
+    this.uploader.setIsTemplate(false);
     return this.uploader;
   }
 

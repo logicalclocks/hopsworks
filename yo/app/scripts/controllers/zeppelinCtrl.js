@@ -49,11 +49,13 @@ angular.module('hopsWorksApp')
                 return true;
               if (group.indexOf("flink") > -1)
                 return true;
-              if (group.indexOf("sh") > -1)
-                return true;
+//              if (group.indexOf("sh") > -1)
+//                return true;
               if (group.indexOf("angular") > -1)
                 return true;
               if (group.indexOf("livy") > -1) 
+                return true;
+              if (group.indexOf("md") > -1) 
                 return true;
               return false;
             };

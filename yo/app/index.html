@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="bower_components/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css" />
     <link rel="stylesheet" href="bower_components/angular-multi-select/isteven-multi-select.css" />
     <link rel="stylesheet" href="bower_components/angular-hamburger-toggle/dist/angular-hamburger-toggle.css" />
+    <link rel="stylesheet" href="bower_components/ng-prettyjson/src/ng-prettyjson.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
@@ -51,7 +52,9 @@
     <div style="margin-top:50px;">
       <div ng-view=""></div>
     </div>
-
+    <!-- build:js(.) scripts/jquery.js -->
+    <script src="bower_components/jquery/jquery.js"></script>
+    <!-- endbuild -->
     <!-- build:js(.) scripts/vendor.js -->
     <!-- bower:js -->
     <script src="bower_components/angular/angular.js"></script>
@@ -90,6 +93,8 @@
     <script src="bower_components/ngclipboard/dist/ngclipboard.js"></script>
     <script src="bower_components/angular-utils-pagination/dirPagination.js"></script>
     <script src="bower_components/angular-smart-table/dist/smart-table.js"></script>
+    <script src="bower_components/ng-prettyjson/src/ng-prettyjson.js"></script>
+    <script src="bower_components/ng-prettyjson/src/ng-prettyjson-tmpl.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
@@ -147,7 +152,9 @@
     <script src="scripts/controllers/selectProjectCtrl.js"></script>    
     <script src="scripts/controllers/createTopicCtrl.js"></script>    
     <script src="scripts/controllers/createAclCtrl.js"></script> 
-    <script src="scripts/controllers/createSchemaCtrl.js"></script>
+    <script src="scripts/controllers/schemaCreateCtrl.js"></script>
+    <script src="scripts/controllers/schemaViewContentCtrl.js"></script>
+    <script src="scripts/controllers/schemaUpdateContentCtrl.js"></script>
 
     <!-- Services -->
     <script src="scripts/services/AuthInterceptorService.js"></script>
