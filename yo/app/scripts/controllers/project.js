@@ -28,7 +28,7 @@ angular.module('hopsWorksApp')
 
                 // We could instead implement a service to get all the available types but this will do it for now
 //        self.projectTypes = ['JOBS', 'ZEPPELIN', 'BIOBANKING', 'CHARON'];
-                self.projectTypes = ['JOBS', 'ZEPPELIN'];
+                self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
                 self.alreadyChoosenServices = [];
                 self.selectionProjectTypes = [];
                 self.pId = $routeParams.projectID;
@@ -253,7 +253,11 @@ angular.module('hopsWorksApp')
                 self.goToBiobanking = function () {
                     $location.path('project/' + self.pId + '/biobanking');
                 };
-
+                
+                self.goToKafka = function () {
+                  $location.path('project/' + self.pId + '/kafka');
+                };
+                
                 self.goToService = function (service) {
                     $location.path('project/' + self.pId + '/' + service.toLowerCase());
                 };
@@ -327,6 +331,10 @@ angular.module('hopsWorksApp')
                     return showService("History");
                 };
 
+                self.showKafka = function () {
+                  return showService("Kafka");
+                };
+                
                 self.getRole = function () {
                     UserService.getRole(self.pId).then(
                             function (success) {
@@ -335,7 +343,7 @@ angular.module('hopsWorksApp')
                         self.role = "";
                     });
                 };
-
+                
                 var showService = function (serviceName) {
                     var len = self.alreadyChoosenServices.length;
                     for (var i = 0; i < len; i++) {

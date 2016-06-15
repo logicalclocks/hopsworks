@@ -91,7 +91,7 @@ public class Project implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 128)
+          max = 88)
   @Column(name = "projectname")
   private String name;
 

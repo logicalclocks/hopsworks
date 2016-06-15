@@ -273,6 +273,51 @@
         "remote": true
       }
     },
+    "2BN395SS2": {
+      "id": "2BN395SS2",
+      "name": "livy",
+      "group": "livy",
+      "properties": {
+        "zeppelin.livy.master": "yarn",
+        "zeppelin.livy.spark.maxResult": "1000",
+        "zeppelin.livy.url": "%%livy_url%%",
+        "livy.spark.master": "yarn",
+        "livy.spark.driver.cores": "2",
+        "livy.spark.driver.memory": "512m",
+        "livy.spark.executor.instances": "1",
+        "livy.spark.executor.cores": "1",
+        "livy.spark.executor.memory": "512m",
+        "livy.spark.dynamicAllocation.enabled": "true",
+        "livy.spark.dynamicAllocation.cachedExecutorIdleTimeout": "60s",
+        "livy.spark.dynamicAllocation.minExecutors": "1",
+        "livy.spark.dynamicAllocation.initialExecutors": "1",
+        "livy.spark.dynamicAllocation.maxExecutors": "500"
+      },
+      "interpreterGroup": [
+        {
+          "class": "org.apache.zeppelin.livy.LivySparkInterpreter",
+          "name": "spark"
+        },
+        {
+          "class": "org.apache.zeppelin.livy.LivySparkSQLInterpreter",
+          "name": "sql"
+        },
+        {
+          "class": "org.apache.zeppelin.livy.LivyPySparkInterpreter",
+          "name": "pyspark"
+        },
+        {
+          "class": "org.apache.zeppelin.livy.LivySparkRInterpreter",
+          "name": "sparkr"
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false
+      }
+    },    
     "2BGUXW9ZV": {
       "id": "2BGUXW9ZV",
       "name": "cassandra",

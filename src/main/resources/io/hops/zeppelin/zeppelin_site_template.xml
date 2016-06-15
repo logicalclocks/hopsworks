@@ -124,13 +124,13 @@
 
 <property>
   <name>zeppelin.interpreters</name>
-  <value>org.apache.zeppelin.spark.SparkInterpreter,org.apache.zeppelin.spark.PySparkInterpreter,org.apache.zeppelin.spark.SparkSqlInterpreter,org.apache.zeppelin.spark.DepInterpreter,org.apache.zeppelin.markdown.Markdown,org.apache.zeppelin.angular.AngularInterpreter,org.apache.zeppelin.shell.ShellInterpreter,org.apache.zeppelin.hive.HiveInterpreter,org.apache.zeppelin.tajo.TajoInterpreter,org.apache.zeppelin.flink.FlinkInterpreter,org.apache.zeppelin.lens.LensInterpreter,org.apache.zeppelin.ignite.IgniteInterpreter,org.apache.zeppelin.ignite.IgniteSqlInterpreter,org.apache.zeppelin.cassandra.CassandraInterpreter,org.apache.zeppelin.geode.GeodeOqlInterpreter,org.apache.zeppelin.postgresql.PostgreSqlInterpreter,org.apache.zeppelin.phoenix.PhoenixInterpreter,org.apache.zeppelin.kylin.KylinInterpreter,org.apache.zeppelin.elasticsearch.ElasticsearchInterpreter,org.apache.zeppelin.scalding.ScaldingInterpreter</value>
+  <value>org.apache.zeppelin.spark.SparkInterpreter,org.apache.zeppelin.spark.PySparkInterpreter,org.apache.zeppelin.spark.SparkSqlInterpreter,org.apache.zeppelin.spark.DepInterpreter,org.apache.zeppelin.markdown.Markdown,org.apache.zeppelin.angular.AngularInterpreter,org.apache.zeppelin.shell.ShellInterpreter,org.apache.zeppelin.hive.HiveInterpreter,org.apache.zeppelin.flink.FlinkInterpreter,org.apache.zeppelin.livy.LivySparkInterpreter,org.apache.zeppelin.livy.LivyPySparkInterpreter,org.apache.zeppelin.livy.LivySparkRInterpreter,org.apache.zeppelin.livy.LivySparkSQLInterpreter</value>
   <description>Comma separated interpreter configurations. First interpreter become a default</description>
 </property>
 
 <property>
   <name>zeppelin.interpreter.connect.timeout</name>
-  <value>30000</value>
+  <value>60000</value>
   <description>Interpreter process connect timeout in msec.</description>
 </property>
 
@@ -161,17 +161,9 @@
 
 <property>
   <name>zeppelin.ssl.keystore.password</name>
-  <value>change me</value>
+  <value>changeit</value>
   <description>Keystore password. Can be obfuscated by the Jetty Password tool</description>
 </property>
-
-<!--
-<property>
-  <name>zeppelin.ssl.key.manager.password</name>
-  <value>change me</value>
-  <description>Key Manager password. Defaults to keystore password. Can be obfuscated.</description>
-</property>
--->
 
 <property>
   <name>zeppelin.ssl.truststore.path</name>
@@ -198,5 +190,76 @@
   <value>*</value>
   <description>Allowed sources for REST and WebSocket requests (i.e. http://onehost:8080,http://otherhost.com). If you leave * you are vulnerable to https://issues.apache.org/jira/browse/ZEPPELIN-173</description>
 </property>
+
+
+<property>
+  <name>zeppelin.livy.url</name>
+  <value>%%livy_url%%</value>
+  <description>Endpoint for the livy server</description>
+</property>
+
+<property>
+  <name>zeppelin.livy.master</name>
+  <value>%%livy_master%%</value>
+  <description>Spark master for Livy (yarn, yarn-client, spark://localhost:8908)</description>
+</property>
+
+<property>
+  <name>livy.spark.master</name>
+  <value>yarn</value>
+  <description>Livy spark master (e.g., yarn)</description>
+</property>
+
+<property>
+  <name>livy.spark.driver.cores</name>
+  <value>2</value>
+  <description>Number of driver cores</description>
+</property>
+<property>
+  <name>livy.spark.driver.memory</name>
+  <value>8g</value>
+  <description>Driver memory (e.g., 8g)</description>
+</property>
+<property>
+  <name>livy.spark.executor.instances</name>
+  <value>1</value>
+  <description>Number of spark executor instances</description>
+</property>
+<property>
+  <name>livy.spark.executor.cores</name>
+  <value>2</value>
+  <description>Number of executor cores</description>
+</property>
+<property>
+  <name>livy.spark.executor.memory</name>
+  <value>8g</value>
+  <description>Executor memory (e.g., 8g)</description>
+</property>
+<property>
+  <name>livy.spark.dynamicAllocation.enabled</name>
+  <value>true</value>
+  <description>Spark dynamic allocation is enabled (e.g., true)</description>
+</property>
+<property>
+  <name>livy.spark.dynamicAllocation.cachedExecutorIdleTimeout</name>
+  <value>300</value>
+  <description>Time in seconds for idle executors to timeout</description>
+</property>
+<property>
+  <name>livy.spark.dynamicAllocation.minExecutors</name>
+  <value>2</value>
+  <description>Minimum number of executors when dynamic allocation is on</description>
+</property>
+<property>
+  <name>livy.spark.dynamicAllocation.initialExecutors</name>
+  <value>2</value>
+  <description>Initial number of executors when dynamic allocation is on</description>
+</property>
+<property>
+  <name>livy.spark.dynamicAllocation.maxExecutors</name>
+  <value>100</value>
+  <description>Maximum number of executors when dynamic allocation is on</description>
+</property>
+
 
 </configuration>

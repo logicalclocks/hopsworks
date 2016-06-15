@@ -14,6 +14,7 @@ import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 
 import java.io.IOException;
 import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
+import se.kth.hopsworks.certificates.UserCertsFacade;
 
 /**
  * Utility class for executing a HopsJob asynchronously. Passing the Hopsjob to
@@ -39,6 +40,9 @@ public class AsynchronousJobExecutor {
   private JobsHistoryFacade jhf;
   @EJB
   private ExecutionInputfilesFacade executionInputFileFacade;
+  @EJB
+  private UserCertsFacade userCerts;
+
 
   @Asynchronous
   public void startExecution(HopsJob job) {
@@ -77,4 +81,9 @@ public class AsynchronousJobExecutor {
   public ExecutionInputfilesFacade getExecutionInputfilesFacade(){
       return executionInputFileFacade;
   }
+
+  public UserCertsFacade getUserCerts() {
+    return userCerts;
+  }
+  
 }

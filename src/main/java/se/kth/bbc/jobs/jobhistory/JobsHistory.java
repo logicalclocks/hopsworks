@@ -27,8 +27,9 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "JobsHistory.findByInodePid", query = "SELECT j FROM JobsHistory j WHERE j.jobsHistoryPK.inodePid = :inodePid"),
     @NamedQuery(name = "JobsHistory.findByInodeName", query = "SELECT j FROM JobsHistory j WHERE j.jobsHistoryPK.inodeName = :inodeName"),
     @NamedQuery(name = "JobsHistory.findByJobType", query = "SELECT j FROM JobsHistory j WHERE j.jobType = :jobType"),
+    @NamedQuery(name = "JobsHistory.findByClassName", query = "SELECT j FROM JobsHistory j WHERE j.className = :className"),
     @NamedQuery(name = "JobsHistory.findBySize", query = "SELECT j FROM JobsHistory j WHERE j.size = :size"),
-    @NamedQuery(name = "JobsHistory.findByBlocksInHdfs", query = "SELECT j FROM JobsHistory j WHERE j.blocksInHdfs = :blocksInHdfs"),
+    @NamedQuery(name = "JobsHistory.findByBlocksInHdfs", query = "SELECT j FROM JobsHistory j WHERE j.inputBlocksInHdfs = :inputBlocksInHdfs"),
     @NamedQuery(name = "JobsHistory.findByExecutionDuration", query = "SELECT j FROM JobsHistory j WHERE j.executionDuration = :executionDuration"),
     @NamedQuery(name = "JobsHistory.findByInitialRequestedMemory", query = "SELECT j FROM JobsHistory j WHERE j.initialRequestedMemory = :initialRequestedMemory"),
     @NamedQuery(name = "JobsHistory.findByInitialrequestedVcores", query = "SELECT j FROM JobsHistory j WHERE j.initialrequestedVcores = :initialrequestedVcores"),
@@ -57,15 +58,25 @@ public class JobsHistory implements Serializable {
     
     @Basic(optional = false)
     @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "class_name")
+    private String className;
+    
+    @Basic(optional = false)
+    @NotNull
     @Column(name = "size")
     private int size;
     
     @Basic(optional = false)
     @NotNull
-    @Column(name = "blocks_in_hdfs")
-    private int blocksInHdfs;
-    @Basic(optional = false)
+    @Column(name = "arguments")
+    private String arguments;
     
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "input_blocks_in_hdfs")
+    private String inputBlocksInHdfs;
+    @Basic(optional = false)
     
     @Column(name = "execution_duration")
     private long executionDuration;
@@ -95,13 +106,16 @@ public class JobsHistory implements Serializable {
         this.jobsHistoryPK = jobsHistoryPK;
     }
 
-    public JobsHistory(int jobId, int inodePid, String inodeName,int executionId, String appId, String jobType, int size, int blocksInHdfs, 
-            int initialRequestedMemory, int initialrequestedVcores) {
+    public JobsHistory(int jobId, int inodePid, String inodeName,int executionId, String appId, String jobType, 
+                       int size, String inputBlocksInHdfs, String arguments, String className,
+                       int initialRequestedMemory, int initialrequestedVcores) {
         this.jobsHistoryPK = new JobsHistoryPK(jobId, inodePid, inodeName, executionId);
         this.appId = appId;
         this.jobType = jobType;
         this.size = size;
-        this.blocksInHdfs = blocksInHdfs;
+        this.inputBlocksInHdfs = inputBlocksInHdfs;
+        this.arguments = arguments;
+        this.className = className;
         this.executionDuration = -1;
         this.initialRequestedMemory = initialRequestedMemory;
         this.initialrequestedVcores = initialrequestedVcores;
@@ -136,6 +150,22 @@ public class JobsHistory implements Serializable {
     public void setJobType(String jobType) {
         this.jobType = jobType;
     }
+    
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+    
+    public String getArguments() {
+        return arguments;
+    }
+
+    public void setArguments(String argument) {
+        this.arguments = argument;
+    }
 
     public int getSize() {
         return size;
@@ -145,12 +175,12 @@ public class JobsHistory implements Serializable {
         this.size = size;
     }
 
-    public int getBlocksInHdfs() {
-        return blocksInHdfs;
+    public String getInputBlocksInHdfs() {
+        return inputBlocksInHdfs;
     }
 
-    public void setBlocksInHdfs(int blocksInHdfs) {
-        this.blocksInHdfs = blocksInHdfs;
+    public void setInputBlocksInHdfs(String inputBlocksInHdfs) {
+        this.inputBlocksInHdfs = inputBlocksInHdfs;
     }
 
     public long getExecutionDuration() {

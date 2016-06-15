@@ -31,6 +31,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 public class BbcGroup implements Serializable {
 
   private static final long serialVersionUID = 1L;
+
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,

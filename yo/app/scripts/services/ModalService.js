@@ -91,6 +91,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              
               createRepository: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/newRepositoryModal.html',
@@ -505,6 +506,111 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              selectProject: function (size, global, projectId, msg) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/selectProject.html',
+                  controller: 'SelectProjectCtrl as selectProjectCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projectId: function () {
+                      return projectId;
+                    },
+                    global: function () {
+                      return global;
+                    },
+                    msg: function () {
+                      return msg;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },              
+              createSchema: function (size, projectId) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/createSchema.html',
+                  controller: 'CreateSchemaCtrl as createSchemaCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projectId: function () {
+                      return projectId;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },     
+              createTopic: function (size, projectId) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/createTopic.html',
+                  controller: 'CreateTopicCtrl as createTopicCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projectId: function () {
+                      return projectId;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },     
+              createTopicAcl: function (size, projectId, topicName) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/createTopicAcl.html',
+                  controller: 'CreateAclCtrl as createAclCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    projectId: function () {
+                      return projectId;
+                    },
+                    topicName: function () {
+                      return topicName;
+                  }
+                  }
+                });
+                return modalInstance.result;
+              },                
               jobDetails: function (size, job, projectId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/jobDetails.html',

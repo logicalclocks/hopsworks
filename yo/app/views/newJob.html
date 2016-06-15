@@ -167,17 +167,30 @@
                 <div class="col-md-8"><input type="number" min="0" ng-model="newJobCtrl.runConfig.executorMemory" class="form-control"></div>
               </div>
               <!-- Flink -->
-              <div class="row" ng-show="newJobCtrl.jobtype == 3">
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
                 <div class="text-right col-md-4">Number of TaskManagers <i class="fa fa-info-circle" tooltip="The number of Flink TaskManagers that should be requested for this job." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numberOfTaskManagers" class="form-control"></div>
               </div>
-              <div class="row" ng-show="newJobCtrl.jobtype == 3">
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
                 <div class="text-right col-md-4">Number of slots <i class="fa fa-info-circle" tooltip="The number of slots per TaskManager that should be requested for this job." style="margin-left: 10px"></i></div>
-                <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numberOfSlots" class="form-control"></div>
+                <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.slots" class="form-control"></div>
               </div>
-              <div class="row" ng-show="newJobCtrl.jobtype == 3">
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
                 <div class="text-right col-md-4">TaskManager memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for each TaskManager." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="number" min="768" ng-model="newJobCtrl.runConfig.taskManagerMemory" class="form-control"></div>
+              </div>
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
+                <div class="text-right col-md-4">Job Parallelism <i class="fa fa-info-circle" tooltip="In Flink programs, the parallelism determines how operations are split into individual tasks which are assigned to task slots. " style="margin-left: 10px"></i></div>
+                <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.parallelism" class="form-control"></div>
+              </div>
+              <div class="row" ng-show="newJobCtrl.jobtype === 3">
+                <div class="text-right col-md-4">Job Type <i class="fa fa-info-circle" tooltip="Choose between Streaming or Batch job." style="margin-left: 10px"></i></div>
+                <div class="col-md-1">
+                    <select name="flinkjobtype" 
+                            ng-options="flinkjobtype for flinkjobtype in newJobCtrl.flinkjobtype"
+                            ng-model="newJobCtrl.runConfig.flinkjobtype" class="form-control">
+                    </select>
+                </div>
               </div>
             </div>
             <!-- Add libraries -->
@@ -300,7 +313,7 @@
             tourtip-element="#selectFileButton"
             tourtip-placement="bottom"
             tourtip-next-label="Next"
-            on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples-1.5.2-hadoop2.4.0.jar')"
+            on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples-1.6.1-hadoop2.4.0.jar')"
             tourtip-offset-vertical="-13"
             tourtip-offset-horizontal="-5"
             ng-if="newJobCtrl.accordion3.visible"

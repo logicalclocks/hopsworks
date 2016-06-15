@@ -26,7 +26,7 @@ import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
-import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.hopsworks.controller.ExecutionController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
@@ -58,8 +58,6 @@ public class ExecutionService {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private ExecutionController executionController;
-  @EJB
-  private InodeFacade inodes;
   @EJB
   private ExecutionInputfilesFacade execInputFilesFacade;
 
@@ -111,6 +109,12 @@ public class ExecutionService {
               "You are not authorized for this invocation.");
     }
     try {
+      //Set sessionId to JobConfiguration so that is used by Kafka
+      if(job.getJobConfig() instanceof SparkJobConfiguration){
+        ((SparkJobConfiguration)job.getJobConfig()).setSessionId(
+          req.getSession().getId());
+      }
+        
       Execution exec = executionController.start(job, user);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(exec).build();

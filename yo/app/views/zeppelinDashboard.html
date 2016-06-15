@@ -14,15 +14,24 @@
             <div class="content-wrapper" ng-show="mainCtrl.searchReturned === ''">                      
                 <div growl reference="10" class="pull-right" ></div>
                 <h3>
-                    <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
+<!--                    <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
                         <button class="btn btn-success" ng-click="zeppelinCtrl.createNewNote()" dropdown-toggle type="button" id="newNotebook" aria-haspopup="true" aria-expanded="true">
                             Create New Notebook
                         </button>
-                    </div>
-                    <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
+                    </div>-->
+                    <ul class="nav navbar-nav pull-right" style="margin-right:30px;  margin-top:-10px;">
+                      <li class="pull-left" 
+                          ng-class="{'connected-space':zeppelinCtrl.connectedStatus, 'disconnected-space':!zeppelinCtrl.connectedStatus}">
                         <hamburger-toggle state="zeppelinCtrl.tgState" class="hamburger-toggle" ng-click="zeppelinCtrl.deselect()">
                         </hamburger-toggle>
-                    </div>
+                      </li>
+                      <li class="server-status">
+                          <span class="fa fa-circle" ng-class="{'server-connected':zeppelinCtrl.connectedStatus, 'server-disconnected':!zeppelinCtrl.connectedStatus}"></span>  
+                          <span ng-show="zeppelinCtrl.connectedStatus">Connected</span>
+                          <span ng-show="!zeppelinCtrl.connectedStatus">Disconnected</span>
+                      </li>
+                    </ul>
+                    
                 </h3>
                 <div ng-init="(iscollapsed$index) = true; zeppelinCtrl.tgState = true;"
                      class="ds-content col-lg-12" ng-class="{'sidenav-open': zeppelinCtrl.tgState}" style="margin-top: 5px;">
@@ -42,7 +51,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div ng-repeat="note in zeppelinCtrl.notes track by $index">
+<!--                            <div ng-repeat="note in zeppelinCtrl.notes track by $index">
                                 <div ng-click="zeppelinCtrl.openNote(note)"
                                      class="file-box"
                                      context-menu>
@@ -74,7 +83,7 @@
                                     </ul>
                                 </div>
                             </div> 
-                            <!-- end repeat -->
+                             end repeat 
 
                             <div class="file-box"
                                  context-menu
@@ -89,7 +98,7 @@
                                         </div>                                                
                                     </div>
                                 </div>
-                            </div>                                    
+                            </div>                                    -->
                         </div>
                     </div>
                 </div>

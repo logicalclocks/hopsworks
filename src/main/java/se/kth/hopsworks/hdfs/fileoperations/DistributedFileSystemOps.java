@@ -125,7 +125,7 @@ public class DistributedFileSystemOps {
    * @throws java.io.IOException
    */
   public void touchz(Path location) throws IOException {
-    dfs.create(location);
+    dfs.create(location).close();
   }
   
   /**
@@ -412,6 +412,10 @@ public class DistributedFileSystemOps {
    */
   public FsPermission getParentPermission(Path path) throws IOException {
     Path location = new Path(path.toUri());
+    if (dfs.exists(location)) {
+      location = location.getParent();
+      return dfs.getFileStatus(location).getPermission();
+    }
     while (!dfs.exists(location)) {
       location = location.getParent();
     }

@@ -41,6 +41,7 @@
     <class>se.kth.bbc.jobs.model.configuration.JsonReduceableConverter</class>
     <class>se.kth.hopsworks.user.model.SshKeys</class>
     <class>se.kth.hopsworks.users.AuthorizedSshkeys</class>
+    <class>se.kth.hopsworks.certificates.UserCerts</class>
     <class>se.kth.hopsworks.meta.entity.TupleToFile</class>
     <class>se.kth.hopsworks.meta.entity.Metadata</class>
     <class>se.kth.hopsworks.meta.entity.RawData</class>
@@ -66,6 +67,10 @@
     <class>se.kth.bbc.jobs.quota.YarnProjectsQuota</class>
     <class>se.kth.bbc.jobs.quota.YarnRunningPrice</class>
     <class>se.kth.bbc.jobs.quota.YarnProjectsDailyCost</class>
+    <class>io.hops.kafka.ProjectTopics</class>
+    <class>io.hops.kafka.SharedTopics</class>
+    <class>io.hops.kafka.SchemaTopics</class>
+    <class>io.hops.kafka.TopicAcls</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

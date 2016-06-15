@@ -17,7 +17,7 @@
 package se.kth.hopsworks.zeppelin.rest.message;
 
 import java.util.List;
-import org.apache.zeppelin.interpreter.Interpreter;
+import org.apache.zeppelin.interpreter.InterpreterSetting;
 
 /**
  * InterpreterSetting information for binding
@@ -28,10 +28,12 @@ public class InterpreterSettingListForNoteBind {
   String name;
   String group;
   private boolean selected;
-  private List<Interpreter> interpreters;
+  private List<InterpreterSetting.InterpreterInfo> interpreters;
 
   public InterpreterSettingListForNoteBind(String id, String name,
-      String group, List<Interpreter> interpreters, boolean selected) {
+                                           String group,
+                                           List<InterpreterSetting.InterpreterInfo> interpreters,
+                                           boolean selected) {
     super();
     this.id = id;
     this.name = name;
@@ -64,11 +66,11 @@ public class InterpreterSettingListForNoteBind {
     this.group = group;
   }
 
-  public List<Interpreter> getInterpreterNames() {
+  public List<InterpreterSetting.InterpreterInfo> getInterpreterNames() {
     return interpreters;
   }
 
-  public void setInterpreterNames(List<Interpreter> interpreters) {
+  public void setInterpreterNames(List<InterpreterSetting.InterpreterInfo> interpreters) {
     this.interpreters = interpreters;
   }
 

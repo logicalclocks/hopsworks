@@ -39,7 +39,13 @@
           Forms<span class="sub_icon fa fa-medkit fa-lg pull-right"></span>
         </a>
       </li>
-
+       <li ng-click="projectCtrl.goToKafka()" ng-show="projectCtrl.showKafka()">
+        <a>
+          Kafka<img class="pull-right" style="margin-left:10px" height="25" src="images/kafka_logo.png"/> 
+        </a>
+      </li>
+       
+       
       <li ng-click="projectCtrl.goToDatasets()" style="margin-top:40px;">
         <a>
           Data Sets<span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>

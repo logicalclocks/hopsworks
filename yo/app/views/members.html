@@ -41,12 +41,12 @@
       <div class="controls">
 
         <ui-select ng-model="memberCtrl.card.selected"
-                   theme="select2"
+                   theme="select2" class="form-control" 
                    style="min-width: 300px;">
 
           <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
           <ui-select-choices
-            repeat="card in memberCtrl.cards">
+            repeat="card in memberCtrl.cards | cardFilter: {email: $select.search, firstname: $select.search, lastname: $select.search}">
 
             <div ng-bind-html="memberCtrl.card.email | highlight: $select.search"></div>
             <small>
@@ -146,7 +146,7 @@
         </tr>
 
         <tr ng-repeat="member in memberCtrl.members| filter:searchInput">
-          <td ng-class="{'text-muted' : member.user.email == mainCtrl.email}">
+          <td ng-class="{'text-muted' : member.user.email === mainCtrl.email}">
             <div class="media">
               <a class="pull-left">
                 <img src="https://gravatar.com/avatar/{{mainCtrl.getEmailHash(member.user.email)}}?d=mm"

@@ -92,7 +92,7 @@ public class HistoryService {
       
         //TODO: Change the URL 
         try {
-		URL url = new URL("http://bbc1.sics.se:21001/rest/job?id=" + jobId );
+		URL url = new URL("http://bbc1.sics.se:27001/rest/job?id=" + jobId );
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");
 		conn.setRequestProperty("Accept", "application/json");

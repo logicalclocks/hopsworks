@@ -7,7 +7,7 @@
   </div>
 
 
-  <div ng-show="mainCtrl.searchReturned === ''" class="row" style="min-width: 1500px">
+  <div ng-show="mainCtrl.searchReturned === ''" class="row" style="min-width: 1000px">
 
     <div class="col-sm-2 col-md-2" style="margin-left: -70px;">
       <div class="col-md-10 sidebar pull-left" style="min-width: 280px; max-width: 280px">
@@ -22,10 +22,11 @@
             <span class="glyphicon glyphicon-expand pull-right"></span>
             <div ng-show="homeCtrl.showTours" ng-repeat="tour in homeCtrl.tours">              
               <button style="margin: 0px; padding-bottom: 5px; padding-top: 5px; padding-left: 0px; padding-right: 0px;" uib-popover="Take a tour of Hopsworks by creating a project and running a Spark job!"
-                      type="button" class="btn btn-default btn-block" ng-click="homeCtrl.createExampleProject()">
-                <span>{{tour.name}}</span>
-                <span style="margin-right: 5px" class="glyphicon glyphicon-play-circle pull-right" ng-hide="homeCtrl.creating === true"></span>
-                <span style="margin-right: 5px" class="fa fa-spinner fa-spin pull-right" ng-hide="homeCtrl.creating === false"></span>
+                      type="button" class="btn btn-default btn-block" ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.createExampleProject()">
+                <span>{{tour.name}}
+                <i style="margin-right: 5px" class="glyphicon glyphicon-play-circle pull-right" ng-hide="homeCtrl.creating === true"></i>
+                <i style="margin-right: 5px" class="fa fa-spinner fa-spin pull-right" ng-hide="homeCtrl.creating === false"></i>
+                </span>
               </button>
             </div>
           </a>
@@ -62,6 +63,11 @@
                 None available.
               </div>
             </div>
+          </a>
+          <a href="https://groups.google.com/forum/#!forum/hopshadoop" class="list-group-item">
+            <span class="glyphicon glyphicon-triangle-right"></span>
+            Need support?
+            <span class="glyphicon glyphicon-earphone pull-right" style="margin-right: 1px;"></span>
           </a>
         </div>
       </div>
@@ -149,7 +155,7 @@
         </div>
         <input type="hidden" name="search_param" value="all" id="search_param">
         <input type="text" class="form-control pull-left" ng-model="searchProject"
-               style="width: 205px; border-radius: 0;"
+               style="width: 155px; border-radius: 0;"
                name="x" placeholder="Find project...">
         <span class="input-group-btn">
           <button class="btn btn-default" type="button" style="height:34px;">
@@ -175,7 +181,7 @@
             <i style="width: 20px; margin-right: 10px; font-size: 20px; color: #9d261d"
                class="fa fa-ban fa-2 pull-left"></i>
           </div>
-          {{project.project.name}}
+          {{ project.project.name | limitTo: 17 }}{{project.project.name.length > 17 ? '...' : ''}}
           <span ng-if="project.project.name.substr(0, 5) === 'demo_'" class="glyphicon glyphicon-play-circle pull-right" style="margin-top: 5px;"></span>
         </a>
         <div class="dropdown position-fixed" id="menu-{{$index}}">

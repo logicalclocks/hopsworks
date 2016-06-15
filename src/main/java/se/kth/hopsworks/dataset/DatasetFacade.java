@@ -5,6 +5,7 @@ import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.project.Project;
@@ -62,6 +63,17 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     return query.getResultList();
   }
 
+  public Dataset findByName(String name) {
+    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByName",
+            Dataset.class);
+    query.setParameter("name", name);
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+  
   /**
    * Find by project and dataset name
    * <p/>
@@ -97,7 +109,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
             Dataset.class);
     List<Dataset> datasets = query.getResultList();
     
-    List<DataSetDTO> ds = new ArrayList<DataSetDTO>();
+    List<DataSetDTO> ds = new ArrayList<>();
     for (Dataset d : datasets) {
         DataSetDTO dto = new DataSetDTO();
         dto.setDescription(d.getDescription());

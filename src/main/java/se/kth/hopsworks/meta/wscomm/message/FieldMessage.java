@@ -108,8 +108,8 @@ public class FieldMessage extends ContentMessage {
     }
 
     Field field = new Field(fieldId, tableId, name, type,
-            Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0),
-            (short) ((required) ? 1 : 0), description, fieldtypeid, position);
+            Integer.parseInt(maxsize), searchable, required, 
+            description, fieldtypeid, position);
 
     //-- ATTACH the field's parent entity (FieldType)
     field.setFieldTypeId(fieldtypeid);

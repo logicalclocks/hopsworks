@@ -64,6 +64,7 @@ public class ExecutionController {
         }
         int execId = exec.getId();
         SparkJobConfiguration config = (SparkJobConfiguration) job.getJobConfig();
+
         String path = config.getJarPath();
         String patternString = "hdfs://(.*)\\s";
         Pattern p = Pattern.compile(patternString);
@@ -79,6 +80,18 @@ public class ExecutionController {
         jobHistoryFac.persist(job, execId, exec.getAppId());
         activityFacade.persistActivity(activityFacade.EXECUTED_JOB + inodeName, job.getProject(), user);
         
+        //Check if application arguments are null
+//        if(config.getArgs() != null){
+//            String patternString = "hdfs://(.*)\\s";
+//            Pattern p = Pattern.compile(patternString);
+//            Matcher m = p.matcher(config.getArgs());
+//            for (int i = 0; i < m.groupCount(); i++) { // for each filename, resolve Inode from HDFS filename
+//    //          String filename = m.group(i);
+//    //           Inode inode = inodes.getInodeAtPath("hdfs://" + filename);
+//              // insert into inputfiles_executions (inode, execId).
+//            }
+//        }
+
         break;
       default:
         throw new IllegalArgumentException(

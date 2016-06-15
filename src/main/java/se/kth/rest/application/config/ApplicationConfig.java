@@ -14,6 +14,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.AdamService.class);
     register(se.kth.hopsworks.rest.AppExceptionMapper.class);
     register(se.kth.hopsworks.rest.AuthExceptionMapper.class);
+    register(se.kth.hopsworks.rest.AgentService.class);
     register(se.kth.hopsworks.rest.AuthService.class);
     register(se.kth.hopsworks.rest.CuneiformService.class);
     register(se.kth.hopsworks.rest.DataSetService.class);
@@ -35,6 +36,9 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.zeppelin.rest.InterpreterRestApi.class);
     register(se.kth.hopsworks.zeppelin.rest.NotebookRestApi.class);
     register(se.kth.hopsworks.zeppelin.rest.ZeppelinRestApi.class);
+    register(se.kth.hopsworks.zeppelin.rest.LoginRestApi.class);
+    register(se.kth.hopsworks.zeppelin.rest.ConfigurationsRestApi.class);
+    register(se.kth.hopsworks.zeppelin.rest.SecurityRestApi.class);
     register(se.kth.hopsworks.rest.MetadataService.class);
     register(se.kth.hopsworks.drelephant.rest.HistoryService.class);
     register(se.kth.hopsworks.rest.MessageService.class);
@@ -44,6 +48,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hdfs.EndpointService.class);
     register(se.kth.hopsworks.rest.LocalFsService.class);
     register(se.kth.hopsworks.rest.CharonService.class);
+    register(se.kth.hopsworks.rest.KafkaService.class);
     // register resources and features
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     //register(org.glassfish.jersey.filter.LoggingFilter.class);

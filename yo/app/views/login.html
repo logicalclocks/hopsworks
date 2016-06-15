@@ -35,6 +35,7 @@
             <div ng-if="loginCtrl.otp === 'true'" class="form-group">
               <input id="login_inputOTP" class="form-control" type="password" required
                      ng-model="loginCtrl.user.otp"
+                     autocomplete="off"
                      placeholder="Mobile PIN or Yubikey PIN"
                      name="otp_password">
             </div>

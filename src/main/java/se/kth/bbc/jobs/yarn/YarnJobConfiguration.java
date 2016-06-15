@@ -20,6 +20,7 @@ public class YarnJobConfiguration extends JobConfiguration {
     private int amMemory = Settings.YARN_DEFAULT_APP_MASTER_MEMORY;
     //Number of cores for appMaster
     private int amVCores = 1;
+    private String jSessionId;
     //List of paths to be added to local resources
     private LocalResourceDTO[] localResources = new LocalResourceDTO[0];
     protected final static String KEY_TYPE = "type";
@@ -176,4 +177,11 @@ public class YarnJobConfiguration extends JobConfiguration {
         this.amVCores = Integer.parseInt(jsonCors);
     }
 
+    public String getjSessionId() {
+        return jSessionId;
+    }
+
+    public void setjSessionId(String jSessionId) {
+        this.jSessionId = jSessionId;
+    }
 }
