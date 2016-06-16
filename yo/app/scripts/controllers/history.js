@@ -85,6 +85,8 @@ angular.module('hopsWorksApp')
             self.selectFirstForm = function (name, searchName) {
               $scope.name = name;
               $scope.searchName = searchName;
+              $scope.valueId = 'null';
+              $scope.valueType = '-- Select --';
               if (searchName === "none") {
                     $scope.fisrtFormSelected = false;
               } else {

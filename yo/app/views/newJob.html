@@ -133,9 +133,17 @@
                            is-open="newJobCtrl.accordion5.isOpen" 
                            ng-show="newJobCtrl.accordion5.visible"
                            id="moreConfigs">
-            <!-- Common -->
-            <div>
-              <div class="row">
+            <!-- The Configuration accordion contains 2 tabs, one for Manual Configuration and one 
+            for auto configuration-->  
+            <ul class="nav nav-tabs" id="myTab">
+		<li role="presentation" class="active"><a data-target="#manual" data-toggle="tab">Manual Configuration</a></li>
+                <li role="presentation"><a data-target="#auto" data-toggle="tab" ng-show="newJobCtrl.jobtype === 1" ng-click="newJobCtrl.autoConfig()">Auto Configuration</a></li>
+            </ul>
+              
+            <div class="tab-content">
+              <!-- The content of the first Tab (Manual Configuration)-->  
+              <div class="tab-pane active" id="manual"> 
+                  <div class="row" style="margin-top: 10px">
                 <div class="text-right col-md-4">Application master memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
                 <div class="col-md-8">
                   <input type="number" ng-model="newJobCtrl.runConfig.amMemory" min="0" class="form-control">
@@ -191,6 +199,40 @@
                             ng-model="newJobCtrl.runConfig.flinkjobtype" class="form-control">
                     </select>
                 </div>
+              </div>
+              </div> 
+              <div class="tab-pane" id="auto" style="float: left;width: 100%;" ng-show="newJobCtrl.jobtype === 1">
+                    <div>
+                    Job Type - {{newJobCtrl.getJobType()}}
+                    Class Name - {{newJobCtrl.runConfig.mainClass}}
+                    Jar - {{newJobCtrl.sparkState.selectedJar}}
+                    Arguments - {{newJobCtrl.runConfig.args}}    
+                    ###### - {{newJobCtrl.autoConfigResult}}
+                    </div>  
+<!--                    <div class="panel panel-primary pull-left" style="width: 32%; height: 250px; margin-left: 10px; margin-top: 10px">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Default</h3>
+                            </div>
+                            <div class="panel-body">
+                                Panel content
+                            </div>
+                    </div>
+                    <div class="panel panel-primary pull-left" style="width: 32%; height: 250px; margin-left: 10px; margin-top: 10px">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Low Cost</h3>
+                            </div>
+                            <div class="panel-body">
+                                Panel content
+                            </div>
+                    </div>
+                    <div class="panel panel-primary pull-left" style="width: 32%; height: 250px; margin-left: 10px; margin-top: 10px">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Premium</h3>
+                            </div>
+                        <div class="panel-body">
+                                Panel content
+                        </div>
+                    </div>-->
               </div>
             </div>
             <!-- Add libraries -->

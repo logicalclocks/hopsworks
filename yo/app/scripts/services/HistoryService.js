@@ -17,24 +17,18 @@ angular.module('hopsWorksApp')
               getDetailsForJob: function (jobId) {
                 return $http.get('/api/history/details/jobs/' + jobId);
               },
-              
-              getHeuristicsForJob: function (jobId) {
-                return $http.get('/api/history/heuristics/jobs/' + jobId);
-              },
-  
-              
-              //DOTO: post Request to take suggestions for job configuration (for a new job)      
-//              getHeuristics: function (projectId, jobDetail) {
-//                var req = {
-//                  method: 'POST',
-//                  url: '/api/history/' + projectId ,
-//                  headers: {
-//                    'Content-Type': 'application/json'
-//                  },
-//                  data: jobDetail
-//                };
-//                return $http(req);
-//              }
+       
+              getHeuristics: function (jobDetails) { 
+                var req = {
+                  method: 'POST',
+                  url: '/api/history/heuristics',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: jobDetails
+                };
+                return $http(req);
+              }
               
             };
             return service;

@@ -12,16 +12,17 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'CuneiformService', 'AdamService', 'FlinkService', 'TourService',
+          'CuneiformService', 'AdamService', 'FlinkService', 'TourService', 'HistoryService',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,
-                  CuneiformService, AdamService, FlinkService, TourService) {
+                  CuneiformService, AdamService, FlinkService, TourService, HistoryService) {
                 var self = this;
                 self.tourService = TourService;
                 self.flinkjobtype = ["Streaming", "Batch"];
                 //Set services as attributes 
                 this.ModalService = ModalService;
                 this.growl = growl;
+                self.autoConfigResult;
 
 
             //Set some (semi-)constants
@@ -562,6 +563,21 @@ angular.module('hopsWorksApp')
                             }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                     });
+                };
+                
+
+                this.autoConfig = function () {
+                    var jobDetails ={};
+                    jobDetails.className = self.runConfig.mainClass;
+                    jobDetails.selectedJar = self.sparkState.selectedJar;
+                    jobDetails.inputArgs = self.runConfig.args;
+                    jobDetails.jobType = self.getJobType();
+                    
+                HistoryService.getHeuristics(jobDetails).then(
+                function (success) {
+                    self.autoConfigResult = success.data;
+                    console.log(self.autoConfigResult);
+                });
                 };
 
 

@@ -6,6 +6,8 @@
 package se.kth.bbc.jobs.jobhistory;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -14,6 +16,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
@@ -101,4 +104,72 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
         em.merge(obj);
         return obj;   
     }
+    
+    public JobHeuristicDTO searchHeuristicRusults(JobDetailDTO jobDetails){
+        String message = "Analysis of the results.";
+        
+        List<JobsHistory> resultsForAnalysis = new ArrayList<JobsHistory>();
+        
+        resultsForAnalysis = searchForHichSimilarity(jobDetails);
+        
+        if(!resultsForAnalysis.isEmpty()){
+            return new JobHeuristicDTO(resultsForAnalysis.size(), message, "HIGH");
+        }
+            
+        resultsForAnalysis = searchForMediumSimilarity(jobDetails);
+        System.out.print("SEARCH MEDIUM");
+        
+        if(!resultsForAnalysis.isEmpty()){
+            return new JobHeuristicDTO(resultsForAnalysis.size(), message, "MEDIUM");
+        }
+        
+        resultsForAnalysis = searchForLowSimilarity(jobDetails);
+        System.out.print("SEARCH LOW");
+        
+        if(!resultsForAnalysis.isEmpty()){
+            return new JobHeuristicDTO(resultsForAnalysis.size(), message, "LOW");
+        }
+        else{
+            message = "There are no results";
+            System.out.print("SEARCH MEDIUM");
+            return new JobHeuristicDTO(0, message, "NONE");
+        }
+    }
+    
+    
+    // High Similarity -> Same jobType, className, arguments and jarFile
+    private List<JobsHistory> searchForHichSimilarity(JobDetailDTO jobDetails){
+        TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithHighSimilarity",
+            JobsHistory.class);
+        q.setParameter("jobType", jobDetails.getJobType());
+        q.setParameter("className", jobDetails.getClassName());
+        q.setParameter("inodeName", jobDetails.getSelectedJar());
+        q.setParameter("arguments", jobDetails.getInputArgs());
+        
+        return q.getResultList();
+        
+    }
+    
+    
+    // Medium Similarity -> Same jobType, className and jarFile
+    private List<JobsHistory> searchForMediumSimilarity(JobDetailDTO jobDetails){
+        TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithMediumSimilarity",
+            JobsHistory.class);
+        q.setParameter("jobType", jobDetails.getJobType());
+        q.setParameter("className", jobDetails.getClassName());
+        q.setParameter("inodeName", jobDetails.getSelectedJar());
+        
+        return q.getResultList();
+    }
+    
+    // Low Similarity -> Same jobType, className
+    private List<JobsHistory> searchForLowSimilarity(JobDetailDTO jobDetails){
+        TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithLowSimilarity",
+            JobsHistory.class);
+        q.setParameter("jobType", jobDetails.getJobType());
+        q.setParameter("className", jobDetails.getClassName());
+        
+        return q.getResultList();
+    }
+    
 }

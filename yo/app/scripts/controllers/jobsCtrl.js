@@ -246,10 +246,6 @@ angular.module('hopsWorksApp')
               ModalService.jobDetails('lg', job, self.projectId);
             };
             
-            self.showHeuristicResults = function(job){
-              ModalService.showHeuristics('lg', job, self.projectId);
-            }
-
 
             self.showLogs = function (jobId) {
               JobService.showLog(self.projectId, jobId).then(

@@ -36,7 +36,9 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "JobsHistory.findByTotalRequestedMemory", query = "SELECT j FROM JobsHistory j WHERE j.totalRequestedMemory = :totalRequestedMemory"),
     @NamedQuery(name = "JobsHistory.findByTotalrequestedVcores", query = "SELECT j FROM JobsHistory j WHERE j.totalrequestedVcores = :totalrequestedVcores"),
     @NamedQuery(name = "JobsHistory.findByUniqueId", query = "SELECT j FROM JobsHistory j WHERE j.jobsHistoryPK.jobId = :jobId AND j.jobsHistoryPK.inodePid = :inodePid AND j.jobsHistoryPK.inodeName = :inodeName"),
-
+    @NamedQuery(name = "JobsHistory.findWithHighSimilarity", query = "SELECT j FROM JobsHistory j WHERE j.jobType = :jobType AND j.className = :className AND j.arguments = :arguments AND j.jobsHistoryPK.inodeName = :inodeName"),
+    @NamedQuery(name = "JobsHistory.findWithMediumSimilarity", query = "SELECT j FROM JobsHistory j WHERE j.jobType = :jobType AND j.className = :className AND j.jobsHistoryPK.inodeName = :inodeName"),
+    @NamedQuery(name = "JobsHistory.findWithLowSimilarity", query = "SELECT j FROM JobsHistory j WHERE j.jobType = :jobType AND j.className = :className")
 })
 public class JobsHistory implements Serializable {
     private static final long serialVersionUID = 1L;

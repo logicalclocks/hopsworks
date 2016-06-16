@@ -2,6 +2,7 @@ package se.kth.hopsworks.drelephant.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hops.kafka.TopicDTO;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -17,8 +18,10 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -28,6 +31,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.jobhistory.HeuristicsBean;
+import se.kth.bbc.jobs.jobhistory.JobDetailDTO;
+import se.kth.bbc.jobs.jobhistory.JobHeuristicDTO;
+import se.kth.bbc.jobs.jobhistory.JobsHistory;
+import se.kth.bbc.jobs.jobhistory.JobsHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.YarnAppResult;
 import se.kth.bbc.jobs.jobhistory.YarnAppResultFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
@@ -58,6 +65,8 @@ public class HistoryService {
   private JobService jobs;
   @EJB
   private JobDescriptionFacade jobFacade;
+  @EJB
+  private JobsHistoryFacade jobsHistoryFacade;
     
   
   @GET
@@ -92,7 +101,7 @@ public class HistoryService {
       
         //TODO: Change the URL 
         try {
-		URL url = new URL("http://bbc1.sics.se:27001/rest/job?id=" + jobId );
+		URL url = new URL("http://bbc1.sics.se:18001/rest/job?id=" + jobId );
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");
 		conn.setRequestProperty("Accept", "application/json");
@@ -127,44 +136,68 @@ public class HistoryService {
     }
   
   
-  @GET
-  @Path("heuristics/jobs/{jobId}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response getHeuristic(@PathParam("jobId") Integer jobId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req,
-      @HeaderParam("Access-Control-Request-Headers") String requestH) throws AppException{
-            
-        //Rerutn jsonObject with the response of the Heuristics
-        String jsonInString = "";
-        
-        HeuristicsBean hb = new HeuristicsBean();
-        hb.setMemory(15);
-        hb.setvCores(1);
-        hb.setName("HB_NAME");
-        hb.setSize(20);
-        hb.setClassName("CLASS_HB");
-        
-        JobDescription jd = jobFacade.findById(jobId);
-        hb.setJobType(jd.getJobType().getName());
-        
-        ObjectMapper om = new ObjectMapper();
-        
-        try {
-            jsonInString = om.writeValueAsString(hb);
-        } catch (JsonProcessingException ex) {
-            Logger.getLogger(HistoryService.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//  @GET
+//  @Path("heuristics/jobs/{jobId}")
+//  @Produces(MediaType.APPLICATION_JSON)
+//  @AllowedRoles(roles = {AllowedRoles.ALL})
+//  public Response getHeuristic(@PathParam("jobId") Integer jobId,
+//      @Context SecurityContext sc,
+//      @Context HttpServletRequest req,
+//      @HeaderParam("Access-Control-Request-Headers") String requestH) throws AppException{
+//            
+//        //Rerutn jsonObject with the response of the Heuristics
+//        String jsonInString = "";
+//        
+//        HeuristicsBean hb = new HeuristicsBean();
+//        hb.setMemory(15);
+//        hb.setvCores(1);
+//        hb.setName("HB_NAME");
+//        hb.setSize(20);
+//        hb.setClassName("CLASS_HB");
+//        
+//        JobDescription jd = jobFacade.findById(jobId);
+//        hb.setJobType(jd.getJobType().getName());
+//        
+//        ObjectMapper om = new ObjectMapper();
+//        
+//        try {
+//            jsonInString = om.writeValueAsString(hb);
+//        } catch (JsonProcessingException ex) {
+//            Logger.getLogger(HistoryService.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        
+//        JsonResponse json = new JsonResponse();
+//        json.setData(jsonInString);
+//        json.setStatus("OK");
+//        json.setSuccessMessage(ResponseMessages.JOB_DETAILS);
+//
+//        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+//            json).build();
+//    }
+  
+  @POST
+    @Path("heuristics")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response Heuristics(JobDetailDTO jobDetailDTO,
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException {
         
         JsonResponse json = new JsonResponse();
-        json.setData(jsonInString);
-        json.setStatus("OK");
-        json.setSuccessMessage(ResponseMessages.JOB_DETAILS);
-
+        
+        System.out.println("Job Details - Class Name: " + jobDetailDTO.getClassName());
+        System.out.println("Job Details - Arguments: " + jobDetailDTO.getInputArgs());
+        System.out.println("Job Details - Jar: " + jobDetailDTO.getSelectedJar());
+        System.out.println("Job Details - Job Type: " + jobDetailDTO.getJobType());
+        
+        JobHeuristicDTO jobsHistoryResult = jobsHistoryFacade.searchHeuristicRusults(jobDetailDTO);
+        GenericEntity<JobHeuristicDTO> jobsHistory = new GenericEntity<JobHeuristicDTO>(jobsHistoryResult){};
+        
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+        jobsHistory).build();
     }
+  
 }
     
 
