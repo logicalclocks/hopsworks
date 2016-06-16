@@ -497,7 +497,6 @@ public class ProjectController {
     }
 
     // TODO: DELETE THE KAFKA TOPICS
-    // TODO: DELETE THE CERTS    
     LocalhostServices.deleteProjectCertificates(settings.getHopsworksDir(),
             project.getName());
     userCertsFacade.removeAllCertsOfAProject(project.getName());

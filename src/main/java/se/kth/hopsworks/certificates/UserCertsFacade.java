@@ -109,6 +109,8 @@ public class UserCertsFacade {
             Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, e);
         } catch (IOException ex) {
             Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Throwable ex) {
+            Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, ex);          
         }
     }
     
