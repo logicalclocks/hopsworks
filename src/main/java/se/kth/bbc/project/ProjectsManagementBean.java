@@ -44,22 +44,22 @@ public class ProjectsManagementBean {
 
   private List<ProjectsManagement> allProjects;
 
-  private String hdfsquota;
-  private String hdfsNsquota;
+  private long hdfsquota;
+  private long hdfsNsquota;
 
-  public String getHdfsNsquota() {
+  public long getHdfsNsquota() {
     return hdfsNsquota;
   }
 
-  public void setHdfsNsquota(String hdfsNsquota) {
+  public void setHdfsNsquota(long hdfsNsquota) {
     this.hdfsNsquota = hdfsNsquota;
   }
 
-  public String getHdfsquota() {
+  public long getHdfsquota() {
     return hdfsquota;
   }
 
-  public void setHdfsquota(String hdfsquota) {
+  public void setHdfsquota(long hdfsquota) {
     this.hdfsquota = hdfsquota;
   }
 
@@ -90,7 +90,8 @@ public class ProjectsManagementBean {
       BigInteger sz = quotas.getDsquota();
       quota = sz.longValue();
       quota /= MB;
-      this.hdfsquota = String.valueOf(quota);
+//      this.hdfsquota = String.valueOf(quota);
+      this.hdfsquota = quota;
     } catch (AppException ex) {
       Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE, null, ex);
     }
@@ -104,7 +105,8 @@ public class ProjectsManagementBean {
       quotas = projectsManagementController.getHDFSQuotas(projectname);
       BigInteger sz = quotas.getNsquota();
       quota = sz.longValue();
-      this.hdfsNsquota = String.valueOf(quota);
+      this.hdfsNsquota = quota;
+//      this.hdfsNsquota = String.valueOf(quota);
     } catch (AppException ex) {
       Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE, null, ex);
     }
