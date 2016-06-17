@@ -497,11 +497,11 @@ public class ProjectController {
     }
 
     // TODO: DELETE THE KAFKA TOPICS
-    LocalhostServices.deleteProjectCertificates(settings.getHopsworksDir(),
-            project.getName());
     userCertsFacade.removeAllCertsOfAProject(project.getName());
 
-    logger.log(Level.FINE, "{0} - project removed.", project.getName());
+    LocalhostServices.deleteProjectCertificates(settings.getHopsworksDir(),
+            project.getName());
+    logger.log(Level.INFO, "{0} - project removed.", project.getName());
 
     return success;
   }
