@@ -174,7 +174,8 @@ public class ProjectsManagementBean {
         .getYarnQuotaRemaining());
     // convert quota to MB from bytes (1024^2)
     projectsManagementController.setHdfsSpaceQuota(row.getProjectname(),
-        Long.parseLong(hdfsquota) * MB);
+//        Long.parseLong(hdfsquota) * MB);
+        hdfsquota * MB);
   }
 
   public void onRowCancel(RowEditEvent event) {
