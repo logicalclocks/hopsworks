@@ -192,6 +192,7 @@ public class HistoryService {
         System.out.println("Job Details - Job Type: " + jobDetailDTO.getJobType());
         
         JobHeuristicDTO jobsHistoryResult = jobsHistoryFacade.searchHeuristicRusults(jobDetailDTO);
+        
         GenericEntity<JobHeuristicDTO> jobsHistory = new GenericEntity<JobHeuristicDTO>(jobsHistoryResult){};
         
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

@@ -7,7 +7,9 @@ package se.kth.bbc.jobs.jobhistory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -65,19 +67,8 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
       int inodePid = inode.getInodePK().getParentId();
       String inodeName = inode.getInodePK().getName();
       int inodeSize = (int) inode.getSize();
-      String blocks = "";
+      String blocks = checkArguments(configuration.getArgs());
       
-      String arguments = configuration.getArgs();
-      if(arguments.startsWith("hdfs://")){
-          try {
-              blocks = fileOperations.getFileBlocks(arguments);
-          } catch (IOException ex) {
-              Logger.getLogger(JobsHistoryFacade.class.getName()).log(Level.SEVERE, null, ex);
-          }
-      }
-      else{
-          blocks = "0";
-      }
       this.persist(jobDesc.getId(), inodePid, inodeName, executionId, appId, jobDesc.getJobType().toString(),
               inodeSize, blocks, configuration.getArgs() ,configuration.getMainClass() ,
               configuration.getExecutorMemory(), configuration.getExecutorCores());
@@ -105,40 +96,85 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
         return obj;   
     }
     
+    private String checkArguments(String arguments){
+      String blocks = "";
+      if(arguments.startsWith("hdfs://")){
+          try {
+              blocks = fileOperations.getFileBlocks(arguments);
+          } catch (IOException ex) {
+              Logger.getLogger(JobsHistoryFacade.class.getName()).log(Level.SEVERE, null, ex);
+          }
+      }
+      else{
+          blocks = "0";
+      }
+      
+      return blocks;
+    }
+    
     public JobHeuristicDTO searchHeuristicRusults(JobDetailDTO jobDetails){
-        String message = "Analysis of the results.";
-        
-        List<JobsHistory> resultsForAnalysis = new ArrayList<JobsHistory>();
-        
-        resultsForAnalysis = searchForHichSimilarity(jobDetails);
+        String blocks = checkArguments(jobDetails.getInputArgs());
+        List<JobsHistory> resultsForAnalysis = searchForVeryHighSimilarity(jobDetails);
         
         if(!resultsForAnalysis.isEmpty()){
-            return new JobHeuristicDTO(resultsForAnalysis.size(), message, "HIGH");
+            JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis);
+            jhDTO.setInputBlocks(blocks);
+            jhDTO.addSimilarAppId(resultsForAnalysis);
+            jhDTO.setDegreeOfSimilarity("VERY HIGH");
+            return jhDTO;
+        }
+        
+        resultsForAnalysis = searchForHighSimilarity(jobDetails);
+        
+        if(!resultsForAnalysis.isEmpty()){
+            JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis);
+            jhDTO.setInputBlocks(blocks);
+            jhDTO.addSimilarAppId(resultsForAnalysis);
+            jhDTO.setDegreeOfSimilarity("HIGH");
+            return jhDTO;
         }
             
         resultsForAnalysis = searchForMediumSimilarity(jobDetails);
-        System.out.print("SEARCH MEDIUM");
         
         if(!resultsForAnalysis.isEmpty()){
-            return new JobHeuristicDTO(resultsForAnalysis.size(), message, "MEDIUM");
+            JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis);
+            jhDTO.setInputBlocks(blocks);
+            jhDTO.addSimilarAppId(resultsForAnalysis);
+            jhDTO.setDegreeOfSimilarity("MEDIUM");
+            return jhDTO;
         }
         
         resultsForAnalysis = searchForLowSimilarity(jobDetails);
-        System.out.print("SEARCH LOW");
         
         if(!resultsForAnalysis.isEmpty()){
-            return new JobHeuristicDTO(resultsForAnalysis.size(), message, "LOW");
+            JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis);
+            jhDTO.setInputBlocks(blocks);
+            jhDTO.addSimilarAppId(resultsForAnalysis);
+            jhDTO.setDegreeOfSimilarity("LOW");
+            return jhDTO;
         }
         else{
-            message = "There are no results";
-            System.out.print("SEARCH MEDIUM");
-            return new JobHeuristicDTO(0, message, "NONE");
+            return new JobHeuristicDTO(0, "There are no results", "none","NONE", blocks);
         }
+    }
+    
+    // High Similarity -> Same jobType, className, arguments and jarFile
+    private List<JobsHistory> searchForVeryHighSimilarity(JobDetailDTO jobDetails){
+        TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithVeryHighSimilarity",
+            JobsHistory.class);
+        q.setParameter("jobType", jobDetails.getJobType());
+        q.setParameter("className", jobDetails.getClassName());
+        q.setParameter("inodeName", jobDetails.getSelectedJar());
+        q.setParameter("arguments", jobDetails.getInputArgs());
+        q.setParameter("inputBlocksInHdfs", checkArguments(jobDetails.getInputArgs()));
+        
+        return q.getResultList();
+        
     }
     
     
     // High Similarity -> Same jobType, className, arguments and jarFile
-    private List<JobsHistory> searchForHichSimilarity(JobDetailDTO jobDetails){
+    private List<JobsHistory> searchForHighSimilarity(JobDetailDTO jobDetails){
         TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithHighSimilarity",
             JobsHistory.class);
         q.setParameter("jobType", jobDetails.getJobType());
@@ -149,7 +185,6 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
         return q.getResultList();
         
     }
-    
     
     // Medium Similarity -> Same jobType, className and jarFile
     private List<JobsHistory> searchForMediumSimilarity(JobDetailDTO jobDetails){
@@ -170,6 +205,33 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
         q.setParameter("className", jobDetails.getClassName());
         
         return q.getResultList();
+    }
+    
+    private JobHeuristicDTO analysisOfHeuristicResults(List<JobsHistory> resultsForAnalysis){
+        String estimatedTime = estimateComletionTime(resultsForAnalysis);
+        int numberOfResults = resultsForAnalysis.size();
+        String message =  "Analysis of the results.";
+        
+        return new JobHeuristicDTO(numberOfResults, message, estimatedTime);    
+    }
+    
+    
+    private String estimateComletionTime(List<JobsHistory> resultsForAnalysis){
+        long milliseconds = 0;
+        long avegareMs = 0;
+        Iterator<JobsHistory> itr = resultsForAnalysis.iterator();
+        
+        while(itr.hasNext()) {
+         JobsHistory element = itr.next();
+         milliseconds = milliseconds + element.getExecutionDuration();
+      }
+        avegareMs = milliseconds / resultsForAnalysis.size();
+        
+        String hms = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(avegareMs),
+            TimeUnit.MILLISECONDS.toMinutes(avegareMs) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(avegareMs)),
+            TimeUnit.MILLISECONDS.toSeconds(avegareMs) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(avegareMs)));
+    
+        return hms;
     }
     
 }

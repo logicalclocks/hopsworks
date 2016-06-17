@@ -202,13 +202,28 @@
               </div>
               </div> 
               <div class="tab-pane" id="auto" style="float: left;width: 100%;" ng-show="newJobCtrl.jobtype === 1">
-                    <div>
+                  <div class="btn-group" style="float: left;width: 120px; margin-bottom: 0px;margin-left: 10px;margin-top: 10px" id="buttonRefresh">
+                        <button style="width: 100%;" ng-click="newJobCtrl.autoConfig()" class="btn btn-default glyphicon glyphicon-refresh">  Refresh  </button>
+                  </div>
+<!--                    <div style="margin-left: 10px;margin-top: 10px">
                     Job Type - {{newJobCtrl.getJobType()}}
                     Class Name - {{newJobCtrl.runConfig.mainClass}}
                     Jar - {{newJobCtrl.sparkState.selectedJar}}
                     Arguments - {{newJobCtrl.runConfig.args}}    
                     ###### - {{newJobCtrl.autoConfigResult}}
-                    </div>  
+                    </div>  -->
+                    <div class="panel panel-primary pull-left" style="width: 80%; height: 300px; margin-left: 10px; margin-top: 10px">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Returned Json from Heuristic Results</h3>
+                            </div>
+                            <div class="panel-body">
+                                <h4>Job Type: {{newJobCtrl.getJobType()}} </h4>
+                                <h4>Class Name: {{newJobCtrl.runConfig.mainClass}}</h4>
+                                <h4>Jar: {{newJobCtrl.sparkState.selectedJar}}</h4>
+                                <h4>Arguments: {{newJobCtrl.runConfig.args}}</h4>
+                                <h4>Heuristic Results  - {{newJobCtrl.autoConfigResult}}</h4>
+                            </div>
+                    </div>
 <!--                    <div class="panel panel-primary pull-left" style="width: 32%; height: 250px; margin-left: 10px; margin-top: 10px">
                             <div class="panel-heading">
                                 <h3 class="panel-title">Default</h3>

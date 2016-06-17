@@ -90,10 +90,10 @@
                   Job Severity
                 <span class="glyphicon sort-icon" ng-show="sortType == 'severity'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('score')" style="width: 10%">
+<!--                <th ng-click="sort('score')" style="width: 10%">
                   Heuristic scores
                 <span class="glyphicon sort-icon" ng-show="sortType == 'score'" ng-class="{'glyphicon glyphicon-sort-by-order':sortReverse,'glyphicon glyphicon-sort-by-order-alt':!sortReverse}"></span>
-                </th>
+                </th>-->
                 <th style="width: 10%">
                   Actions
                 </th>
@@ -124,9 +124,9 @@
                         <span ng-if="job.severity == '4'" class="label label-danger">SEVERE</span>
                         </div>
                     </td>
-                    <td>
+<!--                    <td>
                         {{job.score}}
-                    </td>
+                    </td>-->
                     <td>
                         <span class="field-info" tooltip="Job Details" style="padding-top: 5px;padding-left:3px">
                         <button style=""

@@ -6,6 +6,9 @@
 package se.kth.bbc.jobs.jobhistory;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -20,20 +23,31 @@ public class JobHeuristicDTO implements Serializable{
     private String degreeOfSimilarity = "";   
     private int numberOfResults;           // number of history records that examined
     private String jobType = "";           // the Job Type
-    private int estimatedTime;             // estimated complition time
+    private String estimatedTime;             // estimated complition time
     private int amMemory;                  // estimated Application Master Memory
     private int amVcores;
     private String rmQueue = "";
     private int numberOfexecutors;
     private int executorMemory;
+    private String inputBlocks = "";
+    private String severity = "";
+    private List<String> similarAppIds = new ArrayList<String>();
     
     public JobHeuristicDTO(){
     }
     
-    public JobHeuristicDTO(int numberOfResults, String jobType, String degreeOfSimilarity){
+    public JobHeuristicDTO(int numberOfResults, String message, String estimatedTime){
         this.numberOfResults = numberOfResults;
-        this.jobType = jobType;  
+        this.message = message;  
+        this.estimatedTime = estimatedTime;
+    }
+    
+    public JobHeuristicDTO(int numberOfResults, String message, String estimatedTime, String degreeOfSimilarity, String inputBlocks){
+        this.numberOfResults = numberOfResults;
+        this.message = message;  
+        this.estimatedTime = estimatedTime;
         this.degreeOfSimilarity = degreeOfSimilarity;
+        this.inputBlocks = inputBlocks;
     }
 
     /**
@@ -95,14 +109,14 @@ public class JobHeuristicDTO implements Serializable{
     /**
      * @return the estimatedTime
      */
-    public int getEstimatedTime() {
+    public String getEstimatedTime() {
         return estimatedTime;
     }
 
     /**
      * @param estimatedTime the estimatedTime to set
      */
-    public void setEstimatedTime(int estimatedTime) {
+    public void setEstimatedTime(String estimatedTime) {
         this.estimatedTime = estimatedTime;
     }
 
@@ -175,6 +189,56 @@ public class JobHeuristicDTO implements Serializable{
     public void setExecutorMemory(int executorMemory) {
         this.executorMemory = executorMemory;
     }
- 
+
+    /**
+     * @return the inputBlocks
+     */
+    public String getInputBlocks() {
+        return inputBlocks;
+    }
+
+    /**
+     * @param inputBlocks the inputBlocks to set
+     */
+    public void setInputBlocks(String inputBlocks) {
+        this.inputBlocks = inputBlocks;
+    }
+
+    /**
+     * @return the severity
+     */
+    public String getSeverity() {
+        return severity;
+    }
+
+    /**
+     * @param severity the severity to set
+     */
+    public void setSeverity(String severity) {
+        this.severity = severity;
+    }
+
+    /**
+     * @return the similarAppIds
+     */
+    public List<String> getSimilarAppIds() {
+        return similarAppIds;
+    }
+
+    /**
+     * @param similarAppIds the similarAppIds to set
+     */
+    public void setSimilarAppIds(List<String> similarAppIds) {
+        this.similarAppIds = similarAppIds;
+    }
+    
+    public void addSimilarAppId(List<JobsHistory> jobsHistory){
+        Iterator<JobsHistory> itr = jobsHistory.iterator();
+        
+        while(itr.hasNext()) {
+         JobsHistory element = itr.next();
+         similarAppIds.add(element.getAppId());
+      }
+    }
     
 }
