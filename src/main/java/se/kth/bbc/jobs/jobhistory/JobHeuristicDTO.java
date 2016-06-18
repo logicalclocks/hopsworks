@@ -7,6 +7,7 @@ package se.kth.bbc.jobs.jobhistory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,8 +31,8 @@ public class JobHeuristicDTO implements Serializable{
     private int numberOfexecutors;
     private int executorMemory;
     private String inputBlocks = "";
-    private String severity = "";
     private List<String> similarAppIds = new ArrayList<String>();
+    private List<JobHeuristicDetailsDTO> jobHeuristicDetails = new ArrayList<JobHeuristicDetailsDTO>();
     
     public JobHeuristicDTO(){
     }
@@ -205,20 +206,6 @@ public class JobHeuristicDTO implements Serializable{
     }
 
     /**
-     * @return the severity
-     */
-    public String getSeverity() {
-        return severity;
-    }
-
-    /**
-     * @param severity the severity to set
-     */
-    public void setSeverity(String severity) {
-        this.severity = severity;
-    }
-
-    /**
      * @return the similarAppIds
      */
     public List<String> getSimilarAppIds() {
@@ -240,5 +227,24 @@ public class JobHeuristicDTO implements Serializable{
          similarAppIds.add(element.getAppId());
       }
     }
+
+    /**
+     * @return the jobHeuristicDetails
+     */
+    public List<JobHeuristicDetailsDTO> getJobHeuristicDetails() {
+        return jobHeuristicDetails;
+    }
+
+    /**
+     * @param jobHeuristicDetails the jobHeuristicDetails to set
+     */
+    public void setJobHeuristicDetails(List<JobHeuristicDetailsDTO> jobHeuristicDetails) {
+        this.jobHeuristicDetails = jobHeuristicDetails;
+    }
+    
+    public void addJobHeuristicDetails(JobHeuristicDetailsDTO jhDetail){
+        jobHeuristicDetails.add(jhDetail);
+    }
+
     
 }

@@ -1,17 +1,13 @@
 package se.kth.hopsworks.drelephant.rest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.hops.kafka.TopicDTO;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -30,14 +26,13 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.jobs.jobhistory.HeuristicsBean;
+import org.json.JSONObject;
 import se.kth.bbc.jobs.jobhistory.JobDetailDTO;
 import se.kth.bbc.jobs.jobhistory.JobHeuristicDTO;
-import se.kth.bbc.jobs.jobhistory.JobsHistory;
+import se.kth.bbc.jobs.jobhistory.JobHeuristicDetailsDTO;
 import se.kth.bbc.jobs.jobhistory.JobsHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.YarnAppResult;
 import se.kth.bbc.jobs.jobhistory.YarnAppResultFacade;
-import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
@@ -54,6 +49,7 @@ import se.kth.hopsworks.rest.NoCacheResponse;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class HistoryService {
     
+  private static final String DR_ELEPHANT_ADDRESS = "http://bbc1.sics.se:18001";  
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -97,11 +93,49 @@ public class HistoryService {
       @Context SecurityContext sc,
       @Context HttpServletRequest req,
       @HeaderParam("Access-Control-Request-Headers") String requestH) throws AppException{
+
+        JsonResponse json = getJobDetailsFromDrElephant(jobId); 
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    }
+
+  
+  @POST
+    @Path("heuristics")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response Heuristics(JobDetailDTO jobDetailDTO,
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException {
         
-      
-        //TODO: Change the URL 
-        try {
-		URL url = new URL("http://bbc1.sics.se:18001/rest/job?id=" + jobId );
+        JobHeuristicDTO jobsHistoryResult = jobsHistoryFacade.searchHeuristicRusults(jobDetailDTO);
+        
+        Iterator<String> jobIt = jobsHistoryResult.getSimilarAppIds().iterator();
+        
+        while(jobIt.hasNext()){
+            String appId = jobIt.next();
+            JsonResponse json = getJobDetailsFromDrElephant(appId);
+        
+            StringBuilder jsonString = (StringBuilder) json.getData();
+            JSONObject jsonObj = new JSONObject(jsonString.toString());
+        
+            String totalSeverity = jsonObj.get("severity").toString();
+            
+            JobHeuristicDetailsDTO jhD = new JobHeuristicDetailsDTO(appId, totalSeverity);
+            jobsHistoryResult.addJobHeuristicDetails(jhD);
+        }
+        
+        GenericEntity<JobHeuristicDTO> jobsHistory = new GenericEntity<JobHeuristicDTO>(jobsHistoryResult){};
+        
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        jobsHistory).build();
+    }
+    
+    
+    private JsonResponse getJobDetailsFromDrElephant(String jobId){
+    
+    try {
+		URL url = new URL(DR_ELEPHANT_ADDRESS + "/rest/job?id=" + jobId );
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");
 		conn.setRequestProperty("Accept", "application/json");
@@ -125,78 +159,15 @@ public class HistoryService {
                 json.setStatus("OK");
                 json.setSuccessMessage(ResponseMessages.JOB_DETAILS);
 		conn.disconnect();
-                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+                return json;
 
         } catch (MalformedURLException e) {
 		e.printStackTrace();
         } catch (IOException e) {
 		e.printStackTrace();
         }
+        
         return null;
-    }
-  
-  
-//  @GET
-//  @Path("heuristics/jobs/{jobId}")
-//  @Produces(MediaType.APPLICATION_JSON)
-//  @AllowedRoles(roles = {AllowedRoles.ALL})
-//  public Response getHeuristic(@PathParam("jobId") Integer jobId,
-//      @Context SecurityContext sc,
-//      @Context HttpServletRequest req,
-//      @HeaderParam("Access-Control-Request-Headers") String requestH) throws AppException{
-//            
-//        //Rerutn jsonObject with the response of the Heuristics
-//        String jsonInString = "";
-//        
-//        HeuristicsBean hb = new HeuristicsBean();
-//        hb.setMemory(15);
-//        hb.setvCores(1);
-//        hb.setName("HB_NAME");
-//        hb.setSize(20);
-//        hb.setClassName("CLASS_HB");
-//        
-//        JobDescription jd = jobFacade.findById(jobId);
-//        hb.setJobType(jd.getJobType().getName());
-//        
-//        ObjectMapper om = new ObjectMapper();
-//        
-//        try {
-//            jsonInString = om.writeValueAsString(hb);
-//        } catch (JsonProcessingException ex) {
-//            Logger.getLogger(HistoryService.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        
-//        JsonResponse json = new JsonResponse();
-//        json.setData(jsonInString);
-//        json.setStatus("OK");
-//        json.setSuccessMessage(ResponseMessages.JOB_DETAILS);
-//
-//        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-//            json).build();
-//    }
-  
-  @POST
-    @Path("heuristics")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-    public Response Heuristics(JobDetailDTO jobDetailDTO,
-            @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException {
-        
-        JsonResponse json = new JsonResponse();
-        
-        System.out.println("Job Details - Class Name: " + jobDetailDTO.getClassName());
-        System.out.println("Job Details - Arguments: " + jobDetailDTO.getInputArgs());
-        System.out.println("Job Details - Jar: " + jobDetailDTO.getSelectedJar());
-        System.out.println("Job Details - Job Type: " + jobDetailDTO.getJobType());
-        
-        JobHeuristicDTO jobsHistoryResult = jobsHistoryFacade.searchHeuristicRusults(jobDetailDTO);
-        
-        GenericEntity<JobHeuristicDTO> jobsHistory = new GenericEntity<JobHeuristicDTO>(jobsHistoryResult){};
-        
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        jobsHistory).build();
     }
   
 }
