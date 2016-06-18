@@ -21,6 +21,9 @@
     <glassfish.hostname>localhost</glassfish.hostname>
     <glassfish.admin>adminuser</glassfish.admin>
     <glassfish.passwd>adminpw</glassfish.passwd>           
+    <glassfish.port>8080</glassfish.port>
+    <glassfish.admin_port>4848</glassfish.admin_port>
+    <glassfish.domain>domain1</glassfish.domain>
   </properties>
 
   <dependencies>
@@ -325,49 +328,6 @@
           </execution>
         </executions>
       </plugin>
-      <!--
-                        <plugin>
-                              <groupId>org.codehaus.cargo</groupId>
-                              <artifactId>cargo-maven2-plugin</artifactId>
-                              <version>1.4.17</version>
-                              <executions>
-                                  <execution>
-                                      <phase>install</phase>
-                                      <goals>
-                                          <goal>redeploy</goal>
-                                      </goals>
-                                  </execution>
-                              </executions>
-                                      <configuration>
-                                          <container>
-                                              <containerId>glassfish4x</containerId>
-                                              <type>remote</type>
-                                              <log>target/cargo.log</log>
-                                              <logLevel>debug</logLevel>
-                                          </container>
-                                          <configuration>
-                                              <type>runtime</type>
-                                              <properties>
-                                               <cargo.hostname>${glassfish.hostname}</cargo.hostname>
-                                               <cargo.remote.username>${glassfish.admin}</cargo.remote.username>
-                                               <cargo.remote.password>${glassfish.passwd}</cargo.remote.password>
-                                               <cargo.servlet.port>8081</cargo.servlet.port>                           
-                                               <cargo.glassfish.domain.name>domain1</cargo.glassfish.domain.name>
-                                               <cargo.runtime.args>force=true</cargo.runtime.args>
-                                               <cargo.protocol>https</cargo.protocol>
-                                               <cargo.glassfish.admin.port>4849</cargo.glassfish.admin.port>
-                                              </properties>
-                                          </configuration>
-                                      </configuration>
-                              <dependencies>
-                                  <dependency>
-                                      <groupId>org.glassfish.main.deployment</groupId>
-                                      <artifactId>deployment-client</artifactId>
-                                      <version>4.1.1</version>
-                                  </dependency>            
-                              </dependencies>
-                          </plugin>
-      -->
     </plugins>
   </build>
 
@@ -434,6 +394,59 @@
 
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>deploy</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>    
+      <build>
+       <plugins>
+        <plugin>
+        <groupId>org.codehaus.cargo</groupId>
+        <artifactId>cargo-maven2-plugin</artifactId>
+        <version>1.4.17</version>
+        <executions>
+          <execution>
+            <phase>install</phase>
+            <goals>
+              <goal>redeploy</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <container>
+            <containerId>glassfish4x</containerId>
+            <type>remote</type>
+            <log>target/cargo.log</log>
+            <logLevel>debug</logLevel>
+          </container>
+          <configuration>
+            <type>runtime</type>
+            <properties>
+              <cargo.hostname>${glassfish.hostname}</cargo.hostname>
+              <cargo.remote.username>${glassfish.admin}</cargo.remote.username>
+              <cargo.remote.password>${glassfish.passwd}</cargo.remote.password>
+              <cargo.servlet.port>${glassfish.port}</cargo.servlet.port>                           
+              <cargo.glassfish.domain.name>${glassfish.domain}</cargo.glassfish.domain.name>
+              <cargo.glassfish.admin.port>${glassfish.admin_port}</cargo.glassfish.admin.port>
+              <cargo.runtime.args>force=true</cargo.runtime.args>
+              <cargo.protocol>http</cargo.protocol>
+            </properties>
+          </configuration>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.glassfish.main.deployment</groupId>
+            <artifactId>deployment-client</artifactId>
+            <version>4.1.1</version>
+          </dependency>            
+        </dependencies>
+      </plugin>
+       </plugins>
+      </build>
+  
+
     </profile>
   </profiles>
 

@@ -71,8 +71,8 @@ public class YarnProjectsQuotaFacade extends
     YarnProjectsQuota project = findByProjectName(projectname);
     if (project != null) {
       project.setQuotaRemaining(quota);
+      em.persist(project);
     }
-    em.merge(project);
   }
 
   public YarnRunningPrice getPrice() {
