@@ -31,6 +31,8 @@ import se.kth.bbc.jobs.jobhistory.JobDetailDTO;
 import se.kth.bbc.jobs.jobhistory.JobHeuristicDTO;
 import se.kth.bbc.jobs.jobhistory.JobHeuristicDetailsDTO;
 import se.kth.bbc.jobs.jobhistory.JobsHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.YarnAppHeuristicResultDetailsFacade;
+import se.kth.bbc.jobs.jobhistory.YarnAppHeuristicResultFacade;
 import se.kth.bbc.jobs.jobhistory.YarnAppResult;
 import se.kth.bbc.jobs.jobhistory.YarnAppResultFacade;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
@@ -50,6 +52,10 @@ import se.kth.hopsworks.rest.NoCacheResponse;
 public class HistoryService {
     
   private static final String DR_ELEPHANT_ADDRESS = "http://bbc1.sics.se:18001";  
+  private static final String MEMORY_HEURISTIC_CLASS = "com.linkedin.drelephant.spark.heuristics.MemoryLimitHeuristic";
+  private static final String TOTAL_DRIVE_MEMORY = "Total driver memory allocated";
+  private static final String TOTAL_EXECUTOR_MEMORY = "Total executor memory allocated";
+  private static final String TOTAL_STORAGE_MEMORY = "Total memory allocated for storage";
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -63,7 +69,10 @@ public class HistoryService {
   private JobDescriptionFacade jobFacade;
   @EJB
   private JobsHistoryFacade jobsHistoryFacade;
-    
+  @EJB
+  private YarnAppHeuristicResultFacade yarnAppHeuristicResultsFacade;  
+  @EJB
+  private YarnAppHeuristicResultDetailsFacade yarnAppHeuristicResultDetailsFacade;
   
   @GET
   @Path("all/{projectId}")
@@ -121,8 +130,14 @@ public class HistoryService {
         
             String totalSeverity = jsonObj.get("severity").toString();
             
+            int yarnAppHeuristicId = yarnAppHeuristicResultsFacade.searchByIdAndClass(appId, MEMORY_HEURISTIC_CLASS);
+            
             JobHeuristicDetailsDTO jhD = new JobHeuristicDetailsDTO(appId, totalSeverity);
+            jhD.setTotalDriverMemory(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicId, TOTAL_DRIVE_MEMORY));
+            jhD.setTotalExecutorMemory(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicId, TOTAL_EXECUTOR_MEMORY));
+            jhD.setMemoryForStorage(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicId, TOTAL_STORAGE_MEMORY));
             jobsHistoryResult.addJobHeuristicDetails(jhD);
+            
         }
         
         GenericEntity<JobHeuristicDTO> jobsHistory = new GenericEntity<JobHeuristicDTO>(jobsHistoryResult){};
