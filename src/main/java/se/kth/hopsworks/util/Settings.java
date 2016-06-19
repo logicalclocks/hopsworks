@@ -334,9 +334,9 @@ public class Settings {
 
   private String HDFS_DEFAULT_QUOTA_MBs = "200000";
 
-  public synchronized String getHdfsDefaultQuotaInMBs() {
+  public synchronized long getHdfsDefaultQuotaInMBs() {
     checkCache();
-    return HDFS_DEFAULT_QUOTA_MBs;
+    return Long.parseLong(HDFS_DEFAULT_QUOTA_MBs);
   }
 
   private String MAX_NUM_PROJ_PER_USER = "5";
