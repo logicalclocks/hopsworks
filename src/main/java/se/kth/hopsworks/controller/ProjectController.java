@@ -425,7 +425,7 @@ public class ProjectController {
     //Create first the projectPath
     projectDirCreated = fileOps.mkDir(projectPath); //fails here
 
-    ProjectController.this.setHdfsSpaceQuotaInMBs(projectName, Long.parseLong(settings.getHdfsDefaultQuotaInMBs()));
+    ProjectController.this.setHdfsSpaceQuotaInMBs(projectName, settings.getHdfsDefaultQuotaInMBs());
 
     //create the rest of the child folders if any
     if (projectDirCreated && !fullProjectPath.equals(projectPath)) {
