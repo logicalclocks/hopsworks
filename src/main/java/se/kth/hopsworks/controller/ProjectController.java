@@ -1,4 +1,4 @@
-package se.kth.hopsworks.controller;
+  package se.kth.hopsworks.controller;
 
 import io.hops.bbc.ConsentStatus;
 import java.io.File;
@@ -425,8 +425,7 @@ public class ProjectController {
     //Create first the projectPath
     projectDirCreated = fileOps.mkDir(projectPath); //fails here
 
-    ProjectController.this.setHdfsSpaceQuotaInMBs(projectName, 
-      Long.parseLong(settings.getHdfsDefaultQuotaInGBs()) / 1024l );
+    ProjectController.this.setHdfsSpaceQuotaInMBs(projectName, settings.getHdfsDefaultQuotaInMBs());
 
     //create the rest of the child folders if any
     if (projectDirCreated && !fullProjectPath.equals(projectPath)) {
