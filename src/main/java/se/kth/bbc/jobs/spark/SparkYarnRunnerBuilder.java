@@ -142,7 +142,7 @@ public class SparkYarnRunnerBuilder {
       addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV, "1");
       //TODO: Fill in the init and max number of executors. Should it be a per job
       //or global setting?
-      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV, "4");
+      //addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV, );
       //addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV, );
       //Dynamic executors requires the shuffle service to be enabled
       addSystemProperty(Settings.SPARK_SHUFFLE_SERVICE, "true");
