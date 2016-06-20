@@ -19,6 +19,8 @@ public class JobHeuristicDetailsDTO implements Serializable{
     private String totalSeverity;
     private String totalDriverMemory;
     private String totalExecutorMemory;
+    private String executorCores;
+    private String executorMemory;
     private String memoryForStorage;
     
     public JobHeuristicDetailsDTO(){}
@@ -106,6 +108,35 @@ public class JobHeuristicDetailsDTO implements Serializable{
     public void setMemoryForStorage(String memoryForStorage) {
         this.memoryForStorage = memoryForStorage;
     }
+
+    /**
+     * @return the executorCores
+     */
+    public String getExecutorCores() {
+        return executorCores;
+    }
+
+    /**
+     * @param executorCores the executorCores to set
+     */
+    public void setExecutorCores(String executorCores) {
+        this.executorCores = executorCores;
+    }
+
+    /**
+     * @return the executorMemory
+     */
+    public String getExecutorMemory() {
+        return executorMemory;
+    }
+
+    /**
+     * @param executorMemory the executorMemory to set
+     */
+    public void setExecutorMemory(String executorMemory) {
+        this.executorMemory = executorMemory;
+    }
+    
     
     
     

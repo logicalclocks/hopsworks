@@ -134,7 +134,13 @@ public class HistoryService {
             
             JobHeuristicDetailsDTO jhD = new JobHeuristicDetailsDTO(appId, totalSeverity);
             jhD.setTotalDriverMemory(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicId, TOTAL_DRIVE_MEMORY));
-            jhD.setTotalExecutorMemory(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicId, TOTAL_EXECUTOR_MEMORY));
+            String totalExMemory = yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicId, TOTAL_EXECUTOR_MEMORY);
+            String[] splitTotalExMemory = splitExecutorMemory(totalExMemory);
+            
+            jhD.setTotalExecutorMemory(splitTotalExMemory[0]);
+            jhD.setExecutorMemory(splitTotalExMemory[1]);
+            jhD.setExecutorCores(splitTotalExMemory[2]);
+            
             jhD.setMemoryForStorage(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicId, TOTAL_STORAGE_MEMORY));
             jobsHistoryResult.addJobHeuristicDetails(jhD);
             
@@ -183,6 +189,26 @@ public class HistoryService {
         }
         
         return null;
+    }
+    
+    /*
+    This method splits the total memory to the number of executors and per executor memory
+    For example in the case of 1 GB (512 MB x 2),
+    the method will return an array of Strings with: 
+    1. The total memory (in this case 1 GB)
+    2. Per executor memory (in this case 512 MB)
+    3. Number of executors (in this case 2)
+    */
+    private String[] splitExecutorMemory(String executorMemory){
+        String[] memoryDetails = new String[3];
+        String[] splitParenthesis = executorMemory.split("[\\(\\)]");
+        String[] parts = splitParenthesis[1].split("x");
+        
+        memoryDetails[0] = splitParenthesis[0].trim();  // Total memory
+        memoryDetails[1] = parts[0].trim();             // per executor memory
+        memoryDetails[2] = parts[1].trim();             // number of executors
+        
+        return memoryDetails;
     }
   
 }
