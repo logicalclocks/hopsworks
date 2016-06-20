@@ -28,11 +28,14 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private int numberOfExecutors = 1;
   private int executorCores = 1;
   private int executorMemory = 1024;
+  private boolean dynamicExecutors;
+  
 
   protected static final String KEY_JARPATH = "JARPATH";
   protected static final String KEY_MAINCLASS = "MAINCLASS";
   protected static final String KEY_ARGS = "ARGS";
   protected static final String KEY_NUMEXECS = "NUMEXECS";
+  protected static final String KEY_DYNEXECS = "DYNEXECS";
   protected static final String KEY_EXECCORES = "EXECCORES";
   protected static final String KEY_EXECMEM = "EXECMEM";
   protected static final String KEY_HISTORYSERVER = "HISTORYSERVER";
@@ -146,29 +149,39 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.historyServerIp = historyServerIp;
   }
 
-    public String getSessionId() {
-        return sessionId;
-    }
+  public String getSessionId() {
+      return sessionId;
+  }
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
-    }
+  public void setSessionId(String sessionId) {
+      this.sessionId = sessionId;
+  }
 
-    public String getkStore() {
-        return kStore;
-    }
+  public String getkStore() {
+      return kStore;
+  }
 
-    public void setkStore(String kStore) {
-        this.kStore = kStore;
-    }
+  public void setkStore(String kStore) {
+      this.kStore = kStore;
+  }
 
-    public String gettStore() {
-        return tStore;
-    }
+  public String gettStore() {
+      return tStore;
+  }
 
-    public void settStore(String tStore) {
-        this.tStore = tStore;
-    } 
+  public void settStore(String tStore) {
+      this.tStore = tStore;
+  } 
+
+  public boolean isDynamicExecutors() {
+    return dynamicExecutors;
+  }
+
+  public void setDynamicExecutors(boolean dynamicExecutors) {
+    this.dynamicExecutors = dynamicExecutors;
+  }
+    
+    
 
   @Override
   public JobType getType() {
@@ -192,6 +205,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     obj.set(KEY_EXECCORES, "" + executorCores);
     obj.set(KEY_EXECMEM, ""+executorMemory);
     obj.set(KEY_NUMEXECS, "" + numberOfExecutors);
+    obj.set(KEY_DYNEXECS, "" + dynamicExecutors);
     obj.set(KEY_TYPE, JobType.SPARK.name());
     obj.set(KEY_HISTORYSERVER, getHistoryServerIp());
     return obj;
@@ -202,7 +216,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
           IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
-    String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs, hs;
+    String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs, hs, jsonDynexecs;
     int jsonExecmem, jsonExeccors;
     try {
       String jsonType = json.getString(KEY_TYPE);
@@ -218,6 +232,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       jsonExeccors = Integer.parseInt(json.getString(KEY_EXECCORES));
       jsonExecmem = Integer.parseInt(json.getString(KEY_EXECMEM));
       jsonNumexecs = json.getString(KEY_NUMEXECS);
+      jsonDynexecs = json.getString(KEY_DYNEXECS);
       hs = json.getString(KEY_HISTORYSERVER);
     } catch (Exception e) {
       throw new IllegalArgumentException(
@@ -234,6 +249,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.mainClass = jsonMainclass;
     this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
     this.historyServerIp = hs;
+    this.dynamicExecutors = Boolean.parseBoolean(jsonDynexecs);
   }
 
 }

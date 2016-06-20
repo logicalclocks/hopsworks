@@ -155,6 +155,10 @@
               </div>
               <!-- Spark -->
               <div class="row" ng-show="newJobCtrl.jobtype === 1">
+                <div class="text-right col-md-4">Dynamic Executors <i class="fa fa-info-circle" tooltip="Enable Spark Dynamic Executors." style="margin-left: 10px"></i></div>
+                <div class="col-md-8"><input type="checkbox" ng-model="newJobCtrl.runConfig.dynamicExecutors" class="form-control"></div>
+              </div>              
+              <div class="row" ng-show="newJobCtrl.jobtype === 1 && !newJobCtrl.runConfig.dynamicExecutors">
                 <div class="text-right col-md-4">Number of executors <i class="fa fa-info-circle" tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="number" ng-model="newJobCtrl.runConfig.numberOfExecutors" class="form-control"></div>
               </div>

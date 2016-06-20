@@ -72,6 +72,7 @@ public final class SparkJob extends YarnJob {
     runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
     runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
     runnerbuilder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
+    runnerbuilder.setDynamicExecutors(jobconfig.isDynamicExecutors());
     //Set Yarn running options
     runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
