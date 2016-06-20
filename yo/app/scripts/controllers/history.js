@@ -39,8 +39,8 @@ angular.module('hopsWorksApp')
                         { ind:"severity" , id: 0 , type: "None" },
                         { ind:"severity" , id: 1 , type: "Low" },
                         { ind:"severity" , id: 2 , type: "Moderate" },
-                        { ind:"severity" , id: 3 , type: "Critical" },
-                        { ind:"severity" , id: 4 , type: "Severe" } 
+                        { ind:"severity" , id: 3 , type: "Severe" },
+                        { ind:"severity" , id: 4 , type: "Critical" } 
                     ]
                 },
                 {
