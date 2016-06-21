@@ -30,6 +30,9 @@ public class SparkYarnRunnerBuilder {
   private String jobName = "Untitled Spark Job";
   private List<LocalResourceDTO> extraFiles = new ArrayList<>();
   private int numberOfExecutors = 1;
+  private int numberOfExecutorsMin = Settings.SPARK_MIN_EXECS;
+  private int numberOfExecutorsMax = Settings.SPARK_MAX_EXECS;
+  private int numberOfExecutorsInit = Settings.SPARK_INIT_EXECS;
   private int executorCores = 1;
   private boolean dynamicExecutors;
   private String executorMemory = "512m";
@@ -139,11 +142,14 @@ public class SparkYarnRunnerBuilder {
     //of executors
     if(dynamicExecutors){
       addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_ENV, "true");
-      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV, "1");
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV, 
+              String.valueOf(numberOfExecutorsMin));
       //TODO: Fill in the init and max number of executors. Should it be a per job
       //or global setting?
-      //addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV, );
-      //addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV, );
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
+              String.valueOf(numberOfExecutorsMax));
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+              String.valueOf(numberOfExecutorsInit));
       //Dynamic executors requires the shuffle service to be enabled
       addSystemProperty(Settings.SPARK_SHUFFLE_SERVICE, "true");
       //spark.shuffle.service.enabled
@@ -261,6 +267,31 @@ public class SparkYarnRunnerBuilder {
     this.dynamicExecutors = dynamicExecutors;
   }
 
+  public int getNumberOfExecutorsMin() {
+    return numberOfExecutorsMin;
+  }
+
+  public void setNumberOfExecutorsMin(int numberOfExecutorsMin) {
+    this.numberOfExecutorsMin = numberOfExecutorsMin;
+  }
+
+  public int getNumberOfExecutorsMax() {
+    return numberOfExecutorsMax;
+  }
+
+  public void setNumberOfExecutorsMax(int numberOfExecutorsMax) {
+    this.numberOfExecutorsMax = numberOfExecutorsMax;
+  }
+
+  public int getNumberOfExecutorsInit() {
+    return numberOfExecutorsInit;
+  }
+
+  public void setNumberOfExecutorsInit(int numberOfExecutorsInit) {
+    this.numberOfExecutorsInit = numberOfExecutorsInit;
+  }
+
+  
   
   public SparkYarnRunnerBuilder setExecutorMemoryMB(int executorMemoryMB) {
     if (executorMemoryMB < 1) {

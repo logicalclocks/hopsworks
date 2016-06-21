@@ -418,6 +418,9 @@ public class Settings {
   public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
   public static final String SPARK_CONFIG_FILE = "conf/spark-defaults.conf";
+  public static final int SPARK_MIN_EXECS = 1;
+  public static final int SPARK_MAX_EXECS = 8;
+  public static final int SPARK_INIT_EXECS = 1;
   //Flink constants
   public static final String FLINK_DEFAULT_OUTPUT_PATH = "Logs/Flink/";
   public static final String FLINK_DEFAULT_CONF_FILE = "flink-conf.yaml";
