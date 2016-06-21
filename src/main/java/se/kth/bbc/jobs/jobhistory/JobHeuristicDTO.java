@@ -7,7 +7,6 @@ package se.kth.bbc.jobs.jobhistory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -20,16 +19,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class JobHeuristicDTO implements Serializable{
     
-    private String message = "";              
+    private String message = ""; 
+    private String projectId = "";
+    private String jobName = "";
     private String degreeOfSimilarity = "";   
     private int numberOfResults;           // number of history records that examined
     private String jobType = "";           // the Job Type
     private String estimatedTime;             // estimated complition time
-    private int amMemory;                  // estimated Application Master Memory
-    private int amVcores;
-    private String rmQueue = "";
-    private int numberOfexecutors;
-    private int executorMemory;
     private String inputBlocks = "";
     private List<String> similarAppIds = new ArrayList<String>();
     private List<JobHeuristicDetailsDTO> jobHeuristicDetails = new ArrayList<JobHeuristicDetailsDTO>();
@@ -37,10 +33,13 @@ public class JobHeuristicDTO implements Serializable{
     public JobHeuristicDTO(){
     }
     
-    public JobHeuristicDTO(int numberOfResults, String message, String estimatedTime){
+    public JobHeuristicDTO(int numberOfResults, String message, String estimatedTime, String projectId, String jobName, String jobType){
         this.numberOfResults = numberOfResults;
         this.message = message;  
         this.estimatedTime = estimatedTime;
+        this.projectId = projectId;
+        this.jobName = jobName;
+        this.jobType = jobType;
     }
     
     public JobHeuristicDTO(int numberOfResults, String message, String estimatedTime, String degreeOfSimilarity, String inputBlocks){
@@ -122,76 +121,6 @@ public class JobHeuristicDTO implements Serializable{
     }
 
     /**
-     * @return the amMemory
-     */
-    public int getAmMemory() {
-        return amMemory;
-    }
-
-    /**
-     * @param amMemory the amMemory to set
-     */
-    public void setAmMemory(int amMemory) {
-        this.amMemory = amMemory;
-    }
-
-    /**
-     * @return the amVcores
-     */
-    public int getAmVcores() {
-        return amVcores;
-    }
-
-    /**
-     * @param amVcores the amVcores to set
-     */
-    public void setAmVcores(int amVcores) {
-        this.amVcores = amVcores;
-    }
-
-    /**
-     * @return the rmQueue
-     */
-    public String getRmQueue() {
-        return rmQueue;
-    }
-
-    /**
-     * @param rmQueue the rmQueue to set
-     */
-    public void setRmQueue(String rmQueue) {
-        this.rmQueue = rmQueue;
-    }
-
-    /**
-     * @return the numberOfexecutors
-     */
-    public int getNumberOfexecutors() {
-        return numberOfexecutors;
-    }
-
-    /**
-     * @param numberOfexecutors the numberOfexecutors to set
-     */
-    public void setNumberOfexecutors(int numberOfexecutors) {
-        this.numberOfexecutors = numberOfexecutors;
-    }
-
-    /**
-     * @return the executorMemory
-     */
-    public int getExecutorMemory() {
-        return executorMemory;
-    }
-
-    /**
-     * @param executorMemory the executorMemory to set
-     */
-    public void setExecutorMemory(int executorMemory) {
-        this.executorMemory = executorMemory;
-    }
-
-    /**
      * @return the inputBlocks
      */
     public String getInputBlocks() {
@@ -224,7 +153,7 @@ public class JobHeuristicDTO implements Serializable{
         
         while(itr.hasNext()) {
          JobsHistory element = itr.next();
-         similarAppIds.add(element.getAppId());
+            getSimilarAppIds().add(element.getAppId());
       }
     }
 
@@ -243,8 +172,38 @@ public class JobHeuristicDTO implements Serializable{
     }
     
     public void addJobHeuristicDetails(JobHeuristicDetailsDTO jhDetail){
-        jobHeuristicDetails.add(jhDetail);
+        getJobHeuristicDetails().add(jhDetail);
     }
+
+    /**
+     * @return the projectId
+     */
+    public String getProjectId() {
+        return projectId;
+    }
+
+    /**
+     * @param projectId the projectId to set
+     */
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
+    }
+
+    /**
+     * @return the jobName
+     */
+    public String getJobName() {
+        return jobName;
+    }
+
+    /**
+     * @param jobName the jobName to set
+     */
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
+    }
+    
+    
 
     
 }

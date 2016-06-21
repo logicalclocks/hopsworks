@@ -16,12 +16,22 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class JobHeuristicDetailsDTO implements Serializable{
     
     private String appId;
+    
+    // The total severity of that job
     private String totalSeverity;
-    private String totalDriverMemory;
-    private String totalExecutorMemory;
-    private String executorCores;
-    private String executorMemory;
-    private String memoryForStorage;
+
+    // MemoryLimitHeuristic
+    private String memorySeverity;
+    private String totalDriverMemory, totalExecutorMemory, executorCores, executorMemory, memoryForStorage;
+    
+    // StageRuntimeHeuristic
+    private String stageRuntimeSeverity;
+    private String averageStageFailure, problematicStages, completedStages, failedStages;
+    
+    // JobRuntimeHeuristic
+    private String jobRuntimeSeverity;
+    private String averageJobFailure, completedJobsNumber, failedJobsNumber;
+    
     
     public JobHeuristicDetailsDTO(){}
     
@@ -135,6 +145,146 @@ public class JobHeuristicDetailsDTO implements Serializable{
      */
     public void setExecutorMemory(String executorMemory) {
         this.executorMemory = executorMemory;
+    }
+
+    /**
+     * @return the memorySeverity
+     */
+    public String getMemorySeverity() {
+        return memorySeverity;
+    }
+
+    /**
+     * @param memorySeverity the memorySeverity to set
+     */
+    public void setMemorySeverity(String memorySeverity) {
+        this.memorySeverity = memorySeverity;
+    }
+
+    /**
+     * @return the stageRuntimeSeverity
+     */
+    public String getStageRuntimeSeverity() {
+        return stageRuntimeSeverity;
+    }
+
+    /**
+     * @param stageRuntimeSeverity the stageRuntimeSeverity to set
+     */
+    public void setStageRuntimeSeverity(String stageRuntimeSeverity) {
+        this.stageRuntimeSeverity = stageRuntimeSeverity;
+    }
+
+    /**
+     * @return the averageStageFailure
+     */
+    public String getAverageStageFailure() {
+        return averageStageFailure;
+    }
+
+    /**
+     * @param averageStageFailure the averageStageFailure to set
+     */
+    public void setAverageStageFailure(String averageStageFailure) {
+        this.averageStageFailure = averageStageFailure;
+    }
+
+    /**
+     * @return the problematicStages
+     */
+    public String getProblematicStages() {
+        return problematicStages;
+    }
+
+    /**
+     * @param problematicStages the problematicStages to set
+     */
+    public void setProblematicStages(String problematicStages) {
+        this.problematicStages = problematicStages;
+    }
+
+    /**
+     * @return the completedStages
+     */
+    public String getCompletedStages() {
+        return completedStages;
+    }
+
+    /**
+     * @param completedStages the completedStages to set
+     */
+    public void setCompletedStages(String completedStages) {
+        this.completedStages = completedStages;
+    }
+
+    /**
+     * @return the failedStages
+     */
+    public String getFailedStages() {
+        return failedStages;
+    }
+
+    /**
+     * @param failedStages the failedStages to set
+     */
+    public void setFailedStages(String failedStages) {
+        this.failedStages = failedStages;
+    }
+
+    /**
+     * @return the jobRuntimeSeverity
+     */
+    public String getJobRuntimeSeverity() {
+        return jobRuntimeSeverity;
+    }
+
+    /**
+     * @param jobRuntimeSeverity the jobRuntimeSeverity to set
+     */
+    public void setJobRuntimeSeverity(String jobRuntimeSeverity) {
+        this.jobRuntimeSeverity = jobRuntimeSeverity;
+    }
+
+    /**
+     * @return the averageJobFailure
+     */
+    public String getAverageJobFailure() {
+        return averageJobFailure;
+    }
+
+    /**
+     * @param averageJobFailure the averageJobFailure to set
+     */
+    public void setAverageJobFailure(String averageJobFailure) {
+        this.averageJobFailure = averageJobFailure;
+    }
+
+    /**
+     * @return the completedJobsNumber
+     */
+    public String getCompletedJobsNumber() {
+        return completedJobsNumber;
+    }
+
+    /**
+     * @param completedJobsNumber the completedJobsNumber to set
+     */
+    public void setCompletedJobsNumber(String completedJobsNumber) {
+        this.completedJobsNumber = completedJobsNumber;
+    }
+
+    /**
+     * @return the failedJobsNumber
+     */
+    public String getFailedJobsNumber() {
+        return failedJobsNumber;
+    }
+
+    /**
+     * @param failedJobsNumber the failedJobsNumber to set
+     */
+    public void setFailedJobsNumber(String failedJobsNumber) {
+        this.failedJobsNumber = failedJobsNumber;
     }
     
     

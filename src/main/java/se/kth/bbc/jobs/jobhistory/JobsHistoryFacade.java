@@ -6,7 +6,6 @@
 package se.kth.bbc.jobs.jobhistory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -53,6 +52,13 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
     return em;
   }
 
+  /**
+     * Stores an instance in the database.
+     * <p/>
+     * @param jobDesc
+     * @param executionId 
+     * @param appId
+     */
   
   public void persist(JobDescription jobDesc, int executionId, String appId){
       SparkJobConfiguration configuration = (SparkJobConfiguration) jobDesc.getJobConfig();
@@ -73,7 +79,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
               inodeSize, blocks, configuration.getArgs() ,configuration.getMainClass() ,
               configuration.getExecutorMemory(), configuration.getExecutorCores());
   }
-    
+   
     public void persist(int jobId, int inodePid, String inodeName, int executionId, String appId, String jobType, int size,
             String inputBlocksInHdfs, String arguments, String className, int initialRequestedMemory, int initialrequestedVcores){
         JobsHistoryPK pk = new JobsHistoryPK(jobId, inodePid, inodeName, executionId);
@@ -86,6 +92,18 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
             em.flush();
         }
     }
+   
+    /**
+     * Updates a JobHistory instance with the duration and the application Id
+     * <p/>
+     * @param JobId 
+     * @param inodeId  
+     * @param inodeName 
+     * @param executionId 
+     * @param appId 
+     * @param duration 
+     * @return JobsHistory
+     */
     
     public JobsHistory updateJobHistory(int JobId, int inodeId, String inodeName, int executionId, String appId, long duration){
         jPK = new JobsHistoryPK(JobId, inodeId, inodeName, executionId);
@@ -95,6 +113,14 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
         em.merge(obj);
         return obj;   
     }
+    
+    /**
+     * Check the input arguments of a job. If it is a file then the method returns the number of blocks that the file consists of.
+     * Otherwise the method returns 0 block files.
+     * <p/>
+     * @param arguments
+     * @return Number of Blocks
+     */
     
     private String checkArguments(String arguments){
       String blocks = "";
@@ -112,12 +138,17 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
       return blocks;
     }
     
+    /**
+     * Given the initial arguments for the user, this method tries to find similar jobs in the history.
+     * @param jobDetails
+     * @return JobHeuristicDTO
+     */
     public JobHeuristicDTO searchHeuristicRusults(JobDetailDTO jobDetails){
         String blocks = checkArguments(jobDetails.getInputArgs());
         List<JobsHistory> resultsForAnalysis = searchForVeryHighSimilarity(jobDetails);
         
         if(!resultsForAnalysis.isEmpty()){
-            JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis);
+            JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis, jobDetails);
             jhDTO.setInputBlocks(blocks);
             jhDTO.addSimilarAppId(resultsForAnalysis);
             jhDTO.setDegreeOfSimilarity("VERY HIGH");
@@ -127,7 +158,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
         resultsForAnalysis = searchForHighSimilarity(jobDetails);
         
         if(!resultsForAnalysis.isEmpty()){
-            JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis);
+            JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis, jobDetails);
             jhDTO.setInputBlocks(blocks);
             jhDTO.addSimilarAppId(resultsForAnalysis);
             jhDTO.setDegreeOfSimilarity("HIGH");
@@ -137,7 +168,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
         resultsForAnalysis = searchForMediumSimilarity(jobDetails);
         
         if(!resultsForAnalysis.isEmpty()){
-            JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis);
+            JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis, jobDetails);
             jhDTO.setInputBlocks(blocks);
             jhDTO.addSimilarAppId(resultsForAnalysis);
             jhDTO.setDegreeOfSimilarity("MEDIUM");
@@ -147,7 +178,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
         resultsForAnalysis = searchForLowSimilarity(jobDetails);
         
         if(!resultsForAnalysis.isEmpty()){
-            JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis);
+            JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis, jobDetails);
             jhDTO.setInputBlocks(blocks);
             jhDTO.addSimilarAppId(resultsForAnalysis);
             jhDTO.setDegreeOfSimilarity("LOW");
@@ -158,7 +189,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
         }
     }
     
-    // High Similarity -> Same jobType, className, arguments and jarFile
+    // Very High Similarity -> Same jobType, className, jarFile, arguments and blocks
     private List<JobsHistory> searchForVeryHighSimilarity(JobDetailDTO jobDetails){
         TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithVeryHighSimilarity",
             JobsHistory.class);
@@ -173,7 +204,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
     }
     
     
-    // High Similarity -> Same jobType, className, arguments and jarFile
+    // High Similarity -> Same jobType, className, jarFile and arguments
     private List<JobsHistory> searchForHighSimilarity(JobDetailDTO jobDetails){
         TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithHighSimilarity",
             JobsHistory.class);
@@ -207,18 +238,23 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
         return q.getResultList();
     }
     
-    private JobHeuristicDTO analysisOfHeuristicResults(List<JobsHistory> resultsForAnalysis){
+    private JobHeuristicDTO analysisOfHeuristicResults(List<JobsHistory> resultsForAnalysis, JobDetailDTO jobDetails){
         String estimatedTime = estimateComletionTime(resultsForAnalysis);
         int numberOfResults = resultsForAnalysis.size();
         String message =  "Analysis of the results.";
         
-        return new JobHeuristicDTO(numberOfResults, message, estimatedTime);    
+        return new JobHeuristicDTO(numberOfResults, message, estimatedTime, 
+                jobDetails.getProjectId(), jobDetails.getJobName(), jobDetails.getJobType());    
     }
     
-    
+    /**
+     * Calculates the average of completion time for a bunch of Heuristic results
+     * @param resultsForAnalysis
+     * @return 
+     */
     private String estimateComletionTime(List<JobsHistory> resultsForAnalysis){
         long milliseconds = 0;
-        long avegareMs = 0;
+        long avegareMs;
         Iterator<JobsHistory> itr = resultsForAnalysis.iterator();
         
         while(itr.hasNext()) {

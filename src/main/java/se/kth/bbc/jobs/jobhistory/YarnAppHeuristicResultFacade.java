@@ -8,6 +8,7 @@ package se.kth.bbc.jobs.jobhistory;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.user.AbstractFacade;
@@ -46,5 +47,36 @@ public class YarnAppHeuristicResultFacade extends AbstractFacade<YarnAppHeuristi
         
         return result.getId();
         
+  }
+  
+  public String searchForSeverity(String yarnAppResultId, String heuristicClass){
+    try{
+        TypedQuery<YarnAppHeuristicResult> q = em.createNamedQuery("YarnAppHeuristicResult.findByIdAndHeuristicClass",
+            YarnAppHeuristicResult.class);
+        q.setParameter("yarnAppResultId", yarnAppResultId);
+        q.setParameter("heuristicClass", heuristicClass);
+        
+        YarnAppHeuristicResult result = q.getSingleResult();
+
+        short severity = result.getSeverity();
+        switch(severity){
+            case 0 :
+                return "NONE";
+            case 1 :
+                return "LOW";
+            case 2 :
+                return "MODERATE";
+            case 3 :
+                return "SEVERE";
+            case 4 :
+                return "CRITICAL";
+            default : 
+                return "NONE";
+        }
     }
+    catch(NoResultException e){
+        return "UNDEFINED";
+    }
+  }
+
 }

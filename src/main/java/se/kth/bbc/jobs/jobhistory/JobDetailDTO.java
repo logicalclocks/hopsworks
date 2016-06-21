@@ -24,6 +24,10 @@ public class JobDetailDTO implements Serializable{
     
     private String jobType;
     
+    private String projectId;
+    
+    private String jobName;
+    
     public JobDetailDTO(){
     }
     
@@ -31,11 +35,13 @@ public class JobDetailDTO implements Serializable{
         this.className = className;
     }
     
-    public JobDetailDTO(String className, String selectedJar, String inputArgs, String jobType){
+    public JobDetailDTO(String className, String selectedJar, String inputArgs, String jobType, String projectId, String jobName){
         this.className = className;
         this.selectedJar = selectedJar;
         this.inputArgs = inputArgs;
         this.jobType = jobType;
+        this.projectId = projectId;
+        this.jobName = jobName;
     }
 
     /**
@@ -93,6 +99,36 @@ public class JobDetailDTO implements Serializable{
     public void setJobType(String jobType) {
         this.jobType = jobType;
     }
+
+    /**
+     * @return the projectId
+     */
+    public String getProjectId() {
+        return projectId;
+    }
+
+    /**
+     * @param projectId the projectId to set
+     */
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
+    }
+
+    /**
+     * @return the jobName
+     */
+    public String getJobName() {
+        return jobName;
+    }
+
+    /**
+     * @param jobName the jobName to set
+     */
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
+    }
+    
+    
     
     
 }

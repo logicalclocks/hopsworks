@@ -52,11 +52,23 @@ import se.kth.hopsworks.rest.NoCacheResponse;
 public class HistoryService {
     
   private static final String DR_ELEPHANT_ADDRESS = "http://bbc1.sics.se:18001";  
+  
   private static final String MEMORY_HEURISTIC_CLASS = "com.linkedin.drelephant.spark.heuristics.MemoryLimitHeuristic";
   private static final String TOTAL_DRIVE_MEMORY = "Total driver memory allocated";
   private static final String TOTAL_EXECUTOR_MEMORY = "Total executor memory allocated";
   private static final String TOTAL_STORAGE_MEMORY = "Total memory allocated for storage";
 
+  private static final String STAGE_RUNTIME_HEURISTIC_CLASS = "com.linkedin.drelephant.spark.heuristics.StageRuntimeHeuristic";
+  private static final String AVERAGE_STATE_FAILURE = "Spark average stage failure rate";
+  private static final String PROBLEMATIC_STAGES = "Spark problematic stages";
+  private static final String STAGE_COMPLETED = "Spark stage completed";       
+  private static final String STAGE_FAILED = "Spark stage failed"; 
+   
+  private static final String JOB_RUNTIME_HEURISTIC_CLASS = "com.linkedin.drelephant.spark.heuristics.JobRuntimeHeuristic";
+  private static final String AVERAGE_JOB_FAILURE = "Spark average job failure rate";
+  private static final String JOBS_COMPLETED = "Spark completed jobs number";
+  private static final String JOBS_FAILED_NUMBER = "Spark failed jobs number";
+  
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
@@ -130,18 +142,37 @@ public class HistoryService {
         
             String totalSeverity = jsonObj.get("severity").toString();
             
-            int yarnAppHeuristicId = yarnAppHeuristicResultsFacade.searchByIdAndClass(appId, MEMORY_HEURISTIC_CLASS);
+            int yarnAppHeuristicIdMemory = yarnAppHeuristicResultsFacade.searchByIdAndClass(appId, MEMORY_HEURISTIC_CLASS);
+            int yarnAppHeuristicIdStage = yarnAppHeuristicResultsFacade.searchByIdAndClass(appId, STAGE_RUNTIME_HEURISTIC_CLASS);
+            int yarnAppHeuristicIdJob = yarnAppHeuristicResultsFacade.searchByIdAndClass(appId, JOB_RUNTIME_HEURISTIC_CLASS);
+            
             
             JobHeuristicDetailsDTO jhD = new JobHeuristicDetailsDTO(appId, totalSeverity);
-            jhD.setTotalDriverMemory(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicId, TOTAL_DRIVE_MEMORY));
-            String totalExMemory = yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicId, TOTAL_EXECUTOR_MEMORY);
+            jhD.setTotalDriverMemory(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdMemory, TOTAL_DRIVE_MEMORY));
+            String totalExMemory = yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdMemory, TOTAL_EXECUTOR_MEMORY);
             String[] splitTotalExMemory = splitExecutorMemory(totalExMemory);
             
             jhD.setTotalExecutorMemory(splitTotalExMemory[0]);
             jhD.setExecutorMemory(splitTotalExMemory[1]);
             jhD.setExecutorCores(splitTotalExMemory[2]);
             
-            jhD.setMemoryForStorage(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicId, TOTAL_STORAGE_MEMORY));
+            jhD.setMemorySeverity(yarnAppHeuristicResultsFacade.searchForSeverity(appId, MEMORY_HEURISTIC_CLASS));
+            jhD.setStageRuntimeSeverity(yarnAppHeuristicResultsFacade.searchForSeverity(appId, STAGE_RUNTIME_HEURISTIC_CLASS));
+            jhD.setJobRuntimeSeverity(yarnAppHeuristicResultsFacade.searchForSeverity(appId, JOB_RUNTIME_HEURISTIC_CLASS));
+            
+            jhD.setMemoryForStorage(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdMemory, TOTAL_STORAGE_MEMORY));
+            
+            // JOBS
+            jhD.setAverageJobFailure(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdJob, AVERAGE_JOB_FAILURE));
+            jhD.setCompletedJobsNumber(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdJob, JOBS_COMPLETED));
+            jhD.setFailedJobsNumber(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdJob, JOBS_FAILED_NUMBER));
+            
+            // STAGE
+            jhD.setAverageStageFailure(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdStage, AVERAGE_STATE_FAILURE));
+            jhD.setCompletedStages(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdStage, STAGE_COMPLETED));
+            jhD.setFailedStages(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdStage, STAGE_FAILED));
+            jhD.setProblematicStages(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdStage, PROBLEMATIC_STAGES));
+            
             jobsHistoryResult.addJobHeuristicDetails(jhD);
             
         }
@@ -183,9 +214,7 @@ public class HistoryService {
                 return json;
 
         } catch (MalformedURLException e) {
-		e.printStackTrace();
         } catch (IOException e) {
-		e.printStackTrace();
         }
         
         return null;

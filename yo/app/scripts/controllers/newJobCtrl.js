@@ -572,6 +572,8 @@ angular.module('hopsWorksApp')
                     jobDetails.selectedJar = self.sparkState.selectedJar;
                     jobDetails.inputArgs = self.runConfig.args;
                     jobDetails.jobType = self.getJobType();
+                    jobDetails.projectId = self.projectId;
+                    jobDetails.jobName = self.jobname;
                     
                 HistoryService.getHeuristics(jobDetails).then(
                 function (success) {
