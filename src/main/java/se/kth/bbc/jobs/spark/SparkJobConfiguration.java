@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Contains Spark-specific run information for a Spark job, on top of Yarn
@@ -28,11 +29,24 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private int numberOfExecutors = 1;
   private int executorCores = 1;
   private int executorMemory = 1024;
+  
+  private boolean dynamicExecutors;
+  private int numberOfExecutorsMin = Settings.SPARK_MIN_EXECS;
+  private int numberOfExecutorsMax = Settings.SPARK_MAX_EXECS;
+  private int numberOfExecutorsInit = Settings.SPARK_INIT_EXECS;
+  
 
   protected static final String KEY_JARPATH = "JARPATH";
   protected static final String KEY_MAINCLASS = "MAINCLASS";
   protected static final String KEY_ARGS = "ARGS";
   protected static final String KEY_NUMEXECS = "NUMEXECS";
+  //Dynamic executors properties
+  protected static final String KEY_DYNEXECS = "DYNEXECS";
+  protected static final String KEY_DYNEXECS_MIN = "DYNEXECSMIN";
+  protected static final String KEY_DYNEXECS_MAX = "DYNEXECSMAX";
+  protected static final String KEY_DYNEXECS_INIT = "DYNEXECSINIT";
+  
+  
   protected static final String KEY_EXECCORES = "EXECCORES";
   protected static final String KEY_EXECMEM = "EXECMEM";
   protected static final String KEY_HISTORYSERVER = "HISTORYSERVER";
@@ -146,29 +160,63 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.historyServerIp = historyServerIp;
   }
 
-    public String getSessionId() {
-        return sessionId;
-    }
+  public String getSessionId() {
+      return sessionId;
+  }
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
-    }
+  public void setSessionId(String sessionId) {
+      this.sessionId = sessionId;
+  }
 
-    public String getkStore() {
-        return kStore;
-    }
+  public String getkStore() {
+      return kStore;
+  }
 
-    public void setkStore(String kStore) {
-        this.kStore = kStore;
-    }
+  public void setkStore(String kStore) {
+      this.kStore = kStore;
+  }
 
-    public String gettStore() {
-        return tStore;
-    }
+  public String gettStore() {
+      return tStore;
+  }
 
-    public void settStore(String tStore) {
-        this.tStore = tStore;
-    } 
+  public void settStore(String tStore) {
+      this.tStore = tStore;
+  } 
+
+  public boolean isDynamicExecutors() {
+    return dynamicExecutors;
+  }
+
+  public void setDynamicExecutors(boolean dynamicExecutors) {
+    this.dynamicExecutors = dynamicExecutors;
+  }
+
+  public int getNumberOfExecutorsMin() {
+    return numberOfExecutorsMin;
+  }
+
+  public void setNumberOfExecutorsMin(int numberOfExecutorsMin) {
+    this.numberOfExecutorsMin = numberOfExecutorsMin;
+  }
+
+  public int getNumberOfExecutorsMax() {
+    return numberOfExecutorsMax;
+  }
+
+  public void setNumberOfExecutorsMax(int numberOfExecutorsMax) {
+    this.numberOfExecutorsMax = numberOfExecutorsMax;
+  }
+
+  public int getNumberOfExecutorsInit() {
+    return numberOfExecutorsInit;
+  }
+
+  public void setNumberOfExecutorsInit(int numberOfExecutorsInit) {
+    this.numberOfExecutorsInit = numberOfExecutorsInit;
+  }
+    
+  
 
   @Override
   public JobType getType() {
@@ -192,6 +240,11 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     obj.set(KEY_EXECCORES, "" + executorCores);
     obj.set(KEY_EXECMEM, ""+executorMemory);
     obj.set(KEY_NUMEXECS, "" + numberOfExecutors);
+    obj.set(KEY_DYNEXECS, "" + dynamicExecutors);
+    obj.set(KEY_DYNEXECS_MIN, "" + numberOfExecutorsMin);
+    obj.set(KEY_DYNEXECS_MAX, "" + numberOfExecutorsMax);
+    obj.set(KEY_DYNEXECS_INIT, "" + numberOfExecutorsInit);
+    
     obj.set(KEY_TYPE, JobType.SPARK.name());
     obj.set(KEY_HISTORYSERVER, getHistoryServerIp());
     return obj;
@@ -202,8 +255,10 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
           IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
-    String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs, hs;
-    int jsonExecmem, jsonExeccors;
+    String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs, hs, jsonDynexecs,
+            jsonNumexecsMin, jsonNumexecsMax, jsonNumexecsInit, jsonExecmem,
+            jsonExeccors;
+    
     try {
       String jsonType = json.getString(KEY_TYPE);
       type = JobType.valueOf(jsonType);
@@ -215,9 +270,13 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       jsonJarpath = json.getString(KEY_JARPATH, null);
       jsonMainclass = json.getString(KEY_MAINCLASS, null);
       //Then: fields that cannot be null or emtpy.
-      jsonExeccors = Integer.parseInt(json.getString(KEY_EXECCORES));
-      jsonExecmem = Integer.parseInt(json.getString(KEY_EXECMEM));
+      jsonExeccors = json.getString(KEY_EXECCORES);
+      jsonExecmem = json.getString(KEY_EXECMEM);
       jsonNumexecs = json.getString(KEY_NUMEXECS);
+      jsonNumexecsMin = json.getString(KEY_DYNEXECS_MIN);
+      jsonNumexecsMax = json.getString(KEY_DYNEXECS_MAX);
+      jsonNumexecsInit = json.getString(KEY_DYNEXECS_INIT);
+      jsonDynexecs = json.getString(KEY_DYNEXECS);
       hs = json.getString(KEY_HISTORYSERVER);
     } catch (Exception e) {
       throw new IllegalArgumentException(
@@ -228,12 +287,16 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     super.updateFromJson(json);
     //Third: we're now sure everything is valid: actually update the state
     this.args = jsonArgs;
-    this.executorCores = jsonExeccors;
-    this.executorMemory = jsonExecmem;
+    this.executorCores = Integer.parseInt(jsonExeccors);
+    this.executorMemory = Integer.parseInt(jsonExecmem);
     this.jarPath = jsonJarpath;
     this.mainClass = jsonMainclass;
     this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
+    this.numberOfExecutorsMin = Integer.parseInt(jsonNumexecsMin);
+    this.numberOfExecutorsMax = Integer.parseInt(jsonNumexecsMax);
+    this.numberOfExecutorsInit = Integer.parseInt(jsonNumexecsInit);
     this.historyServerIp = hs;
+    this.dynamicExecutors = Boolean.parseBoolean(jsonDynexecs);
   }
 
 }

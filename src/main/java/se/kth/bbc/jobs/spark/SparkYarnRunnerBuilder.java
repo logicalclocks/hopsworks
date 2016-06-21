@@ -30,7 +30,11 @@ public class SparkYarnRunnerBuilder {
   private String jobName = "Untitled Spark Job";
   private List<LocalResourceDTO> extraFiles = new ArrayList<>();
   private int numberOfExecutors = 1;
+  private int numberOfExecutorsMin = Settings.SPARK_MIN_EXECS;
+  private int numberOfExecutorsMax = Settings.SPARK_MAX_EXECS;
+  private int numberOfExecutorsInit = Settings.SPARK_INIT_EXECS;
   private int executorCores = 1;
+  private boolean dynamicExecutors;
   private String executorMemory = "512m";
   private int driverMemory = 1024; // in MB
   private int driverCores = 1;
@@ -131,9 +135,29 @@ public class SparkYarnRunnerBuilder {
     }
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
     addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
-    addSystemProperty(Settings.SPARK_HISTORY_SERVER_ENV, sparkHistoryServerIp);
-    addSystemProperty(Settings.SPARK_NUMBER_EXECUTORS, Integer.toString(
+    //History server is now loaded by spark config file
+    //addSystemProperty(Settings.SPARK_HISTORY_SERVER_ENV, sparkHistoryServerIp);
+
+    //If DynamicExecutors are not enabled, set the user defined number 
+    //of executors
+    if(dynamicExecutors){
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_ENV, "true");
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV, 
+              String.valueOf(numberOfExecutorsMin));
+      //TODO: Fill in the init and max number of executors. Should it be a per job
+      //or global setting?
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
+              String.valueOf(numberOfExecutorsMax));
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+              String.valueOf(numberOfExecutorsInit));
+      //Dynamic executors requires the shuffle service to be enabled
+      addSystemProperty(Settings.SPARK_SHUFFLE_SERVICE, "true");
+      //spark.shuffle.service.enabled
+    } else {
+      addSystemProperty(Settings.SPARK_NUMBER_EXECUTORS_ENV, Integer.toString(
             numberOfExecutors));
+    }
+    
     for (String s : sysProps.keySet()) {
       String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
       builder.addJavaOption(option);
@@ -141,17 +165,15 @@ public class SparkYarnRunnerBuilder {
 
     //Add local resources to spark environment too
     builder.addCommand(new SparkSetEnvironmentCommand());
-
-   
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
 
-//    amargs.append(" --properties-file");
-//    amargs.append(" /srv/spark/conf/spark-defaults.conf");
-    // spark 1.5.x replaced --num-executors with --properties-file
-    // https://fossies.org/diffs/spark/1.4.1_vs_1.5.0/
-    // amargs.append(" --num-executors ").append(numberOfExecutors);
+    //Load the Spark Configuration file, so that is loaded by the 
+    //ApplicationMaster
+    amargs.append(" --properties-file ");
+    amargs.append(sparkDir).append("/").append(Settings.SPARK_CONFIG_FILE);
+    
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);
     
@@ -237,6 +259,40 @@ public class SparkYarnRunnerBuilder {
     return this;
   }
 
+  public boolean isDynamicExecutors() {
+    return dynamicExecutors;
+  }
+
+  public void setDynamicExecutors(boolean dynamicExecutors) {
+    this.dynamicExecutors = dynamicExecutors;
+  }
+
+  public int getNumberOfExecutorsMin() {
+    return numberOfExecutorsMin;
+  }
+
+  public void setNumberOfExecutorsMin(int numberOfExecutorsMin) {
+    this.numberOfExecutorsMin = numberOfExecutorsMin;
+  }
+
+  public int getNumberOfExecutorsMax() {
+    return numberOfExecutorsMax;
+  }
+
+  public void setNumberOfExecutorsMax(int numberOfExecutorsMax) {
+    this.numberOfExecutorsMax = numberOfExecutorsMax;
+  }
+
+  public int getNumberOfExecutorsInit() {
+    return numberOfExecutorsInit;
+  }
+
+  public void setNumberOfExecutorsInit(int numberOfExecutorsInit) {
+    this.numberOfExecutorsInit = numberOfExecutorsInit;
+  }
+
+  
+  
   public SparkYarnRunnerBuilder setExecutorMemoryMB(int executorMemoryMB) {
     if (executorMemoryMB < 1) {
       throw new IllegalArgumentException(
