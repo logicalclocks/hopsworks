@@ -42,8 +42,8 @@ angular.module('hopsWorksApp')
               interpreters: function () {
                 return $http.get('/api/interpreter/interpretersWithStatus');
               },
-              cleanCache: function () {
-                return $http.get('/api/interpreter/removeFromCache');
+              restart: function () {
+                return $http.get('/api/interpreter/restart');
               }
             };
           }]);

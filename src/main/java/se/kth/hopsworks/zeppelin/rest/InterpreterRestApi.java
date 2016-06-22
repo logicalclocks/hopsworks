@@ -51,6 +51,11 @@ import com.google.gson.Gson;
 import org.apache.zeppelin.dep.Repository;
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.repository.RemoteRepository;
+import se.kth.bbc.jobs.jobhistory.YarnApplicationstate;
+import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
+import se.kth.bbc.project.ProjectTeam;
+import se.kth.bbc.project.ProjectTeamFacade;
+import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 import se.kth.hopsworks.zeppelin.util.TicketContainer;
@@ -72,6 +77,12 @@ public class InterpreterRestApi {
   private ZeppelinResource zeppelinResource;
   @EJB
   private ZeppelinConfigFactory zeppelinConfFactory;
+  @EJB
+  private ProjectTeamFacade teambean;
+  @EJB
+  private HdfsUsersController hdfsUserBean;
+  @EJB
+  private YarnApplicationstateFacade appStateBean;
 
   Gson gson = new Gson();
 
@@ -318,21 +329,41 @@ public class InterpreterRestApi {
 
   private Map<String, InterpreterDTO> interpreters(Project project) throws
           AppException {
-    Map<String, InterpreterDTO> interpreterDTO = new HashMap<>();
+    Map<String, InterpreterDTO> interpreterDTOs = new HashMap<>();
     List<InterpreterSetting> interpreterSettings;
     interpreterSettings = zeppelinConf.getReplFactory().get();
+    List<ProjectTeam> projectTeam;
+    InterpreterDTO interpreterDTO;
+    List<YarnApplicationstate> yarnAppStates;
+    String hdfsUsername;
     for (InterpreterSetting interpreter : interpreterSettings) {
-      interpreterDTO.put(interpreter.getGroup(), new InterpreterDTO(interpreter,
-              !zeppelinResource.isInterpreterRunning(interpreter, project)));
+      interpreterDTO = new InterpreterDTO(interpreter, !zeppelinResource.
+              isInterpreterRunning(interpreter, project));
+      interpreterDTOs.put(interpreter.getGroup(), interpreterDTO);
+      if (interpreter.getGroup().contains("livy")) {
+        projectTeam = teambean.findMembersByProject(project);
+        for (ProjectTeam member : projectTeam) {
+          hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
+          yarnAppStates = appStateBean.findByAppuserAndAppState(hdfsUsername,
+                  "RUNNING");
+          for (YarnApplicationstate state : yarnAppStates) {
+            if (state.getAppname().startsWith("livy-session-")) {
+              interpreterDTO.getSessions().add(member.getUser().getEmail()
+                      + " : " + state.getAppname());
+            }
+          }
+        }
+      }
     }
-    return interpreterDTO;
+    return interpreterDTOs;
   }
-  
+
   @GET
-  @Path("removeFromCache")
-  public Response removeFromCache () {
+  @Path("restart")
+  public Response restart() {
     zeppelinConfFactory.removeFromCache(this.project.getName());
-    zeppelinConfFactory.removeFromCache(this.project.getName(), this.user.getEmail());
+    zeppelinConfFactory.removeFromCache(this.project.getName(), this.user.
+            getEmail());
     TicketContainer.instance.invalidate(this.user.getEmail());
     return new JsonResponse(Status.OK, "Cache cleared.").build();
   }

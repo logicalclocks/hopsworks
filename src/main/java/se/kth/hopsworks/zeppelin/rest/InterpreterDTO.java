@@ -1,5 +1,7 @@
 package se.kth.hopsworks.zeppelin.rest;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 
@@ -9,6 +11,7 @@ public class InterpreterDTO {
   private String id;
   private String name;
   private String group;
+  private List<String> sessions;
   private boolean notRunning;
 
   public InterpreterDTO() {
@@ -19,6 +22,7 @@ public class InterpreterDTO {
     this.name = name;
     this.group = group;
     this.notRunning = notRunning;
+    sessions = new ArrayList<>();
   }
   
   public InterpreterDTO(InterpreterSetting interpreter, boolean notRunning) {
@@ -26,6 +30,7 @@ public class InterpreterDTO {
     this.name = interpreter.getName();
     this.group = interpreter.getGroup();
     this.notRunning = notRunning;
+    sessions = new ArrayList<>();
   }
 
   public String getId() {
@@ -50,6 +55,14 @@ public class InterpreterDTO {
 
   public void setGroup(String group) {
     this.group = group;
+  }
+
+  public List<String> getSessions() {
+    return sessions;
+  }
+
+  public void setSessions(List<String> sessions) {
+    this.sessions = sessions;
   }
 
   public boolean isNotRunning() {

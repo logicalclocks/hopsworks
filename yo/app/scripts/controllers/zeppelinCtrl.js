@@ -12,7 +12,9 @@ angular.module('hopsWorksApp')
             self.tutorialNotes = [];
             self.notes = [];
             self.transition = false;
+            self.collapse = false;
             $scope.tgState = true;
+            self.selectedInterpreter;
             var projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
 
@@ -135,12 +137,17 @@ angular.module('hopsWorksApp')
             };
             
             self.clearCache = function () {
-              ZeppelinService.cleanCache().then( function (success) {
+              ZeppelinService.restart().then( function (success) {
                   //$route.reload();
                 }, function (error) {
                   growl.error(error, {title: 'Error', ttl: 5000, referenceId: 10});
                   //$route.reload();
                 });
+            };
+            
+            self.selectInterpreter = function(interpreter) {
+              self.selectedInterpreter = interpreter;
+              console.log(interpreter);
             };
 
             ZeppelinService.websocket().ws.onMessage(function (event) {
