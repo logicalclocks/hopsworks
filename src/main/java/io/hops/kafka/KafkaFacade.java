@@ -556,7 +556,7 @@ public class KafkaFacade {
         List<SchemaTopics> schemaTopics = query.getResultList();
 
         SchemaTopics schema=null;
-        if (schemaTopics != null && !schemaTopics.isEmpty()) {
+        if (schemaTopics != null && !schemaTopics.isEmpty() ) {
             for (SchemaTopics schemaTopic : schemaTopics) {
 
                 int schemaVersion = schemaTopic.getSchemaTopicsPK().getVersion();

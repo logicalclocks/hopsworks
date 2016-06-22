@@ -94,11 +94,11 @@ public class ProjectsManagementController {
   /**
    *
    * @param projectname
-   * @param quotaInGBs size of quota for project subtree in HDFS in GBs
+   * @param quotaInGBs size of quota for project subtree in HDFS in MBs
    * @throws IOException
    */
-  public void setHdfsSpaceQuota(String projectname, long quotaInGBs) throws IOException {
-    projectController.setHdfsSpaceQuota(projectname, quotaInGBs);
+  public void setHdfsSpaceQuota(String projectname, long quotaInMBs) throws IOException {
+    projectController.setHdfsSpaceQuotaInMBs(projectname, quotaInMBs);
   }
 
   public List<ProjectsManagement> getAllProjects() {

@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -42,6 +43,7 @@ public class DistributedFsService {
 
   @PostConstruct
   public void init() {
+    System.setProperty("hadoop.home.dir", settings.getHadoopDir());
     hadoopConfDir = settings.getHadoopConfDir();
     //Get the configuration file at found path
     File hadoopConfFile = new File(hadoopConfDir, "core-site.xml");

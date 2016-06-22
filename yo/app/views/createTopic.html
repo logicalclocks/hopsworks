@@ -48,12 +48,6 @@
 
           </ui-select><br>
         </div>
-        <!--      <span ng-show="(createTopicForm.$submitted || createTopicCtrl.schemaName.$dirty) & amp;
-                  & amp;
-                  createTopicCtrl.schemaName.$error.required"
-                    class="text-danger ng-hide">
-                Choose a schema-->
-        </span>
         <div class="col-sm-6">
           <label class="control-label">Versions</label><br>
           <ui-select style="min-width: 200px;" name="schema_name" theme="select2" style="margin-left: 10px"
@@ -61,13 +55,14 @@
 
             <ui-select-match placeholder="Select a version">{{$select.selected}}</ui-select-match>
 
-            <ui-select-choices repeat="item in createTopicCtrl.schema.versions | filter: $select.search">
+            <ui-select-choices repeat="item in createTopicCtrl.schema.versions | orderBy: version:true | filter: $select.search">
               <div ng-bind-html="item | highlight: $select.search"></div>
             </ui-select-choices>
-
           </ui-select><br>
         </div>
-
+        <!--<div ng-if="createTopicCtrl.topicSchema_wrong_value === -1" style="color: red">{{"Please select schema name and its version''}}</div>-->
+        <div ng-if="createTopicCtrl.topicSchema_wrong_value === -1" style="color: red">{{"Please select schema name and its version"}}</div>
+      
 
       </div>
       <br>

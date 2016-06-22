@@ -241,7 +241,7 @@ public class YarnRunner {
             try {
                 List<URL> classpaths = new ArrayList<>();
                 //Copy Flink jar to local machine and pass it to the classpath
-                URL flinkURL = new File(localJarPath).toURI().toURL();
+                URL flinkURL = new File("/srv/flink/"+Settings.FLINK_LOCRSC_FLINK_JAR).toURI().toURL();
                 classpaths.add(flinkURL);
                 PackagedProgram program = new PackagedProgram(file, classpaths, args);
                 client.setPrintStatusDuringExecution(false);

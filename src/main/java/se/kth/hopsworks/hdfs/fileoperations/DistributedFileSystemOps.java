@@ -28,6 +28,8 @@ public class DistributedFileSystemOps {
   private static final Logger logger = Logger.getLogger(
           DistributedFileSystemOps.class.getName());
   
+  private static final long MB = 1024l*1024l;
+  
   private final DistributedFileSystem dfs;
   private Configuration conf;
   private String hadoopConfDir;
@@ -314,33 +316,56 @@ public class DistributedFileSystemOps {
 
   /**
    * 
-   * @param src
-   * @param diskspaceQuotaInBytes hdfs quota size in bytes
+   * @param src Path to directory we are setting the quota for
+   * @param diskspaceQuotaInMB hdfs quota size for disk space
    * @throws IOException 
    */
-  public void setQuota(Path src, long diskspaceQuotaInBytes) throws
+  public void setHdfsSpaceQuotaInMBs(Path src, long diskspaceQuotaInMB) throws
           IOException {
-    dfs.setQuota(src, HdfsConstants.QUOTA_DONT_SET, 1073741824 * diskspaceQuotaInBytes);
+    setHdfsQuota(src, HdfsConstants.QUOTA_DONT_SET, diskspaceQuotaInMB);
+  }
+  
+  /**
+   * 
+   * @param src
+   * @param numberOfFiles
+   * @param diskspaceQuotaInMB
+   * @throws IOException 
+   */
+  public void setHdfsQuota(Path src, long numberOfFiles, long diskspaceQuotaInMB) throws
+          IOException {
+    dfs.setQuota(src, numberOfFiles, DistributedFileSystemOps.MB * diskspaceQuotaInMB);
   }
 
   /**
    * 
    * @param path
-   * @return hdfs quota size in bytes
+   * @return hdfs quota size in GB
    * @throws IOException 
    */
-  public long getQuota(Path path) throws IOException {
-    return dfs.getContentSummary(path).getSpaceQuota() / 1073741824;
+  public long getHdfsSpaceQuotaInMbs(Path path) throws IOException {
+    return dfs.getContentSummary(path).getSpaceQuota() / DistributedFileSystemOps.MB;
   }
 
+  /**
+   * 
+   * @param path
+   * @return the number of files allowed to be created
+   * @throws IOException 
+   */
+  public long getHdfsNumFilesQuota(Path path) throws IOException {
+    return dfs.getContentSummary(path).getQuota();
+  }
+  
+  
   /**
    * 
    * @param path
    * @return number of bytes stored in this subtree in bytes
    * @throws IOException 
    */
-  public long getUsedQuota(Path path) throws IOException {
-    return dfs.getContentSummary(path).getSpaceConsumed() / 1073741824;
+  public long getUsedQuotaInMbs(Path path) throws IOException {
+    return dfs.getContentSummary(path).getSpaceConsumed() / DistributedFileSystemOps.MB;
   }
 
   public FSDataInputStream open(Path location) throws IOException {
