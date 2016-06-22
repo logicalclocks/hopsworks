@@ -91,8 +91,10 @@ public class UserCertsFacade {
     }
     
     public void putUserCerts(String projectname, String username){
-      try(FileInputStream kfin = new FileInputStream(new File("/tmp/tempstores/" + projectname + "__" + username + "__kstore.jks"));
-          FileInputStream tfin = new FileInputStream(new File("/tmp/tempstores/" + projectname + "__" + username + "__tstore.jks"))){
+      
+      //  "try-with-resources" in Java 7, FileInputStreams will be closed automatically 
+      try(FileInputStream kfin = new FileInputStream(new File("/tmp/" + projectname + "__" + username + "__kstore.jks"));
+          FileInputStream tfin = new FileInputStream(new File("/tmp/" + projectname + "__" + username + "__tstore.jks"))){
        
             byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
             byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
@@ -100,7 +102,7 @@ public class UserCertsFacade {
             UserCerts uc = new UserCerts(projectname, username);
             uc.setUserKey(kStoreBlob);
             uc.setUserCert(tStoreBlob);
-            em.merge(uc);
+//            em.merge(uc);
             em.persist(uc);
             em.flush();    
       
@@ -109,6 +111,8 @@ public class UserCertsFacade {
             Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, e);
         } catch (IOException ex) {
             Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Throwable ex) {
+            Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, ex);          
         }
     }
     

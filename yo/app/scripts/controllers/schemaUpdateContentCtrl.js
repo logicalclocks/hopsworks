@@ -11,7 +11,7 @@ angular.module('hopsWorksApp')
 
                 self.init = function () {
 
-                    KafkaService.getSchemaContent(self.projectId, schemaName, self.schemaVersion+1).then(
+                    KafkaService.getSchemaContent(self.projectId, schemaName, self.schemaVersion).then(
                             function (success) {
                                 $scope.jsonObj = success.data.contents;
                             }, function (error) {

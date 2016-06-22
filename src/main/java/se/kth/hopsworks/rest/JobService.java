@@ -279,15 +279,11 @@ public class JobService {
       try {
         logger.log(Level.SEVERE, "get on proxy: " + param);
         String trackingUrl;
-//        if (param.matches("([a-z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
           if (param.matches("http([a-z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
             trackingUrl = param;
           } else {
             trackingUrl = "http://" + param;
           }
-//        }else {
-//          trackingUrl = "http://10.0.2.15:8088/" + param;
-//        }
         trackingUrl = trackingUrl.replace("@hwqm", "?");
         logger.log(Level.SEVERE, "get on proxy: " + trackingUrl);
         org.apache.commons.httpclient.URI uri
@@ -295,8 +291,7 @@ public class JobService {
         String source = "http://" + uri.getHost() + ":" + uri.getPort();
         HttpClientParams params = new HttpClientParams();
         params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
-                true);
+        params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS, true);
         HttpClient client = new HttpClient(params);
         HostConfiguration config = new HostConfiguration();
         InetAddress localAddress = InetAddress.getLocalHost();

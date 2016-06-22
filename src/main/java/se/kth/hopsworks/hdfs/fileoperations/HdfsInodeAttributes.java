@@ -34,6 +34,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class HdfsInodeAttributes implements Serializable {
 
   private static final long serialVersionUID = 1L;
+  private static final long MB = 1024l * 1024l;
+  
   @Id
   @Basic(optional = false)
   @NotNull
@@ -75,6 +77,12 @@ public class HdfsInodeAttributes implements Serializable {
     return dsquota;
   }
 
+  public long getDsquotaInMBs() {
+    long quota = dsquota.longValue();
+    quota /= MB;
+    return quota;
+  }  
+  
   public void setDsquota(BigInteger dsquota) {
     this.dsquota = dsquota;
   }
@@ -91,6 +99,16 @@ public class HdfsInodeAttributes implements Serializable {
     return diskspace;
   }
 
+  public long getDiskspaceInMBs() {
+    long quota = diskspace.longValue();
+    quota /= MB;
+    return quota;
+  }
+
+  public void setDiskspaceInMBs(long diskspaceInMBs) {
+    this.diskspace = BigInteger.valueOf(diskspaceInMBs * MB);
+  }
+  
   public void setDiskspace(BigInteger diskspace) {
     this.diskspace = diskspace;
   }
@@ -119,5 +137,5 @@ public class HdfsInodeAttributes implements Serializable {
   public String toString() {
     return "se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes[ inodeId=" + inodeId + " ]";
   }
-  
+
 }
