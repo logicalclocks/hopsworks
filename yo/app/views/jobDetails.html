@@ -120,6 +120,22 @@
           </div>
         </div>
         <div class="row">
+          <div class="text-right col-md-4">Dynamic Executors<i class="fa fa-info-circle" tooltip="Enable Spark Dynamic Executors." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.dynamicExecutors}}</div>
+        </div>
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.dynamicExecutors">
+          <div class="text-right col-md-4">Minimum number of executors<i class="fa fa-info-circle" tooltip="Minimum number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numberOfExecutorsMin}}</div>
+        </div>
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.dynamicExecutors">
+          <div class="text-right col-md-4">Maximum number of executors <i class="fa fa-info-circle" tooltip="Maximum number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numberOfExecutorsMax}}</div>
+        </div>
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.dynamicExecutors">
+          <div class="text-right col-md-4">Initial number of executors <i class="fa fa-info-circle" tooltip="Initial number of Spark executors that should be requested for this job. Must be greate that the minimum and smaller than the maximum number of executors." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numberOfExecutorsInit}}</div>
+        </div>
+          <div class="row" ng-show="!jobDetailCtrl.job.runConfig.dynamicExecutors">
           <div class="text-right col-md-4">Number of executors <i class="fa fa-info-circle" tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numberOfExecutors}}</div>
         </div>

@@ -141,7 +141,7 @@ public class SparkYarnRunnerBuilder {
     //If DynamicExecutors are not enabled, set the user defined number 
     //of executors
     if(dynamicExecutors){
-      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_ENV, "true");
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_ENV, String.valueOf(dynamicExecutors));
       addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV, 
               String.valueOf(numberOfExecutorsMin));
       //TODO: Fill in the init and max number of executors. Should it be a per job
@@ -280,6 +280,11 @@ public class SparkYarnRunnerBuilder {
   }
 
   public void setNumberOfExecutorsMax(int numberOfExecutorsMax) {
+    if(numberOfExecutorsMax > Settings.SPARK_MAX_EXECS){
+      throw new IllegalArgumentException(
+              "Maximum number of  executors cannot be greate than:"+
+                       Settings.SPARK_MAX_EXECS);
+    }
     this.numberOfExecutorsMax = numberOfExecutorsMax;
   }
 
