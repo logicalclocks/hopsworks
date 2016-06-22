@@ -28,7 +28,8 @@ angular.module('hopsWorksApp', [
   'angularUtils.directives.dirPagination',
   'angular-tour',
   'smart-table',
-  'ngPrettyJson' 
+  'ngPrettyJson',
+  'rzModule'
 ])
     .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider',
       function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider) {

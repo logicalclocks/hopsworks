@@ -22,7 +22,14 @@ angular.module('hopsWorksApp')
                 //Set services as attributes 
                 this.ModalService = ModalService;
                 this.growl = growl;
-
+            self.slider = {
+                options: {
+                    floor: 1,
+                    ceil: 8,
+                    step: 1,
+                    noSwitching: true
+                }
+            };
 
             //Set some (semi-)constants
             this.selectFileRegexes = {
@@ -396,6 +403,10 @@ angular.module('hopsWorksApp')
                   SparkService.inspectJar(self.projectId, path).then(
                           function (success) {
                             self.runConfig = success.data;
+                            self.slider.options.floor = self.runConfig.
+                                    numberOfExecutorsMin;
+                            self.slider.options.ceil = self.runConfig.
+                                    numberOfExecutorsMax;
                             self.mainFileSelected(filename);
                             if (self.tourService.currentStep_TourFour > -1) {
                                   self.tourService.currentStep_TourFour = 6;
