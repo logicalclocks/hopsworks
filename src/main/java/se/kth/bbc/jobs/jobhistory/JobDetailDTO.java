@@ -1,17 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.jobs.jobhistory;
 
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/**
- *
- * @author vasileios
- */
 
 @XmlRootElement
 public class JobDetailDTO implements Serializable{
@@ -24,9 +15,11 @@ public class JobDetailDTO implements Serializable{
     
     private String jobType;
     
-    private String projectId;
+    private int projectId;
     
     private String jobName;
+    
+    private boolean filter;
     
     public JobDetailDTO(){
     }
@@ -35,13 +28,15 @@ public class JobDetailDTO implements Serializable{
         this.className = className;
     }
     
-    public JobDetailDTO(String className, String selectedJar, String inputArgs, String jobType, String projectId, String jobName){
+    public JobDetailDTO(String className, String selectedJar, String inputArgs, 
+                        String jobType, int projectId, String jobName, boolean filter){
         this.className = className;
         this.selectedJar = selectedJar;
         this.inputArgs = inputArgs;
         this.jobType = jobType;
         this.projectId = projectId;
         this.jobName = jobName;
+        this.filter = filter;
     }
 
     /**
@@ -103,14 +98,14 @@ public class JobDetailDTO implements Serializable{
     /**
      * @return the projectId
      */
-    public String getProjectId() {
+    public int getProjectId() {
         return projectId;
     }
 
     /**
      * @param projectId the projectId to set
      */
-    public void setProjectId(String projectId) {
+    public void setProjectId(int projectId) {
         this.projectId = projectId;
     }
 
@@ -126,6 +121,20 @@ public class JobDetailDTO implements Serializable{
      */
     public void setJobName(String jobName) {
         this.jobName = jobName;
+    }
+
+    /**
+     * @return the filter
+     */
+    public boolean isFilter() {
+        return filter;
+    }
+
+    /**
+     * @param filter the filter to set
+     */
+    public void setFilter(boolean filter) {
+        this.filter = filter;
     }
     
     

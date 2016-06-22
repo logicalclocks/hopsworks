@@ -186,7 +186,7 @@ public class HistoryService {
     
     private JsonResponse getJobDetailsFromDrElephant(String jobId){
     
-    try {
+        try {
 		URL url = new URL(DR_ELEPHANT_ADDRESS + "/rest/job?id=" + jobId );
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");

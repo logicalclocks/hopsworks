@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.jobs.jobhistory;
 
 import java.io.IOException;
@@ -22,8 +17,11 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.user.model.Users;
 
 @Stateless
 public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
@@ -34,6 +32,8 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
   private ExecutionInputfilesFacade execInputFiles;
   @EJB
   private FileOperations fileOperations;
+  @EJB
+  private ProjectFacade projectFacade;
     
   private static final Logger logger = Logger.getLogger(JobsHistoryFacade.class.
       getName());
@@ -55,12 +55,13 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
   /**
      * Stores an instance in the database.
      * <p/>
+     * @param user
      * @param jobDesc
      * @param executionId 
      * @param appId
      */
   
-  public void persist(JobDescription jobDesc, int executionId, String appId){
+  public void persist(Users user, JobDescription jobDesc, int executionId, String appId){
       SparkJobConfiguration configuration = (SparkJobConfiguration) jobDesc.getJobConfig();
       String inodePath = configuration.getJarPath();
       String patternString = "hdfs://(.*)\\s";
@@ -77,17 +78,17 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
       
       this.persist(jobDesc.getId(), inodePid, inodeName, executionId, appId, jobDesc.getJobType().toString(),
               inodeSize, blocks, configuration.getArgs() ,configuration.getMainClass() ,
-              configuration.getExecutorMemory(), configuration.getExecutorCores());
+              user.getEmail(), jobDesc.getProject().getName(), jobDesc.getName());
   }
    
     public void persist(int jobId, int inodePid, String inodeName, int executionId, String appId, String jobType, int size,
-            String inputBlocksInHdfs, String arguments, String className, int initialRequestedMemory, int initialrequestedVcores){
+            String inputBlocksInHdfs, String arguments, String className, String userEmail, String projectName, String jobName){
         JobsHistoryPK pk = new JobsHistoryPK(jobId, inodePid, inodeName, executionId);
         JobsHistory exist = em.find(JobsHistory.class, pk);
         if(exist == null){
             JobsHistory file = new JobsHistory(jobId, inodePid, inodeName, executionId, appId, jobType, 
-                    size, inputBlocksInHdfs, arguments, className, initialRequestedMemory,
-                initialrequestedVcores);
+                    size, inputBlocksInHdfs, arguments, className, userEmail,
+                    projectName, jobName);
             em.persist(file);
             em.flush();
         }
@@ -128,7 +129,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
           try {
               blocks = fileOperations.getFileBlocks(arguments);
           } catch (IOException ex) {
-              Logger.getLogger(JobsHistoryFacade.class.getName()).log(Level.SEVERE, null, ex);
+              Logger.getLogger(JobsHistoryFacade.class.getName()).log(Level.SEVERE, "Failed to find file at HDFS.", ex);
           }
       }
       else{
@@ -144,8 +145,12 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
      * @return JobHeuristicDTO
      */
     public JobHeuristicDTO searchHeuristicRusults(JobDetailDTO jobDetails){
+        Project project = projectFacade.find(jobDetails.getProjectId());
+        String projectName = project.getName();
+        String userEmail = project.getOwner().getEmail();
+        
         String blocks = checkArguments(jobDetails.getInputArgs());
-        List<JobsHistory> resultsForAnalysis = searchForVeryHighSimilarity(jobDetails);
+        List<JobsHistory> resultsForAnalysis = searchForVeryHighSimilarity(jobDetails, userEmail, projectName);
         
         if(!resultsForAnalysis.isEmpty()){
             JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis, jobDetails);
@@ -155,7 +160,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
             return jhDTO;
         }
         
-        resultsForAnalysis = searchForHighSimilarity(jobDetails);
+        resultsForAnalysis = searchForHighSimilarity(jobDetails, userEmail, projectName);
         
         if(!resultsForAnalysis.isEmpty()){
             JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis, jobDetails);
@@ -165,7 +170,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
             return jhDTO;
         }
             
-        resultsForAnalysis = searchForMediumSimilarity(jobDetails);
+        resultsForAnalysis = searchForMediumSimilarity(jobDetails, userEmail, projectName);
         
         if(!resultsForAnalysis.isEmpty()){
             JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis, jobDetails);
@@ -175,7 +180,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
             return jhDTO;
         }
         
-        resultsForAnalysis = searchForLowSimilarity(jobDetails);
+        resultsForAnalysis = searchForLowSimilarity(jobDetails, userEmail, projectName);
         
         if(!resultsForAnalysis.isEmpty()){
             JobHeuristicDTO jhDTO = analysisOfHeuristicResults(resultsForAnalysis, jobDetails);
@@ -190,52 +195,113 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
     }
     
     // Very High Similarity -> Same jobType, className, jarFile, arguments and blocks
-    private List<JobsHistory> searchForVeryHighSimilarity(JobDetailDTO jobDetails){
-        TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithVeryHighSimilarity",
+    // If Filter is true then we search by the above attributes + same job of a user (user + project + job)
+    private List<JobsHistory> searchForVeryHighSimilarity(JobDetailDTO jobDetails, String userEmail, String projectName){
+        if(jobDetails.isFilter()){
+            TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithVeryHighSimilarityFilter",
             JobsHistory.class);
-        q.setParameter("jobType", jobDetails.getJobType());
-        q.setParameter("className", jobDetails.getClassName());
-        q.setParameter("inodeName", jobDetails.getSelectedJar());
-        q.setParameter("arguments", jobDetails.getInputArgs());
-        q.setParameter("inputBlocksInHdfs", checkArguments(jobDetails.getInputArgs()));
+            q.setParameter("jobType", jobDetails.getJobType());
+            q.setParameter("className", jobDetails.getClassName());
+            q.setParameter("inodeName", jobDetails.getSelectedJar());
+            q.setParameter("arguments", jobDetails.getInputArgs());
+            q.setParameter("inputBlocksInHdfs", checkArguments(jobDetails.getInputArgs()));
+            q.setParameter("projectName", projectName);
+            q.setParameter("jobName", jobDetails.getJobName());
+            q.setParameter("userEmail", userEmail);
+            
+            return q.getResultList();
+        }
+        else{
+            TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithVeryHighSimilarity",
+                JobsHistory.class);
+            q.setParameter("jobType", jobDetails.getJobType());
+            q.setParameter("className", jobDetails.getClassName());
+            q.setParameter("inodeName", jobDetails.getSelectedJar());
+            q.setParameter("arguments", jobDetails.getInputArgs());
+            q.setParameter("inputBlocksInHdfs", checkArguments(jobDetails.getInputArgs()));
         
         return q.getResultList();
-        
+        }
     }
     
     
     // High Similarity -> Same jobType, className, jarFile and arguments
-    private List<JobsHistory> searchForHighSimilarity(JobDetailDTO jobDetails){
-        TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithHighSimilarity",
-            JobsHistory.class);
-        q.setParameter("jobType", jobDetails.getJobType());
-        q.setParameter("className", jobDetails.getClassName());
-        q.setParameter("inodeName", jobDetails.getSelectedJar());
-        q.setParameter("arguments", jobDetails.getInputArgs());
+    // If Filter is true then we search by the above attributes + same job of a user (user + project + job)
+    private List<JobsHistory> searchForHighSimilarity(JobDetailDTO jobDetails, String userEmail, String projectName){
+        if(jobDetails.isFilter()){
+            TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithHighSimilarityFilter",
+                JobsHistory.class);
+            q.setParameter("jobType", jobDetails.getJobType());
+            q.setParameter("className", jobDetails.getClassName());
+            q.setParameter("inodeName", jobDetails.getSelectedJar());
+            q.setParameter("arguments", jobDetails.getInputArgs());
+            q.setParameter("projectName", projectName);
+            q.setParameter("jobName", jobDetails.getJobName());
+            q.setParameter("userEmail", userEmail);
         
         return q.getResultList();
+        }
         
+        else{
+            TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithHighSimilarity",
+                JobsHistory.class);
+            q.setParameter("jobType", jobDetails.getJobType());
+            q.setParameter("className", jobDetails.getClassName());
+            q.setParameter("inodeName", jobDetails.getSelectedJar());
+            q.setParameter("arguments", jobDetails.getInputArgs());
+        
+        return q.getResultList();
+        }
     }
     
     // Medium Similarity -> Same jobType, className and jarFile
-    private List<JobsHistory> searchForMediumSimilarity(JobDetailDTO jobDetails){
-        TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithMediumSimilarity",
-            JobsHistory.class);
-        q.setParameter("jobType", jobDetails.getJobType());
-        q.setParameter("className", jobDetails.getClassName());
-        q.setParameter("inodeName", jobDetails.getSelectedJar());
+    // If Filter is true then we search by the above attributes + same job of a user (user + project + job)
+    private List<JobsHistory> searchForMediumSimilarity(JobDetailDTO jobDetails, String userEmail, String projectName){
+        if(jobDetails.isFilter()){
+            TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithMediumSimilarityFilter",
+                JobsHistory.class);
+            q.setParameter("jobType", jobDetails.getJobType());
+            q.setParameter("className", jobDetails.getClassName());
+            q.setParameter("inodeName", jobDetails.getSelectedJar());
+            q.setParameter("projectName", projectName);
+            q.setParameter("jobName", jobDetails.getJobName());
+            q.setParameter("userEmail", userEmail);
         
-        return q.getResultList();
+            return q.getResultList();
+        }
+        else{
+            TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithMediumSimilarity",
+                JobsHistory.class);
+            q.setParameter("jobType", jobDetails.getJobType());
+            q.setParameter("className", jobDetails.getClassName());
+            q.setParameter("inodeName", jobDetails.getSelectedJar());
+        
+            return q.getResultList();
+        }
     }
     
     // Low Similarity -> Same jobType, className
-    private List<JobsHistory> searchForLowSimilarity(JobDetailDTO jobDetails){
-        TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithLowSimilarity",
-            JobsHistory.class);
-        q.setParameter("jobType", jobDetails.getJobType());
-        q.setParameter("className", jobDetails.getClassName());
+    // If Filter is true then we search by the above attributes + same job of a user (user + project + job)
+    private List<JobsHistory> searchForLowSimilarity(JobDetailDTO jobDetails, String userEmail, String projectName){
+        if(jobDetails.isFilter()){
+            TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithLowSimilarityFilter",
+                JobsHistory.class);
+            q.setParameter("jobType", jobDetails.getJobType());
+            q.setParameter("className", jobDetails.getClassName());
+            q.setParameter("projectName", projectName);
+            q.setParameter("jobName", jobDetails.getJobName());
+            q.setParameter("userEmail", userEmail);
         
-        return q.getResultList();
+            return q.getResultList();
+        }
+        else{
+            TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithLowSimilarity",
+                JobsHistory.class);
+            q.setParameter("jobType", jobDetails.getJobType());
+            q.setParameter("className", jobDetails.getClassName());
+        
+            return q.getResultList();
+        }
     }
     
     private JobHeuristicDTO analysisOfHeuristicResults(List<JobsHistory> resultsForAnalysis, JobDetailDTO jobDetails){

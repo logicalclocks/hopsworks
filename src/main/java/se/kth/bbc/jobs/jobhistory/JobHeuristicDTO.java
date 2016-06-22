@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.jobs.jobhistory;
 
 import java.io.Serializable;
@@ -11,16 +6,12 @@ import java.util.Iterator;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/**
- *
- * @author vasileios
- */
 
 @XmlRootElement
 public class JobHeuristicDTO implements Serializable{
     
     private String message = ""; 
-    private String projectId = "";
+    private int projectId = 0;
     private String jobName = "";
     private String degreeOfSimilarity = "";   
     private int numberOfResults;           // number of history records that examined
@@ -33,7 +24,7 @@ public class JobHeuristicDTO implements Serializable{
     public JobHeuristicDTO(){
     }
     
-    public JobHeuristicDTO(int numberOfResults, String message, String estimatedTime, String projectId, String jobName, String jobType){
+    public JobHeuristicDTO(int numberOfResults, String message, String estimatedTime, int projectId, String jobName, String jobType){
         this.numberOfResults = numberOfResults;
         this.message = message;  
         this.estimatedTime = estimatedTime;
@@ -178,14 +169,14 @@ public class JobHeuristicDTO implements Serializable{
     /**
      * @return the projectId
      */
-    public String getProjectId() {
+    public int getProjectId() {
         return projectId;
     }
 
     /**
      * @param projectId the projectId to set
      */
-    public void setProjectId(String projectId) {
+    public void setProjectId(int projectId) {
         this.projectId = projectId;
     }
 

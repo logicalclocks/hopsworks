@@ -14,10 +14,18 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/history/all/' + projectId);
               },
               
+              /**
+               * Get the details of a job - history page
+               * @returns {unresolved} Specific details for a particular job
+               */
               getDetailsForJob: function (jobId) {
                 return $http.get('/api/history/details/jobs/' + jobId);
               },
        
+              /**
+               * POST request with the arguments of a job durin the configuration phase
+               * @returns {unresolved} 
+               */
               getHeuristics: function (jobDetails) { 
                 var req = {
                   method: 'POST',

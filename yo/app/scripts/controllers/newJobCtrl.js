@@ -565,8 +565,13 @@ angular.module('hopsWorksApp')
                     });
                 };
                 
-
-                this.autoConfig = function () {
+                /**
+                 * Creates a jobDetails object with the arguments typed by the user and send  
+                 * these attributes to the server. The server responds with the results from the 
+                 * heuristic search.
+                 * @returns {undefined}
+                 */
+                this.autoConfig = function (filterValue) {
                     var jobDetails ={};
                     jobDetails.className = self.runConfig.mainClass;
                     jobDetails.selectedJar = self.sparkState.selectedJar;
@@ -574,14 +579,18 @@ angular.module('hopsWorksApp')
                     jobDetails.jobType = self.getJobType();
                     jobDetails.projectId = self.projectId;
                     jobDetails.jobName = self.jobname;
+                    jobDetails.filter = filterValue;
                     
-                HistoryService.getHeuristics(jobDetails).then(
-                function (success) {
-                    self.autoConfigResult = success.data;
-                    console.log(self.autoConfigResult);
-                });
+                if(!angular.isUndefined(jobDetails.className) && !angular.isUndefined(jobDetails.inputArgs) &&
+                   !angular.isUndefined(jobDetails.selectedJar) && !angular.isUndefined(jobDetails.jobType)){
+                    
+                    HistoryService.getHeuristics(jobDetails).then(
+                    function (success) {
+                        self.autoConfigResult = success.data;
+                        console.log(self.autoConfigResult);
+                    });
+                }
                 };
-
 
             }]);
 
