@@ -1,17 +1,19 @@
 require 'airborne'
-require 'byebug'
+#require 'byebug'
 require 'active_record'
 
 require 'dotenv'
 Dotenv.load
 
 ActiveRecord::Base.establish_connection ({
-  :adapter => "mysql2",
+  :adapter => "jdbcmysql",
+  #:driver => "com.mysql.jdbc.Driver",
+  #:url => "jdbc:mysql://#{ENV['DB_HOST']}:#{ENV['DB_PORT']}/hopsworks",
   :host => ENV['DB_HOST'],
   :port => ENV['DB_PORT'],
+  :database => "hopsworks",
   :username => "kthfs",
-  :password => "kthfs",
-  :database => "hopsworks"})
+  :password => "kthfs"})
 
 Dir[File.join(File.dirname(__FILE__), 'factories', '**', '*.rb')].each { |f| require f }
 

@@ -25,8 +25,8 @@ describe "session" do
       last_name = "last"
       password = "Pass123"
       post "/hopsworks/api/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile"}
-      expect_json(errorMsg: -> (value){ expect(value).to be_empty})
-      expect_json(successMessage: -> (value){ expect(value).to include("We registered your account request")})
+      expect_json(errorMsg: ->(value){ expect(value).to be_empty})
+      expect_json(successMessage: ->(value){ expect(value).to include("We registered your account request")})
       expect_status(200)
     end
 
@@ -37,8 +37,8 @@ describe "session" do
       password = "Pass123"
       register_user(email: email)
       post "/hopsworks/api/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile"}
-      expect_json(successMessage: -> (value){ expect(value).to be_nil})
-      expect_json(errorMsg: -> (value){ expect(value).to include("There is an existing account")})
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: ->(value){ expect(value).to include("There is an existing account")})
       expect_status(400)
     end
 
@@ -55,8 +55,8 @@ describe "session" do
       email = "#{random_id}@email.com"
       create_validated_user(email: email)
       create_session(email, "Pass123")
-      expect_json(successMessage: -> (value){ expect(value).to be_nil})
-      expect_json(errorMsg: -> (value){ expect(value).to include("Authentication failed")})
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: ->(value){ expect(value).to include("Authentication failed")})
       expect_status(401)
     end
 
@@ -65,8 +65,8 @@ describe "session" do
       register_user(email: email)
       create_role(User.find_by(email: email))
       create_session(email, "Pass123")
-      expect_json(successMessage: -> (value){ expect(value).to be_nil})
-      expect_json(errorMsg: -> (value){ expect(value).to include("Authentication failed")})
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: ->(value){ expect(value).to include("Authentication failed")})
       expect_status(401)
     end
 
@@ -75,8 +75,8 @@ describe "session" do
       create_validated_user(email: email)
       create_role(User.find_by(email: email))
       create_session(email, "Pass123")
-      expect_json(successMessage: -> (value){ expect(value).to be_nil})
-      expect_json(errorMsg: -> (value){ expect(value).to include("Authentication failed")})
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: ->(value){ expect(value).to include("Authentication failed")})
       expect_status(401)
     end
 
@@ -87,8 +87,8 @@ describe "session" do
       user.status = 4
       user.save
       create_session(email, "Pass123")
-      expect_json(successMessage: -> (value){ expect(value).to be_nil})
-      expect_json(errorMsg: -> (value){ expect(value).to include("No valid role found for this user")})
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: ->(value){ expect(value).to include("No valid role found for this user")})
       expect_status(401)
     end
   end

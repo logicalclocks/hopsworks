@@ -16,7 +16,7 @@ describe 'projects' do
       end
       it 'should work with valid params' do
         post "/hopsworks/api/project", {projectName: "project_#{Time.now.to_i}", description:"", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
-        expect_json(errorMsg: -> (value){ expect(value).to be_empty})
+        expect_json(errorMsg: ->(value){ expect(value).to be_empty})
         expect_json(successMessage: "Project created successfully.")
         expect_status(201)
       end
