@@ -159,7 +159,7 @@ public class Settings {
       CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
       HIWAY_DIR = setDirVar(VARIABLE_HIWAY_DIR, HIWAY_DIR);
       YARN_DEFAULT_QUOTA = setDirVar(VARIABLE_YARN_DEFAULT_QUOTA, YARN_DEFAULT_QUOTA);
-      HDFS_DEFAULT_QUOTA = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA);
+      HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA_MBs);
       MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
       cached = true;
     }
@@ -346,11 +346,11 @@ public class Settings {
     return YARN_DEFAULT_QUOTA;
   }
 
-  private String HDFS_DEFAULT_QUOTA = "200";
+  private String HDFS_DEFAULT_QUOTA_MBs = "200000";
 
-  public synchronized String getHdfsDefaultQuota() {
+  public synchronized long getHdfsDefaultQuotaInMBs() {
     checkCache();
-    return HDFS_DEFAULT_QUOTA;
+    return Long.parseLong(HDFS_DEFAULT_QUOTA_MBs);
   }
 
   private String MAX_NUM_PROJ_PER_USER = "5";
@@ -543,7 +543,7 @@ public class Settings {
 
   public synchronized String getSparkHistoryServerIp() {
     checkCache();
-    return SPARK_HISTORY_SERVER_IP;
+    return SPARK_HISTORY_SERVER_IP + ":18080";
   }  
   
   // Oozie
@@ -598,8 +598,8 @@ public class Settings {
   
   
   // Kafka
-  private String KAFKA_IP = "127.0.0.1";
-  public static final int KAFKA_PORT = 9092;
+  private String KAFKA_IP = "10.0.2.15";
+  public static final int KAFKA_PORT = 9091;
 
   public synchronized String getKafkaConnectStr() {
     checkCache();
@@ -688,9 +688,12 @@ public class Settings {
   public static final String KAFKA_K_CERTIFICATE = "kafka_k_certificate";
   public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
   
+  public static final String KAFKA_TMP_CERT_STORE_LOCAL = "/srv/glassfish/kafkacerts";
+  public static final String KAFKA_TMP_CERT_STORE_REMOTE = "/user/glassfish/kafkacerts";
+  
   public static final String KAFKA_SESSIONID_ENV_VAR = "kafka.sessionid";
   public static final String KAFKA_PROJECTID_ENV_VAR = "kafka.projectid";
-  
+  public static final String KAFKA_BROKERADDR_ENV_VAR = "kafka.brokeraddress";
 //  public static final String KAFKA_K_CERTIFICATE_ENV_VAR = "kafka.key.certificate";
 //  public static final String KAFKA_T_CERTIFICATE_ENV_VAR = "kafka.trusted.certificate";
 //  

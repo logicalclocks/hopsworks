@@ -1,27 +1,29 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ActivityService', 'UtilsService', '$q', 'TourService', '$location', '$scope',
-          function (ProjectService, ModalService, growl, ActivityService, UtilsService, $q, TourService, $location, $scope) {
+        .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ActivityService', '$q', 'TourService', '$location', '$scope',
+          function (ProjectService, ModalService, growl, ActivityService, $q, TourService, $location, $scope) {
 
             var self = this;
 
             self.histories = [];
             self.loadedView = false;
+            self.loadedZeppelin = false;
             self.tourService = TourService;
             self.projects = [];
             self.currentPage = 1;
             self.showTours = false;
             self.showTutorials = false;
             self.showPublicDatasets = false;
-            self.creating = false;
+            $scope.creating = {"spark" : false, "zeppelin" : false};
             self.exampleProjectID;
             self.tours = [];
             self.tutorials = [];
             self.publicDatasets = [];
             self.getTours = function () {
               self.tours = [
-                {'name': 'Take Spark Job Tour', 'tip': 'Take a tour of Hopsworks by creating a project and running a Spark job!'}
+                {'name': 'spark', 'tip': 'Take a tour of Hopsworks by creating a project and running a Spark job!'}
+//                {'name': 'zeppelin', 'tip': 'Take a tour of Zeppelin by creating a Hopsworks project and running a Zeppelin notebook for Spark!'}
               ];
             };
 
@@ -32,6 +34,12 @@ angular.module('hopsWorksApp')
               ];
             };
 
+            $scope.isCreating = function (tourName) {
+              if ($scope.creating[tourName] === true) {
+                return true;
+              }
+              return false;
+            }
 
             
             // Load all projects
@@ -42,10 +50,6 @@ angular.module('hopsWorksApp')
               self.totalItemsProjects = self.projects.length;
               self.currentPageProjects = 1;
             };
-
-//            $scope.$on('$viewContentLoaded', function () {
-//              self.loadedView = true;
-//            });
 
             var loadActivity = function (success) {
               var i = 0;
@@ -149,10 +153,8 @@ angular.module('hopsWorksApp')
                 loadProjects(result.second);
               },
                       function (error) {
-                        growl.info(error, {title: 'Info', ttl: 5000});
+                        growl.info(error, {title: 'Info', ttl: 2000});
                       });
-
-
             };
 
 
@@ -200,7 +202,7 @@ angular.module('hopsWorksApp')
                         self.publicDatasets = success;
                       },
                       function (error) {
-                        self.creating = false;
+                        $scope.creating['spark'] = false;
                         growl.info("Could not load Public Datasets", {title: 'Info', ttl: 5000});
                       }
 
@@ -225,21 +227,24 @@ angular.module('hopsWorksApp')
               });
             };
             self.createExampleProject = function () {
-              self.creating = true;
+              $scope.creating['spark'] = true;
               ProjectService.example().$promise.then(
                       function (success) {
-                        self.creating = false;
+                        $scope.creating['spark'] = false;
                         growl.success("Created Example Project", {title: 'Success', ttl: 10000});
                         self.exampleProjectID = success.id;
                         updateUIAfterChange(true);
+                        // To make sure the new project is refreshed
+//                        self.showTours = false;
                         if (success.errorMsg) {
-                          self.creating = false;
+                          $scope.creating['spark'] = false;
                           growl.warning("some problem", {title: 'Error', ttl: 10000});
                         }
 
+
                       },
                       function (error) {
-                        self.creating = false;
+                        $scope.creating['spark'] = false;
                         growl.info("problem", {title: 'Info', ttl: 5000});
                       }
 

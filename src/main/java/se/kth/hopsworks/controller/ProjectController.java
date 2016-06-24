@@ -1,4 +1,4 @@
-package se.kth.hopsworks.controller;
+  package se.kth.hopsworks.controller;
 
 import io.hops.bbc.ConsentStatus;
 import java.io.File;
@@ -64,55 +64,57 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectController {
 
-    private final static Logger logger = Logger.getLogger(ProjectController.class.
-        getName());
-    @EJB
-    private ProjectFacade projectFacade;
-    @EJB
-    private ProjectTeamFacade projectTeamFacade;
-    @EJB
-    private ProjectPaymentsHistoryFacade projectPaymentsHistoryFacade;
-    @EJB
-    private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
-    @EJB
-    private UserManager userBean;
-    @EJB
-    private ActivityFacade activityFacade;
-    @EJB
-    private FileOperations fileOps;
-    @EJB
-    private FileSystemOperations fsOps;
-    @EJB
-    private ProjectServiceFacade projectServicesFacade;
-    @EJB
-    private InodeFacade inodes;
-    @EJB
-    private DatasetController datasetController;
-    @EJB
-    private DatasetFacade datasetFacade;
-    @EJB
-    private SshkeysFacade sshKeysBean;
-    @EJB
-    private HdfsUsersController hdfsUsersBean;
-    @EJB
-    private DistributedFsService dfs;
-    @EJB
-    private Settings settings;
-    @EJB
-    private ZeppelinConfigFactory zeppelinConfFactory;
-    @EJB
-    private HdfsLeDescriptorsFacade hdfsLeDescriptorFacade;
-    @EJB
-    private UserCertsFacade userCertsFacade;
-  
-    @PersistenceContext(unitName = "kthfsPU")
-    private EntityManager em;
+  private final static Logger logger = Logger.getLogger(ProjectController.class.
+          getName());
+  @EJB
+  private ProjectFacade projectFacade;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private ProjectPaymentsHistoryFacade projectPaymentsHistoryFacade;
+  @EJB
+  private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
+  @EJB
+  private UserManager userBean;
+  @EJB
+  private ActivityFacade activityFacade;
+  @EJB
+  private FileOperations fileOps;
+  @EJB
+  private FileSystemOperations fsOps;
+  @EJB
+  private ProjectServiceFacade projectServicesFacade;
+  @EJB
+  private InodeFacade inodes;
+  @EJB
+  private DatasetController datasetController;
+  @EJB
+  private DatasetFacade datasetFacade;
+  @EJB
+  private SshkeysFacade sshKeysBean;
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
+  @EJB
+  private DistributedFsService dfs;
+  @EJB
+  private Settings settings;
+  @EJB
+  private ZeppelinConfigFactory zeppelinConfFactory;
+  @EJB
+  private HdfsLeDescriptorsFacade hdfsLeDescriptorFacade;
+  @EJB
+  private UserCertsFacade userCertsFacade;
 
-    /**
-     * Creates a new project(project), the related DIR, the different services in the project, and the master of the
+  @PersistenceContext(unitName = "kthfsPU")
+  private EntityManager em;
+
+  /**
+   * Creates a new project(project), the related DIR, the different services in
+   * the project, and the master of the
    * project.
    * <p>
-     * This needs to be an atomic operation (all or nothing) REQUIRES_NEW will make sure a new transaction is created
+   * This needs to be an atomic operation (all or nothing) REQUIRES_NEW will
+   * make sure a new transaction is created
    * even if this method is called from within a transaction.
    * <p/>
    * @param newProject
@@ -120,7 +122,8 @@ public class ProjectController {
    * @return
    * @throws IllegalArgumentException if the project name already exists.
    * @throws se.kth.hopsworks.rest.AppException
-     * @throws IOException if the DIR associated with the project could not be created. For whatever reason.
+   * @throws IOException if the DIR associated with the project could not be
+   * created. For whatever reason.
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Project createProject(ProjectDTO newProject, String email) throws
@@ -204,7 +207,8 @@ public class ProjectController {
   }
 
   /**
-     * Project default datasets Logs and Resources need to be created in a separate transaction after the project
+   * Project default datasets Logs and Resources need to be created in a
+   * separate transaction after the project
    * creation is complete.
    * <p/>
    * @param username
@@ -255,7 +259,8 @@ public class ProjectController {
    *
    * @param id the identifier for a Project
    * @return Project
-     * @throws se.kth.hopsworks.rest.AppException if the project could not be found.
+   * @throws se.kth.hopsworks.rest.AppException if the project could not be
+   * found.
    */
   public Project findProjectById(Integer id) throws AppException {
 
@@ -290,7 +295,8 @@ public class ProjectController {
       for (int i = 0; i < services.size(); i++) {
         servicesString = servicesString + services.get(i).name() + " ";
       }
-            logActivity(ActivityFacade.ADDED_SERVICES + servicesString, ActivityFacade.FLAG_PROJECT,
+      logActivity(ActivityFacade.ADDED_SERVICES + servicesString,
+              ActivityFacade.FLAG_PROJECT,
               user, project);
 //      if (sshAdded == true) {
 //        try {
@@ -320,7 +326,8 @@ public class ProjectController {
   }
 
   /**
-     * change the name of a project but not fully implemented to change the related folder name in hdfs
+   * change the name of a project but not fully implemented to change the
+   * related folder name in hdfs
    * <p/>
    *
    * @param project
@@ -418,10 +425,7 @@ public class ProjectController {
     //Create first the projectPath
     projectDirCreated = fileOps.mkDir(projectPath); //fails here
 
-    //Set default space quota in GB_IN_BYTES
-    ProjectController.this.setHdfsSpaceQuota(new Path(projectPath), Long.
-            parseLong(settings
-                    .getHdfsDefaultQuota()));
+    ProjectController.this.setHdfsSpaceQuotaInMBs(projectName, settings.getHdfsDefaultQuotaInMBs());
 
     //create the rest of the child folders if any
     if (projectDirCreated && !fullProjectPath.equals(projectPath)) {
@@ -442,9 +446,11 @@ public class ProjectController {
    * @param projectID to be removed
    * @param email
    * @param deleteFilesOnRemove if the associated files should be deleted
-     * @return true if the project and the associated files are removed successfully, and false if the associated files
+   * @return true if the project and the associated files are removed
+   * successfully, and false if the associated files
    * could not be removed.
-     * @throws IOException if the hole operation failed. i.e the project is not removed.
+   * @throws IOException if the hole operation failed. i.e the project is not
+   * removed.
    * @throws AppException if the project could not be found.
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -486,51 +492,53 @@ public class ProjectController {
       //projectPaymentsHistoryFacade.remove(projectPaymentsHistory);
       yarnProjectsQuotaFacade.remove(yarnProjectsQuota);
     }
-    
+
     // TODO: DELETE THE KAFKA TOPICS
-    // TODO: DELETE THE CERTS    
-    LocalhostServices.deleteProjectCertificates(settings.getHopsworksDir(), project.getName());
     userCertsFacade.removeAllCertsOfAProject(project.getName());
-    
-    logger.log(Level.FINE, "{0} - project removed.", project.getName());
+
+    LocalhostServices.deleteProjectCertificates(settings.getHopsworksDir(),
+            project.getName());
+    logger.log(Level.INFO, "{0} - project removed.", project.getName());
 
     return success;
   }
 
   /**
-     * Adds new team members to a project(project) - bulk persist if team role not specified or not in (Data owner or
+   * Adds new team members to a project(project) - bulk persist if team role not
+   * specified or not in (Data owner or
    * Data scientist)defaults to Data scientist
    * <p/>
    *
    * @param project
    * @param email
    * @param projectTeams
-     * @return a list of user names that could not be added to the project team list.
-     */
+   * @return a list of user names that could not be added to the project team
+   * list.
+   */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<String> addMembers(Project project, String email,
-      List<ProjectTeam> projectTeams) {
+          List<ProjectTeam> projectTeams) {
     List<String> failedList = new ArrayList<>();
     Users user = userBean.getUserByEmail(email);
     Users newMember;
     for (ProjectTeam projectTeam : projectTeams) {
       try {
         if (!projectTeam.getProjectTeamPK().getTeamMember().equals(user.
-            getEmail())) {
+                getEmail())) {
 
           //if the role is not properly set set it to the default resercher.
           if (projectTeam.getTeamRole() == null || (!projectTeam.getTeamRole().
-              equals(ProjectRoleTypes.DATA_SCIENTIST.getTeam())
-              && !projectTeam.
-              getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getTeam()))) {
+                  equals(ProjectRoleTypes.DATA_SCIENTIST.getTeam())
+                  && !projectTeam.
+                  getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getTeam()))) {
             projectTeam.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getTeam());
           }
 
           projectTeam.setTimestamp(new Date());
           newMember = userBean.getUserByEmail(projectTeam.getProjectTeamPK().
-              getTeamMember());
+                  getTeamMember());
           if (newMember != null && !projectTeamFacade.isUserMemberOfProject(
-              project, newMember)) {
+                  project, newMember)) {
             //this makes sure that the member is added to the project sent as the
             //first param b/c the securty check was made on the parameter sent as path.
             projectTeam.getProjectTeamPK().setProjectId(project.getId());
@@ -541,14 +549,15 @@ public class ProjectController {
               projectTeamFacade.removeProjectTeam(project, newMember);
               throw new EJBException("Could not add member to HDFS.");
             }
-            LocalhostServices.createUserCertificates(settings.getHopsworksDir(), 
-                project.getName(), newMember.getUsername());
-            
-            userCertsFacade.putUserCerts(project.getName(), newMember.getUsername());
-       
+            LocalhostServices.createUserCertificates(settings.getHopsworksDir(),
+                    project.getName(), newMember.getUsername());
+
+            userCertsFacade.putUserCerts(project.getName(), newMember.
+                    getUsername());
+
             logger.log(Level.FINE, "{0} - member added to project : {1}.",
-                new Object[]{newMember.getEmail(),
-                  project.getName()});
+                    new Object[]{newMember.getEmail(),
+                      project.getName()});
             List<SshKeys> keys = sshKeysBean.findAllById(newMember.getUid());
             List<String> publicKeys = new ArrayList<>();
             for (SshKeys k : keys) {
@@ -556,26 +565,27 @@ public class ProjectController {
             }
 
             logActivity(ActivityFacade.NEW_MEMBER + projectTeam.
-                getProjectTeamPK().getTeamMember(),
-                ActivityFacade.FLAG_PROJECT, user, project);
+                    getProjectTeamPK().getTeamMember(),
+                    ActivityFacade.FLAG_PROJECT, user, project);
 //            createUserAccount(project, projectTeam, publicKeys, failedList);
           } else if (newMember == null) {
             failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
-                + " was not found in the system.");
+                    + " was not found in the system.");
           } else {
             failedList.add(newMember.getEmail()
-                + " is already a member in this project.");
+                    + " is already a member in this project.");
           }
 
         }
       } catch (EJBException ejb) {
         failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
-            + "could not be added. Try again later.");
+                + "could not be added. Try again later.");
         logger.log(Level.SEVERE, "Adding  team member {0} to members failed",
-            projectTeam.getProjectTeamPK().getTeamMember());
+                projectTeam.getProjectTeamPK().getTeamMember());
       } catch (IOException ex) {
-            Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE,
+                null, ex);
+      }
     }
     return failedList;
   }
@@ -673,21 +683,29 @@ public class ProjectController {
 
     //send the project back to client
     String quota = getYarnQuota(name);
-        return new ProjectDTO(project, inode.getId(), services, projectTeam, kids, quota);
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids,
+            quota);
   }
 
   public String getYarnQuota(String name) {
-        YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.findByProjectName(name);
+    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.
+            findByProjectName(name);
     if (yarnQuota != null) {
       return Float.toString(yarnQuota.getQuotaRemaining());
     }
     return "";
   }
-
+  
+  
+  public void setHdfsSpaceQuotaInMBs(String projectname, long diskspaceQuotaInMB)
+          throws IOException {
+    dfs.getDfsOps().setHdfsSpaceQuotaInMBs(new Path(settings.getProjectPath(projectname)), diskspaceQuotaInMB);
+  }
+  
 //  public Long getHdfsSpaceQuotaInBytes(String name) throws AppException {
 //    String path = settings.getProjectPath(name);
 //    try {
-//      long quota = dfs.getDfsOps().getQuota(new Path(path));
+//      long quota = dfs.getDfsOps().getHdfsSpaceQuotaInMbs(new Path(path));
 //      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, quota});
 //      return quota;
 //    } catch (IOException ex) {
@@ -701,6 +719,7 @@ public class ProjectController {
     if (res == null) {
       return new HdfsInodeAttributes(inodeId);
     }
+    
     return res;
   }
 
@@ -708,7 +727,7 @@ public class ProjectController {
 //    String path = settings.getProjectPath(name);
 //
 //    try {
-//      long usedQuota = dfs.getDfsOps().getUsedQuota(new Path(path));
+//      long usedQuota = dfs.getDfsOps().getUsedQuotaInMbs(new Path(path));
 //      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, usedQuota});
 //      return usedQuota;
 //    } catch (IOException ex) {
@@ -846,7 +865,8 @@ public class ProjectController {
   }
 
   /**
-     * Extracts the project name out of the given path. The project name is the second part of this path.
+   * Extracts the project name out of the given path. The project name is the
+   * second part of this path.
    * <p/>
    * @param path
    * @return
@@ -859,34 +879,31 @@ public class ProjectController {
     return path.substring(startIndex + 1, endIndex);
   }
 
-  private void setHdfsSpaceQuota(Path src, long diskspaceQuotaInBytes)
-          throws IOException {
-    dfs.getDfsOps().setQuota(src, diskspaceQuotaInBytes);
-  }
-
-  public void setHdfsSpaceQuota(String projectname, long diskspaceQuotaInGB)
-          throws IOException {
-    long diskspaceQuotaInBytes = diskspaceQuotaInGB * 1024 * 1024 * 1024;
-    dfs.getDfsOps().setQuota(new Path(settings.getProjectPath(
-            projectname)), diskspaceQuotaInBytes);
-  }
 
   public void addExampleJarToExampleProject(String username, Project project) {
 
     Users user = userBean.getUserByEmail(username);
     try {
-            datasetController.createDataset(user, project, "TestJob", "jar file to calculate pi", -1, false, true);
+      datasetController.createDataset(user, project, "TestJob",
+              "jar file to calculate pi", -1, false, true);
     } catch (IOException ex) {
-            Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(ProjectController.class.getName()).
+              log(Level.SEVERE, null, ex);
     }
     try {
-
-            HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorFacade.findEndpoint();
-            File file = new File(settings.getSparkDir() + "/lib/spark-examples-" + Settings.SPARK_VERSION + "-hadoop" + Settings.HOPS_VERSION + ".jar");
-            fileOps.copyToHDFSFromLocal(false, file.getAbsolutePath(), "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects/" + project.getName() + "/TestJob/");
+      String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+      HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorFacade.
+              findEndpoint();
+      File file = new File(settings.getSparkDir() + "/lib/spark-examples-"
+              + Settings.SPARK_VERSION + "-hadoop" + Settings.HOPS_VERSION
+              + ".jar");
+      dfs.getDfsOps(hdfsUser).copyToHDFSFromLocal(false, file.getAbsolutePath(),
+              File.separator + Settings.DIR_ROOT + File.separator + project.
+              getName() + "/TestJob/");
 
     } catch (IOException ex) {
-            Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(ProjectController.class.getName()).
+              log(Level.SEVERE, null, ex);
     }
 
   }

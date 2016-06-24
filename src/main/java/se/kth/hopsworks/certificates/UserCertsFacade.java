@@ -100,7 +100,7 @@ public class UserCertsFacade {
             UserCerts uc = new UserCerts(projectname, username);
             uc.setUserKey(kStoreBlob);
             uc.setUserCert(tStoreBlob);
-            em.merge(uc);
+//            em.merge(uc);
             em.persist(uc);
             em.flush();    
       
@@ -109,6 +109,8 @@ public class UserCertsFacade {
             Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, e);
         } catch (IOException ex) {
             Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Throwable ex) {
+            Logger.getLogger(UserCertsFacade.class.getName()).log(Level.SEVERE, null, ex);          
         }
     }
     

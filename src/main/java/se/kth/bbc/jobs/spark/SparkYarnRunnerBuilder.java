@@ -43,7 +43,7 @@ public class SparkYarnRunnerBuilder {
   private boolean enableLogDir = true;
   private String eventLogDir;
   private String sessionId;//used by Kafka
-
+  private String kafkaAddress;
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass) {
     if (appJarPath == null || appJarPath.isEmpty()) {
       throw new IllegalArgumentException(
@@ -111,10 +111,10 @@ public class SparkYarnRunnerBuilder {
         if(dto.getName().equals(Settings.KAFKA_K_CERTIFICATE) ||
               dto.getName().equals(Settings.KAFKA_T_CERTIFICATE)){
             //TODO: Change to true, so that certs are removed
-            //Error with sticky bit on /user/glassfish
+            //Currently a FileNotFound is thrown when trying to delete the file
             builder.addLocalResource(dto, false);
         } else{
-            builder.addLocalResource(dto, false);
+            builder.addLocalResource(dto, !appJarPath.startsWith("hdfs:"));
         }
     }
   
@@ -140,6 +140,7 @@ public class SparkYarnRunnerBuilder {
     }
 
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
+    addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
     addSystemProperty(Settings.SPARK_HISTORY_SERVER_ENV, sparkHistoryServerIp);
     addSystemProperty(Settings.SPARK_NUMBER_EXECUTORS, Integer.toString(
             numberOfExecutors));
@@ -161,15 +162,13 @@ public class SparkYarnRunnerBuilder {
     amargs.append(" --properties-file");
     amargs.append(" /srv/spark/conf/spark-defaults.conf");
     
-//    amargs.append(" --properties-file");
-//    amargs.append(" /srv/spark/conf/spark-defaults.conf");
 
     // spark 1.5.x replaced --num-executors with --properties-file
     // https://fossies.org/diffs/spark/1.4.1_vs_1.5.0/
     // amargs.append(" --num-executors ").append(numberOfExecutors);
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);
-
+    
     for (String s : jobArgs) {
       amargs.append(" --arg ").append(s);
     }
@@ -330,6 +329,11 @@ public class SparkYarnRunnerBuilder {
   public void setSessionId(String sessionId) {
       this.sessionId = sessionId;
   }
+
+  public void setKafkaAddress(String kafkaAddress) {
+    this.kafkaAddress = kafkaAddress;
+  }
+  
 
   public SparkYarnRunnerBuilder addEnvironmentVariable(String name, String value) {
     envVars.put(name, value);

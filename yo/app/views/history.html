@@ -79,7 +79,7 @@
                   <span class="glyphicon sort-icon" ng-show="sortType == 'username'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
                 </th>
                 <th ng-click="sort('jobRunningTime')" style="width: 10%">
-                  Running Time (ms)
+                  Running Time (MM:SS)
                 <span class="glyphicon sort-icon" ng-show="sortType == 'jobRunningTime'" ng-class="{'glyphicon glyphicon-sort-by-order':sortReverse,'glyphicon glyphicon-sort-by-order-alt':!sortReverse}"></span>
                 </th>
                 <th ng-click="sort('jobType')" style="width: 10%">
@@ -109,9 +109,9 @@
                     <td>
                         {{job.username}}
                     </td>
-                     <td>
-                        {{job.finishTime - job.startTime }}
-                    </td>
+                    <td>
+                        {{convertMS(job.finishTime-job.startTime)}}
+                     </td>
                     <td>
                         {{job.jobType}}
                     </td>

@@ -48,9 +48,24 @@ public class KafkaFacade {
     @EJB
     Settings settings;
 
-    public static final String SEPARATOR = ":";
+    public static final String COLON_SEPARATOR = ":";
+
+    public static final String SLASH_SEPARATOR = "//";
+
+    public static final String SECURITY_PROTCOL = "SSL";
+
+    public static final String TWO_UNDERSCROES = "__";
+
+    public static final String DLIMITER = "[\"]";
+
+    String CLIENT_ID = "list_topics";
+
+    final int TIMEOUT = 10 * 1000;// 10 seconds
+
+    final int BUFFER_SIZE = 20 * 1000;
 
     private Set<String> zkBrokerList;
+
     private Set<String> topicList;
 
     protected EntityManager getEntityManager() {
@@ -74,7 +89,7 @@ public class KafkaFacade {
         List<ProjectTopics> res = query.getResultList();
         List<TopicDTO> topics = new ArrayList<>();
         for (ProjectTopics pt : res) {
-            topics.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName(), 3, 2));
+            topics.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName()));
         }
         return topics;
     }
@@ -93,7 +108,7 @@ public class KafkaFacade {
         List<SharedTopics> res = query.getResultList();
         List<TopicDTO> topics = new ArrayList<>();
         for (SharedTopics pt : res) {
-            topics.add(new TopicDTO(pt.getSharedTopicsPK().getTopicName(), 3, 2));
+            topics.add(new TopicDTO(pt.getSharedTopicsPK().getTopicName()));
         }
         return topics;
     }
@@ -106,7 +121,7 @@ public class KafkaFacade {
                     "No Kafka topics found in this project.");
         }
         for (TopicDTO topic : topics) {
-            if (topic.getName().compareToIgnoreCase(topicName) == 0) {
+            if (topic.getName().equalsIgnoreCase(topicName)) {
                 List<PartitionDetailsDTO> topicDetailDTO = getTopicDetailsfromKafkaCluster(topicName);
                 return topicDetailDTO;
             }
@@ -118,14 +133,13 @@ public class KafkaFacade {
     }
 
     private int getPort(String zkIp) {
-        String[] split = zkIp.split(SEPARATOR, 2);
-        int zkPort = Integer.parseInt(split[1]);
+        int zkPort = Integer.parseInt(zkIp.split(COLON_SEPARATOR)[1]);
         return zkPort;
     }
 
     public InetAddress getIp(String zkIp) throws AppException {
-        String[] split = zkIp.split(SEPARATOR, 2);
-        String ip = split[0];
+
+        String ip = zkIp.split(COLON_SEPARATOR)[0];
         try {
             return InetAddress.getByName(ip);
         } catch (UnknownHostException ex) {
@@ -168,8 +182,7 @@ public class KafkaFacade {
         String topicName = topicDto.getName();
 
         TypedQuery<ProjectTopics> query = em.createNamedQuery(
-                "ProjectTopics.findByTopicName",
-                ProjectTopics.class);
+                "ProjectTopics.findByTopicName", ProjectTopics.class);
         query.setParameter("topicName", topicName);
         List<ProjectTopics> res = query.getResultList();
 
@@ -178,7 +191,8 @@ public class KafkaFacade {
                     "Kafka topic already exists. Pick a different topic name.");
         }
 
-        //check if the replication factor is not greater that than the  number of running borkers
+        //check if the replication factor is not greater that than the 
+        //number of running borkers
         Set<String> brokers = getBrokerList();
         if (brokers.size() < topicDto.getNumOfReplicas()) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -215,7 +229,7 @@ public class KafkaFacade {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "topic has not schema");
         }
-        
+
         ProjectTopics pt = new ProjectTopics(topicName, projectId, schema);
 
         em.merge(pt);
@@ -225,6 +239,7 @@ public class KafkaFacade {
 
     public void removeTopicFromProject(Project project, String topicName)
             throws AppException {
+
         ProjectTopics pt = em.find(ProjectTopics.class,
                 new ProjectTopicsPK(topicName, project.getId()));
 
@@ -236,8 +251,8 @@ public class KafkaFacade {
         //remove from database
         em.remove(pt);
         //remove from zookeeper
-        ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).getHostName(),
-                10 * 1000, 29 * 1000, ZKStringSerializer$.MODULE$);
+        ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr())
+                .getHostName(), 10 * 1000, 29 * 1000, ZKStringSerializer$.MODULE$);
         ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
         ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
 
@@ -263,8 +278,8 @@ public class KafkaFacade {
         return valueDto;
     }
 
-    public void shareTopic(Integer owningProjectId, String topicName, Integer projectId)
-            throws AppException {
+    public void shareTopic(Integer owningProjectId, String topicName,
+            Integer projectId) throws AppException {
 
         if (owningProjectId.equals(projectId)) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -286,7 +301,6 @@ public class KafkaFacade {
         }
         //persist shared topic to database
         SharedTopics st = new SharedTopics(topicName, owningProjectId, projectId);
-        em.merge(st);
         em.persist(st);
         em.flush();
     }
@@ -319,7 +333,8 @@ public class KafkaFacade {
 
     }
 
-    public List<SharedProjectDTO> topicIsSharedTo(String topicName, Integer projectId) {
+    public List<SharedProjectDTO> topicIsSharedTo(String topicName,
+            Integer projectId) {
 
         List<SharedProjectDTO> shareProjectDtos = new ArrayList<>();
 
@@ -331,19 +346,22 @@ public class KafkaFacade {
 
         for (SharedTopics st : projectIds) {
 
-            Project project = em.find(Project.class, st.getSharedTopicsPK().getProjectId());
+            Project project = em.find(Project.class, st.getSharedTopicsPK()
+                    .getProjectId());
             if (project != null) {
-                shareProjectDtos.add(new SharedProjectDTO(project.getName(), project.getId()));
+                shareProjectDtos.add(new SharedProjectDTO(project.getName(),
+                        project.getId()));
             }
         }
 
         return shareProjectDtos;
     }
 
-    public List<AclUserDTO> aclUsers(Integer projectId, String topicName) throws AppException {
+    public List<AclUserDTO> aclUsers(Integer projectId, String topicName)
+            throws AppException {
 
         List<AclUserDTO> aclUsers = new ArrayList<>();
-        
+
         //contains project and its members
         Map<String, List<String>> projectMembers = new HashMap<>();
 
@@ -362,7 +380,8 @@ public class KafkaFacade {
         query.setParameter("topicName", topicName);
 
         for (SharedTopics sharedTopics : query.getResultList()) {
-            project = em.find(Project.class, sharedTopics.getSharedTopicsPK().getProjectId());
+            project = em.find(Project.class, sharedTopics.getSharedTopicsPK()
+                    .getProjectId());
 
             projectMembers.put(project.getName(), new ArrayList<String>());
         }
@@ -378,7 +397,7 @@ public class KafkaFacade {
                 projectMembers.get(p.getName()).add(p.getOwner().getEmail());
             }
         }
-        
+
         for (Map.Entry<String, List<String>> user : projectMembers.entrySet()) {
             aclUsers.add(new AclUserDTO(user.getKey(), user.getValue()));
         }
@@ -391,11 +410,11 @@ public class KafkaFacade {
 
         addAclsToTopic(topicName, projectId,
                 dto.getProjectName(),
-                dto.getUserEmail(), dto.getPermissionType(), 
+                dto.getUserEmail(), dto.getPermissionType(),
                 dto.getOperationType(), dto.getHost(), dto.getRole());
     }
 
-    private void addAclsToTopic(String topicName, Integer projectId, 
+    private void addAclsToTopic(String topicName, Integer projectId,
             String selectedProjectName, String userEmail, String permission_type,
             String operation_type, String host, String role) throws AppException {
 
@@ -414,19 +433,19 @@ public class KafkaFacade {
         }
 
         //fetch the user name from database       
-        TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail", Users.class);
-        query.setParameter("email", userEmail);
+        TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
+                Users.class).setParameter("email", userEmail);
         List<Users> users = query.getResultList();
-        
 
         if (users == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "User does not exist.");
         }
         Users selectedUser = users.get(0);
-        String principalName = selectedProjectName+"__"+selectedUser.getUsername();
+        String principalName = selectedProjectName + TWO_UNDERSCROES
+                + selectedUser.getUsername();
 
-        TopicAcls ta = new TopicAcls(pt, selectedUser, 
+        TopicAcls ta = new TopicAcls(pt, selectedUser,
                 permission_type, operation_type, host, role, principalName);
 
         em.persist(ta);
@@ -441,7 +460,8 @@ public class KafkaFacade {
                     "aclId not found in database");
         }
 
-        if (!ta.getProjectTopics().getProjectTopicsPK().getTopicName().equals(topicName)) {
+        if (!ta.getProjectTopics().getProjectTopicsPK().getTopicName()
+                .equals(topicName)) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "aclId does not belong the specified topic");
         }
@@ -458,22 +478,25 @@ public class KafkaFacade {
                     "Kafka topic does not exist in database.");
         }
 
-        TypedQuery<TopicAcls> query = em.createNamedQuery("TopicAcls.findByTopicName",
-                TopicAcls.class).setParameter("topicName", topicName);
+        TypedQuery<TopicAcls> query = em.createNamedQuery(
+                "TopicAcls.findByTopicName", TopicAcls.class)
+                .setParameter("topicName", topicName);
         List<TopicAcls> acls = query.getResultList();
 
         List<AclDTO> aclDtos = new ArrayList<>();
         String projectName;
         for (TopicAcls ta : acls) {
-            projectName = ta.getPrincipal().split("__")[0];
-            aclDtos.add(new AclDTO(ta.getId(),projectName,ta.getUser().getEmail(), ta.getPermissionType(),
+            projectName = ta.getPrincipal().split(TWO_UNDERSCROES)[0];
+            aclDtos.add(new AclDTO(ta.getId(), projectName,
+                    ta.getUser().getEmail(), ta.getPermissionType(),
                     ta.getOperationType(), ta.getHost(), ta.getRole()));
         }
 
         return aclDtos;
     }
 
-    public void updateTopicAcl(Integer projectId, String topicName, Integer aclId, AclDTO aclDto) throws AppException {
+    public void updateTopicAcl(Integer projectId, String topicName,
+            Integer aclId, AclDTO aclDto) throws AppException {
 
         TopicAcls ta = em.find(TopicAcls.class, aclId);
         if (ta == null) {
@@ -484,10 +507,9 @@ public class KafkaFacade {
         em.remove(ta);
         //update acl
         //fetch the user name from database       
-        TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail", Users.class);
-        query.setParameter("email", aclDto.getUserEmail());
+        TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
+                Users.class).setParameter("email", aclDto.getUserEmail());
         List<Users> users = query.getResultList();
-        
 
         if (users == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
@@ -495,52 +517,71 @@ public class KafkaFacade {
         }
         Users selectedUser = users.get(0);
         String projectName = aclDto.getProjectName();
-        String principalName = projectName+"__"+selectedUser.getUsername();
-        
+        String principalName = projectName + TWO_UNDERSCROES + selectedUser.getUsername();
+
         ta.setHost(aclDto.getHost());
         ta.setOperationType(aclDto.getOperationType());
         ta.setPermissionType(aclDto.getPermissionType());
         ta.setRole(aclDto.getRole());
         ta.setUser(selectedUser);
         ta.setPrincipal(principalName);
-        
-        TypedQuery<Project> queryProject = em.createNamedQuery("Project.findByName", Project.class)
+
+        TypedQuery<Project> queryProject = em.createNamedQuery(
+                "Project.findByName", Project.class)
                 .setParameter("name", projectName);
         List<Project> projects = queryProject.getResultList();
-    
+
         if (projects == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "project does not exist.");
         }
-        
+
         Project selectedProject = projects.get(0);
-        ta.setProjectTopics(new ProjectTopics(new ProjectTopicsPK(topicName, selectedProject.getId())));
-        
+        ta.setProjectTopics(new ProjectTopics(
+                new ProjectTopicsPK(topicName, selectedProject.getId())));
+
         em.persist(ta);
         em.flush();
     }
 
-    public void updateSchemaForTopics(SchemaDTO schemaDto) {
-        //create the schema bean and persist it.
+    //if schema exists, increment it if not start version from 1
+    public void addSchemaForTopics(SchemaDTO schemaDto) {
+        
+        int maxVersion = 1;
 
-        SchemaTopics schema = new SchemaTopics(schemaDto.getName(), schemaDto.getVersion(),
-                schemaDto.getContents(), new Date());
+        TypedQuery<SchemaTopics> query = em.createNamedQuery(
+                "SchemaTopics.findByName", SchemaTopics.class);
+        query.setParameter("name", schemaDto.getName());
 
-        em.merge(schema);
+        List<SchemaTopics> schemaTopics = query.getResultList();
+
+        SchemaTopics schema=null;
+        if (schemaTopics != null && !schemaTopics.isEmpty() ) {
+            for (SchemaTopics schemaTopic : schemaTopics) {
+
+                int schemaVersion = schemaTopic.getSchemaTopicsPK().getVersion();
+                if (maxVersion < schemaVersion){
+                    maxVersion = schemaVersion;
+                }
+            }
+            maxVersion++;
+        }
+        if(schema == null){
+            schema = new SchemaTopics(schemaDto.getName(), maxVersion,
+                    schemaDto.getContents(), new Date());
+        }
+
         em.persist(schema);
         em.flush();
-
     }
 
-    public List<SchemaDTO> getSchemaForTopic(String topicName) throws AppException {
-
-        List<SchemaDTO> schemaDtos = new ArrayList<>();
+    public SchemaDTO getSchemaForTopic(String topicName)
+            throws AppException {
 
         List<ProjectTopics> topics = em.createNamedQuery(
                 "ProjectTopics.findByTopicName", ProjectTopics.class)
                 .setParameter("topicName", topicName).getResultList();
 
-        
         if (topics == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "topic not found in database");
@@ -549,19 +590,18 @@ public class KafkaFacade {
         ProjectTopics topic = topics.get(0);
 
         SchemaTopics schema = em.find(SchemaTopics.class,
-                new SchemaTopicsPK(topic.getSchemaTopics().getSchemaTopicsPK().getName(),
+                new SchemaTopicsPK(
+                        topic.getSchemaTopics().getSchemaTopicsPK().getName(),
                         topic.getSchemaTopics().getSchemaTopicsPK().getVersion()));
 
         if (schema == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "topic has not schema");
         }
+        
+        SchemaDTO schemaDto = new SchemaDTO(schema.getContents());
 
-        schemaDtos.add(new SchemaDTO(schema.getSchemaTopicsPK().getName(),
-                schema.getContents(), schema.getSchemaTopicsPK().getVersion()));
-
-        return schemaDtos;
-
+        return schemaDto;
     }
 
     public List<SchemaDTO> listSchemasForTopics() {
@@ -570,7 +610,8 @@ public class KafkaFacade {
         List<SchemaDTO> schemaDtos = new ArrayList<>();
         String schemaName;
 
-        TypedQuery<SchemaTopics> query = em.createNamedQuery("SchemaTopics.findAll", SchemaTopics.class);
+        TypedQuery<SchemaTopics> query = em.createNamedQuery(
+                "SchemaTopics.findAll", SchemaTopics.class);
 
         for (SchemaTopics schema : query.getResultList()) {
             schemaName = schema.getSchemaTopicsPK().getName();
@@ -588,10 +629,27 @@ public class KafkaFacade {
         return schemaDtos;
     }
 
-    public void deleteSchemaForTopics(String schemaName, Integer version) throws AppException {
-        
+    public SchemaDTO getSchemaContent(String schemaName,
+            Integer schemaVersion) throws AppException {
+
+        SchemaTopics schemaTopic = em.find(SchemaTopics.class,
+                new SchemaTopicsPK(schemaName, schemaVersion));
+        if (schemaTopic == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "Schema: " + schemaName + " not found in database");
+        }
+
+        SchemaDTO schemaDto = new SchemaDTO(schemaTopic.getContents());
+
+        return schemaDto;
+    }
+
+    public void deleteSchema(String schemaName, Integer version)
+            throws AppException {
+
         //get the bean and remove it
-        SchemaTopics schema = em.find(SchemaTopics.class, new SchemaTopicsPK(schemaName, version));
+        SchemaTopics schema = em.find(SchemaTopics.class,
+                new SchemaTopicsPK(schemaName, version));
 
         if (schema == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
@@ -607,25 +665,25 @@ public class KafkaFacade {
         Set<String> brokerList = new HashSet<>();
 
         try {
-            ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(), sessionTimeoutMs, null);
+            ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(),
+                    sessionTimeoutMs, null);
             List<String> ids = zk.getChildren("/brokers/ids", false);
             for (String id : ids) {
                 String brokerInfo = new String(zk.getData("/brokers/ids/" + id,
                         false, null));
-                String delim = "[\"]";
-                String[] tokens = brokerInfo.split(delim);
+                String[] tokens = brokerInfo.split(DLIMITER);
                 for (String str : tokens) {
-                    if (str.contains("//")) {
+                    if (str.contains(SLASH_SEPARATOR)) {
                         brokerList.add(str);
                     }
                 }
             }
         } catch (IOException ex) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    "Unable to find the zookeeper server");
+                    "Unable to find the zookeeper server: " + ex);
         } catch (KeeperException | InterruptedException ex) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    "Unable to retrieve seed brokers from the kafka cluster.");
+                    "Unable to retrieve seed brokers from the kafka cluster: " + ex);
         }
 
         return brokerList;
@@ -633,13 +691,16 @@ public class KafkaFacade {
 
     public Set<String> getTopicList() throws Exception {
 
+        CLIENT_ID = "list_topics";
+
         zkBrokerList = getBrokerList();
 
         for (String seed : zkBrokerList) {
             kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
             try {
-                simpleConsumer = new SimpleConsumer(getBrokerIp(seed).getHostAddress(),
-                        getBrokerPort(seed), 10 * 1000, 20 * 1000, "list_topics");
+                simpleConsumer = new SimpleConsumer(getBrokerIp(seed)
+                        .getHostAddress(),
+                        getBrokerPort(seed), TIMEOUT, BUFFER_SIZE, CLIENT_ID);
 
                 //add ssl certificate to the consumer here
                 List<String> topics = new ArrayList<>();
@@ -653,7 +714,7 @@ public class KafkaFacade {
                 }
 
             } catch (Exception ex) {
-                throw new Exception("Error communicating to broker: " + seed);
+                throw new Exception("Error communicating to broker: " + ex);
             } finally {
                 if (simpleConsumer != null) {
                     simpleConsumer.close();
@@ -664,8 +725,10 @@ public class KafkaFacade {
         return topicList;
     }
 
-    private List<PartitionDetailsDTO> getTopicDetailsfromKafkaCluster(String topicName)
-            throws Exception {
+    private List<PartitionDetailsDTO> getTopicDetailsfromKafkaCluster(
+            String topicName) throws Exception {
+
+        CLIENT_ID = "topic_detail";
 
         zkBrokerList = getBrokerList();
 
@@ -681,7 +744,7 @@ public class KafkaFacade {
         Iterator<String> iter = zkBrokerList.iterator();
         while (iter.hasNext()) {
             String seed = iter.next();
-            if (seed.split(":")[0].equalsIgnoreCase("SSL")) {
+            if (seed.split(COLON_SEPARATOR)[0].equalsIgnoreCase(SECURITY_PROTCOL)) {
                 iter.remove();
             }
         }
@@ -689,8 +752,9 @@ public class KafkaFacade {
         for (String seed : zkBrokerList) {
             kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
             try {
-                simpleConsumer = new SimpleConsumer(getBrokerIp(seed).getHostAddress(),
-                        getBrokerPort(seed), 10 * 1000, 20 * 1000, "topic_detail");
+                simpleConsumer = new SimpleConsumer(getBrokerIp(seed)
+                        .getHostAddress(),
+                        getBrokerPort(seed), TIMEOUT, BUFFER_SIZE, CLIENT_ID);
 
                 //add ssl certificate to the consumer here
                 List<String> topics = new ArrayList<>();
@@ -729,7 +793,6 @@ public class KafkaFacade {
             } finally {
                 if (simpleConsumer != null) {
                     simpleConsumer.close();
-                    break;
                 }
             }
         }
@@ -739,9 +802,9 @@ public class KafkaFacade {
 
     private InetAddress getBrokerIp(String str) {
 
-        String endpoint = str.split("//")[1];
+        String endpoint = str.split(SLASH_SEPARATOR)[1];
 
-        String ip = endpoint.split(":")[0];
+        String ip = endpoint.split(COLON_SEPARATOR)[0];
 
         try {
             return InetAddress.getByName(ip);
@@ -753,9 +816,9 @@ public class KafkaFacade {
 
     private int getBrokerPort(String str) {
 
-        String endpoint = str.split("//")[1];
+        String endpoint = str.split(SLASH_SEPARATOR)[1];
 
-        String ip = endpoint.split(":")[1];
+        String ip = endpoint.split(COLON_SEPARATOR)[1];
         return Integer.parseInt(ip);
 
     }

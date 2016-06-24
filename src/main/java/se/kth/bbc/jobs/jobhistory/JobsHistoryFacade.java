@@ -52,6 +52,14 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
     return em;
   }
 
+  public JobsHistory findByAppId(String appId){
+      TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findByAppId",
+            JobsHistory.class);
+            q.setParameter("appId", appId);
+            
+            return q.getSingleResult();
+  }
+  
   /**
      * Stores an instance in the database.
      * <p/>
@@ -73,25 +81,22 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
       Inode inode = inodeFacade.getInodeAtPath(pathOfInode);
       int inodePid = inode.getInodePK().getParentId();
       String inodeName = inode.getInodePK().getName();
-      int inodeSize = (int) inode.getSize();
       String blocks = checkArguments(configuration.getArgs());
       
-      this.persist(jobDesc.getId(), inodePid, inodeName, executionId, appId, jobDesc.getJobType().toString(),
-              inodeSize, blocks, configuration.getArgs() ,configuration.getMainClass() ,
-              user.getEmail(), jobDesc.getProject().getName(), jobDesc.getName());
+      this.persist(jobDesc.getId(), inodePid, inodeName, executionId, appId, jobDesc,
+              blocks, configuration, user.getEmail());
   }
    
-    public void persist(int jobId, int inodePid, String inodeName, int executionId, String appId, String jobType, int size,
-            String inputBlocksInHdfs, String arguments, String className, String userEmail, String projectName, String jobName){
-        JobsHistoryPK pk = new JobsHistoryPK(jobId, inodePid, inodeName, executionId);
-        JobsHistory exist = em.find(JobsHistory.class, pk);
-        if(exist == null){
-            JobsHistory file = new JobsHistory(jobId, inodePid, inodeName, executionId, appId, jobType, 
-                    size, inputBlocksInHdfs, arguments, className, userEmail,
-                    projectName, jobName);
-            em.persist(file);
-            em.flush();
-        }
+    public void persist(int jobId, int inodePid, String inodeName, int executionId, String appId, JobDescription jobDesc, String inputBlocksInHdfs,
+                        SparkJobConfiguration configuration, String userEmail){
+            JobsHistoryPK pk = new JobsHistoryPK(jobId, inodePid, inodeName, executionId);
+            JobsHistory exist = em.find(JobsHistory.class, pk);
+            if(exist == null){
+                JobsHistory file = new JobsHistory(jobId, inodePid, inodeName, executionId, appId, jobDesc, 
+                            inputBlocksInHdfs, configuration, userEmail);
+                em.persist(file);
+                em.flush();
+            }
     }
    
     /**
@@ -100,17 +105,18 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
      * @param JobId 
      * @param inodeId  
      * @param inodeName 
-     * @param executionId 
-     * @param appId 
-     * @param duration 
+     * @param exec
+     * @param duration
      * @return JobsHistory
      */
     
-    public JobsHistory updateJobHistory(int JobId, int inodeId, String inodeName, int executionId, String appId, long duration){
-        jPK = new JobsHistoryPK(JobId, inodeId, inodeName, executionId);
+    public JobsHistory updateJobHistory(int JobId, int inodeId, String inodeName, Execution exec, long duration){
+        jPK = new JobsHistoryPK(JobId, inodeId, inodeName, exec.getId());
         JobsHistory obj = em.find(JobsHistory.class, jPK);
-        obj.setAppId(appId);
+        obj.setAppId(exec.getAppId());
         obj.setExecutionDuration(duration);
+        obj.setState(exec.getState());
+        obj.setFinalStatus(exec.getFinalStatus());
         em.merge(obj);
         return obj;   
     }
@@ -124,7 +130,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
      */
     
     private String checkArguments(String arguments){
-      String blocks = "";
+      String blocks = "0";
       if(arguments.startsWith("hdfs://")){
           try {
               blocks = fileOperations.getFileBlocks(arguments);
@@ -149,7 +155,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
         String projectName = project.getName();
         String userEmail = project.getOwner().getEmail();
         
-        String blocks = checkArguments(jobDetails.getInputArgs());
+        int blocks = Integer.parseInt(checkArguments(jobDetails.getInputArgs()));
         List<JobsHistory> resultsForAnalysis = searchForVeryHighSimilarity(jobDetails, userEmail, projectName);
         
         if(!resultsForAnalysis.isEmpty()){
@@ -208,6 +214,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
             q.setParameter("projectName", projectName);
             q.setParameter("jobName", jobDetails.getJobName());
             q.setParameter("userEmail", userEmail);
+            q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
             
             return q.getResultList();
         }
@@ -219,6 +226,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
             q.setParameter("inodeName", jobDetails.getSelectedJar());
             q.setParameter("arguments", jobDetails.getInputArgs());
             q.setParameter("inputBlocksInHdfs", checkArguments(jobDetails.getInputArgs()));
+            q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
         
         return q.getResultList();
         }
@@ -238,6 +246,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
             q.setParameter("projectName", projectName);
             q.setParameter("jobName", jobDetails.getJobName());
             q.setParameter("userEmail", userEmail);
+            q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
         
         return q.getResultList();
         }
@@ -249,6 +258,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
             q.setParameter("className", jobDetails.getClassName());
             q.setParameter("inodeName", jobDetails.getSelectedJar());
             q.setParameter("arguments", jobDetails.getInputArgs());
+            q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
         
         return q.getResultList();
         }
@@ -266,6 +276,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
             q.setParameter("projectName", projectName);
             q.setParameter("jobName", jobDetails.getJobName());
             q.setParameter("userEmail", userEmail);
+            q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
         
             return q.getResultList();
         }
@@ -275,6 +286,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
             q.setParameter("jobType", jobDetails.getJobType());
             q.setParameter("className", jobDetails.getClassName());
             q.setParameter("inodeName", jobDetails.getSelectedJar());
+            q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
         
             return q.getResultList();
         }
@@ -291,6 +303,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
             q.setParameter("projectName", projectName);
             q.setParameter("jobName", jobDetails.getJobName());
             q.setParameter("userEmail", userEmail);
+            q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
         
             return q.getResultList();
         }
@@ -299,6 +312,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
                 JobsHistory.class);
             q.setParameter("jobType", jobDetails.getJobType());
             q.setParameter("className", jobDetails.getClassName());
+            q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
         
             return q.getResultList();
         }

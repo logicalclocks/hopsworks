@@ -7,22 +7,26 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class JobHeuristicDetailsDTO implements Serializable{
     
     private String appId;
+    private int amMemory, amVcores;
     
     // The total severity of that job
     private String totalSeverity;
 
-    // MemoryLimitHeuristic
+    // Memory Limit Heuristic
     private String memorySeverity;
-    private String totalDriverMemory, totalExecutorMemory, executorCores, executorMemory, memoryForStorage;
+    private String totalDriverMemory, totalExecutorMemory, memoryForStorage;
+    private int numberOfExecutors, executorMemory;
     
-    // StageRuntimeHeuristic
+    // Stage Runtime Heuristic
     private String stageRuntimeSeverity;
     private String averageStageFailure, problematicStages, completedStages, failedStages;
     
-    // JobRuntimeHeuristic
+    // Job Runtime Heuristic
     private String jobRuntimeSeverity;
     private String averageJobFailure, completedJobsNumber, failedJobsNumber;
     
+    //Executor Load Balance Heuristic
+    private String loadBalanceSeverity;
     
     public JobHeuristicDetailsDTO(){}
     
@@ -111,30 +115,30 @@ public class JobHeuristicDetailsDTO implements Serializable{
     }
 
     /**
-     * @return the executorCores
+     * @return the numberOfExecutors
      */
-    public String getExecutorCores() {
-        return executorCores;
+    public int getNumberOfExecutors() {
+        return numberOfExecutors;
     }
 
     /**
-     * @param executorCores the executorCores to set
+     * @param numberOfExecutors the executorCores to set
      */
-    public void setExecutorCores(String executorCores) {
-        this.executorCores = executorCores;
+    public void setNumberOfExecutors(int numberOfExecutors) {
+        this.numberOfExecutors = numberOfExecutors;
     }
 
     /**
      * @return the executorMemory
      */
-    public String getExecutorMemory() {
+    public int getExecutorMemory() {
         return executorMemory;
     }
 
     /**
      * @param executorMemory the executorMemory to set
      */
-    public void setExecutorMemory(String executorMemory) {
+    public void setExecutorMemory(int executorMemory) {
         this.executorMemory = executorMemory;
     }
 
@@ -277,8 +281,47 @@ public class JobHeuristicDetailsDTO implements Serializable{
     public void setFailedJobsNumber(String failedJobsNumber) {
         this.failedJobsNumber = failedJobsNumber;
     }
-    
-    
-    
+
+    /**
+     * @return the loadBalanceSeverity
+     */
+    public String getLoadBalanceSeverity() {
+        return loadBalanceSeverity;
+    }
+
+    /**
+     * @param loadBalanceSeverity the loadBalanceSeverity to set
+     */
+    public void setLoadBalanceSeverity(String loadBalanceSeverity) {
+        this.loadBalanceSeverity = loadBalanceSeverity;
+    }
+
+    /**
+     * @return the amMemory
+     */
+    public int getAmMemory() {
+        return amMemory;
+    }
+
+    /**
+     * @param amMemory the amMemory to set
+     */
+    public void setAmMemory(int amMemory) {
+        this.amMemory = amMemory;
+    }
+
+    /**
+     * @return the amVcores
+     */
+    public int getAmVcores() {
+        return amVcores;
+    }
+
+    /**
+     * @param amVcores the amVcores to set
+     */
+    public void setAmVcores(int amVcores) {
+        this.amVcores = amVcores;
+    }
     
 }

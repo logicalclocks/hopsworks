@@ -49,7 +49,7 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error fetching job configuration.', ttl: 15000});
               });
             };
-
+           
             self.buttonClickedToggle = function (id, display) {
               self.buttonArray[id] = display;
             };
@@ -245,8 +245,11 @@ angular.module('hopsWorksApp')
             self.showDetails = function (job) {
               ModalService.jobDetails('lg', job, self.projectId);
             };
-            
 
+            self.showUI = function (job) {
+              ModalService.jobUI('xlg', job, self.projectId);
+            };
+            
             self.showLogs = function (jobId) {
               JobService.showLog(self.projectId, jobId).then(
                       function (success) {

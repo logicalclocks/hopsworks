@@ -65,7 +65,7 @@
                   <span class="glyphicon sort-icon" ng-show="sortKey == 'state'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
                 <th ng-click="sort('finalStatus')" style="width: 5%">
-                  Final Status
+                  Status
                   <span class="glyphicon sort-icon" ng-show="sortKey == 'finalStatus'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
                 <th ng-click="sort('progress')" style="width: 10%">
@@ -274,7 +274,14 @@
                                         $event.stopPropagation();"
                                 class="btn btn-danger glyphicon glyphicon-trash">
                         </button>
-                      </span>      
+                      </span>
+                      <span class="field-info" tooltip="Job UI" style="padding-top: 5px;padding-left:3px">
+                        <button style="margin-left: 10px"
+                                ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showUI(job);
+                                        $event.stopPropagation();"
+                                class="btn btn-success glyphicon glyphicon-eye-open">
+                        </button>
+                      </span>
                     </td>
                   </tr>
                 </tbody>

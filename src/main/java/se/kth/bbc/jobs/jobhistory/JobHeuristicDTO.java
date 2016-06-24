@@ -17,8 +17,9 @@ public class JobHeuristicDTO implements Serializable{
     private int numberOfResults;           // number of history records that examined
     private String jobType = "";           // the Job Type
     private String estimatedTime;             // estimated complition time
-    private String inputBlocks = "";
+    private int inputBlocks = 0;
     private List<String> similarAppIds = new ArrayList<String>();
+    private List<JobProposedConfigurationDTO> jobProposedConfig = new ArrayList<JobProposedConfigurationDTO>();
     private List<JobHeuristicDetailsDTO> jobHeuristicDetails = new ArrayList<JobHeuristicDetailsDTO>();
     
     public JobHeuristicDTO(){
@@ -33,7 +34,7 @@ public class JobHeuristicDTO implements Serializable{
         this.jobType = jobType;
     }
     
-    public JobHeuristicDTO(int numberOfResults, String message, String estimatedTime, String degreeOfSimilarity, String inputBlocks){
+    public JobHeuristicDTO(int numberOfResults, String message, String estimatedTime, String degreeOfSimilarity, int inputBlocks){
         this.numberOfResults = numberOfResults;
         this.message = message;  
         this.estimatedTime = estimatedTime;
@@ -114,14 +115,14 @@ public class JobHeuristicDTO implements Serializable{
     /**
      * @return the inputBlocks
      */
-    public String getInputBlocks() {
+    public int getInputBlocks() {
         return inputBlocks;
     }
 
     /**
      * @param inputBlocks the inputBlocks to set
      */
-    public void setInputBlocks(String inputBlocks) {
+    public void setInputBlocks(int inputBlocks) {
         this.inputBlocks = inputBlocks;
     }
 
@@ -130,6 +131,48 @@ public class JobHeuristicDTO implements Serializable{
      */
     public List<String> getSimilarAppIds() {
         return similarAppIds;
+    }
+    
+    /**
+     * @return the projectId
+     */
+    public int getProjectId() {
+        return projectId;
+    }
+
+    /**
+     * @param projectId the projectId to set
+     */
+    public void setProjectId(int projectId) {
+        this.projectId = projectId;
+    }
+
+    /**
+     * @return the jobName
+     */
+    public String getJobName() {
+        return jobName;
+    }
+
+    /**
+     * @param jobName the jobName to set
+     */
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
+    }
+
+    /**
+     * @return the jobProposedConfig
+     */
+    public List<JobProposedConfigurationDTO> getJobProposedConfig() {
+        return jobProposedConfig;
+    }
+
+    /**
+     * @param jobProposedConfig the jobProposedConfig to set
+     */
+    public void setJobProposedConfig(List<JobProposedConfigurationDTO> jobProposedConfig) {
+        this.jobProposedConfig = jobProposedConfig;
     }
 
     /**
@@ -165,36 +208,9 @@ public class JobHeuristicDTO implements Serializable{
     public void addJobHeuristicDetails(JobHeuristicDetailsDTO jhDetail){
         getJobHeuristicDetails().add(jhDetail);
     }
-
-    /**
-     * @return the projectId
-     */
-    public int getProjectId() {
-        return projectId;
-    }
-
-    /**
-     * @param projectId the projectId to set
-     */
-    public void setProjectId(int projectId) {
-        this.projectId = projectId;
-    }
-
-    /**
-     * @return the jobName
-     */
-    public String getJobName() {
-        return jobName;
-    }
-
-    /**
-     * @param jobName the jobName to set
-     */
-    public void setJobName(String jobName) {
-        this.jobName = jobName;
-    }
     
-    
+    public void addProposal(JobProposedConfigurationDTO config){
+        getJobProposedConfig().add(config);
+    }
 
-    
 }

@@ -1,6 +1,6 @@
 {
-  "name": "hopsworksfrontend",
-  "version": "0.0.0",
+  "name": "hopsworks",
+  "version": "0.0.1",
   "dependencies": {},
   "repository": {},
   "devDependencies": {

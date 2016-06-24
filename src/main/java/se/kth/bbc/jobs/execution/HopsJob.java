@@ -165,9 +165,8 @@ public abstract class HopsJob {
     int JobId = execution.getJob().getId();
     int inodePid = execIF.getExecutionsInputfilesPK().getInodePid();
     String inodeName = execIF.getExecutionsInputfilesPK().getName();
-
-    services.getJobsHistoryFacade().updateJobHistory(JobId, inodePid, inodeName, execution.getId(), 
-            execution.getAppId(), executiontime);
+    
+    services.getJobsHistoryFacade().updateJobHistory(JobId, inodePid, inodeName, execution, executiontime);
   }
   /**
    * Execute the job and keep track of its execution time. The execution flow is

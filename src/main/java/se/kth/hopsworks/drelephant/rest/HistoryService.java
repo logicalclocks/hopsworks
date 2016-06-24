@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.security.RolesAllowed;
@@ -30,6 +31,8 @@ import org.json.JSONObject;
 import se.kth.bbc.jobs.jobhistory.JobDetailDTO;
 import se.kth.bbc.jobs.jobhistory.JobHeuristicDTO;
 import se.kth.bbc.jobs.jobhistory.JobHeuristicDetailsDTO;
+import se.kth.bbc.jobs.jobhistory.JobProposedConfigurationDTO;
+import se.kth.bbc.jobs.jobhistory.JobsHistory;
 import se.kth.bbc.jobs.jobhistory.JobsHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.YarnAppHeuristicResultDetailsFacade;
 import se.kth.bbc.jobs.jobhistory.YarnAppHeuristicResultFacade;
@@ -68,6 +71,10 @@ public class HistoryService {
   private static final String AVERAGE_JOB_FAILURE = "Spark average job failure rate";
   private static final String JOBS_COMPLETED = "Spark completed jobs number";
   private static final String JOBS_FAILED_NUMBER = "Spark failed jobs number";
+  
+  private static final String EXECUTOR_LOAD_BALANCE_CLASS = "com.linkedin.drelephant.spark.heuristics.ExecutorLoadHeuristic";
+  
+  private List<JobHeuristicDetailsDTO> resultsForAnalysis = new ArrayList<>();
   
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -136,6 +143,13 @@ public class HistoryService {
         while(jobIt.hasNext()){
             String appId = jobIt.next();
             JsonResponse json = getJobDetailsFromDrElephant(appId);
+            JobsHistory jobsHistory = jobsHistoryFacade.findByAppId(appId);
+            
+            // Check if Dr.Elephant can find the Heuristic details for this application.
+            // If the status is FAILED then continue to the next iteration.
+            if(json.getStatus()=="FAILED"){
+                continue;
+            }
         
             StringBuilder jsonString = (StringBuilder) json.getData();
             JSONObject jsonObj = new JSONObject(jsonString.toString());
@@ -152,13 +166,17 @@ public class HistoryService {
             String totalExMemory = yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdMemory, TOTAL_EXECUTOR_MEMORY);
             String[] splitTotalExMemory = splitExecutorMemory(totalExMemory);
             
+            jhD.setAmMemory(jobsHistory.getAmMemory());
+            jhD.setAmVcores(jobsHistory.getAmVcores());
+            
             jhD.setTotalExecutorMemory(splitTotalExMemory[0]);
-            jhD.setExecutorMemory(splitTotalExMemory[1]);
-            jhD.setExecutorCores(splitTotalExMemory[2]);
+            jhD.setExecutorMemory(convertGBtoMB(splitTotalExMemory[1]));
+            jhD.setNumberOfExecutors(Integer.parseInt(splitTotalExMemory[2]));
             
             jhD.setMemorySeverity(yarnAppHeuristicResultsFacade.searchForSeverity(appId, MEMORY_HEURISTIC_CLASS));
             jhD.setStageRuntimeSeverity(yarnAppHeuristicResultsFacade.searchForSeverity(appId, STAGE_RUNTIME_HEURISTIC_CLASS));
             jhD.setJobRuntimeSeverity(yarnAppHeuristicResultsFacade.searchForSeverity(appId, JOB_RUNTIME_HEURISTIC_CLASS));
+            jhD.setLoadBalanceSeverity(yarnAppHeuristicResultsFacade.searchForSeverity(appId, EXECUTOR_LOAD_BALANCE_CLASS));
             
             jhD.setMemoryForStorage(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdMemory, TOTAL_STORAGE_MEMORY));
             
@@ -174,8 +192,12 @@ public class HistoryService {
             jhD.setProblematicStages(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdStage, PROBLEMATIC_STAGES));
             
             jobsHistoryResult.addJobHeuristicDetails(jhD);
+            resultsForAnalysis.add(jhD);
             
         }
+        
+        defaultAnalysis(jobsHistoryResult);
+        premiumAnalysis(jobsHistoryResult);
         
         GenericEntity<JobHeuristicDTO> jobsHistory = new GenericEntity<JobHeuristicDTO>(jobsHistoryResult){};
         
@@ -187,14 +209,18 @@ public class HistoryService {
     private JsonResponse getJobDetailsFromDrElephant(String jobId){
     
         try {
+                JsonResponse json = new JsonResponse();
 		URL url = new URL(DR_ELEPHANT_ADDRESS + "/rest/job?id=" + jobId );
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");
 		conn.setRequestProperty("Accept", "application/json");
 
 		if (conn.getResponseCode() != 200) {
-			throw new RuntimeException("Failed : HTTP error code : "
-					+ conn.getResponseCode());
+                    json.setStatus("FAILED");
+                    json.setData("Failed : HTTP error code : " + conn.getResponseCode());
+                    json.setSuccessMessage(ResponseMessages.JOB_DETAILS);
+                    conn.disconnect();
+                    return json;
 		}
 
 		BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -202,7 +228,6 @@ public class HistoryService {
 
                 String output;
                 StringBuilder outputBuilder = new StringBuilder();
-                JsonResponse json = new JsonResponse();
 		while ((output = br.readLine()) != null) {
                         outputBuilder.append(output);
 		}
@@ -239,7 +264,84 @@ public class HistoryService {
         
         return memoryDetails;
     }
-  
+    
+    private int convertGBtoMB(String memory){
+        int memoryInMB = 0;
+        String[] splited = memory.split("\\s+");
+        
+        if(splited[1].equals("GB")){
+            memoryInMB = Integer.parseInt(splited[0]) * 1024;
+        }
+        else{
+            memoryInMB = Integer.parseInt(splited[0]);
+        }
+        return memoryInMB;
+    }
+    
+    private void defaultAnalysis(JobHeuristicDTO jobsHistoryResult){
+        int defaultAmMemory = 512;
+        int defaultAmVcores = 1;
+        int defaultNumOfExecutors = 1;
+        int defaultExecutorsMemory = 512;
+        int defaultExecutorCores = 1;
+        
+        Iterator<JobHeuristicDetailsDTO> itr = resultsForAnalysis.iterator();
+        
+        while(itr.hasNext()) {
+         JobHeuristicDetailsDTO element = itr.next();
+         
+         if(element.getTotalSeverity().equals("LOW") && element.getAmMemory()<= defaultAmMemory & element.getAmVcores() <= defaultAmVcores){
+             System.out.println("########### DEFAULT ANALYSIS: ");
+             defaultAmMemory = element.getAmMemory();
+             defaultAmVcores = element.getAmVcores();
+             defaultNumOfExecutors = element.getNumberOfExecutors();
+             defaultExecutorsMemory = element.getExecutorMemory();
+             System.out.println("########### DEFAULT ANALYSIS - AM_MEMORY: " + defaultAmMemory);
+             System.out.println("########### DEFAULT ANALYSIS - AM_CORES: " + defaultAmVcores);
+             System.out.println("########### DEFAULT ANALYSIS - NUM_EXECUTORS: " + defaultNumOfExecutors);
+             System.out.println("########### DEFAULT ANALYSIS - EXEC_MEM: " + defaultExecutorCores);
+         }
+      }
+        JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("default", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
+                                    defaultExecutorCores, defaultExecutorsMemory);
+        jobsHistoryResult.addProposal(proposal);        
+    }
+    
+    private void premiumAnalysis(JobHeuristicDTO jobsHistoryResult){
+        int defaultAmMemory = 512;
+        int defaultAmVcores = 1;
+        int defaultNumOfExecutors = 1;
+        int defaultExecutorsMemory = 512;
+        int defaultExecutorCores = 1;
+        
+        Iterator<JobHeuristicDetailsDTO> itr = resultsForAnalysis.iterator();
+        
+        while(itr.hasNext()) {
+         JobHeuristicDetailsDTO element = itr.next();
+         
+         if(element.getTotalSeverity().equals("LOW") && (element.getAmMemory()> defaultAmMemory || element.getAmVcores() > defaultAmVcores)){
+             System.out.println("########### PREMIUM ANALYSIS: ");
+             defaultAmMemory = element.getAmMemory();
+             defaultAmVcores = element.getAmVcores();
+             defaultExecutorsMemory = element.getExecutorMemory();
+             System.out.println("########### PREMIUM ANALYSIS - AM_MEMORY: " + defaultAmMemory);
+             System.out.println("########### PREMIUM ANALYSIS - AM_CORES: " + defaultAmVcores);
+             System.out.println("########### PREMIUM ANALYSIS - EXEC_MEM: " + defaultExecutorCores);
+         }
+         
+        }
+         
+         int blocks = jobsHistoryResult.getInputBlocks();
+         if(blocks != 0){
+             defaultNumOfExecutors = blocks;
+         }
+         
+         JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("premium", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
+                                    defaultExecutorCores, defaultExecutorsMemory);
+        jobsHistoryResult.addProposal(proposal);
+    }
+ 
 }
+  
     
 
