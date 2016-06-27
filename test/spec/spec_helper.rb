@@ -7,8 +7,6 @@ Dotenv.load
 
 ActiveRecord::Base.establish_connection ({
   :adapter => "jdbcmysql",
-  #:driver => "com.mysql.jdbc.Driver",
-  #:url => "jdbc:mysql://#{ENV['DB_HOST']}:#{ENV['DB_PORT']}/hopsworks",
   :host => ENV['DB_HOST'],
   :port => ENV['DB_PORT'],
   :database => "hopsworks",
