@@ -353,47 +353,16 @@
       </plugin>
       <plugin>
         <groupId>de.saumya.mojo</groupId>
-        <artifactId>rspec-maven-plugin</artifactId>
+        <artifactId>gem-maven-plugin</artifactId>
         <version>1.1.5</version>
-        <configuration>
-          <specSourceDirectory>${basedir}/test/spec</specSourceDirectory>
-          <launchDirectory>${basedir}/test</launchDirectory>
-          <testReportDirectory>${basedir}</testReportDirectory>
-          <reportName>/orders-test-report.html</reportName>
-        </configuration>
-        <extensions>true</extensions>
         <executions>
           <execution>
-            <id>test</id>
-            <phase>test</phase>
             <goals>
-              <goal>test</goal>
+              <goal>initialize</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
-      
-      <!--plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.5.0</version>
-        <executions>
-            <execution>
-                <id>test</id>
-                <configuration>
-                    <executable>rspec</executable>
-                    <workingDirectory>${basedir}/test</workingDirectory>
-                    <arguments>
-                        <argument>spec</argument>
-                    </arguments>
-                </configuration>                    
-                <phase>test</phase>
-                <goals>
-                    <goal>exec</goal>
-                </goals>
-            </execution>
-        </executions>
-    </plugin--> 
     </plugins>
   </build>
 
@@ -457,7 +426,6 @@
             </configuration>
           </plugin>
 
-
         </plugins>
       </build>
     </profile>
@@ -511,8 +479,34 @@
           </plugin>
         </plugins>
       </build>
-  
-
+    </profile>
+    <profile>
+      <id>jruby-tests</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>de.saumya.mojo</groupId>
+            <artifactId>rspec-maven-plugin</artifactId>
+            <version>1.1.5</version>
+            <configuration>
+              <specSourceDirectory>${basedir}/test/spec</specSourceDirectory>
+              <launchDirectory>${basedir}/test</launchDirectory>
+              <testReportDirectory>${basedir}</testReportDirectory>
+              <reportName>/orders-test-report.html</reportName>
+            </configuration>
+            <extensions>true</extensions>
+            <executions>
+              <execution>
+                <id>test</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 
