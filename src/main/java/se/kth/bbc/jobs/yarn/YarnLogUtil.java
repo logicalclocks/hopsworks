@@ -47,12 +47,12 @@ public class YarnLogUtil {
     PrintStream writer = null;
     String[] srcs;
     try {
-      writer = new PrintStream(dfs.create(dst));
       Result result = waitForAggregatedLogFileCreation(src, dfs, fsService);
       srcs = getAggregatedLogFilePaths(src, dfs);
       if (!logFilesReady(srcs, dfs, fsService)) {
         LOGGER.log(Level.SEVERE, "Error getting logs");
       }
+      writer = new PrintStream(dfs.create(dst));
       switch (result) {
         case FAILED:
           writer.print("Failed to get the aggregated logs.");
@@ -137,6 +137,69 @@ public class YarnLogUtil {
         reader.close();
       }
     }
+  }
+
+  private static boolean logsReady(DistributedFileSystemOps dfs, String src) {
+    ArrayList<AggregatedLogFormat.LogKey> containerNames = new ArrayList<>();
+    AggregatedLogFormat.LogReader reader = null;
+    DataInputStream valueStream;
+    AggregatedLogFormat.LogKey key = new AggregatedLogFormat.LogKey();
+    AggregatedLogFormat.ContainerLogsReader logReader = null;
+    try {
+        try {
+          reader = new AggregatedLogFormat.LogReader(dfs.getConf(),
+                  new Path(src));
+          valueStream = reader.next(key);
+          while (valueStream != null) {
+            containerNames.add(key);
+            valueStream = reader.next(key);
+          }
+          reader = new AggregatedLogFormat.LogReader(dfs.getConf(),
+                  new Path(src));
+        } catch (FileNotFoundException e) {
+          return false;
+        } catch (IOException e) {
+          return false;
+        }
+
+        try {
+          for (AggregatedLogFormat.LogKey containerKey : containerNames) {
+            valueStream = reader.next(key);
+            while (valueStream != null && !key.equals(containerKey)) {
+              valueStream = reader.next(key);
+            }
+            if (valueStream != null) {
+              logReader = new ContainerLogsReader(valueStream);
+            }
+            if (logReader != null) {
+              if (!testLogs(logReader, "stdout")) {
+                return false;
+              }
+            }
+          }
+        } catch (IOException e) {
+          LOGGER.log(Level.SEVERE, "Error getting logs");
+        }
+    } finally {
+      if (reader != null) {
+        reader.close();
+      }
+    }
+    return true;
+  }
+
+  private static boolean testLogs(AggregatedLogFormat.ContainerLogsReader logReader,
+          String desiredLogType) throws IOException {
+    boolean foundLog = true;
+    String logType = logReader.nextLog();
+    while (logType != null) {
+      foundLog = true;
+      if (!desiredLogType.equals(logType)) {
+        foundLog = false;
+      }
+      logType = logReader.nextLog();
+    }
+    return foundLog;
   }
 
   //Mostly taken from org.apache.hadoop.yarn.webapp.log.AggregatedLogsBlock
@@ -302,19 +365,22 @@ public class YarnLogUtil {
       if (fileStatus[0].getLen() == 0l) {
         return false;
       }
-      Inode i;
-      try {
-        i = fsService.getInode(path);
-      } catch (EJBException e) {
+      if (!logsReady(dfs, path)) {
         return false;
       }
-
-      if (i == null) {
-        return false;
-      }
-      if (i.getUnderConstruction() == 1) {
-        return false;
-      }
+//      Inode i;
+//      try {
+//        i = fsService.getInode(path);
+//      } catch (EJBException e) {
+//        return false;
+//      }
+//
+//      if (i == null) {
+//        return false;
+//      }
+//      if (i.getUnderConstruction() == 1) {
+//        return false;
+//      }
       ready = true;
     }
     return ready;
