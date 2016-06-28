@@ -175,7 +175,7 @@ public class KafkaService {
     @Path("/details/{topic}")
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-    public Response getDetailsTopic(@PathParam("topic") String topicName,
+    public Response getTopicDetails(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
 
@@ -271,7 +271,7 @@ public class KafkaService {
     @GET
     @Path("/{topic}/sharedwith")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response topicIsSharedTo(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
@@ -367,7 +367,7 @@ public class KafkaService {
     @GET
     @Path("/acls/{topic}")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response getTopicAcls(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
@@ -513,7 +513,7 @@ public class KafkaService {
     @DELETE
     @Path("/removeSchema/{schemaName}/{version}")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
     public Response deleteSchema(@PathParam("schemaName") String schemaName,
             @PathParam("version") Integer version,
             @Context SecurityContext sc,
@@ -532,4 +532,4 @@ public class KafkaService {
                 json).build();
     }
 
-}
+} 
