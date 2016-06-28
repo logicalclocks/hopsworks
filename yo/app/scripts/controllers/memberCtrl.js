@@ -28,7 +28,18 @@ angular.module('hopsWorksApp')
                     function (success) {
                       self.cards = success.data;
                       // remove my own 'card' from the list of members
-                      self.cards.splice(self.cards.indexOf(self.myCard), 1);
+                      for (var i = 0, len = self.cards.length; i < len; i++) {
+                          if (self.cards[i].email === self.myCard.email) {
+                            self.cards.splice(i, 1);
+                            break;
+                          }
+                      }
+                      for (var i = 0, len = self.cards.length; i < len; i++) {
+                          if (self.cards[i].email === "agent@hops.io") {
+                            self.cards.splice(i, 1);
+                            break;
+                          }
+                      }                      
                     }, function (error) {
               self.errorMsg = error.data.msg;
             }

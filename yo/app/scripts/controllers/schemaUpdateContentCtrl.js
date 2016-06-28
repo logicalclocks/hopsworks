@@ -5,19 +5,15 @@ angular.module('hopsWorksApp')
                 var self = this;
                 self.projectId = projectId;
                 self.schemaName = schemaName;
-                self.content;
+                self.contents;
                 self.schemaVersion = schemaVersion;
                 self.content_empty = 1;
-
-
 
                 self.init = function () {
 
                     KafkaService.getSchemaContent(self.projectId, schemaName, self.schemaVersion).then(
                             function (success) {
-//                                self.schemaContents = success.data;
                                 $scope.jsonObj = success.data.contents;
-//                                self.schemaContents = JSON.stringify($scope.jsonObj);
                             }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Could not get schema for topic', ttl: 5000, referenceId: 21});
                     });
@@ -25,21 +21,14 @@ angular.module('hopsWorksApp')
 
                 self.init();
 
-//
-//                $scope.getObjectAsText = function () {
-//                    $scope.schemaContents = JSON.stringify($scope.containerObject);
-//                };
-//
-
                 self.createSchema = function () {
-
-                    if (!self.content) {
-                        self.content_empty = -1;
-                    }
-
+                    
+                    var ugly = document.getElementById('myPrettyJson');
+                    self.contents = ugly.textContent;
+                    
                     var schemaDetail = {};
                     schemaDetail.name = schemaName;
-                    schemaDetail.contents =self.schemaContents;
+                    schemaDetail.contents =self.contents;
                     schemaDetail.version = self.schemaVersion + 1;
 
                     KafkaService.createSchema(self.projectId, schemaDetail).then(
@@ -54,4 +43,3 @@ angular.module('hopsWorksApp')
                     $modalInstance.dismiss('cancel');
                 };
             }]);
-

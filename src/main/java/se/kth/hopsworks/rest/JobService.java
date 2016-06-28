@@ -345,8 +345,7 @@ public class JobService {
         String source = "http://" + uri.getHost() + ":" + uri.getPort();
         HttpClientParams params = new HttpClientParams();
         params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
-                true);
+        params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS, true);
         HttpClient client = new HttpClient(params);
         HostConfiguration config = new HostConfiguration();
         InetAddress localAddress = InetAddress.getLocalHost();
