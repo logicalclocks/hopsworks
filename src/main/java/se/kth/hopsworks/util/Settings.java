@@ -159,7 +159,7 @@ public class Settings {
       CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
       HIWAY_DIR = setDirVar(VARIABLE_HIWAY_DIR, HIWAY_DIR);
       YARN_DEFAULT_QUOTA = setDirVar(VARIABLE_YARN_DEFAULT_QUOTA, YARN_DEFAULT_QUOTA);
-      HDFS_DEFAULT_QUOTA = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA);
+      HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA_MBs);
       MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
       cached = true;
     }
@@ -332,11 +332,11 @@ public class Settings {
     return YARN_DEFAULT_QUOTA;
   }
 
-  private String HDFS_DEFAULT_QUOTA = "200";
+  private String HDFS_DEFAULT_QUOTA_MBs = "200000";
 
-  public synchronized String getHdfsDefaultQuota() {
+  public synchronized long getHdfsDefaultQuotaInMBs() {
     checkCache();
-    return HDFS_DEFAULT_QUOTA;
+    return Long.parseLong(HDFS_DEFAULT_QUOTA_MBs);
   }
 
   private String MAX_NUM_PROJ_PER_USER = "5";
@@ -526,7 +526,7 @@ public class Settings {
 
   public synchronized String getSparkHistoryServerIp() {
     checkCache();
-    return SPARK_HISTORY_SERVER_IP;
+    return SPARK_HISTORY_SERVER_IP + ":18080";
   }  
   
   // Oozie

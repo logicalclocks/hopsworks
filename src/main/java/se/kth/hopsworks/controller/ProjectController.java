@@ -1,4 +1,4 @@
-package se.kth.hopsworks.controller;
+  package se.kth.hopsworks.controller;
 
 import io.hops.bbc.ConsentStatus;
 import java.io.File;
@@ -425,10 +425,7 @@ public class ProjectController {
     //Create first the projectPath
     projectDirCreated = fileOps.mkDir(projectPath); //fails here
 
-    //Set default space quota in GB_IN_BYTES
-    ProjectController.this.setHdfsSpaceQuota(new Path(projectPath), Long.
-            parseLong(settings
-                    .getHdfsDefaultQuota()));
+    ProjectController.this.setHdfsSpaceQuotaInMBs(projectName, settings.getHdfsDefaultQuotaInMBs());
 
     //create the rest of the child folders if any
     if (projectDirCreated && !fullProjectPath.equals(projectPath)) {
@@ -497,12 +494,11 @@ public class ProjectController {
     }
 
     // TODO: DELETE THE KAFKA TOPICS
-    // TODO: DELETE THE CERTS    
-    LocalhostServices.deleteProjectCertificates(settings.getHopsworksDir(),
-            project.getName());
     userCertsFacade.removeAllCertsOfAProject(project.getName());
 
-    logger.log(Level.FINE, "{0} - project removed.", project.getName());
+    LocalhostServices.deleteProjectCertificates(settings.getHopsworksDir(),
+            project.getName());
+    logger.log(Level.INFO, "{0} - project removed.", project.getName());
 
     return success;
   }
@@ -699,11 +695,17 @@ public class ProjectController {
     }
     return "";
   }
-
+  
+  
+  public void setHdfsSpaceQuotaInMBs(String projectname, long diskspaceQuotaInMB)
+          throws IOException {
+    dfs.getDfsOps().setHdfsSpaceQuotaInMBs(new Path(settings.getProjectPath(projectname)), diskspaceQuotaInMB);
+  }
+  
 //  public Long getHdfsSpaceQuotaInBytes(String name) throws AppException {
 //    String path = settings.getProjectPath(name);
 //    try {
-//      long quota = dfs.getDfsOps().getQuota(new Path(path));
+//      long quota = dfs.getDfsOps().getHdfsSpaceQuotaInMbs(new Path(path));
 //      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, quota});
 //      return quota;
 //    } catch (IOException ex) {
@@ -717,6 +719,7 @@ public class ProjectController {
     if (res == null) {
       return new HdfsInodeAttributes(inodeId);
     }
+    
     return res;
   }
 
@@ -724,7 +727,7 @@ public class ProjectController {
 //    String path = settings.getProjectPath(name);
 //
 //    try {
-//      long usedQuota = dfs.getDfsOps().getUsedQuota(new Path(path));
+//      long usedQuota = dfs.getDfsOps().getUsedQuotaInMbs(new Path(path));
 //      logger.log(Level.INFO, "HDFS Quota for {0} is {1}", new Object[]{path, usedQuota});
 //      return usedQuota;
 //    } catch (IOException ex) {
@@ -876,17 +879,6 @@ public class ProjectController {
     return path.substring(startIndex + 1, endIndex);
   }
 
-  private void setHdfsSpaceQuota(Path src, long diskspaceQuotaInBytes)
-          throws IOException {
-    dfs.getDfsOps().setQuota(src, diskspaceQuotaInBytes);
-  }
-
-  public void setHdfsSpaceQuota(String projectname, long diskspaceQuotaInGB)
-          throws IOException {
-    long diskspaceQuotaInBytes = diskspaceQuotaInGB * 1024 * 1024 * 1024;
-    dfs.getDfsOps().setQuota(new Path(settings.getProjectPath(
-            projectname)), diskspaceQuotaInBytes);
-  }
 
   public void addExampleJarToExampleProject(String username, Project project) {
 
