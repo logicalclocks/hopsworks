@@ -52,6 +52,7 @@ import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -88,7 +89,9 @@ public class JobService {
   private YarnApplicationAttemptStateFacade appAttemptStateFacade;
   @EJB
   private ActivityFacade activityFacade;
-
+  @EJB
+  private Settings settings;
+  
   private Project project;
 
   JobService setProject(Project project) {
@@ -182,7 +185,7 @@ public class JobService {
     }
   }
 
-    /**
+  /**
    * Get the Job UI url for the specified job
    * <p/>
    * @param jobId
@@ -233,6 +236,57 @@ public class JobService {
     }
   }
 
+    /**
+   * Get the Yarn UI url for the specified job
+   * <p/>
+   * @param jobId
+   * @param sc
+   * @param req
+   * @return url
+   * @throws AppException
+   */
+  @GET
+  @Path("/{jobId}/yarnui")
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getYarnUI(@PathParam("jobId") int jobId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    JobDescription job = jobFacade.findById(jobId);
+    if (job == null) {
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } else if (!job.getProject().equals(project)) {
+      //In this case, a user is trying to access a job outside its project!!!
+      logger.log(Level.SEVERE,
+              "A user is trying to access a job outside their project!");
+      return Response.status(Response.Status.FORBIDDEN).build();
+    } else {
+      Execution execution = exeFacade.findForJob(job).get(0);
+      Execution updatedExecution = exeFacade.getExecution(execution.getJob().
+              getId());
+      if (updatedExecution != null) {
+        execution = updatedExecution;
+      }
+
+      try {
+        String yarnUrl = "/hopsworks/api/project/" + project.getId() + "/jobs/"
+                + jobId + "/prox/" + settings.getYarnWebUIAddress()
+                + "/cluster/app/"
+                + execution.getAppId();
+
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(yarnUrl).build();
+
+      } catch (Exception e) {
+        logger.log(Level.SEVERE, "exception while geting job ui " + e.
+                getLocalizedMessage(), e);
+      }
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    }
+  }
+  
   private static final HashSet<String> passThroughHeaders = new HashSet<String>(
           Arrays
           .asList("User-Agent", "user-agent", "Accept", "accept",
@@ -279,15 +333,11 @@ public class JobService {
       try {
         logger.log(Level.SEVERE, "get on proxy: " + param);
         String trackingUrl;
-//        if (param.matches("([a-z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
           if (param.matches("http([a-z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
             trackingUrl = param;
           } else {
             trackingUrl = "http://" + param;
           }
-//        }else {
-//          trackingUrl = "http://10.0.2.15:8088/" + param;
-//        }
         trackingUrl = trackingUrl.replace("@hwqm", "?");
         logger.log(Level.SEVERE, "get on proxy: " + trackingUrl);
         org.apache.commons.httpclient.URI uri

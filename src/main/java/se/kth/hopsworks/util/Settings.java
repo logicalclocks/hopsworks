@@ -59,6 +59,8 @@ public class Settings {
   private static final String VARIABLE_DRELEPHANT_IP = "drelephant_ip";
   private static final String VARIABLE_DRELEPHANT_DB = "drelephant_db";
   private static final String VARIABLE_DRELEPHANT_PORT = "drelephant_port";
+  private static final String VARIABLE_YARN_WEB_UI_IP = "yarn_ui_ip";
+  private static final String VARIABLE_YARN_WEB_UI_PORT = "yarn_ui_port";
   
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
   
@@ -159,6 +161,8 @@ public class Settings {
       CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
       HIWAY_DIR = setDirVar(VARIABLE_HIWAY_DIR, HIWAY_DIR);
       YARN_DEFAULT_QUOTA = setDirVar(VARIABLE_YARN_DEFAULT_QUOTA, YARN_DEFAULT_QUOTA);
+      YARN_WEB_UI_IP = setIpVar(VARIABLE_YARN_WEB_UI_IP, YARN_WEB_UI_IP);
+      YARN_WEB_UI_PORT = setIntVar(VARIABLE_YARN_WEB_UI_PORT, YARN_WEB_UI_PORT);
       HDFS_DEFAULT_QUOTA = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA);
       MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
       cached = true;
@@ -330,6 +334,14 @@ public class Settings {
   public synchronized String getYarnDefaultQuota() {
     checkCache();
     return YARN_DEFAULT_QUOTA;
+  }
+
+  private String YARN_WEB_UI_IP = "127.0.0.1";
+  private int YARN_WEB_UI_PORT = 8088;
+
+  public synchronized String getYarnWebUIAddress() {
+    checkCache();
+    return YARN_WEB_UI_IP + ":" + YARN_WEB_UI_PORT;
   }
 
   private String HDFS_DEFAULT_QUOTA = "200";
