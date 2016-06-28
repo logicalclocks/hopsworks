@@ -1,12 +1,19 @@
 package se.kth.bbc.jobs.spark;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import se.kth.bbc.jobs.jobhistory.JobType;
@@ -153,16 +160,41 @@ public class SparkYarnRunnerBuilder {
     //Add local resources to spark environment too
     builder.addCommand(new SparkSetEnvironmentCommand());
 
-   
+    InputStream is = null;
+
+    try {
+        is = new FileInputStream("/srv/spark/conf/spark-defaults.conf");
+    } catch (FileNotFoundException e) {}
+    
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
     
-    // Spark Configuration File. Needed for the Spark History Server
-    amargs.append(" --properties-file");
-    amargs.append(" /srv/spark/conf/spark-defaults.conf");
+    Properties sparkProperties = new Properties();
+    sparkProperties.load(is);
     
-
+    sparkProperties.setProperty("spark.driver.memory", Integer.toString(driverMemory)+"m");
+    sparkProperties.setProperty("spark.driver.cores", Integer.toString(driverCores));
+    sparkProperties.setProperty("spark.executor.memory", executorMemory);
+    sparkProperties.setProperty("spark.executor.cores", Integer.toString(executorCores));
+    sparkProperties.setProperty("spark.executor.instances", Integer.toString(numberOfExecutors));
+    
+    Date date= new Date();
+    Timestamp tm = new Timestamp(date.getTime());
+    long timeString = tm.getTime();
+    String sparkConfTempFile = "/tmp/spark-conf-dir/spark_" + timeString + ".conf"; 
+    
+    File file = new File(sparkConfTempFile);
+    FileOutputStream fop = new FileOutputStream(file);
+    
+    sparkProperties.store(fop, "Store Spark Properties file.");    
+    
+    is.close();
+    fop.close();
+    
+    amargs.append(" --properties-file ");
+    amargs.append(sparkConfTempFile);
+    
     // spark 1.5.x replaced --num-executors with --properties-file
     // https://fossies.org/diffs/spark/1.4.1_vs_1.5.0/
     // amargs.append(" --num-executors ").append(numberOfExecutors);
@@ -181,6 +213,7 @@ public class SparkYarnRunnerBuilder {
 
     //Set app name
     builder.appName(jobName);
+    builder.setSparkConfDir(sparkConfTempFile);
 
     return builder.build(hadoopDir, sparkDir, nameNodeIpPort, JobType.SPARK);
   }

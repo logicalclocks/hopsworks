@@ -12,11 +12,13 @@ public class JobProposedConfigurationDTO implements Serializable{
     private int numOfExecutors;
     private int executorCores;
     private int executorMemory;
+    private String estimatedExecutionTime = "";
         
     
     public JobProposedConfigurationDTO(){}
     
-    public JobProposedConfigurationDTO(String configType, int amMemory, int amVcores, int numOfExecutors, int executorCores, int executorMemory){
+    public JobProposedConfigurationDTO(String configType, int amMemory, int amVcores, int numOfExecutors, 
+                                       int executorCores, int executorMemory){
         this.configType = configType;
         this.amMemory = amMemory;
         this.amVcores = amVcores;
@@ -107,6 +109,20 @@ public class JobProposedConfigurationDTO implements Serializable{
      */
     public void setExecutorMemory(int executorMemory) {
         this.executorMemory = executorMemory;
+    }
+
+    /**
+     * @return the estimatedExecutionTime
+     */
+    public String getEstimatedExecutionTime() {
+        return estimatedExecutionTime;
+    }
+
+    /**
+     * @param estimatedExecutionTime the estimatedExecutionTime to set
+     */
+    public void setEstimatedExecutionTime(String estimatedExecutionTime) {
+        this.estimatedExecutionTime = estimatedExecutionTime;
     }
     
     

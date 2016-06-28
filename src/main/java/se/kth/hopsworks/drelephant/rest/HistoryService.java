@@ -9,6 +9,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -168,6 +169,7 @@ public class HistoryService {
             
             jhD.setAmMemory(jobsHistory.getAmMemory());
             jhD.setAmVcores(jobsHistory.getAmVcores());
+            jhD.setExecutionTime(jobsHistory.getExecutionDuration());
             
             jhD.setTotalExecutorMemory(splitTotalExMemory[0]);
             jhD.setExecutorMemory(convertGBtoMB(splitTotalExMemory[1]));
@@ -266,7 +268,7 @@ public class HistoryService {
     }
     
     private int convertGBtoMB(String memory){
-        int memoryInMB = 0;
+        int memoryInMB;
         String[] splited = memory.split("\\s+");
         
         if(splited[1].equals("GB")){
@@ -284,26 +286,33 @@ public class HistoryService {
         int defaultNumOfExecutors = 1;
         int defaultExecutorsMemory = 512;
         int defaultExecutorCores = 1;
+        long executionDuration = 0;
         
         Iterator<JobHeuristicDetailsDTO> itr = resultsForAnalysis.iterator();
         
         while(itr.hasNext()) {
-         JobHeuristicDetailsDTO element = itr.next();
+         JobHeuristicDetailsDTO obj = itr.next();
          
-         if(element.getTotalSeverity().equals("LOW") && element.getAmMemory()<= defaultAmMemory & element.getAmVcores() <= defaultAmVcores){
-             System.out.println("########### DEFAULT ANALYSIS: ");
-             defaultAmMemory = element.getAmMemory();
-             defaultAmVcores = element.getAmVcores();
-             defaultNumOfExecutors = element.getNumberOfExecutors();
-             defaultExecutorsMemory = element.getExecutorMemory();
-             System.out.println("########### DEFAULT ANALYSIS - AM_MEMORY: " + defaultAmMemory);
-             System.out.println("########### DEFAULT ANALYSIS - AM_CORES: " + defaultAmVcores);
-             System.out.println("########### DEFAULT ANALYSIS - NUM_EXECUTORS: " + defaultNumOfExecutors);
-             System.out.println("########### DEFAULT ANALYSIS - EXEC_MEM: " + defaultExecutorCores);
+         if(obj.getTotalSeverity().equals("LOW") && obj.getAmMemory()<= defaultAmMemory && obj.getAmVcores() <= defaultAmVcores &&
+            obj.getNumberOfExecutors()<= defaultNumOfExecutors && obj.getExecutorMemory()<= defaultExecutorsMemory)
+         {
+             defaultAmMemory = obj.getAmMemory();
+             defaultAmVcores = obj.getAmVcores();
+             defaultNumOfExecutors = obj.getNumberOfExecutors();
+             defaultExecutorsMemory = obj.getExecutorMemory();
+             executionDuration = obj.getExecutionTime();
          }
       }
-        JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("default", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
+        JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Default", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
                                     defaultExecutorCores, defaultExecutorsMemory);
+        
+        if (executionDuration == 0){
+            proposal.setEstimatedExecutionTime(jobsHistoryResult.getEstimatedTime());
+        }
+        else{
+            proposal.setEstimatedExecutionTime(convertMsToTime(executionDuration));
+        }
+        
         jobsHistoryResult.addProposal(proposal);        
     }
     
@@ -313,32 +322,47 @@ public class HistoryService {
         int defaultNumOfExecutors = 1;
         int defaultExecutorsMemory = 512;
         int defaultExecutorCores = 1;
+        long executionDuration = 0;
         
         Iterator<JobHeuristicDetailsDTO> itr = resultsForAnalysis.iterator();
         
         while(itr.hasNext()) {
-         JobHeuristicDetailsDTO element = itr.next();
+         JobHeuristicDetailsDTO obj = itr.next();
          
-         if(element.getTotalSeverity().equals("LOW") && (element.getAmMemory()> defaultAmMemory || element.getAmVcores() > defaultAmVcores)){
-             System.out.println("########### PREMIUM ANALYSIS: ");
-             defaultAmMemory = element.getAmMemory();
-             defaultAmVcores = element.getAmVcores();
-             defaultExecutorsMemory = element.getExecutorMemory();
-             System.out.println("########### PREMIUM ANALYSIS - AM_MEMORY: " + defaultAmMemory);
-             System.out.println("########### PREMIUM ANALYSIS - AM_CORES: " + defaultAmVcores);
-             System.out.println("########### PREMIUM ANALYSIS - EXEC_MEM: " + defaultExecutorCores);
+         if(obj.getTotalSeverity().equals("LOW") && ((obj.getAmMemory()*obj.getAmVcores() > defaultAmMemory*defaultAmVcores)
+                 || (obj.getExecutorMemory()*obj.getNumberOfExecutors()>defaultExecutorsMemory*defaultNumOfExecutors))){
+             defaultAmMemory = obj.getAmMemory();
+             defaultAmVcores = obj.getAmVcores();
+             defaultExecutorsMemory = obj.getExecutorMemory();
+             executionDuration = obj.getExecutionTime();
          }
-         
         }
          
          int blocks = jobsHistoryResult.getInputBlocks();
+
          if(blocks != 0){
              defaultNumOfExecutors = blocks;
          }
          
-         JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("premium", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
+        JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Premium", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
                                     defaultExecutorCores, defaultExecutorsMemory);
+        if (executionDuration == 0){
+            proposal.setEstimatedExecutionTime(jobsHistoryResult.getEstimatedTime());
+        }
+        else{
+            proposal.setEstimatedExecutionTime(convertMsToTime(executionDuration));
+        }
+        
         jobsHistoryResult.addProposal(proposal);
+    }
+    
+        private String convertMsToTime(long timeMs){
+        
+        String hms = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(timeMs),
+            TimeUnit.MILLISECONDS.toMinutes(timeMs) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(timeMs)),
+            TimeUnit.MILLISECONDS.toSeconds(timeMs) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeMs)));
+    
+        return hms;
     }
  
 }

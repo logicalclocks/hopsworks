@@ -101,6 +101,7 @@ public class YarnRunner {
   private String hadoopDir;
   private String sparkDir;
   private String nameNodeIpPort;
+  private String sparkConfDir;
 
   private boolean readyToSubmit = false;
   private ApplicationSubmissionContext appContext;
@@ -655,6 +656,8 @@ public class YarnRunner {
     private Configuration conf;
     //YarnClient
     private YarnClient yarnClient;
+    //Spark Conf File
+    private String sparkConfDir;
 
     private String hadoopDir;
     private String sparkDir;
@@ -819,6 +822,23 @@ public class YarnRunner {
     public Builder stdErrPath(String path) {
       this.stdErrPath = path;
       return this;
+    }
+    
+    public Builder setSparkConfDir(String pathFile){
+        this.sparkConfDir = pathFile;
+        return this;
+    }
+    
+    public String getSparkConfDir(){
+        return sparkConfDir;
+    }
+    
+    public void removeSparkConfFile(String path) {
+        try {
+            Files.deleteIfExists(Paths.get(path));
+        } catch (IOException ex) {
+            Logger.getLogger(YarnRunner.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public Builder logPathsRelativeToResourcesPath(boolean value) {

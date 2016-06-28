@@ -8,6 +8,7 @@ public class JobHeuristicDetailsDTO implements Serializable{
     
     private String appId;
     private int amMemory, amVcores;
+    private long executionTime;
     
     // The total severity of that job
     private String totalSeverity;
@@ -323,5 +324,21 @@ public class JobHeuristicDetailsDTO implements Serializable{
     public void setAmVcores(int amVcores) {
         this.amVcores = amVcores;
     }
+
+    /**
+     * @return the executionTime
+     */
+    public long getExecutionTime() {
+        return executionTime;
+    }
+
+    /**
+     * @param executionTime the executionTime to set
+     */
+    public void setExecutionTime(long executionTime) {
+        this.executionTime = executionTime;
+    }
+    
+    
     
 }

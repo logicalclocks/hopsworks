@@ -141,6 +141,8 @@ public abstract class HopsJob {
    * @param appId
    * @param inputFiles
    * @param outputFiles
+   * @param finalStatus
+   * @param progress
    */
   protected final void updateExecution(JobState state,
           long executionDuration, String stdoutPath,

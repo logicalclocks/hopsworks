@@ -572,6 +572,7 @@ angular.module('hopsWorksApp')
                  * @returns {undefined}
                  */
                 this.autoConfig = function (filterValue) {
+                    self.autoConfigResult = {};
                     var jobDetails ={};
                     jobDetails.className = self.runConfig.mainClass;
                     jobDetails.selectedJar = self.sparkState.selectedJar;
@@ -590,6 +591,40 @@ angular.module('hopsWorksApp')
                         console.log(self.autoConfigResult);
                     });
                 }
+                };
+                
+                /**
+                 * Checks the value of the proposed configuration.
+                 * The function is used to initialized the checked radio button
+                 * @param {type} value
+                 * @returns {Boolean}
+                 */
+                $scope.checkRadio = function(value){
+                    if(value === "Default"){
+                        return true;
+                    }
+                    else
+                        return false;
+                };
+                
+                /**
+                 * When the user changes configutaion (using the radio button) the 
+                 * runConfig values change.
+                 * @param {type} value
+                 * @returns {undefined}
+                 */
+                $scope.selectConfig = function(value) {
+                    for(var i=0; i < self.autoConfigResult.jobProposedConfig.length; i++){
+                        var obj = self.autoConfigResult.jobProposedConfig[i];
+                        if(obj.configType === value){
+                            self.runConfig.amMemory = obj.amMemory;
+                            self.runConfig.amVCores = obj.amVcores;
+                            self.runConfig.amQueue = "default";
+                            self.runConfig.numberOfExecutors = obj.numOfExecutors;
+                            self.runConfig.executorCores = obj.executorCores; 
+                            self.runConfig.executorMemory = obj.executorMemory;
+                        }
+                    }
                 };
 
             }]);
