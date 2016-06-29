@@ -214,62 +214,6 @@
         </exclusion>
       </exclusions>
     </dependency> 
-    <dependency>
-      <groupId>rubygems</groupId>
-      <artifactId>rspec</artifactId>
-      <version>3.3.0</version>
-      <type>gem</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>rubygems</groupId>
-      <artifactId>airborne</artifactId>
-      <version>0.2.5</version>
-      <type>gem</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>rubygems</groupId>
-      <artifactId>activerecord-jdbcmysql-adapter</artifactId>
-      <version>1.3.20</version>
-      <type>gem</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>rubygems</groupId>
-      <artifactId>jdbc-mysql</artifactId>
-      <version>5.1.37</version>
-      <type>gem</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>rubygems</groupId>
-      <artifactId>net-ssh</artifactId>
-      <version>2.1.0</version>
-      <type>gem</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>rubygems</groupId>
-      <artifactId>session</artifactId>
-      <version>3.2.0</version>
-      <type>gem</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>rubygems</groupId>
-      <artifactId>dotenv</artifactId>
-      <version>2.1.1</version>
-      <type>gem</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>rubygems</groupId>
-      <artifactId>net-ssh-shell</artifactId>
-      <version>0.2.0</version>
-      <type>gem</type>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
   <build>
     <finalName>hopsworks</finalName>
@@ -348,18 +292,6 @@
                 </artifactItem>
               </artifactItems>
             </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>de.saumya.mojo</groupId>
-        <artifactId>gem-maven-plugin</artifactId>
-        <version>1.1.5</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>initialize</goal>
-            </goals>
           </execution>
         </executions>
       </plugin>
@@ -482,8 +414,133 @@
     </profile>
     <profile>
       <id>jruby-tests</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation> 
+      <dependencies>  
+        <dependency>
+          <groupId>rubygems</groupId>
+          <artifactId>rspec-core</artifactId>
+          <version>3.3.0</version>
+          <type>gem</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>rubygems</groupId>
+          <artifactId>airborne</artifactId>
+          <version>0.2.5</version>
+          <type>gem</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>rubygems</groupId>
+          <artifactId>activerecord-jdbcmysql-adapter</artifactId>
+          <version>1.3.20</version>
+          <type>gem</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>rubygems</groupId>
+          <artifactId>jdbc-mysql</artifactId>
+          <version>5.1.37</version>
+          <type>gem</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>rubygems</groupId>
+          <artifactId>net-ssh</artifactId>
+          <version>2.1.0</version>
+          <type>gem</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>rubygems</groupId>
+          <artifactId>session</artifactId>
+          <version>3.2.0</version>
+          <type>gem</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>rubygems</groupId>
+          <artifactId>dotenv</artifactId>
+          <version>2.1.1</version>
+          <type>gem</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>rubygems</groupId>
+          <artifactId>net-ssh-shell</artifactId>
+          <version>0.2.0</version>
+          <type>gem</type>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
       <build>
         <plugins>
+          <plugin>
+            <groupId>org.codehaus.cargo</groupId>
+            <artifactId>cargo-maven2-plugin</artifactId>
+            <version>1.5.0</version>
+            <executions>
+              <execution>
+                <phase>pre-integration-test</phase>
+                <goals>
+                  <goal>redeploy</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <container>
+                <containerId>glassfish4x</containerId>
+                <type>remote</type>
+                <log>target/cargo.log</log>
+                <logLevel>debug</logLevel>
+              </container>
+              <configuration>
+                <type>runtime</type>
+                <properties>
+                  <cargo.hostname>${glassfish.hostname}</cargo.hostname>
+                  <cargo.remote.username>${glassfish.admin}</cargo.remote.username>
+                  <cargo.remote.password>${glassfish.passwd}</cargo.remote.password>
+                  <cargo.servlet.port>${glassfish.port}</cargo.servlet.port>                           
+                  <cargo.glassfish.domain.name>${glassfish.domain}</cargo.glassfish.domain.name>
+                  <cargo.glassfish.admin.port>${glassfish.admin_port}</cargo.glassfish.admin.port>
+                  <cargo.runtime.args>force=true</cargo.runtime.args>
+                  <cargo.protocol>http</cargo.protocol>
+                </properties>
+              </configuration>
+              <deployables>
+                <deployable>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>${project.artifactId}</artifactId>
+                  <type>war</type>
+                  <location>${basedir}/target/hopsworks.war</location>
+                  <properties>
+                    <context>/hopsworks</context>
+                  </properties>
+                </deployable>
+              </deployables>
+            </configuration>
+            <dependencies>
+              <dependency>
+                <groupId>org.glassfish.main.deployment</groupId>
+                <artifactId>deployment-client</artifactId>
+                <version>4.1.1</version>
+              </dependency>            
+            </dependencies>
+          </plugin>
+          <plugin>
+            <groupId>de.saumya.mojo</groupId>
+            <artifactId>gem-maven-plugin</artifactId>
+            <version>1.1.5</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>initialize</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
           <plugin>
             <groupId>de.saumya.mojo</groupId>
             <artifactId>rspec-maven-plugin</artifactId>
@@ -498,7 +555,7 @@
             <executions>
               <execution>
                 <id>test</id>
-                <phase>test</phase>
+                <phase>integration-test</phase>
                 <goals>
                   <goal>test</goal>
                 </goals>
@@ -542,11 +599,11 @@
       <releases>
       </releases>
     </repository>
-    <repository>  
+    <!--repository>  
       <id>maven2-repository.dev.java.net</id>
       <name>Java.net Repository for Maven</name>
       <url>http://download.java.net/maven/2</url>
-    </repository>
+    </repository-->
     <repository>
       <id>glassfish</id>
       <url>http://download.java.net/maven/glassfish</url>
