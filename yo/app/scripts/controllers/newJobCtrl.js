@@ -60,7 +60,17 @@ angular.module('hopsWorksApp')
 //                }				
             };
             self.sliderValue = self.sliderOptions.from +";"+ self.sliderOptions.to;
-
+            this.setInitExecs = function() {
+              if(self.sliderValue.split(";")[0] >
+                      self.runConfig.numberOfExecutorsInit){
+                self.runConfig.numberOfExecutorsInit = 
+                        parseInt(self.sliderValue.split(";")[0]);
+              } else if(self.sliderValue.split(";")[1] <
+                      self.runConfig.numberOfExecutorsInit){
+                self.runConfig.numberOfExecutorsInit = 
+                        parseInt(self.sliderValue.split(";")[1]);
+              }
+            };
             
             this.sparkState = {//Will hold spark-specific state
               "selectedJar": null //The path to the selected jar
