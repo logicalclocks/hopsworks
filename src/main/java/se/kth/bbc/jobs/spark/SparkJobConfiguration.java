@@ -276,10 +276,14 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
           IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
-    String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs, hs, jsonDynexecs,
-            jsonNumexecsMin, jsonNumexecsMax, jsonNumexecsMinSelected,
-            jsonNumexecsMaxSelected, jsonNumexecsInit, jsonExecmem,
+    String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs, hs, jsonExecmem,
             jsonExeccors;
+    String jsonNumexecsMin = "";
+    String jsonNumexecsMax = "";
+    String jsonNumexecsMinSelected = "";
+    String jsonNumexecsMaxSelected = "";
+    String jsonNumexecsInit = "";
+    String jsonDynexecs = "NOT_AVAILABLE";
 
     try {
       String jsonType = json.getString(KEY_TYPE);
@@ -295,12 +299,15 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       jsonExeccors = json.getString(KEY_EXECCORES);
       jsonExecmem = json.getString(KEY_EXECMEM);
       jsonNumexecs = json.getString(KEY_NUMEXECS);
-      jsonNumexecsMin = json.getString(KEY_DYNEXECS_MIN);
-      jsonNumexecsMax = json.getString(KEY_DYNEXECS_MAX);
-      jsonNumexecsMinSelected = json.getString(KEY_DYNEXECS_MIN_SELECTED);
-      jsonNumexecsMaxSelected = json.getString(KEY_DYNEXECS_MAX_SELECTED);
-      jsonNumexecsInit = json.getString(KEY_DYNEXECS_INIT);
-      jsonDynexecs = json.getString(KEY_DYNEXECS);
+      if (json.containsKey(KEY_DYNEXECS)) {
+        jsonDynexecs = json.getString(KEY_DYNEXECS);
+        jsonNumexecsMin = json.getString(KEY_DYNEXECS_MIN);
+        jsonNumexecsMax = json.getString(KEY_DYNEXECS_MAX);
+        jsonNumexecsMinSelected = json.getString(KEY_DYNEXECS_MIN_SELECTED);
+        jsonNumexecsMaxSelected = json.getString(KEY_DYNEXECS_MAX_SELECTED);
+        jsonNumexecsInit = json.getString(KEY_DYNEXECS_INIT);
+      }
+
       hs = json.getString(KEY_HISTORYSERVER);
     } catch (Exception e) {
       throw new IllegalArgumentException(
@@ -316,14 +323,16 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.jarPath = jsonJarpath;
     this.mainClass = jsonMainclass;
     this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
-    this.minExecutors = Integer.parseInt(jsonNumexecsMin);
-    this.maxExecutors = Integer.parseInt(jsonNumexecsMax);
-    this.selectedMinExecutors = Integer.parseInt(jsonNumexecsMinSelected);
-    this.selectedMaxExecutors = Integer.parseInt(jsonNumexecsMaxSelected);
-    
-    this.numberOfExecutorsInit = Integer.parseInt(jsonNumexecsInit);
+    if (jsonDynexecs.equals("true") || jsonDynexecs.equals("false")) {
+      this.dynamicExecutors = Boolean.parseBoolean(jsonDynexecs);
+      this.minExecutors = Integer.parseInt(jsonNumexecsMin);
+      this.maxExecutors = Integer.parseInt(jsonNumexecsMax);
+      this.selectedMinExecutors = Integer.parseInt(jsonNumexecsMinSelected);
+      this.selectedMaxExecutors = Integer.parseInt(jsonNumexecsMaxSelected);
+      this.numberOfExecutorsInit = Integer.parseInt(jsonNumexecsInit);
+    }
     this.historyServerIp = hs;
-    this.dynamicExecutors = Boolean.parseBoolean(jsonDynexecs);
+
   }
 
 }
