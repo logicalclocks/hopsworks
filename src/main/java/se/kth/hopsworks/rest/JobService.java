@@ -545,10 +545,10 @@ public class JobService {
           if (e.getStderrPath() != null && !e.getStderrPath().isEmpty() && fops.
                   exists(hdfsErrPath)) {
             if (dfs.getDfsOps().listStatus(new org.apache.hadoop.fs.Path(
-                    hdfsLogPath))[0].getLen() > 5000000l) {
+                    hdfsErrPath))[0].getLen() > 5000000l) {
               arrayObjectBuilder.add("log",
                       "Log is too big to display. Please retrieve it from " + e.
-                      getStdoutPath() + " by going to your Datasets!");
+                      getStderrPath() + " by going to your Datasets!");
             } else {
               message = IOUtils.toString(fops.getInputStream(hdfsErrPath),
                       "UTF-8");
