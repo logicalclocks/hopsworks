@@ -546,7 +546,7 @@ public class JobService {
                   exists(hdfsErrPath)) {
             if (dfs.getDfsOps().listStatus(new org.apache.hadoop.fs.Path(
                     hdfsErrPath))[0].getLen() > 5000000l) {
-              arrayObjectBuilder.add("log",
+              arrayObjectBuilder.add("err",
                       "Log is too big to display. Please retrieve it from " + e.
                       getStderrPath() + " by going to your Datasets!");
             } else {
