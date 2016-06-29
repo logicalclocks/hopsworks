@@ -161,7 +161,7 @@
               </div>
                <div class="row" ng-show="newJobCtrl.jobtype === 1 && newJobCtrl.runConfig.dynamicExecutors">
                 <div class="text-right col-md-4">Min/Max Number of Executors <i class="fa fa-info-circle" tooltip="The minimum number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
-                <div class="col-md-8 col-lg-8"> 
+                <div class="col-md-8 col-lg-8 cust"> 
                   <input ng-model="newJobCtrl.sliderValue" ng-change="newJobCtrl.setInitExecs()" type="text" id="executorsSlider" slider options="newJobCtrl.sliderOptions" ng-disabled="disabled" />
                </div>
               </div>
