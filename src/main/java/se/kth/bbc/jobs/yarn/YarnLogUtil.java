@@ -178,7 +178,7 @@ public class YarnLogUtil {
             }
           }
         } catch (IOException e) {
-          LOGGER.log(Level.SEVERE, "Error getting logs");
+          LOGGER.log(Level.SEVERE, "Error testing logs");
         }
     } finally {
       if (reader != null) {
