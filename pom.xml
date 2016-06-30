@@ -22,6 +22,7 @@
     <glassfish.port>8080</glassfish.port>
     <glassfish.admin_port>4848</glassfish.admin_port>
     <glassfish.domain>domain1</glassfish.domain>
+    <glassfish.home>/home/ermiasg/glassfish-4.1.1</glassfish.home>
   </properties>
 
   <dependencies>
@@ -167,8 +168,7 @@
       <artifactId>shiro-web</artifactId>
       <version>1.2.3</version>
     </dependency>
-    <!--End of Zeppelin dependencies -->
-    <!--Elastic dependency-->
+    
     <dependency>
       <groupId>org.quartz-scheduler</groupId>
       <artifactId>quartz</artifactId>
@@ -483,9 +483,17 @@
             <version>1.5.0</version>
             <executions>
               <execution>
+                <id>deploy-war</id>
                 <phase>pre-integration-test</phase>
                 <goals>
                   <goal>redeploy</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>undeploy-war</id>
+                <phase>post-integration-test</phase>
+                <goals>
+                  <goal>undeploy</goal>
                 </goals>
               </execution>
             </executions>
@@ -502,7 +510,7 @@
                   <cargo.hostname>${glassfish.hostname}</cargo.hostname>
                   <cargo.remote.username>${glassfish.admin}</cargo.remote.username>
                   <cargo.remote.password>${glassfish.passwd}</cargo.remote.password>
-                  <cargo.servlet.port>${glassfish.port}</cargo.servlet.port>                           
+                  <cargo.servlet.port>${glassfish.port}</cargo.servlet.port> 
                   <cargo.glassfish.domain.name>${glassfish.domain}</cargo.glassfish.domain.name>
                   <cargo.glassfish.admin.port>${glassfish.admin_port}</cargo.glassfish.admin.port>
                   <cargo.runtime.args>force=true</cargo.runtime.args>
@@ -603,11 +611,11 @@
       <id>maven2-repository.dev.java.net</id>
       <name>Java.net Repository for Maven</name>
       <url>http://download.java.net/maven/2</url>
-    </repository-->
+    </repository>
     <repository>
       <id>glassfish</id>
       <url>http://download.java.net/maven/glassfish</url>
-    </repository>
+    </repository-->
     <repository>
       <id>ossrh</id>
       <url>https://oss.sonatype.org/content/groups/public</url>
@@ -617,11 +625,11 @@
       <url>http://rubygems-proxy.torquebox.org/releases</url>
     </repository>
   </repositories>
-  <pluginRepositories>
+  <!--pluginRepositories>
     <pluginRepository>
       <id>glassfish</id>
       <url>http://download.java.net/maven/glassfish</url>
     </pluginRepository>
-  </pluginRepositories>    
+  </pluginRepositories-->    
 
 </project>
