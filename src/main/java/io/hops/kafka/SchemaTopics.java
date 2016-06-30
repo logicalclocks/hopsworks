@@ -40,7 +40,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "SchemaTopics.findByCreatedOn", query = "SELECT s FROM SchemaTopics s WHERE s.createdOn = :createdOn")})
 public class SchemaTopics implements Serializable {
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "schemaTopics")
+    @OneToMany(cascade = CascadeType.PERSIST, mappedBy = "schemaTopics")
     private Collection<ProjectTopics> projectTopicsCollection;
 
     private static final long serialVersionUID = 1L;

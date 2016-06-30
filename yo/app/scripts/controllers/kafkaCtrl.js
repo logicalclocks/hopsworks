@@ -128,7 +128,7 @@ angular.module('hopsWorksApp')
                               }
                           }
                         }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error  dfjdsfjldfj', ttl: 5000});
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                });
             };
             

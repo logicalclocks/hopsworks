@@ -39,7 +39,7 @@ import se.kth.hopsworks.user.model.Users;
 @Stateless
 public class KafkaFacade {
 
-    private final static Logger logger = Logger.getLogger(KafkaFacade.class.
+    private final static Logger LOGGER = Logger.getLogger(KafkaFacade.class.
             getName());
 
     @PersistenceContext(unitName = "kthfsPU")
@@ -58,15 +58,19 @@ public class KafkaFacade {
 
     public static final String DLIMITER = "[\"]";
 
-    String CLIENT_ID = "list_topics";
+    public String CLIENT_ID = "list_topics";
 
-    final int TIMEOUT = 10 * 1000;// 10 seconds
+    public final int connectionTimeout = 30 * 1000;// 30 seconds
 
-    final int BUFFER_SIZE = 20 * 1000;
+    public final int BUFFER_SIZE = 20 * 1000;
 
-    private Set<String> zkBrokerList;
+    public Set<String> zkBrokerList;
 
-    private Set<String> topicList;
+    public Set<String> topicList;
+
+    public int sessionTimeoutMs = 30 * 1000;//30 seconds
+
+    public static ZooKeeper zk;
 
     protected EntityManager getEntityManager() {
         return em;
@@ -193,15 +197,15 @@ public class KafkaFacade {
 
         //check if the replication factor is not greater that than the 
         //number of running borkers
-        Set<String> brokers = getBrokerList();
-        if (brokers.size() < topicDto.getNumOfReplicas()) {
+        Set<String> brokerEndpoints = getBrokerEndpoints();
+        if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    "Topic replication factor can be maximum of" + brokers.size());
+                    "Topic replication factor can be maximum of" + brokerEndpoints.size());
         }
 
         // create the topic in kafka 
         ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).getHostName(),
-                10 * 1000, 29 * 1000, ZKStringSerializer$.MODULE$);
+                sessionTimeoutMs, connectionTimeout, ZKStringSerializer$.MODULE$);
         ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
         ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
 
@@ -251,8 +255,8 @@ public class KafkaFacade {
         //remove from database
         em.remove(pt);
         //remove from zookeeper
-        ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr())
-                .getHostName(), 10 * 1000, 29 * 1000, ZKStringSerializer$.MODULE$);
+        ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).getHostName(),
+                sessionTimeoutMs, connectionTimeout, ZKStringSerializer$.MODULE$);
         ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
         ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
 
@@ -268,7 +272,7 @@ public class KafkaFacade {
 
     public TopicDefaultValueDTO topicDefaultValues() throws AppException {
 
-        Set<String> brokers = getBrokerList();
+        Set<String> brokers = getBrokerEndpoints();
 
         TopicDefaultValueDTO valueDto = new TopicDefaultValueDTO(
                 settings.getKafkaDefaultNumReplicas(),
@@ -546,7 +550,7 @@ public class KafkaFacade {
 
     //if schema exists, increment it if not start version from 1
     public void addSchemaForTopics(SchemaDTO schemaDto) {
-        
+
         int maxVersion = 1;
 
         TypedQuery<SchemaTopics> query = em.createNamedQuery(
@@ -555,18 +559,18 @@ public class KafkaFacade {
 
         List<SchemaTopics> schemaTopics = query.getResultList();
 
-        SchemaTopics schema=null;
-        if (schemaTopics != null && !schemaTopics.isEmpty() ) {
+        SchemaTopics schema = null;
+        if (schemaTopics != null && !schemaTopics.isEmpty()) {
             for (SchemaTopics schemaTopic : schemaTopics) {
 
                 int schemaVersion = schemaTopic.getSchemaTopicsPK().getVersion();
-                if (maxVersion < schemaVersion){
+                if (maxVersion < schemaVersion) {
                     maxVersion = schemaVersion;
                 }
             }
             maxVersion++;
         }
-        if(schema == null){
+        if (schema == null) {
             schema = new SchemaTopics(schemaDto.getName(), maxVersion,
                     schemaDto.getContents(), new Date());
         }
@@ -598,7 +602,7 @@ public class KafkaFacade {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "topic has not schema");
         }
-        
+
         SchemaDTO schemaDto = new SchemaDTO(schema.getContents());
 
         return schemaDto;
@@ -656,17 +660,22 @@ public class KafkaFacade {
                     "Schema: " + schemaName + " not found in database");
         }
 
-        em.remove(schema);
+        try {
+            em.remove(schema);
+        } catch (Exception ex) {
+            throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+                    ex.getMessage());
+        }
     }
 
-    public Set<String> getBrokerList() throws AppException {
+    public Set<String> getBrokerEndpoints() throws AppException {
 
-        int sessionTimeoutMs = 10 * 1000;//10 seconds
         Set<String> brokerList = new HashSet<>();
 
         try {
-            ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(),
+            zk = new ZooKeeper(settings.getZkConnectStr(),
                     sessionTimeoutMs, null);
+
             List<String> ids = zk.getChildren("/brokers/ids", false);
             for (String id : ids) {
                 String brokerInfo = new String(zk.getData("/brokers/ids/" + id,
@@ -684,6 +693,12 @@ public class KafkaFacade {
         } catch (KeeperException | InterruptedException ex) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "Unable to retrieve seed brokers from the kafka cluster: " + ex);
+        }finally{
+            try {
+                zk.close();
+            } catch (InterruptedException ex) {
+                LOGGER.log(Level.SEVERE, "Cound not close the zookeeper connection: ", ex.toString());
+            }
         }
 
         return brokerList;
@@ -693,14 +708,14 @@ public class KafkaFacade {
 
         CLIENT_ID = "list_topics";
 
-        zkBrokerList = getBrokerList();
+        zkBrokerList = getBrokerEndpoints();
 
         for (String seed : zkBrokerList) {
             kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
             try {
                 simpleConsumer = new SimpleConsumer(getBrokerIp(seed)
                         .getHostAddress(),
-                        getBrokerPort(seed), TIMEOUT, BUFFER_SIZE, CLIENT_ID);
+                        getBrokerPort(seed), connectionTimeout, BUFFER_SIZE, CLIENT_ID);
 
                 //add ssl certificate to the consumer here
                 List<String> topics = new ArrayList<>();
@@ -722,6 +737,7 @@ public class KafkaFacade {
             }
         }
 
+        //val allTopics = zkUtils.getAllTopics()
         return topicList;
     }
 
@@ -730,7 +746,7 @@ public class KafkaFacade {
 
         CLIENT_ID = "topic_detail";
 
-        zkBrokerList = getBrokerList();
+        zkBrokerList = getBrokerEndpoints();
 
         Map<Integer, List<String>> replicas = new HashMap<>();
         Map<Integer, List<String>> inSyncReplicas = new HashMap<>();
@@ -754,7 +770,7 @@ public class KafkaFacade {
             try {
                 simpleConsumer = new SimpleConsumer(getBrokerIp(seed)
                         .getHostAddress(),
-                        getBrokerPort(seed), TIMEOUT, BUFFER_SIZE, CLIENT_ID);
+                        getBrokerPort(seed), connectionTimeout, BUFFER_SIZE, CLIENT_ID);
 
                 //add ssl certificate to the consumer here
                 List<String> topics = new ArrayList<>();
