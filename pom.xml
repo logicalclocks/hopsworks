@@ -22,7 +22,6 @@
     <glassfish.port>8080</glassfish.port>
     <glassfish.admin_port>4848</glassfish.admin_port>
     <glassfish.domain>domain1</glassfish.domain>
-    <glassfish.home>/home/ermiasg/glassfish-4.1.1</glassfish.home>
   </properties>
 
   <dependencies>
@@ -524,7 +523,7 @@
                   <type>war</type>
                   <location>${basedir}/target/hopsworks.war</location>
                   <properties>
-                    <context>/hopsworks</context>
+                    <context>${project.artifactId}</context>
                   </properties>
                 </deployable>
               </deployables>
