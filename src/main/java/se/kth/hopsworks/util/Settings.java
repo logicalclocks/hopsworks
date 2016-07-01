@@ -432,6 +432,7 @@ public class Settings {
   public static final String FLINK_LOCRSC_FLINK_JAR = "flink.jar";
   public static final String FLINK_LOCRSC_APP_JAR = "app.jar";
   public static final String FLINK_AM_MAIN = "org.apache.flink.yarn.ApplicationMaster";
+  public static final int FLINK_APP_MASTER_MEMORY = 768;
   
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir()+ "/flink.jar";

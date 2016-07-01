@@ -83,25 +83,15 @@ public class FlinkController {
         }   
         //If it is a flink job, copy the app jar locally for use by the Flink 
         //client
+        //To distinguish between jars for different job executions, add the 
+        //current system time in the filename. This jar is removed after
+        //the job is finished.
         if(job.getJobConfig().getType() == JobType.FLINK){
             String appJarPath = ((FlinkJobConfiguration)job.getJobConfig()).getJarPath();
-            //String localPathAppJar = "/tmp/"+appJarPath.substring(appJarPath.indexOf("Projects"), appJarPath.length()-4);
-            String localPathAppJar = "/tmp/"+appJarPath.substring(appJarPath.indexOf("Projects"), appJarPath.lastIndexOf("/"));
-            String appJarName = appJarPath.substring(appJarPath.lastIndexOf("/")).replace("/","");
-            File tmpDir = new File(localPathAppJar);
-            if(!tmpDir.exists()){
-                tmpDir.mkdir();
-            }
-            //Copy job jar locaclly so that Flink client has access to it
-            //in YarnRunner
-            fops.copyToLocal(appJarPath, localPathAppJar+"/"+appJarName);
-            ((FlinkJobConfiguration)job.getJobConfig()).setAppJarPath(localPathAppJar+"/"+appJarName);
             
-            //If it is a streaming job, copy Flink.jar locally so it can be 
-            //used by the PackagedProgram flink class
-            ((FlinkJobConfiguration)job.getJobConfig()).setLocalJarPath("hdfs:///user/glassfish/"+Settings.FLINK_LOCRSC_FLINK_JAR);
-            fops.copyToLocal(((FlinkJobConfiguration)job.getJobConfig()).getLocalJarPath(), localPathAppJar+"/"+Settings.FLINK_LOCRSC_FLINK_JAR);
-            ((FlinkJobConfiguration)job.getJobConfig()).setLocalJarPath(localPathAppJar+"/"+Settings.FLINK_LOCRSC_FLINK_JAR);
+            String appJarName = appJarPath.substring(appJarPath.lastIndexOf("/")).replace("/","");
+            //appJarName =  appJarName.replace(".jar",  "-"+System.currentTimeMillis()+".jar");
+            ((FlinkJobConfiguration)job.getJobConfig()).setJarPath(appJarPath);
         }
         
         String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);

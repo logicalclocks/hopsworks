@@ -64,7 +64,7 @@ public class FlinkJob extends YarnJob {
         }
         
         FlinkYarnRunnerBuilder flinkBuilder = new FlinkYarnRunnerBuilder(
-                jobconfig.getJarPath(), jobconfig.getMainClass(), jobconfig.getLocalJarPath());
+                jobconfig.getJarPath(), jobconfig.getMainClass());
         //https://ci.apache.org/projects/flink/flink-docs-release-0.10/setup/yarn_setup.html
         /*If you do not want to keep the Flink YARN client running all the time, 
          its also possible to start a detached YARN session. The parameter for
@@ -79,8 +79,8 @@ public class FlinkJob extends YarnJob {
         //Flink specific conf object
         flinkBuilder.setFlinkLoggingConfigurationPath(new Path(
                 jobconfig.getFlinkConfDir()));
-        flinkBuilder.setLocalJarPath(new Path("hdfs://"+nameNodeIpPort+
-                "/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR));
+//        flinkBuilder.setLocalJarPath(new Path("hdfs://"+nameNodeIpPort+
+//                "/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR));
         
         flinkBuilder.setTaskManagerMemory(jobconfig.getTaskManagerMemory());
         flinkBuilder.setTaskManagerSlots(jobconfig.getSlots());
@@ -92,7 +92,7 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setJobManagerMemory(jobconfig.getAmMemory());
         flinkBuilder.setJobManagerCores(jobconfig.getAmVCores());
         flinkBuilder.setJobManagerQueue(jobconfig.getAmQueue());
-        flinkBuilder.setAppJarPath(jobconfig.getAppJarPath());
+        flinkBuilder.setAppJarPath(jobconfig.getJarPath());
         flinkBuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
         if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){
             String[] jobArgs = jobconfig.getArgs().trim().split(" ");
