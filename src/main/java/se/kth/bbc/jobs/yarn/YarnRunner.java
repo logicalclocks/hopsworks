@@ -204,9 +204,12 @@ public class YarnRunner {
             if(amArgs!=null && !amArgs.isEmpty()){
                 args = amArgs.trim().split(" ");
             }
-            //Copy the appjar to the localOS as it is needed by the Flink client
-            //Create path in local /tmp to store the appjar
-            String localPathAppJarDir = "/tmp/"+appJarPath.substring(appJarPath.indexOf("Projects"), appJarPath.lastIndexOf("/"))+"/"+APPID_REGEX;
+            /*Copy the appjar to the localOS as it is needed by the Flink client
+            *Create path in local /tmp to store the appjar
+            *To distinguish between jars for different job executions, add the 
+            *current system time in the filename. This jar is removed after
+            *the job is finished.*/
+            String localPathAppJarDir = "/tmp/"+appJarPath.substring(appJarPath.indexOf("Projects"), appJarPath.lastIndexOf("/"))+"/"+appId;
             String appJarName = appJarPath.substring(appJarPath.lastIndexOf("/")).replace("/","");
             File tmpDir = new File(localPathAppJarDir);
             if(!tmpDir.exists()){
@@ -267,8 +270,6 @@ public class YarnRunner {
             } finally{
               //Remove local flink app jar
                FileUtils.deleteDirectory(localPathAppJarDir);
-//               Files.deleteIfExists(Paths.get(appJarPath));
-//               Files.deleteIfExists(Paths.get("."+appJarPath+".crc"));
                logger.log(Level.INFO, "Deleting local flink app jar:{0}",appJarPath);
             }
         }

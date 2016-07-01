@@ -81,19 +81,7 @@ public class FlinkController {
         } else if (!isFlinkJarAvailable()) {
             throw new IllegalStateException("Flink is not installed on this system.");
         }   
-        //If it is a flink job, copy the app jar locally for use by the Flink 
-        //client
-        //To distinguish between jars for different job executions, add the 
-        //current system time in the filename. This jar is removed after
-        //the job is finished.
-        if(job.getJobConfig().getType() == JobType.FLINK){
-            String appJarPath = ((FlinkJobConfiguration)job.getJobConfig()).getJarPath();
-            
-            String appJarName = appJarPath.substring(appJarPath.lastIndexOf("/")).replace("/","");
-            //appJarName =  appJarName.replace(".jar",  "-"+System.currentTimeMillis()+".jar");
-            ((FlinkJobConfiguration)job.getJobConfig()).setJarPath(appJarPath);
-        }
-        
+       
         String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
         UserGroupInformation proxyUser = ugiService.getProxyUser(username);
         FlinkJob flinkjob = null;
