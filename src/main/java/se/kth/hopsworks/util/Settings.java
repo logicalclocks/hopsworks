@@ -216,7 +216,13 @@ public class Settings {
   public static final String HOPS_VERSION = "2.4.0";
 
   public static final String SPARK_HISTORY_SERVER_ENV = "spark.yarn.historyServer.address";
-  public static final String SPARK_NUMBER_EXECUTORS = "spark.executor.instances";
+  public static final String SPARK_NUMBER_EXECUTORS_ENV = "spark.executor.instances";
+  public static final String SPARK_DYNAMIC_ALLOC_ENV = "spark.dynamicAllocation.enabled";
+  public static final String SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV = "spark.dynamicAllocation.minExecutors";
+  public static final String SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV = "spark.dynamicAllocation.maxExecutors";
+  public static final String SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV = "spark.dynamicAllocation.initialExecutors";
+  public static final String SPARK_SHUFFLE_SERVICE = "spark.shuffle.service.enabled";
+  
   public synchronized String getSparkDir() {
     checkCache();
     return SPARK_DIR;
@@ -423,7 +429,10 @@ public class Settings {
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
   public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
-
+  public static final String SPARK_CONFIG_FILE = "conf/spark-defaults.conf";
+  public static final int SPARK_MIN_EXECS = 1;
+  public static final int SPARK_MAX_EXECS = 8;
+  public static final int SPARK_INIT_EXECS = 1;
   //Flink constants
   public static final String FLINK_DEFAULT_OUTPUT_PATH = "Logs/Flink/";
   public static final String FLINK_DEFAULT_CONF_FILE = "flink-conf.yaml";

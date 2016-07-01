@@ -35,7 +35,7 @@ import se.kth.hopsworks.util.Settings;
 @Stateless
 public class FlinkController {
 
-    private static final Logger logger = Logger.getLogger(FlinkController.class.
+    private static final Logger LOG = Logger.getLogger(FlinkController.class.
             getName());
 
     @EJB
@@ -99,7 +99,7 @@ public class FlinkController {
                 }
             });
         } catch (InterruptedException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         if (flinkjob == null) {
             throw new NullPointerException("Could not instantiate Flink job.");
@@ -108,7 +108,7 @@ public class FlinkController {
         if (execution != null) {
             submitter.startExecution(flinkjob);
         } else {
-            logger.log(Level.SEVERE,
+            LOG.log(Level.SEVERE,
                     "Failed to persist JobHistory. Aborting execution.");
             throw new IOException("Failed to persist JobHistory.");
         }
@@ -153,7 +153,7 @@ public class FlinkController {
         try {
             isInHdfs = fops.exists(settings.getHdfsFlinkJarPath());
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Cannot get Flink jar file from HDFS: {0}",
+            LOG.log(Level.WARNING, "Cannot get Flink jar file from HDFS: {0}",
                     settings.getHdfsFlinkJarPath());
             //Can't connect to HDFS: return false
             return false;
@@ -172,7 +172,7 @@ public class FlinkController {
                 return false;
             }
         } else {
-            logger.log(Level.WARNING, "Cannot find Flink jar file locally: {0}",
+            LOG.log(Level.WARNING, "Cannot find Flink jar file locally: {0}",
                     settings.getLocalFlinkJarPath());
             return false;
         }
@@ -192,7 +192,7 @@ public class FlinkController {
   public FlinkJobConfiguration inspectJar(String path, String username) throws
 		  AccessControlException, IOException,
 		  IllegalArgumentException {
-	logger.log(Level.INFO, "Executing Flink job by {0} at path: {1}", new Object[]{username, path});
+	LOG.log(Level.INFO, "Executing Flink job by {0} at path: {1}", new Object[]{username, path});
 	if (!path.endsWith(".jar")) {
 	  throw new IllegalArgumentException("Path does not point to a jar file.");
 	}
@@ -200,7 +200,7 @@ public class FlinkController {
 	// If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
 	path = path.replaceFirst("hdfs:/*Projects",
 			"hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
-	logger.log(Level.INFO, "Really executing Flink job by {0} at path: {1}", new Object[]{username, path});
+	LOG.log(Level.INFO, "Really executing Flink job by {0} at path: {1}", new Object[]{username, path});
 	
 	JarInputStream jis = new JarInputStream(dfs.getDfsOps(username).open(path));
 	Manifest mf = jis.getManifest();
