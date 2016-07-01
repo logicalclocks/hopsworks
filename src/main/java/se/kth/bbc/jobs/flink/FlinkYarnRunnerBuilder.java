@@ -299,9 +299,11 @@ public class FlinkYarnRunnerBuilder {
             String hadoopDir, final String flinkDir, 
             final String nameNodeIpPort) throws IOException {
               
-        //Set Jar Path
         //Create the YarnRunner builder for Flink, proceed with setting values
         YarnRunner.Builder builder = new YarnRunner.Builder(Settings.FLINK_AM_MAIN);
+        //Set Jar Path
+        builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
+            "$PWD:$PWD/"+Settings.FLINK_DEFAULT_CONF_FILE + ":$PWD/"+Settings.FLINK_LOCRSC_FLINK_JAR);
         String stagingPath = File.separator + "Projects" + File.separator + project
             + File.separator
             + Settings.PROJECT_STAGING_DIR + File.separator

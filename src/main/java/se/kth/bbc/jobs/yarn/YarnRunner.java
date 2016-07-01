@@ -64,7 +64,7 @@ public class YarnRunner {
   private static final Logger logger = Logger.getLogger(YarnRunner.class.getName());
   public static final String APPID_PLACEHOLDER = "$APPID";
   private static final String APPID_REGEX = "\\$APPID";
-  private static final String KEY_CLASSPATH = "CLASSPATH";
+  public static final String KEY_CLASSPATH = "CLASSPATH";
   private static final String LOCAL_LOG_DIR_PLACEHOLDER = "<LOG_DIR>";
 
   private YarnClient yarnClient;
@@ -426,7 +426,7 @@ public class YarnRunner {
 
   private void setUpClassPath(Map<String, String> env) {
     // Add AppMaster.jar location to classpath
-    StringBuilder classPathEnv = new StringBuilder().append("./*");
+    StringBuilder classPathEnv = new StringBuilder();
     for (String c : conf.getStrings(
         YarnConfiguration.YARN_APPLICATION_CLASSPATH,
         YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH)) {
