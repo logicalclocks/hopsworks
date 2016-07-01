@@ -365,7 +365,7 @@ public abstract class YarnJob extends HopsJob {
           YarnLogUtil.copyAggregatedYarnLogs(services.getFsService(),
                   services.getFileOperations(hdfsUser.getUserName()), runner.
                   getStdOutPath(),
-                  stdOutFinalDestination, "stdout");
+                  stdOutFinalDestination, "out");
 
         } else {
           services.getFileOperations(hdfsUser.getUserName()).renameInHdfs(
@@ -384,7 +384,7 @@ public abstract class YarnJob extends HopsJob {
           YarnLogUtil.copyAggregatedYarnLogs(services.getFsService(),
                   services.getFileOperations(hdfsUser.getUserName()), runner.
                   getStdOutPath(),
-                  stdErrFinalDestination, "stderr");
+                  stdErrFinalDestination, "err");
         } else {
           services.getFileOperations(hdfsUser.getUserName()).renameInHdfs(
                   runner.
