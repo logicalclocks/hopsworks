@@ -63,13 +63,15 @@ public class SparkYarnRunnerBuilder {
    * <p/>
    * @param project name of the project
    * @param sparkUser
+   * @param jobUser
    * @param hadoopDir
    * @param sparkDir
    * @param nameNodeIpPort
    * @return The YarnRunner instance to launch the Spark job on Yarn.
    * @throws IOException If creation failed.
    */
-  public YarnRunner getYarnRunner(String project, String sparkUser,
+  public YarnRunner getYarnRunner(String project, String sparkUser, 
+          String jobUser,
           final String hadoopDir, final String sparkDir, final String nameNodeIpPort)
           throws IOException {
 

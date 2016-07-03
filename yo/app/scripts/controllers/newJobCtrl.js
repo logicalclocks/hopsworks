@@ -53,7 +53,7 @@ angular.module('hopsWorksApp')
                 to: 100,      
                 floor: true,
                 step: 1,
-                vertical: false,
+                vertical: false
 //                callback: function(value, elt) {
 //                    this.runConfig.numberOfExecutorsMin = value.split(";")[0];
 //                    this.runConfig.numberOfExecutorsMax = value.split(";")[1];
@@ -421,10 +421,17 @@ angular.module('hopsWorksApp')
                   SparkService.inspectJar(self.projectId, path).then(
                           function (success) {
                             self.runConfig = success.data;
-                            self.sliderOptions.from = self.runConfig.
-                                    minExecutors;
-                            self.sliderOptions.to = self.runConfig.
-                                    maxExecutors;
+                            //Update the min/max spark executors based on 
+                            //backend configuration 
+                            if(typeof runConfig != 'undefined'){
+                              self.sliderOptions.from = self.runConfig.
+                                      minExecutors;
+                              self.sliderOptions.to = self.runConfig.
+                                      maxExecutors;  
+                            } else {
+                              self.sliderOptions.from = 1;
+                              self.sliderOptions.to = 8;  
+                            }
                             self.mainFileSelected(filename);
                             if (self.tourService.currentStep_TourFour > -1) {
                                   self.tourService.currentStep_TourFour = 6;

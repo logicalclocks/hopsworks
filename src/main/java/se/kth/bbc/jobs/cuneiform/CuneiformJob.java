@@ -55,13 +55,19 @@ public final class CuneiformJob extends YarnJob {
    * @param job
    * @param services
    * @param user
+   * @param jobUser
+   * @param hadoopDir
+   * @param sparkDir
+   * @param hiwayDir
+   * @param nameNodeIpPort
+   * @param kafkaAddress
    * @throws IllegalArgumentException If the given JobDescription does not
    * contain a CuneiformJobConfiguration object.
    */
   public CuneiformJob(JobDescription job,
-          AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir, String hiwayDir,
+          AsynchronousJobExecutor services, Users user, String jobUser, String hadoopDir, String sparkDir, String hiwayDir,
           String nameNodeIpPort, String kafkaAddress) {
-    super(job, services, user, hadoopDir, nameNodeIpPort, kafkaAddress);
+    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, kafkaAddress);
     if (!(job.getJobConfig() instanceof CuneiformJobConfiguration)) {
       throw new IllegalArgumentException(
               "The jobconfiguration in JobDescription must be of type CuneiformJobDescription. Received: "

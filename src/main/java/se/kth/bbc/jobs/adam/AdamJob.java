@@ -22,27 +22,30 @@ import se.kth.hopsworks.util.Settings;
  * @author stig
  */
 public class AdamJob extends YarnJob {
-
+  
   private static final Logger logger = Logger.getLogger(AdamJob.class.getName());
-
+  
   private final AdamJobConfiguration jobconfig;
   private final String sparkDir;
   private final String adamJarPath;
-
+  private final String adamUser; //must be glassfish
+  
   public AdamJob(JobDescription job,
-      AsynchronousJobExecutor services, Users user, String hadoopDir, String sparkDir,
-      String nameNodeIpPort, String adamJarPath, String kafkaAddress) {
-    super(job, services, user, hadoopDir, nameNodeIpPort, kafkaAddress);
+          AsynchronousJobExecutor services, Users user, String hadoopDir,
+          String sparkDir, String adamUser, String jobUser,
+          String nameNodeIpPort, String adamJarPath, String kafkaAddress) {
+    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, kafkaAddress);
     if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {
       throw new IllegalArgumentException(
-          "JobDescription must contain a AdamJobConfiguration object. Received: "
-          + job.getJobConfig().getClass());
+              "JobDescription must contain a AdamJobConfiguration object. Received: "
+              + job.getJobConfig().getClass());
     }
     this.jobconfig = (AdamJobConfiguration) job.getJobConfig();
     this.sparkDir = sparkDir;
     this.adamJarPath = adamJarPath;
+    this.adamUser = adamUser;
   }
-
+  
   @Override
   protected void runJob() {
     //Try to start the AM
@@ -62,48 +65,49 @@ public class AdamJob extends YarnJob {
   }
 
   /**
-   * For all the output files that were created, create an Inode for them and create entries in the DB.
+   * For all the output files that were created, create an Inode for them and
+   * create entries in the DB.
    */
   private void makeOutputAvailable() {
     for (AdamArgumentDTO arg : jobconfig.getSelectedCommand().getArguments()) {
       if (arg.isOutputPath() && !(arg.getValue() == null || arg.getValue().
-          isEmpty())) {
+              isEmpty())) {
         try {
           if (services.getFileOperations().exists(arg.getValue())) {
             services.getJobOutputFileFacade().create(getExecution(), Utils.
-                getFileName(arg.getValue()), arg.getValue());
+                    getFileName(arg.getValue()), arg.getValue());
           }
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
-              + arg.getValue() + ".", e);
+                  + arg.getValue() + ".", e);
         }
       }
     }
-
+    
     for (AdamOptionDTO opt : jobconfig.getSelectedCommand().getOptions()) {
       if (opt.isOutputPath() && opt.getValue() != null && !opt.getValue().
-          isEmpty()) {
+              isEmpty()) {
         try {
           if (services.getFileOperations().exists(opt.getValue())) {
             services.getJobOutputFileFacade().create(getExecution(), Utils.
-                getFileName(opt.getValue()), opt.getValue());
+                    getFileName(opt.getValue()), opt.getValue());
           }
         } catch (IOException e) {
           logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
-              + opt.getValue() + ".", e);
+                  + opt.getValue() + ".", e);
         }
       }
     }
   }
-
+  
   @Override
   protected boolean setupJob() {
     //Get to starting the job
     List<String> missingArgs = checkIfRequiredPresent(jobconfig); //thows an IllegalArgumentException if not ok.
     if (!missingArgs.isEmpty()) {
       writeToLogs(
-          "Cannot execute ADAM command because some required arguments are missing: "
-          + missingArgs);
+              "Cannot execute ADAM command because some required arguments are missing: "
+              + missingArgs);
       return false;
     }
 
@@ -112,41 +116,46 @@ public class AdamJob extends YarnJob {
       jobconfig.setAppName("Untitled ADAM Job");
     }
     SparkYarnRunnerBuilder builder = new SparkYarnRunnerBuilder(
-        adamJarPath, Settings.ADAM_MAINCLASS);
+            adamJarPath, Settings.ADAM_MAINCLASS);
     //Set some ADAM-specific property values   
     builder.addSystemProperty("spark.serializer",
-        "org.apache.spark.serializer.KryoSerializer");
+            "org.apache.spark.serializer.KryoSerializer");
     builder.addSystemProperty("spark.kryo.registrator",
-        "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
+            "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
     builder.addSystemProperty("spark.kryoserializer.buffer", "4m");
     builder.addSystemProperty("spark.kryo.referenceTracking", "true");
     builder.setExecutorMemoryGB(1);
-
+    
     builder.addAllJobArgs(constructArgs(jobconfig));
 
-    //Add all ADAM jars to local resources
-    addAllAdamJarsToLocalResourcesAndClasspath(builder);
-
+    //Add ADAM jar to local resources
+    builder.addExtraFile(new LocalResourceDTO(adamJarPath.substring(adamJarPath.
+            lastIndexOf("/")+1), adamJarPath,
+            LocalResourceVisibility.PUBLIC.toString(),
+            LocalResourceType.FILE.toString(), null));
     //Set the job name
     builder.setJobName(jobconfig.getAppName());
-
+    
     try {
-      runner = builder.getYarnRunner(jobDescription.getProject().getName(), user.getUsername(),
-          hadoopDir, sparkDir, nameNodeIpPort);
+      runner = builder.getYarnRunner(jobDescription.getProject().getName(),
+              adamUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
     } catch (IOException e) {
       logger.log(Level.SEVERE,
-          "Failed to create YarnRunner.", e);
+              "Failed to create YarnRunner.", e);
       writeToLogs(new IOException("Failed to start Yarn client.", e));
       return false;
     }
-
-    String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir, jobDescription.
-        getProject().
-        getName())
-        + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
-        + File.separator + "stdout.log";
-    String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir, jobDescription.getProject().getName())
-        + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId() + File.separator + "stderr.log";
+    
+    String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
+            jobDescription.
+            getProject().
+            getName())
+            + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
+            + File.separator + "stdout.log";
+    String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
+            jobDescription.getProject().getName())
+            + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
+            + File.separator + "stderr.log";
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
     return true;
@@ -155,22 +164,23 @@ public class AdamJob extends YarnJob {
   /**
    * Check if all required arguments have been filled in.
    * <p/>
-   * @return A list of missing argument names. If the list is empty, all required arguments are present.
+   * @return A list of missing argument names. If the list is empty, all
+   * required arguments are present.
    */
   private List<String> checkIfRequiredPresent(AdamJobConfiguration ajc) throws
-      IllegalArgumentException {
+          IllegalArgumentException {
     List<String> missing = new ArrayList<>();
-
+    
     for (AdamArgumentDTO arg : ajc.getSelectedCommand().getArguments()) {
       if (arg.isRequired() && (arg.getValue() == null || arg.getValue().
-          isEmpty())) {
+              isEmpty())) {
         //Required argument is missing
         missing.add(arg.getName());
       }
     }
     return missing;
   }
-
+  
   private List<String> constructArgs(AdamJobConfiguration ajc) {
     List<String> adamargs = new ArrayList<>();
     //First: add command
@@ -201,21 +211,21 @@ public class AdamJob extends YarnJob {
    * @param builder
    */
   private void addAllAdamJarsToLocalResourcesAndClasspath(
-      SparkYarnRunnerBuilder builder) {
+          SparkYarnRunnerBuilder builder) {
     //Add all to local resources and to classpath
     List<String> jars = services.getFileOperations().getChildNames(
-        Settings.ADAM_DEFAULT_HDFS_REPO);
+            Settings.ADAM_DEFAULT_HDFS_REPO);
     for (String jarname : jars) {
       String sourcePath = "hdfs://" + Settings.ADAM_DEFAULT_HDFS_REPO + jarname;
-      builder.addExtraFile(new LocalResourceDTO(jarname, sourcePath, 
-              LocalResourceVisibility.PUBLIC.toString(), 
+      builder.addExtraFile(new LocalResourceDTO(jarname, sourcePath,
+              LocalResourceVisibility.PUBLIC.toString(),
               LocalResourceType.FILE.toString(), null));
     }
   }
-
+  
   @Override
   protected void cleanup() {
     //Nothing to be done, really.
   }
-
+  
 }

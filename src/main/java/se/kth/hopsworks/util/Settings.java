@@ -516,7 +516,7 @@ public class Settings {
   public static final String ADAM_DEFAULT_HDFS_REPO = "/user/adam/repo/";
 
   public String getAdamJarHdfsPath() {
-    return "hdfs:///user/" + getAdamUser() + "/repo/adam-cli.jar";
+    return "hdfs:///user/" + getAdamUser() + "/adam-cli.jar";
   }
 
   //Directory names in HDFS

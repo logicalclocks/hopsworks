@@ -283,7 +283,7 @@ public class FlinkYarnRunnerBuilder {
      * @throws java.io.IOException 
      */
     protected YarnRunner getYarnRunner(String project, final String flinkUser,
-            String hadoopDir, final String flinkDir, 
+            String jobUser, String hadoopDir, final String flinkDir, 
             final String nameNodeIpPort) throws IOException {
               
         //Set Jar Path

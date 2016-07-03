@@ -165,15 +165,7 @@
                   <input ng-model="newJobCtrl.sliderValue" ng-change="newJobCtrl.setInitExecs()" type="text" id="executorsSlider" slider options="newJobCtrl.sliderOptions" ng-disabled="disabled" />
                </div>
               </div>
-<!--              <div class="row" ng-show="newJobCtrl.jobtype === 1 && newJobCtrl.runConfig.dynamicExecutors">
-                <div class="text-right col-md-4">Minimum number of executors <i class="fa fa-info-circle" tooltip="The minimum number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
-                <div class="col-md-8"><input type="number" min="1" max="8" ng-model="newJobCtrl.runConfig.numberOfExecutorsMin" class="form-control"></div>
-              </div>              
-              <div class="row" ng-show="newJobCtrl.jobtype === 1 && newJobCtrl.runConfig.dynamicExecutors">
-                <div class="text-right col-md-4">Maximum number of executors <i class="fa fa-info-circle" tooltip="The maximum number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
-                <div class="col-md-8"><input type="number" min="{{newJobCtrl.runConfig.numberOfExecutorsMin}}" max="8" ng-model="newJobCtrl.runConfig.numberOfExecutorsMax" class="form-control"></div>
-              </div>              -->
-              <div class="row" ng-show="newJobCtrl.jobtype === 1 && newJobCtrl.runConfig.dynamicExecutors">
+            <div class="row" ng-show="newJobCtrl.jobtype === 1 && newJobCtrl.runConfig.dynamicExecutors">
                 <div class="text-right col-md-4">Initial number of executors <i class="fa fa-info-circle" tooltip="The initial number of Spark executors that should be requested for this job. Must be greate that the minimum and smaller than the maximum number of executors." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="number"  ng-change="newJobCtrl.setInitExecs()" value="{{newJobCtrl.runConfig.selectedMinExecutors}}" ng-model="newJobCtrl.runConfig.numberOfExecutorsInit" class="form-control"></div>
               </div>              

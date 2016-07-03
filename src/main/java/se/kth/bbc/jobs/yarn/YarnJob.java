@@ -61,6 +61,7 @@ public abstract class YarnJob extends HopsJob {
   protected Map<String,String> jobSystemProperties;
   
   protected String kafkaAddress;
+  protected final String jobUser;
   
   /**
    *
@@ -74,7 +75,7 @@ public abstract class YarnJob extends HopsJob {
    * YarnJobConfiguration object.
    */
   public YarnJob(JobDescription job, AsynchronousJobExecutor services,
-          Users user, String hadoopDir, String nameNodeIpPort, 
+          Users user, String jobUser, String hadoopDir, String nameNodeIpPort, 
           String kafkaAddress) {
     super(job, services, user, hadoopDir, nameNodeIpPort);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
@@ -86,6 +87,7 @@ public abstract class YarnJob extends HopsJob {
     this.kafkaAddress = kafkaAddress;
     this.jobSystemProperties = new HashMap<>();
     this.projectLocalResources = new ArrayList<>();
+    this.jobUser = jobUser;
     
   }
 
