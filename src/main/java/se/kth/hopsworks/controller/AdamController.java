@@ -92,7 +92,7 @@ public class AdamController {
           return new AdamJob(job, submitter, user, settings.getHadoopDir(),
                   settings.
                   getSparkDir(), settings.getAdamUser(),
-                  job.getProject().getName() + "__" + user.getUsername(),
+                  hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
                   hdfsEndpoint.getSingleEndpoint(),
                   settings.getAdamJarHdfsPath(), settings.getKafkaConnectStr());
         }

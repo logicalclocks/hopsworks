@@ -95,7 +95,7 @@ public class FlinkController {
                             settings.getFlinkConfFile(),
                             hdfsLeDescriptorsFacade.getSingleEndpoint(),
                             settings.getFlinkUser(),
-                            job.getProject().getName() + "__" + user.getUsername(),
+                            hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
                             settings.getKafkaConnectStr());
                 }
             });
