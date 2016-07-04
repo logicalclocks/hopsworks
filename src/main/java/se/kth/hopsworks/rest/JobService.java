@@ -1,7 +1,6 @@
 package se.kth.hopsworks.rest;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -45,6 +44,7 @@ import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationAttemptStateFacade;
+import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.configuration.ScheduleDTO;
 import se.kth.bbc.jobs.model.description.JobDescription;
@@ -53,7 +53,9 @@ import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
+import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -92,7 +94,12 @@ public class JobService {
   private ActivityFacade activityFacade;
   @EJB
   private DistributedFsService dfs;
-
+  @EJB
+  private Settings settings;
+  @EJB
+  private YarnApplicationstateFacade yarnApplicationstateFacade;
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
   private Project project;
 
   JobService setProject(Project project) {
@@ -240,6 +247,57 @@ public class JobService {
     }
   }
 
+    /**
+   * Get the Yarn UI url for the specified job
+   * <p/>
+   * @param jobId
+   * @param sc
+   * @param req
+   * @return url
+   * @throws AppException
+   */
+  @GET
+  @Path("/{jobId}/yarnui")
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getYarnUI(@PathParam("jobId") int jobId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    JobDescription job = jobFacade.findById(jobId);
+    if (job == null) {
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } else if (!job.getProject().equals(project)) {
+      //In this case, a user is trying to access a job outside its project!!!
+      logger.log(Level.SEVERE,
+              "A user is trying to access a job outside their project!");
+      return Response.status(Response.Status.FORBIDDEN).build();
+    } else {
+      Execution execution = exeFacade.findForJob(job).get(0);
+      Execution updatedExecution = exeFacade.getExecution(execution.getJob().
+              getId());
+      if (updatedExecution != null) {
+        execution = updatedExecution;
+      }
+
+      try {
+        String yarnUrl = "/hopsworks/api/project/" + project.getId() + "/jobs/"
+                + jobId + "/prox/" + settings.getYarnWebUIAddress()
+                + "/cluster/app/"
+                + execution.getAppId();
+
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(yarnUrl).build();
+
+      } catch (Exception e) {
+        logger.log(Level.SEVERE, "exception while geting job ui " + e.
+                getLocalizedMessage(), e);
+      }
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    }
+  }
+  
   private static final HashSet<String> passThroughHeaders = new HashSet<String>(
           Arrays
           .asList("User-Agent", "user-agent", "Accept", "accept",
@@ -284,7 +342,6 @@ public class JobService {
       }
       String ui = "";
       try {
-        logger.log(Level.SEVERE, "get on proxy: " + param);
         String trackingUrl;
         if (param.matches("http([a-z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
           trackingUrl = param;
@@ -292,10 +349,14 @@ public class JobService {
           trackingUrl = "http://" + param;
         }
         trackingUrl = trackingUrl.replace("@hwqm", "?");
-        logger.log(Level.SEVERE, "get on proxy: " + trackingUrl);
+        if(!hasAppAccessRight(trackingUrl, job)){
+          logger.log(Level.SEVERE,
+              "A user is trying to access an app outside their project!");
+          return Response.status(Response.Status.FORBIDDEN).build();
+        }
         org.apache.commons.httpclient.URI uri
                 = new org.apache.commons.httpclient.URI(trackingUrl, false);
-        String source = "http://" + uri.getHost() + ":" + uri.getPort();
+        
         HttpClientParams params = new HttpClientParams();
         params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
         params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
@@ -332,12 +393,10 @@ public class JobService {
         for (Header header : method.getResponseHeaders()) {
           response.header(header.getName(), header.getValue());
         }
-
-        if (method.getResponseHeader("Content-Type") != null && method.
-                getResponseHeader("Content-Type").getValue().contains("html")) {
-
-          ui = method.getResponseBodyAsString();
-
+        
+        ui = method.getResponseBodyAsString();
+        if (ui.contains("<html")) {
+          String source = "http://" + method.getURI().getHost() + ":" + method.getURI().getPort();
           //remove the link to the full cluster information in the yarn ui
           ui = ui.replaceAll(
                   "<div id=\"user\">[\\s\\S]+Logged in as: dr.who[\\s\\S]+<div id=\"logo\">",
@@ -403,6 +462,7 @@ public class JobService {
           response.entity(ui);
           response.header("Content-Length", ui.length());
         } else {
+          byte[] test = method.getResponseBody();
           response.entity(method.getResponseBody());
         }
         return response.build();
@@ -413,6 +473,37 @@ public class JobService {
                 getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
       }
     }
+  }
+  
+  private boolean hasAppAccessRight(String trackingUrl, JobDescription job){
+    String appId ="";
+    if(trackingUrl.contains("application_")){
+      for(String elem: trackingUrl.split("/")){
+        if(elem.contains("application_")){
+          appId = elem;
+          break;
+        }
+      }
+    }else if (trackingUrl.contains("container_")){
+      appId ="application_";
+      for(String elem: trackingUrl.split("/")){
+        if(elem.contains("container_")){
+          String[] containerIdElem = elem.split("_");
+          appId = appId + containerIdElem[1] + "_" + containerIdElem[2];
+          break;
+        }
+      }
+      
+    }
+    if (appId != "") {
+      String appUser = yarnApplicationstateFacade.findByAppId(appId).
+              getAppuser();
+      if (!job.getProject().getName().equals(hdfsUsersBean.getProjectName(
+              appUser))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @GET

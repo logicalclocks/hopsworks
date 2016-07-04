@@ -60,7 +60,6 @@ public class FlinkYarnRunnerBuilder {
     
     //Jar paths for AM and app
     private String appJarPath;
-    private String localJarPath;
     //Optional parameters
     private final List<String> jobArgs = new ArrayList<>();
     private List<LocalResourceDTO> extraFiles = new ArrayList<>();
@@ -85,7 +84,7 @@ public class FlinkYarnRunnerBuilder {
     private int parallelism;
     private String customName = null;
 
-    public FlinkYarnRunnerBuilder(String appJarPath, String mainClass, String localJarPath) {
+    public FlinkYarnRunnerBuilder(String appJarPath, String mainClass) {
         if (appJarPath == null || appJarPath.isEmpty()) {
             throw new IllegalArgumentException(
               "Path to application jar cannot be empty!");
@@ -95,7 +94,6 @@ public class FlinkYarnRunnerBuilder {
                   "Name of the main class cannot be empty!");
         }
         this.appJarPath = appJarPath;
-        this.localJarPath = localJarPath;
     }
 
     public FlinkYarnRunnerBuilder addAllJobArgs(String[] jobArgs) {
@@ -104,10 +102,6 @@ public class FlinkYarnRunnerBuilder {
     }
     public void setAppJarPath(String appJarPath){
         this.appJarPath = appJarPath;
-    }
-
-    public void setLocalJarPath(String localJarPath) {
-        this.localJarPath = localJarPath;
     }
     
     public void setJobManagerMemory(int memoryMb) {
@@ -150,13 +144,6 @@ public class FlinkYarnRunnerBuilder {
 
     public void setQueue(String queue) {
         this.jobManagerQueue = queue;
-    }
-
-    public void setLocalJarPath(Path localJarPath) {
-        if (!localJarPath.toString().endsWith("jar")) {
-            throw new IllegalArgumentException("The passed jar path ('" + localJarPath + "') does not end with the 'jar' extension");
-        }
-        this.flinkJarPath = localJarPath;
     }
 
     public void setConfigurationFilePath(Path confPath) {
@@ -296,7 +283,7 @@ public class FlinkYarnRunnerBuilder {
      * @throws java.io.IOException 
      */
     protected YarnRunner getYarnRunner(String project, final String flinkUser,
-            String hadoopDir, final String flinkDir, 
+            String jobUser, String hadoopDir, final String flinkDir, 
             final String nameNodeIpPort) throws IOException {
               
         //Set Jar Path
@@ -334,7 +321,8 @@ public class FlinkYarnRunnerBuilder {
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_MEMORY, String.valueOf(taskManagerMemoryMb));
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_SLOTS, String.valueOf(taskManagerSlots));
 
-        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.FLINK_JAR_PATH, flinkJarPath.toString());
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.FLINK_JAR_PATH, "hdfs://"+nameNodeIpPort+
+                "/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, "");
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, flinkUser);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_HOME_DIR, "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/");
@@ -352,7 +340,6 @@ public class FlinkYarnRunnerBuilder {
         
         builder.setJobType(JobType.FLINK);
         builder.setAppJarPath(appJarPath);
-        builder.setLocalJarPath(localJarPath);
         builder.setParallelism(parallelism);
         String name;
         if (customName == null) {

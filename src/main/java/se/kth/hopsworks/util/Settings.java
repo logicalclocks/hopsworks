@@ -59,6 +59,8 @@ public class Settings {
   private static final String VARIABLE_DRELEPHANT_IP = "drelephant_ip";
   private static final String VARIABLE_DRELEPHANT_DB = "drelephant_db";
   private static final String VARIABLE_DRELEPHANT_PORT = "drelephant_port";
+  private static final String VARIABLE_YARN_WEB_UI_IP = "yarn_ui_ip";
+  private static final String VARIABLE_YARN_WEB_UI_PORT = "yarn_ui_port";
   
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
   
@@ -159,6 +161,8 @@ public class Settings {
       CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
       HIWAY_DIR = setDirVar(VARIABLE_HIWAY_DIR, HIWAY_DIR);
       YARN_DEFAULT_QUOTA = setDirVar(VARIABLE_YARN_DEFAULT_QUOTA, YARN_DEFAULT_QUOTA);
+      YARN_WEB_UI_IP = setIpVar(VARIABLE_YARN_WEB_UI_IP, YARN_WEB_UI_IP);
+      YARN_WEB_UI_PORT = setIntVar(VARIABLE_YARN_WEB_UI_PORT, YARN_WEB_UI_PORT);
       HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA_MBs);
       MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
       cached = true;
@@ -212,7 +216,13 @@ public class Settings {
   public static final String HOPS_VERSION = "2.4.0";
 
   public static final String SPARK_HISTORY_SERVER_ENV = "spark.yarn.historyServer.address";
-  public static final String SPARK_NUMBER_EXECUTORS = "spark.executor.instances";
+  public static final String SPARK_NUMBER_EXECUTORS_ENV = "spark.executor.instances";
+  public static final String SPARK_DYNAMIC_ALLOC_ENV = "spark.dynamicAllocation.enabled";
+  public static final String SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV = "spark.dynamicAllocation.minExecutors";
+  public static final String SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV = "spark.dynamicAllocation.maxExecutors";
+  public static final String SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV = "spark.dynamicAllocation.initialExecutors";
+  public static final String SPARK_SHUFFLE_SERVICE = "spark.shuffle.service.enabled";
+  
   public synchronized String getSparkDir() {
     checkCache();
     return SPARK_DIR;
@@ -332,6 +342,14 @@ public class Settings {
     return YARN_DEFAULT_QUOTA;
   }
 
+  private String YARN_WEB_UI_IP = "127.0.0.1";
+  private int YARN_WEB_UI_PORT = 8088;
+
+  public synchronized String getYarnWebUIAddress() {
+    checkCache();
+    return YARN_WEB_UI_IP + ":" + YARN_WEB_UI_PORT;
+  }
+
   private String HDFS_DEFAULT_QUOTA_MBs = "200000";
 
   public synchronized long getHdfsDefaultQuotaInMBs() {
@@ -411,7 +429,10 @@ public class Settings {
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
   public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
-
+  public static final String SPARK_CONFIG_FILE = "conf/spark-defaults.conf";
+  public static final int SPARK_MIN_EXECS = 1;
+  public static final int SPARK_MAX_EXECS = 8;
+  public static final int SPARK_INIT_EXECS = 1;
   //Flink constants
   public static final String FLINK_DEFAULT_OUTPUT_PATH = "Logs/Flink/";
   public static final String FLINK_DEFAULT_CONF_FILE = "flink-conf.yaml";
@@ -420,6 +441,7 @@ public class Settings {
   public static final String FLINK_LOCRSC_FLINK_JAR = "flink.jar";
   public static final String FLINK_LOCRSC_APP_JAR = "app.jar";
   public static final String FLINK_AM_MAIN = "org.apache.flink.yarn.ApplicationMaster";
+  public static final int FLINK_APP_MASTER_MEMORY = 768;
   
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir()+ "/flink.jar";
@@ -494,7 +516,7 @@ public class Settings {
   public static final String ADAM_DEFAULT_HDFS_REPO = "/user/adam/repo/";
 
   public String getAdamJarHdfsPath() {
-    return "hdfs:///user/" + getAdamUser() + "/repo/adam-cli.jar";
+    return "hdfs:///user/" + getAdamUser() + "/adam-cli.jar";
   }
 
   //Directory names in HDFS

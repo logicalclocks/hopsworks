@@ -99,9 +99,11 @@ public class CuneiformController {
     }
 
     //Then: create a CuneiformJob to run it
-    CuneiformJob cfjob = new CuneiformJob(job, submitter, user, settings.getHadoopDir(), 
-        settings.getSparkDir(), hdfsEndpoint.getSingleEndpoint(),
-        settings.getHiwayDir(), settings.getKafkaConnectStr());
+    CuneiformJob cfjob = new CuneiformJob(job, submitter, user,
+            job.getProject().getName() + "__" + user.getUsername(),
+            settings.getHadoopDir(),
+            settings.getSparkDir(), hdfsEndpoint.getSingleEndpoint(),
+            settings.getHiwayDir(), settings.getKafkaConnectStr());
     Execution jh = cfjob.requestExecutionId();
     if (jh != null) {
       submitter.startExecution(cfjob);
@@ -110,7 +112,8 @@ public class CuneiformController {
               "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
-    activities.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.getProject(), user.
+    activities.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.
+            getProject(), user.
             asUser());
     return jh;
   }
