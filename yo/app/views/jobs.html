@@ -316,13 +316,12 @@
                     close-others="true"infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
                     <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                       <div style="overflow-y: auto">
-                        <textarea ng-if="{{item.logPath === undefined}}" class="form-control" rows="15" placeholer="No log information available" readonly>
+                        <textarea ng-show="item.logPath === undefined" class="form-control" rows="15" placeholer="No log information available" readonly>
                             {{item.log}}
                         </textarea>
-                        </div>
-                        <div ng-if="{{item.logPath !== undefined}}" contenteditable="false" class="form-control" rows="15" placeholer="No log information available" readonly>
+                        <div ng-show="item.logPath !== undefined" contenteditable="false" class="form-control" rows="15" placeholer="No log information available" readonly>
                             {{item.log}}
-                            <a href="{{item.logPath}}">clicking here!</a>
+                            <a href="#{{item.logPath}}">here!</a>
                         </div>
                       </div>
                     </accordion-group>
@@ -330,15 +329,15 @@
                 </div>
                 <div id="errs" class="tab-pane fade">
                   <accordion
-                    close-others="true"infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
+                    close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
                     <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                       <div style="overflow-y: auto">
-                        <textarea ng-if="{{item.errPath === undefined}}" class="form-control" rows="15" placeholer="No error information available" readonly>
+                        <textarea ng-show="item.errPath === undefined" class="form-control" rows="15" placeholer="No error information available" readonly>
                             {{item.err}}                                     
                         </textarea>
-                        <div ng-if="{{item.errPath !== undefined}}" contenteditable="false" class="form-control" rows="15" placeholer="No error information available" readonly>
+                        <div ng-show="item.errPath !== undefined" contenteditable="false" class="form-control" rows="15" placeholer="No error information available" readonly>
                             {{item.err}}                                     
-                            <a href="{{item.errPath}}">clicking here!</a>
+                            <a href="#{{item.errPath}}">here!</a>
                         </div>
                       </div>
                     </accordion-group>

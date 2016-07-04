@@ -521,6 +521,7 @@ public class JobService {
       JsonObjectBuilder arrayObjectBuilder;
       if (executionHistory != null && !executionHistory.isEmpty()) {
         String message;
+        String stdPath;
         for (Execution e : executionHistory) {
           arrayObjectBuilder = Json.createObjectBuilder();
           arrayObjectBuilder.add("time", e.getSubmissionTime().toString());
@@ -529,10 +530,11 @@ public class JobService {
                   exists(hdfsLogPath)) {
             if (dfs.getDfsOps().listStatus(new org.apache.hadoop.fs.Path(
                     hdfsLogPath))[0].getLen() > 5000000l) {
+              stdPath = e.getStdoutPath().split(this.project.getName())[1];
               arrayObjectBuilder.add("log",
-                      "Log is too big to display. Please retrieve it from " + e.
-                      getStdoutPath() + " by going to your Datasets!  Or by ");
-              arrayObjectBuilder.add("logPath", "/project/"+ this.project.getId() + "/dataset/" + e.getStdoutPath());
+                      "Log is too big to display. Please retrieve it by clicking ");
+              arrayObjectBuilder.add("logPath", "/project/" + this.project.
+                      getId() + "/datasets" + stdPath);
             } else {
               message = IOUtils.toString(fops.getInputStream(hdfsLogPath),
                       "UTF-8");
@@ -548,10 +550,11 @@ public class JobService {
                   exists(hdfsErrPath)) {
             if (dfs.getDfsOps().listStatus(new org.apache.hadoop.fs.Path(
                     hdfsErrPath))[0].getLen() > 5000000l) {
+              stdPath = e.getStderrPath().split(this.project.getName())[1];
               arrayObjectBuilder.add("err",
-                      "Log is too big to display. Please retrieve it from " + e.
-                      getStderrPath() + " by going to your Datasets! Or by ");
-              arrayObjectBuilder.add("errPath", "/project/"+ this.project.getId() + "/dataset/" + e.getStderrPath());
+                      "Log is too big to display. Please retrieve it by clicking ");
+              arrayObjectBuilder.add("errPath", "/project/" + this.project.
+                      getId() + "/datasets" + stdPath);
             } else {
               message = IOUtils.toString(fops.getInputStream(hdfsErrPath),
                       "UTF-8");
