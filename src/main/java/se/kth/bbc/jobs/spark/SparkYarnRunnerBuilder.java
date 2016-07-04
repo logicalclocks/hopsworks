@@ -132,6 +132,8 @@ public class SparkYarnRunnerBuilder {
 //      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
 //              + sparkClasspath);
 //    }
+    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
+            "$PWD:$PWD/__spark_conf__:$PWD/"+Settings.SPARK_LOCRSC_SPARK_JAR);
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
