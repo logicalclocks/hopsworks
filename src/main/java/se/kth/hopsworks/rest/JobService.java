@@ -1,6 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -530,7 +531,8 @@ public class JobService {
                     hdfsLogPath))[0].getLen() > 5000000l) {
               arrayObjectBuilder.add("log",
                       "Log is too big to display. Please retrieve it from " + e.
-                      getStdoutPath() + " by going to your Datasets!");
+                      getStdoutPath() + " by going to your Datasets!  Or by ");
+              arrayObjectBuilder.add("logPath", "/project/"+ this.project.getId() + "/dataset/" + e.getStdoutPath());
             } else {
               message = IOUtils.toString(fops.getInputStream(hdfsLogPath),
                       "UTF-8");
@@ -548,7 +550,8 @@ public class JobService {
                     hdfsErrPath))[0].getLen() > 5000000l) {
               arrayObjectBuilder.add("err",
                       "Log is too big to display. Please retrieve it from " + e.
-                      getStderrPath() + " by going to your Datasets!");
+                      getStderrPath() + " by going to your Datasets! Or by ");
+              arrayObjectBuilder.add("errPath", "/project/"+ this.project.getId() + "/dataset/" + e.getStderrPath());
             } else {
               message = IOUtils.toString(fops.getInputStream(hdfsErrPath),
                       "UTF-8");

@@ -195,14 +195,18 @@ angular.module('hopsWorksApp')
                         console.log(success);
                       }, function (error) {
                         if (error.data.errorMsg.indexOf("Path is not a directory.") > -1) {
-                          self.openDir(newPathArray.pop());
+                          var popped = newPathArray.pop();
+                          console.log(popped);
+                          self.openDir({name:popped, dir:false, underConstruction:false});
                           self.pathArray = newPathArray;
                           self.routeParamArray = [];
+                          //growl.info(error.data.errorMsg, {title: 'Info', ttl: 2000});
                           getDirContents();
                         } else if (error.data.errorMsg.indexOf("Path not found :") > -1) {
                           self.routeParamArray = [];
-                          $route.updateParams({fileName:''});
-                          console.log($routeParams.fileName);
+                          //$route.updateParams({fileName:''});
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                          getDirContents();
                         }
                         self.working = false;
                         console.log("Error getting the contents of the path " 
