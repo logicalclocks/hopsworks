@@ -23,7 +23,7 @@ public class FlinkJob extends YarnJob {
              FlinkJob.class.getName());
     private final FlinkJobConfiguration jobconfig;
     private final String flinkDir;
-    private final String flinkUser;
+    private final String flinkUser;    
     private final String JOBTYPE_STREAMING = "Streaming";
     /**
      *
@@ -36,14 +36,16 @@ public class FlinkJob extends YarnJob {
      * @param flinkConfFile
      * @param nameNodeIpPort
      * @param flinkUser
+   * @param jobUser
      * @param kafkaAddress
      */
     public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
             Users user, final String hadoopDir,
             final String flinkDir, final String flinkConfDir, 
             final String flinkConfFile,final String nameNodeIpPort, 
-            String flinkUser, String kafkaAddress) {
-        super(job, services, user, hadoopDir, nameNodeIpPort, kafkaAddress);
+            String flinkUser, String jobUser, String kafkaAddress) {
+        super(job, services, user, jobUser, hadoopDir, nameNodeIpPort,
+                kafkaAddress);
         if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
             throw new IllegalArgumentException(
                     "JobDescription must contain a FlinkJobConfiguration object. Received: "
@@ -64,7 +66,7 @@ public class FlinkJob extends YarnJob {
         }
         
         FlinkYarnRunnerBuilder flinkBuilder = new FlinkYarnRunnerBuilder(
-                jobconfig.getJarPath(), jobconfig.getMainClass(), jobconfig.getLocalJarPath());
+                jobconfig.getJarPath(), jobconfig.getMainClass());
         //https://ci.apache.org/projects/flink/flink-docs-release-0.10/setup/yarn_setup.html
         /*If you do not want to keep the Flink YARN client running all the time, 
          its also possible to start a detached YARN session. The parameter for
@@ -79,8 +81,8 @@ public class FlinkJob extends YarnJob {
         //Flink specific conf object
         flinkBuilder.setFlinkLoggingConfigurationPath(new Path(
                 jobconfig.getFlinkConfDir()));
-        flinkBuilder.setLocalJarPath(new Path("hdfs://"+nameNodeIpPort+
-                "/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR));
+//        flinkBuilder.setLocalJarPath(new Path("hdfs://"+nameNodeIpPort+
+//                "/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR));
         
         flinkBuilder.setTaskManagerMemory(jobconfig.getTaskManagerMemory());
         flinkBuilder.setTaskManagerSlots(jobconfig.getSlots());
@@ -92,7 +94,7 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setJobManagerMemory(jobconfig.getAmMemory());
         flinkBuilder.setJobManagerCores(jobconfig.getAmVCores());
         flinkBuilder.setJobManagerQueue(jobconfig.getAmQueue());
-        flinkBuilder.setAppJarPath(jobconfig.getAppJarPath());
+        flinkBuilder.setAppJarPath(jobconfig.getJarPath());
         flinkBuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
         if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){
             String[] jobArgs = jobconfig.getArgs().trim().split(" ");
@@ -101,7 +103,7 @@ public class FlinkJob extends YarnJob {
         try {
             runner = flinkBuilder.
            getYarnRunner(jobDescription.getProject().getName(),
-               flinkUser, hadoopDir, flinkDir, nameNodeIpPort);
+               flinkUser, jobUser, hadoopDir, flinkDir, nameNodeIpPort);
 
         } catch (IOException e) {
           logger.log(Level.SEVERE,
