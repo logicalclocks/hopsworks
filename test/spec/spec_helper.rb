@@ -29,7 +29,7 @@ RSpec.configure do |config|
 end
 
 Airborne.configure do |config|
-  config.base_url = 'http://localhost:8080'
+  config.base_url = "http://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
   config.headers = { content_type: 'application/json' }
 end
 
