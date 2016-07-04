@@ -78,9 +78,9 @@
                   Username
                   <span class="glyphicon sort-icon" ng-show="sortType == 'username'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('jobRunningTime')" style="width: 10%">
+                <th ng-click="sort('sortExecutionTime')" style="width: 10%">
                   Running Time (MM:SS)
-                <span class="glyphicon sort-icon" ng-show="sortType == 'jobRunningTime'" ng-class="{'glyphicon glyphicon-sort-by-order':sortReverse,'glyphicon glyphicon-sort-by-order-alt':!sortReverse}"></span>
+                <span class="glyphicon sort-icon" ng-show="sortType == 'sortExecutionTime'" ng-class="{'glyphicon glyphicon-sort-by-order':sortReverse,'glyphicon glyphicon-sort-by-order-alt':!sortReverse}"></span>
                 </th>
                 <th ng-click="sort('jobType')" style="width: 10%">
                   Job Type
@@ -99,7 +99,7 @@
                 </th>
                 </thead>
                 <tbody>
-                  <tr dir-paginate ="job in historyCtrl.jobs | orderBy:sortType:sortReverse | filter:historyCtrl.searchFilter | filter:filterJobs | itemsPerPage:pageSize ">
+                    <tr dir-paginate ="job in historyCtrl.jobs | orderBy:[sortType,sortExecutionTime]:sortReverse | filter:historyCtrl.searchFilter | filter:filterJobs | itemsPerPage:pageSize ">
                     <td>
                         {{job.id}}
                     </td>
@@ -138,6 +138,11 @@
                   </tr>
                 </tbody>
               </table>
+              <dir-pagination-controls
+                max-size="5"
+                direction-links="true"
+                boundary-links="true" >
+              </dir-pagination-controls>  
             </div>
           </div>
 

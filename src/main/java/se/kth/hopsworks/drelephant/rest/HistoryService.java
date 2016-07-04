@@ -128,12 +128,12 @@ public class HistoryService {
     }
 
   
-  @POST
-    @Path("heuristics")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-    public Response Heuristics(JobDetailDTO jobDetailDTO,
+@POST
+@Path("heuristics")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
+@AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+public Response Heuristics(JobDetailDTO jobDetailDTO,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException {
         
@@ -199,6 +199,7 @@ public class HistoryService {
         }
         
         defaultAnalysis(jobsHistoryResult);
+        mediumAnalysis(jobsHistoryResult);
         premiumAnalysis(jobsHistoryResult);
         
         GenericEntity<JobHeuristicDTO> jobsHistory = new GenericEntity<JobHeuristicDTO>(jobsHistoryResult){};
@@ -207,7 +208,11 @@ public class HistoryService {
         jobsHistory).build();
     }
     
-    
+    /**
+     * A rest call to Dr. Elephant which returns the details for a specific application
+     * @param jobId
+     * @return 
+     */
     private JsonResponse getJobDetailsFromDrElephant(String jobId){
     
         try {
@@ -280,6 +285,10 @@ public class HistoryService {
         return memoryInMB;
     }
     
+    /**
+     * The default analysis tries to find the minimum resources required for an application.
+     * @param jobsHistoryResult 
+     */
     private void defaultAnalysis(JobHeuristicDTO jobsHistoryResult){
         int defaultAmMemory = 512;
         int defaultAmVcores = 1;
@@ -291,23 +300,22 @@ public class HistoryService {
         Iterator<JobHeuristicDetailsDTO> itr = resultsForAnalysis.iterator();
         
         while(itr.hasNext()) {
-         JobHeuristicDetailsDTO obj = itr.next();
+            JobHeuristicDetailsDTO obj = itr.next();
          
-         if(obj.getTotalSeverity().equals("LOW") && obj.getAmMemory()<= defaultAmMemory && obj.getAmVcores() <= defaultAmVcores &&
-            obj.getNumberOfExecutors()<= defaultNumOfExecutors && obj.getExecutorMemory()<= defaultExecutorsMemory)
-         {
-             defaultAmMemory = obj.getAmMemory();
-             defaultAmVcores = obj.getAmVcores();
-             defaultNumOfExecutors = obj.getNumberOfExecutors();
-             defaultExecutorsMemory = obj.getExecutorMemory();
-             executionDuration = obj.getExecutionTime();
-         }
-      }
+            if(obj.getTotalSeverity().equals("LOW") && obj.getAmMemory()<= defaultAmMemory && obj.getAmVcores() <= defaultAmVcores &&
+               obj.getNumberOfExecutors()<= defaultNumOfExecutors && obj.getExecutorMemory()<= defaultExecutorsMemory){
+                defaultAmMemory = obj.getAmMemory();
+                defaultAmVcores = obj.getAmVcores();
+                defaultNumOfExecutors = obj.getNumberOfExecutors();
+                defaultExecutorsMemory = obj.getExecutorMemory();
+                executionDuration = obj.getExecutionTime();
+            }
+        }
         JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Default", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
                                     defaultExecutorCores, defaultExecutorsMemory);
         
         if (executionDuration == 0){
-            proposal.setEstimatedExecutionTime(jobsHistoryResult.getEstimatedTime());
+            proposal.setEstimatedExecutionTime("Unpredictable");
         }
         else{
             proposal.setEstimatedExecutionTime(convertMsToTime(executionDuration));
@@ -316,6 +324,49 @@ public class HistoryService {
         jobsHistoryResult.addProposal(proposal);        
     }
     
+    /**
+     * The medium analysis tries to find an average of resources required for an application.
+     * It operates if the number of the results for analysis are more than 3.
+     * @param jobsHistoryResult 
+     */
+        private void mediumAnalysis(JobHeuristicDTO jobsHistoryResult){
+            int counter = 0;
+            int defaultAmMemory = 0;
+            int defaultAmVcores = 0;
+            int defaultNumOfExecutors = 0;
+            int defaultExecutorsMemory = 0;
+            int defaultExecutorCores = 1;
+        
+            int size = resultsForAnalysis.size();
+            Iterator<JobHeuristicDetailsDTO> itr = resultsForAnalysis.iterator();
+        
+            // The analysis takes places if and only if the results for analysis are more than 3.
+            while(itr.hasNext() && size >= 3) {
+                JobHeuristicDetailsDTO obj = itr.next();
+         
+                if(obj.getTotalSeverity().equals("LOW")){
+                    defaultAmMemory += obj.getAmMemory();
+                    defaultAmVcores += obj.getAmVcores();
+                    defaultNumOfExecutors += obj.getNumberOfExecutors();
+                    defaultExecutorsMemory += obj.getExecutorMemory();
+                    counter++;
+                }
+            }
+        
+            if(size >= 3){
+                JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Medium", average(defaultAmMemory,counter), defaultAmVcores/counter, defaultNumOfExecutors/counter,
+                                    defaultExecutorCores, average(defaultExecutorsMemory,counter));
+        
+                proposal.setEstimatedExecutionTime("Unpredictable");
+                jobsHistoryResult.addProposal(proposal);
+        }
+    }
+    
+    /**
+     * The premium analysis takes into account the minimum execution duration of an application and
+     * returns the required resources in order to achieve this time.
+     * @param jobsHistoryResult 
+     */    
     private void premiumAnalysis(JobHeuristicDTO jobsHistoryResult){
         int defaultAmMemory = 512;
         int defaultAmVcores = 1;
@@ -329,8 +380,7 @@ public class HistoryService {
         while(itr.hasNext()) {
          JobHeuristicDetailsDTO obj = itr.next();
          
-         if(obj.getTotalSeverity().equals("LOW") && ((obj.getAmMemory()*obj.getAmVcores() > defaultAmMemory*defaultAmVcores)
-                 || (obj.getExecutorMemory()*obj.getNumberOfExecutors()>defaultExecutorsMemory*defaultNumOfExecutors))){
+         if(obj.getTotalSeverity().equals("LOW") && (obj.getExecutionTime() < executionDuration || executionDuration == 0)){
              defaultAmMemory = obj.getAmMemory();
              defaultAmVcores = obj.getAmVcores();
              defaultExecutorsMemory = obj.getExecutorMemory();
@@ -340,29 +390,44 @@ public class HistoryService {
          
          int blocks = jobsHistoryResult.getInputBlocks();
 
+         // The system checks the number of blocks for the input file.
+         // Then proposed a configuration with the same number of executors as the number of the blocks.
          if(blocks != 0){
              defaultNumOfExecutors = blocks;
          }
          
         JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Premium", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
                                     defaultExecutorCores, defaultExecutorsMemory);
-        if (executionDuration == 0){
-            proposal.setEstimatedExecutionTime(jobsHistoryResult.getEstimatedTime());
-        }
-        else{
-            proposal.setEstimatedExecutionTime(convertMsToTime(executionDuration));
-        }
+        
+        proposal.setEstimatedExecutionTime(convertMsToTime(executionDuration));
         
         jobsHistoryResult.addProposal(proposal);
-    }
+        }
     
-        private String convertMsToTime(long timeMs){
-        
+    /**
+     * A converter of Milliseconds (MS) to HH:MM:SS
+     * @param timeMs
+     * @return 
+     */
+    private String convertMsToTime(long timeMs){    
         String hms = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(timeMs),
             TimeUnit.MILLISECONDS.toMinutes(timeMs) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(timeMs)),
             TimeUnit.MILLISECONDS.toSeconds(timeMs) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeMs)));
     
         return hms;
+    }
+        
+    /**
+     * The method calculated the average amount of memory - in the scale of 512 MB
+     * @param value
+     * @param size
+     * @return 
+     */
+    private int average(int value, int size){
+            int div = ((value + size - 1) / size) / 512;
+            
+            int averageValue = div * 512;
+            return averageValue;
     }
  
 }

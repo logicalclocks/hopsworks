@@ -46,9 +46,6 @@ public class SparkYarnRunnerBuilder {
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
   private String sparkHistoryServerIp;
-
-  private boolean enableLogDir = true;
-  private String eventLogDir;
   private String sessionId;//used by Kafka
   private String kafkaAddress;
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass) {
@@ -182,12 +179,12 @@ public class SparkYarnRunnerBuilder {
     Date date= new Date();
     Timestamp tm = new Timestamp(date.getTime());
     long timeString = tm.getTime();
-    String sparkConfTempFile = "/tmp/spark-conf-dir/spark_" + timeString + ".conf"; 
+    String sparkConfTempFile = "/tmp/spark-conf-dir/spark-conf_" + timeString + ".conf"; 
     
     File file = new File(sparkConfTempFile);
     FileOutputStream fop = new FileOutputStream(file);
     
-    sparkProperties.store(fop, "Store Spark Properties file.");    
+    sparkProperties.store(fop, "Store Spark Properties file.");
     
     is.close();
     fop.close();

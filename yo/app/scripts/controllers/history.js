@@ -9,6 +9,8 @@ angular.module('hopsWorksApp')
             self.projectId = $routeParams.projectID;
             $scope.convertMS;
             
+            $scope.pageSize = 12;
+            
             $scope.searchChoices=[
                 {
                     id : 0, 
@@ -79,6 +81,10 @@ angular.module('hopsWorksApp')
               $scope.sortReverse = !$scope.sortReverse; //if true make it false and vice versa
             };
             
+            $scope.sortExecutionTime = function(job) {
+                return job.finishTime - job.startTime;
+            }
+            
             self.showDetails = function (job) {
               ModalService.historyDetails(job , 'lg');
             };
@@ -111,15 +117,12 @@ angular.module('hopsWorksApp')
             
             $scope.filterJobs = function(job){
                 if($scope.searchName === "jobType" && $scope.valueId !== "null"){
-                    console.log("jobType = " + $scope.valueId);
                     return job.jobType === $scope.valueId;
                 }
                 else if($scope.searchName === "severity" && $scope.valueId !== "null"){
-                    console.log("severity = " + $scope.valueId);
                     return job.severity === $scope.valueId;
                 }
                 else if($scope.searchName === "score" && $scope.valueId !== "null"){
-                    console.log("score = " + $scope.valueId);
                     return job.score === $scope.valueId;
                 }
                 else{
@@ -127,8 +130,7 @@ angular.module('hopsWorksApp')
                 }
             };
             
-            var getAllHistory = function () {
-              console.log("Self Id: " + self.projectId.projectname);
+            var getAllHistory = function () {;
               HistoryService.getAllHistoryRecords(self.projectId).then(
                       function (success) {
                         self.jobs = success.data;
