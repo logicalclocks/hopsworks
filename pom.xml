@@ -547,6 +547,9 @@
                 </goals>
               </execution>
             </executions>
+            <configuration>
+              <jrubyVersion>9.1.2.0</jrubyVersion>
+            </configuration>
           </plugin>
           <plugin>
             <groupId>de.saumya.mojo</groupId>
