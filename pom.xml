@@ -440,6 +440,13 @@
         </dependency>
         <dependency>
           <groupId>rubygems</groupId>
+          <artifactId>activerecord</artifactId>
+          <version>4.2.6</version>
+          <type>gem</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>rubygems</groupId>
           <artifactId>jdbc-mysql</artifactId>
           <version>5.1.37</version>
           <type>gem</type>
@@ -476,7 +483,7 @@
       </dependencies>
       <build>
         <plugins>
-          <plugin>
+          <!--plugin>
             <groupId>org.codehaus.cargo</groupId>
             <artifactId>cargo-maven2-plugin</artifactId>
             <version>1.5.0</version>
@@ -535,7 +542,7 @@
                 <version>4.1.1</version>
               </dependency>            
             </dependencies>
-          </plugin>
+          </plugin-->
           <plugin>
             <groupId>de.saumya.mojo</groupId>
             <artifactId>gem-maven-plugin</artifactId>
@@ -560,6 +567,7 @@
               <launchDirectory>${basedir}/test</launchDirectory>
               <testReportDirectory>${basedir}</testReportDirectory>
               <reportName>/orders-test-report.html</reportName>
+              <jrubyVersion>9.1.2.0</jrubyVersion>
             </configuration>
             <extensions>true</extensions>
             <executions>
