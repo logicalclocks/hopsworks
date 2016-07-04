@@ -338,12 +338,14 @@ public class JobService {
                   "<div id=\"footer\" class=\"ui-widget\">[\\s\\S]+<tbody>",
                   "<tbody>");
           ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td ", "<td ");
+          ui = ui.replaceAll(
+                  "<li><a ui-sref=\"submit\"[\\s\\S]+new Job</a></li>", "");
           
           //when geting the logs the file can be very big, we don't want to go 
           //through all of it.
           Header header = method.getResponseHeader("Content-Length");
           if (header != null && Integer.parseInt(header.getValue()) < 100000) {
-            String[] elems = ui.split("<");
+            String[] elems = ui.split("(?=[<])");
             ui = "";
             for (String elem : elems) {
               if (elem.equals("")) {
@@ -372,16 +374,24 @@ public class JobService {
                             "href=\"/hopsworks/api/project/"
                             + project.getId() + "/jobs/" + jobId + "/prox/"
                             + param);
+                  } else if (subElem.contains("src=\"//")) {
+                    subElem = subElem.replace("src=\"/",
+                            "src=\"/hopsworks/api/project/"
+                            + project.getId() + "/jobs/" + jobId + "/prox");
                   } else if (subElem.contains("src=\"/")) {
                     subElem = subElem.replace("src=\"",
                             "src=\"/hopsworks/api/project/"
                             + project.getId() + "/jobs/" + jobId + "/prox/"
                             + source);
-                  } else if (subElem.contains("src=")) {
+                  } else if (subElem.contains("src=\"http")) {
+                    subElem = subElem.replace("src=\"",
+                            "src=\"/hopsworks/api/project/"
+                            + project.getId() + "/jobs/" + jobId + "/prox/");
+                  } else if (subElem.contains("src=\"")) {
                     subElem = subElem.replace("src=\"",
                             "src=\"/hopsworks/api/project/"
                             + project.getId() + "/jobs/" + jobId + "/prox/"
-                            + source + "/");
+                            + param);
                   }
                   subElem = subElem.replace("?", "@hwqm");
                   elem = elem + subElem + " ";
@@ -389,7 +399,7 @@ public class JobService {
 
               }
 
-              ui = ui + "<" + elem;
+              ui = ui + elem;
             }
           }
           response.entity(ui);
