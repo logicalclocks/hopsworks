@@ -172,7 +172,7 @@ public class YarnLogUtil {
               logReader = new ContainerLogsReader(valueStream);
             }
             if (logReader != null) {
-              if (!testLogs(logReader, "stdout")) {
+              if (!testLogs(logReader, "out")) {
                 return false;
               }
             }
@@ -194,7 +194,7 @@ public class YarnLogUtil {
     String logType = logReader.nextLog();
     while (logType != null) {
       foundLog = true;
-      if (!desiredLogType.equals(logType)) {
+      if (!logType.contains(desiredLogType)) {
         foundLog = false;
       }
       logType = logReader.nextLog();
@@ -214,7 +214,7 @@ public class YarnLogUtil {
     String logType = logReader.nextLog();
     while (logType != null) {
       if (desiredLogType == null || desiredLogType.isEmpty()
-              || desiredLogType.equals(logType)) {
+              || logType.contains(desiredLogType)) {
         long logLength = logReader.getCurrentLogLength();
         if (logLength == 0) {
           logType = logReader.nextLog();
