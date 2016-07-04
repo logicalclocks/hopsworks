@@ -175,7 +175,7 @@ angular.module('hopsWorksApp', [
               }
             })
 
-            .when('/project/:projectID/datasets/:datasetName', {
+            .when('/project/:projectID/datasets/:datasetName/:fileName*?', { 
               templateUrl: 'views/datasetsBrowser.html',
               controller: 'ProjectCtrl as projectCtrl',
               resolve: {

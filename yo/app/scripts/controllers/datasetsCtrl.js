@@ -2,10 +2,10 @@
 
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
-          'DataSetService', '$routeParams', 'ModalService', 'growl', '$location',
+          'DataSetService', '$routeParams','$route', 'ModalService', 'growl', '$location',
           'MetadataHelperService',
           function ($scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, $routeParams,
-                  ModalService, growl, $location, MetadataHelperService) {
+                  $route, ModalService, growl, $location, MetadataHelperService) {
 
             var self = this;
             self.working = false;
@@ -18,6 +18,7 @@ angular.module('hopsWorksApp')
             self.selectedList = []; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
             self.sharedPath; //The details about the currently selected file.
+            self.routeParamArray = [];
 
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
@@ -64,20 +65,20 @@ angular.module('hopsWorksApp')
                 return true;
               }
               return false;
-            }
+            };
 
             self.selectInode = function (inode) {
               // add to selectedList
-            }
+            };
 
             self.selectInode = function (inode) {
               // splice
-            }
+            };
 
             $scope.sort = function (keyname) {
               $scope.sortKey = keyname;   //set the sortKey to the param passed
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
-            }
+            };
 
             /**
              * watch for changes happening in service variables from the other controller
@@ -173,6 +174,8 @@ angular.module('hopsWorksApp')
               var newPathArray;
               if (pathComponents) {
                 newPathArray = pathComponents;
+              } else if (self.routeParamArray){
+                newPathArray = self.pathArray.concat(self.routeParamArray);
               } else {
                 newPathArray = self.pathArray;
               }
@@ -191,9 +194,20 @@ angular.module('hopsWorksApp')
                         self.working = false;
                         console.log(success);
                       }, function (error) {
-                self.working = false;
-                console.log("Error getting the contents of the path " + getPath(newPathArray));
-                console.log(error);
+                        if (error.data.errorMsg.indexOf("Path is not a directory.") > -1) {
+                          self.openDir(newPathArray.pop());
+                          self.pathArray = newPathArray;
+                          self.routeParamArray = [];
+                          getDirContents();
+                        } else if (error.data.errorMsg.indexOf("Path not found :") > -1) {
+                          self.routeParamArray = [];
+                          $route.updateParams({fileName:''});
+                          console.log($routeParams.fileName);
+                        }
+                        self.working = false;
+                        console.log("Error getting the contents of the path " 
+                                     + getPath(newPathArray));
+                        console.log(error);
               });
             };
 
@@ -206,6 +220,13 @@ angular.module('hopsWorksApp')
                 //No current dataset is set: get all datasets.
                 self.pathArray = [];
               }
+              if ($routeParams.datasetName && $routeParams.fileName) {
+                //file name is set: get the contents
+                var paths = $routeParams.fileName.split("/");
+                paths.forEach(function(entry) {
+                  self.routeParamArray.push(entry);
+                });               
+              } 
               getDirContents();
               $scope.tgState = true;
             };
