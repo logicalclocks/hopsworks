@@ -132,7 +132,7 @@ public class SparkController {
 
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
         hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser(),
-            job.getProject().getName() + "__" + user.getUsername(),
+           hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
     settings.getKafkaConnectStr());
 
     submitter.stopExecution(sparkjob, appid);
