@@ -101,7 +101,6 @@ public class YarnRunner {
   private String hadoopDir;
   private String sparkDir;
   private String nameNodeIpPort;
-  private String sparkConfDir;
 
   private boolean readyToSubmit = false;
   private ApplicationSubmissionContext appContext;
@@ -257,9 +256,8 @@ public class YarnRunner {
         yarnClient.close();
         
     //Clean up some
-    removeAllNecessary();
+    //removeAllNecessary();
     yarnClient = null;
-    conf = null;
     appId = null;
     appContext = null;
 
@@ -501,7 +499,7 @@ public class YarnRunner {
     return amCommands;
   }
 
-  private void removeAllNecessary() throws IOException {
+  protected void removeAllNecessary() throws IOException {
     FileSystem fs = FileSystem.get(conf);
     for (String s : filesToRemove) {
       if (s.startsWith("hdfs:") && fs.exists(new Path(s))) {
@@ -510,6 +508,7 @@ public class YarnRunner {
         Files.deleteIfExists(Paths.get(s));
       }
     }
+    conf = null;
   }
 
   //---------------------------------------------------------------------------        
@@ -656,8 +655,6 @@ public class YarnRunner {
     private Configuration conf;
     //YarnClient
     private YarnClient yarnClient;
-    //Spark Conf File
-    private String sparkConfDir;
 
     private String hadoopDir;
     private String sparkDir;
@@ -801,6 +798,10 @@ public class YarnRunner {
       }
       return this;
     }
+    
+    public void addFilesToRemove(String path){
+        filesToRemove.add(path);
+    }
 
     /**
      * Sets the path to which to write the Application Master's stdout.
@@ -822,23 +823,6 @@ public class YarnRunner {
     public Builder stdErrPath(String path) {
       this.stdErrPath = path;
       return this;
-    }
-    
-    public Builder setSparkConfDir(String pathFile){
-        this.sparkConfDir = pathFile;
-        return this;
-    }
-    
-    public String getSparkConfDir(){
-        return sparkConfDir;
-    }
-    
-    public void removeSparkConfFile(String path) {
-        try {
-            Files.deleteIfExists(Paths.get(path));
-        } catch (IOException ex) {
-            Logger.getLogger(YarnRunner.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
     public Builder logPathsRelativeToResourcesPath(boolean value) {

@@ -189,6 +189,8 @@ public class SparkYarnRunnerBuilder {
     is.close();
     fop.close();
     
+    builder.addFilesToRemove(sparkConfTempFile);
+    
     amargs.append(" --properties-file ");
     amargs.append(sparkConfTempFile);
     
@@ -210,7 +212,6 @@ public class SparkYarnRunnerBuilder {
 
     //Set app name
     builder.appName(jobName);
-    builder.setSparkConfDir(sparkConfTempFile);
 
     return builder.build(hadoopDir, sparkDir, nameNodeIpPort, JobType.SPARK);
   }

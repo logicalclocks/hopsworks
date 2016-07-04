@@ -293,7 +293,7 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         int defaultAmMemory = 512;
         int defaultAmVcores = 1;
         int defaultNumOfExecutors = 1;
-        int defaultExecutorsMemory = 512;
+        int defaultExecutorsMemory = 1024;
         int defaultExecutorCores = 1;
         long executionDuration = 0;
         
@@ -311,7 +311,7 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
                 executionDuration = obj.getExecutionTime();
             }
         }
-        JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Default", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
+        JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Minimum", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
                                     defaultExecutorCores, defaultExecutorsMemory);
         
         if (executionDuration == 0){
@@ -384,6 +384,7 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
              defaultAmMemory = obj.getAmMemory();
              defaultAmVcores = obj.getAmVcores();
              defaultExecutorsMemory = obj.getExecutorMemory();
+             defaultNumOfExecutors = obj.getNumberOfExecutors();
              executionDuration = obj.getExecutionTime();
          }
         }
@@ -424,9 +425,8 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
      * @return 
      */
     private int average(int value, int size){
-            int div = ((value + size - 1) / size) / 512;
+            int averageValue = ((value + size - 1) / size);
             
-            int averageValue = div * 512;
             return averageValue;
     }
  
