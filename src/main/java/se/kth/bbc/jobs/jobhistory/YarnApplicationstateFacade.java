@@ -63,4 +63,11 @@ public class YarnApplicationstateFacade extends AbstractFacade<YarnApplicationst
             setParameter("appsmstate", appState);
     return query.getResultList();
   }
+
+  public YarnApplicationstate findByAppId(String appId) {
+    TypedQuery<YarnApplicationstate> query = em.createNamedQuery("YarnApplicationstate.findByApplicationid",
+        YarnApplicationstate.class).setParameter(
+        "applicationid", appId);
+    return query.getSingleResult();
+  }
 }

@@ -466,6 +466,26 @@ public class HdfsUsersController {
     }
 
     /**
+     * Returns the username given a hdfs username
+     * <p>
+     * @param hdfsUser
+     * @return
+     */
+    public String getUserName(String hdfsUser) {
+        return hdfsUser.split(USER_NAME_DELIMITER)[1];
+    }
+
+    /**
+     * Returns the project name given a hdfs username
+     * <p>
+     * @param hdfsUser
+     * @return
+     */
+    public String getProjectName(String hdfsUser) {
+        return hdfsUser.split(USER_NAME_DELIMITER)[0];
+    }
+    
+    /**
      * If the dataset is shared with this project we will get a group name that
      * does not exist.
      * <p>
