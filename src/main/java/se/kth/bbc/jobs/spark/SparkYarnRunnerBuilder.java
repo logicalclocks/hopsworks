@@ -176,7 +176,7 @@ public class SparkYarnRunnerBuilder {
     //Load the Spark Configuration file, so that is loaded by the 
     //ApplicationMaster
     amargs.append(" --properties-file ");
-    amargs.append(sparkDir).append("/").append(Settings.SPARK_CONFIG_FILE);
+    amargs.append("/tmp/").append(Settings.SPARK_CONFIG_FILE);
     
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);
