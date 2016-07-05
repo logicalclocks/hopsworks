@@ -148,12 +148,22 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.SPARK_HISTORY_SERVER_ENV, sparkHistoryServerIp);
     addSystemProperty(Settings.SPARK_NUMBER_EXECUTORS, Integer.toString(
             numberOfExecutors));
+    
+    List<String> jobSpecificProperties = new ArrayList<>();
+    jobSpecificProperties.add(Settings.KAFKA_SESSIONID_ENV_VAR);
+    jobSpecificProperties.add(Settings.KAFKA_BROKERADDR_ENV_VAR);
+    jobSpecificProperties.add(Settings.SPARK_HISTORY_SERVER_ENV);
+    jobSpecificProperties.add(Settings.SPARK_NUMBER_EXECUTORS);
+    jobSpecificProperties.add("spark.driver.memory");
+    jobSpecificProperties.add("spark.driver.cores");
+    jobSpecificProperties.add("spark.executor.memory");
+    jobSpecificProperties.add("spark.executor.cores");
 
-    for (String s : sysProps.keySet()) {
-      String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
-      builder.addJavaOption(option);
-    }
-
+    addSystemProperty("spark.driver.memory", Integer.toString(driverMemory)+"m");
+    addSystemProperty("spark.driver.cores", Integer.toString(driverCores));
+    addSystemProperty("spark.executor.memory", executorMemory);
+    addSystemProperty("spark.executor.cores", Integer.toString(executorCores));
+    
     //Add local resources to spark environment too
     builder.addCommand(new SparkSetEnvironmentCommand());
 
@@ -166,33 +176,20 @@ public class SparkYarnRunnerBuilder {
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
-    
+ 
     Properties sparkProperties = new Properties();
     sparkProperties.load(is);
-    
-    sparkProperties.setProperty("spark.driver.memory", Integer.toString(driverMemory)+"m");
-    sparkProperties.setProperty("spark.driver.cores", Integer.toString(driverCores));
-    sparkProperties.setProperty("spark.executor.memory", executorMemory);
-    sparkProperties.setProperty("spark.executor.cores", Integer.toString(executorCores));
-    sparkProperties.setProperty("spark.executor.instances", Integer.toString(numberOfExecutors));
-    
-    Date date= new Date();
-    Timestamp tm = new Timestamp(date.getTime());
-    long timeString = tm.getTime();
-    String sparkConfTempFile = "/tmp/spark-conf-dir/spark-conf_" + timeString + ".conf"; 
-    
-    File file = new File(sparkConfTempFile);
-    FileOutputStream fop = new FileOutputStream(file);
-    
-    sparkProperties.store(fop, "Store Spark Properties file.");
+    for(String property : sparkProperties.stringPropertyNames()){
+        if(!jobSpecificProperties.contains(property)){
+            addSystemProperty(property, sparkProperties.getProperty(property).trim());
+        }
+    }
+    for (String s : sysProps.keySet()) {
+      String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
+      builder.addJavaOption(option);
+    }
     
     is.close();
-    fop.close();
-    
-    builder.addFilesToRemove(sparkConfTempFile);
-    
-    amargs.append(" --properties-file ");
-    amargs.append(sparkConfTempFile);
     
     // spark 1.5.x replaced --num-executors with --properties-file
     // https://fossies.org/diffs/spark/1.4.1_vs_1.5.0/
