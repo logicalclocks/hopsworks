@@ -272,6 +272,10 @@ angular.module('hopsWorksApp')
             self.goToMetadataDesigner = function () {
               self.goToUrl('metadata');
             };
+            
+            self.goToHistory = function () {
+                $location.path('history/' + self.pId + '/history');
+            };
 
             /**
              * Checks if the file has been accepted before opening.
@@ -298,6 +302,7 @@ angular.module('hopsWorksApp')
                                       $location.path($location.path() + '/');
                                       growl.success("Success: " + success.data.successMessage, {title: 'Success', ttl: 5000});
                                     }, function (error) {
+
                               growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
                             });
                           }
@@ -353,7 +358,6 @@ angular.module('hopsWorksApp')
               }
               return false;
             };
-
 
             self.hdfsUsage = function () {
               return convertSize(self.projectFile.hdfsUsageInBytes);

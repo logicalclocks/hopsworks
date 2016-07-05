@@ -368,6 +368,9 @@ public abstract class YarnJob extends HopsJob {
         return false;
       }
       finalState = JobState.getJobState(appState);
+//      if(finalState == JobState.FINISHED){
+//          updateJobHistoryApp(monitor.getApplicationId().toString());
+//      }
       return true;
     }
   }
@@ -436,6 +439,13 @@ public abstract class YarnJob extends HopsJob {
     if (!proceed) {
       return;
     }
+      try {
+          runner.removeAllNecessary();
+      } catch (IOException ex) {
+          logger.log(Level.SEVERE,
+              "Exception while trying to delete job tmp files "
+              + getExecution() + " to HDFS.", ex);
+      }
     updateState(JobState.AGGREGATING_LOGS);
     copyLogs();
     updateState(getFinalState());

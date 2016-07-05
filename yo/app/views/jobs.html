@@ -209,7 +209,8 @@
                       </div>
                     </td>
                     <td>
-                      {{jobsCtrl.runningInfo['' + job.id].duration * 0.000016667| number:2}}
+<!--                      {{jobsCtrl.runningInfo['' + job.id].duration * 0.000016667| number:2}}-->
+                          {{convertMS(jobsCtrl.runningInfo['' + job.id].duration)}}
                     </td>
                     <td>
                       <span class="field-info" tooltip="Stop"

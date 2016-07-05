@@ -336,6 +336,24 @@ angular.module('hopsWorksApp')
               }, 5000);
             };
             startPolling();
+            
+            $scope.convertMS = function(ms) {
+                    if(ms===undefined){
+                        return "";
+                    }    
+                    var m, s;
+                    s = Math.floor(ms / 1000);
+                    m = Math.floor(s / 60);
+                    s = s % 60;
+                    if (s.toString().length < 2) {
+                        s = '0'+s;
+                    }
+                    if (m.toString().length < 2) {
+                        m = '0'+m;
+                    }
+                    var ret = m + ":" + s;
+                    return ret;
+            };
 
           }]);
 

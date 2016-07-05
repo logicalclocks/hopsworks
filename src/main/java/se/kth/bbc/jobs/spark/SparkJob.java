@@ -84,6 +84,7 @@ public final class SparkJob extends YarnJob {
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
     runnerbuilder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
+
     runnerbuilder.setSessionId(jobconfig.getSessionId());
     runnerbuilder.setKafkaAddress(kafkaAddress);
     
@@ -95,6 +96,7 @@ public final class SparkJob extends YarnJob {
         runnerbuilder.addSystemProperty(jobSystemProperty.getKey(), jobSystemProperty.getValue());
       }
     }
+
     try {
       runner = runnerbuilder.
           getYarnRunner(jobDescription.getProject().getName(),

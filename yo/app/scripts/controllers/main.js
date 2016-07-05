@@ -4,58 +4,84 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MainCtrl', ['$interval', '$cookies', '$location', '$scope', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService', 'ProjectService', 'growl', 'MessageService', '$routeParams',
-            function ($interval, $cookies, $location, $scope, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl, MessageService, $routeParams) {
+        .controller('MainCtrl', ['$interval','$cookies', '$location','$scope', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService','ProjectService','growl','MessageService','$routeParams',
+          function ($interval, $cookies, $location, $scope, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl, MessageService, $routeParams) {
 
-                var self = this;
-                self.email = $cookies['email'];
-                self.emailHash = md5.createHash(self.email || '');
-                var elasticService = ElasticService();
+            var self = this;
+            self.email = $cookies['email'];
+            self.emailHash = md5.createHash(self.email || '');
+            var elasticService = ElasticService();
 
-                if (!angular.isUndefined($routeParams.datasetName)) {
-                    self.searchType = "datasetCentric";
-                } else if (!angular.isUndefined($routeParams.projectID)) {
-                    self.searchType = "projectCentric";
-                } else {
-                    self.searchType = "global";
-                }
+            if(!angular.isUndefined($routeParams.datasetName)){
+              self.searchType = "datasetCentric";
+            }
+            else if(!angular.isUndefined($routeParams.projectID)){
+              self.searchType = "projectCentric";
+            }
+            else {
+              self.searchType = "global";
+            }
 
-                self.logout = function () {
-                    AuthService.logout(self.user).then(
-                            function (success) {
-                                $location.url('/login');
-                                delete $cookies.email;
-                                localStorage.removeItem("SESSIONID");
-                                sessionStorage.removeItem("SESSIONID");
-                            }, function (error) {
-                        self.errorMessage = error.data.msg;
-                    });
-                };
+            self.getEmailHash = function(email) {
+              return md5.createHash(email || '');
+            };
+            
+            self.logout = function () {
+              AuthService.logout(self.user).then(
+                      function (success) {
+                        $location.url('/login');
+                        delete $cookies.email;
+                        localStorage.removeItem("SESSIONID");
+                        sessionStorage.removeItem("SESSIONID");
+                      }, function (error) {
+                self.errorMessage = error.data.msg;
+              });
+            };
 
-                
-                self.profileModal = function () {
-                    ModalService.profile('md');
-                };
+            self.profileModal = function () {
+              ModalService.profile('md');
+            };
 
-                self.sshKeysModal = function () {
-                    ModalService.sshKeys('lg');
-                };
+            self.sshKeysModal = function () {
+              ModalService.sshKeys('lg');
+            };
 
-                self.getHostname = function () {
-                    return $location.host();
-                };
+            self.getHostname = function () {
+              return $location.host();
+            };
+            
+            self.getUser = function () {
+              return self.email.substring(0, self.email.indexOf("@"));
+            };
 
-                self.getUser = function () {
-                    return self.email.substring(0, self.email.indexOf("@"));
-                };
+            self.view = function (name, id, dataType) {
 
-                self.view = function (name, id, dataType) {
+              if (dataType === 'project') {
+                ProjectService.getProjectInfo({projectName: name}).$promise.then(
+                        function (success) {
 
-                    if (dataType === 'project') {
-                        ProjectService.getProjectInfo({projectName: name}).$promise.then(
-                                function (success) {
+                          ModalService.viewSearchResult('md', success, dataType)
+                                  .then(function (success) {
+                                    growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
+                                  }, function (error) {
 
-                                    ModalService.viewSearchResult('md', success, dataType)
+                                  });
+                        }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                });
+              } else if (dataType === 'dataset') {
+                //fetch the dataset
+                ProjectService.getDatasetInfo({inodeId: id}).$promise.then(
+                        function (response) {
+                          var projects;
+
+                          //fetch the projects to pass them in the modal. Fixes empty projects array on ui-select initialization
+                          ProjectService.query().$promise.then(
+                                  function (success) {
+                                    projects = success;
+
+                                    //show dataset
+                                    ModalService.viewSearchResult('md', response, dataType, projects)
                                             .then(function (success) {
                                                 growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                                             }, function (error) {
@@ -63,6 +89,7 @@ angular.module('hopsWorksApp')
                                             });
                                 }, function (error) {
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                        });
                         });
                     } else if (dataType === 'ds') {
                         //fetch the dataset
@@ -90,7 +117,6 @@ angular.module('hopsWorksApp')
                         });
                     }
                 };
-
 
                 var getUnreadCount = function () {
                     MessageService.getUnreadCount().then(
@@ -230,12 +256,13 @@ angular.module('hopsWorksApp')
 
                     datePicker();// this will load the function so that the date picker can call it.
                 };
-                var datePicker = function () {
-                    $(function () {
-                        $('#datetimepicker1').datetimepicker();
-                    });
-                };
+                
                 $scope.$on("$destroy", function () {
                     $interval.cancel(getUnreadCountInterval);
                 });
+                
+                var datePicker = function () {
+                    $(function () {
+                        $('#datetimepicker1').datetimepicker();
+                    })};
             }]);

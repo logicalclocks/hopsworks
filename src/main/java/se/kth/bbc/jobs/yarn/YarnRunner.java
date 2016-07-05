@@ -276,9 +276,8 @@ public class YarnRunner {
         yarnClient.close();
         
     //Clean up some
-    removeAllNecessary();
+    //removeAllNecessary();
     yarnClient = null;
-    conf = null;
     appId = null;
     appContext = null;
 
@@ -520,7 +519,7 @@ public class YarnRunner {
     return amCommands;
   }
 
-  private void removeAllNecessary() throws IOException {
+  protected void removeAllNecessary() throws IOException {
     FileSystem fs = FileSystem.get(conf);
     for (String s : filesToRemove) {
       if (s.startsWith("hdfs:") && fs.exists(new Path(s))) {
@@ -529,7 +528,8 @@ public class YarnRunner {
       } else {
         Files.deleteIfExists(Paths.get(s));
       }
-    } 
+    }
+    conf = null;
     fs.close();
   }
 
@@ -812,6 +812,10 @@ public class YarnRunner {
         filesToRemove.add(path);
       }
       return this;
+    }
+    
+    public void addFilesToRemove(String path){
+        filesToRemove.add(path);
     }
 
     /**

@@ -12,17 +12,20 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'CuneiformService', 'AdamService', 'FlinkService', 'TourService',
+          'CuneiformService', 'AdamService', 'FlinkService', 'TourService', 'HistoryService',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,
-                  CuneiformService, AdamService, FlinkService, TourService) {
+                  CuneiformService, AdamService, FlinkService, TourService, HistoryService) {
                 var self = this;
                 self.tourService = TourService;
                 self.flinkjobtype = ["Streaming", "Batch"];
                 //Set services as attributes 
                 this.ModalService = ModalService;
                 this.growl = growl;
-            
+                
+                // keep the proposed configurations
+                self.autoConfigResult;
+
             //Set some (semi-)constants
             this.selectFileRegexes = {
               "SPARK": /.jar\b/,
@@ -602,7 +605,68 @@ angular.module('hopsWorksApp')
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                     });
                 };
-
+                
+                /**
+                 * Creates a jobDetails object with the arguments typed by the user and send  
+                 * these attributes to the server. The server responds with the results from the 
+                 * heuristic search.
+                 * @returns {undefined}
+                 */
+                this.autoConfig = function (filterValue) {
+                    self.autoConfigResult = {};
+                    var jobDetails ={};
+                    jobDetails.className = self.runConfig.mainClass;
+                    jobDetails.selectedJar = self.sparkState.selectedJar;
+                    jobDetails.inputArgs = self.runConfig.args;
+                    jobDetails.jobType = self.getJobType();
+                    jobDetails.projectId = self.projectId;
+                    jobDetails.jobName = self.jobname;
+                    jobDetails.filter = filterValue;
+                    
+                if(!angular.isUndefined(jobDetails.className) && !angular.isUndefined(jobDetails.inputArgs) &&
+                   !angular.isUndefined(jobDetails.selectedJar) && !angular.isUndefined(jobDetails.jobType)){
+                    
+                    HistoryService.getHeuristics(jobDetails).then(
+                    function (success) {
+                        self.autoConfigResult = success.data;
+                        console.log(self.autoConfigResult);
+                    });
+                }
+                };
+                
+                /**
+                 * Checks the value of the proposed configuration.
+                 * The function is used to initialized the checked radio button
+                 * @param {type} value
+                 * @returns {Boolean}
+                 */
+                $scope.checkRadio = function(value){
+                    if(value === "Default"){
+                        return true;
+                    }
+                    else
+                        return false;
+                };
+                
+                /**
+                 * When the user changes configutaion (using the radio button) the 
+                 * runConfig values change.
+                 * @param {type} value
+                 * @returns {undefined}
+                 */
+                $scope.selectConfig = function(value) {
+                    for(var i=0; i < self.autoConfigResult.jobProposedConfig.length; i++){
+                        var obj = self.autoConfigResult.jobProposedConfig[i];
+                        if(obj.configType === value){
+                            self.runConfig.amMemory = obj.amMemory;
+                            self.runConfig.amVCores = obj.amVcores;
+                            self.runConfig.amQueue = "default";
+                            self.runConfig.numberOfExecutors = obj.numOfExecutors;
+                            self.runConfig.executorCores = obj.executorCores; 
+                            self.runConfig.executorMemory = obj.executorMemory;
+                        }
+                    }
+                };
 
             }]);
 
