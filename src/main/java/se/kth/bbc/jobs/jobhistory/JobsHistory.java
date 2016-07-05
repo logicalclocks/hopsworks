@@ -25,7 +25,7 @@ import se.kth.bbc.jobs.spark.SparkJobConfiguration;
     @NamedQuery(name = "JobsHistory.findByJobId", query = "SELECT j FROM JobsHistory j WHERE j.jobsHistoryPK.jobId = :jobId"),
     @NamedQuery(name = "JobsHistory.findByInodePid", query = "SELECT j FROM JobsHistory j WHERE j.jobsHistoryPK.inodePid = :inodePid"),
     @NamedQuery(name = "JobsHistory.findByInodeName", query = "SELECT j FROM JobsHistory j WHERE j.jobsHistoryPK.inodeName = :inodeName"),
-    @NamedQuery(name = "JobsHistory.findByAppId", query = "SELECT j FROM JobsHistory j WHERE j.appId = :appId"),
+    @NamedQuery(name = "JobsHistory.findByAppId", query = "SELECT j FROM JobsHistory j WHERE j.appId = :appId AND j.appId IS NOT NULL"),
     @NamedQuery(name = "JobsHistory.findByJobType", query = "SELECT j FROM JobsHistory j WHERE j.jobType = :jobType"),
     @NamedQuery(name = "JobsHistory.findByClassName", query = "SELECT j FROM JobsHistory j WHERE j.className = :className"),
     @NamedQuery(name = "JobsHistory.findByBlocksInHdfs", query = "SELECT j FROM JobsHistory j WHERE j.inputBlocksInHdfs = :inputBlocksInHdfs"),

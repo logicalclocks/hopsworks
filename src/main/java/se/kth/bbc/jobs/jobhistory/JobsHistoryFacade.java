@@ -53,11 +53,15 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
   }
 
   public JobsHistory findByAppId(String appId){
-      TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findByAppId",
+    TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findByAppId",
             JobsHistory.class);
-            q.setParameter("appId", appId);
-            
-            return q.getSingleResult();
+        q.setParameter("appId", appId);
+        
+        List<JobsHistory> results = q.getResultList();
+        if (results.isEmpty()) return null;
+        else if (results.size() == 1) return results.get(0);
+        
+        return null;
   }
   
   /**
@@ -319,7 +323,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
     }
     
     private JobHeuristicDTO analysisOfHeuristicResults(List<JobsHistory> resultsForAnalysis, JobDetailDTO jobDetails){
-        String estimatedTime = estimateComletionTime(resultsForAnalysis);
+        String estimatedTime = estimateCompletionTime(resultsForAnalysis);
         int numberOfResults = resultsForAnalysis.size();
         String message =  "Analysis of the results.";
         
@@ -332,7 +336,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
      * @param resultsForAnalysis
      * @return 
      */
-    private String estimateComletionTime(List<JobsHistory> resultsForAnalysis){
+    private String estimateCompletionTime(List<JobsHistory> resultsForAnalysis){
         long milliseconds = 0;
         long avegareMs;
         Iterator<JobsHistory> itr = resultsForAnalysis.iterator();

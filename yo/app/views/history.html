@@ -66,29 +66,29 @@
                 <div style="height: 12%"></div>
               <table class="table table-hover">
                 <thead>
-                <th ng-click="sort('id')" style="width: 15%">
+                <th ng-click="sort('yarnAppResult.id')" style="width: 15%">
                   Job ID
-                  <span class="glyphicon sort-icon" ng-show="sortType == 'id'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
+                  <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.id'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('name')" style="width: 10%">
+                <th ng-click="sort('yarnAppResult.name')" style="width: 10%">
                   Name
-                  <span class="glyphicon sort-icon" ng-show="sortType == 'name'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
+                  <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.name'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('username')" style="width: 10%">
+                <th ng-click="sort('yarnAppResult.username')" style="width: 10%">
                   Username
-                  <span class="glyphicon sort-icon" ng-show="sortType == 'username'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
+                  <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.username'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('sortExecutionTime')" style="width: 10%">
+                <th ng-click="sort('executionDuration')" style="width: 10%">
                   Running Time (MM:SS)
-                <span class="glyphicon sort-icon" ng-show="sortType == 'sortExecutionTime'" ng-class="{'glyphicon glyphicon-sort-by-order':sortReverse,'glyphicon glyphicon-sort-by-order-alt':!sortReverse}"></span>
+                <span class="glyphicon sort-icon" ng-show="sortType == 'executionDuration'" ng-class="{'glyphicon glyphicon-sort-by-order':sortReverse,'glyphicon glyphicon-sort-by-order-alt':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('jobType')" style="width: 10%">
+                <th ng-click="sort('yarnAppResult.jobType')" style="width: 10%">
                   Job Type
-                <span class="glyphicon sort-icon" ng-show="sortType == 'jobType'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
+                <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.jobType'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('severity')" style="width: 10%">
+                <th ng-click="sort('yarnAppResult.severity')" style="width: 10%">
                   Job Severity
-                <span class="glyphicon sort-icon" ng-show="sortType == 'severity'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
+                <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.severity'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
                 </th>
 <!--                <th ng-click="sort('score')" style="width: 10%">
                   Heuristic scores
@@ -99,29 +99,29 @@
                 </th>
                 </thead>
                 <tbody>
-                    <tr dir-paginate ="job in historyCtrl.jobs | orderBy:[sortType,sortExecutionTime]:sortReverse | filter:historyCtrl.searchFilter | filter:filterJobs | itemsPerPage:pageSize ">
+                    <tr dir-paginate ="job in historyCtrl.jobs | orderBy:sortType:sortReverse | filter:historyCtrl.searchFilter | filter:filterJobs | itemsPerPage:pageSize ">
                     <td>
-                        {{job.id}}
+                        {{job.yarnAppResult.id}}
                     </td>
                     <td>
-                        {{job.name}}
+                        {{job.yarnAppResult.name}}
                     </td>
                     <td>
-                        {{job.username}}
+                        {{job.yarnAppResult.username}}
                     </td>
                     <td>
-                        {{convertMS(job.finishTime-job.startTime)}}
+                        {{convertMS(job.executionDuration)}}
                      </td>
                     <td>
-                        {{job.jobType}}
+                        {{job.yarnAppResult.jobType}}
                     </td>
                     <td>
                         <div class="text-right col-md-4" style="margin-top: 8px">
-                        <span ng-if="job.severity == '0'" class="label label-primary">NONE</span>
-                        <span ng-if="job.severity == '1'" class="label label-success">LOW</span>
-                        <span ng-if="job.severity == '2'" class="label label-info">MODERATE</span>
-                        <span ng-if="job.severity == '3'" class="label label-warning">SEVERE</span>
-                        <span ng-if="job.severity == '4'" class="label label-danger">CRITICAL</span>
+                        <span ng-if="job.yarnAppResult.severity == '0'" class="label label-primary">NONE</span>
+                        <span ng-if="job.yarnAppResult.severity == '1'" class="label label-success">LOW</span>
+                        <span ng-if="job.yarnAppResult.severity == '2'" class="label label-info">MODERATE</span>
+                        <span ng-if="job.yarnAppResult.severity == '3'" class="label label-warning">SEVERE</span>
+                        <span ng-if="job.yarnAppResult.severity == '4'" class="label label-danger">CRITICAL</span>
                         </div>
                     </td>
 <!--                    <td>

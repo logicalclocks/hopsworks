@@ -19,11 +19,10 @@ angular.module('hopsWorksApp')
             };
 
             self.getDetails = function () {
-            HistoryService.getDetailsForJob(job.id).then(
+            HistoryService.getDetailsForJob(job.yarnAppResult.id).then(
                 function (success) {
                     var str = success.data.data;
                     self.details= JSON.parse(str);
-                    console.log(self.details);
                 });
             };
 

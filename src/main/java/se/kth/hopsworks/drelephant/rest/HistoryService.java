@@ -38,6 +38,7 @@ import se.kth.bbc.jobs.jobhistory.JobsHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.YarnAppHeuristicResultDetailsFacade;
 import se.kth.bbc.jobs.jobhistory.YarnAppHeuristicResultFacade;
 import se.kth.bbc.jobs.jobhistory.YarnAppResult;
+import se.kth.bbc.jobs.jobhistory.YarnAppResultDTO;
 import se.kth.bbc.jobs.jobhistory.YarnAppResultFacade;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.project.Project;
@@ -103,10 +104,22 @@ public class HistoryService {
         @Context HttpServletRequest req) throws AppException{
         
     Project returnProject = projectFacade.find(projectId);
-        
+    List<YarnAppResultDTO> appResultsToReturn = new ArrayList<>();    
     List<YarnAppResult> appResults = yarnAppResultFacade.findByUsername(returnProject.getName() + "__meb10000");
-    GenericEntity<List<YarnAppResult>> yarnApps
-        = new GenericEntity<List<YarnAppResult>>(appResults) {
+    
+    Iterator<YarnAppResult> itr = appResults.iterator();
+    while(itr.hasNext()){
+        YarnAppResult it = itr.next();
+        
+        JobsHistory jh = jobsHistoryFacade.findByAppId(it.getId());
+        if(jh != null){
+            YarnAppResultDTO appToAdd  = new YarnAppResultDTO(it, jh.getExecutionDuration());
+            appResultsToReturn.add(appToAdd);
+        }
+    }
+    
+    GenericEntity<List<YarnAppResultDTO>> yarnApps
+        = new GenericEntity<List<YarnAppResultDTO>>(appResultsToReturn) {
     };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

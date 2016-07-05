@@ -81,10 +81,6 @@ angular.module('hopsWorksApp')
               $scope.sortReverse = !$scope.sortReverse; //if true make it false and vice versa
             };
             
-            $scope.sortExecutionTime = function(job) {
-                return job.finishTime - job.startTime;
-            }
-            
             self.showDetails = function (job) {
               ModalService.historyDetails(job , 'lg');
             };
@@ -117,13 +113,13 @@ angular.module('hopsWorksApp')
             
             $scope.filterJobs = function(job){
                 if($scope.searchName === "jobType" && $scope.valueId !== "null"){
-                    return job.jobType === $scope.valueId;
+                    return job.yarnAppResult.jobType === $scope.valueId;
                 }
                 else if($scope.searchName === "severity" && $scope.valueId !== "null"){
-                    return job.severity === $scope.valueId;
+                    return job.yarnAppResult.severity === $scope.valueId;
                 }
                 else if($scope.searchName === "score" && $scope.valueId !== "null"){
-                    return job.score === $scope.valueId;
+                    return job.yarnAppResult.score === $scope.valueId;
                 }
                 else{
                     return job;
