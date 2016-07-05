@@ -84,12 +84,7 @@ public class SparkController {
     } else if (!isSparkJarAvailable()) {
       throw new IllegalStateException("Spark is not installed on this system.");
     }
-    //Check if spark config file is present in /tmp of local os, if not get
-    //it from hdfs
-    File localTmpSparkConf = new File("/tmp/"+Settings.SPARK_CONFIG_FILE);
-    if(!localTmpSparkConf.exists()){
-      fops.copyToLocal("/user/glassfish/"+Settings.SPARK_CONFIG_FILE, "/tmp/"+Settings.SPARK_CONFIG_FILE);
-    }
+    
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     UserGroupInformation proxyUser = ugiService.getProxyUser(username);
     SparkJob sparkjob = null;
