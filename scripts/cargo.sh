@@ -7,13 +7,13 @@ if [ $# -lt 1 ] ; then
 fi
 
 admin_port=16005
-port=16005
+port=14005
 if [ $# -eq 3 ] ; then
   admin_port=$2
   port=$3
 fi
 
 cd ..
-mvn -Dglassfish.port=14005 -Dglassfish.admin_port=$admin_port -Dglassfish.hostname=$1 clean install -Pdeploy
+mvn -Dglassfish.port=$port -Dglassfish.admin_port=$admin_port -Dglassfish.hostname=$1 clean install -Pdeploy
 cd scripts
 ./jim-bbc1-scp.sh

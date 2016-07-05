@@ -4,6 +4,8 @@ import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.PrivilegedExceptionAction;
 import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
@@ -23,7 +25,6 @@ import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
-import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.UserGroupInformationService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
@@ -83,6 +84,7 @@ public class SparkController {
     } else if (!isSparkJarAvailable()) {
       throw new IllegalStateException("Spark is not installed on this system.");
     }
+    
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     UserGroupInformation proxyUser = ugiService.getProxyUser(username);
     SparkJob sparkjob = null;
@@ -92,7 +94,8 @@ public class SparkController {
         public SparkJob run() throws Exception {
           return new SparkJob(job, submitter, user, settings.
               getHadoopDir(), settings.getSparkDir(), hdfsLeDescriptorsFacade.getSingleEndpoint(),
-              settings.getSparkUser(), settings.getKafkaConnectStr());
+              settings.getSparkUser(), job.getProject().getName() + "__" + user.getUsername(),
+              settings.getKafkaConnectStr());
         }
       });
     } catch (InterruptedException ex) {
@@ -131,6 +134,7 @@ public class SparkController {
 
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopDir(), settings.getSparkDir(),
         hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser(),
+           hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
     settings.getKafkaConnectStr());
 
     submitter.stopExecution(sparkjob, appid);

@@ -39,11 +39,11 @@ import se.kth.bbc.project.Project;
     @NamedQuery(name = "ProjectTopics.findByProjectId", query = "SELECT p FROM ProjectTopics p WHERE p.projectTopicsPK.projectId = :projectId")})
 public class ProjectTopics implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+    
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "projectTopics")
     private Collection<TopicAcls> topicAclsCollection;
-
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "projectTopics")
-    private Collection<TopicAcls> topicAcls1Collection;
+    
     @JoinColumns({
         @JoinColumn(name = "schema_name", referencedColumnName = "name"),
         @JoinColumn(name = "schema_version", referencedColumnName = "version")})
@@ -53,7 +53,6 @@ public class ProjectTopics implements Serializable {
     @ManyToOne(optional = false)
     private Project project;
     
-    private static final long serialVersionUID = 1L;
     @EmbeddedId
     protected ProjectTopicsPK projectTopicsPK;
 
@@ -80,17 +79,6 @@ public class ProjectTopics implements Serializable {
 
     public void setProjectTopicsPK(ProjectTopicsPK projectTopicsPK) {
         this.projectTopicsPK = projectTopicsPK;
-    }
-
-
-    @XmlTransient
-    @JsonIgnore
-    public Collection<TopicAcls> getTopicAcls1Collection() {
-        return topicAcls1Collection;
-    }
-
-    public void setTopicAcls1Collection(Collection<TopicAcls> topicAcls1Collection) {
-        this.topicAcls1Collection = topicAcls1Collection;
     }
 
     public SchemaTopics getSchemaTopics() {

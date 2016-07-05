@@ -321,13 +321,13 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @throws IllegalArgumentException If the path does not point to a directory.
    * @throws java.io.FileNotFoundException If the path does not exist.
    */
-  public List<Inode> getChildren(String path) throws IllegalArgumentException,
+  public List<Inode> getChildren(String path) throws 
           FileNotFoundException {
     Inode parent = getInode(path);
     if (parent == null) {
-      throw new FileNotFoundException("No inode exists at " + path + ".");
+      throw new FileNotFoundException("Path not found : " + path);
     } else if (!parent.isDir()) {
-      throw new IllegalArgumentException("Path does not point to a directory.");
+      throw new FileNotFoundException("Path is not a directory.");
     }
     return getChildren(parent);
   }

@@ -1,9 +1,5 @@
 package se.kth.hopsworks.controller;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
 public class ResponseMessages {
 
   //response for validation error

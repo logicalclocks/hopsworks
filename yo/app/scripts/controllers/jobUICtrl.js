@@ -30,6 +30,20 @@ angular.module('hopsWorksApp')
 
             getJobUI();
 
+            self.yarnUI = function () {
+
+              JobService.getYarnUI(projectId, job.id).then(
+                      function (success) {
+
+                        self.ui = success.data;
+                        var iframe = document.getElementById('ui_iframe');
+                        iframe.src = self.ui;
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+              });
+
+            }
+            
             self.backToHome = function () {
               getJobUI();
             };

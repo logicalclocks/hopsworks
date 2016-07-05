@@ -49,14 +49,13 @@ import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.JobService;
 import se.kth.hopsworks.rest.JsonResponse;
 import se.kth.hopsworks.rest.NoCacheResponse;
+import se.kth.hopsworks.util.Settings;
 
 
 @Path("history")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class HistoryService {
-    
-  private static final String DR_ELEPHANT_ADDRESS = "http://bbc1.sics.se:18001";  
+public class HistoryService {  
   
   private static final String MEMORY_HEURISTIC_CLASS = "com.linkedin.drelephant.spark.heuristics.MemoryLimitHeuristic";
   private static final String TOTAL_DRIVE_MEMORY = "Total driver memory allocated";
@@ -94,6 +93,9 @@ public class HistoryService {
   private YarnAppHeuristicResultFacade yarnAppHeuristicResultsFacade;  
   @EJB
   private YarnAppHeuristicResultDetailsFacade yarnAppHeuristicResultDetailsFacade;
+  @EJB
+  private Settings settings;
+ 
   
   @GET
   @Path("all/{projectId}")
@@ -230,7 +232,7 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
     
         try {
                 JsonResponse json = new JsonResponse();
-		URL url = new URL(DR_ELEPHANT_ADDRESS + "/rest/job?id=" + jobId );
+		URL url = new URL(settings.getDrElephantUrl() + "/rest/job?id=" + jobId );
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");
 		conn.setRequestProperty("Accept", "application/json");

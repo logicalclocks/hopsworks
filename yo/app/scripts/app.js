@@ -28,7 +28,8 @@ angular.module('hopsWorksApp', [
   'angularUtils.directives.dirPagination',
   'angular-tour',
   'smart-table',
-  'ngPrettyJson' 
+  'ngPrettyJson',
+  'angularAwesomeSlider'  
 ])
     .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider',
       function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider) {
@@ -175,7 +176,7 @@ angular.module('hopsWorksApp', [
               }
             })
 
-            .when('/project/:projectID/datasets/:datasetName', {
+            .when('/project/:projectID/datasets/:datasetName/:fileName*?', { 
               templateUrl: 'views/datasetsBrowser.html',
               controller: 'ProjectCtrl as projectCtrl',
               resolve: {

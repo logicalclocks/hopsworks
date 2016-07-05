@@ -285,13 +285,13 @@ angular.module('hopsWorksApp')
 
               if (dataset.status === true) {
                 UtilsService.setDatasetName(dataset.name);
-                $location.path($location.path() + '/' + dataset.name);
+                $location.path($location.path() + '/' + dataset.name + '/');
               } else {
                 ModalService.confirmShare('sm', 'Confirm', 'Do you want to accept this dataset, and add it to this project?')
                         .then(function (success) {
                           DataSetService(self.pId).acceptDataset(dataset.id).then(
                                   function (success) {
-                                    $location.path($location.path() + '/' + dataset.name);
+                                    $location.path($location.path() + '/' + dataset.name + '/');
                                   }, function (error) {
                             growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
                           });

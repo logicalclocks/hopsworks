@@ -37,7 +37,11 @@ public class SparkYarnRunnerBuilder {
   private String jobName = "Untitled Spark Job";
   private List<LocalResourceDTO> extraFiles = new ArrayList<>();
   private int numberOfExecutors = 1;
+  private int numberOfExecutorsMin = Settings.SPARK_MIN_EXECS;
+  private int numberOfExecutorsMax = Settings.SPARK_MAX_EXECS;
+  private int numberOfExecutorsInit = Settings.SPARK_INIT_EXECS;
   private int executorCores = 1;
+  private boolean dynamicExecutors;
   private String executorMemory = "512m";
   private int driverMemory = 1024; // in MB
   private int driverCores = 1;
@@ -66,13 +70,15 @@ public class SparkYarnRunnerBuilder {
    * <p/>
    * @param project name of the project
    * @param sparkUser
+   * @param jobUser
    * @param hadoopDir
    * @param sparkDir
    * @param nameNodeIpPort
    * @return The YarnRunner instance to launch the Spark job on Yarn.
    * @throws IOException If creation failed.
    */
-  public YarnRunner getYarnRunner(String project, String sparkUser,
+  public YarnRunner getYarnRunner(String project, String sparkUser, 
+          String jobUser,
           final String hadoopDir, final String sparkDir, final String nameNodeIpPort)
           throws IOException {
 
@@ -126,7 +132,7 @@ public class SparkYarnRunnerBuilder {
     //Set Spark specific environment variables
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
-    builder.addToAppMasterEnvironment("SPARK_USER", sparkUser); 
+    builder.addToAppMasterEnvironment("SPARK_USER", jobUser); 
 //    builder.addToAppMasterEnvironment("SPARK_USER", );
     // TODO - Change spark user here
 //    builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
@@ -139,21 +145,42 @@ public class SparkYarnRunnerBuilder {
 //      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
 //              + sparkClasspath);
 //    }
+    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
+            "$PWD:$PWD/__spark_conf__:$PWD/"+Settings.SPARK_LOCRSC_SPARK_JAR);
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
 
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
     addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
-    addSystemProperty(Settings.SPARK_HISTORY_SERVER_ENV, sparkHistoryServerIp);
-    addSystemProperty(Settings.SPARK_NUMBER_EXECUTORS, Integer.toString(
+    //History server is now loaded by spark config file
+    //addSystemProperty(Settings.SPARK_HISTORY_SERVER_ENV, sparkHistoryServerIp);
+
+    //If DynamicExecutors are not enabled, set the user defined number 
+    //of executors
+    if(dynamicExecutors){
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_ENV, String.valueOf(dynamicExecutors));
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV, 
+              String.valueOf(numberOfExecutorsMin));
+      //TODO: Fill in the init and max number of executors. Should it be a per job
+      //or global setting?
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
+              String.valueOf(numberOfExecutorsMax));
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+              String.valueOf(numberOfExecutorsInit));
+      //Dynamic executors requires the shuffle service to be enabled
+      addSystemProperty(Settings.SPARK_SHUFFLE_SERVICE, "true");
+      //spark.shuffle.service.enabled
+    } else {
+      addSystemProperty(Settings.SPARK_NUMBER_EXECUTORS_ENV, Integer.toString(
             numberOfExecutors));
+    }
     
     List<String> jobSpecificProperties = new ArrayList<>();
     jobSpecificProperties.add(Settings.KAFKA_SESSIONID_ENV_VAR);
     jobSpecificProperties.add(Settings.KAFKA_BROKERADDR_ENV_VAR);
     jobSpecificProperties.add(Settings.SPARK_HISTORY_SERVER_ENV);
-    jobSpecificProperties.add(Settings.SPARK_NUMBER_EXECUTORS);
+    jobSpecificProperties.add(Settings.SPARK_NUMBER_EXECUTORS_ENV);
     jobSpecificProperties.add("spark.driver.memory");
     jobSpecificProperties.add("spark.driver.cores");
     jobSpecificProperties.add("spark.executor.memory");
@@ -191,9 +218,9 @@ public class SparkYarnRunnerBuilder {
     
     is.close();
     
-    // spark 1.5.x replaced --num-executors with --properties-file
-    // https://fossies.org/diffs/spark/1.4.1_vs_1.5.0/
-    // amargs.append(" --num-executors ").append(numberOfExecutors);
+    //Add local resources to spark environment too
+    builder.addCommand(new SparkSetEnvironmentCommand());
+    
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);
     
@@ -279,6 +306,45 @@ public class SparkYarnRunnerBuilder {
     return this;
   }
 
+  public boolean isDynamicExecutors() {
+    return dynamicExecutors;
+  }
+
+  public void setDynamicExecutors(boolean dynamicExecutors) {
+    this.dynamicExecutors = dynamicExecutors;
+  }
+
+  public int getNumberOfExecutorsMin() {
+    return numberOfExecutorsMin;
+  }
+
+  public void setNumberOfExecutorsMin(int numberOfExecutorsMin) {
+    this.numberOfExecutorsMin = numberOfExecutorsMin;
+  }
+
+  public int getNumberOfExecutorsMax() {
+    return numberOfExecutorsMax;
+  }
+
+  public void setNumberOfExecutorsMax(int numberOfExecutorsMax) {
+    if(numberOfExecutorsMax > Settings.SPARK_MAX_EXECS){
+      throw new IllegalArgumentException(
+              "Maximum number of  executors cannot be greate than:"+
+                       Settings.SPARK_MAX_EXECS);
+    }
+    this.numberOfExecutorsMax = numberOfExecutorsMax;
+  }
+
+  public int getNumberOfExecutorsInit() {
+    return numberOfExecutorsInit;
+  }
+
+  public void setNumberOfExecutorsInit(int numberOfExecutorsInit) {
+    this.numberOfExecutorsInit = numberOfExecutorsInit;
+  }
+
+  
+  
   public SparkYarnRunnerBuilder setExecutorMemoryMB(int executorMemoryMB) {
     if (executorMemoryMB < 1) {
       throw new IllegalArgumentException(
