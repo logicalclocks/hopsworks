@@ -19,6 +19,8 @@ import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
@@ -26,10 +28,9 @@ import se.kth.hopsworks.util.Settings;
 @Singleton
 public class ZookeeprTopicCleanerTimer {
 
-    private final static Logger LOGGER = Logger.getLogger(KafkaFacade.class.
-            getName());
-    
-     public final int connectionTimeout = 30 * 1000;// 30 seconds
+    private final static Logger LOGGER = Logger.getLogger(KafkaFacade.class.getName());
+
+    public final int connectionTimeout = 30 * 1000;// 30 seconds
 
     public int sessionTimeoutMs = 30 * 1000;//30 seconds
 
@@ -41,14 +42,14 @@ public class ZookeeprTopicCleanerTimer {
 
     @EJB
     KafkaFacade kafkaFacade;
-
+    
     @Schedule(persistent = false, second = "*/10", minute = "*", hour = "*")
     public void execute(Timer timer) {
 
         Set<String> zkTopics = new HashSet<>();
         try {
             ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(),
-                    sessionTimeoutMs, null);
+                        sessionTimeoutMs, new ZookeeperWatcher());
             List<String> topics = zk.getChildren("/brokers/topics", false);
             zkTopics.addAll(topics);
         }catch (IOException ex) {
@@ -118,6 +119,14 @@ public class ZookeeprTopicCleanerTimer {
                     }
                 }
             }
+        }
+    }
+    
+    class ZookeeperWatcher implements Watcher{
+
+        @Override
+        public void process(WatchedEvent we) {
+           LOGGER.log(Level.INFO, "");
         }
     }
 }
