@@ -153,8 +153,23 @@
                   <input type="text" ng-model="newJobCtrl.runConfig.amQueue" class="form-control">
                 </div>
               </div>
-              <!-- Spark -->
+              
+              <!-- Spark -->               
               <div class="row" ng-show="newJobCtrl.jobtype === 1">
+                <div class="text-right col-md-4">Dynamic Executors <i class="fa fa-info-circle" tooltip="Enable Spark Dynamic Executors." style="margin-left: 10px"></i></div>
+                <div class="col-md-8"><input type="checkbox" ng-model="newJobCtrl.runConfig.dynamicExecutors"></div>
+              </div>
+               <div class="row" ng-show="newJobCtrl.jobtype === 1 && newJobCtrl.runConfig.dynamicExecutors" style="margin-top: 10px">
+                <div class="text-right col-md-4">Min/Max Number of Executors <i class="fa fa-info-circle" tooltip="The minimum number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
+                <div class="col-md-8 col-lg-8 cust"> 
+                  <input ng-model="newJobCtrl.sliderValue" ng-change="newJobCtrl.setInitExecs()" type="text" id="executorsSlider" slider options="newJobCtrl.sliderOptions" ng-disabled="disabled" />
+               </div>
+              </div>
+            <div class="row" ng-show="newJobCtrl.jobtype === 1 && newJobCtrl.runConfig.dynamicExecutors">
+                <div class="text-right col-md-4">Initial number of executors <i class="fa fa-info-circle" tooltip="The initial number of Spark executors that should be requested for this job. Must be greate that the minimum and smaller than the maximum number of executors." style="margin-left: 10px"></i></div>
+                <div class="col-md-8"><input type="number"  ng-change="newJobCtrl.setInitExecs()" value="{{newJobCtrl.runConfig.selectedMinExecutors}}" ng-model="newJobCtrl.runConfig.numberOfExecutorsInit" class="form-control"></div>
+              </div>              
+              <div class="row" ng-show="newJobCtrl.jobtype === 1 && !newJobCtrl.runConfig.dynamicExecutors">
                 <div class="text-right col-md-4">Number of executors <i class="fa fa-info-circle" tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="number" ng-model="newJobCtrl.runConfig.numberOfExecutors" class="form-control"></div>
               </div>

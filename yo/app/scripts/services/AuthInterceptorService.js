@@ -30,7 +30,7 @@ angular.module('hopsWorksApp')
                     $location.replace();
                   }
 
-                } else {
+                } else if (responseRejection.status === 500) {
                   growl.error(responseRejection.data.errorMsg, {title: 'Error', ttl: 5000});
                   console.log('Unhandled error: ', responseRejection);
                 }

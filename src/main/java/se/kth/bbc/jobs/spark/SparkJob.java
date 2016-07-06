@@ -25,7 +25,7 @@ public final class SparkJob extends YarnJob {
 
   private final SparkJobConfiguration jobconfig; //Just for convenience
   private final String sparkDir;
-  private final String sparkUser;
+  private final String sparkUser; //must be glassfish
 
   /**
    *
@@ -36,13 +36,14 @@ public final class SparkJob extends YarnJob {
    * @param sparkDir
    * @param nameNodeIpPort
    * @param sparkUser
+   * @param jobUser
    * @param kafkaAddress
    */
   public SparkJob(JobDescription job, AsynchronousJobExecutor services,
       Users user, final String hadoopDir,
       final String sparkDir, final String nameNodeIpPort, String sparkUser,
-      String kafkaAddress) {
-    super(job, services, user, hadoopDir, nameNodeIpPort, kafkaAddress);
+      String jobUser, String kafkaAddress) {
+    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, kafkaAddress);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a SparkJobConfiguration object. Received: "
@@ -72,6 +73,12 @@ public final class SparkJob extends YarnJob {
     runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
     runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
     runnerbuilder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
+    if(jobconfig.isDynamicExecutors()){
+      runnerbuilder.setDynamicExecutors(jobconfig.isDynamicExecutors());
+      runnerbuilder.setNumberOfExecutorsMin(jobconfig.getSelectedMinExecutors());
+      runnerbuilder.setNumberOfExecutorsMax(jobconfig.getSelectedMaxExecutors());
+      runnerbuilder.setNumberOfExecutorsInit(jobconfig.getNumberOfExecutorsInit());
+    }
     //Set Yarn running options
     runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
@@ -91,7 +98,7 @@ public final class SparkJob extends YarnJob {
     try {
       runner = runnerbuilder.
           getYarnRunner(jobDescription.getProject().getName(),
-              sparkUser, hadoopDir, sparkDir, nameNodeIpPort);
+              sparkUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
 
     } catch (IOException e) {
       logger.log(Level.SEVERE,
