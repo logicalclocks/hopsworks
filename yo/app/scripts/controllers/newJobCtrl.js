@@ -50,7 +50,7 @@ angular.module('hopsWorksApp')
             this.runConfig; //Will hold the job configuration
             self.sliderOptions = {
                 from: 0,
-                to: 100,      
+                to: 500,      
                 floor: true,
                 step: 1,
                 vertical: false
@@ -430,7 +430,7 @@ angular.module('hopsWorksApp')
                                       maxExecutors;  
                             } else {
                               self.sliderOptions.from = 1;
-                              self.sliderOptions.to = 8;  
+                              self.sliderOptions.to = 300;  
                             }
                             self.mainFileSelected(filename);
                             if (self.tourService.currentStep_TourFour > -1) {
