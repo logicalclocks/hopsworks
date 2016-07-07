@@ -42,17 +42,28 @@ public class ZookeeprTopicCleanerTimer {
 
     @EJB
     KafkaFacade kafkaFacade;
+
+    static ZooKeeper zk;
     
+    ZkClient zkClient = null;
+    
+    ZkConnection zkConnection;
+
     @Schedule(persistent = false, second = "*/10", minute = "*", hour = "*")
     public void execute(Timer timer) {
 
         Set<String> zkTopics = new HashSet<>();
         try {
-            ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(),
+
+            if (zk == null || !zk.getState().isConnected()) {
+
+                zk = new ZooKeeper(settings.getZkConnectStr(),
                         sessionTimeoutMs, new ZookeeperWatcher());
+            }
             List<String> topics = zk.getChildren("/brokers/topics", false);
             zkTopics.addAll(topics);
-        }catch (IOException ex) {
+
+        } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.toString());
         } catch (KeeperException | InterruptedException ex) {
             LOGGER.log(Level.SEVERE, "Cannot retrieve topic list from Zookeeper", ex.toString());
@@ -71,12 +82,12 @@ public class ZookeeprTopicCleanerTimer {
             }
         }
 
-//        Set<String> zkTopicsTemp = zkTopics;
-//        zkTopics.removeAll(dbTopics);
+//        Set<String> dbTopicsTemp = dbTopics;
+//        dbTopicsTemp.removeAll(zkTopics);
 //
 //        //remove topics from database which do not exist in zookeeper
-//        if (!zkTopics.isEmpty()) {
-//            for (String topicName : zkTopics) {
+//        if (!dbTopicsTemp.isEmpty()) {
+//            for (String topicName : dbTopicsTemp) {
 //                ProjectTopics removeTopic = em.createNamedQuery(
 //                        "ProjectTopics.findByTopicName", ProjectTopics.class)
 //                        .setParameter("topicName", topicName).getSingleResult();
@@ -98,35 +109,34 @@ public class ZookeeprTopicCleanerTimer {
         if (!zkTopics.isEmpty()) {
             zkTopics.removeAll(dbTopics);
             for (String topicName : zkTopics) {
-                ZkClient zkClient = null;
                 try {
-                    zkClient = new ZkClient(kafkaFacade.getIp(settings.getZkConnectStr()).getHostName(),
-                            sessionTimeoutMs, connectionTimeout, ZKStringSerializer$.MODULE$);
+                    if (zkClient == null) {
+                        zkClient = new ZkClient(kafkaFacade.getIp(settings.getZkConnectStr()).getHostName(),
+                                sessionTimeoutMs, connectionTimeout, ZKStringSerializer$.MODULE$);
+                    }
                 } catch (AppException ex) {
                     LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex.toString());
                 }
-                ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
+                if (zkConnection == null) {
+                    zkConnection = new ZkConnection(settings.getZkConnectStr());
+                }
                 ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
 
                 try {
                     AdminUtils.deleteTopic(zkUtils, topicName);
-                    LOGGER.log(Level.SEVERE,  "{0} is removed from Zookeeper", new Object[]{topicName});
+                    LOGGER.log(Level.INFO, "{0} is removed from Zookeeper", new Object[]{topicName});
                 } catch (TopicAlreadyMarkedForDeletionException ex) {
-                    LOGGER.log(Level.SEVERE, "{0} is already marked for deletion", new Object[]{topicName});
-                } finally {
-                    if (zkClient != null) {
-                        zkClient.close();
-                    }
-                }
+                    LOGGER.log(Level.INFO, "{0} is already marked for deletion", new Object[]{topicName});
+                } 
             }
         }
     }
-    
-    class ZookeeperWatcher implements Watcher{
+
+    class ZookeeperWatcher implements Watcher {
 
         @Override
         public void process(WatchedEvent we) {
-           LOGGER.log(Level.INFO, "");
+            LOGGER.log(Level.INFO, "");
         }
     }
 }

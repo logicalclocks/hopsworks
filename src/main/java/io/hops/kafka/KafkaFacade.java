@@ -34,6 +34,8 @@ import org.apache.zookeeper.ZooKeeper;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkConnection;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
 import se.kth.hopsworks.user.model.Users;
 
 @Stateless
@@ -69,8 +71,6 @@ public class KafkaFacade {
     public Set<String> topicList;
 
     public int sessionTimeoutMs = 30 * 1000;//30 seconds
-
-    public static ZooKeeper zk;
 
     protected EntityManager getEntityManager() {
         return em;
@@ -171,7 +171,7 @@ public class KafkaFacade {
                 projects.add(p);
             }
         }
-
+        
         if (projects.isEmpty()) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "No project found for this Kafka topic.");
@@ -195,7 +195,7 @@ public class KafkaFacade {
                     "Kafka topic already exists. Pick a different topic name.");
         }
 
-        //check if the replication factor is not greater that than the 
+        //check if the replication factor is not greater than the 
         //number of running borkers
         Set<String> brokerEndpoints = getBrokerEndpoints();
         if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
@@ -221,6 +221,11 @@ public class KafkaFacade {
                     "Kafka topic already exists. Pick a different topic name.");
         } finally {
             zkClient.close();
+            try {
+                zkConnection.close();
+            } catch (InterruptedException ex) {
+                LOGGER.log(Level.SEVERE, null, ex.getMessage());
+            }
         }
 
         //if schema is empty, select a default schema
@@ -234,6 +239,16 @@ public class KafkaFacade {
                     "topic has not schema");
         }
 
+        /*
+        What is the possibility of the program failing here? The topic is created on
+        zookeeper, but not persisted onto db. User cannot access the topic, cannot
+        create a topic of the same name. In such scenario, the zk timer should
+        remove the topic from zk.
+        
+        One possibility is: schema has a global name space, it is not project specific.
+        While the schema is selected by this topic, it could be deleted by another 
+        user. Hence the above schema query will be empty. 
+         */
         ProjectTopics pt = new ProjectTopics(topicName, projectId, schema);
 
         em.merge(pt);
@@ -254,6 +269,16 @@ public class KafkaFacade {
 
         //remove from database
         em.remove(pt);
+        /*
+        What is the possibility of the program failing below? The topic is removed from
+        db, but not yet from zk. 
+        
+        Possibilities:
+            1. ZkClient is unable to establish a connection, maybe due to timeouts.
+            2. In case delete.topic.enable is not set to true in the Kafka server 
+               configuration, delete topic marks a topic for deletion. Subsequent 
+               topic (with the same name) create operation fails. 
+         */
         //remove from zookeeper
         ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).getHostName(),
                 sessionTimeoutMs, connectionTimeout, ZKStringSerializer$.MODULE$);
@@ -671,10 +696,10 @@ public class KafkaFacade {
     public Set<String> getBrokerEndpoints() throws AppException {
 
         Set<String> brokerList = new HashSet<>();
-
+        ZooKeeper zk = null;
         try {
             zk = new ZooKeeper(settings.getZkConnectStr(),
-                    sessionTimeoutMs, null);
+                    sessionTimeoutMs, new ZookeeperWatcher());
 
             List<String> ids = zk.getChildren("/brokers/ids", false);
             for (String id : ids) {
@@ -693,11 +718,13 @@ public class KafkaFacade {
         } catch (KeeperException | InterruptedException ex) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "Unable to retrieve seed brokers from the kafka cluster: " + ex);
-        }finally{
-            try {
-                zk.close();
-            } catch (InterruptedException ex) {
-                LOGGER.log(Level.SEVERE, "Cound not close the zookeeper connection: ", ex.toString());
+        } finally {
+            if (zk != null) {
+                try {
+                    zk.close();
+                } catch (InterruptedException ex) {
+                    LOGGER.log(Level.SEVERE, null, ex.getMessage());
+                }
             }
         }
 
@@ -839,4 +866,11 @@ public class KafkaFacade {
 
     }
 
+    class ZookeeperWatcher implements Watcher {
+
+        @Override
+        public void process(WatchedEvent we) {
+            LOGGER.log(Level.INFO, "");
+        }
+    }
 }
