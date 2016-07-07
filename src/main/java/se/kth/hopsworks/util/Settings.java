@@ -429,7 +429,7 @@ public class Settings {
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
   public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
-  public static final String SPARK_CONFIG_FILE = "spark-defaults.conf";
+  public static final String SPARK_CONFIG_FILE = "conf/spark-defaults.conf";
   public static final int SPARK_MIN_EXECS = 1;
   public static final int SPARK_MAX_EXECS = 300;
   public static final int SPARK_INIT_EXECS = 1;

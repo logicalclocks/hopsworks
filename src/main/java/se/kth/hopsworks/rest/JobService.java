@@ -1,6 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -641,8 +642,10 @@ public class JobService {
               arrayObjectBuilder.add("logPath", "/project/" + this.project.
                       getId() + "/datasets" + stdPath);
             } else {
-              message = IOUtils.toString(fops.getInputStream(hdfsLogPath),
+              InputStream input = fops.getInputStream(hdfsLogPath);
+              message = IOUtils.toString(input,
                       "UTF-8");
+              input.close();
               arrayObjectBuilder.add("log", message.isEmpty()
                       ? "No information." : message);
             }
@@ -661,8 +664,10 @@ public class JobService {
               arrayObjectBuilder.add("errPath", "/project/" + this.project.
                       getId() + "/datasets" + stdPath);
             } else {
-              message = IOUtils.toString(fops.getInputStream(hdfsErrPath),
+              InputStream input = fops.getInputStream(hdfsErrPath);
+              message = IOUtils.toString(input,
                       "UTF-8");
+              input.close();
               arrayObjectBuilder.add("err", message.isEmpty() ? "No error."
                       : message);
             }
