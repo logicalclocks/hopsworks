@@ -66,6 +66,7 @@ angular.module('hopsWorksApp')
               }
               
               if(self.wrong_values === -1){
+                  self.working = false;
                   return;
               }
               
