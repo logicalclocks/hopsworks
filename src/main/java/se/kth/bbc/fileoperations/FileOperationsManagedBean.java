@@ -49,6 +49,7 @@ public class FileOperationsManagedBean implements Serializable {
       String filename = Utils.getFileName(path);
 
       sc = new DefaultStreamedContent(is, extension, filename);
+      is.close();
       logger.log(Level.FINE, "File was downloaded from HDFS path: {0}", path);
     } catch (IOException ex) {
       Logger.getLogger(FileOperationsManagedBean.class.getName()).log(

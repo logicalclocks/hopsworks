@@ -99,6 +99,7 @@ public class YarnLogUtil {
             containerNames.add(key);
             valueStream = reader.next(key);
           }
+          reader.close();
           reader = new AggregatedLogFormat.LogReader(dfs.getConf(),
                   new Path(src));
         } catch (FileNotFoundException e) {
@@ -154,6 +155,7 @@ public class YarnLogUtil {
             containerNames.add(key);
             valueStream = reader.next(key);
           }
+          reader.close();
           reader = new AggregatedLogFormat.LogReader(dfs.getConf(),
                   new Path(src));
         } catch (FileNotFoundException e) {
