@@ -115,7 +115,6 @@ public class InterpreterRestApi {
    *
    * @param message
    * @return
-   * @throws IOException
    * @throws InterpreterException
    */
   @POST
@@ -230,8 +229,10 @@ public class InterpreterRestApi {
       }
     }
 
-    if (zeppelinResource.isInterpreterRunning(setting, project) && !setting.
+    if (zeppelinResource.isInterpreterRunning(setting, project) && setting.
             getGroup().contains("livy")) {
+      
+    } else if (zeppelinResource.isInterpreterRunning(setting, project)) {
       zeppelinResource.forceKillInterpreter(setting, project);
     }
     InterpreterDTO interpreter = new InterpreterDTO(setting,
