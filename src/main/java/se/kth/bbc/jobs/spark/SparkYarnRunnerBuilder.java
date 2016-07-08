@@ -103,6 +103,8 @@ public class SparkYarnRunnerBuilder {
             LocalResourceVisibility.PUBLIC.toString(), 
             LocalResourceType.FILE.toString(), null), 
             !appJarPath.startsWith("hdfs:"));
+    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
+            "$PWD:$PWD/__spark_conf__:$PWD/"+Settings.SPARK_LOCRSC_SPARK_JAR);
 
      
     //Add extra files to local resources, use filename as key
@@ -115,6 +117,8 @@ public class SparkYarnRunnerBuilder {
         } else{
             builder.addLocalResource(dto, !appJarPath.startsWith("hdfs:"));
         }
+        builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
+            "$PWD/"+dto.getName());
     }
   
 
@@ -132,8 +136,7 @@ public class SparkYarnRunnerBuilder {
 //      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
 //              + sparkClasspath);
 //    }
-    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
-            "$PWD:$PWD/__spark_conf__:$PWD/"+Settings.SPARK_LOCRSC_SPARK_JAR);
+    
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
