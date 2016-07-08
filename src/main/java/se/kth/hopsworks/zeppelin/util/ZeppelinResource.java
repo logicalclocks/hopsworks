@@ -3,8 +3,11 @@ package se.kth.hopsworks.zeppelin.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -19,6 +22,7 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
+import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 
 @Stateless
@@ -31,6 +35,8 @@ public class ZeppelinResource {
   private ProjectFacade projectBean;
   @EJB
   private ZeppelinConfigFactory zeppelinConfFactory;
+  @EJB
+  private Settings settings;
 
   public ZeppelinResource() {
   }
@@ -43,7 +49,8 @@ public class ZeppelinResource {
    * @param project
    * @return
    */
-  public boolean isInterpreterRunning(InterpreterSetting interpreter, Project project) {
+  public boolean isInterpreterRunning(InterpreterSetting interpreter,
+          Project project) {
     FileObject[] pidFiles;
     try {
       pidFiles = getPidFiles(project);
@@ -54,7 +61,8 @@ public class ZeppelinResource {
     boolean running = false;
 
     for (FileObject file : pidFiles) {
-      if (file.getName().toString().contains("interpreter-"+interpreter.getGroup()+"-")) {
+      if (file.getName().toString().contains("interpreter-" + interpreter.
+              getGroup() + "-")) {
         running = isProccessAlive(readPid(file));
         //in the rare case were there are more that one pid files for the same 
         //interpreter break only when we find running one
@@ -66,7 +74,8 @@ public class ZeppelinResource {
     return running;
   }
 
-  public void forceKillInterpreter(InterpreterSetting interpreter, Project project) {
+  public void forceKillInterpreter(InterpreterSetting interpreter,
+          Project project) {
     FileObject[] pidFiles;
     try {
       pidFiles = getPidFiles(project);
@@ -76,7 +85,8 @@ public class ZeppelinResource {
     }
     boolean running = false;
     for (FileObject file : pidFiles) {
-      if (file.getName().toString().contains("interpreter-"+interpreter.getGroup()+"-")) {
+      if (file.getName().toString().contains("interpreter-" + interpreter.
+              getGroup() + "-")) {
         running = isProccessAlive(readPid(file));
         if (running) {
           forceKillProccess(readPid(file));
@@ -120,9 +130,11 @@ public class ZeppelinResource {
   }
 
   /**
-   * Retrieves projectId from cookies and returns the project associated with the id.
+   * Retrieves projectId from cookies and returns the project associated with
+   * the id.
+   *
    * @param request
-   * @return 
+   * @return
    */
   public Project getProjectNameFromCookies(HttpServletRequest request) {
     Cookie[] cookies = request.getCookies();
@@ -152,7 +164,7 @@ public class ZeppelinResource {
     if (pid == null) {
       return false;
     }
-    
+
     //TODO: We should clear the environment variables before launching the 
     // redirect stdout and stderr for child process to the zeppelin/project/logs file.
     int exitValue;
@@ -186,7 +198,7 @@ public class ZeppelinResource {
               toString());
     }
   }
-  
+
   private String readPid(FileObject file) {
     //pid value can only be extended up to a theoretical maximum of 
     //32768 for 32 bit systems or 4194304 for 64 bit:
@@ -207,6 +219,29 @@ public class ZeppelinResource {
     }
     return s;
   }
-  
-  
+
+  public int deleteLivySession(int id) {
+    String livyUrl = settings.getLivyUrl();
+    URL url;
+    HttpURLConnection con = null;
+    try {
+      url = new URL(livyUrl + "/sessions/" + id);
+      con = (HttpURLConnection) url.openConnection();
+      con.setRequestProperty("Content-Type",
+                      "application/x-www-form-urlencoded");
+      con.setRequestMethod("DELETE");
+      con.connect();
+      int response = con.getResponseCode();
+      return response;
+    } catch (MalformedURLException ex) {
+      return -1;
+    } catch (IOException ex) {
+      return -1;
+    } finally {
+      if (con != null) {
+        con.disconnect();
+      }
+    }
+  }
+
 }

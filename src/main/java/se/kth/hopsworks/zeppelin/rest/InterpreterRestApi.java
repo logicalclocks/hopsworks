@@ -231,7 +231,7 @@ public class InterpreterRestApi {
 
     if (zeppelinResource.isInterpreterRunning(setting, project) && setting.
             getGroup().contains("livy")) {
-      
+      zeppelinResource.deleteLivySession(0);
     } else if (zeppelinResource.isInterpreterRunning(setting, project)) {
       zeppelinResource.forceKillInterpreter(setting, project);
     }
