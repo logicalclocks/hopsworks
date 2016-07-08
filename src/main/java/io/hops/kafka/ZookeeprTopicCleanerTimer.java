@@ -19,6 +19,8 @@ import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
@@ -48,9 +50,10 @@ public class ZookeeprTopicCleanerTimer {
         Set<String> zkTopics = new HashSet<>();
         try {
             ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(),
-                    sessionTimeoutMs, null);
+                    sessionTimeoutMs, new ZookeeperWatcher());
             List<String> topics = zk.getChildren("/brokers/topics", false);
             zkTopics.addAll(topics);
+            zk.close();
         }catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.toString());
         } catch (KeeperException | InterruptedException ex) {
@@ -120,4 +123,12 @@ public class ZookeeprTopicCleanerTimer {
             }
         }
     }
+    
+    private class ZookeeperWatcher implements Watcher{
+
+       @Override
+       public void process(WatchedEvent we) {
+          LOGGER.log(Level.INFO, "");
+       }
+   }
 }

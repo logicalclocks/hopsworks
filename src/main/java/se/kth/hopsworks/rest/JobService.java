@@ -1,6 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -393,85 +394,90 @@ public class JobService {
         for (Header header : method.getResponseHeaders()) {
           response.header(header.getName(), header.getValue());
         }
-        
-        ui = method.getResponseBodyAsString();
-        if (ui.contains("<html")) {
-          String source = "http://" + method.getURI().getHost() + ":" + method.getURI().getPort();
-          //remove the link to the full cluster information in the yarn ui
-          ui = ui.replaceAll(
-                  "<div id=\"user\">[\\s\\S]+Logged in as: dr.who[\\s\\S]+<div id=\"logo\">",
-                  "<div id=\"logo\">");
-          ui = ui.replaceAll(
-                  "<div id=\"footer\" class=\"ui-widget\">[\\s\\S]+<tbody>",
-                  "<tbody>");
-          ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td ", "<td ");
-          ui = ui.replaceAll(
-                  "<li><a ui-sref=\"submit\"[\\s\\S]+new Job</a></li>", "");
-          //when geting the logs the file can be very big, we don't want to go 
-          //through all of it.
-          Header header = method.getResponseHeader("Content-Length");
-          if (header != null && Integer.parseInt(header.getValue()) < 100000) {
-            String[] elems = ui.split("(?=[<])");
-            ui = "";
-            for (String elem : elems) {
-              if (elem.equals("")) {
-                continue;
-              }
-              if (elem.contains("href=") || elem.
-                      contains("src=")) {
-                String[] subElems = elem.split(" ");
-                elem = "";
-                for (String subElem : subElems) {
-                  if (subElem.contains("href=\"//")) {
-                    subElem = subElem.replace("href=\"/",
-                            "href=\"/hopsworks/api/project/"
-                            + project.getId() + "/jobs/" + jobId + "/prox");
-                  } else if (subElem.contains("href=\"/")) {
-                    subElem = subElem.replace("href=\"",
-                            "href=\"/hopsworks/api/project/"
-                            + project.getId() + "/jobs/" + jobId + "/prox/"
-                            + source);
-                  } else if (subElem.contains("href=\"http")) {
-                    subElem = subElem.replace("href=\"",
-                            "href=\"/hopsworks/api/project/"
-                            + project.getId() + "/jobs/" + jobId + "/prox/");
-                  } else if (subElem.contains("href=\"")) {
-                    subElem = subElem.replace("href=\"",
-                            "href=\"/hopsworks/api/project/"
-                            + project.getId() + "/jobs/" + jobId + "/prox/"
-                            + param);
-                  } else if (subElem.contains("src=\"//")) {
-                    subElem = subElem.replace("src=\"/",
-                            "src=\"/hopsworks/api/project/"
-                            + project.getId() + "/jobs/" + jobId + "/prox");
-                  } else if (subElem.contains("src=\"/")) {
-                    subElem = subElem.replace("src=\"",
-                            "src=\"/hopsworks/api/project/"
-                            + project.getId() + "/jobs/" + jobId + "/prox/"
-                            + source);
-                  } else if (subElem.contains("src=\"http")) {
-                    subElem = subElem.replace("src=\"",
-                            "src=\"/hopsworks/api/project/"
-                            + project.getId() + "/jobs/" + jobId + "/prox/");
-                  } else if (subElem.contains("src=\"")) {
-                    subElem = subElem.replace("src=\"",
-                            "src=\"/hopsworks/api/project/"
-                            + project.getId() + "/jobs/" + jobId + "/prox/"
-                            + param);
+        if (method.getResponseHeader("Content-Type") == null || method.
+                getResponseHeader("Content-Type").getValue().contains("html")) {
+          ui = method.getResponseBodyAsString();
+          if (method.getResponseHeader("Content-Type") == null && !ui.contains(
+                  "<html")) {
+            response.entity(method.getResponseBody());
+          } else {
+            String source = "http://" + method.getURI().getHost() + ":"
+                    + method.getURI().getPort();
+            //remove the link to the full cluster information in the yarn ui
+            ui = ui.replaceAll(
+                    "<div id=\"user\">[\\s\\S]+Logged in as: dr.who[\\s\\S]+<div id=\"logo\">",
+                    "<div id=\"logo\">");
+            ui = ui.replaceAll(
+                    "<div id=\"footer\" class=\"ui-widget\">[\\s\\S]+<tbody>",
+                    "<tbody>");
+            ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td ", "<td ");
+            ui = ui.replaceAll(
+                    "<li><a ui-sref=\"submit\"[\\s\\S]+new Job</a></li>", "");
+            //when geting the logs the file can be very big, we don't want to go 
+            //through all of it.
+            Header header = method.getResponseHeader("Content-Length");
+            if (header != null && Integer.parseInt(header.getValue()) < 100000) {
+              String[] elems = ui.split("(?=[<])");
+              ui = "";
+              for (String elem : elems) {
+                if (elem.equals("")) {
+                  continue;
+                }
+                if (elem.contains("href=") || elem.
+                        contains("src=")) {
+                  String[] subElems = elem.split(" ");
+                  elem = "";
+                  for (String subElem : subElems) {
+                    if (subElem.contains("href=\"//")) {
+                      subElem = subElem.replace("href=\"/",
+                              "href=\"/hopsworks/api/project/"
+                              + project.getId() + "/jobs/" + jobId + "/prox");
+                    } else if (subElem.contains("href=\"/")) {
+                      subElem = subElem.replace("href=\"",
+                              "href=\"/hopsworks/api/project/"
+                              + project.getId() + "/jobs/" + jobId + "/prox/"
+                              + source);
+                    } else if (subElem.contains("href=\"http")) {
+                      subElem = subElem.replace("href=\"",
+                              "href=\"/hopsworks/api/project/"
+                              + project.getId() + "/jobs/" + jobId + "/prox/");
+                    } else if (subElem.contains("href=\"")) {
+                      subElem = subElem.replace("href=\"",
+                              "href=\"/hopsworks/api/project/"
+                              + project.getId() + "/jobs/" + jobId + "/prox/"
+                              + param);
+                    } else if (subElem.contains("src=\"//")) {
+                      subElem = subElem.replace("src=\"/",
+                              "src=\"/hopsworks/api/project/"
+                              + project.getId() + "/jobs/" + jobId + "/prox");
+                    } else if (subElem.contains("src=\"/")) {
+                      subElem = subElem.replace("src=\"",
+                              "src=\"/hopsworks/api/project/"
+                              + project.getId() + "/jobs/" + jobId + "/prox/"
+                              + source);
+                    } else if (subElem.contains("src=\"http")) {
+                      subElem = subElem.replace("src=\"",
+                              "src=\"/hopsworks/api/project/"
+                              + project.getId() + "/jobs/" + jobId + "/prox/");
+                    } else if (subElem.contains("src=\"")) {
+                      subElem = subElem.replace("src=\"",
+                              "src=\"/hopsworks/api/project/"
+                              + project.getId() + "/jobs/" + jobId + "/prox/"
+                              + param);
+                    }
+                    subElem = subElem.replace("?", "@hwqm");
+                    elem = elem + subElem + " ";
                   }
-                  subElem = subElem.replace("?", "@hwqm");
-                  elem = elem + subElem + " ";
+
                 }
 
+                ui = ui + elem;
               }
-
-              ui = ui + elem;
             }
+            response.entity(ui);
+            response.header("Content-Length", ui.length());
           }
-          response.entity(ui);
-          response.header("Content-Length", ui.length());
         } else {
-          byte[] test = method.getResponseBody();
           response.entity(method.getResponseBody());
         }
         return response.build();
@@ -636,8 +642,10 @@ public class JobService {
               arrayObjectBuilder.add("logPath", "/project/" + this.project.
                       getId() + "/datasets" + stdPath);
             } else {
-              message = IOUtils.toString(fops.getInputStream(hdfsLogPath),
+              InputStream input = fops.getInputStream(hdfsLogPath);
+              message = IOUtils.toString(input,
                       "UTF-8");
+              input.close();
               arrayObjectBuilder.add("log", message.isEmpty()
                       ? "No information." : message);
             }
@@ -656,8 +664,10 @@ public class JobService {
               arrayObjectBuilder.add("errPath", "/project/" + this.project.
                       getId() + "/datasets" + stdPath);
             } else {
-              message = IOUtils.toString(fops.getInputStream(hdfsErrPath),
+              InputStream input = fops.getInputStream(hdfsErrPath);
+              message = IOUtils.toString(input,
                       "UTF-8");
+              input.close();
               arrayObjectBuilder.add("err", message.isEmpty() ? "No error."
                       : message);
             }
