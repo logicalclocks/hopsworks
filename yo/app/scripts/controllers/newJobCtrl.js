@@ -52,8 +52,8 @@ angular.module('hopsWorksApp')
             this.phase = 0; //The phase of creation we are in.
             this.runConfig; //Will hold the job configuration
             self.sliderOptions = {
-                from: 0,
-                to: 100,      
+                from: 1,
+                to: 500,      
                 floor: true,
                 step: 1,
                 vertical: false
@@ -62,7 +62,7 @@ angular.module('hopsWorksApp')
 //                    this.runConfig.numberOfExecutorsMax = value.split(";")[1];
 //                }				
             };
-            self.sliderValue = self.sliderOptions.from +";"+ self.sliderOptions.to;
+            self.sliderValue = self.sliderOptions.from +";"+ 10;
             this.setInitExecs = function() {
               if(self.sliderValue.split(";")[0] >
                       self.runConfig.numberOfExecutorsInit){
@@ -433,7 +433,7 @@ angular.module('hopsWorksApp')
                                       maxExecutors;  
                             } else {
                               self.sliderOptions.from = 1;
-                              self.sliderOptions.to = 8;  
+                              self.sliderOptions.to = 300;  
                             }
                             self.mainFileSelected(filename);
                             if (self.tourService.currentStep_TourFour > -1) {
@@ -465,6 +465,15 @@ angular.module('hopsWorksApp')
                   break;
                 case "ADAM":
                   self.adamState.processparameter.value = path;
+                  if(typeof runConfig != 'undefined'){
+                  self.sliderOptions.from = self.runConfig.
+                    minExecutors;
+                    self.sliderOptions.to = self.runConfig.
+                    maxExecutors;  
+                  } else {
+                    self.sliderOptions.from = 1;
+                    self.sliderOptions.to = 300;  
+                  }
                   break;
                 case "FLINK":
                   self.flinkState.selectedJar = filename;

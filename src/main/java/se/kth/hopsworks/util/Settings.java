@@ -449,7 +449,7 @@ public class Settings {
 
   public static final String SPARK_CONFIG_FILE = "spark-defaults.conf";
   public static final int SPARK_MIN_EXECS = 1;
-  public static final int SPARK_MAX_EXECS = 8;
+  public static final int SPARK_MAX_EXECS = 300;
   public static final int SPARK_INIT_EXECS = 1;
 
   //Flink constants
