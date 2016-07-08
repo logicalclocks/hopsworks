@@ -386,9 +386,10 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         int defaultAmMemory = 512;
         int defaultAmVcores = 1;
         int defaultNumOfExecutors = 1;
-        int defaultExecutorsMemory = 512;
+        int defaultExecutorsMemory = 1024;
         int defaultExecutorCores = 1;
         long executionDuration = 0;
+        boolean premium = false;
         
         Iterator<JobHeuristicDetailsDTO> itr = resultsForAnalysis.iterator();
         
@@ -403,6 +404,7 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
              defaultExecutorsMemory = obj.getExecutorMemory();
              defaultNumOfExecutors = obj.getNumberOfExecutors();
              executionDuration = obj.getExecutionTime();
+             premium = true;
          }
         }
          
@@ -412,14 +414,17 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
          // Then proposed a configuration with the same number of executors as the number of the blocks.
          if(blocks != 0){
              defaultNumOfExecutors = blocks;
+             premium = true;
          }
          
-        JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Premium", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
+        if(premium){ 
+            JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Premium", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
                                     defaultExecutorCores, defaultExecutorsMemory);
         
-        proposal.setEstimatedExecutionTime(convertMsToTime(executionDuration));
+            proposal.setEstimatedExecutionTime(convertMsToTime(executionDuration));
         
-        jobsHistoryResult.addProposal(proposal);
+            jobsHistoryResult.addProposal(proposal);
+        }
         }
     
     /**
@@ -428,6 +433,9 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
      * @return 
      */
     private String convertMsToTime(long timeMs){    
+        if(timeMs==0){
+            return "Unpredictable";
+        }
         String hms = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(timeMs),
             TimeUnit.MILLISECONDS.toMinutes(timeMs) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(timeMs)),
             TimeUnit.MILLISECONDS.toSeconds(timeMs) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeMs)));
