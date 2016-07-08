@@ -900,7 +900,11 @@ public class YarnRunner {
     }
 
     public Builder addToAppMasterEnvironment(String key, String value) {
-      amEnvironment.put(key, value);
+      if(amEnvironment.containsKey(key)){
+        amEnvironment.put(key, amEnvironment.get(key)+":"+value);
+      } else {
+        amEnvironment.put(key, value);
+      }
       return this;
     }
 

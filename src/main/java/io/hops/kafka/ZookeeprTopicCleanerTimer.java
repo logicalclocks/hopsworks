@@ -54,14 +54,15 @@ public class ZookeeprTopicCleanerTimer {
 
         Set<String> zkTopics = new HashSet<>();
         try {
-
-            if (zk == null || !zk.getState().isConnected()) {
-
-                zk = new ZooKeeper(settings.getZkConnectStr(),
-                        sessionTimeoutMs, new ZookeeperWatcher());
+          if (zk == null || !zk.getState().isConnected()) {
+            if (zk != null) {
+              zk.close();
             }
-            List<String> topics = zk.getChildren("/brokers/topics", false);
-            zkTopics.addAll(topics);
+            zk = new ZooKeeper(settings.getZkConnectStr(),
+                    sessionTimeoutMs, new ZookeeperWatcher());
+          }
+          List<String> topics = zk.getChildren("/brokers/topics", false);
+          zkTopics.addAll(topics);
 
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.toString());
@@ -81,21 +82,6 @@ public class ZookeeprTopicCleanerTimer {
                 LOGGER.log(Level.SEVERE, e.toString());
             }
         }
-
-//        Set<String> dbTopicsTemp = dbTopics;
-//        dbTopicsTemp.removeAll(zkTopics);
-//
-//        //remove topics from database which do not exist in zookeeper
-//        if (!dbTopicsTemp.isEmpty()) {
-//            for (String topicName : dbTopicsTemp) {
-//                ProjectTopics removeTopic = em.createNamedQuery(
-//                        "ProjectTopics.findByTopicName", ProjectTopics.class)
-//                        .setParameter("topicName", topicName).getSingleResult();
-//                em.remove(removeTopic);
-//                LOGGER.log(Level.SEVERE, "************************** "
-//                        + "{0} is being removed from database", new Object[]{topicName});
-//            }
-//        }
 
         /*
         To remove topics from zookeeper which do not exist in database. This situation
@@ -131,12 +117,12 @@ public class ZookeeprTopicCleanerTimer {
             }
         }
     }
+    
+    private class ZookeeperWatcher implements Watcher{
 
-    class ZookeeperWatcher implements Watcher {
-
-        @Override
-        public void process(WatchedEvent we) {
-            LOGGER.log(Level.INFO, "");
-        }
-    }
+       @Override
+       public void process(WatchedEvent we) {
+          LOGGER.log(Level.INFO, "");
+       }
+   }
 }
