@@ -228,13 +228,14 @@
             <div ng-show="newJobCtrl.autoConfigResult.numberOfResults!=null && newJobCtrl.autoConfigResult.numberOfResults!='0'">
                     <div style="margin-left: 15px; margin-top: 5px; width: 100%">
                         <p style="margin-top: 15px;margin-left: 20px">After the analysis, {{newJobCtrl.autoConfigResult.numberOfResults}} results were found with {{newJobCtrl.autoConfigResult.degreeOfSimilarity}} similarity.</p>
-                        <p ng-show="newJobCtrl.autoConfigResult.numberOfResults<=3"> Due to limited results we can't propose a Medium Configuration.</p>
+                        <p ng-show="newJobCtrl.autoConfigResult.numberOfResults==1"> Due to limited results we can't propose a Premium Configuration.</p>
+                        <p ng-show="newJobCtrl.autoConfigResult.numberOfResults<3"> Due to limited results we can't propose a Medium Configuration.</p>
                         <p> Please select one of the following configuration options:</p>
                     </div>
                     <div style="float: left">
                     <div class="panel panel-info pull-left" ng-repeat="e in newJobCtrl.autoConfigResult.jobProposedConfig" style="width: 32%; margin-left: 10px; margin-top: 10px">
                             <div class="panel-heading">
-                                <label class="panel-title"><input type="radio" name="optradio" value="{{e.configType}}" ng-click="selectConfig(e.configType)" ng-checked="checkRadio(e.configType)" ng-init="selectConfig('Default')"> &nbsp &nbsp {{e.configType}} Configuration</label>
+                                <label class="panel-title"><input type="radio" name="optradio" value="{{e.configType}}" ng-click="selectConfig(e.configType)" ng-checked="checkRadio(e.configType)" ng-init="selectConfig('Minimum')"> &nbsp &nbsp {{e.configType}} Configuration</label>
                             </div>
                             <div class="panel-body">
                             <div class="row" style="margin-top: 10px">

@@ -641,7 +641,7 @@ angular.module('hopsWorksApp')
                  * @returns {Boolean}
                  */
                 $scope.checkRadio = function(value){
-                    if(value === "Default"){
+                    if(value === "Minimum"){
                         return true;
                     }
                     else

@@ -395,7 +395,9 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         while(itr.hasNext()) {
          JobHeuristicDetailsDTO obj = itr.next();
          
-         if(obj.getTotalSeverity().equals("LOW") && (obj.getExecutionTime() < executionDuration || executionDuration == 0)){
+         if(obj.getTotalSeverity().equals("LOW") && (obj.getExecutionTime() < executionDuration || executionDuration == 0) &&
+                 (obj.getAmMemory()> defaultAmMemory || obj.getAmVcores() > defaultAmVcores ||
+                  obj.getNumberOfExecutors() > defaultNumOfExecutors || obj.getExecutorMemory()> defaultExecutorsMemory)){
              defaultAmMemory = obj.getAmMemory();
              defaultAmVcores = obj.getAmVcores();
              defaultExecutorsMemory = obj.getExecutorMemory();
