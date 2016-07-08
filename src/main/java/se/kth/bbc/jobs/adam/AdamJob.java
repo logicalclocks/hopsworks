@@ -3,7 +3,9 @@ package se.kth.bbc.jobs.adam;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
@@ -124,10 +126,32 @@ public class AdamJob extends YarnJob {
             "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
     builder.addSystemProperty("spark.kryoserializer.buffer", "4m");
     builder.addSystemProperty("spark.kryo.referenceTracking", "true");
-    builder.setExecutorMemoryGB(1);
+    
+    builder.setExecutorCores(jobconfig.getExecutorCores());
+    builder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
+    builder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
+    if(jobconfig.isDynamicExecutors()){
+      builder.setDynamicExecutors(jobconfig.isDynamicExecutors());
+      builder.setNumberOfExecutorsMin(jobconfig.getSelectedMinExecutors());
+      builder.setNumberOfExecutorsMax(jobconfig.getSelectedMaxExecutors());
+      builder.setNumberOfExecutorsInit(jobconfig.getNumberOfExecutorsInit());
+    }
+    //Set Yarn running options
+    builder.setDriverMemoryMB(jobconfig.getAmMemory());
+    builder.setDriverCores(jobconfig.getAmVCores());
+    builder.setDriverQueue(jobconfig.getAmQueue());
+    builder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
     
     builder.addAllJobArgs(constructArgs(jobconfig));
 
+    builder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+    //Set project specific resources
+    builder.addExtraFiles(projectLocalResources);
+    if(jobSystemProperties != null && !jobSystemProperties.isEmpty()){
+      for(Map.Entry<String,String> jobSystemProperty: jobSystemProperties.entrySet()){
+        builder.addSystemProperty(jobSystemProperty.getKey(), jobSystemProperty.getValue());
+      }
+    }
     //Add ADAM jar to local resources
     builder.addExtraFile(new LocalResourceDTO(adamJarPath.substring(adamJarPath.
             lastIndexOf("/")+1), adamJarPath,
