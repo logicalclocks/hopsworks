@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import javax.annotation.security.RolesAllowed;
+import javax.ejb.Stateless;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 
@@ -40,6 +41,7 @@ import javax.ws.rs.core.Context;
  *
  */
 @Path("/security")
+@Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class SecurityRestApi {

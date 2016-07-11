@@ -2,6 +2,7 @@ package se.kth.hopsworks.zeppelin.rest;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Path;
@@ -20,6 +21,7 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 @Path("/notebook")
+@Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class NotebookService {

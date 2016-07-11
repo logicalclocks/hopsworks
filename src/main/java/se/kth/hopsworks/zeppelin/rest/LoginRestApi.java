@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Map;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
@@ -48,6 +49,7 @@ import se.kth.hopsworks.users.UserFacade;
  * Created for org.apache.zeppelin.rest.message on 17/03/16.
  */
 @Path("/login")
+@Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class LoginRestApi {

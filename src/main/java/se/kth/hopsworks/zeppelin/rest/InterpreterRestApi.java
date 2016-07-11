@@ -217,9 +217,6 @@ public class InterpreterRestApi {
     if (setting == null) {
       return new JsonResponse(Status.NOT_FOUND, "", settingId).build();
     }
-    if (setting.getGroup().contains("livy")) {
-      return new JsonResponse(Status.NOT_ACCEPTABLE, "", settingId).build();
-    }
     try {
       zeppelinConf.getReplFactory().restart(settingId);
     } catch (InterpreterException e) {
@@ -252,6 +249,7 @@ public class InterpreterRestApi {
    * @param sessionId
    * @param settingId
    * @return
+   * @throws se.kth.hopsworks.rest.AppException
    */
   @DELETE
   @Path("setting/stop/{settingId}/{sessionId}")
@@ -260,6 +258,10 @@ public class InterpreterRestApi {
     logger.info("Restart interpreterSetting {}", settingId);
     InterpreterSetting setting = zeppelinConf.getReplFactory().get(settingId);
     LivyMsg.Session session = zeppelinResource.getLivySession(sessionId);
+    if (session == null) {
+      return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId
+              + "' not found.").build();
+    }
     String projName = hdfsUserBean.getProjectName(session.getProxyUser());
     String username = hdfsUserBean.getUserName(session.getProxyUser());
     if (!this.project.getName().equals(projName)) {

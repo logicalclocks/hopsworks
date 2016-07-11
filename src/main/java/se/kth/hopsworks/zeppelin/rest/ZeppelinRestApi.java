@@ -1,6 +1,7 @@
 package se.kth.hopsworks.zeppelin.rest;
 
 import javax.annotation.security.RolesAllowed;
+import javax.ejb.Stateless;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
@@ -10,6 +11,7 @@ import se.kth.hopsworks.zeppelin.server.JsonResponse;
 /**
  */
 @Path("/")
+@Stateless
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class ZeppelinRestApi {
 
