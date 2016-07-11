@@ -2,14 +2,10 @@ package se.kth.bbc.jobs.spark;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,8 +79,7 @@ public class SparkYarnRunnerBuilder {
           throws IOException {
 
     String sparkClasspath = Settings.getSparkDefaultClasspath(sparkDir);
-    //String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
-    String hdfsSparkJarPath = "hdfs://10.0.2.15:8020/user/glassfish/spark.jar";
+    String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
     
     //TODO: include driver memory as am memory
     //Create a builder
@@ -99,9 +94,6 @@ public class SparkYarnRunnerBuilder {
             + Settings.PROJECT_STAGING_DIR + File.separator
             + YarnRunner.APPID_PLACEHOLDER;
     builder.localResourcesBasePath(stagingPath);
-
-    //Add Spark jar - old
-    //builder.addLocalResource(Settings.SPARK_LOCRSC_SPARK_JAR, "hdfs://10.0.2.15:8020/user/glassfish/spark.jar",false);
 
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath,
@@ -182,44 +174,49 @@ public class SparkYarnRunnerBuilder {
     List<String> jobSpecificProperties = new ArrayList<>();
     jobSpecificProperties.add(Settings.KAFKA_SESSIONID_ENV_VAR);
     jobSpecificProperties.add(Settings.KAFKA_BROKERADDR_ENV_VAR);
-    jobSpecificProperties.add(Settings.SPARK_HISTORY_SERVER_ENV);
     jobSpecificProperties.add(Settings.SPARK_NUMBER_EXECUTORS_ENV);
-    jobSpecificProperties.add("spark.driver.memory");
-    jobSpecificProperties.add("spark.driver.cores");
-    jobSpecificProperties.add("spark.executor.memory");
-    jobSpecificProperties.add("spark.executor.cores");
+    jobSpecificProperties.add(Settings.SPARK_DRIVER_MEMORY_ENV);
+    jobSpecificProperties.add(Settings.SPARK_DRIVER_CORES_ENV);
+    jobSpecificProperties.add(Settings.SPARK_EXECUTOR_MEMORY_ENV);
+    jobSpecificProperties.add(Settings.SPARK_EXECUTOR_CORES_ENV);
 
-    addSystemProperty("spark.driver.memory", Integer.toString(driverMemory)+"m");
-    addSystemProperty("spark.driver.cores", Integer.toString(driverCores));
-    addSystemProperty("spark.executor.memory", executorMemory);
-    addSystemProperty("spark.executor.cores", Integer.toString(executorCores));
+    //These properties are set sot that spark history server picks them up
+    addSystemProperty(Settings.SPARK_DRIVER_MEMORY_ENV, Integer.toString(driverMemory)+"m");
+    addSystemProperty(Settings.SPARK_DRIVER_CORES_ENV, Integer.toString(driverCores));
+    addSystemProperty(Settings.SPARK_EXECUTOR_MEMORY_ENV, executorMemory);
+    addSystemProperty(Settings.SPARK_EXECUTOR_CORES_ENV, Integer.toString(executorCores));
     
-    //Add local resources to spark environment too
     builder.addCommand(new SparkSetEnvironmentCommand());
 
-    InputStream is = null;
-
-    try {
-        is = new FileInputStream("/srv/spark/conf/spark-defaults.conf");
-    } catch (FileNotFoundException e) {}
-    
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
- 
+    
     Properties sparkProperties = new Properties();
-    sparkProperties.load(is);
-    for(String property : sparkProperties.stringPropertyNames()){
-        if(!jobSpecificProperties.contains(property)){
-            addSystemProperty(property, sparkProperties.getProperty(property).trim());
+    InputStream is = null;
+    try {
+      is = new FileInputStream("/srv/spark/" + Settings.SPARK_CONFIG_FILE);
+      sparkProperties.load(is);
+      //For every property that is in the spark configuration file but is not
+      //already set, create a java system property.
+      for (String property : sparkProperties.stringPropertyNames()) {
+        if (!jobSpecificProperties.contains(property) && sparkProperties.
+                getProperty(property) != null && !sparkProperties.getProperty(
+                property).isEmpty()) {
+          addSystemProperty(property,
+                  sparkProperties.getProperty(property).trim());
         }
+      }
+    } finally {
+      if (is != null) {
+        is.close();
+      }
     }
     for (String s : sysProps.keySet()) {
       String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
       builder.addJavaOption(option);
     }
     
-    is.close();
     
     //Add local resources to spark environment too
     builder.addCommand(new SparkSetEnvironmentCommand());

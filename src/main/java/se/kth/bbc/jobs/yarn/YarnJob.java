@@ -68,6 +68,7 @@ public abstract class YarnJob extends HopsJob {
    * @param job
    * @param user
    * @param services
+   * @param jobUser
    * @param hadoopDir
    * @param nameNodeIpPort
    * @param kafkaAddress
@@ -439,13 +440,13 @@ public abstract class YarnJob extends HopsJob {
     if (!proceed) {
       return;
     }
-      try {
-          runner.removeAllNecessary();
-      } catch (IOException ex) {
-          logger.log(Level.SEVERE,
-              "Exception while trying to delete job tmp files "
-              + getExecution() + " to HDFS.", ex);
-      }
+    try {
+        runner.removeAllNecessary();
+    } catch (IOException ex) {
+        logger.log(Level.SEVERE,
+            "Exception while trying to delete job tmp files "
+            + getExecution(), ex);
+    }
     updateState(JobState.AGGREGATING_LOGS);
     copyLogs();
     updateState(getFinalState());

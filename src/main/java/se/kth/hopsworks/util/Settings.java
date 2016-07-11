@@ -222,6 +222,10 @@ public class Settings {
   public static final String SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV = "spark.dynamicAllocation.maxExecutors";
   public static final String SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV = "spark.dynamicAllocation.initialExecutors";
   public static final String SPARK_SHUFFLE_SERVICE = "spark.shuffle.service.enabled";
+  public static final String SPARK_DRIVER_MEMORY_ENV = "spark.driver.memory";
+  public static final String SPARK_DRIVER_CORES_ENV = "spark.driver.cores";
+  public static final String SPARK_EXECUTOR_MEMORY_ENV = "spark.executor.memory";
+  public static final String SPARK_EXECUTOR_CORES_ENV = "spark.executor.cores";
   
   public synchronized String getSparkDir() {
     checkCache();

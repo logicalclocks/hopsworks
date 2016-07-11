@@ -66,6 +66,7 @@ public abstract class HopsJob {
    * services.
    * @param user The user executing this job.
    * @param hadoopDir base Hadoop installation directory
+   * @param nameNodeIpPort
    * @throws NullPointerException If either of the given arguments is null.
    */
   protected HopsJob(JobDescription jobDescription,
