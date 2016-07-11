@@ -3,17 +3,19 @@ package se.kth.hopsworks.zeppelin.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -72,6 +74,11 @@ public class ZeppelinResource {
       }
     }
     return running;
+  }
+
+  public boolean isLivySessionAlive(int sessionId) {
+    LivyMsg.Session session = getLivySession(sessionId);
+    return session != null;
   }
 
   public void forceKillInterpreter(InterpreterSetting interpreter,
@@ -220,28 +227,46 @@ public class ZeppelinResource {
     return s;
   }
 
-  public int deleteLivySession(int id) {
+  public int deleteLivySession(int sessionId) {
     String livyUrl = settings.getLivyUrl();
-    URL url;
-    HttpURLConnection con = null;
+    Client client = ClientBuilder.newClient();
+    WebTarget target = client.target(livyUrl).path("/sessions/" + sessionId);
+    Response res;
     try {
-      url = new URL(livyUrl + "/sessions/" + id);
-      con = (HttpURLConnection) url.openConnection();
-      con.setRequestProperty("Content-Type",
-                      "application/x-www-form-urlencoded");
-      con.setRequestMethod("DELETE");
-      con.connect();
-      int response = con.getResponseCode();
-      return response;
-    } catch (MalformedURLException ex) {
-      return -1;
-    } catch (IOException ex) {
-      return -1;
-    } finally {
-      if (con != null) {
-        con.disconnect();
-      }
+      res = target.request().delete();
+    } catch (NotFoundException e) {
+      return Response.Status.NOT_FOUND.getStatusCode();
+    }finally {
+      client.close();
     }
+    return res.getStatus();
   }
 
+  public LivyMsg.Session getLivySession(int sessionId) {
+    String livyUrl = settings.getLivyUrl();
+    Client client = ClientBuilder.newClient();
+    WebTarget target = client.target(livyUrl).path("/sessions/" + sessionId);
+    LivyMsg.Session session = null;
+    try {
+      session = target.request().get(LivyMsg.Session.class);
+    } catch (NotFoundException e) {
+      return null;
+    }finally {
+      client.close();
+    }
+    return session;
+  }
+  
+  public LivyMsg getLivySessions() {
+    String livyUrl = settings.getLivyUrl();
+    Client client = ClientBuilder.newClient();
+    WebTarget target = client.target(livyUrl).path("/sessions");
+    LivyMsg livySession = null;
+    try {
+      livySession = target.request().get(LivyMsg.class);
+    }finally {
+      client.close();
+    }
+    return livySession;
+  }
 }

@@ -48,6 +48,8 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 import com.google.gson.Gson;
+import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.Produces;
 import org.apache.zeppelin.dep.Repository;
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.repository.RemoteRepository;
@@ -55,9 +57,12 @@ import se.kth.bbc.jobs.jobhistory.YarnApplicationstate;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
+import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
+import se.kth.hopsworks.zeppelin.util.LivyMsg;
 import se.kth.hopsworks.zeppelin.util.TicketContainer;
 
 /**
@@ -83,6 +88,8 @@ public class InterpreterRestApi {
   private HdfsUsersController hdfsUserBean;
   @EJB
   private YarnApplicationstateFacade appStateBean;
+  @EJB
+  private UserFacade userFacade;
 
   Gson gson = new Gson();
 
@@ -206,6 +213,13 @@ public class InterpreterRestApi {
   @Path("setting/restart/{settingId}")
   public Response restartSetting(@PathParam("settingId") String settingId) {
     logger.info("Restart interpreterSetting {}", settingId);
+    InterpreterSetting setting = zeppelinConf.getReplFactory().get(settingId);
+    if (setting == null) {
+      return new JsonResponse(Status.NOT_FOUND, "", settingId).build();
+    }
+    if (setting.getGroup().contains("livy")) {
+      return new JsonResponse(Status.NOT_ACCEPTABLE, "", settingId).build();
+    }
     try {
       zeppelinConf.getReplFactory().restart(settingId);
     } catch (InterpreterException e) {
@@ -213,10 +227,6 @@ public class InterpreterRestApi {
       return new JsonResponse(
               Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e)).
               build();
-    }
-    InterpreterSetting setting = zeppelinConf.getReplFactory().get(settingId);
-    if (setting == null) {
-      return new JsonResponse(Status.NOT_FOUND, "", settingId).build();
     }
     int timeout = zeppelinConf.getConf().getInt(
             ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_CONNECT_TIMEOUT);
@@ -228,15 +238,69 @@ public class InterpreterRestApi {
         break;
       }
     }
-
-    if (zeppelinResource.isInterpreterRunning(setting, project) && setting.
-            getGroup().contains("livy")) {
-      zeppelinResource.deleteLivySession(0);
-    } else if (zeppelinResource.isInterpreterRunning(setting, project)) {
+    if (zeppelinResource.isInterpreterRunning(setting, project)) {
       zeppelinResource.forceKillInterpreter(setting, project);
     }
     InterpreterDTO interpreter = new InterpreterDTO(setting,
             !zeppelinResource.isInterpreterRunning(setting, project));
+    return new JsonResponse(Status.OK, "", interpreter).build();
+  }
+
+  /**
+   * Stop livy session
+   *
+   * @param sessionId
+   * @param settingId
+   * @return
+   */
+  @DELETE
+  @Path("setting/stop/{settingId}/{sessionId}")
+  public Response stopSession(@PathParam("settingId") String settingId,
+          @PathParam("sessionId") int sessionId) throws AppException {
+    logger.info("Restart interpreterSetting {}", settingId);
+    InterpreterSetting setting = zeppelinConf.getReplFactory().get(settingId);
+    LivyMsg.Session session = zeppelinResource.getLivySession(sessionId);
+    String projName = hdfsUserBean.getProjectName(session.getProxyUser());
+    String username = hdfsUserBean.getUserName(session.getProxyUser());
+    if (!this.project.getName().equals(projName)) {
+      throw new AppException(Status.BAD_REQUEST.getStatusCode(),
+              "You can't stop sessions in another project.");
+    }
+    if (!this.user.getUsername().equals(username) && this.roleInProject.equals(
+            AllowedRoles.DATA_SCIENTIST)) {
+      throw new AppException(Status.BAD_REQUEST.getStatusCode(),
+              "You can't stop this session.");
+    }
+    if (this.user.getUsername().equals(username)) {
+      zeppelinConf.getReplFactory().restart(settingId);
+    } else {
+      Users u = userFacade.findByUsername(username);
+      if (u == null) {
+        throw new AppException(Status.BAD_REQUEST.getStatusCode(),
+                "The owner of the session was not found.");
+      }
+      ZeppelinConfig zConf = zeppelinConfFactory.getZeppelinConfig(this.project.
+              getName(), u.getEmail());
+      zConf.getReplFactory().restart(settingId);
+    }
+
+    int timeout = zeppelinConf.getConf().getInt(
+            ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_CONNECT_TIMEOUT);
+    long startTime = System.currentTimeMillis();
+    long endTime;
+    while (zeppelinResource.isLivySessionAlive(sessionId)) {
+      endTime = System.currentTimeMillis();
+      if ((endTime - startTime) > (timeout * 2)) {
+        break;
+      }
+    }
+
+    if (zeppelinResource.isLivySessionAlive(sessionId)) {
+      zeppelinResource.deleteLivySession(sessionId);
+    }
+
+    InterpreterDTO interpreter = new InterpreterDTO(setting,
+            !zeppelinResource.isLivySessionAlive(sessionId));
     return new JsonResponse(Status.OK, "", interpreter).build();
   }
 
@@ -368,5 +432,5 @@ public class InterpreterRestApi {
     TicketContainer.instance.invalidate(this.user.getEmail());
     return new JsonResponse(Status.OK, "Cache cleared.").build();
   }
-
+  
 }

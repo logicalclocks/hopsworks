@@ -47,31 +47,31 @@ public class ZookeeprTopicCleanerTimer {
     @Schedule(persistent = false, second = "*/10", minute = "*", hour = "*")
     public void execute(Timer timer) {
 
-        Set<String> zkTopics = new HashSet<>();
-        try {
-            ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(),
-                    sessionTimeoutMs, new ZookeeperWatcher());
-            List<String> topics = zk.getChildren("/brokers/topics", false);
-            zkTopics.addAll(topics);
-            zk.close();
-        }catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.toString());
-        } catch (KeeperException | InterruptedException ex) {
-            LOGGER.log(Level.SEVERE, "Cannot retrieve topic list from Zookeeper", ex.toString());
-        }
-
-        List<ProjectTopics> dbProjectTopics = em.createNamedQuery(
-                "ProjectTopics.findAll").getResultList();
-
-        Set<String> dbTopics = new HashSet<>();
-
-        for (ProjectTopics pt : dbProjectTopics) {
-            try {
-                dbTopics.add(pt.getProjectTopicsPK().getTopicName());
-            } catch (UnsupportedOperationException e) {
-                LOGGER.log(Level.SEVERE, e.toString());
-            }
-        }
+//        Set<String> zkTopics = new HashSet<>();
+//        try {
+//            ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(),
+//                    sessionTimeoutMs, new ZookeeperWatcher());
+//            List<String> topics = zk.getChildren("/brokers/topics", false);
+//            zkTopics.addAll(topics);
+//            zk.close();
+//        }catch (IOException ex) {
+//            LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.toString());
+//        } catch (KeeperException | InterruptedException ex) {
+//            LOGGER.log(Level.SEVERE, "Cannot retrieve topic list from Zookeeper", ex.toString());
+//        }
+//
+//        List<ProjectTopics> dbProjectTopics = em.createNamedQuery(
+//                "ProjectTopics.findAll").getResultList();
+//
+//        Set<String> dbTopics = new HashSet<>();
+//
+//        for (ProjectTopics pt : dbProjectTopics) {
+//            try {
+//                dbTopics.add(pt.getProjectTopicsPK().getTopicName());
+//            } catch (UnsupportedOperationException e) {
+//                LOGGER.log(Level.SEVERE, e.toString());
+//            }
+//        }
 
 //        Set<String> zkTopicsTemp = zkTopics;
 //        zkTopics.removeAll(dbTopics);
@@ -97,31 +97,31 @@ public class ZookeeprTopicCleanerTimer {
             zkTopics.removeAll(dbTopics);
         3. remove those topics
          */
-        if (!zkTopics.isEmpty()) {
-            zkTopics.removeAll(dbTopics);
-            for (String topicName : zkTopics) {
-                ZkClient zkClient = null;
-                try {
-                    zkClient = new ZkClient(kafkaFacade.getIp(settings.getZkConnectStr()).getHostName(),
-                            sessionTimeoutMs, connectionTimeout, ZKStringSerializer$.MODULE$);
-                } catch (AppException ex) {
-                    LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex.toString());
-                }
-                ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
-                ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
-
-                try {
-                    AdminUtils.deleteTopic(zkUtils, topicName);
-                    LOGGER.log(Level.SEVERE,  "{0} is removed from Zookeeper", new Object[]{topicName});
-                } catch (TopicAlreadyMarkedForDeletionException ex) {
-                    LOGGER.log(Level.SEVERE, "{0} is already marked for deletion", new Object[]{topicName});
-                } finally {
-                    if (zkClient != null) {
-                        zkClient.close();
-                    }
-                }
-            }
-        }
+//        if (!zkTopics.isEmpty()) {
+//            zkTopics.removeAll(dbTopics);
+//            for (String topicName : zkTopics) {
+//                ZkClient zkClient = null;
+//                try {
+//                    zkClient = new ZkClient(kafkaFacade.getIp(settings.getZkConnectStr()).getHostName(),
+//                            sessionTimeoutMs, connectionTimeout, ZKStringSerializer$.MODULE$);
+//                } catch (AppException ex) {
+//                    LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex.toString());
+//                }
+//                ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
+//                ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
+//
+//                try {
+//                    AdminUtils.deleteTopic(zkUtils, topicName);
+//                    LOGGER.log(Level.SEVERE,  "{0} is removed from Zookeeper", new Object[]{topicName});
+//                } catch (TopicAlreadyMarkedForDeletionException ex) {
+//                    LOGGER.log(Level.SEVERE, "{0} is already marked for deletion", new Object[]{topicName});
+//                } finally {
+//                    if (zkClient != null) {
+//                        zkClient.close();
+//                    }
+//                }
+//            }
+//        }
     }
     
     private class ZookeeperWatcher implements Watcher{

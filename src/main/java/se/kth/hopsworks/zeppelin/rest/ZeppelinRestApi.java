@@ -25,10 +25,11 @@ public class ZeppelinRestApi {
   public Response getRoot() {
     return Response.ok().build();
   }
-  
+
   @GET
   @Path("version")
   public Response getVersion() {
-    return new JsonResponse<>(Response.Status.OK, "Zeppelin version", Util.getVersion()).build();
+    return new JsonResponse<>(Response.Status.OK, "Zeppelin version", Util.
+            getVersion()).build();
   }
 }
