@@ -28,12 +28,13 @@
             </div>
             <div ng-if="schemaCreateCtrl.content_empty=== -1" style="color: red">{{"Content should not be empty"}}</div>
         </div>
-        <div class="row"></div>
-        <hr />
+         <div ng-if="schemaCreateCtrl.message" style="color: red">{{schemaCreateCtrl.message}}</div>
+        <!--<hr />-->
         <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
 
             <button class="btn btn-default" type="button" ng-click="schemaCreateCtrl.close()">Cancel</button>
-            <button class="btn btn-primary" type="submit">
+            <button class="btn btn-warning" type="button" ng-click="schemaCreateCtrl.validateSchema()">Validate</button>
+            <button class="btn btn-lightgrey" type="submit" ng-disabled="schemaCreateCtrl.validSchema">
                 Create
             </button>
         </div>
