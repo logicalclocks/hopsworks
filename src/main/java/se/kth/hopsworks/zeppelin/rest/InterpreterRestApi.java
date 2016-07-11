@@ -274,11 +274,15 @@ public class InterpreterRestApi {
               "You can't stop this session.");
     }
 
-    zeppelinResource.deleteLivySession(sessionId);
+    int res = zeppelinResource.deleteLivySession(sessionId);
+    if (res == Response.Status.NOT_FOUND.getStatusCode()) {
+      return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId
+              + "' not found.").build();
+    }
 
     InterpreterDTO interpreter = new InterpreterDTO(setting,
             !zeppelinResource.isLivySessionAlive(sessionId));
-    return new JsonResponse(Status.OK, "", interpreter).build();
+    return new JsonResponse(Status.OK, "Deleted ", interpreter).build();
   }
 
   /**
