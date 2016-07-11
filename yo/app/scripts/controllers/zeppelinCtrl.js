@@ -103,6 +103,21 @@ angular.module('hopsWorksApp')
                         });
               }
             };
+            
+            self.stopLivySession = function (interpreter, sessionId) {
+                self.transition = true;
+                interpreter.statusMsg = statusMsgs[2];
+                ZeppelinService.stopLivySession(interpreter.interpreter.id, sessionId)
+                        .then(function (success) {
+                          interpreter.interpreter = success.data.body;
+                          interpreter.statusMsg = statusMsgs[(success.data.body.notRunning ? 0 : 1)];
+                          self.transition = false;
+                        }, function (error) {
+                          getInterpreterStatus();
+                          self.transition = false;
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+                        });
+            };
 
             self.refreshInterpreters = function () {
               refresh();

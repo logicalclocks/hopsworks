@@ -46,6 +46,11 @@ public class LivyMsg {
     public Session() {
     }
 
+    public Session(int id, String owner) {
+      this.id = id;
+      this.owner = owner;
+    }
+
     public int getId() {
       return id;
     }

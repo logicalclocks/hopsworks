@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
+import se.kth.hopsworks.zeppelin.util.LivyMsg;
 
 @XmlRootElement
 public class InterpreterDTO {
@@ -11,7 +12,7 @@ public class InterpreterDTO {
   private String id;
   private String name;
   private String group;
-  private List<String> sessions;
+  private List<LivyMsg.Session> sessions;
   private boolean notRunning;
 
   public InterpreterDTO() {
@@ -57,11 +58,11 @@ public class InterpreterDTO {
     this.group = group;
   }
 
-  public List<String> getSessions() {
+  public List<LivyMsg.Session> getSessions() {
     return sessions;
   }
 
-  public void setSessions(List<String> sessions) {
+  public void setSessions(List<LivyMsg.Session> sessions) {
     this.sessions = sessions;
   }
 

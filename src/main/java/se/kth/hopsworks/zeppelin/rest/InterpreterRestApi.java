@@ -252,7 +252,7 @@ public class InterpreterRestApi {
    * @throws se.kth.hopsworks.rest.AppException
    */
   @DELETE
-  @Path("setting/stop/{settingId}/{sessionId}")
+  @Path("/livy/sessions/delete/{settingId}/{sessionId}")
   public Response stopSession(@PathParam("settingId") String settingId,
           @PathParam("sessionId") int sessionId) throws AppException {
     logger.info("Restart interpreterSetting {}", settingId);
@@ -273,33 +273,8 @@ public class InterpreterRestApi {
       throw new AppException(Status.BAD_REQUEST.getStatusCode(),
               "You can't stop this session.");
     }
-    if (this.user.getUsername().equals(username)) {
-      zeppelinConf.getReplFactory().restart(settingId);
-    } else {
-      Users u = userFacade.findByUsername(username);
-      if (u == null) {
-        throw new AppException(Status.BAD_REQUEST.getStatusCode(),
-                "The owner of the session was not found.");
-      }
-      ZeppelinConfig zConf = zeppelinConfFactory.getZeppelinConfig(this.project.
-              getName(), u.getEmail());
-      zConf.getReplFactory().restart(settingId);
-    }
 
-    int timeout = zeppelinConf.getConf().getInt(
-            ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_CONNECT_TIMEOUT);
-    long startTime = System.currentTimeMillis();
-    long endTime;
-    while (zeppelinResource.isLivySessionAlive(sessionId)) {
-      endTime = System.currentTimeMillis();
-      if ((endTime - startTime) > (timeout * 2)) {
-        break;
-      }
-    }
-
-    if (zeppelinResource.isLivySessionAlive(sessionId)) {
-      zeppelinResource.deleteLivySession(sessionId);
-    }
+    zeppelinResource.deleteLivySession(sessionId);
 
     InterpreterDTO interpreter = new InterpreterDTO(setting,
             !zeppelinResource.isLivySessionAlive(sessionId));
@@ -402,6 +377,7 @@ public class InterpreterRestApi {
     List<ProjectTeam> projectTeam;
     InterpreterDTO interpreterDTO;
     List<YarnApplicationstate> yarnAppStates;
+    int id;
     String hdfsUsername;
     for (InterpreterSetting interpreter : interpreterSettings) {
       interpreterDTO = new InterpreterDTO(interpreter, !zeppelinResource.
@@ -414,9 +390,15 @@ public class InterpreterRestApi {
           yarnAppStates = appStateBean.findByAppuserAndAppState(hdfsUsername,
                   "RUNNING");
           for (YarnApplicationstate state : yarnAppStates) {
+            try {
+              id = Integer.parseInt(state.getAppname().substring(
+                      "livy-session-".length()));
+            } catch (NumberFormatException e) {
+              continue;
+            }
             if (state.getAppname().startsWith("livy-session-")) {
-              interpreterDTO.getSessions().add(member.getUser().getEmail()
-                      + " : " + state.getAppname());
+              interpreterDTO.getSessions().add(new LivyMsg.Session(id, member.
+                      getUser().getEmail()));
             }
           }
         }
@@ -434,5 +416,5 @@ public class InterpreterRestApi {
     TicketContainer.instance.invalidate(this.user.getEmail());
     return new JsonResponse(Status.OK, "Cache cleared.").build();
   }
-  
+
 }
