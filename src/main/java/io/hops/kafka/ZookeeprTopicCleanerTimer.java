@@ -43,8 +43,6 @@ public class ZookeeprTopicCleanerTimer {
     @EJB
     KafkaFacade kafkaFacade;
 
-    static ZooKeeper zk;
-    
     ZkClient zkClient = null;
     
     ZkConnection zkConnection;
@@ -54,17 +52,12 @@ public class ZookeeprTopicCleanerTimer {
 
         Set<String> zkTopics = new HashSet<>();
         try {
-          if (zk == null || !zk.getState().isConnected()) {
-            if (zk != null) {
-              zk.close();
-            }
-            zk = new ZooKeeper(settings.getZkConnectStr(),
+            ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(),
                     sessionTimeoutMs, new ZookeeperWatcher());
-          }
-          List<String> topics = zk.getChildren("/brokers/topics", false);
-          zkTopics.addAll(topics);
-
-        } catch (IOException ex) {
+            List<String> topics = zk.getChildren("/brokers/topics", false);
+            zkTopics.addAll(topics);
+            zk.close();
+        }catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.toString());
         } catch (KeeperException | InterruptedException ex) {
             LOGGER.log(Level.SEVERE, "Cannot retrieve topic list from Zookeeper", ex.toString());
