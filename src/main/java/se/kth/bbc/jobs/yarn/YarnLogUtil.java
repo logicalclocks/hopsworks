@@ -80,7 +80,7 @@ public class YarnLogUtil {
   private static void writeLogs(DistributedFileSystemOps dfs, String[] srcs,
           PrintStream writer, String desiredLogType) {
     ArrayList<AggregatedLogFormat.LogKey> containerNames = new ArrayList<>();
-    AggregatedLogFormat.LogReader reader = null;
+    LogReader reader = null;
     DataInputStream valueStream;
     AggregatedLogFormat.LogKey key = new AggregatedLogFormat.LogKey();
     AggregatedLogFormat.ContainerLogsReader logReader = null;
@@ -90,7 +90,7 @@ public class YarnLogUtil {
         location = new Path(src);
         LOGGER.log(Level.INFO, "Copying log from {0}", src);
         try {
-          reader = new AggregatedLogFormat.LogReader(dfs.getConf(),
+          reader = new LogReader(dfs.getConf(), dfs,
                   new Path(src));
           valueStream = reader.next(key);
           while (valueStream != null) {
@@ -98,7 +98,7 @@ public class YarnLogUtil {
             valueStream = reader.next(key);
           }
           reader.close();
-          reader = new AggregatedLogFormat.LogReader(dfs.getConf(),
+          reader = new LogReader(dfs.getConf(), dfs,
                   new Path(src));
         } catch (FileNotFoundException e) {
           LOGGER.log(Level.SEVERE,
@@ -140,13 +140,13 @@ public class YarnLogUtil {
 
   private static boolean logsReady(DistributedFileSystemOps dfs, String src) {
     ArrayList<AggregatedLogFormat.LogKey> containerNames = new ArrayList<>();
-    AggregatedLogFormat.LogReader reader = null;
+    LogReader reader = null;
     DataInputStream valueStream;
     AggregatedLogFormat.LogKey key = new AggregatedLogFormat.LogKey();
     AggregatedLogFormat.ContainerLogsReader logReader = null;
     try {
         try {
-          reader = new AggregatedLogFormat.LogReader(dfs.getConf(),
+          reader = new LogReader(dfs.getConf(), dfs,
                   new Path(src));
           valueStream = reader.next(key);
           while (valueStream != null) {
@@ -154,7 +154,7 @@ public class YarnLogUtil {
             valueStream = reader.next(key);
           }
           reader.close();
-          reader = new AggregatedLogFormat.LogReader(dfs.getConf(),
+          reader = new LogReader(dfs.getConf(), dfs,
                   new Path(src));
         } catch (FileNotFoundException e) {
           return false;
