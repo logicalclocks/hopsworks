@@ -90,8 +90,7 @@ public class DistributedFsService {
    * @return DistributedFileSystemOps
    */
   public DistributedFileSystemOps getDfsOps() {
-    return new DistributedFileSystemOps(UserGroupInformation.createRemoteUser(
-            settings.getHdfsSuperUser()), conf);
+    return getDfsOps(settings.getHdfsSuperUser());
   }
 
   /**
