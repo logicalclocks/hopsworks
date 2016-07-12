@@ -45,18 +45,24 @@ public class ZookeeprTopicCleanerTimer {
 
     ZkClient zkClient = null;
     
-    ZkConnection zkConnection;
+    ZkConnection zkConnection = null;
+    
+    ZooKeeper zk = null;
 
     @Schedule(persistent = false, second = "*/10", minute = "*", hour = "*")
     public void execute(Timer timer) {
 
         Set<String> zkTopics = new HashSet<>();
         try {
-            ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(),
+          if (zk == null || !zk.getState().isConnected()) {
+            if (zk != null) {
+              zk.close();
+            }
+            zk = new ZooKeeper(settings.getZkConnectStr(),
                     sessionTimeoutMs, new ZookeeperWatcher());
+           }
             List<String> topics = zk.getChildren("/brokers/topics", false);
             zkTopics.addAll(topics);
-            zk.close();
         }catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.toString());
         } catch (KeeperException | InterruptedException ex) {
@@ -115,7 +121,6 @@ public class ZookeeprTopicCleanerTimer {
 
        @Override
        public void process(WatchedEvent we) {
-          LOGGER.log(Level.INFO, "");
        }
    }
 }

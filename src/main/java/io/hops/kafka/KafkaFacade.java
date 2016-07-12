@@ -870,7 +870,6 @@ public class KafkaFacade {
 
         @Override
         public void process(WatchedEvent we) {
-            LOGGER.log(Level.INFO, "");
         }
     }
 }
