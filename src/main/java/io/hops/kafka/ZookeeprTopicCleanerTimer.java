@@ -28,10 +28,9 @@ import se.kth.hopsworks.util.Settings;
 @Singleton
 public class ZookeeprTopicCleanerTimer {
 
-    private final static Logger LOGGER = Logger.getLogger(KafkaFacade.class.
-            getName());
-    
-     public final int connectionTimeout = 30 * 1000;// 30 seconds
+    private final static Logger LOGGER = Logger.getLogger(KafkaFacade.class.getName());
+
+    public final int connectionTimeout = 30 * 1000;// 30 seconds
 
     public int sessionTimeoutMs = 30 * 1000;//30 seconds
 
@@ -43,6 +42,10 @@ public class ZookeeprTopicCleanerTimer {
 
     @EJB
     KafkaFacade kafkaFacade;
+
+    ZkClient zkClient = null;
+    
+    ZkConnection zkConnection;
 
     @Schedule(persistent = false, second = "*/10", minute = "*", hour = "*")
     public void execute(Timer timer) {
@@ -73,21 +76,6 @@ public class ZookeeprTopicCleanerTimer {
             }
         }
 
-//        Set<String> zkTopicsTemp = zkTopics;
-//        zkTopics.removeAll(dbTopics);
-//
-//        //remove topics from database which do not exist in zookeeper
-//        if (!zkTopics.isEmpty()) {
-//            for (String topicName : zkTopics) {
-//                ProjectTopics removeTopic = em.createNamedQuery(
-//                        "ProjectTopics.findByTopicName", ProjectTopics.class)
-//                        .setParameter("topicName", topicName).getSingleResult();
-//                em.remove(removeTopic);
-//                LOGGER.log(Level.SEVERE, "************************** "
-//                        + "{0} is being removed from database", new Object[]{topicName});
-//            }
-//        }
-
         /*
         To remove topics from zookeeper which do not exist in database. This situation
         happens when a hopsworks project is deleted, because all the topics in the project
@@ -100,26 +88,25 @@ public class ZookeeprTopicCleanerTimer {
         if (!zkTopics.isEmpty()) {
             zkTopics.removeAll(dbTopics);
             for (String topicName : zkTopics) {
-                ZkClient zkClient = null;
                 try {
-                    zkClient = new ZkClient(kafkaFacade.getIp(settings.getZkConnectStr()).getHostName(),
-                            sessionTimeoutMs, connectionTimeout, ZKStringSerializer$.MODULE$);
+                    if (zkClient == null) {
+                        zkClient = new ZkClient(kafkaFacade.getIp(settings.getZkConnectStr()).getHostName(),
+                                sessionTimeoutMs, connectionTimeout, ZKStringSerializer$.MODULE$);
+                    }
                 } catch (AppException ex) {
                     LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex.toString());
                 }
-                ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
+                if (zkConnection == null) {
+                    zkConnection = new ZkConnection(settings.getZkConnectStr());
+                }
                 ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
 
                 try {
                     AdminUtils.deleteTopic(zkUtils, topicName);
-                    LOGGER.log(Level.SEVERE,  "{0} is removed from Zookeeper", new Object[]{topicName});
+                    LOGGER.log(Level.INFO, "{0} is removed from Zookeeper", new Object[]{topicName});
                 } catch (TopicAlreadyMarkedForDeletionException ex) {
-                    LOGGER.log(Level.SEVERE, "{0} is already marked for deletion", new Object[]{topicName});
-                } finally {
-                    if (zkClient != null) {
-                        zkClient.close();
-                    }
-                }
+                    LOGGER.log(Level.INFO, "{0} is already marked for deletion", new Object[]{topicName});
+                } 
             }
         }
     }

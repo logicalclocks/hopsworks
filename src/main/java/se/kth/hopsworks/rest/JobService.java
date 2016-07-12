@@ -78,8 +78,6 @@ public class JobService {
   @Inject
   private ExecutionService executions;
   @Inject
-  private CuneiformService cuneiform;
-  @Inject
   private SparkService spark;
   @Inject
   private AdamService adam;
@@ -818,12 +816,6 @@ public class JobService {
     }
     return noCacheResponse.getNoCacheResponseBuilder(
             Response.Status.INTERNAL_SERVER_ERROR).build();
-  }
-
-  @Path("/cuneiform")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public CuneiformService cuneiform() {
-    return this.cuneiform.setProject(project);
   }
 
   @Path("/spark")

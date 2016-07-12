@@ -22,8 +22,6 @@ public class ExecutionController {
 
   //Controllers
   @EJB
-  private CuneiformController cuneiformController;
-  @EJB
   private SparkController sparkController;
   @EJB
   private AdamController adamController;
@@ -37,8 +35,6 @@ public class ExecutionController {
     Execution exec = null;
 
     switch (job.getJobType()) {
-      //      case CUNEIFORM:
-      //        return cuneiformController.startWorkflow(job, user);
       case ADAM:
         exec = adamController.startJob(job, user);
         break;
@@ -76,8 +72,6 @@ public class ExecutionController {
   public void stop(JobDescription job, Users user, String appid) throws
       IOException {
     switch (job.getJobType()) {
-      case CUNEIFORM:
-      //cuneiformController.stopWorkflow(job, user);
       case ADAM:
       //adamController.stopJob(job, user);
       case SPARK:
