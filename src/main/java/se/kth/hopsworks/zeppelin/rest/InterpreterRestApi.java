@@ -274,6 +274,31 @@ public class InterpreterRestApi {
               "You can't stop this session.");
     }
 
+    if (this.user.getUsername().equals(username)) {
+      zeppelinConf.getReplFactory().restart(settingId);
+    } else {
+      Users u = userFacade.findByUsername(username);
+      if (u == null) {
+        throw new AppException(Status.BAD_REQUEST.getStatusCode(),
+                "The owner of the session was not found.");
+      }
+      ZeppelinConfig zConf = zeppelinConfFactory.getZeppelinConfig(this.project.
+              getName(), u.getEmail());
+      if (zConf.getReplFactory() != null) {
+        zConf.getReplFactory().restart(settingId);
+      }
+    }
+
+    int timeout = zeppelinConf.getConf().getInt(
+            ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_CONNECT_TIMEOUT);
+    long startTime = System.currentTimeMillis();
+    long endTime;
+    while (zeppelinResource.isLivySessionAlive(sessionId)) {
+      endTime = System.currentTimeMillis();
+      if ((endTime - startTime) > (timeout * 2)) {
+        break;
+      }
+    }
     int res = zeppelinResource.deleteLivySession(sessionId);
     if (res == Response.Status.NOT_FOUND.getStatusCode()) {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId
