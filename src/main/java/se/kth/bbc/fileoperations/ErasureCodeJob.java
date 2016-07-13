@@ -7,6 +7,7 @@ import javax.ws.rs.NotFoundException;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -35,7 +36,7 @@ public class ErasureCodeJob extends HopsJob {
   }
 
   @Override
-  protected boolean setupJob() {
+  protected boolean setupJob(DistributedFileSystemOps dfso) {
     if (jobConfig.getAppName() == null || jobConfig.getAppName().isEmpty()) {
       jobConfig.setAppName("Untitled Erasure coding Job");
     }
@@ -44,7 +45,7 @@ public class ErasureCodeJob extends HopsJob {
   }
 
   @Override
-  protected void runJob() {
+  protected void runJob(DistributedFileSystemOps udfso) {
 
     boolean jobSucceeded = false;
 

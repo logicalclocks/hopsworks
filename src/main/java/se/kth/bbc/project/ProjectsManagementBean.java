@@ -25,6 +25,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.rest.AppException;
 
@@ -144,7 +145,7 @@ public class ProjectsManagementBean {
     projectsManagementController.changeYarnQuota(projectname, quota);
   }
 
-  public void onRowEdit(RowEditEvent event)
+  public void onRowEdit(RowEditEvent event, DistributedFileSystemOps dfso)
       throws IOException {
     ProjectsManagement row = (ProjectsManagement) event.getObject();
     if (row.getDisabled()) {
@@ -153,7 +154,8 @@ public class ProjectsManagementBean {
       projectsManagementController.enableProject(row.getProjectname());
     }
     projectsManagementController.changeYarnQuota(row.getProjectname(), row.getYarnQuotaRemaining());
-    projectsManagementController.setHdfsSpaceQuota(row.getProjectname(), this.hdfsquota);
+    projectsManagementController.setHdfsSpaceQuota(row.getProjectname(),
+            this.hdfsquota, dfso);
   }
 
   public void onRowCancel(RowEditEvent event) {

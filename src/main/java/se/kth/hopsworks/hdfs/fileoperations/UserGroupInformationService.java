@@ -17,16 +17,17 @@ public class UserGroupInformationService {
   private static final Logger logger = Logger.getLogger(
           UserGroupInformationService.class.
           getName());
-  private ConcurrentMap<String, UserGroupInformation> cache
+  private ConcurrentMap<String, UserGroupInformation> proxyCache
           = new ConcurrentHashMap<>();
-
+  private ConcurrentMap<String, UserGroupInformation> remoteCache
+          = new ConcurrentHashMap<>();
   public UserGroupInformationService() {
   }
 
   
   @PreDestroy
   public void preDestroy() {
-    for (UserGroupInformation ugi : cache.values()) {
+    for (UserGroupInformation ugi : proxyCache.values()) {
       try {
         FileSystem.closeAllForUGI(ugi);
       } catch (IOException ioe) {
@@ -35,7 +36,7 @@ public class UserGroupInformationService {
                 getUserName(), ioe);
       }
     }
-    cache.clear();
+    proxyCache.clear();
   }
 
   /**
@@ -45,18 +46,30 @@ public class UserGroupInformationService {
    * @throws IOException 
    */
   public UserGroupInformation getProxyUser(String user) throws IOException {
-    cache.putIfAbsent(user, UserGroupInformation.createProxyUser(user,
+    proxyCache.putIfAbsent(user, UserGroupInformation.createProxyUser(user,
             UserGroupInformation.getLoginUser()));
-    return cache.get(user);
+    return proxyCache.get(user);
   }
 
+  /**
+   * Creates and saves a remote user.
+   * @param user
+   * @return
+   * @throws IOException 
+   */
+  public UserGroupInformation getRemoteUser(String user) throws IOException {
+    remoteCache.putIfAbsent(user, UserGroupInformation.createProxyUser(user,
+            UserGroupInformation.getLoginUser()));
+    return remoteCache.get(user);
+  }
+  
   /**
    * removes a user from cache
    * @param username
    * @return 
    */
   public UserGroupInformation remove(String username) {
-    return cache.remove(username);
+    return proxyCache.remove(username);
   }
   
 }

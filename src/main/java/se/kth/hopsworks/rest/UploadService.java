@@ -186,12 +186,16 @@ public class UploadService {
       //TODO: *** WARNING ***
       //Check permissions before creating file
       if (this.username != null) {
+        DistributedFileSystemOps udfso = null;
         try {
-          dfs.getDfsOps(username).touchz(new org.apache.hadoop.fs.Path(this.path
+          udfso = dfs.getDfsOps(username);
+          udfso.touchz(new org.apache.hadoop.fs.Path(this.path
                   + fileName));
         } catch (AccessControlException ex) {
           throw new AccessControlException(
                   "Permission denied: You can not upload to this folder. ");
+        }finally{
+          udfso.close();
         }
       }
     }
@@ -271,6 +275,7 @@ public class UploadService {
     }
 
     if (finished) {
+      DistributedFileSystemOps dfsOps=null;
       try {
         String fileContent = null;
 
@@ -299,7 +304,7 @@ public class UploadService {
         }
 
         this.path = Utils.ensurePathEndsInSlash(this.path);
-        DistributedFileSystemOps dfsOps;
+
         if (this.username != null) {
           dfsOps = dfs.getDfsOps(username);
         } else { // to accommodate previous implimentations  
@@ -343,6 +348,10 @@ public class UploadService {
         json.setErrorMsg("Failed to write to HDFS");
         return noCacheResponse.getNoCacheResponseBuilder(
                 Response.Status.BAD_REQUEST).entity(json).build();
+      } finally {
+        if(dfsOps!=null){
+          dfsOps.close();
+        }
       }
     }
 
