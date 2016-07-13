@@ -326,7 +326,7 @@ public class YarnLogUtil {
 
   private static long getFileLen(String path, DistributedFileSystemOps dfs) {
     Path location = new Path(path);
-    FileStatus[] fileStatus;
+    FileStatus fileStatus;
     try {
       if (!dfs.exists(path)) {
         return 0l;
@@ -334,14 +334,14 @@ public class YarnLogUtil {
       if (dfs.isDir(path)) {
         return 0l;
       }
-      fileStatus = dfs.listStatus(location);
-      if (fileStatus == null || fileStatus.length == 0) {
+      fileStatus = dfs.getFileStatus(location);
+      if (fileStatus == null) {
         return 0l;
       }
     } catch (IOException ex) {
       return 0l;
     }
-    return fileStatus[0].getLen();
+    return fileStatus.getLen();
   }
 
   private static boolean logFilesReady(String[] paths,
@@ -351,36 +351,23 @@ public class YarnLogUtil {
     boolean ready = false;
     for (String path : paths) {
       Path location = new Path(path);
-      FileStatus[] fileStatus;
+      FileStatus fileStatus;
       if (!dfs.exists(path)) {
         return false;
       }
       if (dfs.isDir(path)) {
         return false;
       }
-      fileStatus = dfs.listStatus(location);
-      if (fileStatus == null || fileStatus.length == 0) {
+      fileStatus = dfs.getFileStatus(location);
+      if (fileStatus == null) {
         return false;
       }
-      if (fileStatus[0].getLen() == 0l) {
+      if (fileStatus.getLen() == 0l) {
         return false;
       }
       if (!logsReady(dfs, path)) {
         return false;
       }
-//      Inode i;
-//      try {
-//        i = fsService.getInode(path);
-//      } catch (EJBException e) {
-//        return false;
-//      }
-//
-//      if (i == null) {
-//        return false;
-//      }
-//      if (i.getUnderConstruction() == 1) {
-//        return false;
-//      }
       ready = true;
     }
     return ready;
