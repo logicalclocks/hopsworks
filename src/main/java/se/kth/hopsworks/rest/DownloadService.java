@@ -15,6 +15,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 
 @RequestScoped
@@ -46,12 +47,19 @@ public class DownloadService {
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response downloadFromHDFS() throws AppException, AccessControlException {
     FSDataInputStream stream;
+    DistributedFileSystemOps dfso = null;
     try {
       if (username != null) {
-          stream = dfs.getDfsOps(username).open(new Path(this.path));
+        dfso = dfs.getDfsOps(username);
+        stream = dfso.open(new Path(this.path));
       } else {
-        stream = dfs.getDfsOps().open(new Path(this.path));
+        dfso = dfs.getDfsOps();
+        stream = dfso.open(new Path(this.path));
       }
+      Response.ResponseBuilder response = Response.ok((Object) stream);
+      response.header("Content-disposition", "attachment;");
+
+      return response.build();
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not download the file ");
@@ -59,11 +67,11 @@ public class DownloadService {
       LOG.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "File does not exist: " + this.path);
-    }
-    Response.ResponseBuilder response = Response.ok((Object) stream);
-    response.header("Content-disposition", "attachment;");
-
-    return response.build();
+    } 
+//    finally {
+//      if (dfso != null) {
+//        dfso.close();
+//      }
+//    }
   }
-
 }

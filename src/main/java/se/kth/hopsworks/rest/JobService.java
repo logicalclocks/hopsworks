@@ -53,6 +53,7 @@ import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.exception.DatabaseException;
@@ -83,8 +84,6 @@ public class JobService {
   private AdamService adam;
   @Inject
   private FlinkService flink;
-  @EJB
-  private FileOperations fops;
   @EJB
   private JobController jobController;
   @EJB
@@ -619,7 +618,9 @@ public class JobService {
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+    DistributedFileSystemOps dfso = null;
     try {
+      dfso=dfs.getDfsOps();
       List<Execution> executionHistory = exeFacade.
               findbyProjectAndJobId(project, jobId);
       JsonObjectBuilder arrayObjectBuilder;
@@ -630,9 +631,9 @@ public class JobService {
           arrayObjectBuilder = Json.createObjectBuilder();
           arrayObjectBuilder.add("time", e.getSubmissionTime().toString());
           String hdfsLogPath = "hdfs://" + e.getStdoutPath();
-          if (e.getStdoutPath() != null && !e.getStdoutPath().isEmpty() && fops.
+          if (e.getStdoutPath() != null && !e.getStdoutPath().isEmpty() && dfso.
                   exists(hdfsLogPath)) {
-            if (dfs.getDfsOps().listStatus(new org.apache.hadoop.fs.Path(
+            if (dfso.listStatus(new org.apache.hadoop.fs.Path(
                     hdfsLogPath))[0].getLen() > 5000000l) {
               stdPath = e.getStdoutPath().split(this.project.getName())[1];
               arrayObjectBuilder.add("log",
@@ -640,7 +641,7 @@ public class JobService {
               arrayObjectBuilder.add("logPath", "/project/" + this.project.
                       getId() + "/datasets" + stdPath);
             } else {
-              InputStream input = fops.getInputStream(hdfsLogPath);
+              InputStream input = dfso.open(hdfsLogPath);
               message = IOUtils.toString(input,
                       "UTF-8");
               input.close();
@@ -652,9 +653,9 @@ public class JobService {
             arrayObjectBuilder.add("log", "No log available");
           }
           String hdfsErrPath = "hdfs://" + e.getStderrPath();
-          if (e.getStderrPath() != null && !e.getStderrPath().isEmpty() && fops.
+          if (e.getStderrPath() != null && !e.getStderrPath().isEmpty() && dfso.
                   exists(hdfsErrPath)) {
-            if (dfs.getDfsOps().listStatus(new org.apache.hadoop.fs.Path(
+            if (dfso.listStatus(new org.apache.hadoop.fs.Path(
                     hdfsErrPath))[0].getLen() > 5000000l) {
               stdPath = e.getStderrPath().split(this.project.getName())[1];
               arrayObjectBuilder.add("err",
@@ -662,7 +663,7 @@ public class JobService {
               arrayObjectBuilder.add("errPath", "/project/" + this.project.
                       getId() + "/datasets" + stdPath);
             } else {
-              InputStream input = fops.getInputStream(hdfsErrPath);
+              InputStream input = dfso.open(hdfsErrPath);
               message = IOUtils.toString(input,
                       "UTF-8");
               input.close();
@@ -685,6 +686,10 @@ public class JobService {
     } catch (IOException ex) {
       logger.log(Level.WARNING, "Error when reading hdfs logs: {0}", ex.
               getMessage());
+    }finally{
+      if(dfso!=null){
+        dfso.close();
+      }
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
