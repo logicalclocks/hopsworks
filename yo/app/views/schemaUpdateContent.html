@@ -28,13 +28,13 @@
                 </div>
             </div>
         </div>
-        <div class="row"></div>
-        <hr />
+        <div ng-if="schemaUpdateContentCtrl.message" style="color: red">{{schemaUpdateContentCtrl.message}}</div>
         <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
  
             <button class="btn btn-default" type="button" ng-click="schemaUpdateContentCtrl.close()">Cancel</button>
-            <button class="btn btn-primary" type="submit">
-                Create
+             <button class="btn btn-warning" type="button" ng-click="schemaUpdateContentCtrl.validateSchema()">Validate</button>
+            <button class="btn btn-lightgrey" type="submit" ng-disabled="schemaUpdateContentCtrl.validSchema">
+                Update
             </button>
         </div>
     </form>

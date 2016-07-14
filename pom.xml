@@ -26,12 +26,15 @@
     <glassfish.domain>domain1</glassfish.domain>
   </properties>
 
-  <dependencies>
+  <dependencies>    
+<!--
+>>>>>>> f9f83f07a3af50e8ae8f33d1c6521d03733306a8
     <dependency>
       <groupId>de.hu-berlin.wbi.cuneiform</groupId>
       <artifactId>cuneiform-core</artifactId>
       <version>2.0.0-SNAPSHOT</version>
     </dependency>
+-->
     <dependency>
       <groupId>com.google.zxing</groupId>
       <artifactId>javase</artifactId>

@@ -9,6 +9,9 @@ angular.module('hopsWorksApp')
                 self.schemaVersion = schemaVersion;
                 self.content_empty = 1;
 
+                self.message ="";
+                self.validSchema = "invalid";
+           
                 self.init = function () {
 
                     KafkaService.getSchemaContent(self.projectId, schemaName, self.schemaVersion).then(
@@ -20,7 +23,38 @@ angular.module('hopsWorksApp')
                 };
 
                 self.init();
+                
+                self.validateSchema = function () {
+                    
+                    self.validSchema = "invalid";
+                    
+                    var ugly = document.getElementById('myPrettyJson');
+                    self.contents = ugly.textContent;
+                    
+                    if(!self.contents){
+                        self.content_empty = -1;
+                        self.wrong_values = -1;
+                    }
 
+                    if(self.wrong_values === -1){
+                        return;
+                    }
+
+                    var schemaDetail ={};
+                    schemaDetail.name=self.schemaName;
+                    schemaDetail.contents =self.contents;
+                    //schemaDetail.version =self.version;
+                    schemaDetail.versions =[];
+
+                    KafkaService.validateSchema(self.projectId, schemaDetail).then(
+                            function (success) {
+                                self.message = "schema is valid";
+                                self.validSchema="";
+                            }, function (error) {
+                       self.message = "schema is invalid";
+                    });
+                 };
+                
                 self.createSchema = function () {
                     
                     var ugly = document.getElementById('myPrettyJson');

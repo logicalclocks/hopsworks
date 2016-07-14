@@ -57,6 +57,7 @@ import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.dataset.DatasetRequest;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.MoveDTO;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
@@ -277,11 +278,14 @@ public class DataSetService {
       datasetRequest.remove(dsReq);//the dataset is shared so remove the request.
     }
     if (newDS.isEditable()) {
+      DistributedFileSystemOps udfso = null;
       try {
+        String username = hdfsUsersBean.getHdfsUserName(project, user);
+        udfso = dfs.getDfsOps(username);
         FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
                 FsAction.NONE, true);
         datasetController.changePermission(inodes.getPath(newDS.getInode()),
-                user, project, fsPermission);
+                user, project, fsPermission, udfso);
       } catch (AccessControlException ex) {
         throw new AccessControlException(
                 "Permission denied: Can not change the permission of this file.");
@@ -289,6 +293,8 @@ public class DataSetService {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "Error while creating directory: " + e.
                 getLocalizedMessage());
+      } finally{
+        udfso.close();
       }
     }
     activityFacade.persistActivity(ActivityFacade.SHARED_DATA + dataSet.
@@ -371,11 +377,17 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException {
 
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
-
+    DistributedFileSystemOps dfso=null;
+    DistributedFileSystemOps udfso=null;
     try {
+      dfso= dfs.getDfsOps();
+      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      if (username != null) {
+        udfso = dfs.getDfsOps(username);
+      }
       datasetController.createDataset(user, project, dataSet.getName(), dataSet.
               getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
-              false);
+              false, dfso, udfso);
     } catch (NullPointerException c) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), c.
               getLocalizedMessage());
@@ -386,6 +398,13 @@ public class DataSetService {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Failed to create dataset: " + e.
               getLocalizedMessage());
+    } finally {
+      if(dfso!=null){
+        dfso.close();
+      }
+      if(udfso!=null){
+        udfso.close();
+      }
     }
 
     JsonResponse json = new JsonResponse();
@@ -425,11 +444,17 @@ public class DataSetService {
     for (String s : datasetRelativePathArray) {
       dsRelativePath.append(s).append("/");
     }
-
+    DistributedFileSystemOps dfso = null;
+    DistributedFileSystemOps udfso = null;
     try {
+      dfso= dfs.getDfsOps();
+      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      if(username!=null){
+        udfso= dfs.getDfsOps(username);
+      }
       datasetController.createSubDirectory(user, project, fullPathArray[2],
               dsRelativePath.toString(), dataSetName.getTemplate(), dataSetName.
-              getDescription(), dataSetName.isSearchable());
+              getDescription(), dataSetName.isSearchable(), dfso, udfso);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not create a folder in "
@@ -441,6 +466,11 @@ public class DataSetService {
     } catch (IllegalArgumentException | NullPointerException e) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Invalid directory: " + e.getLocalizedMessage());
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
+      udfso.close();
     }
     json.setSuccessMessage("A directory was created at " + dsPath);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -482,15 +512,19 @@ public class DataSetService {
                 entity(json).build();
       }
     }
-
+    DistributedFileSystemOps udfso=null;
     try {
-      success = datasetController.deleteDataset(filePath, user, project);
+      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      udfso = dfs.getDfsOps(username);
+      success = datasetController.deleteDataset(filePath, user, project, udfso);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not delete the file " + filePath);
     } catch (IOException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + filePath);
+    } finally {
+      udfso.close();
     }
     if (!success) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -542,8 +576,9 @@ public class DataSetService {
     }
 
     path = getFullPath(path);
-
+    DistributedFileSystemOps udfso=null;
     try {
+      udfso = dfs.getDfsOps(username);
       boolean exists = this.fileOps.exists(path);
 
       Inode sourceInode = inodes.findById(inodeId);
@@ -552,7 +587,7 @@ public class DataSetService {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 "Cannot find file/folder you are trying to move. Has it been deleted?");
       }
-      dfs.getDfsOps(username).moveWithinHdfs(new org.apache.hadoop.fs.Path(
+      udfso.moveWithinHdfs(new org.apache.hadoop.fs.Path(
               inodes.getPath(sourceInode)),
               new org.apache.hadoop.fs.Path(path));
 
@@ -574,6 +609,8 @@ public class DataSetService {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "The parent folders for the destination do not exist. Create them first.");
+    }finally{
+      udfso.close();
     }
 
   }
@@ -591,8 +628,9 @@ public class DataSetService {
       path = "";
     }
     path = getFullPath(path);
-
+    DistributedFileSystemOps udfso = null;
     try {
+      udfso = dfs.getDfsOps(username);
       boolean exists = this.fileOps.exists(path);
 
       //check if the path is a file only if it exists
@@ -600,7 +638,7 @@ public class DataSetService {
         throw new IOException("The file does not exist");
       }
       //tests if the user have permission to access this path
-      dfs.getDfsOps(username).open(path);
+      udfso.open(path);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not download the file ");
@@ -608,6 +646,8 @@ public class DataSetService {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "File does not exist: " + path);
+    }finally{
+      udfso.close();
     }
     Response.ResponseBuilder response = Response.ok();
     return response.build();

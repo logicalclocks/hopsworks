@@ -16,7 +16,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.AuthExceptionMapper.class);
     register(se.kth.hopsworks.rest.AgentService.class);
     register(se.kth.hopsworks.rest.AuthService.class);
-    register(se.kth.hopsworks.rest.CuneiformService.class);
     register(se.kth.hopsworks.rest.DataSetService.class);
     register(se.kth.hopsworks.rest.ExecutionService.class);
     register(se.kth.hopsworks.rest.JobService.class);

@@ -32,6 +32,8 @@ import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.controller.SparkController;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
@@ -65,7 +67,9 @@ public class SparkService {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
-  
+  @EJB
+  private DistributedFsService dfs;
+      
   private Project project;
 
   SparkService setProject(Project project) {
@@ -116,9 +120,10 @@ public class SparkService {
     String email = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(email);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
+    DistributedFileSystemOps udfso = null;
     try {
-          
-      SparkJobConfiguration config = sparkController.inspectJar(path, username);
+      udfso = dfs.getDfsOps(username);
+      SparkJobConfiguration config = sparkController.inspectJar(path, username, udfso);
       //SparkJobConfiguration config = sparkController.inspectJar(path, username, req.getSession().getId());
       //Add SESSIONID to config so that the Job can access Kafka endpoint
       config.setjSessionId(req.getSession().getId());
@@ -137,6 +142,10 @@ public class SparkService {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(), "Error reading jar file: " + e.
           getLocalizedMessage());
+    } finally{
+      if(udfso!=null){
+        udfso.close();
+      }
     }
   }
 

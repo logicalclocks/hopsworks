@@ -140,6 +140,16 @@ public class DistributedFileSystemOps {
   public FileStatus[] listStatus(Path location) throws IOException {
     return dfs.listStatus(location);
   }
+  
+  /**
+   * Returns the status information about the file.
+   * @param location
+   * @return
+   * @throws IOException 
+   */
+  public FileStatus getFileStatus(Path location) throws IOException {
+    return dfs.getFileStatus(location);
+  }
 
   /**
    * Delete a file or directory from the file system.

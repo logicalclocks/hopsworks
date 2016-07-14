@@ -22,6 +22,7 @@ import se.kth.bbc.jobs.flink.FlinkJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.UserGroupInformationService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
@@ -44,8 +45,6 @@ public class FlinkController {
     private AsynchronousJobExecutor submitter;
     @EJB
     private ActivityFacade activityFacade;
-    @EJB
-    private DistributedFsService dfs;
     @EJB
     private UserGroupInformationService ugiService;
     @EJB
@@ -192,7 +191,8 @@ public class FlinkController {
    * @throws org.apache.hadoop.security.AccessControlException
    * @throws IOException
    */
-  public FlinkJobConfiguration inspectJar(String path, String username) throws
+  public FlinkJobConfiguration inspectJar(String path, String username,
+          DistributedFileSystemOps udfso) throws
 		  AccessControlException, IOException,
 		  IllegalArgumentException {
 	LOG.log(Level.INFO, "Executing Flink job by {0} at path: {1}", new Object[]{username, path});
@@ -205,7 +205,7 @@ public class FlinkController {
 			"hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
 	LOG.log(Level.INFO, "Really executing Flink job by {0} at path: {1}", new Object[]{username, path});
 	
-	JarInputStream jis = new JarInputStream(dfs.getDfsOps(username).open(path));
+	JarInputStream jis = new JarInputStream(udfso.open(path));
 	Manifest mf = jis.getManifest();
 	Attributes atts = mf.getMainAttributes();
 	FlinkJobConfiguration config = new FlinkJobConfiguration();
