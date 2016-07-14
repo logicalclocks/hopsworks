@@ -1,6 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -9,8 +10,10 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
@@ -55,10 +58,11 @@ public class DownloadService {
       } else {
         dfso = dfs.getDfsOps();
         stream = dfso.open(new Path(this.path));
-      }
-      Response.ResponseBuilder response = Response.ok((Object) stream);
+      }    
+      Response.ResponseBuilder response = Response.ok(buildOutputStream(stream,
+              dfso));
       response.header("Content-disposition", "attachment;");
-
+      
       return response.build();
     } catch (AccessControlException ex) {
       throw new AccessControlException(
@@ -68,10 +72,25 @@ public class DownloadService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "File does not exist: " + this.path);
     } 
-//    finally {
-//      if (dfso != null) {
-//        dfso.close();
-//      }
-//    }
+  }
+  
+  private StreamingOutput buildOutputStream(final FSDataInputStream stream,
+          final DistributedFileSystemOps dfso){
+     StreamingOutput output = new StreamingOutput() {
+        @Override
+        public void write(OutputStream out) throws IOException,
+                WebApplicationException {
+          int length;
+          byte[] buffer = new byte[1024];
+          while((length = stream.read(buffer)) != -1) {
+            out.write(buffer, 0, length);
+          }
+          out.flush();
+          stream.close();
+          dfso.close();
+        }
+      };
+      
+      return output;
   }
 }
