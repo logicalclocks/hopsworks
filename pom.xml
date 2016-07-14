@@ -28,7 +28,6 @@
 
   <dependencies>    
 <!--
->>>>>>> f9f83f07a3af50e8ae8f33d1c6521d03733306a8
     <dependency>
       <groupId>de.hu-berlin.wbi.cuneiform</groupId>
       <artifactId>cuneiform-core</artifactId>
