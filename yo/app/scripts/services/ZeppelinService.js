@@ -46,7 +46,7 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/interpreter/restart');
               },
               stopLivySession: function (settingId, sessionId) {
-                return $http.delete('/api/interpreter/livy/sessions/delete/' + settingId +'/'+ sessionId);
+                return $http.delete('/api/interpreter/livy/sessions/delete/' + settingId + '/' + sessionId);
               }
             };
           }]);

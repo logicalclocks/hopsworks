@@ -444,8 +444,11 @@ public class ZeppelinConfig {
     if (this.notebook != null) {
       this.notebook.close();
     }
+    if (this.notebookServer != null) {
+      this.notebookServer.closeConnection();
+    }
     this.schedulerFactory = null;
-    this.notebookServer = null;
+    //this.notebookServer = null;
     this.replFactory = null;
     this.notebook = null;
   }

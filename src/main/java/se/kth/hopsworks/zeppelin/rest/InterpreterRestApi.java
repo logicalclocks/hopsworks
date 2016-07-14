@@ -48,8 +48,7 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 import com.google.gson.Gson;
-import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.Produces;
+import java.util.ArrayList;
 import org.apache.zeppelin.dep.Repository;
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.repository.RemoteRepository;
@@ -271,10 +270,15 @@ public class InterpreterRestApi {
     if (!this.user.getUsername().equals(username) && this.roleInProject.equals(
             AllowedRoles.DATA_SCIENTIST)) {
       throw new AppException(Status.BAD_REQUEST.getStatusCode(),
-              "You can't stop this session.");
+              "You are not authorized to stop this session.");
     }
-
-    if (this.user.getUsername().equals(username)) {
+    List<YarnApplicationstate> yarnAppStates;
+    yarnAppStates = appStateBean.
+            findByAppuserAndAppState(session.getProxyUser(),
+                    "RUNNING");
+    if (yarnAppStates.size() > 1) {
+      zeppelinResource.deleteLivySession(sessionId);
+    } else if (this.user.getUsername().equals(username)) {
       zeppelinConf.getReplFactory().restart(settingId);
     } else {
       Users u = userFacade.findByUsername(username);
@@ -300,13 +304,16 @@ public class InterpreterRestApi {
       }
     }
     int res = zeppelinResource.deleteLivySession(sessionId);
-    if (res == Response.Status.NOT_FOUND.getStatusCode()) {
-      return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId
-              + "' not found.").build();
+    if (res != Response.Status.NOT_FOUND.getStatusCode() && res
+            != Response.Status.OK.getStatusCode()) {
+      return new JsonResponse(Response.Status.EXPECTATION_FAILED,
+              "Could not stop session '" + sessionId
+              + "'").build();
     }
 
     InterpreterDTO interpreter = new InterpreterDTO(setting,
-            !zeppelinResource.isLivySessionAlive(sessionId));
+            !zeppelinResource.isInterpreterRunning(setting, project),
+            getRunningLivySessions(this.project));
     return new JsonResponse(Status.OK, "Deleted ", interpreter).build();
   }
 
@@ -352,9 +359,8 @@ public class InterpreterRestApi {
               request.getAuthentication());
       logger.info("New repository {} added", request.getId());
     } catch (Exception e) {
-      logger.
-              error("Exception in InterpreterRestApi while adding repository ",
-                      e);
+      logger.error("Exception in InterpreterRestApi while adding repository ",
+              e);
       return new JsonResponse(
               Status.INTERNAL_SERVER_ERROR, e.getMessage(), ExceptionUtils.
               getStackTrace(e)).build();
@@ -403,46 +409,77 @@ public class InterpreterRestApi {
     Map<String, InterpreterDTO> interpreterDTOs = new HashMap<>();
     List<InterpreterSetting> interpreterSettings;
     interpreterSettings = zeppelinConf.getReplFactory().get();
-    List<ProjectTeam> projectTeam;
     InterpreterDTO interpreterDTO;
-    List<YarnApplicationstate> yarnAppStates;
-    int id;
-    String hdfsUsername;
     for (InterpreterSetting interpreter : interpreterSettings) {
       interpreterDTO = new InterpreterDTO(interpreter, !zeppelinResource.
               isInterpreterRunning(interpreter, project));
       interpreterDTOs.put(interpreter.getGroup(), interpreterDTO);
       if (interpreter.getGroup().contains("livy")) {
-        projectTeam = teambean.findMembersByProject(project);
-        for (ProjectTeam member : projectTeam) {
-          hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
-          yarnAppStates = appStateBean.findByAppuserAndAppState(hdfsUsername,
-                  "RUNNING");
-          for (YarnApplicationstate state : yarnAppStates) {
-            try {
-              id = Integer.parseInt(state.getAppname().substring(
-                      "livy-session-".length()));
-            } catch (NumberFormatException e) {
-              continue;
-            }
-            if (state.getAppname().startsWith("livy-session-")) {
-              interpreterDTO.getSessions().add(new LivyMsg.Session(id, member.
-                      getUser().getEmail()));
-            }
-          }
-        }
+        interpreterDTO.setSessions(getRunningLivySessions(project));
       }
     }
     return interpreterDTOs;
   }
 
+  private List<LivyMsg.Session> getRunningLivySessions(Project project) {
+    List<LivyMsg.Session> sessions = new ArrayList<>();
+    List<ProjectTeam> projectTeam;
+    List<YarnApplicationstate> yarnAppStates;
+    String hdfsUsername;
+    int id;
+    projectTeam = teambean.findMembersByProject(project);
+    for (ProjectTeam member : projectTeam) {
+      hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
+      yarnAppStates = appStateBean.findByAppuserAndAppState(hdfsUsername,
+              "RUNNING");
+      for (YarnApplicationstate state : yarnAppStates) {
+        try {
+          id = Integer.parseInt(state.getAppname().substring(
+                  "livy-session-".length()));
+        } catch (NumberFormatException e) {
+          continue;
+        }
+        if (state.getAppname().startsWith("livy-session-")) {
+          sessions.add(new LivyMsg.Session(id, member.
+                  getUser().getEmail()));
+        }
+      }
+    }
+    return sessions;
+  }
+
   @GET
   @Path("restart")
-  public Response restart() {
+  public Response restart() throws AppException {
+    if (this.roleInProject.equals(AllowedRoles.DATA_SCIENTIST)) {
+      throw new AppException(Status.BAD_REQUEST.getStatusCode(),
+              "You are not authorized to restart zeppelin for this project.");
+    }
+    Map<String, InterpreterDTO> interpreterDTOMap = interpreters(this.project);
+    InterpreterDTO interpreterDTO;
+    for (String key : interpreterDTOMap.keySet()) {
+      interpreterDTO = interpreterDTOMap.get(key);
+      if (interpreterDTO.isNotRunning()) {
+        continue;
+      }
+      if (interpreterDTO.getGroup().contains("livy")) {
+        for (LivyMsg.Session session : interpreterDTO.getSessions()) {
+          stopSession(interpreterDTO.getId(), session.getId());
+        }
+      } else {
+        restartSetting(interpreterDTO.getId());
+      }
+    }
     zeppelinConfFactory.removeFromCache(this.project.getName());
-    zeppelinConfFactory.removeFromCache(this.project.getName(), this.user.
-            getEmail());
-    TicketContainer.instance.invalidate(this.user.getEmail());
+    List<ProjectTeam> projectTeam;
+    projectTeam = teambean.findMembersByProject(this.project);
+    for (ProjectTeam member : projectTeam) {
+      zeppelinConfFactory.removeFromCache(this.project.getName(), member.
+              getUser().getEmail());
+      TicketContainer.instance.invalidate(member.getUser().getEmail());
+    }
+
+
     return new JsonResponse(Status.OK, "Cache cleared.").build();
   }
 

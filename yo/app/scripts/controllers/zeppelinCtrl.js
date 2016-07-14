@@ -155,7 +155,7 @@ angular.module('hopsWorksApp')
               ZeppelinService.restart().then( function (success) {
                   //$route.reload();
                 }, function (error) {
-                  growl.error(error, {title: 'Error', ttl: 5000, referenceId: 10});
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
                   //$route.reload();
                 });
             };
@@ -167,6 +167,7 @@ angular.module('hopsWorksApp')
 
             ZeppelinService.websocket().ws.onMessage(function (event) {
               var payload;
+              console.log('Receive event << %o', event);
               if (event.data) {
                 payload = angular.fromJson(event.data);
               }
@@ -178,8 +179,12 @@ angular.module('hopsWorksApp')
                 console.log('NOTE', data.note);
               } else if (op === 'NOTES_INFO') {
                 init();
-                console.log('NOTES_INFO', data.note);
-              } 
+                console.log('NOTES_INFO', data);
+              } else if (op === 'PARAGRAPH_APPEND_OUTPUT') {
+                //init();
+                getInterpreterStatus();
+                console.log('PARAGRAPH_APPEND_OUTPUT', data);
+              }
             });
             
             ZeppelinService.websocket().ws.onOpen(function () {
@@ -193,6 +198,12 @@ angular.module('hopsWorksApp')
 
             ZeppelinService.websocket().ws.onClose(function (event) {
               console.log('close message: ', event);
+              //close code should be 1012 (service restart) but chrome shows 
+              //closed abnormally (1006) this might cause problem when the socket 
+              //is closed but not restarted 
+              if (event.code === 1012 || event.code === 1006) {
+                $route.reload();
+              }
               self.connectedStatus = false;
             });  
             

@@ -290,6 +290,18 @@ public class NotebookServer implements
     }
   }
 
+  public void closeConnection() {
+    try {
+      if (this.session.isOpen()) {
+        this.session.close(new CloseReason(
+                CloseReason.CloseCodes.SERVICE_RESTART,
+                "Restarting zeppelin."));
+      }
+    } catch (IOException ex) {
+      LOG.log(Level.SEVERE, null, ex);
+    }
+  }
+
   private void removeNote(String noteId) {
     synchronized (noteSocketMap) {
       noteSocketMap.remove(noteId);
@@ -344,7 +356,9 @@ public class NotebookServer implements
       LOG.log(Level.INFO, "SEND >> {0}", m.op);
       for (Session conn : socketLists) {
         try {
-          conn.getBasicRemote().sendText(serializeMessage(m));
+          if (conn.isOpen()) {
+            conn.getBasicRemote().sendText(serializeMessage(m));
+          }
         } catch (IOException ex) {
           LOG.log(Level.SEVERE, "Unable to send message " + m, ex);
         }
@@ -364,7 +378,9 @@ public class NotebookServer implements
           continue;
         }
         try {
-          conn.getBasicRemote().sendText(serializeMessage(m));
+          if (conn.isOpen()) {
+            conn.getBasicRemote().sendText(serializeMessage(m));
+          }
         } catch (IOException ex) {
           LOG.log(Level.SEVERE, "Unable to send message " + m, ex);
         }
@@ -377,7 +393,7 @@ public class NotebookServer implements
     for (Session conn : connectedSockets) {
       try {
         if (conn.getUserProperties().get("projectID").equals(
-                this.project.getId())) {
+                this.project.getId()) && conn.isOpen()) {
           conn.getBasicRemote().sendText(serializeMessage(m));
         }
       } catch (IOException ex) {

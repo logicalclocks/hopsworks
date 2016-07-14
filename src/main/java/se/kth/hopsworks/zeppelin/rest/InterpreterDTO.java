@@ -8,7 +8,7 @@ import se.kth.hopsworks.zeppelin.util.LivyMsg;
 
 @XmlRootElement
 public class InterpreterDTO {
-  
+
   private String id;
   private String name;
   private String group;
@@ -25,13 +25,22 @@ public class InterpreterDTO {
     this.notRunning = notRunning;
     sessions = new ArrayList<>();
   }
-  
+
   public InterpreterDTO(InterpreterSetting interpreter, boolean notRunning) {
     this.id = interpreter.id();
     this.name = interpreter.getName();
     this.group = interpreter.getGroup();
     this.notRunning = notRunning;
     sessions = new ArrayList<>();
+  }
+
+  public InterpreterDTO(InterpreterSetting interpreter, boolean notRunning,
+          List<LivyMsg.Session> runningLivySessions) {
+    this.id = interpreter.id();
+    this.name = interpreter.getName();
+    this.group = interpreter.getGroup();
+    this.notRunning = notRunning;
+    sessions = runningLivySessions;
   }
 
   public String getId() {
