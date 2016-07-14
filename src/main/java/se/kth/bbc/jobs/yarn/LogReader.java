@@ -6,6 +6,8 @@ import java.io.EOFException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.io.file.tfile.TFile;
@@ -18,6 +20,7 @@ import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat.LogKey;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat;
 
 /**
  * Re-implementation of
@@ -30,7 +33,20 @@ public class LogReader {
   private final FSDataInputStream fsDataIStream;
   private final TFile.Reader.Scanner scanner;
   private final TFile.Reader reader;
-
+  private static final Map<String, LogKey> RESERVED_KEYS;
+  private static final LogKey APPLICATION_ACL_KEY =
+      new LogKey("APPLICATION_ACL");
+  private static final LogKey APPLICATION_OWNER_KEY =
+      new LogKey("APPLICATION_OWNER");
+  private static final LogKey VERSION_KEY = new LogKey("VERSION");
+  
+  static {
+    RESERVED_KEYS = new HashMap<String, AggregatedLogFormat.LogKey>();
+    RESERVED_KEYS.put(APPLICATION_ACL_KEY.toString(), APPLICATION_ACL_KEY);
+    RESERVED_KEYS.put(APPLICATION_OWNER_KEY.toString(), APPLICATION_OWNER_KEY);
+    RESERVED_KEYS.put(VERSION_KEY.toString(), VERSION_KEY);
+  }
+  
   public LogReader(Configuration conf, DistributedFileSystemOps dfs,
           Path remoteAppLogFile)
           throws IOException {
@@ -59,10 +75,10 @@ public class LogReader {
     }
     TFile.Reader.Scanner.Entry entry = this.scanner.entry();
     key.readFields(entry.getKeyStream());
-    // Skip META keys
-    //    if (RESERVED_KEYS.containsKey(key.toString())) {
-    //      return next(key);
-    //    }
+//     Skip META keys
+    if (RESERVED_KEYS.containsKey(key.toString())) {
+      return next(key);
+    }
     DataInputStream valueStream = entry.getValueStream();
     return valueStream;
   }
