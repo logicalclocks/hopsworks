@@ -20,11 +20,9 @@ package se.kth.bbc.jobs.jobhistory;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.OrderBy;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.project.Project;
-import se.kth.bbc.project.fb.Inode;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 @Stateless
@@ -57,10 +55,14 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
   }
 
   public YarnApplicationstate findByAppId(String appId) {
-    TypedQuery<YarnApplicationstate> query = em.createNamedQuery("YarnApplicationstate.findByApplicationid",
-        YarnApplicationstate.class).setParameter(
-        "applicationid", appId);
-    return query.getSingleResult();
+    try {
+      return em.createNamedQuery("YarnApplicationstate.findByApplicationid",
+              YarnApplicationstate.class).setParameter(
+                      "applicationid", appId).getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+
   }
 
 }

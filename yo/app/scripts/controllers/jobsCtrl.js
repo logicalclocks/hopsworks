@@ -49,7 +49,7 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error fetching job configuration.', ttl: 15000});
               });
             };
-           
+
             self.buttonClickedToggle = function (id, display) {
               self.buttonArray[id] = display;
             };
@@ -197,7 +197,7 @@ angular.module('hopsWorksApp')
               ProjectService.uberPrice({id: self.projectId}).$promise.then(
                       function (success) {
                         var price = success.price;
-                        price = Math.ceil(parseFloat(price).toFixed(4) * 100.0 / 1.67*100)/100;
+                        price = Math.ceil(parseFloat(price).toFixed(4) * 100.0 / 1.67 * 100) / 100;
                         ModalService.uberPrice('sm', 'Confirm', 'Do you want to run this job at this price?', price).then(
                                 function (success) {
                                   JobService.runJob(self.projectId, jobId).then(
@@ -249,7 +249,7 @@ angular.module('hopsWorksApp')
             self.showUI = function (job) {
               ModalService.jobUI('xlg', job, self.projectId);
             };
-            
+
             self.showLogs = function (jobId) {
               JobService.showLog(self.projectId, jobId).then(
                       function (success) {
@@ -257,6 +257,29 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to show logs', ttl: 15000});
               });
+            };
+
+            self.retryLogs = function (appId, type) {
+              JobService.retryLog(self.projectId, appId, type).then(
+                      function (success) {
+                        growl.success(success.data.errorMsg, {title: 'Log retrieved seccessfuly.', ttl: 5000});
+                        self.showLogs(self.currentjob.id);
+                      }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Failed to get logs', ttl: 5000});
+              });
+            };
+            
+            self.retriable = function (log) {
+              if (log === 'No information.') {
+                return true;
+              } else if (log === 'No information.') {
+                return true;
+              } else if (log === 'No log available') {
+                return true;
+              } else if (log === 'No error.') {
+                return true;
+              } 
+              return false;
             };
 
             self.deleteJob = function (jobId, jobName) {
@@ -290,7 +313,7 @@ angular.module('hopsWorksApp')
               self.hasSelectJob = true;
               $scope.selectedIndex = index;
               self.currentToggledIndex = index;
-
+              self.currentjob = job;
             };
             self.untoggle = function (job, index) {
               //reset all jobs showing flag
