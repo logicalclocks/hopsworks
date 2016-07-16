@@ -47,6 +47,7 @@ import se.kth.hopsworks.certificates.UserCertsFacade;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
@@ -126,10 +127,11 @@ public class ProjectController {
    * created. For whatever reason.
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Project createProject(ProjectDTO newProject, String email) throws
+  public Project createProject(ProjectDTO newProject, String email,
+          DistributedFileSystemOps dfso) throws
           IOException, AppException {
     Users user = userBean.getUserByEmail(email);
-
+    
     if (!FolderNameValidator.isValidName(newProject.getProjectName())) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.INVALID_PROJECT_NAME);
@@ -143,7 +145,7 @@ public class ProjectController {
               newProject.getProjectName());
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_EXISTS);
-    } else if (dfs.getDfsOps().exists(File.separator + settings.DIR_ROOT
+    } else if (dfso.exists(File.separator + settings.DIR_ROOT
             + File.separator + newProject.getProjectName())) {
       logger.log(Level.WARNING, "Project with name {0} already exists in hdfs. "
               + "Possible inconsistency! project name not in database.",
@@ -157,7 +159,7 @@ public class ProjectController {
        * first create the folder structure in hdfs. If it is successful move on
        * to create the project in hopsworks database
        */
-      String projectPath = mkProjectDIR(newProject.getProjectName());
+      String projectPath = mkProjectDIR(newProject.getProjectName(), dfso);
       if (projectPath != null) {
 
         //Create a new project object
@@ -215,7 +217,8 @@ public class ProjectController {
    * @param project
    * @throws ProjectInternalFoldersFailedException
    */
-  public void createProjectLogResources(String username, Project project) throws
+  public void createProjectLogResources(String username, Project project,
+          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
           ProjectInternalFoldersFailedException {
 
     Users user = userBean.getUserByEmail(username);
@@ -225,7 +228,7 @@ public class ProjectController {
         boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
                 || ds.equals(Settings.DefaultDataset.LOGS));
         datasetController.createDataset(user, project, ds.getName(), ds.
-                getDescription(), -1, false, globallyVisible);
+                getDescription(), -1, false, globallyVisible, dfso, udfso);
       }
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
@@ -233,7 +236,8 @@ public class ProjectController {
     }
   }
 
-  public void createProjectConsentFolder(String username, Project project)
+  public void createProjectConsentFolder(String username, Project project,
+          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
           throws
           ProjectInternalFoldersFailedException {
 
@@ -241,7 +245,7 @@ public class ProjectController {
 
     try {
       datasetController.createDataset(user, project, "consents",
-              "Biobanking consent forms", -1, false, false);
+              "Biobanking consent forms", -1, false, false, dfso, udfso);
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
               "Could not create project consents folder ", e);
@@ -389,7 +393,8 @@ public class ProjectController {
   }
 
   //create project in HDFS
-  private String mkProjectDIR(String projectName) throws IOException {
+  private String mkProjectDIR(String projectName, DistributedFileSystemOps dfso)
+          throws IOException {
 
     String rootDir = settings.DIR_ROOT;
 
@@ -425,7 +430,8 @@ public class ProjectController {
     //Create first the projectPath
     projectDirCreated = fileOps.mkDir(projectPath); //fails here
 
-    ProjectController.this.setHdfsSpaceQuotaInMBs(projectName, settings.getHdfsDefaultQuotaInMBs());
+    ProjectController.this.setHdfsSpaceQuotaInMBs(projectName, settings.
+            getHdfsDefaultQuotaInMBs(), dfso);
 
     //create the rest of the child folders if any
     if (projectDirCreated && !fullProjectPath.equals(projectPath)) {
@@ -455,15 +461,16 @@ public class ProjectController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public boolean removeByID(Integer projectID, String email,
-          boolean deleteFilesOnRemove) throws IOException, AppException {
+          boolean deleteFilesOnRemove, DistributedFileSystemOps udfso) throws
+          IOException, AppException {
     boolean success = !deleteFilesOnRemove;
-    Users user = userBean.getUserByEmail(email);
+    
     Project project = projectFacade.find(projectID);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    
     ProjectPaymentsHistory projectPaymentsHistory
             = projectPaymentsHistoryFacade.findByProjectName(project.getName());
     YarnProjectsQuota yarnProjectsQuota = yarnProjectsQuotaFacade.
@@ -478,7 +485,7 @@ public class ProjectController {
       String path = File.separator + settings.DIR_ROOT + File.separator
               + project.getName();
       Path location = new Path(path);
-      success = dfs.getDfsOps(username).rm(location, true);
+      success = udfso.rm(location, true);
       //if the files are removed the group should also go.
       if (success) {
         hdfsUsersBean.deleteProjectGroupsRecursive(project, dsInProject);
@@ -697,9 +704,9 @@ public class ProjectController {
   }
   
   
-  public void setHdfsSpaceQuotaInMBs(String projectname, long diskspaceQuotaInMB)
+  public void setHdfsSpaceQuotaInMBs(String projectname, long diskspaceQuotaInMB, DistributedFileSystemOps dfso)
           throws IOException {
-    dfs.getDfsOps().setHdfsSpaceQuotaInMBs(new Path(settings.getProjectPath(projectname)), diskspaceQuotaInMB);
+    dfso.setHdfsSpaceQuotaInMBs(new Path(settings.getProjectPath(projectname)), diskspaceQuotaInMB);
   }
   
 //  public Long getHdfsSpaceQuotaInBytes(String name) throws AppException {
@@ -880,12 +887,13 @@ public class ProjectController {
   }
 
 
-  public void addExampleJarToExampleProject(String username, Project project) {
+  public void addExampleJarToExampleProject(String username, Project project,
+          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) {
 
     Users user = userBean.getUserByEmail(username);
     try {
       datasetController.createDataset(user, project, "TestJob",
-              "jar file to calculate pi", -1, false, true);
+              "jar file to calculate pi", -1, false, true, dfso, udfso);
     } catch (IOException ex) {
       Logger.getLogger(ProjectController.class.getName()).
               log(Level.SEVERE, null, ex);
@@ -897,7 +905,7 @@ public class ProjectController {
       File file = new File(settings.getSparkDir() + "/lib/spark-examples-"
               + Settings.SPARK_VERSION + "-hadoop" + Settings.HOPS_VERSION
               + ".jar");
-      dfs.getDfsOps(hdfsUser).copyToHDFSFromLocal(false, file.getAbsolutePath(),
+      udfso.copyToHDFSFromLocal(false, file.getAbsolutePath(),
               File.separator + Settings.DIR_ROOT + File.separator + project.
               getName() + "/TestJob/");
 

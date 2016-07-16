@@ -19,6 +19,7 @@ import se.kth.bbc.jobs.jobhistory.JobsHistory;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.hopsworks.certificates.UserCertsFacade;
 import se.kth.hopsworks.controller.ProjectController;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -188,22 +189,40 @@ public abstract class HopsJob {
       this.hdfsUser.doAs(new PrivilegedExceptionAction<Void>() {
         @Override
         public Void run() {
-          long starttime = System.currentTimeMillis();
-          boolean proceed = setupJob();
-          if (!proceed) {
+          DistributedFileSystemOps dfso = null;
+          DistributedFileSystemOps udfso = null;
+          try {
+            dfso = services.getFsService().getDfsOps();
+            udfso = services.getFileOperations(hdfsUser.getUserName());
+            long starttime = System.currentTimeMillis();
+            boolean proceed = setupJob(dfso);
+            if (!proceed) {
+              long executiontime = System.currentTimeMillis() - starttime;
+              updateExecution(JobState.INITIALIZATION_FAILED, executiontime,
+                      null, null,
+                      null, null, null, null, 0);
+              cleanup();
+              return null;
+            } else {
+              updateState(JobState.STARTING_APP_MASTER);
+            }
+            runJob(udfso);
             long executiontime = System.currentTimeMillis() - starttime;
-            updateExecution(JobState.INITIALIZATION_FAILED, executiontime, null, null,
-                null, null, null, null, 0);
+            updateExecution(null, executiontime, null, null, null, null, null,
+                    null, 0);
+            updateJobHistoryApp(executiontime);
             cleanup();
             return null;
-          } else {
-            updateState(JobState.STARTING_APP_MASTER);
+          } catch (IOException e) {
+            logger.log(Level.SEVERE,
+                    "Exception while trying to get hdfsUser name for execution "
+                    + getExecution(), e);
+          } finally {
+            if (dfso != null) {
+              dfso.close();
+            }
+            udfso.close();
           }
-          runJob();
-          long executiontime = System.currentTimeMillis() - starttime;
-          updateExecution(null, executiontime, null, null, null, null, null, null, 0);
-          updateJobHistoryApp(executiontime);
-          cleanup();
           return null;
         }
       });
@@ -223,7 +242,7 @@ public abstract class HopsJob {
    * @return False if execution should be aborted. Cleanup() is still executed
    * in that case.
    */
-  protected abstract boolean setupJob();
+  protected abstract boolean setupJob(DistributedFileSystemOps dfso);
 
   /**
    * Takes care of the execution of the job. Called by execute() after
@@ -232,7 +251,7 @@ public abstract class HopsJob {
    * persistently, since this object is used to check the status of (running)
    * jobs.
    */
-  protected abstract void runJob();
+  protected abstract void runJob(DistributedFileSystemOps udfso);
 
   protected abstract void stopJob(String appid);
 
