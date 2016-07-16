@@ -8,6 +8,7 @@ import javax.ejb.Stateless;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.bbc.activity.ActivityFacade;
+import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
 import se.kth.bbc.jobs.jobhistory.JobsHistoryFacade;
@@ -49,6 +50,23 @@ public class ExecutionController {
     switch (job.getJobType()) {
       case ADAM:
         exec = adamController.startJob(job, user);
+//        if (exec == null) {
+//          throw new IllegalArgumentException("Problem getting execution object for: " + job.
+//              getJobType());
+//        }
+//        int execId = exec.getId();
+//        AdamJobConfiguration adamConfig = (AdamJobConfiguration) job.getJobConfig();
+//        String path = adamConfig.getJarPath();
+//        String[] parts = path.split("/");
+//        String pathOfInode = path.replace("hdfs://" + parts[2], "");
+//        
+//        Inode inode = inodes.getInodeAtPath(pathOfInode);
+//        int inodePid = inode.getInodePK().getParentId();
+//        String inodeName = inode.getInodePK().getName();
+//        
+//        execInputFilesFacade.create(execId, inodePid, inodeName);
+//        jobHistoryFac.persist(user, job, execId, exec.getAppId());
+//        activityFacade.persistActivity(activityFacade.EXECUTED_JOB + inodeName, job.getProject(), user);
         break;
       case FLINK:
         return flinkController.startJob(job, user);

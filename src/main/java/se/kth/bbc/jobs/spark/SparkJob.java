@@ -19,7 +19,7 @@ import se.kth.hopsworks.util.Settings;
  * <p/>
  * @author stig
  */
-public final class SparkJob extends YarnJob {
+public class SparkJob extends YarnJob {
 
   private static final Logger logger = Logger.
       getLogger(SparkJob.class.getName());
@@ -27,7 +27,8 @@ public final class SparkJob extends YarnJob {
   private final SparkJobConfiguration jobconfig; //Just for convenience
   private final String sparkDir;
   private final String sparkUser; //must be glassfish
-
+  protected SparkYarnRunnerBuilder runnerbuilder;
+  
   /**
    *
    * @param job
@@ -62,14 +63,19 @@ public final class SparkJob extends YarnJob {
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled Spark Job");
     }
-    SparkYarnRunnerBuilder runnerbuilder = new SparkYarnRunnerBuilder(
+    //If runnerbuilder is not null, it has been instantiated by child class,
+    //i.e. AdamJob
+    if(runnerbuilder==null){
+      runnerbuilder = new SparkYarnRunnerBuilder(
         jobconfig.getJarPath(), jobconfig.getMainClass());
-    runnerbuilder.setJobName(jobconfig.getAppName());
-    //Check if the user provided application arguments
-    if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){
-            String[] jobArgs = jobconfig.getArgs().trim().split(" ");
-            runnerbuilder.addAllJobArgs(jobArgs);
-    }  
+        runnerbuilder.setJobName(jobconfig.getAppName());
+      //Check if the user provided application arguments
+      if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){
+              String[] jobArgs = jobconfig.getArgs().trim().split(" ");
+              runnerbuilder.addAllJobArgs(jobArgs);
+      }  
+    }
+   
     //Set spark runner options
     runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
     runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
@@ -90,7 +96,7 @@ public final class SparkJob extends YarnJob {
     runnerbuilder.setKafkaAddress(kafkaAddress);
     
     runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
-    //Set project specific resources
+    //Set project specific resources, i.e. Kafka certificates
     runnerbuilder.addExtraFiles(projectLocalResources);
     if(jobSystemProperties != null && !jobSystemProperties.isEmpty()){
       for(Entry<String,String> jobSystemProperty: jobSystemProperties.entrySet()){
