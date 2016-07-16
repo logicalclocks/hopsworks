@@ -165,12 +165,14 @@ public abstract class HopsJob {
   protected final void updateJobHistoryApp(long executiontime){
 
     ExecutionsInputfiles execIF = services.getExecutionInputfilesFacade().findExecutionInputFileByExecutionId(execution.getId());
-      
-    int JobId = execution.getJob().getId();
-    int inodePid = execIF.getExecutionsInputfilesPK().getInodePid();
-    String inodeName = execIF.getExecutionsInputfilesPK().getName();
-    
-    services.getJobsHistoryFacade().updateJobHistory(JobId, inodePid, inodeName, execution, executiontime);
+    if(execIF !=  null){
+      int JobId = execution.getJob().getId();
+      int inodePid = execIF.getExecutionsInputfilesPK().getInodePid();
+      String inodeName = execIF.getExecutionsInputfilesPK().getName();
+      services.getJobsHistoryFacade().updateJobHistory(JobId, inodePid, inodeName, execution, executiontime);
+    } else {
+      logger.log(Level.WARNING, "No entry found in ExecutionInputfiles table for id:{0}",execution.getId());
+    }
   }
   /**
    * Execute the job and keep track of its execution time. The execution flow is
@@ -221,7 +223,9 @@ public abstract class HopsJob {
             if (dfso != null) {
               dfso.close();
             }
-            udfso.close();
+            if(udfso!=null){
+              udfso.close();
+            }
           }
           return null;
         }

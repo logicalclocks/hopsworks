@@ -37,7 +37,12 @@ public class ExecutionInputfilesFacade extends AbstractFacade<ExecutionsInputfil
         TypedQuery<ExecutionsInputfiles> q = em.createNamedQuery(
             "ExecutionsInputfiles.findByExecutionId", ExecutionsInputfiles.class);
         q.setParameter("id", id);
-        return q.getSingleResult();
+        List<ExecutionsInputfiles> results = q.getResultList();
+        if(results!= null && results.size() == 1){
+          return results.get(0);
+        } else {
+          return null;
+        }
     }
     
     public List<ExecutionsInputfiles> findExecutionInputFileByInodePid(int parent_id){
