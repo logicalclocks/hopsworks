@@ -215,8 +215,7 @@ angular.module('hopsWorksApp')
 
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Could not get the current YARN price.', ttl: 10000});
-              }
-              )
+              });
             };
 
             self.stopJob = function (jobId) {
@@ -260,26 +259,16 @@ angular.module('hopsWorksApp')
             };
 
             self.retryLogs = function (appId, type) {
+              if (appId === undefined) {
+                growl.error("Can not retry log. The job has not yet been assigned an Id", {title: 'Error', ttl: 5000});
+              }
               JobService.retryLog(self.projectId, appId, type).then(
                       function (success) {
-                        growl.success(success.data.errorMsg, {title: 'Log retrieved seccessfuly.', ttl: 5000});
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                         self.showLogs(self.currentjob.id);
                       }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Failed to get logs', ttl: 5000});
               });
-            };
-            
-            self.retriable = function (log) {
-              if (log === 'No information.') {
-                return true;
-              } else if (log === 'No information.') {
-                return true;
-              } else if (log === 'No log available') {
-                return true;
-              } else if (log === 'No error.') {
-                return true;
-              } 
-              return false;
             };
 
             self.deleteJob = function (jobId, jobName) {

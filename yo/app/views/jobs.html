@@ -316,7 +316,7 @@
                     close-others="true"infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
                     <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                       <div style="overflow-y: auto">
-                        <button ng-if="jobsCtrl.retriable(item.log)" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'out')" >
+                        <button ng-if="item.retriableOut !== undefined && item.appId !== undefined" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'out')" >
                           Retry log
                         </button><br>
                         <textarea ng-show="item.logPath === undefined" class="form-control" rows="15" placeholer="No log information available" readonly>
@@ -335,7 +335,7 @@
                     close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
                     <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                       <div style="overflow-y: auto">
-                        <button  ng-if="jobsCtrl.retriable(item.err)" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'err')" >
+                        <button  ng-if="item.retriableErr !== undefined && item.appId !== undefined" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'err')" >
                           Retry log
                         </button><br>
                         <textarea ng-show="item.errPath === undefined" class="form-control" rows="15" placeholer="No error information available" readonly>

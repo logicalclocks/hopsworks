@@ -12,15 +12,11 @@ import se.kth.bbc.jobs.JobScheduler;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
-import static se.kth.bbc.jobs.yarn.YarnRunner.APPID_PLACEHOLDER;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.Settings;
 
-/**
- *
- * @author stig
- */
+
 @Stateless
 public class JobController {
 
@@ -28,6 +24,9 @@ public class JobController {
   private JobDescriptionFacade jdFacade;
   @EJB
   private JobScheduler scheduler;
+  @EJB
+  private Settings settings;
+  
   private static final Logger logger = Logger.getLogger(JobController.class.
           getName());
 
@@ -50,15 +49,20 @@ public class JobController {
     return status;
   }
 
+  /**
+   * Returns aggregated log dir path for an application with the the given appId.
+   * @param hdfsUser
+   * @param appId
+   * @return 
+   */
   public String getAggregatedLogPath(String hdfsUser, String appId) {
-    //String yarnConfDir = System.getenv(Settings.ENV_KEY_HADOOP_CONF_DIR );
-    String yarnConfDir = "/srv/hadoop/etc/hadoop/";
+    String yarnConfDir = settings.getYarnConfDir();
     Path confPath = new Path(yarnConfDir);
     File confFile = new File(confPath + File.separator
             + Settings.DEFAULT_YARN_CONFFILE_NAME);
     if (!confFile.exists()) {
       logger.log(Level.SEVERE,
-              "Unable to locate Yarn configuration file in {0}. Aborting exectution.",
+              "Unable to locate Yarn configuration file in {0}. Aborting log aggregation retry.",
               confFile);
       throw new IllegalStateException("No Yarn conf file");
     }
@@ -82,6 +86,5 @@ public class JobController {
     }
     return aggregatedLogPath;
   }
-  
-  
+
 }

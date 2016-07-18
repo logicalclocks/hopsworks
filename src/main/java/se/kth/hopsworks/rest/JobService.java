@@ -660,7 +660,8 @@ public class JobService {
         String stdPath;
         for (Execution e : executionHistory) {
           arrayObjectBuilder = Json.createObjectBuilder();
-          arrayObjectBuilder.add("appId", e.getAppId() == null ? "": e.getAppId());
+          arrayObjectBuilder.add("appId", e.getAppId() == null ? "" : e.
+                  getAppId());
           arrayObjectBuilder.add("time", e.getSubmissionTime().toString());
           String hdfsLogPath = "hdfs://" + e.getStdoutPath();
           if (e.getStdoutPath() != null && !e.getStdoutPath().isEmpty() && dfso.
@@ -679,10 +680,14 @@ public class JobService {
               input.close();
               arrayObjectBuilder.add("log", message.isEmpty()
                       ? "No information." : message);
+              if (message.isEmpty()) {
+                arrayObjectBuilder.add("retriableOut", "true");
+              }
             }
 
           } else {
             arrayObjectBuilder.add("log", "No log available");
+            arrayObjectBuilder.add("retriableOut", "true");
           }
           String hdfsErrPath = "hdfs://" + e.getStderrPath();
           if (e.getStderrPath() != null && !e.getStderrPath().isEmpty() && dfso.
@@ -701,9 +706,13 @@ public class JobService {
               input.close();
               arrayObjectBuilder.add("err", message.isEmpty() ? "No error."
                       : message);
+              if (message.isEmpty()) {
+                arrayObjectBuilder.add("retriableErr", "err");
+              }
             }
           } else {
             arrayObjectBuilder.add("err", "No log available");
+            arrayObjectBuilder.add("retriableErr", "err");
           }
           arrayBuilder.add(arrayObjectBuilder);
         }
@@ -807,7 +816,10 @@ public class JobService {
         udfso.close();
       }
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    JsonResponse json = new JsonResponse();
+    json.setSuccessMessage("Log retrieved successfuly.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
   }
 
   /**
