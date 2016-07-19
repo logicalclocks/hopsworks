@@ -91,8 +91,6 @@ public class UserCertsFacade {
     }
     
     public void putUserCerts(String projectname, String username){
-      
-      //  "try-with-resources" in Java 7, FileInputStreams will be closed automatically 
       try(FileInputStream kfin = new FileInputStream(new File("/tmp/" + projectname + "__" + username + "__kstore.jks"));
           FileInputStream tfin = new FileInputStream(new File("/tmp/" + projectname + "__" + username + "__tstore.jks"))){
        

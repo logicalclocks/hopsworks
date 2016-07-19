@@ -12,12 +12,12 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.adam.AdamJob;
+import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.hopsworks.hdfs.fileoperations.UserGroupInformationService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
-import se.kth.hopsworks.rest.ProjectService;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.Settings;
 
@@ -48,8 +48,6 @@ public class AdamController {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private UserGroupInformationService ugiService;
-  @EJB
-  private ProjectController projectService;
 
   /**
    * Start an execution of the given job, ordered by the given User.
@@ -79,7 +77,8 @@ public class AdamController {
       throw new IllegalStateException(
               "Some ADAM jars are not in HDFS and could not be copied in from this host.");
     }
-    
+    ((AdamJobConfiguration)job.getJobConfig()).setJarPath(settings.getAdamJarHdfsPath());
+    ((AdamJobConfiguration)job.getJobConfig()).setHistoryServerIp(settings.getSparkHistoryServerIp());
     //Get to starting the job
     AdamJob adamJob = null;
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);

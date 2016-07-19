@@ -5,13 +5,17 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
+import se.kth.bbc.jobs.jobhistory.ExecutionsInputfiles;
 import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;
+import se.kth.bbc.jobs.jobhistory.JobsHistory;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.hopsworks.certificates.UserCertsFacade;
 import se.kth.hopsworks.controller.ProjectController;
@@ -43,6 +47,8 @@ public abstract class HopsJob {
 
   private static final Logger logger = Logger.getLogger(HopsJob.class.getName());
   private Execution execution;
+  private JobsHistory jobHistory;
+  private ExecutionsInputfiles execInputFiles;
   private boolean initialized = false;
 
   //Service provider providing access to facades
@@ -61,6 +67,7 @@ public abstract class HopsJob {
    * services.
    * @param user The user executing this job.
    * @param hadoopDir base Hadoop installation directory
+   * @param nameNodeIpPort
    * @throws NullPointerException If either of the given arguments is null.
    */
   protected HopsJob(JobDescription jobDescription,
@@ -103,7 +110,7 @@ public abstract class HopsJob {
   public final Execution getExecution() {
     return new Execution(execution);
   }
-
+  
   /**
    * Update the current state of the Execution entity to the given state.
    * <p/>
@@ -136,11 +143,13 @@ public abstract class HopsJob {
    * @param appId
    * @param inputFiles
    * @param outputFiles
+   * @param finalStatus
+   * @param progress
    */
   protected final void updateExecution(JobState state,
           long executionDuration, String stdoutPath,
           String stderrPath, String appId, Collection<JobInputFile> inputFiles,
-          Collection<JobOutputFile> outputFiles, JobFinalStatus finalStatus, float progress) {
+          Collection<JobOutputFile> outputFiles, JobFinalStatus finalStatus, float progress) {  
     Execution upd = services.getExecutionFacade().updateAppId(execution, appId);
     upd = services.getExecutionFacade().updateExecutionTime(upd,
             executionDuration);
@@ -152,7 +161,19 @@ public abstract class HopsJob {
     upd = services.getExecutionFacade().updateProgress(upd, progress);
     this.execution = upd;
   }
+  
+  protected final void updateJobHistoryApp(long executiontime){
 
+    ExecutionsInputfiles execIF = services.getExecutionInputfilesFacade().findExecutionInputFileByExecutionId(execution.getId());
+    if(execIF !=  null){
+      int JobId = execution.getJob().getId();
+      int inodePid = execIF.getExecutionsInputfilesPK().getInodePid();
+      String inodeName = execIF.getExecutionsInputfilesPK().getName();
+      services.getJobsHistoryFacade().updateJobHistory(JobId, inodePid, inodeName, execution, executiontime);
+    } else {
+      logger.log(Level.WARNING, "No entry found in ExecutionInputfiles table for id:{0}",execution.getId());
+    }
+  }
   /**
    * Execute the job and keep track of its execution time. The execution flow is
    * outlined in the class documentation. Internally, this method calls
@@ -191,6 +212,7 @@ public abstract class HopsJob {
             long executiontime = System.currentTimeMillis() - starttime;
             updateExecution(null, executiontime, null, null, null, null, null,
                     null, 0);
+            updateJobHistoryApp(executiontime);
             cleanup();
             return null;
           } catch (IOException e) {
@@ -201,7 +223,9 @@ public abstract class HopsJob {
             if (dfso != null) {
               dfso.close();
             }
-            udfso.close();
+            if(udfso!=null){
+              udfso.close();
+            }
           }
           return null;
         }
