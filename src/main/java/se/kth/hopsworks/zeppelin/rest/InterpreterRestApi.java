@@ -276,21 +276,27 @@ public class InterpreterRestApi {
     yarnAppStates = appStateBean.
             findByAppuserAndAppState(session.getProxyUser(),
                     "RUNNING");
-    if (yarnAppStates.size() > 1) {
-      zeppelinResource.deleteLivySession(sessionId);
-    } else if (this.user.getUsername().equals(username)) {
-      zeppelinConf.getReplFactory().restart(settingId);
-    } else {
-      Users u = userFacade.findByUsername(username);
-      if (u == null) {
-        throw new AppException(Status.BAD_REQUEST.getStatusCode(),
-                "The owner of the session was not found.");
+    try {
+      if (yarnAppStates.size() > 1) {
+        zeppelinResource.deleteLivySession(sessionId);
+      } else if (this.user.getUsername().equals(username)) {
+        zeppelinConf.getReplFactory().restart(settingId);
+      } else {
+        Users u = userFacade.findByUsername(username);
+        if (u == null) {
+          throw new AppException(Status.BAD_REQUEST.getStatusCode(),
+                  "The owner of the session was not found.");
+        }
+        ZeppelinConfig zConf = zeppelinConfFactory.getZeppelinConfig(this.project.
+                getName(), u.getEmail());
+        if (zConf.getReplFactory() != null) {
+          zConf.getReplFactory().restart(settingId);
+        }
       }
-      ZeppelinConfig zConf = zeppelinConfFactory.getZeppelinConfig(this.project.
-              getName(), u.getEmail());
-      if (zConf.getReplFactory() != null) {
-        zConf.getReplFactory().restart(settingId);
-      }
+    } catch (InterpreterException e) {
+      logger.warn("Could not close interpreter.", e);
+      throw new AppException(Status.BAD_REQUEST.getStatusCode(),
+                  "Could not close interpreter. Make sure it is not running.");
     }
 
     int timeout = zeppelinConf.getConf().getInt(
@@ -448,12 +454,24 @@ public class InterpreterRestApi {
     return sessions;
   }
 
+  /**
+   * Restarts zeppelin by cleaning the cache for the 
+   * @return
+   * @throws AppException 
+   */
   @GET
   @Path("restart")
   public Response restart() throws AppException {
-    if (this.roleInProject.equals(AllowedRoles.DATA_SCIENTIST)) {
-      throw new AppException(Status.BAD_REQUEST.getStatusCode(),
-              "You are not authorized to restart zeppelin for this project.");
+    Long timeSinceLastRestart;
+    Long lastRestartTime = zeppelinConfFactory.getLastRestartTime(this.project.
+            getName());
+    if (lastRestartTime != null) {
+      timeSinceLastRestart = System.currentTimeMillis() - lastRestartTime;
+      if (timeSinceLastRestart < 60000 * 1) {
+        throw new AppException(Status.BAD_REQUEST.getStatusCode(),
+                "This service has been restarted recently. "
+              + "Please wait a few minutes before trying again.");
+      }
     }
     Map<String, InterpreterDTO> interpreterDTOMap = interpreters(this.project);
     InterpreterDTO interpreterDTO;
@@ -478,7 +496,6 @@ public class InterpreterRestApi {
               getUser().getEmail());
       TicketContainer.instance.invalidate(member.getUser().getEmail());
     }
-
 
     return new JsonResponse(Status.OK, "Cache cleared.").build();
   }

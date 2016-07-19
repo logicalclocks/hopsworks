@@ -29,7 +29,7 @@ angular.module('hopsWorksApp', [
   'angular-tour',
   'smart-table',
   'ngPrettyJson',
-  'angularAwesomeSlider'  
+  'angularAwesomeSlider'
 ])
     .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider',
       function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider) {

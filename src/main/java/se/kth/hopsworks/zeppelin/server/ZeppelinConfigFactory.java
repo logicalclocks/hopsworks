@@ -35,6 +35,8 @@ public class ZeppelinConfigFactory {
   private static final String ZEPPELIN_SITE_XML = "/conf/zeppelin-site.xml";
   private final ConcurrentMap<String, ZeppelinConfig> projectConfCache
           = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, Long> projectCacheLastRestart
+          = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, ZeppelinConfig> projectUserConfCache
           = new ConcurrentHashMap<>();
   @EJB
@@ -61,6 +63,7 @@ public class ZeppelinConfigFactory {
     }
     projectConfCache.clear();
     projectUserConfCache.clear();
+    projectCacheLastRestart.clear();
   }
 
   /**
@@ -132,13 +135,16 @@ public class ZeppelinConfigFactory {
   }
 
   /**
-   * Removes configuration for projectName. This will force it to be recreated
-   * next time it is accessed.
+   * Removes last restart time for projectName. 
    *
    * @param projectName
    */
   public void removeFromCache(String projectName) {
-    projectConfCache.remove(projectName).clean();
+    ZeppelinConfig config = projectConfCache.remove(projectName);
+    if (config != null) {
+      config.clean();
+      projectCacheLastRestart.put(projectName, System.currentTimeMillis());
+    }
   }
 
   /**
@@ -154,9 +160,21 @@ public class ZeppelinConfigFactory {
       return;
     }
     String hdfsUser = hdfsUsername.getHdfsUserName(project, user);
-    projectUserConfCache.remove(hdfsUser).clean();
+    ZeppelinConfig config = projectUserConfCache.remove(hdfsUser);
+    if (config != null) {
+      config.clean();
+    }
   }
-
+  
+  /**
+   * Last restart time for the given project
+   * @param projectName
+   * @return 
+   */
+  public Long getLastRestartTime(String projectName) {
+    return projectCacheLastRestart.get(projectName);
+  }
+  
   /**
    * Deletes zeppelin configuration dir for projectName.
    *

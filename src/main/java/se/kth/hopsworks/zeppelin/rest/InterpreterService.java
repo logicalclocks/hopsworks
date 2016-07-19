@@ -50,17 +50,20 @@ public class InterpreterService {
           throws AppException {
     Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
     if (project == null) {
+      logger.error("Could not find project in cookies.");
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
               "Could not find project. Make sure cookies are enabled.");
     }
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
     if (user == null) {
+      logger.error("Could not find remote user in request.");
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
               "Could not find remote user.");
     }
     ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
             getName(), user.getEmail());
     if (zeppelinConf == null) {
+      logger.error("Could not connect to web socket.");
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not connect to web socket.");
     }
@@ -68,6 +71,7 @@ public class InterpreterService {
     String userRole = projectTeamBean.findCurrentRole(project, user);
 
     if (userRole == null) {
+      logger.error("User with no role in this project.");
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
               "You curently have no role in this project!");
     }

@@ -13,6 +13,8 @@ angular.module('hopsWorksApp')
             self.notes = [];
             self.transition = false;
             self.collapse = false;
+            self.loading = false;
+            self.loadingText = "";
             $scope.tgState = true;
             self.selectedInterpreter;
             var projectId = $routeParams.projectID;
@@ -23,26 +25,51 @@ angular.module('hopsWorksApp')
               refresh();
               getNotesInProject();
             };
+            
+            var startLoading = function (lable) {
+              self.loading = true;
+              self.loadingText = lable;
+            };
+            
+            var stopLoading = function () {
+              self.loading = false;
+              self.loadingText = "";
+            };
 
-            var getInterpreterStatus = function () {
+            var getInterpreterStatus = function (loading) {
               self.interpreters = [];
+              if (loading) {
+                startLoading(loading);
+              }
+              var interpreter;
               ZeppelinService.interpreters().then(function (success) {
                 for (var k in success.data.body) {
-                  self.interpreters.push({interpreter: success.data.body[k], statusMsg: statusMsgs[(success.data.body[k].notRunning ? 0 : 1)]});
+                  interpreter = {interpreter: success.data.body[k], 
+                    statusMsg: statusMsgs[(success.data.body[k].notRunning ? 0 : 1)]};
+                  self.interpreters.push(interpreter);
                 }
+                stopLoading();
               }, function (error) {
-                console.log('getInterpreterStatus-->',error);
+                growl.warning(error.data.errorMsg + " Try reloading the page.", 
+                {title: 'Error', ttl: 5000, referenceId: 10});
+                stopLoading();
               });
             };
 
-            var getNotesInProject = function () {
+            var getNotesInProject = function (loading) {
               self.notesRefreshing = true;
+              if (loading) {
+                 startLoading(loading);
+              }
               ZeppelinService.notebooks().then(function (success) {
                 self.notes = success.data.body;
                 self.notesRefreshing = false;
+                stopLoading();
               }, function (error) {
                 self.notesRefreshing = false;
-                console.log('getNotesInProject-->',error);
+                growl.warning(error.data.errorMsg + " Try reloading the page.", 
+                {title: 'Error', ttl: 5000, referenceId: 10});
+                stopLoading();
               });
             };
 
@@ -81,11 +108,21 @@ angular.module('hopsWorksApp')
             };
 
             var init = function () {
+              startLoading("Connecting to zeppelin...");
+              ZeppelinService.websocket().sendNewEvent({principal: 'anonymous', 
+                ticket:'anonymous', op: 'LIST_NOTES'});
               self.connectedStatus = ZeppelinService.websocket().isConnected();
-              getInterpreterStatus();
-              getNotesInProject();
               $scope.tgState = true;
             };
+            
+            var load = function () {
+              self.connectedStatus = ZeppelinService.websocket().isConnected();
+              getInterpreterStatus("Loading interpreters...");
+              getNotesInProject("Loading notebooks...");
+              $scope.tgState = true;
+            };
+            
+            init();
 
             self.stopInterpreter = function (interpreter) {
               if (!interpreter.interpreter.notRunning) {
@@ -141,9 +178,11 @@ angular.module('hopsWorksApp')
                         noteName = success.val;
                         ZeppelinService.createNotebook(noteName).then(function (success) {
                           self.notes.push(success.data.body);
-                          growl.success("Notebook created successfully.", {title: 'Success', ttl: 5000, referenceId: 10});
+                          growl.success("Notebook created successfully.", 
+                          {title: 'Success', ttl: 5000, referenceId: 10});
                         }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+                          growl.error(error.data.errorMsg, 
+                          {title: 'Error', ttl: 5000, referenceId: 10});
                         });
                       },
                       function (error) {
@@ -152,11 +191,13 @@ angular.module('hopsWorksApp')
             };
             
             self.clearCache = function () {
+              startLoading("Restarting zeppelin...");
               ZeppelinService.restart().then( function (success) {
-                  //$route.reload();
+                  //stopLoading();
+                  $route.reload();
                 }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
-                  //$route.reload();
+                  stopLoading();
+                  growl.info(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});                  
                 });
             };
             
@@ -175,16 +216,12 @@ angular.module('hopsWorksApp')
               var op = payload.op;
               var data = payload.data;
               if (op === 'NOTE') {
-                init();
+                load();
                 console.log('NOTE', data.note);
               } else if (op === 'NOTES_INFO') {
-                init();
+                load();
                 console.log('NOTES_INFO', data);
-              } else if (op === 'PARAGRAPH_APPEND_OUTPUT') {
-                //init();
-                getInterpreterStatus();
-                console.log('PARAGRAPH_APPEND_OUTPUT', data);
-              }
+              } 
             });
             
             ZeppelinService.websocket().ws.onOpen(function () {
@@ -197,16 +234,15 @@ angular.module('hopsWorksApp')
             });
 
             ZeppelinService.websocket().ws.onClose(function (event) {
-              console.log('close message: ', event);
+              self.connectedStatus = false;
+              console.log('close message: ', event);              
               //close code should be 1012 (service restart) but chrome shows 
               //closed abnormally (1006) this might cause problem when the socket 
               //is closed but not restarted 
-              if (event.code === 1012 || event.code === 1006) {
+              if (event.code === 1012) {
+                startLoading("Restarting zeppelin...");
                 $route.reload();
               }
-              self.connectedStatus = false;
-            });  
-            
-            ZeppelinService.websocket().sendNewEvent({principal: 'anonymous', ticket:'anonymous', op: 'LIST_NOTES'});
+            });                          
 
           }]);

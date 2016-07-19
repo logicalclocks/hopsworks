@@ -293,6 +293,7 @@ public class NotebookServer implements
   public void closeConnection() {
     try {
       if (this.session.isOpen()) {
+        this.session.getBasicRemote().sendText("Restarting zeppelin.");
         this.session.close(new CloseReason(
                 CloseReason.CloseCodes.SERVICE_RESTART,
                 "Restarting zeppelin."));
@@ -487,7 +488,7 @@ public class NotebookServer implements
     }
 
     Note note = notebook.getNote(noteId);
-    if (note != null) {
+    if (note != null && conn.isOpen()) {
       if (this.userRole == null) {
         permissionError(conn, "read", this.userRole, AllowedRoles.DATA_OWNER
                 + ", " + AllowedRoles.DATA_SCIENTIST);
@@ -509,7 +510,7 @@ public class NotebookServer implements
       note = notebook.getNote(noteId);
     }
 
-    if (note != null) {
+    if (note != null  && conn.isOpen()) {
       if (this.userRole == null) {
         permissionError(conn, "read", this.userRole, AllowedRoles.DATA_OWNER
                 + ", " + AllowedRoles.DATA_SCIENTIST);
