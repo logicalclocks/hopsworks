@@ -106,6 +106,8 @@ public class JobService {
   @EJB
   private UserManager userBean;
   private Project project;
+  private static final String PROXY_USER_COOKIE_NAME = "proxy-user";
+
 
   JobService setProject(Project project) {
     this.project = project;
@@ -309,7 +311,6 @@ public class JobService {
                   "Accept-Encoding", "accept-encoding", "Accept-Language",
                   "accept-language",
                   "Accept-Charset", "accept-charset"));
-  public static final String PROXY_USER_COOKIE_NAME = "proxy-user";
 
   /**
    * Get the job ui for the specified job.
