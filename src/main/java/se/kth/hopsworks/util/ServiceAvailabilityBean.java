@@ -7,7 +7,10 @@ package se.kth.hopsworks.util;
 
 import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
+import io.hops.kafka.KafkaFacade;
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -21,6 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.Service;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.impl.YarnClientImpl;
+import org.apache.zookeeper.ZooKeeper;
 import org.elasticsearch.ElasticsearchTimeoutException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
@@ -28,6 +32,7 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
+import se.kth.hopsworks.rest.AppException;
 
 @Singleton
 public class ServiceAvailabilityBean {
@@ -35,6 +40,8 @@ public class ServiceAvailabilityBean {
   private final static Logger logger = Logger.getLogger(ServiceAvailabilityBean.class.getName());
 
   private static long INTERVAL_MS_BETWEEN_SERVICE_CHECKS = 10 * 1000l;
+  
+  public int zkSessionTimeoutMs = 30 * 1000;//30 seconds
 
   private boolean elasticsearch;
   private boolean namenode;
@@ -46,7 +53,11 @@ public class ServiceAvailabilityBean {
   private boolean ndb;
   private boolean jhs;
   private boolean sparkHistoryServer;
-
+  private boolean zookeeper;
+  private boolean kafka;
+  
+  @EJB
+  private KafkaFacade kafkaFacade;
   @EJB
   private Settings settings;
   @EJB
@@ -95,6 +106,7 @@ public class ServiceAvailabilityBean {
       logger.warning("Resourcemanager appears to be down.");
     }
 // Check Elastic
+ try {
     String addr = this.settings.getElasticIp();
 
     final org.elasticsearch.common.settings.Settings settings
@@ -105,7 +117,7 @@ public class ServiceAvailabilityBean {
     Client client = TransportClient.builder().settings(settings).build()
         .addTransportAddress(new InetSocketTransportAddress(new InetSocketAddress(addr, Settings.ELASTIC_PORT)));
 
-    try {
+   
       final ClusterHealthResponse healthResponse = client.admin().cluster().prepareHealth()
           .setWaitForStatus(ClusterHealthStatus.GREEN).setTimeout(TimeValue.timeValueSeconds(5)).execute().actionGet();
       if (healthResponse.isTimedOut()) {
@@ -116,14 +128,30 @@ public class ServiceAvailabilityBean {
     } catch (final ElasticsearchTimeoutException e) {
       elasticsearch = false;
     }
+    
+    
+        try {
+            //Check Kafka
 
-// Check P2P Downloader
-    // TODO - Call some REST API
-// Check Livy
-    // TODO
-// Check Ooozie
-    // TODO
-  }
+            Set<String> kafkaBrokerEndpoints = kafkaFacade.getBrokerEndpoints();
+            if (!kafkaBrokerEndpoints.isEmpty()) {
+                kafka = true;
+            } else {
+                kafka = false;
+            }
+        } catch (AppException ex) {
+            kafka = false;
+        }
+        
+        
+      try {
+          ZooKeeper zk =  new ZooKeeper(settings.getZkConnectStr(), zkSessionTimeoutMs, null);
+          zookeeper = true;
+       
+      } catch (IOException ex) {
+          zookeeper = false;
+      }
+    }
 
   @PostConstruct
   public void initialise() {
@@ -181,6 +209,14 @@ public class ServiceAvailabilityBean {
 
   public boolean isSparkHistoryServer() {
     return sparkHistoryServer;
+  }
+  
+  public boolean isZookeeper(){
+    return zookeeper;
+  }
+  
+  public boolean isKafka(){
+    return kafka;
   }
 
 }

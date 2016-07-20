@@ -228,7 +228,7 @@ public class KafkaFacade {
             }
         }
 
-        //if schema is empty, select a default schema
+        //if schema is empty, select a default schema, not impmented
         //persist topic into database
         SchemaTopics schema = em.find(SchemaTopics.class,
                 new SchemaTopicsPK(topicDto.getSchemaName(),
@@ -866,9 +866,8 @@ public class KafkaFacade {
 
     }
 
-    class ZookeeperWatcher implements Watcher {
+    public class ZookeeperWatcher implements Watcher {
 
-        @Override
         public void process(WatchedEvent we) {
             LOGGER.log(Level.INFO, "");
         }
