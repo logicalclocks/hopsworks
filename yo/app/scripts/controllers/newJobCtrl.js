@@ -4,7 +4,7 @@
  * 
  * As it stands, this controller contains a lot of logic concerning all different 
  * job types. It would be nicer to have these as Mixins in a different file. 
- * Guess that's a TODO.
+ * Guess that's a TODO.a
  */
 
 'use strict';
@@ -38,7 +38,6 @@ angular.module('hopsWorksApp')
               "SPARK": "Please select a JAR file.",
               "FLINK": "Please select a JAR file.",
               "LIBRARY": "Please select a JAR file.",
-              "CUNEIFORM": "Please select a Cuneiform workflow. The file should have the extension '.cf'.",
               "ADAM-FILE": "Please select a file.",
               "ADAM-FOLDER": "Please select a folder."
             };
@@ -56,8 +55,7 @@ angular.module('hopsWorksApp')
                 from: 1,
                 to: 500,      
                 floor: true,
-                step: 1,
-                vertical: false	
+                step: 1
             };
             self.sliderValue = self.sliderOptions.from +";"+ 10;
             this.setInitExecs = function() {
