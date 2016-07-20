@@ -106,7 +106,8 @@
                 </div>
                 <div class="col-md-8">
                   <input type="text" ng-model="arg.value" ng-hide="arg.path && !arg.value" ng-required="arg.required" class="form-control">
-                  <button ng-show="arg.path && !arg.value" ng-click="newJobCtrl.selectFile('ADAM', arg)" class="btn btn-default">Select</button>
+                  <button ng-show="arg.path && !arg.value && arg.name==='INPUT'" ng-click="newJobCtrl.selectFile('ADAM', arg)" class="btn btn-default">Select</button>
+                  <button ng-show="arg.path && !arg.value && arg.name==='OUTPUT'" ng-click="newJobCtrl.selectDir('ADAM', arg)" class="btn btn-default">Select</button>
                 </div>
               </div>
 

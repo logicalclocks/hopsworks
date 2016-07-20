@@ -58,21 +58,27 @@
         </a>
       </li>
 
+      <li ng-click="projectCtrl.goToWorklows()" style="margin-top:40px;"  ng-show="projectCtrl.showWorkflows()">
+        <a>
+          Oozie<span class="sub_icon fa fa-code-fork fa-lg pull-right"></span>
+        </a>
+      </li>
+
       <li ng-click="projectCtrl.projectSettingModal()" style="margin-top:40px;">
         <a>
-          Settings <span class="sub_icon fa fa-dashboard fa-lg pull-right"></span>
+          Settings<span class="sub_icon fa fa-dashboard fa-lg pull-right"></span>
         </a>
       </li>
 
       <li ng-click="projectCtrl.membersModal()">
         <a>
-          Members <span class="sub_icon fa fa-users fa-lg pull-right"></span>
+          Members<span class="sub_icon fa fa-users fa-lg pull-right"></span>
         </a>
       </li>
 
       <li ng-click="projectCtrl.goToMetadataDesigner()" ng-show="projectCtrl.role == 'Data owner'">
         <a>
-          Metadata Designer <span
+          Metadata Designer<span
           class="sub_icon fa fa-edit fa-lg pull-right"></span>
         </a>
       </li>

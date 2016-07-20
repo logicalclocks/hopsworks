@@ -39,7 +39,8 @@ angular.module('hopsWorksApp')
               "FLINK": "Please select a JAR file.",
               "LIBRARY": "Please select a JAR file.",
               "CUNEIFORM": "Please select a Cuneiform workflow. The file should have the extension '.cf'.",
-              "ADAM": "Please select a file or folder."
+              "ADAM-FILE": "Please select a file.",
+              "ADAM-FOLDER": "Please select a folder."
             };
             this.projectId = $routeParams.projectID;
 
@@ -56,11 +57,7 @@ angular.module('hopsWorksApp')
                 to: 500,      
                 floor: true,
                 step: 1,
-                vertical: false
-//                callback: function(value, elt) {
-//                    this.runConfig.numberOfExecutorsMin = value.split(";")[0];
-//                    this.runConfig.numberOfExecutorsMax = value.split(";")[1];
-//                }				
+                vertical: false	
             };
             self.sliderValue = self.sliderOptions.from +";"+ 10;
             this.setInitExecs = function() {
@@ -464,10 +461,9 @@ angular.module('hopsWorksApp')
                   });
                   break;
                 case "ADAM":
-                  self.adamState.processparameter.value = path;
+                    self.adamState.processparameter.value = path;
                   if(typeof runConfig != 'undefined'){
-                  self.sliderOptions.from = self.runConfig.
-                    minExecutors;
+                    self.sliderOptions.from = self.runConfig.minExecutors;
                     self.sliderOptions.to = self.runConfig.
                     maxExecutors;  
                   } else {
@@ -499,9 +495,30 @@ angular.module('hopsWorksApp')
                         self.adamState.processparameter = parameter;
                     }
                     ModalService.selectFile('lg', self.selectFileRegexes[reason],
-                            self.selectFileErrorMsgs[reason]).then(
+                            self.selectFileErrorMsgs["ADAM-FILE"]).then(
                             function (success) {
                                 self.onFileSelected(reason, "hdfs://" + success);
+                            }, function (error) {
+                        //The user changed their mind.
+                    });
+                };
+                /**
+                 * Open a dialog for directory selection.
+                 * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").
+                 * @param {Object} parameter The Adam parameter to bind.
+                 * @returns {undefined}
+                 */
+                this.selectDir = function (reason, parameter) {
+                    if (reason.toUpperCase() === "ADAM") {
+                        self.adamState.processparameter = parameter;
+                    }
+                    ModalService.selectDir('lg', self.selectFileRegexes[reason],
+                            self.selectFileErrorMsgs["ADAM-FOLDER"]).then(
+                            function (success) {
+                                self.onFileSelected(reason, "hdfs://" + success);
+                                if (reason.toUpperCase() === "ADAM") {
+                                  growl.info("Insert output file name", {title: 'Required', ttl: 5000});
+                                }
                             }, function (error) {
                         //The user changed their mind.
                     });

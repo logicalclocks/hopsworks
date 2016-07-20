@@ -1,0 +1,16 @@
+# frozen_string_literal: true
+# A sample Gemfile
+source "https://rubygems.org"
+
+gem "rspec", "3.4.0"
+gem 'airborne', '0.2.5'
+gem 'activerecord', '4.2.6'
+gem 'mysql2', '0.4.4'
+
+group :development do
+  gem 'dotenv'
+  gem 'byebug'
+  gem 'net-ssh-shell'
+end
+
+# gem "factory_girl", "~> 4"

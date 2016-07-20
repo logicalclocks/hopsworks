@@ -81,6 +81,13 @@ public class FlinkController {
             throw new IllegalStateException("Flink is not installed on this system.");
         }   
        
+        //Check if flink conf file is in hdfs. If not, copy it.
+        if(!fops.exists("/user/"+settings.getFlinkUser()+"/"+Settings.FLINK_DEFAULT_CONF_FILE)){
+          fops.copyToHDFSFromLocal(false, settings.getFlinkDir()+
+                  "/conf/"+Settings.FLINK_DEFAULT_CONF_FILE, 
+                  "/user/"+settings.getFlinkUser()+"/"+Settings.FLINK_DEFAULT_CONF_FILE);
+        }
+        
         String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
         UserGroupInformation proxyUser = ugiService.getProxyUser(username);
         FlinkJob flinkjob = null;

@@ -1,7 +1,13 @@
 package se.kth.kthfsdashboard.user;
 
+import org.json.JSONObject;
+
 import java.util.List;
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 /**
  *

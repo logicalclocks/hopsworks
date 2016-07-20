@@ -3,9 +3,7 @@ package se.kth.bbc.jobs.adam;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
@@ -15,7 +13,6 @@ import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
-import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
@@ -121,7 +118,6 @@ public class AdamJob extends SparkJob {
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled ADAM Job");
     }
-    
     runnerbuilder = new SparkYarnRunnerBuilder(
             adamJarPath, Settings.ADAM_MAINCLASS);
     super.setupJob(dfso);
