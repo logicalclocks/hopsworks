@@ -43,6 +43,7 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationAttemptStateFacade;
@@ -589,22 +590,28 @@ public class JobService {
                 findByAppId(execution.getAppId());
         long executiontime = System.currentTimeMillis() - execution.
                 getSubmissionTime().getTime();
-        if (yarnAppState == null && executiontime > 60000 * 15) {
+        //yarnAppState do not know about this execution
+        if (yarnAppState == null && executiontime > 60000l * 5) {
           exeFacade.updateState(execution, JobState.INITIALIZATION_FAILED);
+          exeFacade.updateFinalStatus(execution, JobFinalStatus.FAILED);
           continue;
         }
+        //yarnAppState say something else
         if (yarnAppState != null) {
           if (yarnAppState.getAppsmstate().equals(YarnApplicationState.FAILED.
                   toString())) {
             exeFacade.updateState(execution, JobState.FAILED);
+            exeFacade.updateFinalStatus(execution, JobFinalStatus.FAILED);
             continue;
           } else if (yarnAppState.getAppsmstate().equals(
                   YarnApplicationState.KILLED.toString())) {
             exeFacade.updateState(execution, JobState.KILLED);
+            exeFacade.updateFinalStatus(execution, JobFinalStatus.KILLED);
             continue;
           } else if (yarnAppState.getAppsmstate().equals(
                   YarnApplicationState.FINISHED.toString())) {
             exeFacade.updateState(execution, JobState.FINISHED);
+            exeFacade.updateFinalStatus(execution, JobFinalStatus.SUCCEEDED);
             continue;
           }
         }

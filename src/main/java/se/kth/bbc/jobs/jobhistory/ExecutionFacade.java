@@ -3,6 +3,7 @@ package se.kth.bbc.jobs.jobhistory;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -193,7 +194,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException ex) {
-            Logger.getLogger(ExecutionFacade.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         logger.info("Trying to get the Execution Object");
         obj = em.find(Execution.class, exec.getId());
