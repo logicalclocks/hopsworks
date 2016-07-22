@@ -81,8 +81,6 @@ public class ProjectService {
   @Inject
   private BiobankingService biobanking;
   @Inject
-  private CharonService charon;
-  @Inject
   private WorkflowService workflowService;
 
   @EJB
@@ -673,14 +671,6 @@ public class ProjectService {
     AppException {
     Project project = projectController.findProjectById(projectId);
     return this.biobanking.setProject(project);
-  }
-
-  @Path("{projectId}/charon")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public CharonService charon(@PathParam("projectId") Integer projectId) throws
-    AppException {
-    Project project = projectController.findProjectById(projectId);
-    return this.charon.setProject(project);
   }
 
   @GET

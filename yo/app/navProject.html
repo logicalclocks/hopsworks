@@ -21,42 +21,30 @@
           Jobs <span class="sub_icon fa fa-cogs fa-lg pull-right"></span>
         </a>
       </li>
-
+       
+      <li ng-click="projectCtrl.goToHistory()" style="margin-top:40px;"  ng-show="projectCtrl.showJobs()">
+        <a>
+          Jobs History<span class="sub_icon fa fa-history fa-lg pull-right"></span>
+        </a>
+      </li>
 <!--      <li ng-click="projectCtrl.goToSsh()" ng-show="projectCtrl.showSsh()">
         <a>
           Ssh <span class="sub_icon fa fa-terminal fa-lg pull-right"></span>
         </a>
       </li>-->
 
-      <li ng-click="projectCtrl.goToCharon()" ng-show="projectCtrl.showCharon()">
-        <a>
-          Charon<span class="sub_icon fa fa-cloud-upload fa-lg pull-right"></span>
-        </a>
-      </li>
-      
       <li ng-click="projectCtrl.goToBiobanking()" ng-show="projectCtrl.showBiobanking()">
         <a>
           Forms<span class="sub_icon fa fa-medkit fa-lg pull-right"></span>
         </a>
       </li>
-       <li ng-click="projectCtrl.goToKafka()" ng-show="projectCtrl.showKafka()">
+
+      <li ng-click="projectCtrl.goToKafka()" ng-show="projectCtrl.showKafka()">
         <a>
           Kafka<img class="pull-right" style="margin-left:10px" height="25" src="images/kafka_logo.png"/> 
         </a>
       </li>
        
-       
-      <li ng-click="projectCtrl.goToDatasets()" style="margin-top:40px;">
-        <a>
-          Data Sets<span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
-        </a>
-      </li>
-      
-      <li ng-click="projectCtrl.goToHistory()" style="margin-top:40px;">
-        <a>
-          History<span class="sub_icon fa fa-history fa-lg pull-right"></span>
-        </a>
-      </li>
 
       <li ng-click="projectCtrl.goToWorklows()" style="margin-top:40px;"  ng-show="projectCtrl.showWorkflows()">
         <a>
@@ -64,6 +52,12 @@
         </a>
       </li>
 
+      <li ng-click="projectCtrl.goToDatasets()" style="margin-top:40px;">
+        <a>
+          Data Sets<span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
+        </a>
+      </li>
+      
       <li ng-click="projectCtrl.projectSettingModal()" style="margin-top:40px;">
         <a>
           Settings<span class="sub_icon fa fa-dashboard fa-lg pull-right"></span>
