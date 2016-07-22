@@ -109,7 +109,6 @@ public class JobService {
   private Project project;
   private static final String PROXY_USER_COOKIE_NAME = "proxy-user";
 
-
   JobService setProject(Project project) {
     this.project = project;
     return this;
@@ -318,6 +317,7 @@ public class JobService {
    * This act as a proxy to get the job ui from yarn
    * <p/>
    * @param jobId
+   * @param param
    * @param sc
    * @param req
    * @return
@@ -591,29 +591,11 @@ public class JobService {
         long executiontime = System.currentTimeMillis() - execution.
                 getSubmissionTime().getTime();
         //yarnAppState do not know about this execution
-        if (yarnAppState == null && executiontime > 60000l * 5) {
+        if (execution.getAppId() != null && yarnAppState == null
+                && executiontime > 60000l * 5) {
           exeFacade.updateState(execution, JobState.INITIALIZATION_FAILED);
           exeFacade.updateFinalStatus(execution, JobFinalStatus.FAILED);
           continue;
-        }
-        //yarnAppState say something else
-        if (yarnAppState != null) {
-          if (yarnAppState.getAppsmstate().equals(YarnApplicationState.FAILED.
-                  toString())) {
-            exeFacade.updateState(execution, JobState.FAILED);
-            exeFacade.updateFinalStatus(execution, JobFinalStatus.FAILED);
-            continue;
-          } else if (yarnAppState.getAppsmstate().equals(
-                  YarnApplicationState.KILLED.toString())) {
-            exeFacade.updateState(execution, JobState.KILLED);
-            exeFacade.updateFinalStatus(execution, JobFinalStatus.KILLED);
-            continue;
-          } else if (yarnAppState.getAppsmstate().equals(
-                  YarnApplicationState.FINISHED.toString())) {
-            exeFacade.updateState(execution, JobState.FINISHED);
-            exeFacade.updateFinalStatus(execution, JobFinalStatus.SUCCEEDED);
-            continue;
-          }
         }
 
         String trackingUrl = appAttemptStateFacade.findTrackingUrlByAppId(
@@ -688,14 +670,18 @@ public class JobService {
               input.close();
               arrayObjectBuilder.add("log", message.isEmpty()
                       ? "No information." : message);
-              if (message.isEmpty()) {
+              if (message.isEmpty() && e.getState().isFinalState()
+                      && e.getFinalStatus().equals(JobFinalStatus.SUCCEEDED)) {
                 arrayObjectBuilder.add("retriableOut", "true");
               }
             }
 
           } else {
             arrayObjectBuilder.add("log", "No log available");
-            arrayObjectBuilder.add("retriableOut", "true");
+            if (e.getState().isFinalState() && e.getFinalStatus().equals(
+                    JobFinalStatus.SUCCEEDED)) {
+              arrayObjectBuilder.add("retriableOut", "true");
+            }
           }
           String hdfsErrPath = "hdfs://" + e.getStderrPath();
           if (e.getStderrPath() != null && !e.getStderrPath().isEmpty() && dfso.
@@ -714,13 +700,15 @@ public class JobService {
               input.close();
               arrayObjectBuilder.add("err", message.isEmpty() ? "No error."
                       : message);
-              if (message.isEmpty()) {
+              if (message.isEmpty() && e.getState().isFinalState()) {
                 arrayObjectBuilder.add("retriableErr", "err");
               }
             }
           } else {
             arrayObjectBuilder.add("err", "No log available");
-            arrayObjectBuilder.add("retriableErr", "err");
+            if (e.getState().isFinalState()) {
+              arrayObjectBuilder.add("retriableErr", "err");
+            }
           }
           arrayBuilder.add(arrayObjectBuilder);
         }
@@ -752,20 +740,25 @@ public class JobService {
   public Response retryLogAggregation(@PathParam("appId") String appId,
           @PathParam("type") String type,
           @Context HttpServletRequest req) throws AppException {
+    if (appId == null || appId.isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.
+              getStatusCode(), "Can not get log. No ApplicationId.");
+    }
     Execution execution = exeFacade.findByAppId(appId);
     if (execution == null) {
       throw new AppException(Response.Status.BAD_REQUEST.
               getStatusCode(), "No excution for appId " + appId);
     }
+    if (!execution.getState().isFinalState()) {
+      throw new AppException(Response.Status.BAD_REQUEST.
+              getStatusCode(), "Job still running.");
+    }
     if (!execution.getJob().getProject().equals(this.project)) {
       throw new AppException(Response.Status.BAD_REQUEST.
               getStatusCode(), "No excution for appId " + appId
-              + " in this project.");
+              + ".");
     }
-    if (appId == null || appId.isEmpty()) {
-      throw new AppException(Response.Status.BAD_REQUEST.
-              getStatusCode(), "Can not get log. No ApplicationId.");
-    }
+
     DistributedFileSystemOps dfso = null;
     DistributedFileSystemOps udfso = null;
     Users user = userBean.findByEmail(req.getRemoteUser());
@@ -795,8 +788,8 @@ public class JobService {
                     getStatusCode(),
                     "Destination file is not empty.");
           } else {
-            YarnLogUtil.copyAggregatedYarnLogs(dfs,
-                    udfso, aggregatedLogPath, hdfsLogPath, "out");
+            YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
+                    hdfsLogPath, "out");
           }
         }
       } else if (type.equals("err")) {
@@ -809,8 +802,8 @@ public class JobService {
                     getStatusCode(),
                     "Destination file is not empty.");
           } else {
-            YarnLogUtil.copyAggregatedYarnLogs(dfs,
-                    udfso, aggregatedLogPath, hdfsErrPath, "err");
+            YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
+                    hdfsErrPath, "err");
           }
         }
       }
