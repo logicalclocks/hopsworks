@@ -39,7 +39,6 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
@@ -47,7 +46,6 @@ import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationAttemptStateFacade;
-import se.kth.bbc.jobs.jobhistory.YarnApplicationstate;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.configuration.ScheduleDTO;
@@ -586,13 +584,10 @@ public class JobService {
         if (updatedExecution != null) {
           execution = updatedExecution;
         }
-        YarnApplicationstate yarnAppState = yarnApplicationstateFacade.
-                findByAppId(execution.getAppId());
         long executiontime = System.currentTimeMillis() - execution.
                 getSubmissionTime().getTime();
-        //yarnAppState do not know about this execution
-        if (execution.getAppId() != null && yarnAppState == null
-                && executiontime > 60000l * 5) {
+        //not given appId (not submited yet)
+        if (execution.getAppId() == null && executiontime > 60000l * 5) {
           exeFacade.updateState(execution, JobState.INITIALIZATION_FAILED);
           exeFacade.updateFinalStatus(execution, JobFinalStatus.FAILED);
           continue;
