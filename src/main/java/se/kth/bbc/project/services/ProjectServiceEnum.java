@@ -12,7 +12,6 @@ public enum ProjectServiceEnum {
   WORKFLOWS("Workflows"),
   HISTORY("History"),
   //  BIOBANKING("Biobanking"),
-  //  CHARON("Charon"),
   JOBS("Jobs");
 
   private final String readable;

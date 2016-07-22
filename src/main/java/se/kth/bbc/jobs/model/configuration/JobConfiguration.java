@@ -177,7 +177,6 @@ public abstract class JobConfiguration implements JsonReduceable {
     public static Set<JobType> getSupportedTypes() {
       return EnumSet.of(JobType.ADAM, 
                         JobType.SPARK,
-			//JobType.CUNEIFORM, 
                         JobType.FLINK,
                         JobType.YARN, 
                         JobType.ERASURE_CODING);

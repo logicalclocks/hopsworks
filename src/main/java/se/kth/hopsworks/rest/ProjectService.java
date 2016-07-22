@@ -265,17 +265,6 @@ public class ProjectService {
         //             + json.getErrorMsg());
         //   }
         // }
-        // if (s.compareToIgnoreCase(ProjectServiceEnum.CHARON.toString()) == 0) {
-        //   try {
-        //     projectController.createProjectCharonFolder(project);
-        //   } catch (ProjectInternalFoldersFailedException ex) {
-        //     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-        //             null, ex);
-        //     json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
-        //             + " 'consents' \n "
-        //             + json.getErrorMsg());
-        //   }
-        // }
         projectServices.add(se);
       } catch (IllegalArgumentException iex) {
         logger.log(Level.SEVERE,

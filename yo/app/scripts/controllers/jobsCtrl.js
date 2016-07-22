@@ -61,9 +61,6 @@ angular.module('hopsWorksApp')
             self.copy = function () {
               var jobType;
               switch (self.currentjob.jobType.toUpperCase()) {
-                case "CUNEIFORM":
-                  jobType = 0;
-                  break;
                 case "SPARK":
                   jobType = 1;
                   break;

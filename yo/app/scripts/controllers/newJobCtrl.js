@@ -12,10 +12,10 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'CuneiformService', 'AdamService', 'FlinkService', 'TourService', 'HistoryService',
+          'AdamService', 'FlinkService', 'TourService', 'HistoryService',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,
-                  CuneiformService, AdamService, FlinkService, TourService, HistoryService) {
+                  AdamService, FlinkService, TourService, HistoryService) {
                 var self = this;
                 self.tourService = TourService;
                 self.flinkjobtype = ["Streaming", "Batch"];
@@ -31,7 +31,6 @@ angular.module('hopsWorksApp')
               "SPARK": /.jar\b/,
               "FLINK": /.jar\b/,
               "LIBRARY": /.jar\b/,
-              "CUNEIFORM": /.cf\b/,
               "ADAM": /[^]*/
             };
             this.selectFileErrorMsgs = {
@@ -310,11 +309,6 @@ angular.module('hopsWorksApp')
               self.accordion3.isOpen = true; //Open file selection
               var type;
               switch (self.jobtype) { //Set the panel titles according to job type
-                case 0:
-                  self.accordion3.title = "Workflow file";
-                  self.accordion4.title = "Input variables";
-                  type = "Cuneiform";
-                  break;
                 case 1:
                   self.accordion3.title = "JAR file";
                   self.accordion4.title = "Job details";
@@ -352,8 +346,6 @@ angular.module('hopsWorksApp')
              */
             self.getJobType = function () {
               switch (self.jobtype) {
-                case 0:
-                  return "CUNEIFORM";
                 case 1:
                   return "SPARK";
                 case 2:
@@ -447,15 +439,6 @@ angular.module('hopsWorksApp')
                       'type': null,
                       'visibility': null,
                       'pattern': null
-                  });
-                  break;
-                case "CUNEIFORM":
-                  CuneiformService.inspectStoredWorkflow(self.projectId, path).then(
-                          function (success) {
-                            self.runConfig = success.data;
-                            self.mainFileSelected(filename);
-                          }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                   });
                   break;
                 case "ADAM":
