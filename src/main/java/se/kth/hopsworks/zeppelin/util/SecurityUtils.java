@@ -16,7 +16,7 @@
  */
 package se.kth.hopsworks.zeppelin.util;
 
-import org.apache.shiro.subject.Subject;
+//import org.apache.shiro.subject.Subject;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 
 import java.net.InetAddress;

@@ -7,11 +7,13 @@ import javax.ejb.Stateless;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.jobhistory.JobsHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 
 import java.io.IOException;
+import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
 import se.kth.hopsworks.certificates.UserCertsFacade;
 
 /**
@@ -35,7 +37,12 @@ public class AsynchronousJobExecutor {
   @EJB
   private DistributedFsService dfs;
   @EJB
+  private JobsHistoryFacade jhf;
+  @EJB
+  private ExecutionInputfilesFacade executionInputFileFacade;
+  @EJB
   private UserCertsFacade userCerts;
+
 
   @Asynchronous
   public void startExecution(HopsJob job) {
@@ -65,6 +72,14 @@ public class AsynchronousJobExecutor {
   public DistributedFileSystemOps getFileOperations(String hdfsUser) throws
           IOException {
     return dfs.getDfsOps(hdfsUser);
+  }
+  
+  public JobsHistoryFacade getJobsHistoryFacade(){
+      return jhf;
+  }
+  
+  public ExecutionInputfilesFacade getExecutionInputfilesFacade(){
+      return executionInputFileFacade;
   }
 
   public UserCertsFacade getUserCerts() {

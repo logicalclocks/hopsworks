@@ -12,6 +12,8 @@ import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.spark.SparkJob;
+import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.lims.Utils;
@@ -24,7 +26,7 @@ import se.kth.hopsworks.util.Settings;
  *
  * @author stig
  */
-public class AdamJob extends YarnJob {
+public class AdamJob extends SparkJob {
   
   private static final Logger logger = Logger.getLogger(AdamJob.class.getName());
   
@@ -37,7 +39,8 @@ public class AdamJob extends YarnJob {
           AsynchronousJobExecutor services, Users user, String hadoopDir,
           String sparkDir, String adamUser, String jobUser,
           String nameNodeIpPort, String adamJarPath, String kafkaAddress) {
-    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, kafkaAddress);
+    super(job, services, user, hadoopDir, sparkDir, nameNodeIpPort, adamUser,
+            jobUser,  kafkaAddress);
     if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain a AdamJobConfiguration object. Received: "
@@ -118,51 +121,53 @@ public class AdamJob extends YarnJob {
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled ADAM Job");
     }
-    SparkYarnRunnerBuilder builder = new SparkYarnRunnerBuilder(
+    
+    runnerbuilder = new SparkYarnRunnerBuilder(
             adamJarPath, Settings.ADAM_MAINCLASS);
+    super.setupJob(dfso);
     //Set some ADAM-specific property values   
-    builder.addSystemProperty("spark.serializer",
+    runnerbuilder.addSystemProperty("spark.serializer",
             "org.apache.spark.serializer.KryoSerializer");
-    builder.addSystemProperty("spark.kryo.registrator",
+    runnerbuilder.addSystemProperty("spark.kryo.registrator",
             "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
-    builder.addSystemProperty("spark.kryoserializer.buffer", "4m");
-    builder.addSystemProperty("spark.kryo.referenceTracking", "true");
+    runnerbuilder.addSystemProperty("spark.kryoserializer.buffer", "4m");
+    runnerbuilder.addSystemProperty("spark.kryo.referenceTracking", "true");
     
-    builder.setExecutorCores(jobconfig.getExecutorCores());
-    builder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
-    builder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
-    if(jobconfig.isDynamicExecutors()){
-      builder.setDynamicExecutors(jobconfig.isDynamicExecutors());
-      builder.setNumberOfExecutorsMin(jobconfig.getSelectedMinExecutors());
-      builder.setNumberOfExecutorsMax(jobconfig.getSelectedMaxExecutors());
-      builder.setNumberOfExecutorsInit(jobconfig.getNumberOfExecutorsInit());
-    }
-    //Set Yarn running options
-    builder.setDriverMemoryMB(jobconfig.getAmMemory());
-    builder.setDriverCores(jobconfig.getAmVCores());
-    builder.setDriverQueue(jobconfig.getAmQueue());
-    builder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
-    
-    builder.addAllJobArgs(constructArgs(jobconfig));
-
-    builder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
-    //Set project specific resources
-    builder.addExtraFiles(projectLocalResources);
-    if(jobSystemProperties != null && !jobSystemProperties.isEmpty()){
-      for(Map.Entry<String,String> jobSystemProperty: jobSystemProperties.entrySet()){
-        builder.addSystemProperty(jobSystemProperty.getKey(), jobSystemProperty.getValue());
-      }
-    }
+//    builder.setExecutorCores(jobconfig.getExecutorCores());
+//    builder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
+//    builder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
+//    if(jobconfig.isDynamicExecutors()){
+//      builder.setDynamicExecutors(jobconfig.isDynamicExecutors());
+//      builder.setNumberOfExecutorsMin(jobconfig.getSelectedMinExecutors());
+//      builder.setNumberOfExecutorsMax(jobconfig.getSelectedMaxExecutors());
+//      builder.setNumberOfExecutorsInit(jobconfig.getNumberOfExecutorsInit());
+//    }
+//    //Set Yarn running options
+//    builder.setDriverMemoryMB(jobconfig.getAmMemory());
+//    builder.setDriverCores(jobconfig.getAmVCores());
+//    builder.setDriverQueue(jobconfig.getAmQueue());
+//    builder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
+//    
+     runnerbuilder.addAllJobArgs(constructArgs(jobconfig));
+//
+//    builder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+//    //Set project specific resources
+//    builder.addExtraFiles(projectLocalResources);
+//    if(jobSystemProperties != null && !jobSystemProperties.isEmpty()){
+//      for(Map.Entry<String,String> jobSystemProperty: jobSystemProperties.entrySet()){
+//        builder.addSystemProperty(jobSystemProperty.getKey(), jobSystemProperty.getValue());
+//      }
+//    }
     //Add ADAM jar to local resources
-    builder.addExtraFile(new LocalResourceDTO(adamJarPath.substring(adamJarPath.
+    runnerbuilder.addExtraFile(new LocalResourceDTO(adamJarPath.substring(adamJarPath.
             lastIndexOf("/")+1), adamJarPath,
             LocalResourceVisibility.PUBLIC.toString(),
             LocalResourceType.FILE.toString(), null));
     //Set the job name
-    builder.setJobName(jobconfig.getAppName());
+    runnerbuilder.setJobName(jobconfig.getAppName());
     
     try {
-      runner = builder.getYarnRunner(jobDescription.getProject().getName(),
+      runner = runnerbuilder.getYarnRunner(jobDescription.getProject().getName(),
               adamUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
     } catch (IOException e) {
       logger.log(Level.SEVERE,

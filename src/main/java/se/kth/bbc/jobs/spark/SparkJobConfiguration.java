@@ -54,7 +54,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   protected static final String KEY_EXECCORES = "EXECCORES";
   protected static final String KEY_EXECMEM = "EXECMEM";
   protected static final String KEY_HISTORYSERVER = "HISTORYSERVER";
-
+  
   public SparkJobConfiguration() {
     super();
   }
@@ -323,6 +323,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.jarPath = jsonJarpath;
     this.mainClass = jsonMainclass;
     this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
+
     if (jsonDynexecs.equals("true") || jsonDynexecs.equals("false")) {
       this.dynamicExecutors = Boolean.parseBoolean(jsonDynexecs);
       this.minExecutors = Integer.parseInt(jsonNumexecsMin);
@@ -335,4 +336,5 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   }
 
+  
 }

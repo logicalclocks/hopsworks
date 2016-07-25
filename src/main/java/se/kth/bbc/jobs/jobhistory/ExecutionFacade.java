@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.jobs.model.description.JobDescription;
@@ -24,7 +25,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
 
 
   private static final Logger logger = Logger.getLogger(ExecutionFacade.class.
-      getName());
+          getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -69,9 +70,25 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     q.setParameter("job", job);
     return q.getResultList();
   }
-  
+
+  /**
+   * Get an execution for application id.
+   * <p/>
+   * @param appId
+   * @return
+   */
+  public Execution findByAppId(String appId) {
+    try {
+      return em.createNamedQuery("Execution.findByAppId",
+              Execution.class).setParameter("appId", appId).getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+
   public List<Execution> findbyProjectAndJobId(Project project, int jobId) {
-    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByProjectAndJobId",
+    TypedQuery<Execution> q = em.createNamedQuery(
+            "Execution.findByProjectAndJobId",
             Execution.class);
     q.setParameter("jobid", jobId);
     q.setParameter("project", project);
@@ -122,12 +139,12 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
 
   public Execution updateFinalStatus(Execution exec, JobFinalStatus finalStatus) {
     return update(exec, null, -1, null, null, null, null,
-        null, finalStatus, 0);
+            null, finalStatus, 0);
   }
 
   public Execution updateProgress(Execution exec, float progress) {
     return update(exec, null, -1, null, null, null, null,
-        null, null, progress);
+            null, null, progress);
   }
 
   public Execution updateExecutionTime(Execution exec, long executionTime) {
@@ -169,9 +186,20 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
           Execution exec, JobState state, long executionDuration,
           String stdoutPath, String stderrPath, String appId,
           Collection<JobOutputFile> output, Collection<JobInputFile> input,
-      JobFinalStatus finalStatus, float progress) {
+          JobFinalStatus finalStatus, float progress) {
     //Find the updated execution object
     Execution obj = em.find(Execution.class, exec.getId());
+    int count = 0;
+    while(obj == null && count<10){
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+        logger.info("Trying to get the Execution Object");
+        obj = em.find(Execution.class, exec.getId());
+        count++;
+    }
     if (obj == null) {
       throw new IllegalArgumentException(
               "Unable to find Execution object with id " + exec.getId());
