@@ -20,10 +20,7 @@ package se.kth.bbc.jobs.jobhistory;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-<<<<<<< HEAD
-=======
 import javax.persistence.NoResultException;
->>>>>>> 3f58e52712e6f82234990881ec2227536f0b3459
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.user.AbstractFacade;
