@@ -100,6 +100,8 @@ public class FlinkYarnRunnerBuilder {
         this.jobArgs.addAll(Arrays.asList(jobArgs));
         return this;
     }
+    
+    //@Override
     public void setAppJarPath(String appJarPath){
         this.appJarPath = appJarPath;
     }

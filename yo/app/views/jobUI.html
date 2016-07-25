@@ -30,7 +30,9 @@
       </button>
     </span>
   </div>
-  <iframe id="ui_iframe" ng-src="{{jobUICtrl.ui}}" width="1170" height ="1000" ng-if="jobUICtrl.ui !== ''"></iframe> 
+  <div ng-if="jobUICtrl.ui !== ''">
+    <iframe id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="1170" height ="1000"></iframe> 
+  </div>
   <div ng-if="jobUICtrl.ui === ''">This job has not run yet</div>
 </div>
 

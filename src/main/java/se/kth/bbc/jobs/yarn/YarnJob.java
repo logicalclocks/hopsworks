@@ -69,6 +69,7 @@ public abstract class YarnJob extends HopsJob {
    * @param job
    * @param user
    * @param services
+   * @param jobUser
    * @param hadoopDir
    * @param nameNodeIpPort
    * @param kafkaAddress
@@ -370,6 +371,9 @@ public abstract class YarnJob extends HopsJob {
         return false;
       }
       finalState = JobState.getJobState(appState);
+//      if(finalState == JobState.FINISHED){
+//          updateJobHistoryApp(monitor.getApplicationId().toString());
+//      }
       return true;
     }
   }
@@ -386,7 +390,7 @@ public abstract class YarnJob extends HopsJob {
                           getStdOutPath(),
                           stdOutFinalDestination);
         } else if (runner.areLogPathsAggregated()) {
-          YarnLogUtil.copyAggregatedYarnLogs(services.getFsService(),
+          YarnLogUtil.copyAggregatedYarnLogs(
                   udfso, runner.
                   getStdOutPath(),
                   stdOutFinalDestination, "out");
@@ -405,7 +409,7 @@ public abstract class YarnJob extends HopsJob {
                           getStdErrPath(),
                           stdErrFinalDestination);
         } else if (runner.areLogPathsAggregated()) {
-          YarnLogUtil.copyAggregatedYarnLogs(services.getFsService(),
+          YarnLogUtil.copyAggregatedYarnLogs(
                   udfso, runner.
                   getStdOutPath(),
                   stdErrFinalDestination, "err");
@@ -437,6 +441,13 @@ public abstract class YarnJob extends HopsJob {
     //If not ok: return
     if (!proceed) {
       return;
+    }
+    try {
+        runner.removeAllNecessary();
+    } catch (IOException ex) {
+        logger.log(Level.SEVERE,
+            "Exception while trying to delete job tmp files "
+            + getExecution(), ex);
     }
     updateState(JobState.AGGREGATING_LOGS);
     copyLogs(udfso);

@@ -36,6 +36,7 @@ public class ProjectServices implements Serializable {
   private static final long serialVersionUID = 1L;
   @EmbeddedId
   protected ProjectServicePK projectServicePK;
+
   @JoinColumn(name = "project_id",
           referencedColumnName = "id",
           insertable = false,
