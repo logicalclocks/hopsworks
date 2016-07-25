@@ -223,7 +223,7 @@ public class InterpreterRestApi {
       return new JsonResponse(
               Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e)).
               build();
-    }
+    } 
     int timeout = zeppelinConf.getConf().getInt(
             ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_CONNECT_TIMEOUT);
     long startTime = System.currentTimeMillis();
@@ -296,7 +296,7 @@ public class InterpreterRestApi {
     } catch (InterpreterException e) {
       logger.warn("Could not close interpreter.", e);
       throw new AppException(Status.BAD_REQUEST.getStatusCode(),
-                  "Could not close interpreter. Make sure it is not running.");
+              "Could not close interpreter. Make sure it is not running.");
     }
 
     int timeout = zeppelinConf.getConf().getInt(
@@ -455,9 +455,10 @@ public class InterpreterRestApi {
   }
 
   /**
-   * Restarts zeppelin by cleaning the cache for the 
+   * Restarts zeppelin by cleaning the cache for the
+   *
    * @return
-   * @throws AppException 
+   * @throws AppException
    */
   @GET
   @Path("restart")
@@ -470,7 +471,7 @@ public class InterpreterRestApi {
       if (timeSinceLastRestart < 60000 * 1) {
         throw new AppException(Status.BAD_REQUEST.getStatusCode(),
                 "This service has been restarted recently. "
-              + "Please wait a few minutes before trying again.");
+                + "Please wait a few minutes before trying again.");
       }
     }
     Map<String, InterpreterDTO> interpreterDTOMap = interpreters(this.project);

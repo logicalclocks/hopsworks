@@ -1074,9 +1074,7 @@ public class NotebookServer implements
     String text = (String) fromMessage.get("paragraph");
     p.setText(text);
     p.setTitle((String) fromMessage.get("title"));
-    
-    //TODO force livy
-    
+       
     // This AuthenticationInfo object is used for secure impersonation by the Livy Interpreter to
     // execute the Spark job as the hdfsUserName. It sets a property called "ProxyUser" in Livy
     // Right now, an empty password is ok as a parameter

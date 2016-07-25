@@ -15,8 +15,6 @@
     <java.version>1.7</java.version>
     <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
     <glassfish.hostname>localhost</glassfish.hostname>
     <glassfish.admin>adminuser</glassfish.admin>
