@@ -1,7 +1,15 @@
 package se.kth.hopsworks.rest;
 
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -26,11 +34,13 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.StreamingOutput;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
@@ -242,6 +252,9 @@ public class JobService {
                   + jobId + "/prox/" + trackingUrl;
           return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                   entity(trackingUrl).build();
+        } else{
+          return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                  entity("").build();
         }
       } catch (Exception e) {
         logger.log(Level.SEVERE, "exception while geting job ui " + e.
@@ -325,8 +338,8 @@ public class JobService {
   @Path("/{jobId}/prox/{path: .+}")
   @Produces(MediaType.WILDCARD)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response getProx(@PathParam("jobId") int jobId,
-          @PathParam("path") String param,
+  public Response getProx(@PathParam("jobId") final int jobId,
+          @PathParam("path") final String param,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     JobDescription job = jobFacade.findById(jobId);
@@ -345,7 +358,6 @@ public class JobService {
       if (updatedExecution != null) {
         execution = updatedExecution;
       }
-      String ui = "";
       try {
         String trackingUrl;
         if (param.matches("http([a-z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
@@ -371,7 +383,7 @@ public class JobService {
         InetAddress localAddress = InetAddress.getLocalHost();
         config.setLocalAddress(localAddress);
 
-        HttpMethod method = new GetMethod(uri.getEscapedURI());
+        final HttpMethod method = new GetMethod(uri.getEscapedURI());
         Enumeration<String> names = req.getHeaderNames();
         while (names.hasMoreElements()) {
           String name = names.nextElement();
@@ -400,89 +412,50 @@ public class JobService {
         }
         if (method.getResponseHeader("Content-Type") == null || method.
                 getResponseHeader("Content-Type").getValue().contains("html")) {
-          ui = method.getResponseBodyAsString();
-          if (method.getResponseHeader("Content-Type") == null && !ui.contains(
-                  "<html")) {
-            response.entity(method.getResponseBody());
-          } else {
-            String source = "http://" + method.getURI().getHost() + ":"
-                    + method.getURI().getPort();
-            //remove the link to the full cluster information in the yarn ui
-            ui = ui.replaceAll(
-                    "<div id=\"user\">[\\s\\S]+Logged in as: dr.who[\\s\\S]+<div id=\"logo\">",
-                    "<div id=\"logo\">");
-            ui = ui.replaceAll(
-                    "<div id=\"footer\" class=\"ui-widget\">[\\s\\S]+<tbody>",
-                    "<tbody>");
-            ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td ", "<td ");
-            ui = ui.replaceAll(
-                    "<li><a ui-sref=\"submit\"[\\s\\S]+new Job</a></li>", "");
-            //when geting the logs the file can be very big, we don't want to go 
-            //through all of it.
-            Header header = method.getResponseHeader("Content-Length");
-            if (header != null && Integer.parseInt(header.getValue()) < 100000) {
-              String[] elems = ui.split("(?=[<])");
-              ui = "";
-              for (String elem : elems) {
-                if (elem.equals("")) {
-                  continue;
+          final String source = "http://" + method.getURI().getHost() + ":"
+                  + method.getURI().getPort();
+          if (method.getResponseHeader("Content-Length") == null) {
+            response.entity(new StreamingOutput() {
+              @Override
+              public void write(OutputStream out) throws IOException,
+                      WebApplicationException {
+                Writer writer
+                        = new BufferedWriter(new OutputStreamWriter(out));
+                InputStream stream = method.getResponseBodyAsStream();
+                Reader in = new InputStreamReader(stream, "UTF-8");
+                char[] buffer = new char[4 * 1024];
+                String remaining = "";
+                int n;
+                while ((n=in.read(buffer)) != -1) {
+                  StringBuilder strb = new StringBuilder();
+                  strb.append(buffer,0,n);
+                  String s = remaining + strb.toString();
+                  remaining = s.substring(s.lastIndexOf(">") + 1, s.length());
+                  s = hopify(s.substring(0, s.lastIndexOf(">") + 1), param,
+                          jobId,
+                          source);
+                  writer.write(s);
                 }
-                if (elem.contains("href=") || elem.
-                        contains("src=")) {
-                  String[] subElems = elem.split(" ");
-                  elem = "";
-                  for (String subElem : subElems) {
-                    if (subElem.contains("href=\"//")) {
-                      subElem = subElem.replace("href=\"/",
-                              "href=\"/hopsworks/api/project/"
-                              + project.getId() + "/jobs/" + jobId + "/prox");
-                    } else if (subElem.contains("href=\"/")) {
-                      subElem = subElem.replace("href=\"",
-                              "href=\"/hopsworks/api/project/"
-                              + project.getId() + "/jobs/" + jobId + "/prox/"
-                              + source);
-                    } else if (subElem.contains("href=\"http")) {
-                      subElem = subElem.replace("href=\"",
-                              "href=\"/hopsworks/api/project/"
-                              + project.getId() + "/jobs/" + jobId + "/prox/");
-                    } else if (subElem.contains("href=\"")) {
-                      subElem = subElem.replace("href=\"",
-                              "href=\"/hopsworks/api/project/"
-                              + project.getId() + "/jobs/" + jobId + "/prox/"
-                              + param);
-                    } else if (subElem.contains("src=\"//")) {
-                      subElem = subElem.replace("src=\"/",
-                              "src=\"/hopsworks/api/project/"
-                              + project.getId() + "/jobs/" + jobId + "/prox");
-                    } else if (subElem.contains("src=\"/")) {
-                      subElem = subElem.replace("src=\"",
-                              "src=\"/hopsworks/api/project/"
-                              + project.getId() + "/jobs/" + jobId + "/prox/"
-                              + source);
-                    } else if (subElem.contains("src=\"http")) {
-                      subElem = subElem.replace("src=\"",
-                              "src=\"/hopsworks/api/project/"
-                              + project.getId() + "/jobs/" + jobId + "/prox/");
-                    } else if (subElem.contains("src=\"")) {
-                      subElem = subElem.replace("src=\"",
-                              "src=\"/hopsworks/api/project/"
-                              + project.getId() + "/jobs/" + jobId + "/prox/"
-                              + param);
-                    }
-                    subElem = subElem.replace("?", "@hwqm");
-                    elem = elem + subElem + " ";
-                  }
-
-                }
-
-                ui = ui + elem;
+                writer.flush();
               }
-            }
-            response.entity(ui);
-            response.header("Content-Length", ui.length());
+            });
+          } else {
+            String s = hopify(method.getResponseBodyAsString(), param, jobId,
+                    source);
+            response.entity(s);
+            response.header("Content-Length", s.length());
           }
+
         } else {
-          response.entity(method.getResponseBody());
+          response.entity(new StreamingOutput() {
+            @Override
+            public void write(OutputStream out) throws IOException,
+                    WebApplicationException {
+              InputStream stream = method.getResponseBodyAsStream();
+              org.apache.hadoop.io.IOUtils.copyBytes(stream, out, 4096, true);
+              out.flush();
+            }
+          });
         }
         return response.build();
       } catch (Exception e) {
@@ -493,7 +466,38 @@ public class JobService {
       }
     }
   }
+  
+  private String hopify(String ui, String param, int jobId, String source) {
+    
+    //remove the link to the full cluster information in the yarn ui
+    ui = ui.replaceAll(
+            "<div id=\"user\">[\\s\\S]+Logged in as: dr.who[\\s\\S]+<div id=\"logo\">",
+            "<div id=\"logo\">");
+    ui = ui.replaceAll(
+            "<div id=\"footer\" class=\"ui-widget\">[\\s\\S]+<tbody>",
+            "<tbody>");
+    ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td ", "<td ");
+    ui = ui.replaceAll(
+            "<li><a ui-sref=\"submit\"[\\s\\S]+new Job</a></li>", "");
 
+    ui = ui.replaceAll("(?<=(href|src)=.[^>]{0,200})\\?", "@hwqm");
+
+    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-z])",
+            "/hopsworks/api/project/"
+            + project.getId() + "/jobs/" + jobId + "/prox/"
+            + source + "/");
+    ui = ui.replaceAll("(?<=(href|src)=\")//", "/hopsworks/api/project/"
+            + project.getId() + "/jobs/" + jobId + "/prox/");
+    ui = ui.replaceAll("(?<=(href|src)=\")(?=http)",
+            "/hopsworks/api/project/"
+            + project.getId() + "/jobs/" + jobId + "/prox/");
+    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-z])",
+            "/hopsworks/api/project/"
+            + project.getId() + "/jobs/" + jobId + "/prox/" + param);
+    return ui;
+
+  }
+  
   private boolean hasAppAccessRight(String trackingUrl, JobDescription job) {
     String appId = "";
     if (trackingUrl.contains("application_")) {
