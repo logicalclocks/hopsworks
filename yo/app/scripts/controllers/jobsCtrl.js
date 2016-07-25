@@ -49,7 +49,7 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error fetching job configuration.', ttl: 15000});
               });
             };
-           
+
             self.buttonClickedToggle = function (id, display) {
               self.buttonArray[id] = display;
             };
@@ -197,7 +197,7 @@ angular.module('hopsWorksApp')
               ProjectService.uberPrice({id: self.projectId}).$promise.then(
                       function (success) {
                         var price = success.price;
-                        price = Math.ceil(parseFloat(price).toFixed(4) * 100.0 / 1.67*100)/100;
+                        price = Math.ceil(parseFloat(price).toFixed(4) * 100.0 / 1.67 * 100) / 100;
                         ModalService.uberPrice('sm', 'Confirm', 'Do you want to run this job at this price?', price).then(
                                 function (success) {
                                   JobService.runJob(self.projectId, jobId).then(
@@ -215,8 +215,7 @@ angular.module('hopsWorksApp')
 
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Could not get the current YARN price.', ttl: 10000});
-              }
-              )
+              });
             };
 
             self.stopJob = function (jobId) {
@@ -249,13 +248,26 @@ angular.module('hopsWorksApp')
             self.showUI = function (job) {
               ModalService.jobUI('xlg', job, self.projectId);
             };
-            
+
             self.showLogs = function (jobId) {
               JobService.showLog(self.projectId, jobId).then(
                       function (success) {
                         self.logset = success.data.logset;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to show logs', ttl: 15000});
+              });
+            };
+
+            self.retryLogs = function (appId, type) {
+              if (appId === undefined) {
+                growl.error("Can not retry log. The job has not yet been assigned an Id", {title: 'Error', ttl: 5000});
+              }
+              JobService.retryLog(self.projectId, appId, type).then(
+                      function (success) {
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                        self.showLogs(self.currentjob.id);
+                      }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Failed to get logs', ttl: 5000});
               });
             };
 
@@ -290,7 +302,7 @@ angular.module('hopsWorksApp')
               self.hasSelectJob = true;
               $scope.selectedIndex = index;
               self.currentToggledIndex = index;
-
+              self.currentjob = job;
             };
             self.untoggle = function (job, index) {
               //reset all jobs showing flag

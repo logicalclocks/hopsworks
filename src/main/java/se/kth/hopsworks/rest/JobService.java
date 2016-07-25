@@ -40,9 +40,10 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.io.IOUtils;
 import se.kth.bbc.activity.ActivityFacade;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
+import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
+import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationAttemptStateFacade;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
@@ -50,13 +51,16 @@ import se.kth.bbc.jobs.model.configuration.JobConfiguration;
 import se.kth.bbc.jobs.model.configuration.ScheduleDTO;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
+import se.kth.bbc.jobs.yarn.YarnLogUtil;
 import se.kth.bbc.project.Project;
+import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -98,9 +102,10 @@ public class JobService {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private HdfsUsersController hdfsUsersBean;
+  @EJB
+  private UserManager userBean;
   private Project project;
   private static final String PROXY_USER_COOKIE_NAME = "proxy-user";
-
 
   JobService setProject(Project project) {
     this.project = project;
@@ -247,7 +252,7 @@ public class JobService {
     }
   }
 
-    /**
+  /**
    * Get the Yarn UI url for the specified job
    * <p/>
    * @param jobId
@@ -297,7 +302,7 @@ public class JobService {
               getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
   }
-  
+
   private static final HashSet<String> passThroughHeaders = new HashSet<String>(
           Arrays
           .asList("User-Agent", "user-agent", "Accept", "accept",
@@ -310,6 +315,7 @@ public class JobService {
    * This act as a proxy to get the job ui from yarn
    * <p/>
    * @param jobId
+   * @param param
    * @param sc
    * @param req
    * @return
@@ -348,14 +354,14 @@ public class JobService {
           trackingUrl = "http://" + param;
         }
         trackingUrl = trackingUrl.replace("@hwqm", "?");
-        if(!hasAppAccessRight(trackingUrl, job)){
+        if (!hasAppAccessRight(trackingUrl, job)) {
           logger.log(Level.SEVERE,
-              "A user is trying to access an app outside their project!");
+                  "A user is trying to access an app outside their project!");
           return Response.status(Response.Status.FORBIDDEN).build();
         }
         org.apache.commons.httpclient.URI uri
                 = new org.apache.commons.httpclient.URI(trackingUrl, false);
-        
+
         HttpClientParams params = new HttpClientParams();
         params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
         params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
@@ -487,26 +493,26 @@ public class JobService {
       }
     }
   }
-  
-  private boolean hasAppAccessRight(String trackingUrl, JobDescription job){
-    String appId ="";
-    if(trackingUrl.contains("application_")){
-      for(String elem: trackingUrl.split("/")){
-        if(elem.contains("application_")){
+
+  private boolean hasAppAccessRight(String trackingUrl, JobDescription job) {
+    String appId = "";
+    if (trackingUrl.contains("application_")) {
+      for (String elem : trackingUrl.split("/")) {
+        if (elem.contains("application_")) {
           appId = elem;
           break;
         }
       }
-    }else if (trackingUrl.contains("container_")){
-      appId ="application_";
-      for(String elem: trackingUrl.split("/")){
-        if(elem.contains("container_")){
+    } else if (trackingUrl.contains("container_")) {
+      appId = "application_";
+      for (String elem : trackingUrl.split("/")) {
+        if (elem.contains("container_")) {
           String[] containerIdElem = elem.split("_");
           appId = appId + containerIdElem[1] + "_" + containerIdElem[2];
           break;
         }
       }
-      
+
     }
     if (appId != "") {
       String appUser = yarnApplicationstateFacade.findByAppId(appId).
@@ -566,7 +572,7 @@ public class JobService {
           );
         }
       } catch (ArrayIndexOutOfBoundsException e) {
-        logger.log(Level.WARNING, "No execution was found: " + e
+        logger.log(Level.WARNING, "No execution was found: {0}", e
                 .getMessage());
       }
     }
@@ -578,6 +584,15 @@ public class JobService {
         if (updatedExecution != null) {
           execution = updatedExecution;
         }
+        long executiontime = System.currentTimeMillis() - execution.
+                getSubmissionTime().getTime();
+        //not given appId (not submited yet)
+        if (execution.getAppId() == null && executiontime > 60000l * 5) {
+          exeFacade.updateState(execution, JobState.INITIALIZATION_FAILED);
+          exeFacade.updateFinalStatus(execution, JobFinalStatus.FAILED);
+          continue;
+        }
+
         String trackingUrl = appAttemptStateFacade.findTrackingUrlByAppId(
                 execution.getAppId());
         builder.add(desc.getId().toString(),
@@ -591,7 +606,7 @@ public class JobService {
                 .add("url", trackingUrl)
         );
       } catch (ArrayIndexOutOfBoundsException e) {
-        logger.log(Level.WARNING, "No execution was found: " + e
+        logger.log(Level.WARNING, "No execution was found: {0}", e
                 .getMessage());
       }
     }
@@ -621,7 +636,7 @@ public class JobService {
     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
     DistributedFileSystemOps dfso = null;
     try {
-      dfso=dfs.getDfsOps();
+      dfso = dfs.getDfsOps();
       List<Execution> executionHistory = exeFacade.
               findbyProjectAndJobId(project, jobId);
       JsonObjectBuilder arrayObjectBuilder;
@@ -630,6 +645,8 @@ public class JobService {
         String stdPath;
         for (Execution e : executionHistory) {
           arrayObjectBuilder = Json.createObjectBuilder();
+          arrayObjectBuilder.add("appId", e.getAppId() == null ? "" : e.
+                  getAppId());
           arrayObjectBuilder.add("time", e.getSubmissionTime().toString());
           String hdfsLogPath = "hdfs://" + e.getStdoutPath();
           if (e.getStdoutPath() != null && !e.getStdoutPath().isEmpty() && dfso.
@@ -648,10 +665,18 @@ public class JobService {
               input.close();
               arrayObjectBuilder.add("log", message.isEmpty()
                       ? "No information." : message);
+              if (message.isEmpty() && e.getState().isFinalState()
+                      && e.getFinalStatus().equals(JobFinalStatus.SUCCEEDED)) {
+                arrayObjectBuilder.add("retriableOut", "true");
+              }
             }
 
           } else {
             arrayObjectBuilder.add("log", "No log available");
+            if (e.getState().isFinalState() && e.getFinalStatus().equals(
+                    JobFinalStatus.SUCCEEDED)) {
+              arrayObjectBuilder.add("retriableOut", "true");
+            }
           }
           String hdfsErrPath = "hdfs://" + e.getStderrPath();
           if (e.getStderrPath() != null && !e.getStderrPath().isEmpty() && dfso.
@@ -670,9 +695,15 @@ public class JobService {
               input.close();
               arrayObjectBuilder.add("err", message.isEmpty() ? "No error."
                       : message);
+              if (message.isEmpty() && e.getState().isFinalState()) {
+                arrayObjectBuilder.add("retriableErr", "err");
+              }
             }
           } else {
-            arrayObjectBuilder.add("err", "No error log available");
+            arrayObjectBuilder.add("err", "No log available");
+            if (e.getState().isFinalState()) {
+              arrayObjectBuilder.add("retriableErr", "err");
+            }
           }
           arrayBuilder.add(arrayObjectBuilder);
         }
@@ -687,14 +718,104 @@ public class JobService {
     } catch (IOException ex) {
       logger.log(Level.WARNING, "Error when reading hdfs logs: {0}", ex.
               getMessage());
-    }finally{
-      if(dfso!=null){
+    } finally {
+      if (dfso != null) {
         dfso.close();
       }
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(builder.build()).build();
+  }
+
+  @GET
+  @Path("/retryLogAggregation/{appId}/{type}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response retryLogAggregation(@PathParam("appId") String appId,
+          @PathParam("type") String type,
+          @Context HttpServletRequest req) throws AppException {
+    if (appId == null || appId.isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.
+              getStatusCode(), "Can not get log. No ApplicationId.");
+    }
+    Execution execution = exeFacade.findByAppId(appId);
+    if (execution == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.
+              getStatusCode(), "No excution for appId " + appId);
+    }
+    if (!execution.getState().isFinalState()) {
+      throw new AppException(Response.Status.BAD_REQUEST.
+              getStatusCode(), "Job still running.");
+    }
+    if (!execution.getJob().getProject().equals(this.project)) {
+      throw new AppException(Response.Status.BAD_REQUEST.
+              getStatusCode(), "No excution for appId " + appId
+              + ".");
+    }
+
+    DistributedFileSystemOps dfso = null;
+    DistributedFileSystemOps udfso = null;
+    Users user = userBean.findByEmail(req.getRemoteUser());
+    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+    String aggregatedLogPath = jobController.getAggregatedLogPath(hdfsUser,
+            appId);
+    if (aggregatedLogPath == null) {
+      throw new AppException(Response.Status.NOT_FOUND.
+              getStatusCode(),
+              "Aggregation is not enabled.");
+    }
+    try {
+      dfso = dfs.getDfsOps();
+      udfso = dfs.getDfsOps(hdfsUser);
+      if (!dfso.exists(aggregatedLogPath)) {
+        throw new AppException(Response.Status.NOT_FOUND.
+                getStatusCode(),
+                "Logs not available. This could be caused by the rentention policy");
+      }
+      if (type.equals("out")) {
+        String hdfsLogPath = "hdfs://" + execution.getStdoutPath();
+        if (execution.getStdoutPath() != null && !execution.getStdoutPath().
+                isEmpty()) {
+          if (dfso.exists(hdfsLogPath) && dfso.getFileStatus(
+                  new org.apache.hadoop.fs.Path(hdfsLogPath)).getLen() > 0) {
+            throw new AppException(Response.Status.BAD_REQUEST.
+                    getStatusCode(),
+                    "Destination file is not empty.");
+          } else {
+            YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
+                    hdfsLogPath, "out");
+          }
+        }
+      } else if (type.equals("err")) {
+        String hdfsErrPath = "hdfs://" + execution.getStderrPath();
+        if (execution.getStdoutPath() != null && !execution.getStdoutPath().
+                isEmpty()) {
+          if (dfso.exists(hdfsErrPath) && dfso.getFileStatus(
+                  new org.apache.hadoop.fs.Path(hdfsErrPath)).getLen() > 0) {
+            throw new AppException(Response.Status.BAD_REQUEST.
+                    getStatusCode(),
+                    "Destination file is not empty.");
+          } else {
+            YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
+                    hdfsErrPath, "err");
+          }
+        }
+      }
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
+      if (udfso != null) {
+        udfso.close();
+      }
+    }
+    JsonResponse json = new JsonResponse();
+    json.setSuccessMessage("Log retrieved successfuly.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
   }
 
   /**
