@@ -25,7 +25,6 @@ import javax.ws.rs.core.Response;
 import org.apache.hadoop.security.AccessControlException;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
@@ -56,8 +55,6 @@ public class UploadService {
 
   @EJB
   private NoCacheResponse noCacheResponse;
-  @EJB
-  private FileOperations fileOps;
   @EJB
   private InodeFacade inodes;
   @EJB
@@ -138,15 +135,17 @@ public class UploadService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Not a valid path!");
     }
-
+    DistributedFileSystemOps dfso = dfs.getDfsOps();
     //check if the parent directory exists. If it doesn't create it first
-    if (!fileOps.isDir(File.separator + pathArray[0])) {
+    if (!dfso.isDir(File.separator + pathArray[0])) {
       try {
-        fileOps.mkDir(File.separator + pathArray[0]);
+        dfso.mkdir(File.separator + pathArray[0]);
       } catch (IOException e) {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
                 "Upload directory could not be created in the file system");
+      } finally {
+        dfso.close();
       }
     }
 

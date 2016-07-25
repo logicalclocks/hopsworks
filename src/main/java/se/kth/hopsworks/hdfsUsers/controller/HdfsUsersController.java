@@ -61,6 +61,7 @@ public class HdfsUsersController {
      * exist, and gets added to the group <code>projectName</code>.
      * <p>
      * @param project
+   * @param dfso
      * @throws java.io.IOException
      */
   public void addProjectFolderOwner(Project project,

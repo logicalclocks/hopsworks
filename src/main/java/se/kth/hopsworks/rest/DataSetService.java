@@ -35,7 +35,6 @@ import org.apache.hadoop.security.AccessControlException;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.ErasureCodeJob;
 import se.kth.bbc.fileoperations.ErasureCodeJobConfiguration;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.JobType;
@@ -87,8 +86,6 @@ public class DataSetService {
   private UserManager userBean;
   @EJB
   private NoCacheResponse noCacheResponse;
-  @EJB
-  private FileOperations fileOps;
   @EJB
   private InodeFacade inodes;
   @Inject
@@ -193,7 +190,7 @@ public class DataSetService {
       logger.log(Level.WARNING, ex.getMessage(), ex);
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               ex.getMessage());
-    } 
+    }
     List<InodeView> kids = new ArrayList<>();
     InodeView inodeView;
     Users user;
@@ -293,7 +290,7 @@ public class DataSetService {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "Error while creating directory: " + e.
                 getLocalizedMessage());
-      } finally{
+      } finally {
         udfso.close();
       }
     }
@@ -377,10 +374,10 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException {
 
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
-    DistributedFileSystemOps dfso=null;
-    DistributedFileSystemOps udfso=null;
+    DistributedFileSystemOps dfso = null;
+    DistributedFileSystemOps udfso = null;
     try {
-      dfso= dfs.getDfsOps();
+      dfso = dfs.getDfsOps();
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       if (username != null) {
         udfso = dfs.getDfsOps(username);
@@ -399,10 +396,10 @@ public class DataSetService {
               getStatusCode(), "Failed to create dataset: " + e.
               getLocalizedMessage());
     } finally {
-      if(dfso!=null){
+      if (dfso != null) {
         dfso.close();
       }
-      if(udfso!=null){
+      if (udfso != null) {
         udfso.close();
       }
     }
@@ -447,10 +444,10 @@ public class DataSetService {
     DistributedFileSystemOps dfso = null;
     DistributedFileSystemOps udfso = null;
     try {
-      dfso= dfs.getDfsOps();
+      dfso = dfs.getDfsOps();
       String username = hdfsUsersBean.getHdfsUserName(project, user);
-      if(username!=null){
-        udfso= dfs.getDfsOps(username);
+      if (username != null) {
+        udfso = dfs.getDfsOps(username);
       }
       datasetController.createSubDirectory(user, project, fullPathArray[2],
               dsRelativePath.toString(), dataSetName.getTemplate(), dataSetName.
@@ -512,7 +509,7 @@ public class DataSetService {
                 entity(json).build();
       }
     }
-    DistributedFileSystemOps udfso=null;
+    DistributedFileSystemOps udfso = null;
     try {
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
@@ -576,10 +573,12 @@ public class DataSetService {
     }
 
     path = getFullPath(path);
-    DistributedFileSystemOps udfso=null;
+    DistributedFileSystemOps udfso = null;
+    DistributedFileSystemOps dfso = null;
     try {
+      dfso = dfs.getDfsOps();
       udfso = dfs.getDfsOps(username);
-      boolean exists = this.fileOps.exists(path);
+      boolean exists = dfso.exists(path);
 
       Inode sourceInode = inodes.findById(inodeId);
 
@@ -609,8 +608,13 @@ public class DataSetService {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "The parent folders for the destination do not exist. Create them first.");
-    }finally{
-      udfso.close();
+    } finally {
+      if (udfso != null) {
+        udfso.close();
+      }
+      if (dfso != null) {
+        dfso.close();
+      }
     }
 
   }
@@ -629,12 +633,14 @@ public class DataSetService {
     }
     path = getFullPath(path);
     DistributedFileSystemOps udfso = null;
+    DistributedFileSystemOps dfso = null;
     try {
+      dfso = dfs.getDfsOps();
       udfso = dfs.getDfsOps(username);
-      boolean exists = this.fileOps.exists(path);
+      boolean exists = dfso.exists(path);
 
       //check if the path is a file only if it exists
-      if (!exists || this.fileOps.isDir(path)) {
+      if (!exists || dfso.isDir(path)) {
         throw new IOException("The file does not exist");
       }
       //tests if the user have permission to access this path
@@ -646,8 +652,13 @@ public class DataSetService {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "File does not exist: " + path);
-    }finally{
-      udfso.close();
+    } finally {
+      if (udfso != null) {
+        udfso.close();
+      }
+      if (dfso != null) {
+        dfso.close();
+      }
     }
     Response.ResponseBuilder response = Response.ok();
     return response.build();
@@ -664,10 +675,11 @@ public class DataSetService {
       path = "";
     }
     path = getFullPath(path);
-
+    DistributedFileSystemOps dfso = null;
     try {
-      boolean exists = this.fileOps.exists(path);
-      boolean isDir = this.fileOps.isDir(path);
+      dfso = dfs.getDfsOps();
+      boolean exists = dfso.exists(path);
+      boolean isDir = dfso.isDir(path);
 
       String message = "";
       JsonResponse response = new JsonResponse();
@@ -689,6 +701,10 @@ public class DataSetService {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "File does not exist: " + path);
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
     }
     throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             "The requested path does not resolve to a valid dir");
@@ -705,10 +721,10 @@ public class DataSetService {
       path = "";
     }
     path = getFullPath(path);
-
+    DistributedFileSystemOps dfso = null;
     try {
-
-      String blocks = this.fileOps.getFileBlocks(path);
+      dfso = dfs.getDfsOps();
+      String blocks = dfso.getFileBlocks(path);
 
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(blocks).build();
@@ -717,6 +733,10 @@ public class DataSetService {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "File does not exist: " + path);
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
     }
   }
 

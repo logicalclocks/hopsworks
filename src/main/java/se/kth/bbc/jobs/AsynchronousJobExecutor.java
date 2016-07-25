@@ -4,7 +4,6 @@ import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobsHistoryFacade;
@@ -33,8 +32,6 @@ public class AsynchronousJobExecutor {
   @EJB
   private JobOutputFileFacade jobOutputFileFacade;
   @EJB
-  private FileOperations fileOperations;
-  @EJB
   private DistributedFsService dfs;
   @EJB
   private JobsHistoryFacade jhf;
@@ -59,10 +56,6 @@ public class AsynchronousJobExecutor {
 
   public JobOutputFileFacade getJobOutputFileFacade() {
     return jobOutputFileFacade;
-  }
-
-  public FileOperations getFileOperations() {
-    return fileOperations;
   }
   
   public DistributedFsService getFsService() {

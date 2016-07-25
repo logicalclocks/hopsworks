@@ -12,17 +12,15 @@ import se.kth.hopsworks.user.model.Users;
 
 /**
  *
- * @author vangelis
  */
 public class ErasureCodeJob extends HopsJob {
-
   private static final Logger logger = Logger.getLogger(ErasureCodeJob.class.
           getName());
-  
   private ErasureCodeJobConfiguration jobConfig;
 
-  public ErasureCodeJob(JobDescription job, AsynchronousJobExecutor services, Users user, 
-      String hadoopDir, String nameNodeIpPort) {
+  public ErasureCodeJob(JobDescription job, AsynchronousJobExecutor services,
+          Users user,
+          String hadoopDir, String nameNodeIpPort) {
 
     super(job, services, user, hadoopDir, nameNodeIpPort);
 
@@ -46,23 +44,25 @@ public class ErasureCodeJob extends HopsJob {
 
   @Override
   protected void runJob(DistributedFileSystemOps udfso) {
-
     boolean jobSucceeded = false;
-
+    DistributedFileSystemOps dfso = this.services.getFsService().getDfsOps();
     try {
       //do compress the file
-      jobSucceeded = this.services.getFileOperations().compress(this.jobConfig.
+      jobSucceeded = dfso.compress(this.jobConfig.
               getFilePath());
     } catch (IOException | NotFoundException e) {
       jobSucceeded = false;
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
     }
-    
-    if(jobSucceeded){
+
+    if (jobSucceeded) {
       //TODO: push a message to the messaging service
       logger.log(Level.INFO, "File compression was successful");
       return;
     }
-    
     //push message to the messaging service
     logger.log(Level.INFO, "File compression was not successful");
   }
