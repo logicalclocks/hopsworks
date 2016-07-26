@@ -7,7 +7,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.fileoperations.ErasureCodeJobConfiguration;
 import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
-import se.kth.bbc.jobs.cuneiform.model.CuneiformJobConfiguration;
 import se.kth.bbc.jobs.flink.FlinkJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.JsonReduceable;
@@ -123,9 +122,6 @@ public abstract class JobConfiguration implements JsonReduceable {
         case ADAM:
           conf = new AdamJobConfiguration();
           break;
-        // case CUNEIFORM:
-        //   conf = new CuneiformJobConfiguration();
-        //   break;
         case SPARK:
           conf = new SparkJobConfiguration();
           break;
@@ -159,9 +155,6 @@ public abstract class JobConfiguration implements JsonReduceable {
         case ADAM:
           conf = new AdamJobConfiguration();
           break;
-        // case CUNEIFORM:
-        //   conf = new CuneiformJobConfiguration();
-        //   break;
         case SPARK:
           conf = new SparkJobConfiguration();
           break;

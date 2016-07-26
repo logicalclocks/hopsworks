@@ -10,6 +10,7 @@ import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.lims.Utils;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.Settings;
 
@@ -59,7 +60,7 @@ public class FlinkJob extends YarnJob {
     }
 
     @Override
-    protected boolean setupJob() {
+    protected boolean setupJob(DistributedFileSystemOps dfso) {
         //Then: actually get to running.
         if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
             jobconfig.setAppName("Untitled Flink Job");

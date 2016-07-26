@@ -25,6 +25,7 @@ import io.hops.bbc.Consents;
 import java.util.logging.Logger;
 import org.apache.hadoop.fs.FSDataInputStream;
 import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.util.Settings;
 
@@ -132,7 +133,8 @@ public class ProjectPrivacyManager {
     return false;
   }
 
-  public void downloadPDF(Consents consent) throws IOException {
+  public void downloadPDF(Consents consent, DistributedFileSystemOps dfso)
+          throws IOException {
 
     // Prepare.
     FacesContext facesContext = FacesContext.getCurrentInstance();
@@ -148,9 +150,9 @@ public class ProjectPrivacyManager {
     
     
   
-    FSDataInputStream stream;
+    FSDataInputStream stream=null;
     try { 
-        stream = dfs.getDfsOps().open(new Path(consentsPath));
+        stream = dfso.open(new Path(consentsPath));
       //response.header("Content-disposition", "attachment;");
       
       // Init servlet response.
@@ -169,8 +171,10 @@ public class ProjectPrivacyManager {
       }
       output.flush();
     } finally {
-
       close(output);
+      if(stream!=null){
+        stream.close();
+      }
     }
 
        

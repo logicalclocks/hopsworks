@@ -209,7 +209,8 @@
                       </div>
                     </td>
                     <td>
-                      {{jobsCtrl.runningInfo['' + job.id].duration * 0.000016667| number:2}}
+<!--                      {{jobsCtrl.runningInfo['' + job.id].duration * 0.000016667| number:2}}-->
+                          {{convertMS(jobsCtrl.runningInfo['' + job.id].duration)}}
                     </td>
                     <td>
                       <span class="field-info" tooltip="Stop"
@@ -316,6 +317,9 @@
                     close-others="true"infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
                     <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                       <div style="overflow-y: auto">
+                        <button ng-if="item.retriableOut !== undefined && item.appId !== undefined" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'out')" >
+                          Retry log
+                        </button><br>
                         <textarea ng-show="item.logPath === undefined" class="form-control" rows="15" placeholer="No log information available" readonly>
                             {{item.log}}
                         </textarea>
@@ -332,6 +336,9 @@
                     close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
                     <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                       <div style="overflow-y: auto">
+                        <button  ng-if="item.retriableErr !== undefined && item.appId !== undefined" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'err')" >
+                          Retry log
+                        </button><br>
                         <textarea ng-show="item.errPath === undefined" class="form-control" rows="15" placeholer="No error information available" readonly>
                             {{item.err}}                                     
                         </textarea>

@@ -106,7 +106,8 @@ public class DistributedFsService {
     }
     UserGroupInformation ugi;
     try {
-      ugi = ugiService.getProxyUser(username);
+      ugi = UserGroupInformation.createProxyUser(username, UserGroupInformation.
+              getLoginUser());
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       return null;

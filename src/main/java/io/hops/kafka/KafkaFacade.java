@@ -862,7 +862,6 @@ public class KafkaFacade {
     public class ZookeeperWatcher implements Watcher {
 
         public void process(WatchedEvent we) {
-            LOGGER.log(Level.INFO, "");
         }
     }
 }

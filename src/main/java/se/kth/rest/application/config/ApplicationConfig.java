@@ -16,7 +16,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.AuthExceptionMapper.class);
     register(se.kth.hopsworks.rest.AgentService.class);
     register(se.kth.hopsworks.rest.AuthService.class);
-    register(se.kth.hopsworks.rest.CuneiformService.class);
     register(se.kth.hopsworks.rest.DataSetService.class);
     register(se.kth.hopsworks.rest.ExecutionService.class);
     register(se.kth.hopsworks.rest.JobService.class);
@@ -40,6 +39,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.zeppelin.rest.ConfigurationsRestApi.class);
     register(se.kth.hopsworks.zeppelin.rest.SecurityRestApi.class);
     register(se.kth.hopsworks.rest.MetadataService.class);
+    register(se.kth.hopsworks.drelephant.rest.HistoryService.class);
     register(se.kth.hopsworks.rest.MessageService.class);
     register(se.kth.hopsworks.rest.ElasticService.class);
     register(se.kth.hopsworks.rest.VariablesService.class);

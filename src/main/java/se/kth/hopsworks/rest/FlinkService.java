@@ -33,6 +33,8 @@ import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.FlinkController;
 import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
@@ -65,7 +67,9 @@ public class FlinkService {
     private HdfsUsersController hdfsUsersBean;
     @EJB
     private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
-
+    @EJB
+    private DistributedFsService dfs;
+    
     private Project project;
 
     FlinkService setProject(Project project) {
@@ -118,9 +122,12 @@ public class FlinkService {
         String email = sc.getUserPrincipal().getName();
         Users user = userFacade.findByEmail(email);
         String username = hdfsUsersBean.getHdfsUserName(project, user);
+        DistributedFileSystemOps udfso = null;
         try {
-            FlinkJobConfiguration config = flinkController.inspectJar(path, username);
-            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+          udfso = dfs.getDfsOps(username);
+          FlinkJobConfiguration config = flinkController.inspectJar(path,
+                  username, udfso);
+          return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                     entity(config).build();
         } catch (AccessControlException ex) {
             throw new AccessControlException(
@@ -135,6 +142,8 @@ public class FlinkService {
             throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                     getStatusCode(), "Error reading jar file: " + e.
                     getLocalizedMessage());
+        }finally{
+          udfso.close();
         }
     }
 
