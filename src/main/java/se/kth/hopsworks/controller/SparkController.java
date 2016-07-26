@@ -153,8 +153,9 @@ public class SparkController {
    */
   public boolean isSparkJarAvailable() {
     boolean isInHdfs;
-    DistributedFileSystemOps dfso = fops.getDfsOps();
+    DistributedFileSystemOps dfso = null;
     try {
+      dfso = fops.getDfsOps();
       try {
         String sparkInHdfsPath = settings.getHdfsSparkJarPath();
         // don't need the NN ip:port here - just going to DB

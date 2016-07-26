@@ -135,16 +135,19 @@ public class UploadService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Not a valid path!");
     }
-    DistributedFileSystemOps dfso = dfs.getDfsOps();
+    DistributedFileSystemOps dfso = null;
     //check if the parent directory exists. If it doesn't create it first
-    if (!dfso.isDir(File.separator + pathArray[0])) {
-      try {
+    try {
+      dfso = dfs.getDfsOps();
+      if (!dfso.isDir(File.separator + pathArray[0])) {
         dfso.mkdir(File.separator + pathArray[0]);
-      } catch (IOException e) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(),
-                "Upload directory could not be created in the file system");
-      } finally {
+      }
+    } catch (IOException e) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Upload directory could not be created in the file system");
+    } finally {
+      if (dfso != null) {
         dfso.close();
       }
     }
@@ -193,7 +196,7 @@ public class UploadService {
         } catch (AccessControlException ex) {
           throw new AccessControlException(
                   "Permission denied: You can not upload to this folder. ");
-        }finally{
+        } finally {
           udfso.close();
         }
       }
@@ -274,7 +277,7 @@ public class UploadService {
     }
 
     if (finished) {
-      DistributedFileSystemOps dfsOps=null;
+      DistributedFileSystemOps dfsOps = null;
       try {
         String fileContent = null;
 
@@ -315,7 +318,7 @@ public class UploadService {
                 + fileName);
         org.apache.hadoop.fs.Path location = new org.apache.hadoop.fs.Path(
                 this.path + fileName);
-        dfsOps.setPermission(location, dfsOps.getParentPermission(location)); 
+        dfsOps.setPermission(location, dfsOps.getParentPermission(location));
         logger.log(Level.INFO, "Copied to HDFS");
 
         if (templateid != 0 && templateid != -1) {
@@ -348,7 +351,7 @@ public class UploadService {
         return noCacheResponse.getNoCacheResponseBuilder(
                 Response.Status.BAD_REQUEST).entity(json).build();
       } finally {
-        if(dfsOps!=null){
+        if (dfsOps != null) {
           dfsOps.close();
         }
       }

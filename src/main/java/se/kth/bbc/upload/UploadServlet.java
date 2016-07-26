@@ -77,9 +77,10 @@ public class UploadServlet extends HttpServlet {
         c.print("Upload");
       }
     }
-    DistributedFileSystemOps dfso = fileOps.getDfsOps();
+    DistributedFileSystemOps dfso = null;
     if (finished) {
       try {
+        dfso = fileOps.getDfsOps();
         uploadPath = Utils.ensurePathEndsInSlash(uploadPath);
         dfso.copyToHDFSFromLocal(true, new File(stagingManager.
                 getStagingPath(), info.getResumableFilename()).

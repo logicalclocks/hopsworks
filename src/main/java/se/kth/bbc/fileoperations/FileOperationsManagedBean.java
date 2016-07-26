@@ -46,15 +46,16 @@ public class FileOperationsManagedBean implements Serializable {
   public StreamedContent downloadFile(String path) {
 
     StreamedContent sc = null;
-    DistributedFileSystemOps dfso = fileOps.getDfsOps();
+    DistributedFileSystemOps dfso = null;
+    InputStream is = null;
     try {
       //TODO: should convert to try-with-resources? or does that break streamedcontent?
-      InputStream is = dfso.open(path);
+      dfso = fileOps.getDfsOps();
+      is = dfso.open(path);
       String extension = Utils.getExtension(path);
       String filename = Utils.getFileName(path);
 
       sc = new DefaultStreamedContent(is, extension, filename);
-      is.close();
       logger.log(Level.FINE, "File was downloaded from HDFS path: {0}", path);
     } catch (IOException ex) {
       Logger.getLogger(FileOperationsManagedBean.class.getName()).log(
@@ -62,6 +63,13 @@ public class FileOperationsManagedBean implements Serializable {
       MessagesController.addErrorMessage(MessagesController.ERROR,
               "Download failed.");
     } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException ex) {
+          logger.log(Level.SEVERE, "Error while closing stream.", ex);
+        }
+      }
       if (dfso != null) {
         dfso.close();
       }
@@ -79,13 +87,14 @@ public class FileOperationsManagedBean implements Serializable {
    */
   public void mkDir(String path) {
     String location;
-    DistributedFileSystemOps dfso = fileOps.getDfsOps();
+    DistributedFileSystemOps dfso = null;
     if (path.endsWith(File.separator)) {
       location = path + newFolderName;
     } else {
       location = path + File.separator + newFolderName;
     }
     try {
+      dfso = fileOps.getDfsOps();
       boolean success = dfso.mkdir(location);
       if (success) {
         newFolderName = null;
@@ -114,9 +123,10 @@ public class FileOperationsManagedBean implements Serializable {
   }
 
   public void deleteFile(String path) {
-    DistributedFileSystemOps dfso = fileOps.getDfsOps();
+    DistributedFileSystemOps dfso = null;
     Path location = new Path(path);
     try {
+      dfso = fileOps.getDfsOps();
       dfso.rm(location, false);
     } catch (IOException ex) {
       Logger.getLogger(FileOperationsManagedBean.class.getName()).log(
@@ -131,9 +141,10 @@ public class FileOperationsManagedBean implements Serializable {
   }
 
   public void deleteFolderRecursive(String path) {
-    DistributedFileSystemOps dfso = fileOps.getDfsOps();
+    DistributedFileSystemOps dfso = null;
     Path location = new Path(path);
     try {
+      dfso = fileOps.getDfsOps();
       dfso.rm(location, true);
     } catch (IOException ex) {
       Logger.getLogger(FileOperationsManagedBean.class.getName()).log(

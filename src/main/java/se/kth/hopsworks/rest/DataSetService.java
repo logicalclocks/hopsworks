@@ -29,6 +29,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
@@ -634,6 +635,7 @@ public class DataSetService {
     path = getFullPath(path);
     DistributedFileSystemOps udfso = null;
     DistributedFileSystemOps dfso = null;
+    FSDataInputStream is = null;
     try {
       dfso = dfs.getDfsOps();
       udfso = dfs.getDfsOps(username);
@@ -644,7 +646,7 @@ public class DataSetService {
         throw new IOException("The file does not exist");
       }
       //tests if the user have permission to access this path
-      udfso.open(path);
+      is = udfso.open(path);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not download the file ");
@@ -653,6 +655,13 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "File does not exist: " + path);
     } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException ex) {
+          logger.log(Level.SEVERE, "Error while closing stream.", ex);
+        }
+      }
       if (udfso != null) {
         udfso.close();
       }

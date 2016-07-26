@@ -144,9 +144,10 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
    */
   private String checkArguments(String arguments) {
     String blocks = "0";
-    DistributedFileSystemOps dfso = fileOperations.getDfsOps();
+    DistributedFileSystemOps dfso = null;
     if (arguments.startsWith("hdfs://")) {
       try {
+        dfso = fileOperations.getDfsOps();
         blocks = dfso.getFileBlocks(arguments);
       } catch (IOException ex) {
         Logger.getLogger(JobsHistoryFacade.class.getName()).log(Level.SEVERE,

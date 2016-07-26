@@ -77,8 +77,9 @@ public class BiobankingService {
   public Response getConsentForms(@Context SecurityContext sc,
           @Context HttpServletRequest req)
           throws AppException {
-    DistributedFileSystemOps dfso = fops.getDfsOps();
+    DistributedFileSystemOps dfso = null;
     try {
+      dfso = fops.getDfsOps();
       String projectPath = "/" + Settings.DIR_ROOT + "/" + project.getName();
       String consentsPath = projectPath + "/" + Settings.DIR_CONSENTS;
       logger.log(Level.INFO, "Request to get all consent forms in: {0}",

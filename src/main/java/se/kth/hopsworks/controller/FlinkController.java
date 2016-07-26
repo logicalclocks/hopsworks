@@ -152,8 +152,9 @@ public class FlinkController {
    */
   public boolean isFlinkJarAvailable() {
     boolean isInHdfs;
-    DistributedFileSystemOps dfso = fops.getDfsOps();
+    DistributedFileSystemOps dfso = null;
     try {
+      dfso = fops.getDfsOps();
       try {
         isInHdfs = dfso.exists(settings.getHdfsFlinkJarPath());
       } catch (IOException e) {

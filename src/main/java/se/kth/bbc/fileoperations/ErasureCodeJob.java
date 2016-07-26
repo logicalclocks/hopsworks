@@ -14,6 +14,7 @@ import se.kth.hopsworks.user.model.Users;
  *
  */
 public class ErasureCodeJob extends HopsJob {
+
   private static final Logger logger = Logger.getLogger(ErasureCodeJob.class.
           getName());
   private ErasureCodeJobConfiguration jobConfig;
@@ -43,21 +44,16 @@ public class ErasureCodeJob extends HopsJob {
   }
 
   @Override
-  protected void runJob(DistributedFileSystemOps udfso) {
+  protected void runJob(DistributedFileSystemOps udfso,
+          DistributedFileSystemOps dfso) {
     boolean jobSucceeded = false;
-    DistributedFileSystemOps dfso = this.services.getFsService().getDfsOps();
     try {
       //do compress the file
       jobSucceeded = dfso.compress(this.jobConfig.
               getFilePath());
     } catch (IOException | NotFoundException e) {
       jobSucceeded = false;
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
     }
-
     if (jobSucceeded) {
       //TODO: push a message to the messaging service
       logger.log(Level.INFO, "File compression was successful");

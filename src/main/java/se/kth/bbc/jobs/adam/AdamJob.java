@@ -49,7 +49,8 @@ public class AdamJob extends SparkJob {
   }
 
   @Override
-  protected void runJob(DistributedFileSystemOps udfso) {
+  protected void runJob(DistributedFileSystemOps udfso,
+          DistributedFileSystemOps dfso) {
     //Try to start the AM
     boolean proceed = startApplicationMaster();
     //If success: monitor running job
@@ -62,7 +63,7 @@ public class AdamJob extends SparkJob {
       return;
     }
     copyLogs(udfso);
-    makeOutputAvailable();
+    makeOutputAvailable(dfso);
     updateState(getFinalState());
   }
 
@@ -70,41 +71,34 @@ public class AdamJob extends SparkJob {
    * For all the output files that were created, create an Inode for them and
    * create entries in the DB.
    */
-  private void makeOutputAvailable() {
-    DistributedFileSystemOps dfso = this.services.getFsService().getDfsOps();
-    try {
-      for (AdamArgumentDTO arg : jobconfig.getSelectedCommand().getArguments()) {
-        if (arg.isOutputPath() && !(arg.getValue() == null || arg.getValue().
-                isEmpty())) {
-          try {
-            if (dfso.exists(arg.getValue())) {
-              services.getJobOutputFileFacade().create(getExecution(), Utils.
-                      getFileName(arg.getValue()), arg.getValue());
-            }
-          } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
-                    + arg.getValue() + ".", e);
+  private void makeOutputAvailable(DistributedFileSystemOps dfso) {
+    for (AdamArgumentDTO arg : jobconfig.getSelectedCommand().getArguments()) {
+      if (arg.isOutputPath() && !(arg.getValue() == null || arg.getValue().
+              isEmpty())) {
+        try {
+          if (dfso.exists(arg.getValue())) {
+            services.getJobOutputFileFacade().create(getExecution(), Utils.
+                    getFileName(arg.getValue()), arg.getValue());
           }
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
+                  + arg.getValue() + ".", e);
         }
       }
+    }
 
-      for (AdamOptionDTO opt : jobconfig.getSelectedCommand().getOptions()) {
-        if (opt.isOutputPath() && opt.getValue() != null && !opt.getValue().
-                isEmpty()) {
-          try {
-            if (dfso.exists(opt.getValue())) {
-              services.getJobOutputFileFacade().create(getExecution(), Utils.
-                      getFileName(opt.getValue()), opt.getValue());
-            }
-          } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
-                    + opt.getValue() + ".", e);
+    for (AdamOptionDTO opt : jobconfig.getSelectedCommand().getOptions()) {
+      if (opt.isOutputPath() && opt.getValue() != null && !opt.getValue().
+              isEmpty()) {
+        try {
+          if (dfso.exists(opt.getValue())) {
+            services.getJobOutputFileFacade().create(getExecution(), Utils.
+                    getFileName(opt.getValue()), opt.getValue());
           }
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
+                  + opt.getValue() + ".", e);
         }
-      }
-    } finally {
-      if (dfso != null) {
-        dfso.close();
       }
     }
   }

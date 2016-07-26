@@ -12,6 +12,8 @@ import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 
 import java.io.IOException;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
 import se.kth.hopsworks.certificates.UserCertsFacade;
 
@@ -42,6 +44,7 @@ public class AsynchronousJobExecutor {
 
 
   @Asynchronous
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void startExecution(HopsJob job) {
     job.execute();
   }
