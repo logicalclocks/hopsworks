@@ -4,7 +4,6 @@ import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.JobsHistoryFacade;
@@ -13,6 +12,8 @@ import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 
 import java.io.IOException;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
 import se.kth.hopsworks.certificates.UserCertsFacade;
 
@@ -33,8 +34,6 @@ public class AsynchronousJobExecutor {
   @EJB
   private JobOutputFileFacade jobOutputFileFacade;
   @EJB
-  private FileOperations fileOperations;
-  @EJB
   private DistributedFsService dfs;
   @EJB
   private JobsHistoryFacade jhf;
@@ -45,6 +44,7 @@ public class AsynchronousJobExecutor {
 
 
   @Asynchronous
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void startExecution(HopsJob job) {
     job.execute();
   }
@@ -59,10 +59,6 @@ public class AsynchronousJobExecutor {
 
   public JobOutputFileFacade getJobOutputFileFacade() {
     return jobOutputFileFacade;
-  }
-
-  public FileOperations getFileOperations() {
-    return fileOperations;
   }
   
   public DistributedFsService getFsService() {

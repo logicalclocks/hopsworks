@@ -252,7 +252,7 @@ public class JobService {
                   + jobId + "/prox/" + trackingUrl;
           return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                   entity(trackingUrl).build();
-        } else{
+        } else {
           return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                   entity("").build();
         }
@@ -426,9 +426,9 @@ public class JobService {
                 char[] buffer = new char[4 * 1024];
                 String remaining = "";
                 int n;
-                while ((n=in.read(buffer)) != -1) {
+                while ((n = in.read(buffer)) != -1) {
                   StringBuilder strb = new StringBuilder();
-                  strb.append(buffer,0,n);
+                  strb.append(buffer, 0, n);
                   String s = remaining + strb.toString();
                   remaining = s.substring(s.lastIndexOf(">") + 1, s.length());
                   s = hopify(s.substring(0, s.lastIndexOf(">") + 1), param,
@@ -466,9 +466,9 @@ public class JobService {
       }
     }
   }
-  
+
   private String hopify(String ui, String param, int jobId, String source) {
-    
+
     //remove the link to the full cluster information in the yarn ui
     ui = ui.replaceAll(
             "<div id=\"user\">[\\s\\S]+Logged in as: dr.who[\\s\\S]+<div id=\"logo\">",
@@ -497,7 +497,7 @@ public class JobService {
     return ui;
 
   }
-  
+
   private boolean hasAppAccessRight(String trackingUrl, JobDescription job) {
     String appId = "";
     if (trackingUrl.contains("application_")) {
@@ -586,7 +586,7 @@ public class JobService {
         Execution updatedExecution = exeFacade.getExecution(execution.getJob().
                 getId());
         if (updatedExecution != null) {
-          execution = updatedExecution;
+          execution = updatedExecution;          
         }
         long executiontime = System.currentTimeMillis() - execution.
                 getSubmissionTime().getTime();
@@ -669,7 +669,8 @@ public class JobService {
               input.close();
               arrayObjectBuilder.add("log", message.isEmpty()
                       ? "No information." : message);
-              if (message.isEmpty() && e.getState().isFinalState()
+              if (message.isEmpty() && e.getState().isFinalState() && e.
+                      getAppId() != null
                       && e.getFinalStatus().equals(JobFinalStatus.SUCCEEDED)) {
                 arrayObjectBuilder.add("retriableOut", "true");
               }
@@ -678,7 +679,7 @@ public class JobService {
           } else {
             arrayObjectBuilder.add("log", "No log available");
             if (e.getState().isFinalState() && e.getFinalStatus().equals(
-                    JobFinalStatus.SUCCEEDED)) {
+                    JobFinalStatus.SUCCEEDED) && e.getAppId() != null) {
               arrayObjectBuilder.add("retriableOut", "true");
             }
           }
@@ -699,13 +700,14 @@ public class JobService {
               input.close();
               arrayObjectBuilder.add("err", message.isEmpty() ? "No error."
                       : message);
-              if (message.isEmpty() && e.getState().isFinalState()) {
+              if (message.isEmpty() && e.getState().isFinalState() && e.
+                      getAppId() != null) {
                 arrayObjectBuilder.add("retriableErr", "err");
               }
             }
           } else {
             arrayObjectBuilder.add("err", "No log available");
-            if (e.getState().isFinalState()) {
+            if (e.getState().isFinalState() && e.getAppId() != null) {
               arrayObjectBuilder.add("retriableErr", "err");
             }
           }

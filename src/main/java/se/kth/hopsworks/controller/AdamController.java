@@ -9,7 +9,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.activity.ActivityFacade;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.adam.AdamJob;
 import se.kth.bbc.jobs.adam.AdamJobConfiguration;
@@ -32,8 +31,6 @@ public class AdamController {
   private static final Logger logger = Logger.getLogger(AdamController.class.
           getName());
 
-  @EJB
-  private FileOperations fops;
   @EJB
   private AsynchronousJobExecutor submitter;
   @EJB
@@ -77,8 +74,10 @@ public class AdamController {
       throw new IllegalStateException(
               "Some ADAM jars are not in HDFS and could not be copied in from this host.");
     }
-    ((AdamJobConfiguration)job.getJobConfig()).setJarPath(settings.getAdamJarHdfsPath());
-    ((AdamJobConfiguration)job.getJobConfig()).setHistoryServerIp(settings.getSparkHistoryServerIp());
+    ((AdamJobConfiguration) job.getJobConfig()).setJarPath(settings.
+            getAdamJarHdfsPath());
+    ((AdamJobConfiguration) job.getJobConfig()).setHistoryServerIp(settings.
+            getSparkHistoryServerIp());
     //Get to starting the job
     AdamJob adamJob = null;
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
@@ -91,7 +90,8 @@ public class AdamController {
           return new AdamJob(job, submitter, user, settings.getHadoopDir(),
                   settings.
                   getSparkDir(), settings.getAdamUser(),
-                  hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
+                  hdfsUsersBean.getHdfsUserName(job.getProject(), job.
+                          getCreator()),
                   hdfsEndpoint.getSingleEndpoint(),
                   settings.getAdamJarHdfsPath(), settings.getKafkaConnectStr());
         }

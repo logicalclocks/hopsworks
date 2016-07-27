@@ -114,8 +114,8 @@
                       <td ng-if="kafkaCtrl.activeId === -1">{{acl.permissionType}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id">
                         <select name="permission_type" ng-model="kafkaCtrl.permission_type">
-                          <option value="allow">Allow</option>
                           <option value="deny">Deny</option>
+                          <option value="allow">Allow</option>
                         </select>
                       </td>
                       <td ng-if="kafkaCtrl.activeId === -1">{{acl.operationType}}</td>
@@ -151,10 +151,10 @@
                       </td>
                       <td ng-if="kafkaCtrl.activeId === -1 || kafkaCtrl.activeId === acl.id">
                         <button ng-show="kafkaCtrl.activeId === acl.id" type="button" ng-click="kafkaCtrl.activeId = -1;kafkaCtrl.updateAcl(row.name, acl.id)" class="btn btn-sm btn-warning">
-                          Save ACL
+                          Save
                         </button>
                         <button ng-show="kafkaCtrl.activeId === -1" type="button" ng-click="kafkaCtrl.selectAcl(acl, row.name);" class="btn btn-sm btn-primary">
-                          Edit ACL
+                          Edit
                         </button>
                       </td>
                 </tr>
