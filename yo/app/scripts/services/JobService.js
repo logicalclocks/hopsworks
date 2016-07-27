@@ -145,6 +145,15 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/showlog');
               },
               /**
+               * Retrieve the logs associated to a certain job.
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {undefined} Log infrormation json.
+               */
+              retryLog: function (projectId, appId, type) {
+                return $http.get('/api/project/' + projectId + '/jobs/retryLogAggregation/' + appId + '/' + type);
+              },
+              /**
                * Delete a job 
                * @param {type} projectId
                * @param {type} jobId

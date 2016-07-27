@@ -390,7 +390,7 @@ public abstract class YarnJob extends HopsJob {
                           getStdOutPath(),
                           stdOutFinalDestination);
         } else if (runner.areLogPathsAggregated()) {
-          YarnLogUtil.copyAggregatedYarnLogs(services.getFsService(),
+          YarnLogUtil.copyAggregatedYarnLogs(
                   udfso, runner.
                   getStdOutPath(),
                   stdOutFinalDestination, "out");
@@ -409,7 +409,7 @@ public abstract class YarnJob extends HopsJob {
                           getStdErrPath(),
                           stdErrFinalDestination);
         } else if (runner.areLogPathsAggregated()) {
-          YarnLogUtil.copyAggregatedYarnLogs(services.getFsService(),
+          YarnLogUtil.copyAggregatedYarnLogs(
                   udfso, runner.
                   getStdOutPath(),
                   stdErrFinalDestination, "err");
