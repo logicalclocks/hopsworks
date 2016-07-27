@@ -11,7 +11,6 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
 import se.kth.bbc.activity.ActivityFacade;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
@@ -41,8 +40,6 @@ public class DatasetController {
   @EJB
   private InodeFacade inodes;
   @EJB
-  private FileOperations fileOps;
-  @EJB
   private TemplateFacade templates;
   @EJB
   private DatasetFacade datasetFacade;
@@ -52,8 +49,6 @@ public class DatasetController {
   private InodeBasicMetadataFacade inodeBasicMetaFacade;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private DistributedFsService dfsSingleton;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -71,6 +66,8 @@ public class DatasetController {
    * @param searchable Defines whether the dataset can be indexed or not (i.e.
    * whether it can be visible in the search results or not)
    * @param globallyVisible
+   * @param dfso
+   * @param udfso
    * @throws NullPointerException If any of the given parameters is null.
    * @throws IllegalArgumentException If the given DataSetDTO contains invalid
    * folder names, or the folder already exists.
@@ -121,10 +118,9 @@ public class DatasetController {
             group, global, globallyVisible);
     success = createFolder(dsPath, templateId, username, fsPermission, dfso,
             udfso);
-
     if (success) {
       //set the dataset meta enabled. Support 3 level indexing
-      this.fileOps.setMetaEnabled(dsPath);
+      dfso.setMetaEnabled(dsPath);
       try {
 
         ds = inodes.findByParentAndName(parent, dataSetName);
@@ -142,7 +138,7 @@ public class DatasetController {
         IOException failed = new IOException("Failed to create dataset at path "
                 + dsPath + ".", e);
         try {
-          fileOps.rmRecursive(dsPath);//if dataset persist fails rm ds folder.
+          dfso.rm(new Path(dsPath), true);//if dataset persist fails rm ds folder.
           throw failed;
         } catch (IOException ex) {
           throw new IOException(
@@ -171,6 +167,8 @@ public class DatasetController {
    * created directory.
    * @param description The description of the directory
    * @param searchable Defines if the directory can be searched upon
+   * @param dfso
+   * @param udfso
    * @throws java.io.IOException If something goes wrong upon the creation of
    * the directory.
    * @throws IllegalArgumentException If:
@@ -269,6 +267,7 @@ public class DatasetController {
    * @param path
    * @param user
    * @param project
+   * @param udfso
    * @return
    * @throws java.io.IOException
    */
@@ -290,6 +289,7 @@ public class DatasetController {
    * @param user
    * @param project
    * @param pemission
+   * @param udfso
    * @throws IOException
    */
   public void changePermission(String path, Users user, Project project,

@@ -259,7 +259,7 @@ angular.module('hopsWorksApp')
             };
 
             self.retryLogs = function (appId, type) {
-              if (appId === undefined) {
+              if (appId === '' || appId === undefined) {
                 growl.error("Can not retry log. The job has not yet been assigned an Id", {title: 'Error', ttl: 5000});
               }
               JobService.retryLog(self.projectId, appId, type).then(
