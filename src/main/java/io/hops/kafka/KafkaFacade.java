@@ -171,7 +171,7 @@ public class KafkaFacade {
                 projects.add(p);
             }
         }
-        
+
         if (projects.isEmpty()) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "No project found for this Kafka topic.");
@@ -228,7 +228,7 @@ public class KafkaFacade {
             }
         }
 
-        //if schema is empty, select a default schema
+        //if schema is empty, select a default schema, not impmented
         //persist topic into database
         SchemaTopics schema = em.find(SchemaTopics.class,
                 new SchemaTopicsPK(topicDto.getSchemaName(),
@@ -251,7 +251,6 @@ public class KafkaFacade {
          */
         ProjectTopics pt = new ProjectTopics(topicName, projectId, schema);
 
-        em.merge(pt);
         em.persist(pt);
         em.flush();
     }
@@ -392,7 +391,7 @@ public class KafkaFacade {
         List<AclUserDTO> aclUsers = new ArrayList<>();
 
         //contains project and its members
-        Map<String, List<String>> projectMembers = new HashMap<>();
+        Map<String, List<String>> projectMemberCollections = new HashMap<>();
 
         //get the owner project name 
         Project project = em.find(Project.class, projectId);
@@ -401,7 +400,12 @@ public class KafkaFacade {
                     "The owner project does not exist in database.");
         }
 
-        projectMembers.put(project.getName(), new ArrayList<String>());
+        List<String> teamMembers = new ArrayList<>();
+        for (ProjectTeam pt : project.getProjectTeamCollection()) {
+            teamMembers.add(pt.getUser().getEmail());
+        }
+        teamMembers.add("*");//wildcard used for rolebased acl
+        projectMemberCollections.put(project.getName(), teamMembers);
 
         //get all the projects this topic is shared with
         TypedQuery<SharedTopics> query = em.createNamedQuery(
@@ -411,23 +415,15 @@ public class KafkaFacade {
         for (SharedTopics sharedTopics : query.getResultList()) {
             project = em.find(Project.class, sharedTopics.getSharedTopicsPK()
                     .getProjectId());
-
-            projectMembers.put(project.getName(), new ArrayList<String>());
-        }
-
-        //So far, we got the project names that this topic is shared with and
-        // the owner. Next is to find all the user and filter all the 
-        //users for the topic project which will be the acl users.
-        TypedQuery<Project> projects = em.createNamedQuery(
-                "Project.findAll", Project.class);
-        Set<String> keySet = projectMembers.keySet();
-        for (Project p : projects.getResultList()) {
-            if (keySet.contains(p.getName())) {
-                projectMembers.get(p.getName()).add(p.getOwner().getEmail());
+            teamMembers.clear();
+            for (ProjectTeam pt : project.getProjectTeamCollection()) {
+                teamMembers.add(pt.getUser().getEmail());
             }
+            teamMembers.add("*");//wildcard used for rolebased acl
+            projectMemberCollections.put(project.getName(), teamMembers);
         }
 
-        for (Map.Entry<String, List<String>> user : projectMembers.entrySet()) {
+        for (Map.Entry<String, List<String>> user : projectMemberCollections.entrySet()) {
             aclUsers.add(new AclUserDTO(user.getKey(), user.getValue()));
         }
 
@@ -461,26 +457,72 @@ public class KafkaFacade {
                     "Topic does not belong to the project.");
         }
 
-        //fetch the user name from database       
-        TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
-                Users.class).setParameter("email", userEmail);
-        List<Users> users = query.getResultList();
+        if (!userEmail.equals("*")) {
+            //fetch the user name from database       
+            TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
+                    Users.class).setParameter("email", userEmail);
+            List<Users> users = query.getResultList();
 
-        if (users == null) {
-            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    "User does not exist.");
+            if (users == null) {
+                throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                        "User does not exist.");
+            }
+            Users selectedUser = users.get(0);
+
+            String principalName = selectedProjectName + TWO_UNDERSCROES
+                    + selectedUser.getUsername();
+
+            TopicAcls ta = new TopicAcls(pt, selectedUser,
+                    permission_type, operation_type, host, role, principalName);
+
+            em.persist(ta);
+            em.flush();
+
+        } else {
+            for (ProjectTeam p : project.getProjectTeamCollection()) {
+                Users selectedUser = p.getUser();
+
+                String principalName = selectedProjectName + TWO_UNDERSCROES
+                        + selectedUser.getUsername();
+
+                TopicAcls ta = new TopicAcls(pt, selectedUser,
+                        permission_type, operation_type, host, role, principalName);
+
+                em.persist(ta);
+                em.flush();
+            }
         }
-        Users selectedUser = users.get(0);
-        String principalName = selectedProjectName + TWO_UNDERSCROES
-                + selectedUser.getUsername();
-
-        TopicAcls ta = new TopicAcls(pt, selectedUser,
-                permission_type, operation_type, host, role, principalName);
-
-        em.persist(ta);
-        em.flush();
     }
 
+     public void updateTopicAcl(Integer projectId, String topicName,
+            Integer aclId, AclDTO aclDto) throws AppException {
+        
+        //get the project id
+        Project project = em.find(Project.class, projectId);
+        if (project == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "The specified project for the topic is not in database");
+        }
+        
+         ProjectTopics pt = em.find(ProjectTopics.class,
+                new ProjectTopicsPK(topicName, projectId));
+        if (pt == null) {
+            throw new AppException(Response.Status.FOUND.getStatusCode(),
+                    "Topic does not belong to the project.");
+        }
+
+        TopicAcls ta = em.find(TopicAcls.class, aclId);
+        if (ta == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "acl not found in database");
+        }
+        //remove previous acl
+        em.remove(ta);
+        //add the new acls  
+        
+        addAclsToTopic(topicName, projectId, aclDto);        
+    }
+     
     public void removeAclsFromTopic(String topicName, Integer aclId)
             throws AppException {
         TopicAcls ta = em.find(TopicAcls.class, aclId);
@@ -522,55 +564,6 @@ public class KafkaFacade {
         }
 
         return aclDtos;
-    }
-
-    public void updateTopicAcl(Integer projectId, String topicName,
-            Integer aclId, AclDTO aclDto) throws AppException {
-
-        TopicAcls ta = em.find(TopicAcls.class, aclId);
-        if (ta == null) {
-            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    "aclId not found in database");
-        }
-        //remove previous acl
-        em.remove(ta);
-        //update acl
-        //fetch the user name from database       
-        TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
-                Users.class).setParameter("email", aclDto.getUserEmail());
-        List<Users> users = query.getResultList();
-
-        if (users == null) {
-            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    "User does not exist.");
-        }
-        Users selectedUser = users.get(0);
-        String projectName = aclDto.getProjectName();
-        String principalName = projectName + TWO_UNDERSCROES + selectedUser.getUsername();
-
-        ta.setHost(aclDto.getHost());
-        ta.setOperationType(aclDto.getOperationType());
-        ta.setPermissionType(aclDto.getPermissionType());
-        ta.setRole(aclDto.getRole());
-        ta.setUser(selectedUser);
-        ta.setPrincipal(principalName);
-
-        TypedQuery<Project> queryProject = em.createNamedQuery(
-                "Project.findByName", Project.class)
-                .setParameter("name", projectName);
-        List<Project> projects = queryProject.getResultList();
-
-        if (projects == null) {
-            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    "project does not exist.");
-        }
-
-        Project selectedProject = projects.get(0);
-        ta.setProjectTopics(new ProjectTopics(
-                new ProjectTopicsPK(topicName, selectedProject.getId())));
-
-        em.persist(ta);
-        em.flush();
     }
 
     //if schema exists, increment it if not start version from 1
@@ -782,7 +775,7 @@ public class KafkaFacade {
         List<PartitionDetailsDTO> partitionDetailsDto = new ArrayList<>();
         PartitionDetailsDTO pd = new PartitionDetailsDTO();
 
-        //Simple Consumer cannot connect to a secured kafka cluster,
+        //SimpleConsumer cannot connect to a secured kafka cluster,
         //try connnecting only to plaintext endpoints
         Iterator<String> iter = zkBrokerList.iterator();
         while (iter.hasNext()) {
@@ -866,9 +859,8 @@ public class KafkaFacade {
 
     }
 
-    class ZookeeperWatcher implements Watcher {
+    public class ZookeeperWatcher implements Watcher {
 
-        @Override
         public void process(WatchedEvent we) {
         }
     }

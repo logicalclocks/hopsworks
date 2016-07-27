@@ -140,7 +140,7 @@ angular.module('hopsWorksApp')
 
               ModalService.createSchema('lg', self.projectId).then(
                       function (success) {
-                          growl.success(success.data.successMessage, {title: 'New schema added successfully project.', ttl: 2000});
+                          growl.success(success.data.successMessage, {title: 'New schema added successfully.', ttl: 2000});
                           self.listSchemas();
                       }, function (error) {
                 //The user changed their mind.
