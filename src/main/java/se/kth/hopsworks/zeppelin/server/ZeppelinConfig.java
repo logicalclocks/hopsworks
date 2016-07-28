@@ -23,6 +23,7 @@ import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import org.apache.zeppelin.search.LuceneSearch;
 import org.apache.zeppelin.search.SearchService;
+import org.apache.zeppelin.user.Credentials;
 import org.quartz.SchedulerException;
 import org.sonatype.aether.RepositoryException;
 import se.kth.hopsworks.util.ConfigFileGenerator;
@@ -52,6 +53,7 @@ public class ZeppelinConfig {
   private NotebookRepo notebookRepo;
   private DependencyResolver depResolver;
   private NotebookAuthorization notebookAuthorization;
+  private Credentials credentials;
   private SearchService notebookIndex;
   private final Settings settings;
   private final String projectName;
@@ -107,6 +109,7 @@ public class ZeppelinConfig {
       this.notebookRepo = new NotebookRepoSync(conf);
       this.notebookIndex = new LuceneSearch();
       this.notebookAuthorization = new NotebookAuthorization(conf);
+      this.credentials = new Credentials(conf.credentialsPersist(), conf.getCredentialsPath());
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
         //        removeProjectDirRecursive();
@@ -136,6 +139,8 @@ public class ZeppelinConfig {
     this.schedulerFactory = zConf.getSchedulerFactory();
     this.notebookRepo = zConf.getNotebookRepo();
     this.notebookIndex = zConf.getNotebookIndex();
+    this.notebookAuthorization = zConf.getNotebookAuthorization();
+    this.credentials = zConf.getCredentials();
     setNotebookServer(nbs);
   }
 
@@ -156,7 +161,8 @@ public class ZeppelinConfig {
               this.replFactory,
               this.notebookServer,
               this.notebookIndex,
-              this.notebookAuthorization);
+              this.notebookAuthorization,
+              this.credentials);
     } catch (InterpreterException | IOException | RepositoryException |
             SchedulerException ex) {
       LOGGGER.log(Level.SEVERE, null, ex);
@@ -239,6 +245,16 @@ public class ZeppelinConfig {
   public String getLogDirPath() {
     return logDirPath;
   }
+
+  public NotebookAuthorization getNotebookAuthorization() {
+    return notebookAuthorization;
+  }
+
+  public Credentials getCredentials() {
+    return credentials;
+  }
+  
+  
 
   //returns true if the project dir was created 
   private boolean createZeppelinDirs() {

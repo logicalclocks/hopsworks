@@ -50,6 +50,10 @@ import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 import com.google.gson.Gson;
 import java.util.ArrayList;
 import org.apache.zeppelin.dep.Repository;
+import org.apache.zeppelin.interpreter.InterpreterFactory;
+import org.apache.zeppelin.notebook.Notebook;
+import org.apache.zeppelin.notebook.NotebookAuthorization;
+import org.apache.zeppelin.search.SearchService;
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.repository.RemoteRepository;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstate;
@@ -61,6 +65,7 @@ import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
+import se.kth.hopsworks.zeppelin.socket.NotebookServer;
 import se.kth.hopsworks.zeppelin.util.LivyMsg;
 import se.kth.hopsworks.zeppelin.util.TicketContainer;
 
@@ -72,10 +77,11 @@ import se.kth.hopsworks.zeppelin.util.TicketContainer;
 public class InterpreterRestApi {
 
   Logger logger = LoggerFactory.getLogger(InterpreterRestApi.class);
-  Project project;
-  Users user;
-  ZeppelinConfig zeppelinConf;
-  String roleInProject;
+  private InterpreterFactory interpreterFactory;
+  private Project project;
+  private ZeppelinConfig zeppelinConf;
+  private String roleInProject;
+  private Users user;
 
   @EJB
   private ZeppelinResource zeppelinResource;
@@ -101,6 +107,8 @@ public class InterpreterRestApi {
     this.user = user;
     this.zeppelinConf = zeppelinConf;
     this.roleInProject = userRole;
+    this.interpreterFactory = zeppelinConf.getReplFactory();
+
   }
 
   /**
@@ -112,7 +120,7 @@ public class InterpreterRestApi {
   @Path("setting")
   public Response listSettings() {
     List<InterpreterSetting> interpreterSettings;
-    interpreterSettings = zeppelinConf.getReplFactory().get();
+    interpreterSettings = interpreterFactory.get();
     return new JsonResponse(Status.OK, "", interpreterSettings).build();
   }
 
@@ -131,13 +139,12 @@ public class InterpreterRestApi {
               NewInterpreterSettingRequest.class);
       Properties p = new Properties();
       p.putAll(request.getProperties());
-      // Option is deprecated from API, always use remote = true
-      InterpreterSetting interpreterSetting = zeppelinConf.getReplFactory().
-              add(request.getName(),
-                      request.getGroup(),
-                      request.getDependencies(),
-                      request.getOption(),
-                      p);
+      InterpreterSetting interpreterSetting = interpreterFactory.add(request.
+              getName(),
+              request.getGroup(),
+              request.getDependencies(),
+              request.getOption(),
+              p);
       logger.info("new setting created with {}", interpreterSetting.id());
       return new JsonResponse(Status.CREATED, "", interpreterSetting).build();
     } catch (InterpreterException e) {
@@ -155,16 +162,22 @@ public class InterpreterRestApi {
     }
   }
 
+  /**
+   *
+   * @param message
+   * @param settingId
+   * @return
+   */
   @PUT
   @Path("setting/{settingId}")
   public Response updateSetting(String message,
           @PathParam("settingId") String settingId) {
     logger.info("Update interpreterSetting {}", settingId);
+
     try {
       UpdateInterpreterSettingRequest request = gson.fromJson(message,
               UpdateInterpreterSettingRequest.class);
-      // Option is deprecated from API, always use remote = true
-      zeppelinConf.getReplFactory().setPropertyAndRestart(settingId,
+      interpreterFactory.setPropertyAndRestart(settingId,
               request.getOption(),
               request.getProperties(),
               request.getDependencies());
@@ -179,7 +192,7 @@ public class InterpreterRestApi {
               Status.INTERNAL_SERVER_ERROR, e.getMessage(), ExceptionUtils.
               getStackTrace(e)).build();
     }
-    InterpreterSetting setting = zeppelinConf.getReplFactory().get(settingId);
+    InterpreterSetting setting = interpreterFactory.get(settingId);
     if (setting == null) {
       return new JsonResponse(Status.NOT_FOUND, "", settingId).build();
     }
@@ -198,7 +211,7 @@ public class InterpreterRestApi {
   public Response removeSetting(@PathParam("settingId") String settingId) throws
           IOException {
     logger.info("Remove interpreterSetting {}", settingId);
-    zeppelinConf.getReplFactory().remove(settingId);
+    interpreterFactory.remove(settingId);
     return new JsonResponse(Status.OK).build();
   }
 
@@ -212,18 +225,18 @@ public class InterpreterRestApi {
   @Path("setting/restart/{settingId}")
   public Response restartSetting(@PathParam("settingId") String settingId) {
     logger.info("Restart interpreterSetting {}", settingId);
-    InterpreterSetting setting = zeppelinConf.getReplFactory().get(settingId);
-    if (setting == null) {
-      return new JsonResponse(Status.NOT_FOUND, "", settingId).build();
-    }
     try {
-      zeppelinConf.getReplFactory().restart(settingId);
+      interpreterFactory.restart(settingId);
     } catch (InterpreterException e) {
       logger.error("Exception in InterpreterRestApi while restartSetting ", e);
       return new JsonResponse(
               Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e)).
               build();
-    } 
+    }
+    InterpreterSetting setting = interpreterFactory.get(settingId);
+    if (setting == null) {
+      return new JsonResponse(Status.NOT_FOUND, "", settingId).build();
+    }
     int timeout = zeppelinConf.getConf().getInt(
             ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_CONNECT_TIMEOUT);
     long startTime = System.currentTimeMillis();
@@ -287,7 +300,8 @@ public class InterpreterRestApi {
           throw new AppException(Status.BAD_REQUEST.getStatusCode(),
                   "The owner of the session was not found.");
         }
-        ZeppelinConfig zConf = zeppelinConfFactory.getZeppelinConfig(this.project.
+        ZeppelinConfig zConf = zeppelinConfFactory.getZeppelinConfig(
+                this.project.
                 getName(), u.getEmail());
         if (zConf.getReplFactory() != null) {
           zConf.getReplFactory().restart(settingId);
@@ -326,10 +340,11 @@ public class InterpreterRestApi {
   /**
    * List all available interpreters by group
    * <p/>
+   * @param message
    * @return
    */
   @GET
-  public Response listInterpreter() {
+  public Response listInterpreter(String message) {
     Map<String, RegisteredInterpreter> m = Interpreter.registeredInterpreters;
     return new JsonResponse(Status.OK, "", m).build();
   }
@@ -342,8 +357,8 @@ public class InterpreterRestApi {
   @GET
   @Path("repository")
   public Response listRepositories() {
-    List<RemoteRepository> interpreterRepositories = null;
-    interpreterRepositories = zeppelinConf.getReplFactory().getRepositories();
+    List<RemoteRepository> interpreterRepositories;
+    interpreterRepositories = interpreterFactory.getRepositories();
     return new JsonResponse(Status.OK, "", interpreterRepositories).build();
   }
 
@@ -358,7 +373,7 @@ public class InterpreterRestApi {
   public Response addRepository(String message) {
     try {
       Repository request = gson.fromJson(message, Repository.class);
-      zeppelinConf.getReplFactory().addRepository(
+      interpreterFactory.addRepository(
               request.getId(),
               request.getUrl(),
               request.isSnapshot(),
@@ -385,7 +400,7 @@ public class InterpreterRestApi {
   public Response removeRepository(@PathParam("repoId") String repoId) {
     logger.info("Remove repository {}", repoId);
     try {
-      zeppelinConf.getReplFactory().removeRepository(repoId);
+      interpreterFactory.removeRepository(repoId);
     } catch (Exception e) {
       logger.error("Exception in InterpreterRestApi while removing repository ",
               e);

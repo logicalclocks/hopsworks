@@ -9,8 +9,10 @@
   <scan>
     <exclude name="com.sun.jersey.guice.**" />
     <exclude name="org.jclouds.**" />
-    <exclude name="com.google.inject.**" />         
-    <exclude name="com.sun.jersey.guice.**" />    
+    <exclude name="com.google.inject.**" />     
+    <exclude name="org.sonatype.guice.plexus.shim.PseudoPlexusContainer" />     
+    <exclude name="org.sonatype.guice.plexus.converters.PlexusXmlBeanConverter" />     
+    <exclude name="org.sonatype.guice.**" />    
   </scan>
 
 </beans>
