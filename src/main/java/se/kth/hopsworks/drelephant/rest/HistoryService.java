@@ -391,20 +391,32 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         long executionDuration = 0;
         boolean premium = false;
         
+        Iterator<JobHeuristicDetailsDTO> it = resultsForAnalysis.iterator();
+        
+        // Get the maximum execution time of all results
+        while(it.hasNext()) {
+         JobHeuristicDetailsDTO obj = it.next();
+         if(obj.getExecutionTime() > executionDuration)
+             executionDuration = obj.getExecutionTime();
+        }
+        
+        System.out.println("############### MAX EXECUTION TIME: " + executionDuration);
+        
         Iterator<JobHeuristicDetailsDTO> itr = resultsForAnalysis.iterator();
         
         while(itr.hasNext()) {
          JobHeuristicDetailsDTO obj = itr.next();
          
-         if(obj.getTotalSeverity().equals("LOW") && (obj.getExecutionTime() < executionDuration || executionDuration == 0) &&
+         if(obj.getTotalSeverity().equals("LOW") && (obj.getExecutionTime() < executionDuration) &&
                  (obj.getAmMemory()> defaultAmMemory || obj.getAmVcores() > defaultAmVcores ||
-                  obj.getNumberOfExecutors() > defaultNumOfExecutors || obj.getExecutorMemory()> defaultExecutorsMemory)){
+                  obj.getNumberOfExecutors() > defaultNumOfExecutors || obj.getExecutorMemory() > defaultExecutorsMemory)){
              defaultAmMemory = obj.getAmMemory();
              defaultAmVcores = obj.getAmVcores();
              defaultExecutorsMemory = obj.getExecutorMemory();
              defaultNumOfExecutors = obj.getNumberOfExecutors();
              executionDuration = obj.getExecutionTime();
              premium = true;
+             
          }
         }
          

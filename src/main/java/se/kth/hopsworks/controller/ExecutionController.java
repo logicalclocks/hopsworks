@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.jobhistory.Execution;
-import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
 import se.kth.bbc.jobs.jobhistory.JobsHistoryFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
@@ -36,8 +35,6 @@ public class ExecutionController {
   private FlinkController flinkController;
   @EJB
   private InodeFacade inodes;
-  @EJB
-  private ExecutionInputfilesFacade execInputFilesFacade;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -76,7 +73,6 @@ public class ExecutionController {
         int inodePid = inode.getInodePK().getParentId();
         String inodeName = inode.getInodePK().getName();
         
-        execInputFilesFacade.create(execId, inodePid, inodeName);
         jobHistoryFac.persist(user, job, execId, exec.getAppId());
         activityFacade.persistActivity(activityFacade.EXECUTED_JOB + inodeName, job.getProject(), user);
         break;

@@ -29,8 +29,6 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
   @EJB
   private InodeFacade inodeFacade;
   @EJB
-  private ExecutionInputfilesFacade execInputFiles;
-  @EJB
   private FileOperations fileOperations;
   @EJB
   private ProjectFacade projectFacade;
@@ -40,7 +38,6 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-  private JobsHistoryPK jPK;
 
 
   public JobsHistoryFacade() {
@@ -83,20 +80,18 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
       String pathOfInode = inodePath.replace("hdfs://" + parts[2], "");
       
       Inode inode = inodeFacade.getInodeAtPath(pathOfInode);
-      int inodePid = inode.getInodePK().getParentId();
-      String inodeName = inode.getInodePK().getName();
+      String jarFile = inode.getInodePK().getName();
       String blocks = checkArguments(configuration.getArgs());
       
-      this.persist(jobDesc.getId(), inodePid, inodeName, executionId, appId, jobDesc,
+      this.persist(jobDesc.getId(), jarFile, executionId, appId, jobDesc,
               blocks, configuration, user.getEmail());
   }
    
-    public void persist(int jobId, int inodePid, String inodeName, int executionId, String appId, JobDescription jobDesc, String inputBlocksInHdfs,
+    public void persist(int jobId, String jarFile, int executionId, String appId, JobDescription jobDesc, String inputBlocksInHdfs,
                         SparkJobConfiguration configuration, String userEmail){
-            JobsHistoryPK pk = new JobsHistoryPK(jobId, inodePid, inodeName, executionId);
-            JobsHistory exist = em.find(JobsHistory.class, pk);
+            JobsHistory exist = em.find(JobsHistory.class, executionId);
             if(exist == null){
-                JobsHistory file = new JobsHistory(jobId, inodePid, inodeName, executionId, appId, jobDesc, 
+                JobsHistory file = new JobsHistory(executionId, jobId, jarFile, appId, jobDesc, 
                             inputBlocksInHdfs, configuration, userEmail);
                 em.persist(file);
                 em.flush();
@@ -106,17 +101,13 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
     /**
      * Updates a JobHistory instance with the duration and the application Id
      * <p/>
-     * @param JobId 
-     * @param inodeId  
-     * @param inodeName 
      * @param exec
      * @param duration
      * @return JobsHistory
      */
     
-    public JobsHistory updateJobHistory(int JobId, int inodeId, String inodeName, Execution exec, long duration){
-        jPK = new JobsHistoryPK(JobId, inodeId, inodeName, exec.getId());
-        JobsHistory obj = em.find(JobsHistory.class, jPK);
+    public JobsHistory updateJobHistory(Execution exec, long duration){
+        JobsHistory obj = em.find(JobsHistory.class, exec.getId());
         obj.setAppId(exec.getAppId());
         obj.setExecutionDuration(duration);
         obj.setState(exec.getState());
@@ -212,7 +203,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
             JobsHistory.class);
             q.setParameter("jobType", jobDetails.getJobType());
             q.setParameter("className", jobDetails.getClassName());
-            q.setParameter("inodeName", jobDetails.getSelectedJar());
+            q.setParameter("jarFile", jobDetails.getSelectedJar());
             q.setParameter("arguments", jobDetails.getInputArgs());
             q.setParameter("inputBlocksInHdfs", checkArguments(jobDetails.getInputArgs()));
             q.setParameter("projectName", projectName);
@@ -227,7 +218,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
                 JobsHistory.class);
             q.setParameter("jobType", jobDetails.getJobType());
             q.setParameter("className", jobDetails.getClassName());
-            q.setParameter("inodeName", jobDetails.getSelectedJar());
+            q.setParameter("jarFile", jobDetails.getSelectedJar());
             q.setParameter("arguments", jobDetails.getInputArgs());
             q.setParameter("inputBlocksInHdfs", checkArguments(jobDetails.getInputArgs()));
             q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
@@ -245,7 +236,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
                 JobsHistory.class);
             q.setParameter("jobType", jobDetails.getJobType());
             q.setParameter("className", jobDetails.getClassName());
-            q.setParameter("inodeName", jobDetails.getSelectedJar());
+            q.setParameter("jarFile", jobDetails.getSelectedJar());
             q.setParameter("arguments", jobDetails.getInputArgs());
             q.setParameter("projectName", projectName);
             q.setParameter("jobName", jobDetails.getJobName());
@@ -260,7 +251,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
                 JobsHistory.class);
             q.setParameter("jobType", jobDetails.getJobType());
             q.setParameter("className", jobDetails.getClassName());
-            q.setParameter("inodeName", jobDetails.getSelectedJar());
+            q.setParameter("jarFile", jobDetails.getSelectedJar());
             q.setParameter("arguments", jobDetails.getInputArgs());
             q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
         
@@ -276,7 +267,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
                 JobsHistory.class);
             q.setParameter("jobType", jobDetails.getJobType());
             q.setParameter("className", jobDetails.getClassName());
-            q.setParameter("inodeName", jobDetails.getSelectedJar());
+            q.setParameter("jarFile", jobDetails.getSelectedJar());
             q.setParameter("projectName", projectName);
             q.setParameter("jobName", jobDetails.getJobName());
             q.setParameter("userEmail", userEmail);
@@ -289,7 +280,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory>{
                 JobsHistory.class);
             q.setParameter("jobType", jobDetails.getJobType());
             q.setParameter("className", jobDetails.getClassName());
-            q.setParameter("inodeName", jobDetails.getSelectedJar());
+            q.setParameter("jarFile", jobDetails.getSelectedJar());
             q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
         
             return q.getResultList();

@@ -5,12 +5,9 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
 import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.jobhistory.Execution;
-import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
-import se.kth.bbc.jobs.jobhistory.ExecutionsInputfiles;
 import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
@@ -47,7 +44,6 @@ public abstract class HopsJob {
   private static final Logger logger = Logger.getLogger(HopsJob.class.getName());
   private Execution execution;
   private JobsHistory jobHistory;
-  private ExecutionsInputfiles execInputFiles;
   private boolean initialized = false;
 
   //Service provider providing access to facades
@@ -161,14 +157,8 @@ public abstract class HopsJob {
   }
   
   protected final void updateJobHistoryApp(long executiontime){
-
-    ExecutionsInputfiles execIF = services.getExecutionInputfilesFacade().findExecutionInputFileByExecutionId(execution.getId());
       
-    int JobId = execution.getJob().getId();
-    int inodePid = execIF.getExecutionsInputfilesPK().getInodePid();
-    String inodeName = execIF.getExecutionsInputfilesPK().getName();
-    
-    services.getJobsHistoryFacade().updateJobHistory(JobId, inodePid, inodeName, execution, executiontime);
+    services.getJobsHistoryFacade().updateJobHistory(execution, executiontime);
   }
   /**
    * Execute the job and keep track of its execution time. The execution flow is
