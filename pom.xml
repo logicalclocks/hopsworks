@@ -24,7 +24,7 @@
     <glassfish.domain>domain1</glassfish.domain>
   </properties>
 
-  <dependencies> 
+  <dependencies>   
     <!--
         <dependency>
           <groupId>de.hu-berlin.wbi.cuneiform</groupId>
@@ -138,24 +138,18 @@
     <!--Zeppelin dependencies -->
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
-      <artifactId>zeppelin</artifactId>
-      <version>0.6.1-SNAPSHOT</version>
-      <type>pom</type>     
-    </dependency>
-    <dependency>
-      <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-interpreter</artifactId>
-      <version>0.6.1-SNAPSHOT</version>      
+      <version>0.6.0</version>      
     </dependency>
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-zengine</artifactId>
-      <version>0.6.1-SNAPSHOT</version>      
+      <version>0.6.0</version>      
     </dependency>
     <dependency>		
       <groupId>org.apache.zeppelin</groupId>		
       <artifactId>zeppelin-web</artifactId>		
-      <version>0.6.1-SNAPSHOT</version>      
+      <version>0.6.0</version>      
       <type>war</type>		
     </dependency> 
     <!-- Apache Shiro -->
