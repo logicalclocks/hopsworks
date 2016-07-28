@@ -9,7 +9,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -25,7 +24,8 @@ import se.kth.hopsworks.util.Settings;
 @Stateless
 public class DistributedFsService {
 
-  private static final Logger logger = Logger.getLogger(DistributedFsService.class.
+  private static final Logger logger = Logger.getLogger(
+          DistributedFsService.class.
           getName());
 
   @EJB
@@ -34,7 +34,7 @@ public class DistributedFsService {
   private InodeFacade inodes;
   @EJB
   private UserGroupInformationService ugiService;
-  
+
   private Configuration conf;
   private String hadoopConfDir;
 
@@ -77,7 +77,7 @@ public class DistributedFsService {
     conf.addResource(hdfsPath);
     conf.set("fs.permissions.umask-mode", "000");
   }
-  
+
   @PreDestroy
   public void preDestroy() {
     conf.clear();
@@ -151,7 +151,7 @@ public class DistributedFsService {
     }
     return false;
   }
-  
+
   /**
    * Get the inode for a given path.
    * <p/>
@@ -184,6 +184,20 @@ public class DistributedFsService {
         }
       }
       return retList;
+    } else {
+      return Collections.EMPTY_LIST;
+    }
+  }
+
+  /**
+   * Returns a list of inodes if the path is a directory empty list otherwise.
+   * @param path
+   * @return 
+   */
+  public List<Inode> getChildInodes(String path) {
+    Inode inode = inodes.getInodeAtPath(path);
+    if (inode.isDir()) {
+      return inodes.getChildren(inode);
     } else {
       return Collections.EMPTY_LIST;
     }

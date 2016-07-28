@@ -12,10 +12,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.InodesMB;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 
 /**
  * by fanxu
@@ -25,7 +26,7 @@ public class UploadServlet extends HttpServlet {
   private static final Logger logger = Logger.getLogger(UploadServlet.class.
           getName());
   @EJB
-  private FileOperations fileOps;
+  private DistributedFsService fileOps;
 
   @EJB
   private StagingManager stagingManager;
@@ -76,16 +77,21 @@ public class UploadServlet extends HttpServlet {
         c.print("Upload");
       }
     }
-
+    DistributedFileSystemOps dfso = null;
     if (finished) {
       try {
+        dfso = fileOps.getDfsOps();
         uploadPath = Utils.ensurePathEndsInSlash(uploadPath);
-        fileOps.copyToHDFSFromLocal(true, new File(stagingManager.
+        dfso.copyToHDFSFromLocal(true, new File(stagingManager.
                 getStagingPath(), info.getResumableFilename()).
                 getAbsolutePath(), uploadPath
                 + info.getResumableFilename());
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Failed to write to HDSF", e);
+      } finally {
+        if (dfso != null) {
+          dfso.close();
+        }
       }
     }
   }

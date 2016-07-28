@@ -12,7 +12,6 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.project.Project;
@@ -28,13 +27,8 @@ public class ProjectEthicalManager implements Serializable {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-
   @EJB
   private ProjectPrivacyManager privacyManager;
-
-  @EJB
-  private FileOperations fops;
-
   @EJB
   private ProjectFacade projectController;
 
