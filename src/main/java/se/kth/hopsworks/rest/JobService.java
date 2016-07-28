@@ -1,14 +1,12 @@
 package se.kth.hopsworks.rest;
 
 import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.net.URLEncoder;
@@ -762,7 +760,7 @@ public class JobService {
 
     DistributedFileSystemOps dfso = null;
     DistributedFileSystemOps udfso = null;
-    Users user = userBean.findByEmail(req.getRemoteUser());
+    Users user = execution.getUser();
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
     String aggregatedLogPath = jobController.getAggregatedLogPath(hdfsUser,
             appId);
