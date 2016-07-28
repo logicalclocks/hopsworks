@@ -40,10 +40,8 @@ public class ServiceAvailabilityBean {
 
   private final static Logger logger = Logger.getLogger(ServiceAvailabilityBean.class.getName());
 
-
   private static long INTERVAL_MS_BETWEEN_SERVICE_CHECKS = 30 * 1000l;
   public int zkSessionTimeoutMs = 30 * 1000;//30 seconds
-
 
   private boolean elasticsearch;
   private boolean namenode;
@@ -57,7 +55,7 @@ public class ServiceAvailabilityBean {
   private boolean sparkHistoryServer;
   private boolean zookeeper;
   private boolean kafka;
-  
+
   @EJB
   private KafkaFacade kafkaFacade;
   @EJB
@@ -108,20 +106,19 @@ public class ServiceAvailabilityBean {
       logger.warning("Resourcemanager appears to be down.");
     }
 // Check Elastic
- try {
-    String addr = this.settings.getElasticIp();
+    try {
+      String addr = this.settings.getElasticIp();
 
-    final org.elasticsearch.common.settings.Settings settings
-        = org.elasticsearch.common.settings.Settings.settingsBuilder()
-        .put("client.transport.sniff", true) //being able to retrieve other nodes 
-        .put("cluster.name", "hops").build();
+      final org.elasticsearch.common.settings.Settings settings
+              = org.elasticsearch.common.settings.Settings.settingsBuilder()
+              .put("client.transport.sniff", true) //being able to retrieve other nodes 
+              .put("cluster.name", "hops").build();
 
-    Client client = TransportClient.builder().settings(settings).build()
-        .addTransportAddress(new InetSocketTransportAddress(new InetSocketAddress(addr, Settings.ELASTIC_PORT)));
+      Client client = TransportClient.builder().settings(settings).build()
+              .addTransportAddress(new InetSocketTransportAddress(new InetSocketAddress(addr, Settings.ELASTIC_PORT)));
 
-   
       final ClusterHealthResponse healthResponse = client.admin().cluster().prepareHealth()
-          .setWaitForStatus(ClusterHealthStatus.GREEN).setTimeout(TimeValue.timeValueSeconds(5)).execute().actionGet();
+              .setWaitForStatus(ClusterHealthStatus.GREEN).setTimeout(TimeValue.timeValueSeconds(5)).execute().actionGet();
       if (healthResponse.isTimedOut()) {
         elasticsearch = false;
       } else {
@@ -131,48 +128,41 @@ public class ServiceAvailabilityBean {
       elasticsearch = false;
     }
 
-
 // Check P2P Downloader
     // TODO - Call some REST API
 // Check Livy
     // TODO
 // Check Ooozie
     // TODO
-
-    try{
+    try {
       OozieClient oozieClient = new OozieClient("http://" + this.settings.getOozieIp() + ":11000/oozie/");
       oozieClient.getSystemMode();
       this.oozie = true;
-    }catch(Exception e){
+    } catch (Exception e) {
       this.oozie = false;
     }
-  }
 
-    
-    
-        try {
-            //Check Kafka
+    try {
+      //Check Kafka
 
-            Set<String> kafkaBrokerEndpoints = kafkaFacade.getBrokerEndpoints();
-            if (!kafkaBrokerEndpoints.isEmpty()) {
-                kafka = true;
-            } else {
-                kafka = false;
-            }
-        } catch (AppException ex) {
-            kafka = false;
-        }
-        
-        
-      try {
-          ZooKeeper zk =  new ZooKeeper(settings.getZkConnectStr(), zkSessionTimeoutMs, null);
-          zookeeper = true;
-       
-      } catch (IOException ex) {
-          zookeeper = false;
+      Set<String> kafkaBrokerEndpoints = kafkaFacade.getBrokerEndpoints();
+      if (!kafkaBrokerEndpoints.isEmpty()) {
+        kafka = true;
+      } else {
+        kafka = false;
       }
+    } catch (AppException ex) {
+      kafka = false;
     }
 
+    try {
+      ZooKeeper zk = new ZooKeeper(settings.getZkConnectStr(), zkSessionTimeoutMs, null);
+      zookeeper = true;
+
+    } catch (IOException ex) {
+      zookeeper = false;
+    }
+  }
 
   @PostConstruct
   public void initialise() {
@@ -231,12 +221,12 @@ public class ServiceAvailabilityBean {
   public boolean isSparkHistoryServer() {
     return sparkHistoryServer;
   }
-  
-  public boolean isZookeeper(){
+
+  public boolean isZookeeper() {
     return zookeeper;
   }
-  
-  public boolean isKafka(){
+
+  public boolean isKafka() {
     return kafka;
   }
 
