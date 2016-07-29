@@ -319,10 +319,10 @@ module.exports = function(target, dir, cb) {
     }
 
     if(options.url.indexOf(":execution_id") > -1){
-      if( _window.location.hash.match(/executions\/(\d+)/)){
-        options.url = options.url.replace(":execution_id", _window.location.hash.match(/executions\/(\d+)/)[1])
+      if( _window.location.hash.match(/wfexecutions\/(\d+)/)){
+        options.url = options.url.replace(":execution_id", _window.location.hash.match(/wfexecutions\/(\d+)/)[1])
       }else{
-        options.url = options.url.replace(":execution_id", _window.location.pathname.match(/executions\/(\d+)/)[1])
+        options.url = options.url.replace(":execution_id", _window.location.pathname.match(/wfexecutions\/(\d+)/)[1])
       }
     }
     if(options.url.indexOf(":job_id") > -1){

@@ -24,7 +24,9 @@ angular.module('hopsWorksApp')
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000})
               })
           }
-          if(workflowId) index();
+          if (workflowId) {
+            index();
+          }
 
           self.selectedIndex = -1;
           self.selectedExecution = null;

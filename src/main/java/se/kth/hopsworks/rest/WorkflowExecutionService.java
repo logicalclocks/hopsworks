@@ -9,7 +9,6 @@ import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.workflows.*;
-import se.kth.kthfsdashboard.user.AbstractFacade;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -26,7 +25,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 

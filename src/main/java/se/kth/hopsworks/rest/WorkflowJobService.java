@@ -2,14 +2,12 @@ package se.kth.hopsworks.rest;
 
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.workflows.Workflow;
 import se.kth.hopsworks.workflows.WorkflowExecution;
 import se.kth.hopsworks.workflows.WorkflowJob;
 import se.kth.hopsworks.workflows.WorkflowJobFacade;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
-import javax.ejb.EJBException;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
