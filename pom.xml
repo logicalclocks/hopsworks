@@ -153,12 +153,6 @@
     <!--Zeppelin dependencies -->
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
-      <artifactId>zeppelin</artifactId>
-      <version>0.6.1-SNAPSHOT</version>
-      <type>pom</type>     
-    </dependency>
-    <dependency>
-      <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-interpreter</artifactId>
       <version>0.6.1-SNAPSHOT</version>  
     </dependency>
