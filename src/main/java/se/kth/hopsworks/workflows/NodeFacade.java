@@ -65,7 +65,7 @@ public class NodeFacade extends AbstractFacade<Node> {
         workflow.setUpdatedAt(date);
         node.setCreatedAt(date);
         em.persist(node);
-        em.merge(workflow);
+//        em.merge(workflow);
     }
 
     public void flush() {
@@ -77,7 +77,7 @@ public class NodeFacade extends AbstractFacade<Node> {
         Workflow workflow = node.getWorkflow();
         node.setUpdatedAt(date);
         workflow.setUpdatedAt(date);
-        em.merge(workflow);
+//        em.merge(workflow);
         return em.merge(node);
 
     }

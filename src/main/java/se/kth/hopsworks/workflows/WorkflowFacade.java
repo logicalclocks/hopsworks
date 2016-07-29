@@ -1,21 +1,12 @@
 package se.kth.hopsworks.workflows;
 
-import io.hops.metadata.hdfs.entity.User;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import se.kth.bbc.project.Project;
-import se.kth.bbc.project.fb.Inode;
-import se.kth.hopsworks.dataset.Dataset;
-import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.ws.rs.ProcessingException;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.util.List;
 
 @Stateless

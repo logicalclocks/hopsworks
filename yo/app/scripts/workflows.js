@@ -1,40 +1,40 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 function addBlankNode(ele){
-  var cy = ele.cy()
-  var source = ele.source()
-  var target = ele.target()
-  var node = cy.add(cy.defaults.blankNodeOpts())
+    var cy = ele.cy();
+    var source = ele.source();
+    var target = ele.target();
+    var node = cy.add(cy.defaults.blankNodeOpts());
   var edges = [
     { data: { id: cy.uuid(), source: source.id(), target: node.id() } },
     { data: { id: cy.uuid(), source: node.id(), target: target.id() } }
-  ]
-  cy.add(edges)
-  cy.remove(ele)
+  ];
+    cy.add(edges);
+    cy.remove(ele);
 }
 function addDecisionSon(ele){
-  var cy = ele.cy()
-  var source = ele
-  var target = cy.$('#' + ele.data("targetNodeId"))
-  var node = cy.add(cy.defaults.blankNodeOpts())
+    var cy = ele.cy();
+    var source = ele;
+    var target = cy.$('#' + ele.data("targetNodeId"));
+    var node = cy.add(cy.defaults.blankNodeOpts());
 
   var edges = [
     { data: { id: cy.uuid(), source: source.id(), target: node.id(), type: "decision-edge" }},
     { data: { id: cy.uuid(), source: node.id(), target: target.id() } }
-  ]
-  cy.add(edges)
+  ];
+    cy.add(edges);
 }
 function addForkSon(ele){
-  var cy = ele.cy()
-  var source = ele
+    var cy = ele.cy();
+    var source = ele;
 
-  var target = cy.$('#' + ele.data("joinNodeId"))
-  var node = cy.add(cy.defaults.blankNodeOpts())
+    var target = cy.$('#' + ele.data("joinNodeId"));
+    var node = cy.add(cy.defaults.blankNodeOpts());
 
   var edges = [
     { data: { id: cy.uuid(), source: source.id(), target: node.id() } },
     { data: { id: cy.uuid(), source: node.id(), target: target.id() } }
-  ]
-  cy.add(edges)
+  ];
+    cy.add(edges);
 }
 
 function addFork(ele){
@@ -173,7 +173,7 @@ var init = function(cy){
         }
       }
     ]
-  })
+  });
 
   cy.cxtmenu({
     selector: 'node.options-node',
@@ -198,7 +198,7 @@ var init = function(cy){
         }
       }
     ]
-  })
+  });
 
   cy.cxtmenu({
     selector: 'node.action-node',
@@ -221,7 +221,7 @@ var init = function(cy){
         }
       }
     ]
-  })
+  });
 }
 module.exports = {
   init : init
@@ -463,16 +463,16 @@ module.exports = function(target, dir, cb) {
         style: require('./style.js'),
     });
 
-    var cyToolbar = cy.tools = require("./toolbar.js")
-    loadDefaults(_window.cy)
-    cy.viewDatasets = require("./hdfsViewer.js")
-    $.jstree.defaults.core.check_callback = true
-    cy.emailNode.init(cy.tools)
-    cy.sparkCustomNode.init(cy.tools)
+      var cyToolbar = cy.tools = require("./toolbar.js");
+      loadDefaults(_window.cy);
+      cy.viewDatasets = require("./hdfsViewer.js");
+      $.jstree.defaults.core.check_callback = true;
+      cy.emailNode.init(cy.tools);
+    cy.sparkCustomNode.init(cy.tools);
 
 
-    require("./cxtmenu.js").init(cy)
-    $('#cy').cyNavigator({container: '#navigator'})
+    require("./cxtmenu.js").init(cy);
+    $('#cy').cyNavigator({container: '#navigator'});
 
     cy.on('add remove', 'edge', function(e){
       cy.nodes().unlock()
@@ -494,43 +494,43 @@ module.exports = function(target, dir, cb) {
       $('#options').empty()
       var form = cy[node.data("type").camelCase()].form(node)
       $('#options').html(form)
-    })
+    });
 
     $.get("/hopsworks/api/project/:project_id/workflows/:workflow_id", function(data){
       if(data.nodes.length == 0){
-        var ele0 = defaults.blankNodeOpts()
+          var ele0 = defaults.blankNodeOpts();
         var nodes = [
           defaults.rootNodeOpts(),
           ele0,
           defaults.endNodeOpts()
-        ]
+        ];
         var edges =[
           { data: { id: cy.uuid(), source: "root", target: ele0.data.id } },
           { data: { id: cy.uuid(), source: ele0.data.id, target: "end" } }
-        ]
-        cy.ready(ready)
-        cy.add(nodes)
-        cy.add(edges)
+        ];
+          cy.ready(ready);
+          cy.add(nodes);
+          cy.add(edges);
       }else{
-        var nodes = []
-        var edges = []
+          var nodes = [];
+          var edges = [];
         data.nodes.forEach(function(node){
-          var opts = cy.nodeOptions[node.type.camelCase()]()
-          jQuery.extend(opts.data, node.data)
-          opts.data["id"] = node.id
-          nodes.push(opts)
-        })
+            var opts = cy.nodeOptions[node.type.camelCase()]();
+            jQuery.extend(opts.data, node.data);
+            opts.data["id"] = node.id;
+            nodes.push(opts);
+        });
 
         data.edges.forEach(function(edge){
-          var e = {data:{id: edge.id, source: edge.sourceId, target: edge.targetId}}
-          if(edge.type){e.data['type'] = edge.type}
-          edges.push(e)
-        })
-        cy.add(nodes)
-        cy.add(edges)
-        cy.ready(ready)
+            var e = {data:{id: edge.id, source: edge.sourceId, target: edge.targetId}};
+            if(edge.type){e.data['type'] = edge.type};
+            edges.push(e);
+        });
+          cy.add(nodes);
+          cy.add(edges);
+          cy.ready(ready);
       }
-    })
+    });
 
   }
 
