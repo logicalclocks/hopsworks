@@ -243,7 +243,6 @@ public class NotebookRestApi {
   }
 
   @GET
-  @Path("/")
   public Response getNotebookList() throws IOException {
     AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
             getPrincipal());
@@ -303,7 +302,6 @@ public class NotebookRestApi {
    * @throws IOException
    */
   @POST
-  @Path("/")
   public Response createNote(String message) throws IOException {
     LOG.info("Create new notebook by JSON {}", message);
     NewNotebookRequest request = gson.fromJson(message,
