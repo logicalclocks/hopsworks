@@ -41,6 +41,12 @@ angular.module('hopsWorksApp')
               },
               interpreters: function () {
                 return $http.get('/api/interpreter/interpretersWithStatus');
+              },
+              restart: function () {
+                return $http.get('/api/interpreter/restart');
+              },
+              stopLivySession: function (settingId, sessionId) {
+                return $http.delete('/api/interpreter/livy/sessions/delete/' + settingId + '/' + sessionId);
               }
             };
           }]);

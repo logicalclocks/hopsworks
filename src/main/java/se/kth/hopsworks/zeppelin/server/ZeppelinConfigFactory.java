@@ -35,6 +35,8 @@ public class ZeppelinConfigFactory {
   private static final String ZEPPELIN_SITE_XML = "/conf/zeppelin-site.xml";
   private final ConcurrentMap<String, ZeppelinConfig> projectConfCache
           = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, Long> projectCacheLastRestart
+          = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, ZeppelinConfig> projectUserConfCache
           = new ConcurrentHashMap<>();
   @EJB
@@ -61,6 +63,7 @@ public class ZeppelinConfigFactory {
     }
     projectConfCache.clear();
     projectUserConfCache.clear();
+    projectCacheLastRestart.clear();
   }
 
   /**
@@ -88,10 +91,11 @@ public class ZeppelinConfigFactory {
     projectUserConfCache.put(hdfsUser, userConfig);
     return userConfig;
   }
-  
+
   /**
-   * Returns a unique zeppelin configuration for the project user. Null is 
+   * Returns a unique zeppelin configuration for the project user. Null is
    * returned when the user is not connected to web socket.
+   *
    * @param projectName
    * @param username
    * @return null if there is no configuration for the user
@@ -108,11 +112,13 @@ public class ZeppelinConfigFactory {
   }
 
   /**
-   * Returns conf for the project. This can not be used to call 
-   * notebook server, replFactory or notebook b/c a user specific notebook server
+   * Returns conf for the project. This can not be used to call
+   * notebook server, replFactory or notebook b/c a user specific notebook
+   * server
    * connection is needed to create those.
+   *
    * @param projectName
-   * @return 
+   * @return
    */
   public ZeppelinConfig getprojectConf(String projectName) {
     ZeppelinConfig config = projectConfCache.get(projectName);
@@ -129,27 +135,46 @@ public class ZeppelinConfigFactory {
   }
 
   /**
-   * Removes configuration for projectName. This will force it to be recreated
-   * next time it is accessed.
+   * Removes last restart time for projectName. 
    *
    * @param projectName
    */
   public void removeFromCache(String projectName) {
-    projectConfCache.remove(projectName);
+    ZeppelinConfig config = projectConfCache.remove(projectName);
+    if (config != null) {
+      config.clean();
+      projectCacheLastRestart.put(projectName, System.currentTimeMillis());
+    }
   }
-  
+
   /**
-   * Remove user configuration from cache. 
+   * Remove user configuration from cache.
+   *
    * @param projectName
-   * @param username 
+   * @param username
    */
   public void removeFromCache(String projectName, String username) {
     Project project = projectBean.findByName(projectName);
     Users user = userFacade.findByEmail(username);
+    if (project == null || user == null) {
+      return;
+    }
     String hdfsUser = hdfsUsername.getHdfsUserName(project, user);
-    projectUserConfCache.remove(hdfsUser);
+    ZeppelinConfig config = projectUserConfCache.remove(hdfsUser);
+    if (config != null) {
+      config.clean();
+    }
   }
-
+  
+  /**
+   * Last restart time for the given project
+   * @param projectName
+   * @return 
+   */
+  public Long getLastRestartTime(String projectName) {
+    return projectCacheLastRestart.get(projectName);
+  }
+  
   /**
    * Deletes zeppelin configuration dir for projectName.
    *

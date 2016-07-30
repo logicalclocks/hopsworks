@@ -17,6 +17,7 @@
 
 package se.kth.hopsworks.zeppelin.rest;
 
+import java.util.ArrayList;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import se.kth.hopsworks.zeppelin.server.JsonResponse;
 import se.kth.hopsworks.zeppelin.util.TicketContainer;
@@ -30,8 +31,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.Stateless;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 
 /**
@@ -39,7 +44,9 @@ import javax.ws.rs.core.Context;
  *
  */
 @Path("/security")
+@Stateless
 @Produces("application/json")
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class SecurityRestApi {
   private static final Logger LOG = LoggerFactory.getLogger(SecurityRestApi.class);
 
@@ -68,7 +75,7 @@ public class SecurityRestApi {
     JsonResponse response;
     // ticket set to anonymous for anonymous user. Simplify testing.
     String ticket;
-    if ("anonymous".equals(principal))
+    if (principal == null || "anonymous".equals(principal))
       ticket = "anonymous";
     else
       ticket = TicketContainer.instance.getTicket(principal);
@@ -82,4 +89,21 @@ public class SecurityRestApi {
     LOG.warn(response.toString());
     return response.build();
   }
+
+  /**
+   * Get userlist
+   * Returns list of all user from available realms
+   *
+   * @param searchText
+   * @return 200 response
+   */
+  @GET
+  @Path("userlist/{searchText}")
+  public Response getUserList(@PathParam("searchText") final String searchText) {
+
+    List<String> autoSuggestList = new ArrayList<>();
+    
+    return new JsonResponse<>(Response.Status.OK, "", autoSuggestList).build();
+  }
+
 }

@@ -16,16 +16,14 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.dep.DependencyResolver;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
-import org.apache.zeppelin.notebook.JobListenerFactory;
-import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.NotebookAuthorization;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
 import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
-import org.apache.zeppelin.scheduler.JobListener;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import org.apache.zeppelin.search.LuceneSearch;
 import org.apache.zeppelin.search.SearchService;
+import org.apache.zeppelin.user.Credentials;
 import org.quartz.SchedulerException;
 import org.sonatype.aether.RepositoryException;
 import se.kth.hopsworks.util.ConfigFileGenerator;
@@ -55,6 +53,7 @@ public class ZeppelinConfig {
   private NotebookRepo notebookRepo;
   private DependencyResolver depResolver;
   private NotebookAuthorization notebookAuthorization;
+  private Credentials credentials;
   private SearchService notebookIndex;
   private final Settings settings;
   private final String projectName;
@@ -110,11 +109,12 @@ public class ZeppelinConfig {
       this.notebookRepo = new NotebookRepoSync(conf);
       this.notebookIndex = new LuceneSearch();
       this.notebookAuthorization = new NotebookAuthorization(conf);
+      this.credentials = new Credentials(conf.credentialsPersist(), conf.getCredentialsPath());
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
-	  //        removeProjectDirRecursive();
+        //        removeProjectDirRecursive();
       } else if (newFile) { // if the conf files were newly created delete them
-	  //        removeProjectConfFiles();
+        //        removeProjectConfFiles();
       }
       LOGGGER.log(Level.SEVERE,
               "Error in initializing ZeppelinConfig for project: {0}. {1}",
@@ -139,6 +139,8 @@ public class ZeppelinConfig {
     this.schedulerFactory = zConf.getSchedulerFactory();
     this.notebookRepo = zConf.getNotebookRepo();
     this.notebookIndex = zConf.getNotebookIndex();
+    this.notebookAuthorization = zConf.getNotebookAuthorization();
+    this.credentials = zConf.getCredentials();
     setNotebookServer(nbs);
   }
 
@@ -159,11 +161,17 @@ public class ZeppelinConfig {
               this.replFactory,
               this.notebookServer,
               this.notebookIndex,
-              this.notebookAuthorization);
+              this.notebookAuthorization,
+              this.credentials);
     } catch (InterpreterException | IOException | RepositoryException |
             SchedulerException ex) {
       LOGGGER.log(Level.SEVERE, null, ex);
     }
+  }
+
+  public boolean isClosed() {
+    return this.replFactory == null || this.notebook == null
+            || this.notebookServer == null;
   }
 
   public Notebook getNotebook() {
@@ -238,6 +246,16 @@ public class ZeppelinConfig {
     return logDirPath;
   }
 
+  public NotebookAuthorization getNotebookAuthorization() {
+    return notebookAuthorization;
+  }
+
+  public Credentials getCredentials() {
+    return credentials;
+  }
+  
+  
+
   //returns true if the project dir was created 
   private boolean createZeppelinDirs() {
     File projectDir = new File(projectDirPath);
@@ -299,7 +317,8 @@ public class ZeppelinConfig {
     if (!log4j_file.exists()) {
       StringBuilder log4j = ConfigFileGenerator.instantiateFromTemplate(
               ConfigFileGenerator.LOG4J_TEMPLATE);
-      createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.toString());
+      createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.
+              toString());
     }
     if (!zeppelin_env_file.exists()) {
       StringBuilder zeppelin_env = ConfigFileGenerator.instantiateFromTemplate(
@@ -322,7 +341,7 @@ public class ZeppelinConfig {
                       ConfigFileGenerator.ZEPPELIN_CONFIG_TEMPLATE,
                       "zeppelin_home", home,
                       "livy_url", settings.getLivyUrl(),
-                      "livy_master", settings.getLivyYarnMode(),              
+                      "livy_master", settings.getLivyYarnMode(),
                       "zeppelin_home_dir", home);
       createdXml = ConfigFileGenerator.createConfigFile(zeppelin_site_xml_file,
               zeppelin_site_xml.
@@ -382,7 +401,7 @@ public class ZeppelinConfig {
     clean();
     return removeProjectDirRecursive();
   }
-
+  
   private boolean removeProjectDirRecursive() {
     File projectDir = new File(projectDirPath);
     if (!projectDir.exists()) {
@@ -436,10 +455,16 @@ public class ZeppelinConfig {
     if (this.replFactory != null) {
       this.replFactory.close();
     }
-    if (this.schedulerFactory != null) {
-      this.schedulerFactory.destroy();
+
+    // will close repo and index
+    if (this.notebook != null) {
+      this.notebook.close();
     }
-    this.notebookServer = null;
+    if (this.notebookServer != null) {
+      this.notebookServer.closeConnection();
+    }
+    this.schedulerFactory = null;
+    //this.notebookServer = null;
     this.replFactory = null;
     this.notebook = null;
   }

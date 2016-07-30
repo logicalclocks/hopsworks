@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response.Status;
 import java.util.Map;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import se.kth.bbc.project.Project;
@@ -44,6 +45,7 @@ import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
  * Configurations Rest API Endpoint
  */
 @Path("/configurations")
+@Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class ConfigurationsRestApi {

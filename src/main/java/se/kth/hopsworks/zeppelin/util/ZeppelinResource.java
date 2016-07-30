@@ -11,6 +11,11 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -19,6 +24,7 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
+import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 
 @Stateless
@@ -31,6 +37,8 @@ public class ZeppelinResource {
   private ProjectFacade projectBean;
   @EJB
   private ZeppelinConfigFactory zeppelinConfFactory;
+  @EJB
+  private Settings settings;
 
   public ZeppelinResource() {
   }
@@ -43,7 +51,8 @@ public class ZeppelinResource {
    * @param project
    * @return
    */
-  public boolean isInterpreterRunning(InterpreterSetting interpreter, Project project) {
+  public boolean isInterpreterRunning(InterpreterSetting interpreter,
+          Project project) {
     FileObject[] pidFiles;
     try {
       pidFiles = getPidFiles(project);
@@ -54,7 +63,8 @@ public class ZeppelinResource {
     boolean running = false;
 
     for (FileObject file : pidFiles) {
-      if (file.getName().toString().contains("interpreter-"+interpreter.getGroup()+"-")) {
+      if (file.getName().toString().contains("interpreter-" + interpreter.
+              getGroup() + "-")) {
         running = isProccessAlive(readPid(file));
         //in the rare case were there are more that one pid files for the same 
         //interpreter break only when we find running one
@@ -66,7 +76,13 @@ public class ZeppelinResource {
     return running;
   }
 
-  public void forceKillInterpreter(InterpreterSetting interpreter, Project project) {
+  public boolean isLivySessionAlive(int sessionId) {
+    LivyMsg.Session session = getLivySession(sessionId);
+    return session != null;
+  }
+
+  public void forceKillInterpreter(InterpreterSetting interpreter,
+          Project project) {
     FileObject[] pidFiles;
     try {
       pidFiles = getPidFiles(project);
@@ -76,7 +92,8 @@ public class ZeppelinResource {
     }
     boolean running = false;
     for (FileObject file : pidFiles) {
-      if (file.getName().toString().contains("interpreter-"+interpreter.getGroup()+"-")) {
+      if (file.getName().toString().contains("interpreter-" + interpreter.
+              getGroup() + "-")) {
         running = isProccessAlive(readPid(file));
         if (running) {
           forceKillProccess(readPid(file));
@@ -120,9 +137,11 @@ public class ZeppelinResource {
   }
 
   /**
-   * Retrieves projectId from cookies and returns the project associated with the id.
+   * Retrieves projectId from cookies and returns the project associated with
+   * the id.
+   *
    * @param request
-   * @return 
+   * @return
    */
   public Project getProjectNameFromCookies(HttpServletRequest request) {
     Cookie[] cookies = request.getCookies();
@@ -152,7 +171,7 @@ public class ZeppelinResource {
     if (pid == null) {
       return false;
     }
-    
+
     //TODO: We should clear the environment variables before launching the 
     // redirect stdout and stderr for child process to the zeppelin/project/logs file.
     int exitValue;
@@ -186,7 +205,7 @@ public class ZeppelinResource {
               toString());
     }
   }
-  
+
   private String readPid(FileObject file) {
     //pid value can only be extended up to a theoretical maximum of 
     //32768 for 32 bit systems or 4194304 for 64 bit:
@@ -206,5 +225,48 @@ public class ZeppelinResource {
       return null;
     }
     return s;
+  }
+
+  public int deleteLivySession(int sessionId) {
+    String livyUrl = settings.getLivyUrl();
+    Client client = ClientBuilder.newClient();
+    WebTarget target = client.target(livyUrl).path("/sessions/" + sessionId);
+    Response res;
+    try {
+      res = target.request().delete();
+    } catch (NotFoundException e) {
+      return Response.Status.NOT_FOUND.getStatusCode();
+    }finally {
+      client.close();
+    }
+    return res.getStatus();
+  }
+
+  public LivyMsg.Session getLivySession(int sessionId) {
+    String livyUrl = settings.getLivyUrl();
+    Client client = ClientBuilder.newClient();
+    WebTarget target = client.target(livyUrl).path("/sessions/" + sessionId);
+    LivyMsg.Session session = null;
+    try {
+      session = target.request().get(LivyMsg.Session.class);
+    } catch (NotFoundException e) {
+      return null;
+    }finally {
+      client.close();
+    }
+    return session;
+  }
+  
+  public LivyMsg getLivySessions() {
+    String livyUrl = settings.getLivyUrl();
+    Client client = ClientBuilder.newClient();
+    WebTarget target = client.target(livyUrl).path("/sessions");
+    LivyMsg livySession = null;
+    try {
+      livySession = target.request().get(LivyMsg.class);
+    }finally {
+      client.close();
+    }
+    return livySession;
   }
 }
