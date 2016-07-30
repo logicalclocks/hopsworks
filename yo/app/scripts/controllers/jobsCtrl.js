@@ -39,6 +39,8 @@ angular.module('hopsWorksApp')
               $scope.sortKey = keyname;   //set the sortKey to the param passed
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
             };
+
+
             self.editAsNew = function (job) {
               JobService.getConfiguration(self.projectId, job.id).then(
                       function (success) {
@@ -49,7 +51,7 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error fetching job configuration.', ttl: 15000});
               });
             };
-           
+
             self.buttonClickedToggle = function (id, display) {
               self.buttonArray[id] = display;
             };
@@ -61,9 +63,6 @@ angular.module('hopsWorksApp')
             self.copy = function () {
               var jobType;
               switch (self.currentjob.jobType.toUpperCase()) {
-                case "CUNEIFORM":
-                  jobType = 0;
-                  break;
                 case "SPARK":
                   jobType = 1;
                   break;
@@ -74,11 +73,7 @@ angular.module('hopsWorksApp')
                   jobType = 3;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
-              if (jobType === 0) {
-                mainFileTxt = "Workflow file";
-                mainFileVal = self.currentjob.runConfig.wf.name;
-                jobDetailsTxt = "Input variables";
-              } else if (jobType === 1) {
+              if (jobType === 1) {
                 sparkState = {
                   "selectedJar": getFileName(self.currentjob.runConfig.jarPath)
                 };
@@ -197,7 +192,7 @@ angular.module('hopsWorksApp')
               ProjectService.uberPrice({id: self.projectId}).$promise.then(
                       function (success) {
                         var price = success.price;
-                        price = Math.ceil(parseFloat(price).toFixed(4) * 100.0 / 1.67*100)/100;
+                        price = Math.ceil(parseFloat(price).toFixed(4) * 100.0 / 1.67 * 100) / 100;
                         ModalService.uberPrice('sm', 'Confirm', 'Do you want to run this job at this price?', price).then(
                                 function (success) {
                                   JobService.runJob(self.projectId, jobId).then(
@@ -249,7 +244,7 @@ angular.module('hopsWorksApp')
             self.showUI = function (job) {
               ModalService.jobUI('xlg', job, self.projectId);
             };
-            
+
             self.showLogs = function (jobId) {
               JobService.showLog(self.projectId, jobId).then(
                       function (success) {
@@ -336,25 +331,35 @@ angular.module('hopsWorksApp')
               }, 5000);
             };
             startPolling();
-            
-            $scope.convertMS = function(ms) {
-                    if(ms===undefined){
-                        return "";
-                    }    
-                    var m, s;
-                    s = Math.floor(ms / 1000);
-                    m = Math.floor(s / 60);
-                    s = s % 60;
-                    if (s.toString().length < 2) {
-                        s = '0'+s;
-                    }
-                    if (m.toString().length < 2) {
-                        m = '0'+m;
-                    }
-                    var ret = m + ":" + s;
-                    return ret;
+
+            $scope.convertMS = function (ms) {
+              if (ms === undefined) {
+                return "";
+              }
+              var m, s;
+              s = Math.floor(ms / 1000);
+              m = Math.floor(s / 60);
+              s = s % 60;
+              if (s.toString().length < 2) {
+                s = '0' + s;
+              }
+              if (m.toString().length < 2) {
+                m = '0' + m;
+              }
+              var ret = m + ":" + s;
+              return ret;
             };
 
+
+            var init = function () {
+              var stored = StorageService.contains(self.projectId + "_newjob");
+              if (stored) {
+//                self.newJob();
+                  $location.path('project/' + self.projectId + '/newjob');
+              }
+            };
+
+            init();
           }]);
 
 

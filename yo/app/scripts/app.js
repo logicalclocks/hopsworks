@@ -196,26 +196,6 @@ angular.module('hopsWorksApp', [
                   }]
               }
             })
-            .when('/project/:projectID/cuneiform', {
-              templateUrl: 'views/cuneiform.html',
-              controller: 'ProjectCtrl as projectCtrl',
-              resolve: {
-                auth: ['$q', '$location', 'AuthService', '$cookies',
-                  function ($q, $location, AuthService, $cookies) {
-                    return AuthService.session().then(
-                        function (success) {
-                          $cookies.email = success.data.data.value;
-                        },
-                        function (err) {
-                          delete $cookies.email;
-                          delete $cookies.projectID;
-                          $location.path('/login');
-                          $location.replace();
-                          return $q.reject(err);
-                        });
-                  }]
-              }
-            })
             .when('/project/:projectID/spark', {
               templateUrl: 'views/spark.html',
               controller: 'ProjectCtrl as projectCtrl',
@@ -338,26 +318,6 @@ angular.module('hopsWorksApp', [
             })
             .when('/project/:projectID/kafka', {
               templateUrl: 'views/kafka.html',
-              controller: 'ProjectCtrl as projectCtrl',
-              resolve: {
-                auth: ['$q', '$location', 'AuthService', '$cookies',
-                  function ($q, $location, AuthService, $cookies) {
-                    return AuthService.session().then(
-                        function (success) {
-                          $cookies.email = success.data.data.value;
-                        },
-                        function (err) {
-                          delete $cookies.email;
-                          delete $cookies.projectID;
-                          $location.path('/login');
-                          $location.replace();
-                          return $q.reject(err);
-                        });
-                  }]
-              }
-            })
-            .when('/project/:projectID/charon', {
-              templateUrl: 'views/charon.html',
               controller: 'ProjectCtrl as projectCtrl',
               resolve: {
                 auth: ['$q', '$location', 'AuthService', '$cookies',

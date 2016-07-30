@@ -26,7 +26,7 @@
                 </button>
               </div>
               <div style="float: left;width: 90%;">
-                <input style="float: left;width: 85%;margin: 0px 10px;"
+                <input style="float: left;width: 35%;margin: 0px 10px;"
                        type="text"
                        ng-model="jobsCtrl.jobFilter.name"
                        placeholder="Filter Jobs" class="form-control" autofocus/>
@@ -44,7 +44,7 @@
                   Name
                   <span class="glyphicon sort-icon" ng-show="sortKey == 'name'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th ng-click="sort('creationTime')" style="width: 10%">
+                <th ng-click="sort('creationTime')" style="width: 9%">
                   Created on
                   <span class="glyphicon sort-icon" ng-show="sortKey == 'creationTime'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
@@ -57,7 +57,7 @@
                   <span class="glyphicon sort-icon" ng-show="sortKey == 'owner'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
                 <th ng-click="sort('submissiontime')" style="width: 10%">
-                  Submission Time
+                  Submitted at
                   <span class="glyphicon sort-icon" ng-show="sortKey == 'submissiontime'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
                 <th ng-click="sort('state')" style="width: 7%">
@@ -68,15 +68,15 @@
                   Status
                   <span class="glyphicon sort-icon" ng-show="sortKey == 'finalStatus'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th ng-click="sort('progress')" style="width: 10%">
+                <th ng-click="sort('progress')" style="width: 9%">
                   Progress
                   <span class="glyphicon sort-icon" ng-show="sortKey == 'progress'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
                 <th ng-click="sort('duration')" style="width: 5%">
-                  Duration(min)
+                  Duration
                   <span class="glyphicon sort-icon" ng-show="sortKey == 'duration'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
                 </th>
-                <th style="width: 20%">
+                <th style="width: 23%">
                   Actions
                 </th>
                 </thead>
@@ -269,7 +269,7 @@
                         </button>
                       </span>
                       <span class="field-info" tooltip="Delete" style="padding-top: 5px;padding-left:3px">
-                        <button style="margin-left: 10px"
+                        <button style=""
                                 ng-click="jobsCtrl.toggle(job, $index);
                                         jobsCtrl.deleteJob(job.id);
                                         $event.stopPropagation();"
@@ -277,7 +277,7 @@
                         </button>
                       </span>
                       <span class="field-info" tooltip="Job UI" style="padding-top: 5px;padding-left:3px">
-                        <button style="margin-left: 10px"
+                        <button style=""
                                 ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showUI(job);
                                         $event.stopPropagation();"
                                 class="btn btn-success glyphicon glyphicon-eye-open">
