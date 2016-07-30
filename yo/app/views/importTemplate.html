@@ -77,23 +77,23 @@
           <div class="col-md-1">
             <table size="50%">
               <tr>
-                <td>
+                <td style="margin-left: 10px;">
                   <span class="btn btn-small btn-info" flow-btn flow-attrs="{accept:'.json'}">
                     <i class="glyphicon glyphicon-file"></i>
                     &nbsp Upload File
                   </span>
                 </td>
-                <td>
+                <td style="margin-left: 10px;">
                   <a class="btn btn-small btn-warning" ng-click="$flow.pause()">
                     <i class="glyphicon glyphicon-pause"></i>
                     Pause all</a>
                 </td>
-                <td>
+                <td style="margin-left: 10px;"> 
                   <a class="btn btn-small btn-danger" ng-click="$flow.cancel()">
                     <i class="glyphicon glyphicon-remove-circle"></i>
                     Cancel all</a>
                 </td>
-                <td>
+                <td style="margin-left: 10px;"> 
                   <span class="label label-info">Total Size: {{importTemplateCtrl.size($flow.getSize())}}</span>
                 </td>
               </tr>

@@ -66,10 +66,7 @@ angular.module('hopsWorksApp')
             };
 
             this.setupInfo = function () {
-              if (self.job.runConfig.type == "cuneiformJobConfiguration") {
-                self.jobtype = "Cuneiform";
-                self.execFile = job.runConfig.wf.name;
-              } else if (self.job.runConfig.type == "sparkJobConfiguration") {
+              if (self.job.runConfig.type == "sparkJobConfiguration") {
                 self.jobtype = "Spark";
                 self.execFile = getFileName(job.runConfig.jarPath);
               } else if (self.job.runConfig.type == "adamJobConfiguration") {
