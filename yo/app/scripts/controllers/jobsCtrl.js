@@ -210,8 +210,7 @@ angular.module('hopsWorksApp')
 
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Could not get the current YARN price.', ttl: 10000});
-              }
-              )
+              });
             };
 
             self.stopJob = function (jobId) {
@@ -254,6 +253,19 @@ angular.module('hopsWorksApp')
               });
             };
 
+            self.retryLogs = function (appId, type) {
+              if (appId === '' || appId === undefined) {
+                growl.error("Can not retry log. The job has not yet been assigned an Id", {title: 'Error', ttl: 5000});
+              }
+              JobService.retryLog(self.projectId, appId, type).then(
+                      function (success) {
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                        self.showLogs(self.currentjob.id);
+                      }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Failed to get logs', ttl: 5000});
+              });
+            };
+
             self.deleteJob = function (jobId, jobName) {
               ModalService.confirm("sm", "Delete Job (" + jobName + ")",
                       "Do you really want to delete this job?\n\
@@ -285,7 +297,7 @@ angular.module('hopsWorksApp')
               self.hasSelectJob = true;
               $scope.selectedIndex = index;
               self.currentToggledIndex = index;
-
+              self.currentjob = job;
             };
             self.untoggle = function (job, index) {
               //reset all jobs showing flag

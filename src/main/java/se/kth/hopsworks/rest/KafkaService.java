@@ -36,6 +36,7 @@ import io.hops.kafka.SharedProjectDTO;
 import io.hops.kafka.TopicDefaultValueDTO;
 import java.util.logging.Level;
 import javax.json.JsonObject;
+import javax.persistence.EntityExistsException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.PUT;
@@ -335,7 +336,13 @@ public class KafkaService {
 
         try {
             kafkaFacade.addAclsToTopic(topicName, projectId, aclDto);
-        } catch (Exception e) {
+        } catch(EntityExistsException ex){
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "This ACL definition already existes in database.");
+        }catch (IllegalArgumentException ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Wrong imput values");
+        }catch (Exception ex) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Problem adding ACL to topic.");
         }
@@ -361,6 +368,9 @@ public class KafkaService {
 
         try {
             kafkaFacade.removeAclsFromTopic(topicName, aclId);
+        }catch (IllegalArgumentException ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Wrong imput values");
         } catch (Exception e) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "Topic acl not found in database");
@@ -415,9 +425,20 @@ public class KafkaService {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Incomplete request!");
         }
-
-        kafkaFacade.updateTopicAcl(projectId, topicName, Integer.parseInt(aclId), aclDto);
-
+        
+        try {
+             kafkaFacade.updateTopicAcl(projectId, topicName, Integer.parseInt(aclId), aclDto);
+        } catch(EntityExistsException ex){
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "This ACL definition already existes in database.");
+        }catch (IllegalArgumentException ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Wrong imput values");
+        }catch (Exception ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Problem adding ACL to topic.");
+        }
+        
         json.setSuccessMessage("TopicAcl updated successfuly");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
     }
