@@ -349,6 +349,8 @@ angular.module('hopsWorksApp')
               MetadataActionService.removeTemplate($cookies['email'], templateId)
                       .then(function (data) {
                         self.selectedTemplate = {};
+                        self.currentTemplateID = -1;
+                        self.currentBoard = {};
                         //trigger a variable change (availableTemplates) in the service
                         MetadataHelperService.fetchAvailableTemplates();
                         self.availableTemplates = MetadataHelperService.getAvailableTemplates();
