@@ -15,8 +15,6 @@
     <java.version>1.7</java.version>
     <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
     <glassfish.hostname>localhost</glassfish.hostname>
     <glassfish.admin>adminuser</glassfish.admin>
@@ -26,24 +24,10 @@
     <glassfish.domain>domain1</glassfish.domain>
   </properties>
 
-  <dependencies>
+  <dependencies> 
     <!-- CDI bug. Zeppelin-interpreter includes org.sonatype.guice.**
     which has CDI annotated beans, causing deployment of hopsworks to fail. Because Zeppelin-interpreter
     is a 3rd party jar, Glassfish won't exclude from scanning beans/paths we put in beans.xml 
-    -->
-
-    <!--
-	<dependency> 
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-bean</artifactId>
-      <version>2.2.2</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-plexus</artifactId>
-      <version>2.2.2</version>
-      </dependency>
     -->
     <dependency> 
       <groupId>org.sonatype.sisu</groupId>
@@ -55,15 +39,14 @@
       <groupId>org.sonatype.sisu</groupId>
       <artifactId>sisu-inject-plexus</artifactId>
       <version>2.6.0</version>
-    </dependency>
-
-<!--
-    <dependency>
-      <groupId>de.hu-berlin.wbi.cuneiform</groupId>
-      <artifactId>cuneiform-core</artifactId>
-      <version>2.0.0-SNAPSHOT</version>
-    </dependency>
--->
+    </dependency> 
+    <!--
+        <dependency>
+          <groupId>de.hu-berlin.wbi.cuneiform</groupId>
+          <artifactId>cuneiform-core</artifactId>
+          <version>2.0.0-SNAPSHOT</version>
+        </dependency>
+    -->
     <dependency>
       <groupId>com.google.zxing</groupId>
       <artifactId>javase</artifactId>
@@ -133,15 +116,15 @@
     </dependency>
     
     <dependency>
-     <groupId>org.apache.kafka</groupId>
+      <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_2.10</artifactId>
       <version>0.9.0.1</version>
       <type>jar</type>
     </dependency>
     <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>1.7.21</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.21</version>
     </dependency>
     <dependency>
       <groupId>com.101tec</groupId>
@@ -170,24 +153,18 @@
     <!--Zeppelin dependencies -->
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
-      <artifactId>zeppelin</artifactId>
-      <version>0.6.0-incubating-SNAPSHOT</version>
-      <type>pom</type>     
-    </dependency>
-    <dependency>
-      <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-interpreter</artifactId>
-      <version>0.6.0-incubating-SNAPSHOT</version>      
+      <version>0.6.1-SNAPSHOT</version>  
     </dependency>
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-zengine</artifactId>
-      <version>0.6.0-incubating-SNAPSHOT</version>      
+      <version>0.6.1-SNAPSHOT</version>      
     </dependency>
     <dependency>		
       <groupId>org.apache.zeppelin</groupId>		
       <artifactId>zeppelin-web</artifactId>		
-      <version>0.6.0-incubating-SNAPSHOT</version>      
+      <version>0.6.1-SNAPSHOT</version>      
       <type>war</type>		
     </dependency> 
     <!-- Apache Shiro -->
@@ -223,59 +200,59 @@
       <version>2.1.2</version>
     </dependency>
     <dependency>
-    <groupId>org.apache.flink</groupId>
-    <artifactId>flink-clients_2.10</artifactId>
-    <version>1.0.3</version>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-clients_2.10</artifactId>
+      <version>1.0.3</version>
       <exclusions>
-       <exclusion>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-shaded-hadoop2</artifactId>
-       </exclusion>
+        <exclusion>
+          <groupId>org.apache.flink</groupId>
+          <artifactId>flink-shaded-hadoop2</artifactId>
+        </exclusion>
         <exclusion>
           <groupId>io.netty</groupId>
           <artifactId>netty-all</artifactId>
         </exclusion>
       </exclusions>
-     </dependency> 
-     <dependency>
+    </dependency> 
+    <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-yarn_2.10</artifactId>
       <version>1.0.3</version>
-        <exclusions>
-         <exclusion>
+      <exclusions>
+        <exclusion>
           <groupId>org.apache.flink</groupId>
           <artifactId>flink-shaded-hadoop2</artifactId>
-         </exclusion>
-        </exclusions>
+        </exclusion>
+      </exclusions>
     </dependency> 
   </dependencies>
   <build>
     <finalName>hopsworks</finalName>
     <plugins>
-<!---
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>2.15</version>
-        <executions>
-          <execution>
-            <id>validate</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <suppressionsLocation>/tools/maven/suppressions.xml</suppressionsLocation>
-          <suppressionsFileExpression>/checkstyle.suppressions.file</suppressionsFileExpression>
-          <configLocation>/tools/maven/checkstyle.xml</configLocation>
-          <logViolationsToConsole>true</logViolationsToConsole>
-          <failsOnError>true</failsOnError>
-          <consoleOutput>true</consoleOutput>
-        </configuration>
-      </plugin>
--->
+      <!---
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-checkstyle-plugin</artifactId>
+              <version>2.15</version>
+              <executions>
+                <execution>
+                  <id>validate</id>
+                  <phase>validate</phase>
+                  <goals>
+                    <goal>check</goal>
+                  </goals>
+                </execution>
+              </executions>
+              <configuration>
+                <suppressionsLocation>/tools/maven/suppressions.xml</suppressionsLocation>
+                <suppressionsFileExpression>/checkstyle.suppressions.file</suppressionsFileExpression>
+                <configLocation>/tools/maven/checkstyle.xml</configLocation>
+                <logViolationsToConsole>true</logViolationsToConsole>
+                <failsOnError>true</failsOnError>
+                <consoleOutput>true</consoleOutput>
+              </configuration>
+            </plugin>
+      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -402,49 +379,49 @@
         <activeByDefault>false</activeByDefault>
       </activation>    
       <build>
-       <plugins>
-        <plugin>
-        <groupId>org.codehaus.cargo</groupId>
-        <artifactId>cargo-maven2-plugin</artifactId>
-        <version>1.4.17</version>
-        <executions>
-          <execution>
-            <phase>install</phase>
-            <goals>
-              <goal>redeploy</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <container>
-            <containerId>glassfish4x</containerId>
-            <type>remote</type>
-            <log>target/cargo.log</log>
-            <logLevel>debug</logLevel>
-          </container>
-          <configuration>
-            <type>runtime</type>
-            <properties>
-              <cargo.hostname>${glassfish.hostname}</cargo.hostname>
-              <cargo.remote.username>${glassfish.admin}</cargo.remote.username>
-              <cargo.remote.password>${glassfish.passwd}</cargo.remote.password>
-              <cargo.servlet.port>${glassfish.port}</cargo.servlet.port>                           
-              <cargo.glassfish.domain.name>${glassfish.domain}</cargo.glassfish.domain.name>
-              <cargo.glassfish.admin.port>${glassfish.admin_port}</cargo.glassfish.admin.port>
-              <cargo.runtime.args>force=true</cargo.runtime.args>
-              <cargo.protocol>http</cargo.protocol>
-            </properties>
-          </configuration>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.glassfish.main.deployment</groupId>
-            <artifactId>deployment-client</artifactId>
-            <version>4.1.1</version>
-          </dependency>            
-        </dependencies>
-      </plugin>
-       </plugins>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.cargo</groupId>
+            <artifactId>cargo-maven2-plugin</artifactId>
+            <version>1.4.17</version>
+            <executions>
+              <execution>
+                <phase>install</phase>
+                <goals>
+                  <goal>redeploy</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <container>
+                <containerId>glassfish4x</containerId>
+                <type>remote</type>
+                <log>target/cargo.log</log>
+                <logLevel>debug</logLevel>
+              </container>
+              <configuration>
+                <type>runtime</type>
+                <properties>
+                  <cargo.hostname>${glassfish.hostname}</cargo.hostname>
+                  <cargo.remote.username>${glassfish.admin}</cargo.remote.username>
+                  <cargo.remote.password>${glassfish.passwd}</cargo.remote.password>
+                  <cargo.servlet.port>${glassfish.port}</cargo.servlet.port>                           
+                  <cargo.glassfish.domain.name>${glassfish.domain}</cargo.glassfish.domain.name>
+                  <cargo.glassfish.admin.port>${glassfish.admin_port}</cargo.glassfish.admin.port>
+                  <cargo.runtime.args>force=true</cargo.runtime.args>
+                  <cargo.protocol>http</cargo.protocol>
+                </properties>
+              </configuration>
+            </configuration>
+            <dependencies>
+              <dependency>
+                <groupId>org.glassfish.main.deployment</groupId>
+                <artifactId>deployment-client</artifactId>
+                <version>4.1.1</version>
+              </dependency>            
+            </dependencies>
+          </plugin>
+        </plugins>
       </build>
   
 
@@ -482,11 +459,6 @@
       <url>http://kompics.sics.se/maven/repository</url>
       <releases>
       </releases>
-    </repository>
-    <repository>  
-      <id>maven2-repository.dev.java.net</id>
-      <name>Java.net Repository for Maven</name>
-      <url>http://download.java.net/maven/2</url>
     </repository>
     <repository>
       <id>glassfish</id>
