@@ -315,7 +315,13 @@
                 <div id="logs" class="tab-pane fade in active">
                   <accordion
                     close-others="true"infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
-                    <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                    <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.appId}}">
+                      <accordion-heading>
+                        Application Id = {{item.appId}}
+                        <div class="pull-right">
+                          {{item.time}}
+                        </div>
+                      </accordion-heading>
                       <div style="overflow-y: auto">
                         <button ng-if="item.retriableOut !== undefined && item.appId !== ''" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'out')" >
                           Retry log
@@ -334,7 +340,13 @@
                 <div id="errs" class="tab-pane fade">
                   <accordion
                     close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
-                    <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                    <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.appId}}">
+                      <accordion-heading>
+                        Application Id = {{item.appId}}
+                        <div class="pull-right">
+                          {{item.time}}
+                        </div>
+                      </accordion-heading>
                       <div style="overflow-y: auto">
                         <button  ng-if="item.retriableErr !== undefined && item.appId !== ''" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'err')" >
                           Retry log
