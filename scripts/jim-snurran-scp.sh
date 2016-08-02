@@ -1,14 +1,13 @@
 #!/bin/bash
 # Deploy the frontend to the glassfish home directory and run bower
-export PORT=9191
+set -e
+export PORT=20005
 export WEBPORT=8080
 export SERVER=snurran.sics.se
-export key=private_key
+export key=insecure_private_key
+usr=jdowling
 
-
-scp jdowling@snurran.sics.se:/home/jdowling/NetBeansProjects/hopsworks-chef/.kitchen/kitchen-vagrant/default-ubuntu-1404/.vagrant/machines/default/virtualbox/private_key .
-chmod 600 private_key
-#scp jdowling@snurran.sics.se:/home/jdowling/NetBeansProjects/hopsworks-chef/vagrant/machines/default/virtualbox/private_key
+scp ${usr}@${SERVER}:/home/${usr}/.vagrant.d/insecure_private_key .
 
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $key -p $PORT vagrant@${SERVER} "cd /srv/glassfish/domain1 && sudo chown -R glassfish:vagrant docroot && sudo chmod -R 775 *"
 
@@ -18,3 +17,4 @@ scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnl
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $key -p $PORT vagrant@${SERVER} "cd /srv/glassfish/domain1/docroot/app && bower install && perl -pi -e \"s/getLocationBase\(\)/'http:\/\/${SERVER}:${WEBPORT}\/hopsworks'/g\" scripts/services/RequestInterceptorService.js"
 
 google-chrome -new-tab http://${SERVER}:$WEBPORT/app
+
