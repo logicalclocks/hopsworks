@@ -55,6 +55,7 @@ module.exports = function (config) {
       'bower_components/ng-prettyjson/src/ng-prettyjson.js',
       'bower_components/ng-prettyjson/src/ng-prettyjson-tmpl.js',
       'bower_components/angular-awesome-slider/dist/angular-awesome-slider.js',
+      'bower_components/angular-resizable/src/angular-resizable.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',
