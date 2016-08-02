@@ -1,5 +1,7 @@
 package io.hops.kmon.rest.resources;
 
+import io.hops.kmon.alert.Alert;
+import io.hops.kmon.alert.AlertEJB;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.ws.rs.POST;
 
 /**
  *
@@ -40,8 +43,8 @@ public class AgentResource {
     private HostEJB hostEJB;
     @EJB
     private RoleEJB roleEjb;
-//    @EJB
-//    private AlertEJB alertEJB;
+    @EJB
+    private AlertEJB alertEJB;
     
     final static Logger logger = Logger.getLogger(AgentResource.class.getName());
 
@@ -162,9 +165,8 @@ public class AgentResource {
     public Response heartbeat(@Context HttpServletRequest req, String jsonHb) {
         try {
           
+
           InputStream stream = new ByteArrayInputStream(jsonHb.getBytes(StandardCharsets.UTF_8));
-          
-//            JSONObject json = new JSONObject(jsonHb);
             JsonObject json = Json.createReader(stream).readObject();
             long agentTime = json.getJsonNumber("agent-time").longValue();
             String hostId = json.getString("host-id");
@@ -173,22 +175,23 @@ public class AgentResource {
                 logger.log(Level.INFO, "Host with id {0} not found.", hostId);
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
-            if (!host.isRegistered()) {
-                logger.log(Level.INFO, "Host with id {0} is not registered.", hostId);
-                return Response.status(Response.Status.NOT_ACCEPTABLE).build();
-            }
+//            if (!host.isRegistered()) {
+//                logger.log(Level.INFO, "Host with id {0} is not registered.", hostId);
+//                return Response.status(Response.Status.NOT_ACCEPTABLE).build();
+//            }
             host.setLastHeartbeat((new Date()).getTime());
             host.setLoad1(json.getJsonNumber("load1").doubleValue());
             host.setLoad5(json.getJsonNumber("load5").doubleValue());
             host.setLoad15(json.getJsonNumber("load15").doubleValue());
             host.setDiskUsed(json.getJsonNumber("disk-used").longValue());
             host.setMemoryUsed(json.getJsonNumber("memory-used").longValue());
+            host.setPrivateIp(json.getString("private-ip"));
+            host.setDiskCapacity(json.getJsonNumber("disk-capacity").longValue());
+            host.setMemoryCapacity(json.getJsonNumber("memory-capacity").longValue());
             hostEJB.storeHost(host, false);
 
-//            JSONArray roles = json.getJSONArray("services");
             JsonArray roles = json.getJsonArray("services");
             for (int i = 0; i < roles.size(); i++) {
-//                JSONObject s = roles.getJSONObject(i);
                 JsonObject s = roles.getJsonObject(i);
                 Role role = new Role();
                 role.setHostId(host.getHostId());
@@ -220,54 +223,55 @@ public class AgentResource {
         return Response.ok().build();
     }
 
-//    @POST
-//    @Path("/alert")
-//    @Consumes(MediaType.APPLICATION_JSON)
-//    public Response alert(@Context HttpServletRequest req, String jsonString) {
-//        // TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
-//        try {
-//            JSONObject json = new JSONObject(jsonString);
-//            Alert alert = new Alert();
-//            alert.setAlertTime(new Date());
-//            alert.setProvider(Alert.Provider.valueOf(json.getString("Provider")));
-//            alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")));
-//            alert.setAgentTime(json.getLong("Time"));
-//            alert.setMessage(json.getString("Message"));
-//            alert.setHostId(json.getString("Host"));
-//            alert.setPlugin(json.getString("Plugin"));
-//            if (json.has("PluginInstance")) {
-//                alert.setPluginInstance(json.getString("PluginInstance"));
-//            }
-//            if (json.has("Type")) {
-//                alert.setType(json.getString("Type"));
-//            }
-//            if (json.has("TypeInstance")) {
-//                alert.setTypeInstance(json.getString("TypeInstance"));
-//            }
-//            if (json.has("DataSource")) {
-//                alert.setDataSource(json.getString("DataSource"));
-//            }
-//            if (json.has("CurrentValue")) {
-//                alert.setCurrentValue(json.getString("CurrentValue"));
-//            }
-//            if (json.has("WarningMin")) {
-//                alert.setWarningMin(json.getString("WarningMin"));
-//            }
-//            if (json.has("WarningMax")) {
-//                alert.setWarningMax(json.getString("WarningMax"));
-//            }
-//            if (json.has("FailureMin")) {
-//                alert.setFailureMin(json.getString("FailureMin"));
-//            }
-//            if (json.has("FailureMax")) {
-//                alert.setFailureMax(json.getString("FailureMax"));
-//            }
-//            alertEJB.persistAlert(alert);
-//
-//        } catch (Exception ex) {
-//            logger.log(Level.SEVERE, "Exception: {0}", ex);
-//            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-//        }
-//        return Response.ok().build();
-//    }
+    @POST
+    @Path("/alert")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response alert(@Context HttpServletRequest req, String jsonString) {
+        // TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
+        try {
+          InputStream stream = new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8));
+            JsonObject json = Json.createReader(stream).readObject();
+            Alert alert = new Alert();
+            alert.setAlertTime(new Date());
+            alert.setProvider(Alert.Provider.valueOf(json.getString("Provider")));
+            alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")));
+            alert.setAgentTime(json.getJsonNumber("Time").longValue());
+            alert.setMessage(json.getString("Message"));
+            alert.setHostId(json.getString("Host"));
+            alert.setPlugin(json.getString("Plugin"));
+            if (json.containsKey("PluginInstance")) {
+                alert.setPluginInstance(json.getString("PluginInstance"));
+            }
+            if (json.containsKey("Type")) {
+                alert.setType(json.getString("Type"));
+            }
+            if (json.containsKey("TypeInstance")) {
+                alert.setTypeInstance(json.getString("TypeInstance"));
+            }
+            if (json.containsKey("DataSource")) {
+                alert.setDataSource(json.getString("DataSource"));
+            }
+            if (json.containsKey("CurrentValue")) {
+                alert.setCurrentValue(json.getString("CurrentValue"));
+            }
+            if (json.containsKey("WarningMin")) {
+                alert.setWarningMin(json.getString("WarningMin"));
+            }
+            if (json.containsKey("WarningMax")) {
+                alert.setWarningMax(json.getString("WarningMax"));
+            }
+            if (json.containsKey("FailureMin")) {
+                alert.setFailureMin(json.getString("FailureMin"));
+            }
+            if (json.containsKey("FailureMax")) {
+                alert.setFailureMax(json.getString("FailureMax"));
+            }
+            alertEJB.persistAlert(alert);
+
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Exception: {0}", ex);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
+        return Response.ok().build();
+    }
 }
