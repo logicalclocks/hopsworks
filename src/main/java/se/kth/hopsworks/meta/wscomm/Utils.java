@@ -10,7 +10,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
-import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.meta.db.FieldFacade;
 import se.kth.hopsworks.meta.db.FieldPredefinedValueFacade;
 import se.kth.hopsworks.meta.db.HdfsMetadataLogFacade;
@@ -288,11 +287,13 @@ public class Utils {
    * Updates a single raw data record.
    * <p/>
    * @param composite
-   * @param meta
+   * @param metaId
+   * @param metaObj
    * @return 
    * @throws ApplicationException
    */
-  public Inode updateMetadata(List<EntityIntf> composite, Metadata meta) throws
+//  public Inode updateMetadata(List<EntityIntf> composite, Metadata meta) throws
+  public Inode updateMetadata(List<EntityIntf> composite, int metaId, String metaObj) throws
           ApplicationException {
     try {
 
@@ -307,9 +308,8 @@ public class Utils {
       Inode inode = this.inodeFacade.findByParentAndName(parent, itc.
               getInodeName());
 
-      Metadata metadata = this.metadataFacade.getMetadataById(meta.
-              getMetadataPK().getId());
-      metadata.setData(meta.getData());
+      Metadata metadata = this.metadataFacade.getMetadataById(metaId);
+      metadata.setData(metaObj);
       this.metadataFacade.addMetadata(metadata);
       
       return inode;
@@ -323,11 +323,12 @@ public class Utils {
    * Remove a single raw metadata record.
    * <p/>
    * @param composite
-   * @param meta
+   * @param metaId
+   * @param metaObj
    * @return 
    * @throws ApplicationException
    */
-  public Inode removeMetadata(List<EntityIntf> composite, Metadata meta) throws
+  public Inode removeMetadata(List<EntityIntf> composite, int metaId, String metaObj) throws
           ApplicationException {
     try {
 
@@ -342,9 +343,8 @@ public class Utils {
       Inode inode = this.inodeFacade.findByParentAndName(parent, itc.
               getInodeName());
 
-      Metadata metadata = this.metadataFacade.getMetadataById(meta.
-              getMetadataPK().getId());
-      metadata.setData(meta.getData());
+      Metadata metadata = this.metadataFacade.getMetadataById(metaId);
+      metadata.setData(metaObj);
       this.metadataFacade.removeMetadata(metadata);
       
       return inode;

@@ -51,7 +51,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
 
   /**
    * Finds all instances of a dataset. i.e if a dataset is shared it is going
-   * to be present in the parent project and in the project it is shard with.
+   * to be present in the parent project and in the project it is shared with.
    * <p/>
    * @param inode
    * @return

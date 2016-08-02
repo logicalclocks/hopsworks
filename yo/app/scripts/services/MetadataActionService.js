@@ -162,7 +162,7 @@ angular.module('hopsWorksApp')
                   metadata: data
                 })
               });
-            },
+            },         
             isTableEmpty: function (user, tableId) {
               return WSComm.send({
                 sender: user,
