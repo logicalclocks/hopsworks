@@ -52,6 +52,9 @@ public class ApplicationConfig extends ResourceConfig {
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     //register(org.glassfish.jersey.filter.LoggingFilter.class);
 
+    // KMON REST Apis
+    register(io.hops.kmon.rest.resources.AgentResource.class);
+    
     // Enable Tracing support.
     //property(ServerProperties.TRACING, "OFF");
   }
