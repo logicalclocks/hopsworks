@@ -31,7 +31,7 @@ import se.kth.hopsworks.util.Settings;
  *
  * @author jdowling
  */
-@Path("/agent")
+@Path("/agentservice")
 @Stateless
 @RolesAllowed({"AGENT"})
 public class AgentService {

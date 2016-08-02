@@ -34,7 +34,7 @@ import javax.ws.rs.POST;
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
-@Path("/agent")
+@Path("/agentresource")
 @Stateless
 @RolesAllowed({"AGENT"})
 public class AgentResource {
