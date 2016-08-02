@@ -63,3 +63,20 @@ You should also add the chef recipe to the end of your Vagrantfile:
 ```
  hopsworks::dev
 ```
+
+
+
+#### For development
+
+You can build hopsworks without running grunt/bower using:
+
+```
+mvn install -P-dist
+```
+
+Then run your script to upload your javascript to bbc1:
+
+```
+cd scripts
+./jim-bbc1-scp.sh
+```

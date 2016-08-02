@@ -39,6 +39,7 @@ public class ZeppelinConfig {
   private static final String ZEPPELIN_ENV_SH = "/zeppelin-env.sh";
   private static final String HIVE_SITE_XML = "/hive-site.xml";
   private static final String INTERPRETER_JSON = "/interpreter.json";
+  private static final int DELETE_RETRY = 10;
 
   /**
    * A configuration that is common for all projects.
@@ -109,7 +110,8 @@ public class ZeppelinConfig {
       this.notebookRepo = new NotebookRepoSync(conf);
       this.notebookIndex = new LuceneSearch();
       this.notebookAuthorization = new NotebookAuthorization(conf);
-      this.credentials = new Credentials(conf.credentialsPersist(), conf.getCredentialsPath());
+      this.credentials = new Credentials(conf.credentialsPersist(), conf.
+              getCredentialsPath());
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
         //        removeProjectDirRecursive();
@@ -253,8 +255,6 @@ public class ZeppelinConfig {
   public Credentials getCredentials() {
     return credentials;
   }
-  
-  
 
   //returns true if the project dir was created 
   private boolean createZeppelinDirs() {
@@ -401,7 +401,7 @@ public class ZeppelinConfig {
     clean();
     return removeProjectDirRecursive();
   }
-  
+
   private boolean removeProjectDirRecursive() {
     File projectDir = new File(projectDirPath);
     if (!projectDir.exists()) {
@@ -411,11 +411,19 @@ public class ZeppelinConfig {
     File interpreter = new File(interpreterDirPath);
     File lib = new File(libDirPath);
     //symlinks must be deleted before we recursive delete the project dir.
-    if (interpreter.exists()) {
-      interpreter.delete();
-    }
-    if (lib.exists()) {
-      lib.delete();
+    int retry = 0;
+    while (interpreter.exists() || lib.exists()) {
+      if (interpreter.exists()) {
+        interpreter.delete();
+      }
+      if (lib.exists()) {
+        lib.delete();
+      }
+      retry++;
+      if (retry > DELETE_RETRY) {
+        LOGGGER.log(Level.SEVERE, "Could not delete zeppelin project folder.");
+        return false;
+      }
     }
     try {
       ret = ConfigFileGenerator.deleteRecursive(projectDir);

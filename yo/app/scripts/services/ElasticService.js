@@ -29,12 +29,13 @@ angular.module('hopsWorksApp')
                 /**
                  * Search under a dataset hitting hitting 'dataset' index
                  * 
+                 * @param {type} projectId
                  * @param {type} datasetName
                  * @param {type} searchTerm
                  * @returns {unresolved}
                  */
-                datasetSearch: function (datasetName, searchTerm) {
-                  return $http.get('/api/elastic/datasetsearch/' + datasetName + '/' + searchTerm);
+                datasetSearch: function (projectId, datasetName, searchTerm) {
+                  return $http.get('/api/elastic/datasetsearch/' + projectId + '/' + datasetName + '/' + searchTerm);
                 }
               };
               return services;

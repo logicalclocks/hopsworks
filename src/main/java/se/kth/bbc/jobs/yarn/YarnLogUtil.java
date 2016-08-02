@@ -40,6 +40,7 @@ public class YarnLogUtil {
           String desiredLogType) {
     long wait = dfs.getConf().getLong(
             YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, 86400);
+    wait = (wait > 0 ? wait : 86400);
     PrintStream writer = null;
     String[] srcs;
     try {
@@ -253,6 +254,7 @@ public class YarnLogUtil {
     //If retain seconds not set deffault to 24hours.
     long maxWait = dfs.getConf().getLong(
             YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, 86400);
+    maxWait = (maxWait > 0 ? maxWait : 86400);
     long startTime = System.currentTimeMillis();
     long endTime = System.currentTimeMillis();
     long retries = 0l;

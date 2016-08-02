@@ -3,9 +3,10 @@
 angular.module('hopsWorksApp')
         .controller('MetadataCtrl', ['$cookies', '$modal', '$scope', '$rootScope', '$routeParams',
           '$filter', 'DataSetService', 'ModalService', 'growl', 'MetadataActionService',
-          'MetadataHelperService', 'ProjectService',
+          'MetadataRestService', 'MetadataHelperService', 'ProjectService',
           function ($cookies, $modal, $scope, $rootScope, $routeParams, $filter, DataSetService,
-                  ModalService, growl, MetadataActionService, MetadataHelperService, ProjectService) {
+                  ModalService, growl, MetadataActionService, MetadataRestService,
+                  MetadataHelperService, ProjectService) {
 
             var self = this;
             self.metaData = {};
@@ -84,13 +85,19 @@ angular.module('hopsWorksApp')
                 return;
               }
               //after the project inodeid is available proceed to store metadata
-              MetadataActionService.storeMetadata($cookies['email'],
+//              MetadataActionService.storeMetadata($cookies['email'],
+//                      parseInt(self.currentFile.parentId), self.currentFile.name, self.currentTableId, self.metaData)
+//                      .then(function (response) {
+////                        growl.success("Metadata saved", {title: 'Success', ttl: 1000});
+//                      });
+//              MetadataActionService.storeMetadata($cookies['email'],
+              MetadataRestService.addMetadataWithSchema(
                       parseInt(self.currentFile.parentId), self.currentFile.name, self.currentTableId, self.metaData)
-                      .then(function (response) {
-                        //console.log("Metadata saved " + response.status);
-                        MetadataHelperService.setCloseSlider("true");
+                      .then(function (success) {
+                        self.fetchMetadataForTemplate();
+                      }, function (error) {
+                        growl.error("Metadata could not be saved", {title: 'Info', ttl: 1000});
                       });
-
               //truncate metaData object
               angular.forEach(self.metaData, function (value, key) {
                 if (!angular.isArray(value)) {
@@ -99,7 +106,6 @@ angular.module('hopsWorksApp')
                   self.metaData[key] = [];
                 }
               });
-              //self.metaData = {};
             };
 
 
@@ -120,11 +126,20 @@ angular.module('hopsWorksApp')
 
               var tempInput = {};
               tempInput[metadataId] = value;
-              MetadataActionService.storeMetadata($cookies['email'],
-                      parseInt(self.currentFile.parentId), self.currentFile.name, tableId, tempInput)
-                      .then(function (response) {
+//              MetadataActionService.storeMetadata($cookies['email'],
+//                      parseInt(self.currentFile.parentId), self.currentFile.name, tableId, tempInput)
+//                      .then(function (response) {
+//                        self.metaData[metadataId] = '';
+//                        self.fetchMetadataForTemplate();
+//                      });
+              MetadataRestService.addMetadataWithSchema(
+                      parseInt(self.currentFile.parentId), self.currentFile.name, self.currentTableId, tempInput)
+                      .then(function (success) {
                         self.metaData[metadataId] = '';
-//                       growl.success("Created new metadata", {title: 'Success', ttl: 2000});
+                        self.fetchMetadataForTemplate();
+                      }, function (error) {
+                        growl.error("Metadata could not be saved", {title: 'Info', ttl: 1000});
+                        self.metaData[metadataId] = '';
                         self.fetchMetadataForTemplate();
                       });
             };
@@ -264,10 +279,9 @@ angular.module('hopsWorksApp')
             /**
              * Persists a template's contents (tables, fields) in the database
              * 
-             * @param {type} closeSlideout
              * @returns {undefined}
              */
-            self.storeTemplate = function (closeSlideout) {
+            self.storeTemplate = function () {
 
               MetadataActionService.storeTemplate($cookies['email'], self.currentTemplateID, self.currentBoard)
                       .then(function (response) {
@@ -276,9 +290,7 @@ angular.module('hopsWorksApp')
                         template.columns = sortedTables;
 
                         self.currentBoard = template;
-                        if (closeSlideout === 'true') {
-                          MetadataHelperService.setCloseSlider("true");
-                        }
+
                       }, function (error) {
                         console.log(error);
                       });
@@ -604,7 +616,7 @@ angular.module('hopsWorksApp')
              */
             self.makeSearchable = function (card) {
               card.find = !card.find;
-              self.storeTemplate(false);
+              self.storeTemplate();
               //console.log("Card " + card.title + " became searchable " + card.find);
             };
 
@@ -616,7 +628,7 @@ angular.module('hopsWorksApp')
              */
             self.makeRequired = function (card) {
               card.required = !card.required;
-              self.storeTemplate(false);
+              self.storeTemplate();
               //console.log("Card " + card.title + " became required " + card.required);
             };
 
@@ -638,7 +650,7 @@ angular.module('hopsWorksApp')
                   value.position = (key + 1);
                 });
 
-                self.storeTemplate(false);
+                self.storeTemplate();
               },
               /*
                * Triggered when a field changes position inside the same container (table). Does not apply on cards
@@ -653,7 +665,7 @@ angular.module('hopsWorksApp')
                   value.position = (key + 1);
                 });
 
-                self.storeTemplate(false);
+                self.storeTemplate();
               },
               containment: '#board'
             };
@@ -687,17 +699,6 @@ angular.module('hopsWorksApp')
              * @param {type} raw
              * @returns {undefined}
              */
-            /*
-             self.updateMetadata = function (metadata) {
-             
-             MetadataActionService.updateMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
-             .then(function (response) {
-             growl.success(response.board, {title: 'Success', ttl: 5000});
-             
-             }, function (dialogResponse) {
-             growl.info("Could not update metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
-             });
-             };*/
 
             self.updateMetadata = function (metadata) {
 
@@ -713,13 +714,13 @@ angular.module('hopsWorksApp')
 
               metadata.data = value;
 
-              MetadataActionService.updateMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
-                      .then(function (response) {
-//                        growl.success("Metadata updated successfully", {title: 'Success', ttl: 1000});
-                        self.setMetadataTemplate(self.currentFile);
-                      }, function (dialogResponse) {
-                        growl.info("Could not update metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
+              MetadataRestService.updateMetadata(self.currentFile.parentId, self.currentFile.name, metadata)
+                      .then(function (success) {
+                        self.fetchMetadataForTemplate();
+                      }, function (error) {
+                        growl.error("Metadata could not be updated", {title: 'Info', ttl: 1000});
                       });
+
             };
 
             self.removeMetadata = function (metadata) {
@@ -728,13 +729,13 @@ angular.module('hopsWorksApp')
                 return;
               }
 
-              MetadataActionService.removeMetadata($cookies['email'], metadata, self.currentFile.parentId, self.currentFile.name)
-                      .then(function (response) {
-//                        growl.success("Metadata deleted successfully", {title: 'Success', ttl: 1000});
-                        self.setMetadataTemplate(self.currentFile);
-                      }, function (dialogResponse) {
-                        growl.info("Could not delete metadata " + metadata.data + ".", {title: 'Info', ttl: 5000});
+              MetadataRestService.removeMetadata(self.currentFile.parentId, self.currentFile.name, metadata)
+                      .then(function (success) {
+                        self.fetchMetadataForTemplate();
+                      }, function (error) {
+                        growl.error("Metadata could not be removed", {title: 'Info', ttl: 1000});
                       });
+
             };
 
 

@@ -189,12 +189,11 @@ public class ZeppelinConfigFactory {
     String projectDirPath = settings.getZeppelinDir() + File.separator
             + Settings.DIR_ROOT + File.separator + projectName;
     File projectDir = new File(projectDirPath);
-    boolean ret = true;
-    try {
-      ret = ConfigFileGenerator.deleteRecursive(projectDir);
-    } catch (FileNotFoundException ex) {
+    if (projectDir.exists()) {
+      conf = new ZeppelinConfig(projectName, settings);
+      return conf.cleanAndRemoveConfDirs();
     }
-    return ret;
+    return false;
   }
 
   private ZeppelinConfiguration loadConfig() {
