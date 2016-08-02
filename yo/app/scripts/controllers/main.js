@@ -234,7 +234,7 @@ angular.module('hopsWorksApp')
                                     growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                                 });
                     } else if (self.searchType === "datasetCentric") {
-                        elasticService.datasetSearch(UtilsService.getDatasetName(), self.searchTerm)
+                        elasticService.datasetSearch($routeParams.projectID, UtilsService.getDatasetName(), self.searchTerm)
                                 .then(function (response) {
 
                                     var searchHits = response.data;
