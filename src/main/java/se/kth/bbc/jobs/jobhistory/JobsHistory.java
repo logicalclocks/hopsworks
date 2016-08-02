@@ -362,7 +362,6 @@ public class JobsHistory implements Serializable {
         this.jarFile = jarFile;
     }
     
-    
 
   @Override
   public int hashCode() {

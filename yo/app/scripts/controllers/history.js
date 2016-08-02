@@ -45,20 +45,6 @@ angular.module('hopsWorksApp')
                         { ind:"severity" , id: 3 , type: "Severe" },
                         { ind:"severity" , id: 4 , type: "Critical" } 
                     ]
-                },
-                {
-                    id : 3, 
-                    name : "Score", 
-                    searchName: "score",
-                    values:[
-                        { ind:"score" , id: "null" , type: "-- Select Score --" },
-                        { ind:"score" , id: 0 , type: "0" },
-                        { ind:"score" , id: 1 , type: "1" },
-                        { ind:"score" , id: 2 , type: "2" },
-                        { ind:"score" , id: 3 , type: "3" },
-                        { ind:"score" , id: 4 , type: "4" },
-                        { ind:"score" , id: 5 , type: "5" }
-                    ]
                 }
             ];  
             
@@ -96,9 +82,6 @@ angular.module('hopsWorksApp')
               else if(searchName == "severity"){
                   $scope.valueType = '-- Select Severity --';
               }
-              else if(searchName == "score"){
-                  $scope.valueType = '-- Select Score --';
-              }
               if (searchName === "none") {
                     $scope.fisrtFormSelected = false;
               } else {
@@ -126,9 +109,6 @@ angular.module('hopsWorksApp')
                 }
                 else if($scope.searchName === "severity" && $scope.valueId !== "null"){
                     return job.yarnAppResult.severity === $scope.valueId;
-                }
-                else if($scope.searchName === "score" && $scope.valueId !== "null"){
-                    return job.yarnAppResult.score === $scope.valueId;
                 }
                 else{
                     return job;

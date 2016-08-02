@@ -18,8 +18,14 @@
               <div style="float: left;width: 90%;">
               </div>
                 <div style="float: left;width: 100%;">
+                <div class="pull-left"><i class="glyphicon glyphicon-info-sign"                  
+                         tooltip="Search using the 'Search Field' or use the drop down menu to select the Type and the second
+                         menu to set the Value that you search for." 
+                         tooltip-placement="bottom"
+                         style="margin-left: 10px"></i>
+                </div>
                 <div>
-                <input style="float: left;width: 50%;margin: 0px 10px;"
+                <input style="float: left;width: 45%;margin: 0px 10px;"
                        type="text"
                        ng-model="historyCtrl.searchFilter"
                        placeholder="Search Field" class="form-control" autofocus/>
@@ -42,7 +48,7 @@
                     <button type="button" style="width: 100%;"
                             class="btn btn-default dropdown-toggle"
                             data-toggle="dropdown" id="filterByType"
-                            ng-disabled="!fisrtFormSelected">
+                            ng-hide="!fisrtFormSelected">
                             <span id="search_concept">{{valueType}}</span>
                             <span class="caret"></span>
                     </button>
@@ -52,14 +58,17 @@
                         </li> 
                     </ul>
                     </li>
-                </div>   
+                </div> 
+                <div class="pull-left" style="width: 10%; margin-left: 10px" ng-show="!fisrtFormSelected">
+                &nbsp;
+                </div>    
                 <div>
                     <div class="btn-group" style="float: left;width: 10%; margin-bottom: 0px;margin-left: 10px" id="buttonSearch">
                         <button style="width: 80%;margin-left: 15px" ng-click="historyCtrl.clear()" class="btn btn-primary glyphicon glyphicon-erase">  Clear  </button>
                     </div>
                 </div>
                 <div>    
-                    <label style="float: left; margin-left: 30px; margin-top: 7px;">jobs per page:</label>
+                    <label style="float: left; margin-left: 15px; margin-top: 7px;">jobs per page:</label>
                     <input style="float: left; margin-left: 10px; width: 5%;" type="number" min="1" max="25" class="form-control" ng-model="pageSize">
                 </div>
                 </div>
@@ -78,9 +87,9 @@
                   Username
                   <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.username'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
                 </th>
-                <th ng-click="sort('executionDuration')" style="width: 10%">
-                  Running Time (MM:SS)
-                <span class="glyphicon sort-icon" ng-show="sortType == 'executionDuration'" ng-class="{'glyphicon glyphicon-sort-by-order':sortReverse,'glyphicon glyphicon-sort-by-order-alt':!sortReverse}"></span>
+                <th ng-click="sort('totalExecutionDuration')" style="width: 10%">
+                  Total Duration (MM:SS)
+                <span class="glyphicon sort-icon" ng-show="sortType == 'totalExecutionDuration'" ng-class="{'glyphicon glyphicon-sort-by-order':sortReverse,'glyphicon glyphicon-sort-by-order-alt':!sortReverse}"></span>
                 </th>
                 <th ng-click="sort('yarnAppResult.jobType')" style="width: 10%">
                   Job Type
@@ -95,7 +104,7 @@
                 <span class="glyphicon sort-icon" ng-show="sortType == 'score'" ng-class="{'glyphicon glyphicon-sort-by-order':sortReverse,'glyphicon glyphicon-sort-by-order-alt':!sortReverse}"></span>
                 </th>-->
                 <th style="width: 10%">
-                  Results
+                  Details
                 </th>
                 </thead>
                 <tbody>
@@ -110,7 +119,7 @@
                         {{job.yarnAppResult.username}}
                     </td>
                     <td>
-                        {{convertMS(job.executionDuration)}}
+                        {{convertMS(job.totalExecutionDuration)}}
                      </td>
                     <td>
                         {{job.yarnAppResult.jobType}}
