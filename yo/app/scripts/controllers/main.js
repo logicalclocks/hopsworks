@@ -21,6 +21,27 @@ angular.module('hopsWorksApp')
             else {
               self.searchType = "global";
             }
+            
+            self.isAdmin = false;
+            self.checkedAdmin = false;
+
+
+            self.checkIfAdmin = function () {
+              if (self.checkedAdmin === false) {
+              AuthService.isAdmin().then(
+                      function (success) {
+                        self.isAdmin = true;
+                      }, function (error) {
+                        self.isAdmin = false;
+              });
+                 self.checkedAdmin = true;
+              } 
+              return self.isAdmin;
+            }
+            
+            self.goToAdminPage = function () {
+              $location.path('index.xhtml');
+            }
 
             self.getEmailHash = function(email) {
               return md5.createHash(email || '');

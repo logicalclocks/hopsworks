@@ -27,6 +27,7 @@ angular.module('hopsWorksApp')
               ];
             };
 
+            
             self.getTutorials = function () {
               self.tutorials = [
                 {'url': 'spark.apache.org/docs/latest/running-on-yarn.html', 'description': 'Spark on YARN'},
