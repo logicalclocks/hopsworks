@@ -39,21 +39,21 @@ import javax.ws.rs.POST;
 @RolesAllowed({"AGENT"})
 public class AgentResource {
 
-    @EJB
-    private HostEJB hostEJB;
-    @EJB
-    private RoleEJB roleEjb;
-    @EJB
-    private AlertEJB alertEJB;
-    
-    final static Logger logger = Logger.getLogger(AgentResource.class.getName());
+  @EJB
+  private HostEJB hostEJB;
+  @EJB
+  private RoleEJB roleEjb;
+  @EJB
+  private AlertEJB alertEJB;
 
-    @GET
-    @Path("ping")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String ping() {
-        return "KTHFS Dashboard: Pong";
-    }
+  final static Logger logger = Logger.getLogger(AgentResource.class.getName());
+
+  @GET
+  @Path("ping")
+  @Produces(MediaType.TEXT_PLAIN)
+  public String ping() {
+    return "KTHFS Dashboard: Pong";
+  }
 
 //    @GET
 //    @Path("load/{name}")
@@ -77,7 +77,6 @@ public class AgentResource {
 //        }
 //        return Response.ok(json).build();
 //    }
-
 //    @GET
 //    @Path("loads")
 //    @Produces(MediaType.APPLICATION_JSON)
@@ -99,7 +98,6 @@ public class AgentResource {
 //        }
 //        return Response.ok(jsonArray).build();
 //    }
-
 //    @PUT
 //    @Path("/register")
 //    @Consumes(MediaType.APPLICATION_JSON)
@@ -158,120 +156,129 @@ public class AgentResource {
 //            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 //        }
 //    }
+  @PUT
+  @Path("/heartbeat")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response heartbeat(@Context HttpServletRequest req, String jsonHb) {
+    try {
 
-    @PUT
-    @Path("/heartbeat")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response heartbeat(@Context HttpServletRequest req, String jsonHb) {
-        try {
-          
-
-          InputStream stream = new ByteArrayInputStream(jsonHb.getBytes(StandardCharsets.UTF_8));
-            JsonObject json = Json.createReader(stream).readObject();
-            long agentTime = json.getJsonNumber("agent-time").longValue();
-            String hostId = json.getString("host-id");
-            Host host = hostEJB.findByHostId(hostId);
-            if (host == null) {
-                logger.log(Level.INFO, "Host with id {0} not found.", hostId);
-                return Response.status(Response.Status.NOT_FOUND).build();
-            }
+      InputStream stream = new ByteArrayInputStream(jsonHb.getBytes(StandardCharsets.UTF_8));
+      JsonObject json = Json.createReader(stream).readObject();
+      long agentTime = json.getJsonNumber("agent-time").longValue();
+      String hostId = json.getString("host-id");
+      Host host = hostEJB.findByHostId(hostId);
+      if (host == null) {
+        logger.log(Level.INFO, "Host with id {0} not found.", hostId);
+        return Response.status(Response.Status.NOT_FOUND).build();
+      }
 //            if (!host.isRegistered()) {
 //                logger.log(Level.INFO, "Host with id {0} is not registered.", hostId);
 //                return Response.status(Response.Status.NOT_ACCEPTABLE).build();
 //            }
-            host.setLastHeartbeat((new Date()).getTime());
-            host.setLoad1(json.getJsonNumber("load1").doubleValue());
-            host.setLoad5(json.getJsonNumber("load5").doubleValue());
-            host.setLoad15(json.getJsonNumber("load15").doubleValue());
-            host.setDiskUsed(json.getJsonNumber("disk-used").longValue());
-            host.setMemoryUsed(json.getJsonNumber("memory-used").longValue());
-            host.setPrivateIp(json.getString("private-ip"));
-            host.setDiskCapacity(json.getJsonNumber("disk-capacity").longValue());
-            host.setMemoryCapacity(json.getJsonNumber("memory-capacity").longValue());
-            hostEJB.storeHost(host, false);
+      host.setLastHeartbeat((new Date()).getTime());
+      host.setLoad1(json.getJsonNumber("load1").doubleValue());
+      host.setLoad5(json.getJsonNumber("load5").doubleValue());
+      host.setLoad15(json.getJsonNumber("load15").doubleValue());
+      host.setDiskUsed(json.getJsonNumber("disk-used").longValue());
+      host.setMemoryUsed(json.getJsonNumber("memory-used").longValue());
+      host.setPrivateIp(json.getString("private-ip"));
+      host.setDiskCapacity(json.getJsonNumber("disk-capacity").longValue());
+      host.setMemoryCapacity(json.getJsonNumber("memory-capacity").longValue());
+      host.setCores(json.getInt("cores"));
+      hostEJB.storeHost(host, false);
 
-            JsonArray roles = json.getJsonArray("services");
-            for (int i = 0; i < roles.size(); i++) {
-                JsonObject s = roles.getJsonObject(i);
-                Role role = new Role();
-                role.setHostId(host.getHostId());
-                role.setCluster(s.getString("cluster"));
-                role.setService(s.getString("service"));
-                if (s.containsKey("role")) {
-                    role.setRole(s.getString("role"));
-                } else {
-                    role.setRole("");
-                }
-                role.setWebPort(s.containsKey("web-port") ? s.getInt("web-port") : null);
-                role.setPid(s.containsKey("pid") ? s.getInt("pid") : 0);
-                if (s.containsKey("status")) {
-                    role.setStatus(Status.valueOf(s.getString("status")));
-                } else {
-                    role.setStatus(Status.None);
-                }
-                if (s.containsKey("stop-time")) {
-                    role.setUptime(s.getJsonNumber("stop-time").longValue() - s.getJsonNumber("start-time").longValue());
-                } else if (s.containsKey("start-time")) {
-                    role.setUptime(agentTime - s.getJsonNumber("start-time").longValue());
-                }
-                roleEjb.store(role);
-            }
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Exception: ".concat(ex.getMessage()));
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+      JsonArray roles = json.getJsonArray("services");
+      for (int i = 0; i < roles.size(); i++) {
+        JsonObject s = roles.getJsonObject(i);
+        Role role = new Role();
+        role.setHostId(host.getHostId());
+        role.setCluster(s.getString("cluster"));
+        role.setService(s.getString("service"));
+        if (s.containsKey("role")) {
+          role.setRole(s.getString("role"));
+        } else {
+          role.setRole("");
         }
-        return Response.ok().build();
-    }
-
-    @POST
-    @Path("/alert")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response alert(@Context HttpServletRequest req, String jsonString) {
-        // TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
-        try {
-          InputStream stream = new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8));
-            JsonObject json = Json.createReader(stream).readObject();
-            Alert alert = new Alert();
-            alert.setAlertTime(new Date());
-            alert.setProvider(Alert.Provider.valueOf(json.getString("Provider")));
-            alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")));
-            alert.setAgentTime(json.getJsonNumber("Time").longValue());
-            alert.setMessage(json.getString("Message"));
-            alert.setHostId(json.getString("Host"));
-            alert.setPlugin(json.getString("Plugin"));
-            if (json.containsKey("PluginInstance")) {
-                alert.setPluginInstance(json.getString("PluginInstance"));
-            }
-            if (json.containsKey("Type")) {
-                alert.setType(json.getString("Type"));
-            }
-            if (json.containsKey("TypeInstance")) {
-                alert.setTypeInstance(json.getString("TypeInstance"));
-            }
-            if (json.containsKey("DataSource")) {
-                alert.setDataSource(json.getString("DataSource"));
-            }
-            if (json.containsKey("CurrentValue")) {
-                alert.setCurrentValue(json.getString("CurrentValue"));
-            }
-            if (json.containsKey("WarningMin")) {
-                alert.setWarningMin(json.getString("WarningMin"));
-            }
-            if (json.containsKey("WarningMax")) {
-                alert.setWarningMax(json.getString("WarningMax"));
-            }
-            if (json.containsKey("FailureMin")) {
-                alert.setFailureMin(json.getString("FailureMin"));
-            }
-            if (json.containsKey("FailureMax")) {
-                alert.setFailureMax(json.getString("FailureMax"));
-            }
-            alertEJB.persistAlert(alert);
-
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Exception: {0}", ex);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        String webPort = s.containsKey("web-port") ? s.getString("web-port") : "0";
+        role.setWebPort(Integer.parseInt(webPort));
+        String pid = s.containsKey("pid") ? s.getString("pid") : "-1";
+        role.setPid(Integer.parseInt(pid));
+        if (s.containsKey("status")) {
+          role.setStatus(Status.valueOf(s.getString("status")));
+        } else {
+          role.setStatus(Status.None);
         }
-        return Response.ok().build();
+        String startTime = null;
+        if (s.containsKey("start-time")) {
+          startTime = s.getString("start-time");
+        }
+        String stopTime = null;
+        if (s.containsKey("stop-time")) {
+          stopTime = s.getString("stop-time");
+        }
+        if (stopTime != null) {
+          role.setUptime(Long.parseLong(stopTime) - Long.parseLong(startTime));
+        } else if (startTime != null) {
+          role.setUptime(agentTime - Long.parseLong(startTime));
+        }
+        roleEjb.store(role);
+      }
+    } catch (Exception ex) {
+      logger.log(Level.SEVERE, "Exception: ".concat(ex.getMessage()));
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
+    return Response.ok().build();
+  }
+
+  @POST
+  @Path("/alert")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response alert(@Context HttpServletRequest req, String jsonString) {
+    // TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
+    try {
+      InputStream stream = new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8));
+      JsonObject json = Json.createReader(stream).readObject();
+      Alert alert = new Alert();
+      alert.setAlertTime(new Date());
+      alert.setProvider(Alert.Provider.valueOf(json.getString("Provider")));
+      alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")));
+      alert.setAgentTime(json.getJsonNumber("Time").longValue());
+      alert.setMessage(json.getString("Message"));
+      alert.setHostId(json.getString("Host"));
+      alert.setPlugin(json.getString("Plugin"));
+      if (json.containsKey("PluginInstance")) {
+        alert.setPluginInstance(json.getString("PluginInstance"));
+      }
+      if (json.containsKey("Type")) {
+        alert.setType(json.getString("Type"));
+      }
+      if (json.containsKey("TypeInstance")) {
+        alert.setTypeInstance(json.getString("TypeInstance"));
+      }
+      if (json.containsKey("DataSource")) {
+        alert.setDataSource(json.getString("DataSource"));
+      }
+      if (json.containsKey("CurrentValue")) {
+        alert.setCurrentValue(json.getString("CurrentValue"));
+      }
+      if (json.containsKey("WarningMin")) {
+        alert.setWarningMin(json.getString("WarningMin"));
+      }
+      if (json.containsKey("WarningMax")) {
+        alert.setWarningMax(json.getString("WarningMax"));
+      }
+      if (json.containsKey("FailureMin")) {
+        alert.setFailureMin(json.getString("FailureMin"));
+      }
+      if (json.containsKey("FailureMax")) {
+        alert.setFailureMax(json.getString("FailureMax"));
+      }
+      alertEJB.persistAlert(alert);
+
+    } catch (Exception ex) {
+      logger.log(Level.SEVERE, "Exception: {0}", ex);
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+    }
+    return Response.ok().build();
+  }
 }
