@@ -57,7 +57,7 @@ angular.module('hopsWorksApp')
                 from: 1,
                 to: 500,      
                 floor: true,
-                step: 1
+                step: 1,
                 vertical: false
 //                callback: function(value, elt) {
 //                    self.runConfig.numberOfExecutorsMin = value.split(";")[0];
