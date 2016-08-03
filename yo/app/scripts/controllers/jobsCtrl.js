@@ -18,13 +18,7 @@ angular.module('hopsWorksApp')
             self.runningInfo; //Will contain run information
             self.buttonArray = [];
             self.workingArray = [];
-            self.jobFilter = {
-              "creator": {
-                "email": ""
-              },
-              "jobType": "",
-              "name": ""
-            };
+            self.jobFilter = "";
 
             self.hasSelectJob = false;
 
@@ -148,6 +142,18 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
+            };
+            
+            self.getNumOfExecution = function () {
+              if (self.hasSelectJob) {
+                if (self.logset.length > 1) {
+                  return self.logset.length;
+                } else if (self.logset.length === 1 && self.logset[0].appId !== '') {
+                  return 1;
+                } else {
+                  return 0;
+                }
+              }
             };
 
             self.getRunStatus = function () {
@@ -323,7 +329,7 @@ angular.module('hopsWorksApp')
                 self.jobFilter.jobType = "";
               }
             };
-
+            
             self.launchAppMasterUrl = function (trackingUrl) {
               window.open(trackingUrl);
             };
