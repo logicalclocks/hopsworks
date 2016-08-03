@@ -713,6 +713,7 @@ public class JobService {
         }
       } else {
         arrayObjectBuilder = Json.createObjectBuilder();
+        arrayObjectBuilder.add("appId", "");
         arrayObjectBuilder.add("time", "No log available");
         arrayObjectBuilder.add("log", "No log available");
         arrayObjectBuilder.add("err", "No log available");
