@@ -126,7 +126,7 @@ angular.module('hopsWorksApp')
                   "value": "",
                   "title": "Configure and create"}
               };
-              StorageService.store(self.projectId + "newjob", state);
+              StorageService.store(self.projectId + "_newjob", state);
               $location.path('project/' + self.projectId + '/newjob');
             };
 
@@ -146,6 +146,9 @@ angular.module('hopsWorksApp')
             
             self.getNumOfExecution = function () {
               if (self.hasSelectJob) {
+                if (self.logset === undefined) {
+                  return 0;
+                }
                 if (self.logset.length > 1) {
                   return self.logset.length;
                 } else if (self.logset.length === 1 && self.logset[0].appId !== '') {
