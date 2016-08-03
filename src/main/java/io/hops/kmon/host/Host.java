@@ -22,7 +22,6 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Host.findBy-Hostname", query = "SELECT h FROM Host h WHERE h.hostname = :hostname"),
     @NamedQuery(name = "Host.findBy-Cluster.Service.Role.Status", query = "SELECT h FROM Host h, Role r WHERE h.hostId = r.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),    
     @NamedQuery(name = "Host.findBy-Cluster.Service.Role", query = "SELECT h FROM Host h, Role r WHERE h.hostId = r.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),    
-    
 })
 public class Host implements Serializable {
 

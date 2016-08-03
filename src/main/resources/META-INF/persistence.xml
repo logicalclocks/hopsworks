@@ -62,10 +62,6 @@
     <class>io.hops.bbc.Consents</class>
     <class>se.kth.bbc.project.ProjectsManagement</class>
     <class>se.kth.bbc.project.ProjectPaymentsHistory</class>
-    <class>se.kth.bbc.project.CharonRegisteredSites</class>
-    <class>se.kth.bbc.project.CharonRepoShared</class>
-    <class>io.hops.bbc.charon.CharonRepoShared</class>
-    <class>io.hops.bbc.charon.CharonRegisteredSites</class>
     <class>se.kth.bbc.jobs.quota.YarnProjectsQuota</class>
     <class>se.kth.bbc.jobs.quota.YarnRunningPrice</class>
     <class>se.kth.bbc.jobs.quota.YarnProjectsDailyCost</class>
@@ -73,6 +69,10 @@
     <class>io.hops.kafka.SharedTopics</class>
     <class>io.hops.kafka.SchemaTopics</class>
     <class>io.hops.kafka.TopicAcls</class>
+    <class>io.hops.kmon.host.Host</class>
+    <class>io.hops.kmon.alert.Alert</class>
+    <class>io.hops.kmon.role.Role</class>
+    <class>io.hops.kmon.command.Command</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
