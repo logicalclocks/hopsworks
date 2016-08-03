@@ -80,6 +80,8 @@ public class ProjectService {
   private JobService jobs;
   @Inject
   private BiobankingService biobanking;
+  @Inject
+  private WorkflowService workflowService;
 
   @EJB
   private ActivityFacade activityFacade;
@@ -263,17 +265,6 @@ public class ProjectService {
         //             + json.getErrorMsg());
         //   }
         // }
-        // if (s.compareToIgnoreCase(ProjectServiceEnum.CHARON.toString()) == 0) {
-        //   try {
-        //     projectController.createProjectCharonFolder(project);
-        //   } catch (ProjectInternalFoldersFailedException ex) {
-        //     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-        //             null, ex);
-        //     json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
-        //             + " 'consents' \n "
-        //             + json.getErrorMsg());
-        //   }
-        // }
         projectServices.add(se);
       } catch (IllegalArgumentException iex) {
         logger.log(Level.SEVERE,
@@ -291,7 +282,6 @@ public class ProjectService {
         updated = true;
       }
     }
-
     if (!updated) {
       json.setSuccessMessage("Nothing to update.");
     }
@@ -794,4 +784,17 @@ public class ProjectService {
 
     return this.kafka;
   }
+  
+	@Path("{id}/workflows")
+  	@AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  	public WorkflowService workflows(@PathParam("id") Integer id) throws
+          AppException {
+    	Project project = projectController.findProjectById(id);
+    	if (project == null) {
+      	throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+    	}
+    	this.workflowService.setProject(project);
+    	return workflowService;
+  }  
 }

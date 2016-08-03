@@ -278,6 +278,7 @@ public class FlinkYarnRunnerBuilder {
      * deployed on YARN.
      * @param project
      * @param hadoopDir
+     * @param jobUser
      * @param flinkUser
      * @param flinkDir
      * @param nameNodeIpPort

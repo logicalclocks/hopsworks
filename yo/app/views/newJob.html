@@ -33,7 +33,6 @@
                            is-open="newJobCtrl.accordion2.isOpen" 
                            ng-show="newJobCtrl.accordion2.visible">
             <div class="btn-group">
-              <!--<label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="0" ng-change="newJobCtrl.jobTypeChosen()">Cuneiform</label>-->
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
               <label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>
               <label class="btn btn-default" ng-model="newJobCtrl.jobtype" btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>
@@ -45,7 +44,7 @@
           <accordion-group heading="{{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}" 
                            is-open="newJobCtrl.accordion3.isOpen" 
                            ng-show="newJobCtrl.accordion3.visible">
-            <!-- Cuneiform, Spark and Flink  -->
+            <!-- Adam, Spark and Flink  -->
             <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 0 || newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3">
               <span>Select...</span>
             </button>
@@ -68,22 +67,6 @@
                            is-open="newJobCtrl.accordion4.isOpen" 
                            ng-show="newJobCtrl.accordion4.visible"
                            id="chooseParametersAndArguments">
-            <!-- Cuneiform -->
-            <div ng-show="newJobCtrl.jobtype === 0">
-              <div class="row">
-                <div class="text-right col-md-4">
-                  <strong>Parameter</strong> 
-                  <i class="fa fa-info-circle" tooltip="The unbound input parameters to the selected workflow are given here. Enter a value to bind them." style="margin-left: 10px"></i>
-                </div>
-                <div class="col-md-8">
-                  <strong>Value</strong>
-                </div>
-              </div>
-              <div class="row" ng-repeat="param in newJobCtrl.runConfig.wf.inputParams">
-                <div class="text-right col-md-4">{{param.name}}</div>
-                <div class="col-md-8"> <input type="text" ng-model="param.value" class="form-control"></div>
-              </div>
-            </div>
             <!-- Spark, Flink-->
             <div ng-show="newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3">
               <div class="row">
@@ -107,7 +90,8 @@
                 </div>
                 <div class="col-md-8">
                   <input type="text" ng-model="arg.value" ng-hide="arg.path && !arg.value" ng-required="arg.required" class="form-control">
-                  <button ng-show="arg.path && !arg.value" ng-click="newJobCtrl.selectFile('ADAM', arg)" class="btn btn-default">Select</button>
+                  <button ng-show="arg.path && !arg.value && arg.name==='INPUT'" ng-click="newJobCtrl.selectFile('ADAM', arg)" class="btn btn-default">Select</button>
+                  <button ng-show="arg.path && !arg.value && arg.name==='OUTPUT'" ng-click="newJobCtrl.selectDir('ADAM', arg)" class="btn btn-default">Select</button>
                 </div>
               </div>
 

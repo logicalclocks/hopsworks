@@ -40,13 +40,6 @@
       <artifactId>sisu-inject-plexus</artifactId>
       <version>2.6.0</version>
     </dependency> 
-    <!--
-        <dependency>
-          <groupId>de.hu-berlin.wbi.cuneiform</groupId>
-          <artifactId>cuneiform-core</artifactId>
-          <version>2.0.0-SNAPSHOT</version>
-        </dependency>
-    -->
     <dependency>
       <groupId>com.google.zxing</groupId>
       <artifactId>javase</artifactId>
@@ -198,6 +191,32 @@
       <groupId>org.elasticsearch</groupId>
       <artifactId>elasticsearch</artifactId>
       <version>2.1.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.oozie</groupId>
+      <artifactId>oozie-client</artifactId>
+      <version>4.2.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.oozie</groupId>
+          <artifactId>oozie-hadoop-auth</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <version>1.9.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>

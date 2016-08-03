@@ -4,7 +4,7 @@
  * 
  * As it stands, self controller contains a lot of logic concerning all different 
  * job types. It would be nicer to have these as Mixins in a different file. 
- * Guess that's a TODO.
+ * Guess that's a TODO.a
  */
 
 'use strict';
@@ -16,6 +16,7 @@ angular.module('hopsWorksApp')
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,
                   AdamService, FlinkService, TourService, HistoryService) {
+
             var self = this;
             self.tourService = TourService;
             self.flinkjobtype = ["Streaming", "Batch"];
@@ -37,7 +38,8 @@ angular.module('hopsWorksApp')
               "SPARK": "Please select a JAR file.",
               "FLINK": "Please select a JAR file.",
               "LIBRARY": "Please select a JAR file.",
-              "ADAM": "Please select a file or folder."
+              "ADAM-FILE": "Please select a file.",
+              "ADAM-FOLDER": "Please select a folder."
             };
             self.projectId = $routeParams.projectID;
 
@@ -52,11 +54,11 @@ angular.module('hopsWorksApp')
             self.phase = 0; //The phase of creation we are in.
             self.runConfig; //Will hold the job configuration
             self.sliderOptions = {
-              from: 1,
-              to: 500,
-              floor: true,
-              step: 1,
-              vertical: false
+                from: 1,
+                to: 500,      
+                floor: true,
+                step: 1,
+                vertical: false
 //                callback: function(value, elt) {
 //                    self.runConfig.numberOfExecutorsMin = value.split(";")[0];
 //                    self.runConfig.numberOfExecutorsMax = value.split(";")[1];
@@ -447,18 +449,17 @@ angular.module('hopsWorksApp')
                 case "LIBRARY":
                   //Push the new library into the localresources array
                   self.localResources.push({
-                    'name': filename,
-                    'path': path,
-                    'type': null,
-                    'visibility': null,
-                    'pattern': null
+                      'name': filename,
+                      'path': path, 
+                      'type': null,
+                      'visibility': null,
+                      'pattern': null
                   });
                   break;
                 case "ADAM":
-                  self.adamState.processparameter.value = path;
-                  if (typeof runConfig != 'undefined') {
-                    self.sliderOptions.from = self.runConfig.
-                            minExecutors;
+                    self.adamState.processparameter.value = path;
+                  if(typeof runConfig != 'undefined'){
+                    self.sliderOptions.from = self.runConfig.minExecutors;
                     self.sliderOptions.to = self.runConfig.
                             maxExecutors;
                   } else {
@@ -479,54 +480,74 @@ angular.module('hopsWorksApp')
               }
             };
 
-            /**
-             * Open a dialog for file selection.
-             * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").
-             * @param {Object} parameter The Adam parameter to bind.
-             * @returns {undefined}
-             */
-            self.selectFile = function (reason, parameter) {
-              if (reason.toUpperCase() === "ADAM") {
-                self.adamState.processparameter = parameter;
-              }
-              ModalService.selectFile('lg', self.selectFileRegexes[reason],
-                      self.selectFileErrorMsgs[reason]).then(
-                      function (success) {
-                        self.onFileSelected(reason, "hdfs://" + success);
-                      }, function (error) {
-                //The user changed their mind.
-              });
-            };
+                /**
+                 * Open a dialog for file selection.
+                 * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").
+                 * @param {Object} parameter The Adam parameter to bind.
+                 * @returns {undefined}
+                 */
+                this.selectFile = function (reason, parameter) {
+                    if (reason.toUpperCase() === "ADAM") {
+                        self.adamState.processparameter = parameter;
+                    }
+                    ModalService.selectFile('lg', self.selectFileRegexes[reason],
+                            self.selectFileErrorMsgs["ADAM-FILE"]).then(
+                            function (success) {
+                                self.onFileSelected(reason, "hdfs://" + success);
+                            }, function (error) {
+                        //The user changed their mind.
+                    });
+                };
+                /**
+                 * Open a dialog for directory selection.
+                 * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").
+                 * @param {Object} parameter The Adam parameter to bind.
+                 * @returns {undefined}
+                 */
+                this.selectDir = function (reason, parameter) {
+                    if (reason.toUpperCase() === "ADAM") {
+                        self.adamState.processparameter = parameter;
+                    }
+                    ModalService.selectDir('lg', self.selectFileRegexes[reason],
+                            self.selectFileErrorMsgs["ADAM-FOLDER"]).then(
+                            function (success) {
+                                self.onFileSelected(reason, "hdfs://" + success);
+                                if (reason.toUpperCase() === "ADAM") {
+                                  growl.info("Insert output file name", {title: 'Required', ttl: 5000});
+                                }
+                            }, function (error) {
+                        //The user changed their mind.
+                    });
+                };
 
 
-            /**
-             * Get a list of ADAM commands from the server.
-             * @returns {undefined}
-             */
-            self.getCommandList = function () {
-              AdamService.getCommandList(self.projectId).then(
-                      function (success) {
-                        self.adamState.commandList = success.data;
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-              });
-            };
+                /**
+                 * Get a list of ADAM commands from the server.
+                 * @returns {undefined}
+                 */
+                this.getCommandList = function () {
+                    AdamService.getCommandList(self.projectId).then(
+                            function (success) {
+                                self.adamState.commandList = success.data;
+                            }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                    });
+                };
 
-            /**
-             * Remove the given entry from the localResources list.
-             * @param {type} lib
-             * @returns {undefined}
-             */
-            self.removeLibrary = function (name) {
-              var arlen = self.localResources.length;
-              for (var i = 0; i < arlen; i++) {
-                if (self.localResources[i].name === name) {
-                  self.localResources.splice(i, 1);
-                  return;
-                }
-              }
-            };
-
+                /**
+                 * Remove the given entry from the localResources list.
+                 * @param {type} lib
+                 * @returns {undefined}
+                 */
+                this.removeLibrary = function (name) {
+                    var arlen = self.localResources.length;
+                    for (var i = 0; i < arlen; i++) {
+                        if (self.localResources[i].name === name) {
+                            self.localResources.splice(i, 1);
+                            return;
+                        }
+                    }
+                };
 
             /**
              * Save state upon destroy.

@@ -26,6 +26,7 @@ public class SparkJob extends YarnJob {
 
   private final SparkJobConfiguration jobconfig; //Just for convenience
   private final String sparkDir;
+
   private final String sparkUser; //must be glassfish
   protected SparkYarnRunnerBuilder runnerbuilder;
   
