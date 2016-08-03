@@ -8,6 +8,7 @@ public class YarnAppResultDTO implements Serializable{
     
     private YarnAppResult yarnAppResult;
     private long totalExecutionDuration, runningTime;
+    private String ownerFullName;
 
     public YarnAppResultDTO(){}
     
@@ -62,6 +63,19 @@ public class YarnAppResultDTO implements Serializable{
     public void setRunningTime(long runningTime) {
         this.runningTime = runningTime;
     }
- 
+
+    /**
+     * @return the ownerFullName
+     */
+    public String getOwnerFullName() {
+        return ownerFullName;
+    }
+
+    /**
+     * @param ownerFullName the ownerFullName to set
+     */
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
+    }
     
 }

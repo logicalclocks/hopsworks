@@ -84,7 +84,7 @@
                   <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.name'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
                 </th>
                 <th ng-click="sort('yarnAppResult.username')" style="width: 10%">
-                  Username
+                  Owner
                   <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.username'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
                 </th>
                 <th ng-click="sort('totalExecutionDuration')" style="width: 10%">
@@ -116,7 +116,7 @@
                         {{job.yarnAppResult.name}}
                     </td>
                     <td>
-                        {{job.yarnAppResult.username}}
+                        {{job.ownerFullName}}
                     </td>
                     <td>
                         {{convertMS(job.totalExecutionDuration)}}

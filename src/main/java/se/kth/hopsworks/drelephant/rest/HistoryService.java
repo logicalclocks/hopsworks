@@ -117,6 +117,7 @@ public class HistoryService {
         JobsHistory jh = jobsHistoryFacade.findByAppId(it.getId());
         if(jh != null){
             YarnAppResultDTO appToAdd  = new YarnAppResultDTO(it, jh.getExecutionDuration(), it.getFinishTime()-it.getStartTime());
+            appToAdd.setOwnerFullName(returnProject.getOwner().getFname() + " " + returnProject.getOwner().getLname());
             appResultsToReturn.add(appToAdd);
         }
     }
@@ -250,7 +251,6 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         }
         
         defaultAnalysis(jobsHistoryResult);
-        //mediumAnalysis(jobsHistoryResult);
         premiumAnalysis(jobsHistoryResult);
         
         GenericEntity<JobHeuristicDTO> jobsHistory = new GenericEntity<JobHeuristicDTO>(jobsHistoryResult){};
@@ -375,43 +375,6 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         jobsHistoryResult.addProposal(proposal);        
     }
     
-//    /**
-//     * The medium analysis tries to find an average of resources required for an application.
-//     * It operates if the number of the results for analysis are more than 3.
-//     * @param jobsHistoryResult 
-//     */
-//        private void mediumAnalysis(JobHeuristicDTO jobsHistoryResult){
-//            int counter = 0;
-//            int defaultAmMemory = 0;
-//            int defaultAmVcores = 0;
-//            int defaultNumOfExecutors = 0;
-//            int defaultExecutorsMemory = 0;
-//            int defaultExecutorCores = 1;
-//        
-//            int size = resultsForAnalysis.size();
-//            Iterator<JobHeuristicDetailsDTO> itr = resultsForAnalysis.iterator();
-//        
-//            // The analysis takes places if and only if the results for analysis are more than 3.
-//            while(itr.hasNext() && size >= 3) {
-//                JobHeuristicDetailsDTO obj = itr.next();
-//         
-//                if(obj.getTotalSeverity().equals("LOW")){
-//                    defaultAmMemory += obj.getAmMemory();
-//                    defaultAmVcores += obj.getAmVcores();
-//                    defaultNumOfExecutors += obj.getNumberOfExecutors();
-//                    defaultExecutorsMemory += obj.getExecutorMemory();
-//                    counter++;
-//                }
-//            }
-//        
-//            if(size >= 3){
-//                JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Medium", average(defaultAmMemory,counter), defaultAmVcores/counter, defaultNumOfExecutors/counter,
-//                                    defaultExecutorCores, average(defaultExecutorsMemory,counter));
-//        
-//                proposal.setEstimatedExecutionTime("Unpredictable");
-//                jobsHistoryResult.addProposal(proposal);
-//        }
-//    }
     
     /**
      * The premium analysis takes into account the minimum execution duration of an application and
@@ -464,7 +427,7 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
          }
          
         if(premium){ 
-            JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Fast", "[Max Resources]",defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
+            JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Fast", "[Maximim Resources]",defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
                                     defaultExecutorCores, defaultExecutorsMemory);
         
             proposal.setEstimatedExecutionTime(convertMsToTime(executionDuration));
