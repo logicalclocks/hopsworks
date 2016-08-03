@@ -94,8 +94,9 @@ public class PKIUtils {
       logger.info(line);
     }
     process.waitFor();
-    if (process.exitValue() != 0) {
-      throw new RuntimeException("Failed to sign certificate.");
+    int exitValue = process.exitValue();
+    if (exitValue != 0) {
+      throw new RuntimeException("Failed to sign certificate. Exit value: " + exitValue);
     }
     logger.info("Signed certificate.");
     return FileUtils.readFileToString(generatedCertFile);
