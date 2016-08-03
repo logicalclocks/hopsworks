@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MainCtrl', ['$interval','$cookies', '$location','$scope', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService','ProjectService','growl','MessageService','$routeParams',
-          function ($interval, $cookies, $location, $scope, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl, MessageService, $routeParams) {
+        .controller('MainCtrl', ['$interval','$cookies', '$location','$scope', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService','ProjectService','growl','MessageService','$routeParams', '$window',
+          function ($interval, $cookies, $location, $scope, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl, MessageService, $routeParams, $window) {
 
             var self = this;
             self.email = $cookies['email'];
@@ -40,7 +40,7 @@ angular.module('hopsWorksApp')
             }
             
             self.goToAdminPage = function () {
-              $location.path('index.xhtml');
+              $window.location.href = '/hopsworks/security/protected/admin/adminIndex.xhtml';
             }
 
             self.getEmailHash = function(email) {
