@@ -31,9 +31,9 @@ import se.kth.hopsworks.util.Settings;
  *
  * @author jdowling
  */
-@Path("/agent")
+@Path("/agentservice")
 @Stateless
-@RolesAllowed({"HOPS_ADMIN"})
+@RolesAllowed({"AGENT"})
 public class AgentService {
 
   final static Logger logger = Logger.getLogger(AgentService.class.getName());

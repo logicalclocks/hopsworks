@@ -162,6 +162,8 @@ public class AuthService {
             json).build();
     }
 
+    
+    
     @GET
     @Path("logout")
     @Produces(MediaType.APPLICATION_JSON)
@@ -192,6 +194,19 @@ public class AuthService {
         return Response.ok().entity(json).build();
     }
 
+    @GET
+    @Path("isAdmin")
+    @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})    
+    public Response login(@Context SecurityContext sc,
+        @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
+        throws AppException, MessagingException {
+
+        if (sc.isUserInRole("HOPS_ADMIN")) {
+           return Response.ok().build();        
+        }
+        return Response.noContent().build();
+    }    
+    
     @POST
     @Path("register")
     @Produces(MediaType.APPLICATION_JSON)
