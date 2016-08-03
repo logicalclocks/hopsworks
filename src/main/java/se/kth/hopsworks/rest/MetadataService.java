@@ -1,6 +1,7 @@
 package se.kth.hopsworks.rest;
 
 import java.io.File;
+import java.util.HashSet;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -29,6 +30,12 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.xml.crypto.Data;
+
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.apache.hadoop.security.AccessControlException;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
@@ -137,6 +144,66 @@ public class MetadataService {
   }
 
   /**
+   * Fetch all metadata associated to an inode
+   * <p/>
+   * @param inodePid
+   * @param sc
+   * @param req
+   * @return
+   * @throws AppException
+   */
+  @GET
+  @Path("{inodepid}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response fetchMetadataCompact(
+          @PathParam("inodepid") Integer inodePid,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    if (inodePid == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Incomplete request!");
+    }
+
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode templates, tables, fields;
+    ArrayNode values;
+
+    Inode inode = this.inodefacade.findById(inodePid);
+    HashSet<Integer> tuples = new HashSet<Integer>();
+    try {
+      for(TupleToFile tuple: ttf.getTuplesByInodeId(inode.getInodePK().getParentId(), inode.getInodePK().getName())){
+        tuples.add(tuple.getId());
+      }
+    }catch(DatabaseException e){
+      logger.log(Level.WARNING, "Trying to fetch metadata.", e);
+      throw new AppException(Response.Status.NO_CONTENT.getStatusCode(),
+              "Could not fetch the metadata for the file " + inode.getInodePK().getName() + ".");
+    }
+    templates = mapper.createObjectNode();
+    for(Template template : inode.getTemplates()){
+      tables = mapper.createObjectNode();
+      for(MTable table : template.getMTables()){
+        fields = mapper.createObjectNode();
+        for (Field field : table.getFields()) {
+          values =  mapper.createArrayNode();
+          for (RawData raw : field.getRawData()) {
+            if (!tuples.contains(raw.getRawdataPK().getTupleid())) continue;
+            for (Metadata mt : raw.getMetadata()) {
+                values.add(mt.getData());
+            }
+          }
+          fields.put(field.getName(), values);
+        }
+        tables.put(table.getName(), fields);
+      }
+      templates.put(template.getName(), tables);
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(templates.toString()).build();
+  }
+
+  /**
    * Fetch metadata associated to an inode by table id
    * <p/>
    * @param inodePid
@@ -167,6 +234,8 @@ public class MetadataService {
     List<MetadataView> metadata = new LinkedList<>();
 
     try {
+      Inode inode = this.inodefacade.findById(inodePid);
+      List<Template> nodeTemplates = new LinkedList<>(inode.getTemplates());
 
       List<TupleToFile> tuples = ttf.getTuplesByInodeId(inodePid, inodeName);
       MTable table = mtf.getTable(tableid);
@@ -175,6 +244,7 @@ public class MetadataService {
 
       //groups metadata per table
       MetadataView metatopView = new MetadataView(table.getName());
+
 
       for (Field field : fields) {
         //groups metadata per field

@@ -938,6 +938,28 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+
+              newWorkflow: function (size) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/newWorkflow.html',
+                  controller: 'WorkflowCreatorCtrl as workflowCreatorCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                            function (success) {
+                            },
+                            function (err) {
+                              $location.path('/login');
+                              $location.replace();
+                              return $q.reject(err);
+                            });
+                      }]
+                  }
+                });
+                return modalInstance.result;
+              },
               historyDetails: function (job, size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/historyDetails.html',

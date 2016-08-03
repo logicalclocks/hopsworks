@@ -66,13 +66,14 @@ angular.module('hopsWorksApp')
             };
 
             this.setupInfo = function () {
-              if (self.job.runConfig.type == "sparkJobConfiguration") {
+
+              if (self.job.runConfig.type === "sparkJobConfiguration") {
                 self.jobtype = "Spark";
                 self.execFile = getFileName(job.runConfig.jarPath);
-              } else if (self.job.runConfig.type == "adamJobConfiguration") {
+              } else if (self.job.runConfig.type === "adamJobConfiguration") {
                 self.jobtype = "ADAM";
                 self.execFile = job.runConfig.selectedCommand.command;
-              } else if (self.job.runConfig.type == "flinkJobConfiguration") {
+              } else if (self.job.runConfig.type === "flinkJobConfiguration") {
                 self.jobtype = "Flink";
                 self.execFile = getFileName(job.runConfig.jarPath);
               }

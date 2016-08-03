@@ -42,8 +42,6 @@ public class Settings {
   private static final String VARIABLE_MYSQL_DIR = "mysql_dir";
   private static final String VARIABLE_HADOOP_DIR = "hadoop_dir";
   private static final String VARIABLE_HOPSWORKS_DIR = "hopsworks_dir";
-  private static final String VARIABLE_CHARON_DIR = "charon_dir";
-  private static final String VARIABLE_HIWAY_DIR = "hiway_dir";
   private static final String VARIABLE_YARN_DEFAULT_QUOTA = "yarn_default_quota";
   private static final String VARIABLE_HDFS_DEFAULT_QUOTA = "hdfs_default_quota";
   private static final String VARIABLE_MAX_NUM_PROJ_PER_USER = "max_num_proj_per_user";
@@ -158,8 +156,6 @@ public class Settings {
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
       KAFKA_DEFAULT_NUM_PARTITIONS = setDirVar(VARIABLE_KAFKA_NUM_PARTITIONS, KAFKA_DEFAULT_NUM_PARTITIONS);
       KAFKA_DEFAULT_NUM_REPLICAS = setDirVar(VARIABLE_KAFKA_NUM_REPLICAS, KAFKA_DEFAULT_NUM_REPLICAS);
-      CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
-      HIWAY_DIR = setDirVar(VARIABLE_HIWAY_DIR, HIWAY_DIR);
       YARN_DEFAULT_QUOTA = setDirVar(VARIABLE_YARN_DEFAULT_QUOTA, YARN_DEFAULT_QUOTA);
       YARN_WEB_UI_IP = setIpVar(VARIABLE_YARN_WEB_UI_IP, YARN_WEB_UI_IP);
       YARN_WEB_UI_PORT = setIntVar(VARIABLE_YARN_WEB_UI_PORT, YARN_WEB_UI_PORT);
@@ -175,21 +171,6 @@ public class Settings {
     }
   }
 
-  private String CHARON_DIR = "/srv/Charon";
-
-  public synchronized String getCharonDir() {
-    checkCache();
-    return CHARON_DIR;
-  }
-
-  public synchronized String getCharonMountDir() {
-    checkCache();
-    return CHARON_DIR + "/charon_fs";
-  }
-
-  public synchronized String getCharonProjectDir(String projectName) {
-    return getCharonMountDir() + "/" + projectName;
-  }
 
 
   private static String GLASSFISH_DIR = "/srv/glassfish";
@@ -388,13 +369,6 @@ public class Settings {
     return num;
   }
 
-  public static String HIWAY_REL_JAR_PATH = "software/hiway/hiway-core.jar";
-
-  //Local path to the hiway jar
-//  public static final String HIWAY_JAR_PATH = "/home/glassfish/software/hiway";
-  //Relative output path (within hdfs project folder) which to write cuneiform in-/output to
-  public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Logs/Cuneiform/";
-
   //Hadoop locations
   public synchronized String getHadoopConfDir() {
     return hadoopConfDir(getHadoopDir());
@@ -544,7 +518,6 @@ public class Settings {
   //Directory names in HDFS
   public static final String DIR_ROOT = "Projects";
   public static final String DIR_SAMPLES = "Samples";
-  public static final String DIR_CUNEIFORM = "Cuneiform";
   public static final String DIR_RESULTS = "Results";
   public static final String DIR_CONSENTS = "consents";
   public static final String DIR_BAM = "bam";

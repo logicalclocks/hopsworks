@@ -96,34 +96,6 @@ public class LocalFsService {
         fileViews).build();
   }
 
-  @GET
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response findFilesInCharonProjectID(
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
-    return dirListing(settings.getCharonProjectDir(project.getName()));
-  }
-
-  /**
-   * Get the inodes in the given project-relative path.
-   * <p/>
-   * @param path
-   * @param sc
-   * @param req
-   * @return
-   * @throws AppException
-   */
-  @GET
-  @Path("/{path: .+}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response getDirContent(
-      @PathParam("path") String path,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
-    return dirListing(settings.getCharonProjectDir(project.getName()) + File.separator + path);
-  }
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)

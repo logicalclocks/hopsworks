@@ -6,7 +6,6 @@ package se.kth.bbc.jobs.jobhistory;
  */
 public enum JobType {
 
-  CUNEIFORM("Cuneiform"),
   YARN("Yarn"),
   FLINK("Flink"),
   SPARK("Spark"),
