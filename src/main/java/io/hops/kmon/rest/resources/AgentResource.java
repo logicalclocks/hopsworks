@@ -36,7 +36,7 @@ import javax.ws.rs.POST;
  */
 @Path("/agentresource")
 @Stateless
-@RolesAllowed({"AGENT"})
+//@RolesAllowed({"AGENT"})
 public class AgentResource {
 
     @EJB
