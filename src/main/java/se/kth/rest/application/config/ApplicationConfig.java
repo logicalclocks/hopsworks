@@ -57,6 +57,9 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.EdgeService.class);
     register(se.kth.hopsworks.rest.WorkflowExecutionService.class);
 
+    // KMON REST Apis
+    register(io.hops.kmon.rest.resources.AgentResource.class);
+    
     // Enable Tracing support.
     //property(ServerProperties.TRACING, "OFF");
   }

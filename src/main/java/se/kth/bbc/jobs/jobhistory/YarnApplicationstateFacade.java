@@ -26,7 +26,7 @@ import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 @Stateless
-  public class YarnApplicationstateFacade extends AbstractFacade<YarnApplicationstate> {
+public class YarnApplicationstateFacade extends AbstractFacade<YarnApplicationstate> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -42,15 +42,26 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 
   @Override
   public List<YarnApplicationstate> findAll() {
-    TypedQuery<YarnApplicationstate> query = em.createNamedQuery("YarnApplicationstate.findAll",
-        YarnApplicationstate.class);
+    TypedQuery<YarnApplicationstate> query = em.createNamedQuery(
+            "YarnApplicationstate.findAll",
+            YarnApplicationstate.class);
     return query.getResultList();
   }
 
   public List<YarnApplicationstate> findByAppname(String appname) {
-    TypedQuery<YarnApplicationstate> query = em.createNamedQuery("YarnApplicationstate.findByAppname",
-        YarnApplicationstate.class).setParameter(
-        "appname", appname);
+    TypedQuery<YarnApplicationstate> query = em.createNamedQuery(
+            "YarnApplicationstate.findByAppname",
+            YarnApplicationstate.class).setParameter(
+                    "appname", appname);
+    return query.getResultList();
+  }
+
+  public List<YarnApplicationstate> findByAppuserAndAppState(String appUser,
+          String appState) {
+    TypedQuery<YarnApplicationstate> query = em.createNamedQuery(
+            "YarnApplicationstate.findByAppuserAndAppsmstate",
+            YarnApplicationstate.class).setParameter("appuser", appUser).
+            setParameter("appsmstate", appState);
     return query.getResultList();
   }
 
@@ -64,5 +75,4 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
     }
 
   }
-
 }

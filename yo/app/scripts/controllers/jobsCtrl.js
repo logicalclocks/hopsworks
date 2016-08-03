@@ -39,6 +39,8 @@ angular.module('hopsWorksApp')
               $scope.sortKey = keyname;   //set the sortKey to the param passed
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
             };
+
+
             self.editAsNew = function (job) {
               JobService.getConfiguration(self.projectId, job.id).then(
                       function (success) {
@@ -71,11 +73,7 @@ angular.module('hopsWorksApp')
                   jobType = 3;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
-              if (jobType === 0) {
-                mainFileTxt = "Workflow file";
-                mainFileVal = self.currentjob.runConfig.wf.name;
-                jobDetailsTxt = "Input variables";
-              } else if (jobType === 1) {
+              if (jobType === 1) {
                 sparkState = {
                   "selectedJar": getFileName(self.currentjob.runConfig.jarPath)
                 };
@@ -345,25 +343,35 @@ angular.module('hopsWorksApp')
               }, 5000);
             };
             startPolling();
-            
-            $scope.convertMS = function(ms) {
-                    if(ms===undefined){
-                        return "";
-                    }    
-                    var m, s;
-                    s = Math.floor(ms / 1000);
-                    m = Math.floor(s / 60);
-                    s = s % 60;
-                    if (s.toString().length < 2) {
-                        s = '0'+s;
-                    }
-                    if (m.toString().length < 2) {
-                        m = '0'+m;
-                    }
-                    var ret = m + ":" + s;
-                    return ret;
+
+            $scope.convertMS = function (ms) {
+              if (ms === undefined) {
+                return "";
+              }
+              var m, s;
+              s = Math.floor(ms / 1000);
+              m = Math.floor(s / 60);
+              s = s % 60;
+              if (s.toString().length < 2) {
+                s = '0' + s;
+              }
+              if (m.toString().length < 2) {
+                m = '0' + m;
+              }
+              var ret = m + ":" + s;
+              return ret;
             };
 
+
+            var init = function () {
+              var stored = StorageService.contains(self.projectId + "_newjob");
+              if (stored) {
+//                self.newJob();
+                  $location.path('project/' + self.projectId + '/newjob');
+              }
+            };
+
+            init();
           }]);
 
 

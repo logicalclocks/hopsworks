@@ -20,6 +20,7 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
@@ -27,7 +28,7 @@ import javax.validation.constraints.Size;
  */
 @Entity
 @Table(name = "hopsworks.meta_tables")
-
+@XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "MTable.findAll",
           query = "SELECT t FROM MTable t"),

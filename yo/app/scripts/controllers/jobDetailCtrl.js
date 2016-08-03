@@ -66,6 +66,7 @@ angular.module('hopsWorksApp')
             };
 
             this.setupInfo = function () {
+
               if (self.job.runConfig.type === "sparkJobConfiguration") {
                 self.jobtype = "Spark";
                 self.execFile = getFileName(job.runConfig.jarPath);
