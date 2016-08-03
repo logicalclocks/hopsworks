@@ -382,6 +382,8 @@ public abstract class YarnJob extends HopsJob {
   protected void copyLogs(DistributedFileSystemOps udfso) {
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
+        stdOutFinalDestination = stdOutFinalDestination + getExecution().getAppId()
+            + File.separator + "stdout.log";
         if (!runner.areLogPathsHdfs() && !runner.areLogPathsAggregated()) {
           udfso.copyToHDFSFromLocal(true, runner.
                   getStdOutPath(),
@@ -400,6 +402,8 @@ public abstract class YarnJob extends HopsJob {
         }
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
+        stdErrFinalDestination = stdErrFinalDestination + getExecution().getAppId()
+            + File.separator + "stderr.log";
         if (!runner.areLogPathsHdfs() && !runner.areLogPathsAggregated()) {
           udfso.copyToHDFSFromLocal(true, runner.
                   getStdErrPath(),

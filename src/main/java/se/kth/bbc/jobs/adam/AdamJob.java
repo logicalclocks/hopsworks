@@ -179,12 +179,10 @@ public class AdamJob extends SparkJob {
             jobDescription.
             getProject().
             getName())
-            + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
-            + File.separator + "stdout.log";
+            + Settings.ADAM_DEFAULT_OUTPUT_PATH;
     String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
             jobDescription.getProject().getName())
-            + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
-            + File.separator + "stderr.log";
+            + Settings.ADAM_DEFAULT_OUTPUT_PATH;
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
     return true;
