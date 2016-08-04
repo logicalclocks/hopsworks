@@ -103,3 +103,4 @@ test/.env
 
 ###########glassfish##############
 src/main/setup/glassfish-resources.xml
+*/glassfish-resources.xml
