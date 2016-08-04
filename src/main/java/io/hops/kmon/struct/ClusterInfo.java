@@ -18,12 +18,12 @@ public class ClusterInfo {
     private Long totalCores;
     private Long totalMemoryCapacity;
     private Long totalDiskCapacity;
-    private Set<String> services = new HashSet<String>();
-    private Set<String> roles = new HashSet<String>();
-    private Set<String> badServices = new HashSet<String>();
-    private Set<String> badRoles = new HashSet<String>();
-    private Map<String, Integer> rolesCount = new TreeMap<String, Integer>();
-    private Map<String, String> rolesServicesMap = new TreeMap<String, String>();
+    private Set<String> services = new HashSet<>();
+    private Set<String> roles = new HashSet<>();
+    private Set<String> badServices = new HashSet<>();
+    private Set<String> badRoles = new HashSet<>();
+    private Map<String, Integer> rolesCount = new TreeMap<>();
+    private Map<String, String> rolesServicesMap = new TreeMap<>();
     private Integer started, stopped, timedOut;
 
     public ClusterInfo(String name) {

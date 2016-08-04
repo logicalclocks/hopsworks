@@ -54,8 +54,8 @@ public class AgentService {
     if (json.has("csr")) {
       String csr = json.getString("csr");
       try {
-        pubAgentCert = PKIUtils.signWithServerCertificate(csr, settings.getHopsworksMasterPasswordSsl());
-        caPubCert = Files.toString(new File(Settings.CA_DIR + "/certs/ca-chain.cert.pem"), Charsets.UTF_8);
+        pubAgentCert = PKIUtils.signWithServerCertificate(csr, settings.getIntermediateCaDir(), settings.getHopsworksMasterPasswordSsl());
+        caPubCert = Files.toString(new File(settings.getIntermediateCaDir() + "/certs/ca-chain.cert.pem"), Charsets.UTF_8);
       } catch (IOException | InterruptedException ex) {
         Logger.getLogger(AgentService.class.getName()).log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.toString());

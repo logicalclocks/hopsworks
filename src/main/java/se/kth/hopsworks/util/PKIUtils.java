@@ -14,12 +14,12 @@ public class PKIUtils {
 
   final static Logger logger = Logger.getLogger(PKIUtils.class.getName());
 
-  public static String signWithServerCertificate(String csr, String hopsMasterPassword) throws IOException, InterruptedException {
+  public static String signWithServerCertificate(String csr, String intermediateCaDir, String hopsMasterPassword) throws IOException, InterruptedException {
     File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".csr");
     FileUtils.writeStringToFile(csrFile, csr);
 
     if (verifyCSR(csrFile)) {
-      return signCSR(csrFile, hopsMasterPassword);
+      return signCSR(csrFile, intermediateCaDir, hopsMasterPassword);
     }
     return null;
   }
@@ -57,7 +57,7 @@ public class PKIUtils {
     return false;
   }
 
-  private static String signCSR(File csr, String hopsMasterPassword) throws IOException, InterruptedException {
+  private static String signCSR(File csr, String intermediateCaDir, String hopsMasterPassword) throws IOException, InterruptedException {
 
     File generatedCertFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".cert.pem");
 
@@ -69,7 +69,7 @@ public class PKIUtils {
     cmds.add("-policy policy_loose");
     cmds.add("-batch");
     cmds.add("-config");
-    cmds.add(Settings.CA_DIR + "openssl.cnf");
+    cmds.add(intermediateCaDir + "/openssl.cnf");
     cmds.add("-passin");
     cmds.add("pass:" + hopsMasterPassword);
     cmds.add("-extensions");

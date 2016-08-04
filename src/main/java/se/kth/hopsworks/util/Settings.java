@@ -288,11 +288,16 @@ public class Settings {
     return HADOOP_DIR;
   }
 
-  private static String HOPSWORKS_DIR = "/srv/glassfish/domain1";
+  private static String HOPSWORKS_DIR = "/srv/glassfish";
 
   public synchronized String getHopsworksDir() {
     checkCache();
-    return HOPSWORKS_DIR;
+    return HOPSWORKS_DIR + "/domain1";
+  }
+
+  public synchronized String getIntermediateCaDir() {
+    checkCache();
+    return getHopsworksDir() + Settings.CA_DIR;
   }
 
   //User under which yarn is run
@@ -667,11 +672,10 @@ public class Settings {
   
   // Hopsworks
   public static final Charset ENCODING = StandardCharsets.UTF_8;
+  public static final String HOPS_USERS_HOMEDIR = "/home/";
   public static final String HOPS_USERNAME_SEPARATOR = "__";
-  public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
-  public static String CA_DIR = Settings.HOPSWORKS_DIR + "/config/ca/intermediate/";
-  public static final String CA_CERT_DIR = CA_DIR + "certs/";
-  public static final String CA_KEY_DIR = CA_DIR + "private/";
+//  public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
+  private static String CA_DIR = "/config/ca/intermediate";
   public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
   public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";
   public static final String SSL_DELETE_PROJECT_CERTS_SCRIPTNAME = "deleteprojectcerts.sh";
