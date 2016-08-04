@@ -68,6 +68,7 @@ public class PKIUtils {
 
     cmds.add("openssl");
     cmds.add("ca");
+    cmds.add("-policy policy_loose");
     cmds.add("-batch");
     cmds.add("-config");
     cmds.add(Settings.CA_DIR + "openssl.cnf");
