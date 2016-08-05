@@ -272,11 +272,10 @@
                   </dir-pagination-controls>
                   </div>
               </section>
-
           </div>
 
             <!-- right side -->
-          <div class="row rg-row-bottom">
+          <div class="row rg-row-bottom" style="overflow-y: auto;">
             <h3 class="text-muted" style="text-align: center;" ng-show="!jobsCtrl.hasSelectJob">
               Click on a job to see execution logs. 
             </h3>
@@ -284,7 +283,7 @@
                 ng-show="jobsCtrl.hasSelectJob && !jobsCtrl.getNumOfExecution()">
               No execution log found. 
             </h3>
-            <section style="overflow: auto;" ng-show="jobsCtrl.hasSelectJob && jobsCtrl.getNumOfExecution()">
+            <section ng-show="jobsCtrl.hasSelectJob && jobsCtrl.getNumOfExecution()">
               <h5 class="text-muted pull-right"> Number of executions {{jobsCtrl.getNumOfExecution()}}</h5>
               <div style="max-height: 90%; padding-top: 10px" >
                  <ul class="nav nav-tabs">
