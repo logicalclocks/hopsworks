@@ -30,7 +30,7 @@ public class ClustersController {
    public void init() {
       logger.info("init ClustersController");
       clusters = new ArrayList<>();
-//      loadClusters();
+      loadClusters();
    }
 
    public List<ClusterInfo> getClusters() {

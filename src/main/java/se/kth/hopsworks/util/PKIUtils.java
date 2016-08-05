@@ -35,7 +35,11 @@ public class PKIUtils {
     cmds.add(csr.getAbsolutePath());
     cmds.add("-noout");
     cmds.add("-verify");
-
+    StringBuilder sb = new StringBuilder("/usr/bin/openssl ");
+    for (String s : cmds) {
+      sb.append(s).append(" ");
+    }
+    logger.info(sb.toString());
     Process process = new ProcessBuilder(cmds).directory(new File("/usr/bin/")).
             redirectErrorStream(true).start();
     BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -66,10 +70,10 @@ public class PKIUtils {
 
     cmds.add("openssl");
     cmds.add("ca");
-    cmds.add("-policy policy_loose");
+//    cmds.add("-policy policy_loose");
     cmds.add("-batch");
     cmds.add("-config");
-    cmds.add(intermediateCaDir + "/openssl.cnf");
+    cmds.add(intermediateCaDir + "/openssl-intermediate.cnf");
     cmds.add("-passin");
     cmds.add("pass:" + hopsMasterPassword);
     cmds.add("-extensions");
@@ -83,6 +87,11 @@ public class PKIUtils {
     cmds.add(csr.getAbsolutePath());
     cmds.add("-out");
     cmds.add(generatedCertFile.getAbsolutePath());
+    StringBuilder sb = new StringBuilder("/usr/bin/");
+    for (String s : cmds) {
+      sb.append(s).append(" ");
+    }
+    logger.info(sb.toString());
 
     Process process = new ProcessBuilder(cmds).directory(new File("/usr/bin/")).
             redirectErrorStream(true).start();
