@@ -64,8 +64,9 @@ public class Settings {
   
   private static final String VARIABLE_KAFKA_NUM_PARTITIONS = "kafka_num_partitions";
   private static final String VARIABLE_KAFKA_NUM_REPLICAS = "kafka_num_replicas";
+  private static final String VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD = "hopsworks_master_password";
   
-  private String setUserVar(String varName, String defaultValue) {
+  private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (userName.getValue().isEmpty() == false)) {
       String user = userName.getValue();
@@ -125,16 +126,16 @@ public class Settings {
 
   private void populateCache() {
     if (!cached) {
-      TWOFACTOR_AUTH = setUserVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
-      HDFS_SUPERUSER = setUserVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
-      YARN_SUPERUSER = setUserVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
-      SPARK_USER = setUserVar(VARIABLE_SPARK_USER, SPARK_USER);
+      TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
+      HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
+      YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
+      SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
-      FLINK_USER = setUserVar(VARIABLE_FLINK_USER, FLINK_USER);
+      FLINK_USER = setVar(VARIABLE_FLINK_USER, FLINK_USER);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
-      ZEPPELIN_USER = setUserVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
+      ZEPPELIN_USER = setVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
       ZEPPELIN_DIR = setDirVar(VARIABLE_ZEPPELIN_DIR, ZEPPELIN_DIR);
-      ADAM_USER = setUserVar(VARIABLE_ADAM_USER, ADAM_USER);
+      ADAM_USER = setVar(VARIABLE_ADAM_USER, ADAM_USER);
       ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
@@ -146,13 +147,13 @@ public class Settings {
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
       SPARK_HISTORY_SERVER_IP = setIpVar(VARIABLE_SPARK_HISTORY_SERVER_IP, SPARK_HISTORY_SERVER_IP);	
       ZK_IP = setIpVar(VARIABLE_ZK_IP, ZK_IP);
-      ZK_USER = setUserVar(VARIABLE_ZK_USER, ZK_USER);
+      ZK_USER = setVar(VARIABLE_ZK_USER, ZK_USER);
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
       DRELEPHANT_IP = setIpVar(VARIABLE_DRELEPHANT_IP, DRELEPHANT_IP);
       DRELEPHANT_PORT = setIntVar(VARIABLE_DRELEPHANT_PORT, DRELEPHANT_PORT);
       DRELEPHANT_DB = setDbVar(VARIABLE_DRELEPHANT_DB, DRELEPHANT_DB);
       KAFKA_IP = setIpVar(VARIABLE_KAFKA_IP, KAFKA_IP);
-      KAFKA_USER = setUserVar(VARIABLE_KAFKA_USER, KAFKA_USER);
+      KAFKA_USER = setVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
       KAFKA_DEFAULT_NUM_PARTITIONS = setDirVar(VARIABLE_KAFKA_NUM_PARTITIONS, KAFKA_DEFAULT_NUM_PARTITIONS);
       KAFKA_DEFAULT_NUM_REPLICAS = setDirVar(VARIABLE_KAFKA_NUM_REPLICAS, KAFKA_DEFAULT_NUM_REPLICAS);
@@ -161,6 +162,7 @@ public class Settings {
       YARN_WEB_UI_PORT = setIntVar(VARIABLE_YARN_WEB_UI_PORT, YARN_WEB_UI_PORT);
       HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA_MBs);
       MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
+      HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD, HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD);
       cached = true;
     }
   }
@@ -617,6 +619,15 @@ public class Settings {
     checkCache();
    return KAFKA_DIR;
  }
+  
+  private String HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = "adminpw";
+  
+  public synchronized String getHopsworksMasterPasswordSsl() {
+    checkCache();
+    return HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD;
+  }
+  
+  
   
   private String KAFKA_DEFAULT_NUM_PARTITIONS = "2";
   private String KAFKA_DEFAULT_NUM_REPLICAS = "1";
