@@ -22,6 +22,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.digest.DigestUtils;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.bbc.security.audit.UserAuditActions;
 import se.kth.bbc.security.auth.AuthenticationConstants;
@@ -30,7 +31,6 @@ import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
 import se.kth.hopsworks.user.model.Users;
-import se.kth.hopsworks.users.BbcGroupFacade;
 import se.kth.hopsworks.users.UserDTO;
 import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.util.Settings;
@@ -48,13 +48,11 @@ public class AuthService {
   @EJB
   private UserStatusValidator statusValidator;
   @EJB
-  private BbcGroupFacade bbcGroup;
-  @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  Settings settings;
+  private Settings settings;
   @EJB
-  AuditManager am;
+  private AuditManager am;
 
   @GET
   @Path("session")
@@ -102,6 +100,18 @@ public class AuthService {
               "Unrecognized email address. Have you registered yet?");
     }
     String newPassword = null;
+    if (settings.findById("twofactor_auth").getValue().equals("mandatory") || 
+       (settings.findById("twofactor_auth").getValue().equals("true") &&
+        user.getTwoFactor())) {
+      
+      if (otp == null || otp.isEmpty() && user.getMode()
+              == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
+        if (user.getPassword().equals(DigestUtils.sha256Hex(password))) {
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  "Second factor required.");
+        }
+      }
+    }
     // Add padding if custom realm is disabled
     if (otp == null || otp.isEmpty() && user.getMode()
             == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
@@ -224,16 +234,18 @@ public class AuthService {
     byte[] qrCode = null;
 
     JsonResponse json = new JsonResponse();
-
+    
     qrCode = userController.registerUser(newUser, req);
 
-    if (settings.findById("twofactor_auth").getValue().equals("true")) {
+    if (settings.findById("twofactor_auth").getValue().equals("mandatory") || 
+       (settings.findById("twofactor_auth").getValue().equals("true") && 
+        newUser.isTwoFactor())) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
     } else {
       json.setSuccessMessage(
               "We registered your account request. "
-            + "Please validate you email and we will "
-            + "review your account within 48 hours.");
+              + "Please validate you email and we will "
+              + "review your account within 48 hours.");
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

@@ -31,6 +31,7 @@ public enum AccountsAuditActions {
   
   PROFILE("PROFILE UPDATE"),
   PASSWORD("PASSWORD CHANGE"),
+  TWO_FACTOR("TWO FACTOR CHANGE"),
   // get all the logs
   ALL("ALL"),
   
