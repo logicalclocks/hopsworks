@@ -139,7 +139,7 @@ public class Settings {
       ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
-      HOPSWORKS_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR, HOPSWORKS_DIR);
+      HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR, HOPSWORKS_INSTALL_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
@@ -288,16 +288,23 @@ public class Settings {
     return HADOOP_DIR;
   }
 
-  private static String HOPSWORKS_DIR = "/srv/glassfish";
+  private static String HOPSWORKS_INSTALL_DIR = "/srv/glassfish";
 
-  public synchronized String getHopsworksDir() {
+  public synchronized String getHopsworksInstallDir() {
     checkCache();
-    return HOPSWORKS_DIR + "/domain1";
+    return HOPSWORKS_INSTALL_DIR;
+  }
+  
+  private static String HOPSWORKS_DOMAIN_DIR = HOPSWORKS_INSTALL_DIR + "/domain1";
+
+  public synchronized String getHopsworksDomainDir() {
+    checkCache();
+    return HOPSWORKS_DOMAIN_DIR;
   }
 
   public synchronized String getIntermediateCaDir() {
     checkCache();
-    return getHopsworksDir() + Settings.CA_DIR;
+    return getHopsworksDomainDir() + Settings.CA_DIR;
   }
 
   //User under which yarn is run
