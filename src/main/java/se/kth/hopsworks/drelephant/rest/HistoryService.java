@@ -422,6 +422,9 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
          // The system checks the number of blocks for the input file.
          // Then proposed a configuration with the same number of executors as the number of the blocks.
          if(blocks != 0){
+             if(defaultNumOfExecutors != blocks){
+                 executionDuration = 0;
+             }
              defaultNumOfExecutors = blocks;
              premium = true;
          }
