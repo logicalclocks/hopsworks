@@ -148,17 +148,17 @@ public class RoleEJB {
    }
 
    public void store(Role role) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
-              .setParameter("hostId", role.getHostId()).setParameter("cluster", role.getCluster())
-              .setParameter("service", role.getService()).setParameter("role", role.getRole());
-      List<Role> s = query.getResultList();
-
-      if (s.size() > 0) {
-         role.setId(s.get(0).getId());
-         em.merge(role);
-      } else {
+//      TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
+//              .setParameter("hostId", role.getHostId()).setParameter("cluster", role.getCluster())
+//              .setParameter("service", role.getService()).setParameter("role", role.getRole());
+//      List<Role> s = query.getResultList();
+//
+//      if (s.size() > 0) {
+//         role.setId(s.get(0).getId());
+//         em.merge(role);
+//      } else {
          em.persist(role);
-      }
+//      }
    }
    
    public void deleteRolesByHostId(String hostId) {

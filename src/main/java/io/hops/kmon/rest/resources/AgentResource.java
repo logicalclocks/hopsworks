@@ -171,10 +171,10 @@ public class AgentResource {
         logger.log(Level.INFO, "Host with id {0} not found.", hostId);
         return Response.status(Response.Status.NOT_FOUND).build();
       }
-//            if (!host.isRegistered()) {
-//                logger.log(Level.INFO, "Host with id {0} is not registered.", hostId);
-//                return Response.status(Response.Status.NOT_ACCEPTABLE).build();
-//            }
+      if (!host.isRegistered()) {
+        logger.log(Level.INFO, "Host with id {0} is not registered.", hostId);
+        return Response.status(Response.Status.NOT_ACCEPTABLE).build();
+      }
       host.setLastHeartbeat((new Date()).getTime());
       host.setLoad1(json.getJsonNumber("load1").doubleValue());
       host.setLoad5(json.getJsonNumber("load5").doubleValue());
