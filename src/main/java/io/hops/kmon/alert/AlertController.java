@@ -80,7 +80,7 @@ public class AlertController implements Serializable {
    @PostConstruct
    public void init() {
       logger.info("init AlertController");
-//      loadAlerts();
+      loadAlerts();
    }
 
    public String[] getSeverities() {

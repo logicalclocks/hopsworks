@@ -37,15 +37,18 @@ public class RoleEJB {
       return query.getResultList();
    }   
 
-   public Role find(String hostId, String cluster, String service, String role) throws Exception{
-      TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
+   public Role find(String hostId, String cluster, String service, String role) {
+
+     TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
               .setParameter("hostId", hostId).setParameter("cluster", cluster)
               .setParameter("service", service).setParameter("role", role);
-      try {
-         return query.getSingleResult();
-      } catch (NoResultException ex) {
-         throw new Exception("NoResultException");
-      }
+        List results = query.getResultList();
+        if (results.isEmpty()) {
+          return null;
+        } else if (results.size() == 1) {
+          return (Role) results.get(0);
+        }
+        throw new NonUniqueResultException();
    }
    
    public List<Role> findHostRoles(String hostId) {
@@ -148,17 +151,17 @@ public class RoleEJB {
    }
 
    public void store(Role role) {
-//      TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
-//              .setParameter("hostId", role.getHostId()).setParameter("cluster", role.getCluster())
-//              .setParameter("service", role.getService()).setParameter("role", role.getRole());
-//      List<Role> s = query.getResultList();
-//
-//      if (s.size() > 0) {
-//         role.setId(s.get(0).getId());
-//         em.merge(role);
-//      } else {
+      TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
+              .setParameter("hostId", role.getHostId()).setParameter("cluster", role.getCluster())
+              .setParameter("service", role.getService()).setParameter("role", role.getRole());
+      List<Role> s = query.getResultList();
+
+      if (s.size() > 0) {
+         role.setId(s.get(0).getId());
+         em.merge(role);
+      } else {
          em.persist(role);
-//      }
+      }
    }
    
    public void deleteRolesByHostId(String hostId) {

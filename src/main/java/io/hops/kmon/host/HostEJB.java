@@ -75,7 +75,7 @@ public class HostEJB implements Serializable{
 
     public Host storeHost(Host host, boolean register) {
         if (register) {
-            em.persist(host);
+            em.merge(host);
         } else {
             Host h = em.find(Host.class, host.getHostId());
             host.setPrivateIp(h.getPrivateIp());
