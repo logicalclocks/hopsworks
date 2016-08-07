@@ -40,7 +40,7 @@ public class HostsController implements Serializable {
   private void loadHosts() {
       hosts = hostEJB.find();
       if (hosts == null) {
-        hosts = new ArrayList<Host>();
+        hosts = new ArrayList<>();
       }
   }
 
