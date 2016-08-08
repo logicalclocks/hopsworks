@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="bower_components/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css" />
     <link rel="stylesheet" href="bower_components/angular-multi-select/isteven-multi-select.css" />
     <link rel="stylesheet" href="bower_components/angular-hamburger-toggle/dist/angular-hamburger-toggle.css" />
+    <link rel="stylesheet" href="bower_components/jstree/dist/themes/default/style.css" />
     <link rel="stylesheet" href="bower_components/ng-prettyjson/src/ng-prettyjson.css" />
     <link rel="stylesheet" href="bower_components/angular-awesome-slider/dist/css/angular-awesome-slider.min.css" />
     <!-- endbower -->
@@ -41,8 +42,11 @@
     <link rel="stylesheet" href="styles/message.css">
     <link rel="stylesheet" href="styles/angular-tour.css"/>
     <link rel="stylesheet" href="styles/timeline.css">
-    <link rel="stylesheet" href="styles/cuneiform.css">
     <link rel="stylesheet" href="styles/ExampleProjectLoaderFix.css">
+    <link rel="stylesheet" href="styles/workflows.css">
+    <link rel="stylesheet" href="styles/jquery.qtip.css" />
+    <link rel="stylesheet" href="styles/loading.css">
+    <link rel="stylesheet" href="styles/angular-resizable.css">
     <!-- endbuild -->
   </head>
   <body  ng-app="hopsWorksApp">
@@ -93,18 +97,37 @@
     <script src="bower_components/clipboard/dist/clipboard.js"></script>
     <script src="bower_components/ngclipboard/dist/ngclipboard.js"></script>
     <script src="bower_components/angular-utils-pagination/dirPagination.js"></script>
+    <script src="bower_components/cytoscape/dist/cytoscape.js"></script>
+    <script src="bower_components/cytoscape-cxtmenu/cytoscape-cxtmenu.js"></script>
+    <script src="bower_components/js.cytoscape-navigator/cytoscape-navigator.js"></script>
+    <script src="bower_components/lodash/lodash.js"></script>
+    <script src="bower_components/graphlib/dist/graphlib.core.js"></script>
+    <script src="bower_components/dagre/dist/dagre.core.js"></script>
+    <script src="bower_components/dagre/dist/dagre.core.min.js"></script>
+    <script src="bower_components/cytoscape-dagre/cytoscape-dagre.js"></script>
+    <script src="bower_components/jstree/dist/jstree.js"></script>
+    <script src="bower_components/recase/recase.js"></script>
+    <script src="bower_components/node-uuid/uuid.js"></script>
+    <script src="bower_components/ev-emitter/ev-emitter.js"></script>
+    <script src="bower_components/imagesloaded/imagesloaded.js"></script>
+    <script src="bower_components/qtip2/jquery.qtip.js"></script>
+    <script src="bower_components/qtip2/basic/jquery.qtip.js"></script>
+    <script src="bower_components/cytoscape-qtip/cytoscape-qtip.js"></script>
     <script src="bower_components/angular-smart-table/dist/smart-table.js"></script>
     <script src="bower_components/ng-prettyjson/src/ng-prettyjson.js"></script>
     <script src="bower_components/ng-prettyjson/src/ng-prettyjson-tmpl.js"></script>
     <script src="bower_components/angular-awesome-slider/dist/angular-awesome-slider.js"></script>
+    <script src="bower_components/angular-resizable/src/angular-resizable.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
-
     <!-- build:js({.tmp,app}) scripts/scripts.js -->
 
     <script src="scripts/app.js"></script>
     <script src="scripts/util.js"></script>
     <script src="scripts/countries.js"></script>
+    <script src="scripts/cytoscape-toolbar.js"></script>
+    <script src="scripts/jquery.ajax-retry.min.js"></script>
+    <script src="scripts/workflows.js"></script>
 
     <script src="scripts/directives/switch.js"></script>
     <script src="scripts/directives/modal.js"></script>
@@ -134,7 +157,6 @@
     <script src="scripts/controllers/modifyFieldCtrl.js"></script>
     <script src="scripts/controllers/registration.js"></script>
     <script src="scripts/controllers/selectFileCtrl.js"></script>
-    <script src="scripts/controllers/selectFileCharonCtrl.js"></script>
     <script src="scripts/controllers/attachTemplateCtrl.js"></script>
     <script src="scripts/controllers/shareDatasetCtrl.js"></script>
     <script src="scripts/controllers/viewPublicDatasetCtrl.js"></script>
@@ -150,9 +172,11 @@
     <script src="scripts/controllers/sshKeysCtrl.js"></script>
     <script src="scripts/controllers/biobankingCtrl.js"></script>    
     <script src="scripts/controllers/detachTemplateCtrl.js"></script>
-    <script src="scripts/controllers/charonCtrl.js"></script>
     <script src="scripts/controllers/localFsCtrl.js"></script>
     <script src="scripts/controllers/inputModalCtrl.js"></script>
+    <script src="scripts/controllers/uberCtrl.js"></script>
+    <script src="scripts/controllers/workflow.js"></script>
+    <script src="scripts/controllers/workflowcreator.js"></script>
     <script src="scripts/controllers/uberCtrl.js"></script>    
     <script src="scripts/controllers/kafkaCtrl.js"></script>    
     <script src="scripts/controllers/selectProjectCtrl.js"></script>    
@@ -181,24 +205,27 @@
     <script src="scripts/services/MembersService.js"></script>
     <script src="scripts/services/MetadataActionService.js"></script>
     <script src="scripts/services/DataSetService.js"></script>
-    <script src="scripts/services/CuneiformService.js"></script>
     <script src="scripts/services/SparkService.js"></script>
     <script src="scripts/services/AdamService.js"></script>
     <script src="scripts/services/FlinkService.js"></script>
     <script src="scripts/services/HistoryService.js"></script>
     <script src="scripts/services/JobService.js"></script>
     <script src="scripts/services/RequestService.js"></script>
+    <script src="scripts/services/MetadataRestService.js"></script>
     <script src="scripts/services/MetadataHelperService.js"></script>
     <script src="scripts/services/StorageService.js"></script>
     <script src="scripts/services/ZeppelinService.js"></script>
     <script src="scripts/services/MessageService.js"></script>
     <script src="scripts/services/VariablesService.js"></script>
     <script src="scripts/services/BiobankingService.js"></script>
-    <script src="scripts/services/CharonService.js"></script>
     <script src="scripts/services/LocalFsService.js"></script>
     <script src="scripts/services/TourService.js"></script>
+    <script src="scripts/services/workflowservice.js"></script>
+    <script src="scripts/controllers/workflowexecution.js"></script>
+    <script src="scripts/services/workflowexecutionservice.js"></script>
+    <script src="scripts/controllers/workflowjob.js"></script>
+    <script src="scripts/services/workflowjobservice.js"></script>
     <script src="scripts/services/KafkaService.js"></script>
-    
     <!-- endbuild -->
 
   </body>

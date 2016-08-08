@@ -18,13 +18,7 @@ angular.module('hopsWorksApp')
             self.runningInfo; //Will contain run information
             self.buttonArray = [];
             self.workingArray = [];
-            self.jobFilter = {
-              "creator": {
-                "email": ""
-              },
-              "jobType": "",
-              "name": ""
-            };
+            self.jobFilter = "";
 
             self.hasSelectJob = false;
 
@@ -39,6 +33,8 @@ angular.module('hopsWorksApp')
               $scope.sortKey = keyname;   //set the sortKey to the param passed
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
             };
+
+
             self.editAsNew = function (job) {
               JobService.getConfiguration(self.projectId, job.id).then(
                       function (success) {
@@ -61,9 +57,6 @@ angular.module('hopsWorksApp')
             self.copy = function () {
               var jobType;
               switch (self.currentjob.jobType.toUpperCase()) {
-                case "CUNEIFORM":
-                  jobType = 0;
-                  break;
                 case "SPARK":
                   jobType = 1;
                   break;
@@ -74,11 +67,7 @@ angular.module('hopsWorksApp')
                   jobType = 3;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
-              if (jobType === 0) {
-                mainFileTxt = "Workflow file";
-                mainFileVal = self.currentjob.runConfig.wf.name;
-                jobDetailsTxt = "Input variables";
-              } else if (jobType === 1) {
+              if (jobType === 1) {
                 sparkState = {
                   "selectedJar": getFileName(self.currentjob.runConfig.jarPath)
                 };
@@ -137,7 +126,7 @@ angular.module('hopsWorksApp')
                   "value": "",
                   "title": "Configure and create"}
               };
-              StorageService.store(self.projectId + "newjob", state);
+              StorageService.store(self.projectId + "_newjob", state);
               $location.path('project/' + self.projectId + '/newjob');
             };
 
@@ -153,6 +142,21 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
+            };
+            
+            self.getNumOfExecution = function () {
+              if (self.hasSelectJob) {
+                if (self.logset === undefined) {
+                  return 0;
+                }
+                if (self.logset.length > 1) {
+                  return self.logset.length;
+                } else if (self.logset.length === 1 && self.logset[0].appId !== '') {
+                  return 1;
+                } else {
+                  return 0;
+                }
+              }
             };
 
             self.getRunStatus = function () {
@@ -259,7 +263,7 @@ angular.module('hopsWorksApp')
             };
 
             self.retryLogs = function (appId, type) {
-              if (appId === undefined) {
+              if (appId === '' || appId === undefined) {
                 growl.error("Can not retry log. The job has not yet been assigned an Id", {title: 'Error', ttl: 5000});
               }
               JobService.retryLog(self.projectId, appId, type).then(
@@ -328,7 +332,7 @@ angular.module('hopsWorksApp')
                 self.jobFilter.jobType = "";
               }
             };
-
+            
             self.launchAppMasterUrl = function (trackingUrl) {
               window.open(trackingUrl);
             };
@@ -348,25 +352,35 @@ angular.module('hopsWorksApp')
               }, 5000);
             };
             startPolling();
-            
-            $scope.convertMS = function(ms) {
-                    if(ms===undefined){
-                        return "";
-                    }    
-                    var m, s;
-                    s = Math.floor(ms / 1000);
-                    m = Math.floor(s / 60);
-                    s = s % 60;
-                    if (s.toString().length < 2) {
-                        s = '0'+s;
-                    }
-                    if (m.toString().length < 2) {
-                        m = '0'+m;
-                    }
-                    var ret = m + ":" + s;
-                    return ret;
+
+            $scope.convertMS = function (ms) {
+              if (ms === undefined) {
+                return "";
+              }
+              var m, s;
+              s = Math.floor(ms / 1000);
+              m = Math.floor(s / 60);
+              s = s % 60;
+              if (s.toString().length < 2) {
+                s = '0' + s;
+              }
+              if (m.toString().length < 2) {
+                m = '0' + m;
+              }
+              var ret = m + ":" + s;
+              return ret;
             };
 
+
+            var init = function () {
+              var stored = StorageService.contains(self.projectId + "_newjob");
+              if (stored) {
+//                self.newJob();
+                  $location.path('project/' + self.projectId + '/newjob');
+              }
+            };
+
+            init();
           }]);
 
 

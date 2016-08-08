@@ -14,6 +14,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.project.fb.Inode;
 
 /**
@@ -22,7 +23,7 @@ import se.kth.bbc.project.fb.Inode;
  */
 @Entity
 @Table(name = "hopsworks.meta_inode_basic_metadata")
-
+@XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "InodeBasicMetadata.findAll",
           query = "SELECT m FROM InodeBasicMetadata m"),

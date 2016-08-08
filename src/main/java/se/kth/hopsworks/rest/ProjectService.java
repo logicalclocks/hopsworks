@@ -81,7 +81,7 @@ public class ProjectService {
   @Inject
   private BiobankingService biobanking;
   @Inject
-  private CharonService charon;
+  private WorkflowService workflowService;
 
   @EJB
   private ActivityFacade activityFacade;
@@ -265,17 +265,6 @@ public class ProjectService {
         //             + json.getErrorMsg());
         //   }
         // }
-        // if (s.compareToIgnoreCase(ProjectServiceEnum.CHARON.toString()) == 0) {
-        //   try {
-        //     projectController.createProjectCharonFolder(project);
-        //   } catch (ProjectInternalFoldersFailedException ex) {
-        //     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-        //             null, ex);
-        //     json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
-        //             + " 'consents' \n "
-        //             + json.getErrorMsg());
-        //   }
-        // }
         projectServices.add(se);
       } catch (IllegalArgumentException iex) {
         logger.log(Level.SEVERE,
@@ -293,7 +282,6 @@ public class ProjectService {
         updated = true;
       }
     }
-
     if (!updated) {
       json.setSuccessMessage("Nothing to update.");
     }
@@ -341,7 +329,7 @@ public class ProjectService {
           ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
       }
       //Severe: java.io.FileNotFoundException: /tmp/tempstores/demo_admin000__meb10000__kstore.jks (No such file or directory)
-      LocalhostServices.createUserCertificates(settings.getHopsworksDir(),
+      LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(),
         project.getName(), user.getUsername());
       certificateBean.putUserCerts(project.getName(), user.getUsername());
     } catch (IOException ex) {
@@ -457,8 +445,7 @@ public class ProjectService {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
       }
-      LocalhostServices.createUserCertificates(settings.getHopsworksDir(),
-        project.getName(), user.getUsername());
+      LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(), project.getName(), user.getUsername());
 //      try {
 //        UserCerts uc = certificateBean.findUserCert(project.getName(), user.getUsername());
 //      } catch (javax.persistence.NoResultException ex) {
@@ -674,14 +661,6 @@ public class ProjectService {
     return this.biobanking.setProject(project);
   }
 
-  @Path("{projectId}/charon")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public CharonService charon(@PathParam("projectId") Integer projectId) throws
-    AppException {
-    Project project = projectController.findProjectById(projectId);
-    return this.charon.setProject(project);
-  }
-
   @GET
   @Path("{id}/quotas")
   @Produces(MediaType.APPLICATION_JSON)
@@ -804,4 +783,17 @@ public class ProjectService {
 
     return this.kafka;
   }
+  
+	@Path("{id}/workflows")
+  	@AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  	public WorkflowService workflows(@PathParam("id") Integer id) throws
+          AppException {
+    	Project project = projectController.findProjectById(id);
+    	if (project == null) {
+      	throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+    	}
+    	this.workflowService.setProject(project);
+    	return workflowService;
+  }  
 }

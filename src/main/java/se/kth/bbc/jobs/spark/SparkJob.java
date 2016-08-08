@@ -26,6 +26,7 @@ public class SparkJob extends YarnJob {
 
   private final SparkJobConfiguration jobconfig; //Just for convenience
   private final String sparkDir;
+
   private final String sparkUser; //must be glassfish
   protected SparkYarnRunnerBuilder runnerbuilder;
   
@@ -120,14 +121,12 @@ public class SparkJob extends YarnJob {
         jobDescription.
         getProject().
         getName())
-        + Settings.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
-        + File.separator + "stdout.log";
+        + Settings.SPARK_DEFAULT_OUTPUT_PATH;
     String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
         jobDescription.
         getProject().
         getName())
-        + Settings.SPARK_DEFAULT_OUTPUT_PATH + getExecution().getId()
-        + File.separator + "stderr.log";
+        + Settings.SPARK_DEFAULT_OUTPUT_PATH;
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
     return true;

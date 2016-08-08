@@ -78,10 +78,10 @@ public class LocalhostServices {
   }
   
   //Make this asynchronous and call back UserCertsFacade.putUSer()
-  public static String createUserCertificates(String hopsworksDir, String projectName, String userName) throws IOException {
+  public static String createUserCertificates(String intermediateCaDir, String projectName, String userName) throws IOException {
     
-    String sslCertFile = Settings.CA_CERT_DIR + projectName + "__" + userName + ".cert.pem";
-    String sslKeyFile = Settings.CA_KEY_DIR + projectName + "__" + userName + ".key.pem";
+    String sslCertFile = intermediateCaDir + "/certs/" + projectName + "__" + userName + ".cert.pem";
+    String sslKeyFile = intermediateCaDir + "/private/" +  projectName + "__" + userName + ".key.pem";
 
     if (new File(sslCertFile).exists() || new File(sslKeyFile).exists()) {
       throw new IOException("Certs exist already: " + sslCertFile + " & " + sslKeyFile);
@@ -93,7 +93,7 @@ public class LocalhostServices {
     List<String> commands = new ArrayList<>();
     commands.add("/bin/bash");
     commands.add("-c");   
-    commands.add("sudo " + hopsworksDir + "/config/ca/intermediate/" + Settings.SSL_CREATE_CERT_SCRIPTNAME + " " + projectName + "__" + userName);
+    commands.add("sudo " + intermediateCaDir + "/" + Settings.SSL_CREATE_CERT_SCRIPTNAME + " " + projectName + "__" + userName);
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
     String stdout = "", stderr = "";
@@ -111,9 +111,9 @@ public class LocalhostServices {
     return stdout;
    }
 
-  public static String deleteUserCertificates(String hopsworksDir, String projectName, String userName) throws IOException {
-    String sslCertFile = Settings.CA_CERT_DIR + projectName + "__" + userName + ".cert.pem";
-    String sslKeyFile = Settings.CA_KEY_DIR + projectName + "__" + userName + ".key.pem";
+  public static String deleteUserCertificates(String intermediateCaDir, String projectName, String userName) throws IOException {
+    String sslCertFile = intermediateCaDir + "/certs/"  + "__" + userName + ".cert.pem";
+    String sslKeyFile = intermediateCaDir + "/private/" + projectName + "__" + userName + ".key.pem";
 
    
     // Need to execute DeleteUserCerts.sh as 'root' using sudo. 
@@ -121,7 +121,7 @@ public class LocalhostServices {
     List<String> commands = new ArrayList<>();
     commands.add("/bin/bash");
     commands.add("-c");   
-    commands.add("sudo " + hopsworksDir + "/config/ca/intermediate/" + Settings.SSL_DELETE_CERT_SCRIPTNAME + " " +
+    commands.add("sudo " + intermediateCaDir + Settings.SSL_DELETE_CERT_SCRIPTNAME + " " +
         LocalhostServices.getUsernameInProject(userName, projectName));
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
@@ -140,14 +140,14 @@ public class LocalhostServices {
     return stdout;    
   }    
   
-  public static String deleteProjectCertificates(String hopsworksDir, String projectName) throws IOException {
+  public static String deleteProjectCertificates(String intermediateCaDir, String projectName) throws IOException {
    
     // Need to execute DeleteUserCerts.sh as 'root' using sudo. 
     // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
     List<String> commands = new ArrayList<>();
     commands.add("/bin/bash");
     commands.add("-c");   
-    commands.add("sudo " + hopsworksDir + "/config/ca/intermediate/" + Settings.SSL_DELETE_PROJECT_CERTS_SCRIPTNAME + " " + projectName);
+    commands.add("sudo " + intermediateCaDir + "/" + Settings.SSL_DELETE_PROJECT_CERTS_SCRIPTNAME + " " + projectName);
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
     String stdout = "", stderr = "";

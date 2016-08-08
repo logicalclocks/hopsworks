@@ -34,6 +34,7 @@ import se.kth.hopsworks.users.BbcGroupFacade;
 import se.kth.hopsworks.users.UserDTO;
 import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.util.Settings;
+import se.kth.hopsworks.zeppelin.util.TicketContainer;
 
 @Path("/auth")
 @Stateless
@@ -161,6 +162,8 @@ public class AuthService {
             json).build();
     }
 
+    
+    
     @GET
     @Path("logout")
     @Produces(MediaType.APPLICATION_JSON)
@@ -173,10 +176,13 @@ public class AuthService {
             req.logout();
             json.setStatus("SUCCESS");
             req.getSession().invalidate();
-            userController.setUserIsOnline(user, AuthenticationConstants.IS_OFFLINE);
-            am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
-                UserAuditActions.SUCCESS.name(), req);
-
+            if (user != null) {
+                userController.setUserIsOnline(user, AuthenticationConstants.IS_OFFLINE);
+                am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
+                    UserAuditActions.SUCCESS.name(), req);
+                //remove zeppelin ticket for user
+                TicketContainer.instance.invalidate(user.getEmail());
+            }
         } catch (ServletException e) {
 
             am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
@@ -188,6 +194,19 @@ public class AuthService {
         return Response.ok().entity(json).build();
     }
 
+    @GET
+    @Path("isAdmin")
+    @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})    
+    public Response login(@Context SecurityContext sc,
+        @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
+        throws AppException, MessagingException {
+
+        if (sc.isUserInRole("HOPS_ADMIN")) {
+           return Response.ok().build();        
+        }
+        return Response.noContent().build();
+    }    
+    
     @POST
     @Path("register")
     @Produces(MediaType.APPLICATION_JSON)

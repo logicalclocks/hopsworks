@@ -42,8 +42,6 @@ public class Settings {
   private static final String VARIABLE_MYSQL_DIR = "mysql_dir";
   private static final String VARIABLE_HADOOP_DIR = "hadoop_dir";
   private static final String VARIABLE_HOPSWORKS_DIR = "hopsworks_dir";
-  private static final String VARIABLE_CHARON_DIR = "charon_dir";
-  private static final String VARIABLE_HIWAY_DIR = "hiway_dir";
   private static final String VARIABLE_YARN_DEFAULT_QUOTA = "yarn_default_quota";
   private static final String VARIABLE_HDFS_DEFAULT_QUOTA = "hdfs_default_quota";
   private static final String VARIABLE_MAX_NUM_PROJ_PER_USER = "max_num_proj_per_user";
@@ -66,8 +64,9 @@ public class Settings {
   
   private static final String VARIABLE_KAFKA_NUM_PARTITIONS = "kafka_num_partitions";
   private static final String VARIABLE_KAFKA_NUM_REPLICAS = "kafka_num_replicas";
+  private static final String VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD = "hopsworks_master_password";
   
-  private String setUserVar(String varName, String defaultValue) {
+  private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (userName.getValue().isEmpty() == false)) {
       String user = userName.getValue();
@@ -127,20 +126,20 @@ public class Settings {
 
   private void populateCache() {
     if (!cached) {
-      TWOFACTOR_AUTH = setUserVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
-      HDFS_SUPERUSER = setUserVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
-      YARN_SUPERUSER = setUserVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
-      SPARK_USER = setUserVar(VARIABLE_SPARK_USER, SPARK_USER);
+      TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
+      HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
+      YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
+      SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
-      FLINK_USER = setUserVar(VARIABLE_FLINK_USER, FLINK_USER);
+      FLINK_USER = setVar(VARIABLE_FLINK_USER, FLINK_USER);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
-      ZEPPELIN_USER = setUserVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
+      ZEPPELIN_USER = setVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
       ZEPPELIN_DIR = setDirVar(VARIABLE_ZEPPELIN_DIR, ZEPPELIN_DIR);
-      ADAM_USER = setUserVar(VARIABLE_ADAM_USER, ADAM_USER);
+      ADAM_USER = setVar(VARIABLE_ADAM_USER, ADAM_USER);
       ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
-      HOPSWORKS_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR, HOPSWORKS_DIR);
+      HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR, HOPSWORKS_INSTALL_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
@@ -148,23 +147,22 @@ public class Settings {
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
       SPARK_HISTORY_SERVER_IP = setIpVar(VARIABLE_SPARK_HISTORY_SERVER_IP, SPARK_HISTORY_SERVER_IP);	
       ZK_IP = setIpVar(VARIABLE_ZK_IP, ZK_IP);
-      ZK_USER = setUserVar(VARIABLE_ZK_USER, ZK_USER);
+      ZK_USER = setVar(VARIABLE_ZK_USER, ZK_USER);
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
       DRELEPHANT_IP = setIpVar(VARIABLE_DRELEPHANT_IP, DRELEPHANT_IP);
       DRELEPHANT_PORT = setIntVar(VARIABLE_DRELEPHANT_PORT, DRELEPHANT_PORT);
       DRELEPHANT_DB = setDbVar(VARIABLE_DRELEPHANT_DB, DRELEPHANT_DB);
       KAFKA_IP = setIpVar(VARIABLE_KAFKA_IP, KAFKA_IP);
-      KAFKA_USER = setUserVar(VARIABLE_KAFKA_USER, KAFKA_USER);
+      KAFKA_USER = setVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
       KAFKA_DEFAULT_NUM_PARTITIONS = setDirVar(VARIABLE_KAFKA_NUM_PARTITIONS, KAFKA_DEFAULT_NUM_PARTITIONS);
       KAFKA_DEFAULT_NUM_REPLICAS = setDirVar(VARIABLE_KAFKA_NUM_REPLICAS, KAFKA_DEFAULT_NUM_REPLICAS);
-      CHARON_DIR = setDirVar(VARIABLE_CHARON_DIR, CHARON_DIR);
-      HIWAY_DIR = setDirVar(VARIABLE_HIWAY_DIR, HIWAY_DIR);
       YARN_DEFAULT_QUOTA = setDirVar(VARIABLE_YARN_DEFAULT_QUOTA, YARN_DEFAULT_QUOTA);
       YARN_WEB_UI_IP = setIpVar(VARIABLE_YARN_WEB_UI_IP, YARN_WEB_UI_IP);
       YARN_WEB_UI_PORT = setIntVar(VARIABLE_YARN_WEB_UI_PORT, YARN_WEB_UI_PORT);
       HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA_MBs);
       MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
+      HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD, HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD);
       cached = true;
     }
   }
@@ -175,21 +173,6 @@ public class Settings {
     }
   }
 
-  private String CHARON_DIR = "/srv/Charon";
-
-  public synchronized String getCharonDir() {
-    checkCache();
-    return CHARON_DIR;
-  }
-
-  public synchronized String getCharonMountDir() {
-    checkCache();
-    return CHARON_DIR + "/charon_fs";
-  }
-
-  public synchronized String getCharonProjectDir(String projectName) {
-    return getCharonMountDir() + "/" + projectName;
-  }
 
 
   private static String GLASSFISH_DIR = "/srv/glassfish";
@@ -305,11 +288,23 @@ public class Settings {
     return HADOOP_DIR;
   }
 
-  private static String HOPSWORKS_DIR = "/srv/glassfish/domain1";
+  private static String HOPSWORKS_INSTALL_DIR = "/srv/glassfish";
 
-  public synchronized String getHopsworksDir() {
+  public synchronized String getHopsworksInstallDir() {
     checkCache();
-    return HOPSWORKS_DIR;
+    return HOPSWORKS_INSTALL_DIR;
+  }
+  
+  private static String HOPSWORKS_DOMAIN_DIR = HOPSWORKS_INSTALL_DIR + "/domain1";
+
+  public synchronized String getHopsworksDomainDir() {
+    checkCache();
+    return HOPSWORKS_DOMAIN_DIR;
+  }
+
+  public synchronized String getIntermediateCaDir() {
+    checkCache();
+    return getHopsworksDomainDir() + Settings.CA_DIR;
   }
 
   //User under which yarn is run
@@ -387,13 +382,6 @@ public class Settings {
     }
     return num;
   }
-
-  public static String HIWAY_REL_JAR_PATH = "software/hiway/hiway-core.jar";
-
-  //Local path to the hiway jar
-//  public static final String HIWAY_JAR_PATH = "/home/glassfish/software/hiway";
-  //Relative output path (within hdfs project folder) which to write cuneiform in-/output to
-  public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Logs/Cuneiform/";
 
   //Hadoop locations
   public synchronized String getHadoopConfDir() {
@@ -544,7 +532,6 @@ public class Settings {
   //Directory names in HDFS
   public static final String DIR_ROOT = "Projects";
   public static final String DIR_SAMPLES = "Samples";
-  public static final String DIR_CUNEIFORM = "Cuneiform";
   public static final String DIR_RESULTS = "Results";
   public static final String DIR_CONSENTS = "consents";
   public static final String DIR_BAM = "bam";
@@ -645,6 +632,15 @@ public class Settings {
    return KAFKA_DIR;
  }
   
+  private String HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = "adminpw";
+  
+  public synchronized String getHopsworksMasterPasswordSsl() {
+    checkCache();
+    return HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD;
+  }
+  
+  
+  
   private String KAFKA_DEFAULT_NUM_PARTITIONS = "2";
   private String KAFKA_DEFAULT_NUM_REPLICAS = "1";
 
@@ -683,11 +679,10 @@ public class Settings {
   
   // Hopsworks
   public static final Charset ENCODING = StandardCharsets.UTF_8;
+  public static final String HOPS_USERS_HOMEDIR = "/home/";
   public static final String HOPS_USERNAME_SEPARATOR = "__";
-  public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
-  public static String CA_DIR = Settings.HOPSWORKS_DIR + "/config/ca/intermediate/";
-  public static final String CA_CERT_DIR = CA_DIR + "certs/";
-  public static final String CA_KEY_DIR = CA_DIR + "private/";
+//  public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
+  private static String CA_DIR = "/config/ca/intermediate";
   public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
   public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";
   public static final String SSL_DELETE_PROJECT_CERTS_SCRIPTNAME = "deleteprojectcerts.sh";

@@ -108,7 +108,9 @@
         }
       ],
       "option": {
-        "remote": true
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": true
       }
     },
     "2BFCSS97Q": {

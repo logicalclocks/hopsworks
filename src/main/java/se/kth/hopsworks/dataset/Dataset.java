@@ -47,9 +47,9 @@ import se.kth.bbc.project.fb.Inode;
   @NamedQuery(name = "Dataset.findByDescription",
           query
           = "SELECT d FROM Dataset d WHERE d.description = :description"),
-  @NamedQuery(name = "Dataset.findByName",
+  @NamedQuery(name = "Dataset.findByNameAndProjectId",
           query
-          = "SELECT d FROM Dataset d WHERE d.name = :name")})
+          = "SELECT d FROM Dataset d WHERE d.name = :name AND d.projectId = :projectId")})
 public class Dataset implements Serializable {
 
   private static final long serialVersionUID = 1L;

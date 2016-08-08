@@ -59,11 +59,11 @@ public abstract class YarnJob extends HopsJob {
 
   private JobState finalState = null;
   protected List<LocalResourceDTO> projectLocalResources;
-  protected Map<String,String> jobSystemProperties;
-  
+  protected Map<String, String> jobSystemProperties;
+
   protected String kafkaAddress;
   protected final String jobUser;
-  
+
   /**
    *
    * @param job
@@ -77,7 +77,7 @@ public abstract class YarnJob extends HopsJob {
    * YarnJobConfiguration object.
    */
   public YarnJob(JobDescription job, AsynchronousJobExecutor services,
-          Users user, String jobUser, String hadoopDir, String nameNodeIpPort, 
+          Users user, String jobUser, String hadoopDir, String nameNodeIpPort,
           String kafkaAddress) {
     super(job, services, user, hadoopDir, nameNodeIpPort);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
@@ -90,7 +90,7 @@ public abstract class YarnJob extends HopsJob {
     this.jobSystemProperties = new HashMap<>();
     this.projectLocalResources = new ArrayList<>();
     this.jobUser = jobUser;
-    
+
   }
 
   public final void setStdOutFinalDestination(String stdOutFinalDestination) {
@@ -153,139 +153,135 @@ public abstract class YarnJob extends HopsJob {
     }
   }
 
-   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso){
-      //Check if this job is using Kakfa, and include certificate
-      //in local resources
-      Collection<ProjectServices> projectServices =
-              jobDescription.getProject().getProjectServicesCollection();
-      Iterator<ProjectServices> iter = projectServices.iterator();
-      while(iter.hasNext()){
-          ProjectServices projectService = iter.next();
-          //If the project is of type KAFKA
-          if(projectService.getProjectServicesPK().getService() == ProjectServiceEnum.KAFKA){
-            copyUserKafkaCerts(projectService, true, 
-                    Settings.KAFKA_TMP_CERT_STORE_LOCAL, 
-                    Settings.KAFKA_TMP_CERT_STORE_REMOTE, dfso);
-          }
+  @Override
+  protected boolean setupJob(DistributedFileSystemOps dfso) {
+    //Check if this job is using Kakfa, and include certificate
+    //in local resources
+    Collection<ProjectServices> projectServices = jobDescription.getProject().
+            getProjectServicesCollection();
+    Iterator<ProjectServices> iter = projectServices.iterator();
+    while (iter.hasNext()) {
+      ProjectServices projectService = iter.next();
+      //If the project is of type KAFKA
+      if (projectService.getProjectServicesPK().getService()
+              == ProjectServiceEnum.KAFKA) {
+        copyUserKafkaCerts(projectService, true,
+                Settings.KAFKA_TMP_CERT_STORE_LOCAL,
+                Settings.KAFKA_TMP_CERT_STORE_REMOTE, dfso);
       }
-      return true;
+    }
+    return true;
   }
-  
+
   /**
-   * Utility method that copies Kafka user certificates from the Database, to 
+   * Utility method that copies Kafka user certificates from the Database, to
    * either hdfs to be passed as LocalResources to the YarnJob or to used
-   * by another method. 
+   * by another method.
+   *
    * @param projectService
-   * @param isYarnJob 
+   * @param isYarnJob
    */
   private void copyUserKafkaCerts(ProjectServices projectService,
           boolean isYarnJob, String localTmpDir, String remoteTmpDir,
           DistributedFileSystemOps dfso) {
     //Pull the certificate of the client
-      UserCerts userCert = services.getUserCerts().findUserCert(
-          projectService.getProject().getName(),
-          projectService.getProject().getOwner().getUsername());
-      //Check if the user certificate was actually retrieved
-      if(userCert.getUserCert()!= null && 
-              userCert.getUserCert().length>0 && 
-              userCert.getUserKey()!= null &&
-              userCert.getUserKey().length>0) {
+    UserCerts userCert = services.getUserCerts().findUserCert(
+            projectService.getProject().getName(),
+            projectService.getProject().getOwner().getUsername());
+    //Check if the user certificate was actually retrieved
+    if (userCert.getUserCert() != null && userCert.getUserCert().length > 0
+            && userCert.getUserKey() != null && userCert.getUserKey().length > 0) {
 
-
-        Map<String, byte[]> kafkaCertFiles = new HashMap<>();
-        kafkaCertFiles.put(Settings.KAFKA_K_CERTIFICATE, userCert.getUserCert());
-        kafkaCertFiles.put(Settings.KAFKA_T_CERTIFICATE, userCert.getUserKey());
-        Map<String, File> kafkaCerts = new HashMap<>();
-        //Create tmp cert directory if not exists. Certificates will later 
-        //be deleted from this directory when copied to HDFS. 
-        File certDir = new File(Settings.KAFKA_TMP_CERT_STORE_LOCAL);
-        if (!certDir.exists()) {
-              try{
-                  certDir.mkdir();
-              } 
-              catch(SecurityException ex){
-                  logger.log(Level.SEVERE, ex.getMessage());//handle it
-              }        
-
+      Map<String, byte[]> kafkaCertFiles = new HashMap<>();
+      kafkaCertFiles.put(Settings.KAFKA_K_CERTIFICATE, userCert.getUserCert());
+      kafkaCertFiles.put(Settings.KAFKA_T_CERTIFICATE, userCert.getUserKey());
+      Map<String, File> kafkaCerts = new HashMap<>();
+      //Create tmp cert directory if not exists. Certificates will later 
+      //be deleted from this directory when copied to HDFS. 
+      File certDir = new File(Settings.KAFKA_TMP_CERT_STORE_LOCAL);
+      if (!certDir.exists()) {
+        try {
+          certDir.mkdir();
+        } catch (SecurityException ex) {
+          logger.log(Level.SEVERE, ex.getMessage());//handle it
         }
-        //Setting of files as system params
-        //Set projectId as java system property
-        if(isYarnJob){
-          jobSystemProperties.put(Settings.KAFKA_PROJECTID_ENV_VAR, 
-                  String.valueOf(projectService.getProject().getId()));
-        }
-       
-        try{
-          kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(
-                  localTmpDir + "/" + projectService.getProject().getName() + 
-                          "__" +
-                          projectService.getProject().getOwner().getUsername() +
-                          "__kstore.jks"));
-          kafkaCerts.put(Settings.KAFKA_T_CERTIFICATE, new File(
-                 localTmpDir + "/" + projectService.getProject().getName() + 
-                         "__" +
-                          projectService.getProject().getOwner().getUsername() +
-                          "__tstore.jks"));
 
+      }
+      //Setting of files as system params
+      //Set projectId as java system property
+      if (isYarnJob) {
+        jobSystemProperties.put(Settings.KAFKA_PROJECTID_ENV_VAR,
+                String.valueOf(projectService.getProject().getId()));
+      }
 
-          // if file doesnt exists, then create it
-          try {
-            for(Map.Entry<String, File> entry : kafkaCerts.entrySet()){
-              if (!entry.getValue().exists()) {
-                  entry.getValue().createNewFile();
-             }
+      try {
+        kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(
+                localTmpDir + "/" + projectService.getProject().getName() + "__"
+                + projectService.getProject().getOwner().getUsername()
+                + "__kstore.jks"));
+        kafkaCerts.put(Settings.KAFKA_T_CERTIFICATE, new File(
+                localTmpDir + "/" + projectService.getProject().getName() + "__"
+                + projectService.getProject().getOwner().getUsername()
+                + "__tstore.jks"));
 
-              //Write the actual file(cert) to localFS
-              //Create HDFS kafka certificate directory. This is done
-              //So that the certificates can be used as LocalResources
-              //by the YarnJob
-              //TODO: Fix permissions on tmp hdfs directory
-              if(!dfso.exists(remoteTmpDir)) {
-                dfso.mkdir(
-                          new Path(remoteTmpDir), new FsPermission(FsAction.ALL,
-                                  FsAction.ALL, FsAction.ALL));
+        // if file doesnt exists, then create it
+        try {
+          for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
+            if (!entry.getValue().exists()) {
+              entry.getValue().createNewFile();
+            }
 
-                }
-              Files.write(kafkaCertFiles.get(entry.getKey()), entry.getValue());
-              dfso.copyToHDFSFromLocal(true, entry.getValue().getAbsolutePath(), 
-                                Settings.KAFKA_TMP_CERT_STORE_REMOTE);
+            //Write the actual file(cert) to localFS
+            //Create HDFS kafka certificate directory. This is done
+            //So that the certificates can be used as LocalResources
+            //by the YarnJob
+            //TODO: Fix permissions on tmp hdfs directory
+            if (!dfso.exists(remoteTmpDir)) {
+              dfso.mkdir(
+                      new Path(remoteTmpDir), new FsPermission(FsAction.ALL,
+                              FsAction.ALL, FsAction.ALL));
+
+            }
+            Files.write(kafkaCertFiles.get(entry.getKey()), entry.getValue());
+            dfso.copyToHDFSFromLocal(true, entry.getValue().getAbsolutePath(),
+                    Settings.KAFKA_TMP_CERT_STORE_REMOTE);
 //                     dfso.setOwner(
 //                                new Path(Settings.KAFKA_TMP_CERT_STORE_REMOTE+"/"+entry.getValue().getName()),
 //                                projectService.getProject().getName()+ "__" +
 //                                  projectService.getProject().getOwner().getUsername(), "hadoop");
-              dfso.setPermission(
-                      new Path(remoteTmpDir +"/" + entry.getValue().getName()),
-                        new FsPermission(FsAction.ALL, FsAction.ALL,
-                                FsAction.ALL));
+            dfso.setPermission(
+                    new Path(remoteTmpDir + "/" + entry.getValue().getName()),
+                    new FsPermission(FsAction.ALL, FsAction.ALL,
+                            FsAction.ALL));
 
-              if(isYarnJob){
-                projectLocalResources.add(new LocalResourceDTO(
-                        entry.getKey(), 
-                        "hdfs://"+nameNodeIpPort+remoteTmpDir+"/"+entry.getValue().getName(),
-                        LocalResourceVisibility.APPLICATION.toString(),
-                        LocalResourceType.FILE.toString(), null));
-                
-                jobSystemProperties.put(entry.getKey(), entry.getValue().getName());
-               }
+            if (isYarnJob) {
+              projectLocalResources.add(new LocalResourceDTO(
+                      entry.getKey(),
+                      "hdfs://" + nameNodeIpPort + remoteTmpDir + "/" + entry.
+                      getValue().getName(),
+                      LocalResourceVisibility.APPLICATION.toString(),
+                      LocalResourceType.FILE.toString(), null));
+
+              jobSystemProperties.
+                      put(entry.getKey(), entry.getValue().getName());
             }
-          } catch (IOException ex) {
-              logger.log(Level.SEVERE, 
-                      "Error writing Kakfa certificates to local fs", ex);
           }
+        } catch (IOException ex) {
+          logger.log(Level.SEVERE,
+                  "Error writing Kakfa certificates to local fs", ex);
+        }
 
-         } finally{
-            //In case the certificates where not removed
-            for(Map.Entry<String, File> entry : kafkaCerts.entrySet()){
-                if(entry.getValue().exists()){
-                    entry.getValue().delete();
-                }
-            }
+      } finally {
+        //In case the certificates where not removed
+        for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
+          if (entry.getValue().exists()) {
+            entry.getValue().delete();
+          }
         }
       }
+    }
   }
-  
-  
+
   /**
    * Monitor the state of the job.
    * <p/>
@@ -380,15 +376,18 @@ public abstract class YarnJob extends HopsJob {
 
   /**
    * Copy the AM logs to their final destination.
+   *
+   * @param udfso
    */
   protected void copyLogs(DistributedFileSystemOps udfso) {
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
+        stdOutFinalDestination = stdOutFinalDestination + getExecution().getAppId()
+            + File.separator + "stdout.log";
         if (!runner.areLogPathsHdfs() && !runner.areLogPathsAggregated()) {
-          udfso.
-                  copyToHDFSFromLocal(true, runner.
-                          getStdOutPath(),
-                          stdOutFinalDestination);
+          udfso.copyToHDFSFromLocal(true, runner.
+                  getStdOutPath(),
+                  stdOutFinalDestination);
         } else if (runner.areLogPathsAggregated()) {
           YarnLogUtil.copyAggregatedYarnLogs(
                   udfso, runner.
@@ -403,11 +402,12 @@ public abstract class YarnJob extends HopsJob {
         }
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
+        stdErrFinalDestination = stdErrFinalDestination + getExecution().getAppId()
+            + File.separator + "stderr.log";
         if (!runner.areLogPathsHdfs() && !runner.areLogPathsAggregated()) {
-          udfso.
-                  copyToHDFSFromLocal(true, runner.
-                          getStdErrPath(),
-                          stdErrFinalDestination);
+          udfso.copyToHDFSFromLocal(true, runner.
+                  getStdErrPath(),
+                  stdErrFinalDestination);
         } else if (runner.areLogPathsAggregated()) {
           YarnLogUtil.copyAggregatedYarnLogs(
                   udfso, runner.
@@ -430,7 +430,8 @@ public abstract class YarnJob extends HopsJob {
   }
 
   @Override
-  protected void runJob(DistributedFileSystemOps udfso) {
+  protected void runJob(DistributedFileSystemOps udfso,
+          DistributedFileSystemOps dfso) {
     // Try to start the AM
     boolean proceed = startApplicationMaster();
 
@@ -443,11 +444,11 @@ public abstract class YarnJob extends HopsJob {
       return;
     }
     try {
-        runner.removeAllNecessary();
+      runner.removeAllNecessary();
     } catch (IOException ex) {
-        logger.log(Level.SEVERE,
-            "Exception while trying to delete job tmp files "
-            + getExecution(), ex);
+      logger.log(Level.SEVERE,
+              "Exception while trying to delete job tmp files "
+              + getExecution(), ex);
     }
     updateState(JobState.AGGREGATING_LOGS);
     copyLogs(udfso);
@@ -469,7 +470,4 @@ public abstract class YarnJob extends HopsJob {
       e.printStackTrace();
     }
   }
-
-
-
 }

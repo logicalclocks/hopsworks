@@ -23,7 +23,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.activity.ActivityFacade;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
@@ -32,6 +31,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.core.GenericEntity;
 import se.kth.bbc.security.audit.AuditManager;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.util.Settings;
 
 @RequestScoped
@@ -44,7 +45,7 @@ public class BiobankingService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private FileOperations fops;
+  private DistributedFsService fops;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -76,14 +77,14 @@ public class BiobankingService {
   public Response getConsentForms(@Context SecurityContext sc,
           @Context HttpServletRequest req)
           throws AppException {
-
+    DistributedFileSystemOps dfso = null;
     try {
-
+      dfso = fops.getDfsOps();
       String projectPath = "/" + Settings.DIR_ROOT + "/" + project.getName();
       String consentsPath = projectPath + "/" + Settings.DIR_CONSENTS;
       logger.log(Level.INFO, "Request to get all consent forms in: {0}",
               consentsPath);
-      if (fops.exists(consentsPath) == false) {
+      if (dfso.exists(consentsPath) == false) {
         return noCacheResponse.getNoCacheResponseBuilder(
                 Response.Status.INTERNAL_SERVER_ERROR).entity(
                         "Consents path was missing").build();
@@ -118,11 +119,12 @@ public class BiobankingService {
           }
         }
       }
-      logger.info("Num of consent forms found: " + allConsents.size());
+      logger.log(Level.INFO, "Num of consent forms found: {0}", allConsents.
+              size());
 
       GenericEntity<List<ConsentDTO>> consents
               = new GenericEntity<List<ConsentDTO>>(allConsents) {
-              };
+      };
 
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(
@@ -134,11 +136,15 @@ public class BiobankingService {
               Response.Status.INTERNAL_SERVER_ERROR).entity(
                       ex.getMessage()).build();
 
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
     }
   }
 
   private String relativePath(String path) {
-    logger.info("relative path for: " + path);
+    logger.log(Level.INFO, "relative path for: {0}", path);
     return path.replace("/" + Settings.DIR_ROOT + "/" + project.getName() + "/",
             "");
   }
@@ -163,24 +169,23 @@ public class BiobankingService {
       if (i == null) {
         json.setErrorMsg("Could not find file: " + consent.getPath());
         am.registerConsentInfo(consentBean.getProject().getOwner(), "REGISTER",
-              "FAILED", consentBean, req);
+                "FAILED", consentBean, req);
         Response.ResponseBuilder response = Response.serverError();
         return response.entity(json).build();
       }
       if (ConsentType.create(consent.getConsentType()).equals(
               ConsentType.UNDEFINED)) {
         am.registerConsentInfo(consentBean.getProject().getOwner(), "REGISTER",
-              "FAILED", consentBean, req);
+                "FAILED", consentBean, req);
         json.setErrorMsg(
                 "You need to change the Consent Type to register the consent form for: "
                 + consent.getPath());
         Response.ResponseBuilder response = Response.serverError();
         return response.entity(json).build();
       }
-      
-//      Consents consentBean = new Consents(ConsentType.create(consent.getConsentType()),
-  //    ConsentStatus.PENDING, i, project);
 
+//      Consents consentBean = new Consents(ConsentType.create(consent.getConsentType()),
+      //    ConsentStatus.PENDING, i, project);
       consentsFacade.persistConsent(consentBean);
       am.registerConsentInfo(consentBean.getProject().getOwner(), "REGISTER",
               "SUCCESS", consentBean, req);
