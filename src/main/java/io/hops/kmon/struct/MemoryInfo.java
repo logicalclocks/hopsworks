@@ -9,48 +9,60 @@ import java.io.Serializable;
  */
 public class MemoryInfo implements Serializable {
 
-   private final Long used;
-   private final Long capacity;
+  private Long used;
+  private Long capacity;
 
-   public MemoryInfo(Long capacity, Long used) {
-      this.used = used;
-      this.capacity = capacity;
-   }
+  public MemoryInfo() {
 
-   public long getUsed() {
-      return used;
-   }
+  }
 
-   public long getCapacity() {
-      return capacity;
-   }
+  public MemoryInfo(Long capacity, Long used) {
+    this.used = used;
+    this.capacity = capacity;
+  }
 
-   private double usagePercentage() {
-      if (used == null || capacity == null) {
-         return 0;
-      }
-      return ((double) used) / capacity * 100d;
-   }
+  public long getUsed() {
+    return used;
+  }
 
-   public String getUsagePercentageString() {
-      
-      return String.format("%1.1f", usagePercentage()) + "%";
-   }
+  public void setCapacity(Long capacity) {
+    this.capacity = capacity;
+  }
 
-   public String getUsageInfo() {
-      FormatUtils f = new FormatUtils();
-      if (used == null || capacity == null) {
-         return "N/A";
-      }
-      return FormatUtils.storage(used) + " / " + FormatUtils.storage(capacity);
-   }
+  public void setUsed(Long used) {
+    this.used = used;
+  }
 
-   public String getPriority() {
-      if (usagePercentage() > 75) {
-         return "priorityHigh";
-      } else if (usagePercentage() > 25) {
-         return "priorityMed";
-      }
-      return "priorityLow";
-   }
+  public long getCapacity() {
+    return capacity;
+  }
+
+  private double usagePercentage() {
+    if (used == null || capacity == null) {
+      return 0;
+    }
+    return ((double) used) / capacity * 100d;
+  }
+
+  public String getUsagePercentageString() {
+
+    return String.format("%1.1f", usagePercentage()) + "%";
+  }
+
+  public String getUsageInfo() {
+    FormatUtils f = new FormatUtils();
+    if (used == null || capacity == null) {
+      return "N/A";
+    }
+    return FormatUtils.storage(used) + " / " + FormatUtils.storage(capacity);
+  }
+
+  public String getPriority() {
+    if (usagePercentage() > 75) {
+      return "priorityHigh";
+    } else if (usagePercentage() > 25) {
+      return "priorityMed";
+    }
+    return "priorityLow";
+  }
 }
