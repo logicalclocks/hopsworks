@@ -2,6 +2,7 @@ package se.kth.hopsworks.rest;
 
 import java.net.SocketException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -30,10 +31,13 @@ import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UserStatusValidator;
 import se.kth.hopsworks.controller.UsersController;
+import se.kth.hopsworks.user.model.BbcGroup;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.users.BbcGroupFacade;
 import se.kth.hopsworks.users.UserDTO;
 import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.util.Settings;
+import se.kth.hopsworks.util.Variables;
 import se.kth.hopsworks.zeppelin.util.TicketContainer;
 
 @Path("/auth")
@@ -53,10 +57,12 @@ public class AuthService {
   private Settings settings;
   @EJB
   private AuditManager am;
+  @EJB
+  private BbcGroupFacade bbcGroupFacade;
 
   @GET
   @Path("session")
-  @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+  @RolesAllowed({"HOPS_ADMIN", "HOPS_USER", "AGENT"})
   @Produces(MediaType.APPLICATION_JSON)
   public Response session(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -100,15 +106,21 @@ public class AuthService {
               "Unrecognized email address. Have you registered yet?");
     }
     String newPassword = null;
-    if (settings.findById("twofactor_auth").getValue().equals("mandatory") || 
-       (settings.findById("twofactor_auth").getValue().equals("true") &&
-        user.getTwoFactor())) {
-      
-      if (otp == null || otp.isEmpty() && user.getMode()
-              == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
-        if (user.getPassword().equals(DigestUtils.sha256Hex(password))) {
-          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                  "Second factor required.");
+
+    Variables varTwoFactor = settings.findById("twofactor_auth");
+    Variables varExclude = settings.findById("twofactor-excluded-groups");
+    String twoFactorMode = (varTwoFactor != null ? varTwoFactor.getValue() : "");
+    String excludes = (varExclude != null ? varExclude.getValue() : null);
+    String[] groups = (excludes != null ? excludes.split(";") : null);
+    if (!isInGroup(user, groups)) {
+      if ((twoFactorMode.equals("mandatory") || (twoFactorMode.equals("true")
+              && user.getTwoFactor()))) {
+        if (otp == null || otp.isEmpty() && user.getMode()
+                == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
+          if (user.getPassword().equals(DigestUtils.sha256Hex(password))) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Second factor required.");
+          }
         }
       }
     }
@@ -234,12 +246,12 @@ public class AuthService {
     byte[] qrCode = null;
 
     JsonResponse json = new JsonResponse();
-    
+
     qrCode = userController.registerUser(newUser, req);
 
-    if (settings.findById("twofactor_auth").getValue().equals("mandatory") || 
-       (settings.findById("twofactor_auth").getValue().equals("true") && 
-        newUser.isTwoFactor())) {
+    if (settings.findById("twofactor_auth").getValue().equals("mandatory")
+            || (settings.findById("twofactor_auth").getValue().equals("true")
+            && newUser.isTwoFactor())) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
     } else {
       json.setSuccessMessage(
@@ -285,6 +297,24 @@ public class AuthService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
+  }
+
+  private boolean isInGroup(Users user, String[] groups) {
+    Collection<BbcGroup> userGroups = user.getBbcGroupCollection();
+    if (userGroups == null || userGroups.isEmpty()) {
+      return false;
+    }
+    if (groups == null || groups.length == 0) {
+      return false;
+    }
+    BbcGroup group;
+    for (String groupName : groups) {
+      group = bbcGroupFacade.findByGroupName(groupName);
+      if (userGroups.contains(group)) {
+        return true;
+      }
+    }
+    return false;
   }
 
 }
