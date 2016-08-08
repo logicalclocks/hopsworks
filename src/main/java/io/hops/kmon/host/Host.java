@@ -195,7 +195,8 @@ public class Host implements Serializable {
   }
 
   public String getPublicOrPrivateIp() {
-    if (publicIp == null || publicIp.isEmpty()) {
+    // Prefer private IP, but return a public IP if the private ip is null
+    if (publicIp == null || publicIp.isEmpty() || (publicIp != null && privateIp != null)) {
       return privateIp;
     }
     return publicIp;

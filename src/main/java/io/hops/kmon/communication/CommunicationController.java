@@ -21,128 +21,137 @@ import io.hops.kmon.struct.NodesTableItem;
 @RequestScoped
 public class CommunicationController {
 
-   @EJB
-   private HostEJB hostEJB;
-   @EJB
-   private RoleEJB roleEjb;
-   @ManagedProperty("#{param.hostid}")
-   private String hostId;
-   @ManagedProperty("#{param.role}")
-   private String role;
-   @ManagedProperty("#{param.service}")
-   private String service;
-   @ManagedProperty("#{param.cluster}")
-   private String cluster;
-   private static final Logger logger = Logger.getLogger(CommunicationController.class.getName());
+  @EJB
+  private HostEJB hostEJB;
+  @EJB
+  private RoleEJB roleEjb;
+  @EJB
+  private WebCommunication web;
 
-   public CommunicationController() {
-      logger.info("CommunicationController");
-   }
+  @ManagedProperty("#{param.hostid}")
+  private String hostId;
+  @ManagedProperty("#{param.role}")
+  private String role;
+  @ManagedProperty("#{param.service}")
+  private String service;
+  @ManagedProperty("#{param.cluster}")
+  private String cluster;
 
-   @PostConstruct
-   public void init() {
-   }
+  private static final Logger logger = Logger.getLogger(CommunicationController.class.getName());
 
-   public String getRole() {
-      return role;
-   }
+  public CommunicationController() {
+    logger.info("CommunicationController");
+  }
 
-   public void setRole(String role) {
-      this.role = role;
-   }
+  @PostConstruct
+  public void init() {
+  }
 
-   public String getService() {
-      return service;
-   }
+  public String getRole() {
+    return role;
+  }
 
-   public void setService(String service) {
-      this.service = service;
-   }
+  public void setRole(String role) {
+    this.role = role;
+  }
 
-   public void setCluster(String cluster) {
-      this.cluster = cluster;
-   }
+  public String getService() {
+    return service;
+  }
 
-   public String getCluster() {
-      return cluster;
-   }
+  public void setService(String service) {
+    this.service = service;
+  }
 
-   public String getHostId() {
-      return hostId;
-   }
+  public void setCluster(String cluster) {
+    this.cluster = cluster;
+  }
 
-   public void setHostId(String hostId) {
-      this.hostId = hostId;
-   }
-   
-   private String findIpByHostId(String hostId) throws Exception {
-      try {
-         Host host = hostEJB.findByHostId(hostId);
-         return host.getPublicOrPrivateIp();
-      } catch (Exception ex) {
-         throw new RuntimeException("HostId " + hostId + " not found.");
-      }
-   }
-   
-   private String findIpByRole(String cluster, String service, String role) throws Exception {
-      String id = roleEjb.findRoles(cluster, service, role).get(0).getHostId();
-      return findIpByHostId(id);
-   }     
+  public String getCluster() {
+    return cluster;
+  }
 
-   public String serviceLog(int lines) {
-      try {
-         String ip = findIpByRole(cluster, service, "mgmserver");
-         WebCommunication webComm = new WebCommunication();
-         return webComm.getServiceLog(ip, cluster, service, lines);
-      } catch (Exception ex) {
-         return ex.getMessage();
-      }
-   }
+  public String getHostId() {
+    return hostId;
+  }
 
-   public String mySqlClusterConfig() throws Exception {
-      // Finds hostId of mgmserver
-      // Role=mgmserver , Service=MySQLCluster, Cluster=cluster
-      String mgmserverRole = "mgmserver";
-      String ip = findIpByRole(cluster, service, mgmserverRole);
-      WebCommunication webComm = new WebCommunication();
-      return webComm.getConfig(ip, cluster, service, mgmserverRole);
-   }
+  public void setHostId(String hostId) {
+    this.hostId = hostId;
+  }
 
-   public String getRoleLog(int lines) {
-      try {
-         WebCommunication webComm = new WebCommunication();
-         String ip = findIpByHostId(hostId);
-         return webComm.getRoleLog(ip, cluster, service, role, lines);
-      } catch (Exception ex) {
-         return ex.getMessage();
-      }
-   } 
+  private Host findHostById(String hostId) throws Exception {
+    try {
+      Host host = hostEJB.findByHostId(hostId);
+      return host;
+    } catch (Exception ex) {
+      throw new RuntimeException("HostId " + hostId + " not found.");
+    }
+  }
 
-   public String getAgentLog(int lines) {
-      try {
-         WebCommunication webCom = new WebCommunication();
-         String ip = findIpByHostId(hostId);
-         return webCom.getAgentLog(ip, lines);
-      } catch (Exception ex) {
-         return ex.getMessage();
-      }
-   }
+  private Host findHostByRole(String cluster, String service, String role) throws Exception {
+    String id = roleEjb.findRoles(cluster, service, role).get(0).getHostId();
+    return findHostById(id);
+  }
 
-   public List<NodesTableItem> getNdbinfoNodesTable() throws Exception {
+  public String serviceLog(int lines) {
+    try {
+      Host h = findHostByRole(cluster, service, "mgmserver");
+      String ip = h.getPublicOrPrivateIp();
+      String agentPassword = h.getAgentPassword();
+      return web.getServiceLog(ip, agentPassword, cluster, service, lines);
+    } catch (Exception ex) {
+      return ex.getMessage();
+    }
+  }
 
-      // Finds host of mysqld
-      // Role=mysqld , Service=MySQLCluster, Cluster=cluster
-      final String ROLE = "mysqld";
-      List<NodesTableItem> results;
-      try {
-         String id = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostId();
-         String ip = findIpByHostId(id);
-         WebCommunication wc = new WebCommunication();
-         results = wc.getNdbinfoNodesTable(ip);
-      } catch (Exception ex) {
-         results = new ArrayList<NodesTableItem>();
-      }
-      return results;
-   }
+  public String mySqlClusterConfig() throws Exception {
+    // Finds hostId of mgmserver
+    // Role=mgmserver , Service=MySQLCluster, Cluster=cluster
+    String mgmserverRole = "mgmserver";
+    Host h = findHostByRole(cluster, service, mgmserverRole);
+    String ip = h.getPublicOrPrivateIp();
+    String agentPassword = h.getAgentPassword();
+    return web.getConfig(ip, agentPassword, cluster, service, mgmserverRole);
+  }
+
+  public String getRoleLog(int lines) {
+    try {
+      Host h = findHostById(hostId);
+      String ip = h.getPublicOrPrivateIp();
+      String agentPassword = h.getAgentPassword();
+      return web.getRoleLog(ip, agentPassword, cluster, service, role, lines);
+    } catch (Exception ex) {
+      return ex.getMessage();
+    }
+  }
+
+  public String getAgentLog(int lines) {
+    try {
+      Host h = findHostById(hostId);
+      String ip = h.getPublicOrPrivateIp();
+      String agentPassword = h.getAgentPassword();
+      return web.getAgentLog(ip, agentPassword, lines);
+    } catch (Exception ex) {
+      return ex.getMessage();
+    }
+  }
+
+  public List<NodesTableItem> getNdbinfoNodesTable() throws Exception {
+
+    // Finds host of mysqld
+    // Role=mysqld , Service=MySQLCluster, Cluster=cluster
+    final String ROLE = "mysqld";
+    List<NodesTableItem> results;
+    try {
+      String id = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostId();
+      Host h = findHostById(hostId);
+      String ip = h.getPublicOrPrivateIp();
+      String agentPassword = h.getAgentPassword();
+      results = web.getNdbinfoNodesTable(ip, agentPassword);
+    } catch (Exception ex) {
+      results = new ArrayList<>();
+    }
+    return results;
+  }
 
 }

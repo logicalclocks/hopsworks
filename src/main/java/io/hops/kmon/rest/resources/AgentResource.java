@@ -170,11 +170,11 @@ public class AgentResource {
       String hostId = json.getString("host-id");
       Host host = hostEJB.findByHostId(hostId);
       if (host == null) {
-        logger.log(Level.INFO, "Host with id {0} not found.", hostId);
+        logger.log(Level.WARNING, "Host with id {0} not found.", hostId);
         return Response.status(Response.Status.NOT_FOUND).build();
       }
       if (!host.isRegistered()) {
-        logger.log(Level.INFO, "Host with id {0} is not registered.", hostId);
+        logger.log(Level.WARNING, "Host with id {0} is not registered.", hostId);
         return Response.status(Response.Status.NOT_ACCEPTABLE).build();
       }
       host.setLastHeartbeat((new Date()).getTime());
