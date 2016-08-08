@@ -1,15 +1,16 @@
 package io.hops.kmon.struct;
 
 import io.hops.kmon.utils.FormatUtils;
+import java.io.Serializable;
 
 /**
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
-public class MemoryInfo {
+public class MemoryInfo implements Serializable {
 
-   private Long used;
-   private Long capacity;
+   private final Long used;
+   private final Long capacity;
 
    public MemoryInfo(Long capacity, Long used) {
       this.used = used;
@@ -41,7 +42,7 @@ public class MemoryInfo {
       if (used == null || capacity == null) {
          return "N/A";
       }
-      return f.storage(used) + " / " + f.storage(capacity);
+      return FormatUtils.storage(used) + " / " + FormatUtils.storage(capacity);
    }
 
    public String getPriority() {

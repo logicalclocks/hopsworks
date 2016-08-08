@@ -31,6 +31,8 @@ public class TerminalController {
     private String service;
     @EJB
     private HostEJB hostEjb;
+    @EJB
+    private WebCommunication web;    
     private static final Logger logger = Logger.getLogger(TerminalController.class.getName());
     private static final String welcomeMessage;
 
@@ -117,8 +119,8 @@ public class TerminalController {
             if (hosts.isEmpty()) {
                 throw new RuntimeException("No live node available.");
             }
-            WebCommunication web = new WebCommunication();
-            String result = web.executeRun(hosts.get(0).getPublicOrPrivateIp(), cluster, service, roleName, command, params);
+            String result = web.executeRun(hosts.get(0).getPublicOrPrivateIp(), hosts.get(0).getAgentPassword(), 
+                    cluster, service, roleName, command, params);
             return result;
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);

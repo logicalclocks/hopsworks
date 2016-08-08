@@ -19,9 +19,13 @@ import io.hops.kmon.communication.WebCommunication;
 import io.hops.kmon.role.Role;
 import io.hops.kmon.role.RoleEJB;
 import io.hops.kmon.struct.Status;
-import java.io.InputStream;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import javax.annotation.Resource;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.ws.rs.core.Response;
 
 /**
  *
@@ -37,6 +41,12 @@ public class HostController implements Serializable {
   private RoleEJB roleEjb;
   @EJB
   private CommandEJB commandEJB;
+  @EJB
+  private WebCommunication web;
+
+  @Resource
+  private ManagedExecutorService executorService;
+
   @ManagedProperty("#{param.cluster}")
   private String cluster;
   @ManagedProperty("#{param.hostid}")
@@ -58,8 +68,8 @@ public class HostController implements Serializable {
   @PostConstruct
   public void init() {
     logger.info("init HostController");
-//        loadHost();
-//        loadRoles();
+    loadHost();
+    loadRoles();
   }
 
   public void setCommand(String command) {
@@ -131,15 +141,16 @@ public class HostController implements Serializable {
   }
 
   public void doCommand() throws Exception {
-    //  TODO: If the web application server craches, status will remain 'Running'.
+    //  TODO: If the web application server crashes, status will remain 'Running'.
     Command c = new Command(command, hostId, service, role, cluster);
     commandEJB.persistCommand(c);
     Host h = hostEJB.findByHostId(hostId);
     FacesContext context = FacesContext.getCurrentInstance();
-    CommandThread r = new CommandThread(context, h.getPublicOrPrivateIp(), c);
-    Thread t = new Thread(r);
-    t.setDaemon(true);
-    t.start();
+//    CommandThread r = new CommandThread(context, h.getPublicOrPrivateIp(), c);
+//    Thread t = new Thread(r);
+//    t.setDaemon(true);
+//    t.start();
+    runCommands(context, h.getPublicOrPrivateIp(), h.getAgentPassword(), c);
   }
 
   public List<Role> getRoles() {
@@ -147,34 +158,95 @@ public class HostController implements Serializable {
     return roles;
   }
 
-  class CommandThread implements Runnable {//it's not bad, because he does bad thing :D
+//  class CommandThread implements Runnable {//it's not bad, because he does bad thing :D
+//
+//    public CommandThread(FacesContext context, String hostAddress, Command c) {
+//      this.hostAddress = hostAddress;
+//      this.c = c;
+//      this.context = context;
+//    }
+//    private final String hostAddress;
+//    private final Command c;
+//    private final FacesContext context;
+//
+//    @Override
+//    public void run() {
+//      FacesMessage message;
+//      try {
+//        ClientResponse response = web.doCommand(hostAddress, cluster, service, role, command);
+//
+//        Thread.sleep(3000);
+//
+//        if (response.getClientResponseStatus().getFamily() == Family.SUCCESSFUL) {
+//          c.succeeded();
+//          String messageText = "";
+//          Role r = roleEjb.find(hostId, cluster, service, role);
+//
+//          if (command.equalsIgnoreCase("start")) {
+//            JsonObject json = Json.createReader(response.getEntityInputStream()).readObject();
+//            messageText = json.getString("msg");
+//            r.setStatus(Status.Started);
+//
+//          } else if (command.equalsIgnoreCase("stop")) {
+//            messageText = command + ": " + response.getEntity(String.class);
+//            r.setStatus(Status.Stopped);
+//          }
+//          roleEjb.store(r);
+//          message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", messageText);
+//
+//        } else {
+//          c.failed();
+//          if (response.getStatus() == 400) {
+//            message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", command + ": " + response.getEntity(String.class));
+//          } else {
+//            message = new FacesMessage(FacesMessage.SEVERITY_FATAL, "Server Error", "");
+//          }
+//        }
+//      } catch (Exception e) {
+//        c.failed();
+//        message = new FacesMessage(FacesMessage.SEVERITY_FATAL, "Communication Error", e.toString());
+//      }
+//      commandEJB.updateCommand(c);
+////            context.addMessage(null, message);
+//    }
+//  }
 
-    public CommandThread(FacesContext context, String hostAddress, Command c) {
-      this.hostAddress = hostAddress;
-      this.c = c;
+
+  public void runCommands(FacesContext context, String hostAddress, String agentPassword, Command c) {
+    CommandTask commandTask = new CommandTask(context, hostAddress, agentPassword, c);
+    Future<Command> future = executorService.submit(commandTask);
+  }
+  
+  class CommandTask implements Callable<Command> {
+
+    private final Logger logger = Logger.getLogger(getClass().getSimpleName());
+
+    private final FacesContext context;
+    private final String hostAddress;
+    private final String agentPassword;
+    private final Command c;
+
+    public CommandTask(FacesContext context, String hostAddress, String agentPassword, Command c) {
       this.context = context;
+      this.hostAddress = hostAddress;
+      this.agentPassword = agentPassword;
+      this.c = c;
     }
-    private String hostAddress;
-    private Command c;
-    private FacesContext context;
 
     @Override
-    public void run() {
+    public Command call() {
       FacesMessage message;
       try {
-        WebCommunication webComm = new WebCommunication();
-        ClientResponse response = webComm.doCommand(hostAddress, cluster, service, role, command);
+        ClientResponse response = web.doCommand(hostAddress, agentPassword, cluster, service, role, command);
 
         Thread.sleep(3000);
 
-        if (response.getClientResponseStatus().getFamily() == Family.SUCCESSFUL) {
+        if (response.getClientResponseStatus().getFamily() == Response.Status.Family.SUCCESSFUL) {
           c.succeeded();
           String messageText = "";
           Role r = roleEjb.find(hostId, cluster, service, role);
 
           if (command.equalsIgnoreCase("start")) {
-//            JSONObject json = new JSONObject(response.getEntity(String.class));
-//            messageText = json.getString("msg");
             JsonObject json = Json.createReader(response.getEntityInputStream()).readObject();
             messageText = json.getString("msg");
             r.setStatus(Status.Started);
@@ -199,7 +271,8 @@ public class HostController implements Serializable {
         message = new FacesMessage(FacesMessage.SEVERITY_FATAL, "Communication Error", e.toString());
       }
       commandEJB.updateCommand(c);
-//            context.addMessage(null, message);
+      return c;
     }
   }
+
 }

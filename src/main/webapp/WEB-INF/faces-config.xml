@@ -185,7 +185,11 @@
       <to-view-id>/security/protected/admin/yubikeyUers.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
- 
+     <navigation-case>
+      <from-outcome>monitoring</from-outcome>
+      <to-view-id>/security/protected/kmon/clusters.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
 
     <navigation-case>
       <from-outcome>adminIndex</from-outcome>

@@ -20,7 +20,7 @@ public class SettingsController implements Serializable{
 
    public SettingsController() {
       logger.info("SettingsController");      
-      name = "Hadoop Open PaaS Dashboard";
+      name = "Hopsworks";
       logLines = 2;
    }
 

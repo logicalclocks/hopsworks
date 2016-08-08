@@ -37,8 +37,8 @@ public class ClusterStatusController {
   @PostConstruct
   public void init() {
     logger.info("init ClusterStatusController");
-//        loadServices();
-//        loadCluster();
+        loadServices();
+        loadCluster();
   }
 
   public void setCluster(String cluster) {

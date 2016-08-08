@@ -29,7 +29,7 @@ public class HostsController implements Serializable {
   @PostConstruct
   public void init() {
     logger.info("init HostsController");
-//      loadHosts();
+      loadHosts();
   }
 
   public List<Host> getHosts() {
@@ -38,10 +38,10 @@ public class HostsController implements Serializable {
   }
 
   private void loadHosts() {
-//      hosts = hostEJB.find();
-//      if (hosts == null) {
-//        hosts = new ArrayList<Host>();
-//      }
+      hosts = hostEJB.find();
+      if (hosts == null) {
+        hosts = new ArrayList<>();
+      }
   }
 
 }

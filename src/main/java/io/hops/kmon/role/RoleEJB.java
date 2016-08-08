@@ -7,6 +7,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import io.hops.kmon.struct.RoleHostInfo;
+import javax.persistence.NonUniqueResultException;
 
 /**
  *
@@ -37,15 +38,18 @@ public class RoleEJB {
       return query.getResultList();
    }   
 
-   public Role find(String hostId, String cluster, String service, String role) throws Exception{
-      TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
+   public Role find(String hostId, String cluster, String service, String role) {
+
+     TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
               .setParameter("hostId", hostId).setParameter("cluster", cluster)
               .setParameter("service", service).setParameter("role", role);
-      try {
-         return query.getSingleResult();
-      } catch (NoResultException ex) {
-         throw new Exception("NoResultException");
-      }
+        List results = query.getResultList();
+        if (results.isEmpty()) {
+          return null;
+        } else if (results.size() == 1) {
+          return (Role) results.get(0);
+        }
+        throw new NonUniqueResultException();
    }
    
    public List<Role> findHostRoles(String hostId) {
