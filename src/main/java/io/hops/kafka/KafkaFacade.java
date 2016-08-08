@@ -34,6 +34,9 @@ import org.apache.zookeeper.ZooKeeper;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkConnection;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaCompatibility;
+import org.apache.avro.SchemaParseException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import se.kth.hopsworks.user.model.Users;
@@ -182,9 +185,15 @@ public class KafkaFacade {
 
     public void createTopicInProject(Integer projectId, TopicDTO topicDto)
             throws AppException {
+        
+        Project project = em.find(Project.class, projectId);
+        if(project == null){
+        throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    "Project does not exist in database.");
+        }
 
         String topicName = topicDto.getName();
-
+        
         TypedQuery<ProjectTopics> query = em.createNamedQuery(
                 "ProjectTopics.findByTopicName", ProjectTopics.class);
         query.setParameter("topicName", topicName);
@@ -192,7 +201,7 @@ public class KafkaFacade {
 
         if (!res.isEmpty()) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
-                    "Kafka topic already exists. Pick a different topic name.");
+                    "Kafka topic already exists in database. Pick a different topic name.");
         }
 
         //check if the replication factor is not greater than the 
@@ -200,7 +209,7 @@ public class KafkaFacade {
         Set<String> brokerEndpoints = getBrokerEndpoints();
         if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    "Topic replication factor can be maximum of" + brokerEndpoints.size());
+                    "Topic replication factor can be a maximum of" + brokerEndpoints.size());
         }
 
         // create the topic in kafka 
@@ -218,7 +227,7 @@ public class KafkaFacade {
             }
         } catch (TopicExistsException ex) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
-                    "Kafka topic already exists. Pick a different topic name.");
+                    "Kafka topic already exists in Zookeeper. Pick a different topic name.");
         } finally {
             zkClient.close();
             try {
@@ -228,7 +237,7 @@ public class KafkaFacade {
             }
         }
 
-        //if schema is empty, select a default schema, not impmented
+        //if schema is empty, select a default schema, not implemented
         //persist topic into database
         SchemaTopics schema = em.find(SchemaTopics.class,
                 new SchemaTopicsPK(topicDto.getSchemaName(),
@@ -236,7 +245,7 @@ public class KafkaFacade {
 
         if (schema == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    "topic has not schema");
+                    "topic has no schema");
         }
 
         /*
@@ -253,6 +262,9 @@ public class KafkaFacade {
 
         em.persist(pt);
         em.flush();
+        
+        //add default topic acl for the existing project members
+       // addAclsToTopic(topicName, projectId, project.getName(), "*", "allow", "*", "*", "Data owner");
     }
 
     public void removeTopicFromProject(Project project, String topicName)
@@ -457,6 +469,7 @@ public class KafkaFacade {
                     "Topic does not belong to the project.");
         }
 
+        //if acl definition applies only for a specific user
         if (!userEmail.equals("*")) {
             //fetch the user name from database       
             TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
@@ -480,6 +493,7 @@ public class KafkaFacade {
 
         } else {
             for (ProjectTeam p : project.getProjectTeamCollection()) {
+                
                 Users selectedUser = p.getUser();
 
                 String principalName = selectedProjectName + TWO_UNDERSCROES
@@ -518,8 +532,8 @@ public class KafkaFacade {
         }
         //remove previous acl
         em.remove(ta);
-        //add the new acls  
         
+        //add the new acls  
         addAclsToTopic(topicName, projectId, aclDto);        
     }
      
@@ -566,10 +580,46 @@ public class KafkaFacade {
         return aclDtos;
     }
 
+    public SchemaCompatiblityCheck schemaBackwardCompatibility(SchemaDTO schemaDto) {
+
+        String schemaContent = schemaDto.getContents();
+
+        SchemaCompatibility.SchemaPairCompatibility schemaCompatibility;
+        Schema writer;
+
+        TypedQuery<SchemaTopics> query = em.createNamedQuery(
+                "SchemaTopics.findByName", SchemaTopics.class);
+        query.setParameter("name", schemaDto.getName());
+
+        try {
+            Schema reader = new Schema.Parser().parse(schemaContent);
+
+            for (SchemaTopics schemaTopic : query.getResultList()) {
+
+                writer = new Schema.Parser().parse(schemaTopic.getContents());
+
+                schemaCompatibility = SchemaCompatibility.checkReaderWriterCompatibility(reader, writer);
+
+                switch (schemaCompatibility.getType()) {
+
+                    case COMPATIBLE:
+                        break;
+                    case INCOMPATIBLE:
+                        return SchemaCompatiblityCheck.INCOMPATIBLE;
+                    case RECURSION_IN_PROGRESS:
+                        break;
+                }
+            }
+        } catch (SchemaParseException ex) {
+            return SchemaCompatiblityCheck.INVALID;
+        }
+        return SchemaCompatiblityCheck.COMPATIBLE;
+    }
+
     //if schema exists, increment it if not start version from 1
     public void addSchemaForTopics(SchemaDTO schemaDto) {
 
-        int maxVersion = 1;
+        int newVersion = 1;
 
         TypedQuery<SchemaTopics> query = em.createNamedQuery(
                 "SchemaTopics.findByName", SchemaTopics.class);
@@ -582,14 +632,14 @@ public class KafkaFacade {
             for (SchemaTopics schemaTopic : schemaTopics) {
 
                 int schemaVersion = schemaTopic.getSchemaTopicsPK().getVersion();
-                if (maxVersion < schemaVersion) {
-                    maxVersion = schemaVersion;
+                if (newVersion < schemaVersion) {
+                    newVersion = schemaVersion;
                 }
             }
-            maxVersion++;
+            newVersion++;
         }
         if (schema == null) {
-            schema = new SchemaTopics(schemaDto.getName(), maxVersion,
+            schema = new SchemaTopics(schemaDto.getName(), newVersion,
                     schemaDto.getContents(), new Date());
         }
 
