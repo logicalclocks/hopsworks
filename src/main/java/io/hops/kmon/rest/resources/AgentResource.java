@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.persistence.NoResultException;
 import javax.ws.rs.POST;
 
 /**
@@ -117,6 +118,7 @@ public class AgentResource {
 //                } else {
 //                    host.setHostname(json.getString("hostname"));                    
 //                }
+//                host.setCores (h.getCores());
 //            } else {
 //                if (host.isRegistered()) {
 //                    logger.log(Level.INFO, "Re-registering host with id {0}: already registered.", hostId);
@@ -168,13 +170,13 @@ public class AgentResource {
       String hostId = json.getString("host-id");
       Host host = hostEJB.findByHostId(hostId);
       if (host == null) {
-        logger.log(Level.INFO, "Host with id {0} not found.", hostId);
+        logger.log(Level.WARNING, "Host with id {0} not found.", hostId);
         return Response.status(Response.Status.NOT_FOUND).build();
       }
-//            if (!host.isRegistered()) {
-//                logger.log(Level.INFO, "Host with id {0} is not registered.", hostId);
-//                return Response.status(Response.Status.NOT_ACCEPTABLE).build();
-//            }
+      if (!host.isRegistered()) {
+        logger.log(Level.WARNING, "Host with id {0} is not registered.", hostId);
+        return Response.status(Response.Status.NOT_ACCEPTABLE).build();
+      }
       host.setLastHeartbeat((new Date()).getTime());
       host.setLoad1(json.getJsonNumber("load1").doubleValue());
       host.setLoad5(json.getJsonNumber("load5").doubleValue());
@@ -190,19 +192,33 @@ public class AgentResource {
       JsonArray roles = json.getJsonArray("services");
       for (int i = 0; i < roles.size(); i++) {
         JsonObject s = roles.getJsonObject(i);
-        Role role = new Role();
-        role.setHostId(host.getHostId());
-        role.setCluster(s.getString("cluster"));
-        role.setService(s.getString("service"));
-        if (s.containsKey("role")) {
-          role.setRole(s.getString("role"));
-        } else {
-          role.setRole("");
+
+        if (!s.containsKey("cluster") || !s.containsKey("cluster") || !s.containsKey("cluster")) {
+          logger.warning("Badly formed JSON object describing a service.");
+          continue;
         }
+        String cluster = s.getString("cluster");
+        String roleName = s.getString("role");
+        String service = s.getString("service");
+
+        Role role = roleEjb.find(hostId, cluster, service, roleName);
+        if (role == null) {
+          role = new Role();
+          role.setHostId(hostId);
+          role.setCluster(cluster);
+          role.setService(service);
+          role.setRole(roleName);
+        }
+
         String webPort = s.containsKey("web-port") ? s.getString("web-port") : "0";
-        role.setWebPort(Integer.parseInt(webPort));
         String pid = s.containsKey("pid") ? s.getString("pid") : "-1";
-        role.setPid(Integer.parseInt(pid));
+        try {
+          role.setWebPort(Integer.parseInt(webPort));
+          role.setPid(Integer.parseInt(pid));
+        } catch (NumberFormatException ex) {
+          logger.log(Level.WARNING, "Invalid webport or pid - not a number for: {0}", role);
+          continue;
+        }
         if (s.containsKey("status")) {
           role.setStatus(Status.valueOf(s.getString("status")));
         } else {
@@ -216,10 +232,15 @@ public class AgentResource {
         if (s.containsKey("stop-time")) {
           stopTime = s.getString("stop-time");
         }
-        if (stopTime != null) {
-          role.setUptime(Long.parseLong(stopTime) - Long.parseLong(startTime));
-        } else if (startTime != null) {
-          role.setUptime(agentTime - Long.parseLong(startTime));
+        try {
+          if (stopTime != null) {
+            role.setUptime(Long.parseLong(stopTime) - Long.parseLong(startTime));
+          } else if (startTime != null) {
+            role.setUptime(agentTime - Long.parseLong(startTime));
+          }
+        } catch (NumberFormatException ex) {
+          logger.log(Level.WARNING, "Invalid startTime or stopTime - not a valid number for: {0}", role);
+          continue;
         }
         roleEjb.store(role);
       }

@@ -139,7 +139,7 @@ public class Settings {
       ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
-      HOPSWORKS_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR, HOPSWORKS_DIR);
+      HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR, HOPSWORKS_INSTALL_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
@@ -288,11 +288,23 @@ public class Settings {
     return HADOOP_DIR;
   }
 
-  private static String HOPSWORKS_DIR = "/srv/glassfish/domain1";
+  private static String HOPSWORKS_INSTALL_DIR = "/srv/glassfish";
 
-  public synchronized String getHopsworksDir() {
+  public synchronized String getHopsworksInstallDir() {
     checkCache();
-    return HOPSWORKS_DIR;
+    return HOPSWORKS_INSTALL_DIR;
+  }
+  
+  private static String HOPSWORKS_DOMAIN_DIR = HOPSWORKS_INSTALL_DIR + "/domain1";
+
+  public synchronized String getHopsworksDomainDir() {
+    checkCache();
+    return HOPSWORKS_DOMAIN_DIR;
+  }
+
+  public synchronized String getIntermediateCaDir() {
+    checkCache();
+    return getHopsworksDomainDir() + Settings.CA_DIR;
   }
 
   //User under which yarn is run
@@ -667,11 +679,10 @@ public class Settings {
   
   // Hopsworks
   public static final Charset ENCODING = StandardCharsets.UTF_8;
+  public static final String HOPS_USERS_HOMEDIR = "/home/";
   public static final String HOPS_USERNAME_SEPARATOR = "__";
-  public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
-  public static String CA_DIR = Settings.HOPSWORKS_DIR + "/config/ca/intermediate/";
-  public static final String CA_CERT_DIR = CA_DIR + "certs/";
-  public static final String CA_KEY_DIR = CA_DIR + "private/";
+//  public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
+  private static String CA_DIR = "/config/ca/intermediate";
   public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
   public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";
   public static final String SSL_DELETE_PROJECT_CERTS_SCRIPTNAME = "deleteprojectcerts.sh";

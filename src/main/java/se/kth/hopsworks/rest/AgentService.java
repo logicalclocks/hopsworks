@@ -8,6 +8,8 @@ package se.kth.hopsworks.rest;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import io.hops.kafka.CsrDTO;
+import io.hops.kmon.host.Host;
+import io.hops.kmon.host.HostEJB;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -42,7 +44,9 @@ public class AgentService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private Settings settings;
-
+  @EJB
+  private HostEJB hostEJB;
+  
   @PUT
   @Path("/register")
   @Consumes(MediaType.APPLICATION_JSON)
@@ -54,13 +58,28 @@ public class AgentService {
     if (json.has("csr")) {
       String csr = json.getString("csr");
       try {
-        pubAgentCert = PKIUtils.signWithServerCertificate(csr, settings.getHopsworksMasterPasswordSsl());
-        caPubCert = Files.toString(new File(Settings.CA_DIR + "/certs/ca-chain.cert.pem"), Charsets.UTF_8);
+        pubAgentCert = PKIUtils.signWithServerCertificate(csr, settings.getIntermediateCaDir(), settings.getHopsworksMasterPasswordSsl());
+        caPubCert = Files.toString(new File(settings.getIntermediateCaDir() + "/certs/ca-chain.cert.pem"), Charsets.UTF_8);
       } catch (IOException | InterruptedException ex) {
         Logger.getLogger(AgentService.class.getName()).log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.toString());
       }
     }
+    
+    if (json.has("host-id") && json.has("agent-password")) {    
+      String hostId = json.getString("host-id");
+      Host host;
+      try {
+        host = hostEJB.findByHostId(hostId);
+        String agentPassword = json.getString("agent-password");
+        host.setAgentPassword(agentPassword);
+        host.setRegistered(true);
+        hostEJB.storeHost(host, true);
+      } catch (Exception ex) {
+        Logger.getLogger(AgentService.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }    
+    
     CsrDTO dto = new CsrDTO(caPubCert, pubAgentCert);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             dto).build();

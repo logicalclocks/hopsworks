@@ -48,7 +48,7 @@ public class RoleController {
   public void loadRoles() {
 
     logger.info("init RoleController");
-    instanceInfoList = new ArrayList<InstanceFullInfo>();
+    instanceInfoList = new ArrayList<>();
     try {
       RoleHostInfo roleHost = roleEjb.findRoleHost(cluster, service, role, hostId);
       String ip = roleHost.getHost().getPublicOrPrivateIp();

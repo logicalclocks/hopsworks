@@ -90,7 +90,7 @@ public class FormatUtils {
     }
 
     public static List<String> rrdChartFormats() {
-        List<String> formats = new ArrayList<String>();
+        List<String> formats = new ArrayList<>();
         formats.add("%5.2lf");
         formats.add("%5.2lf %S");
         return formats;

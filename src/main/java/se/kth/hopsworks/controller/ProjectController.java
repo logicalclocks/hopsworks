@@ -456,8 +456,7 @@ public class ProjectController {
     // TODO: DELETE THE KAFKA TOPICS
     userCertsFacade.removeAllCertsOfAProject(project.getName());
 
-    LocalhostServices.deleteProjectCertificates(settings.getHopsworksDir(),
-            project.getName());
+    LocalhostServices.deleteProjectCertificates(settings.getIntermediateCaDir(), project.getName());
     logger.log(Level.INFO, "{0} - project removed.", project.getName());
 
     return success;
@@ -509,7 +508,7 @@ public class ProjectController {
               projectTeamFacade.removeProjectTeam(project, newMember);
               throw new EJBException("Could not add member to HDFS.");
             }
-            LocalhostServices.createUserCertificates(settings.getHopsworksDir(),
+            LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(),
                     project.getName(), newMember.getUsername());
 
             userCertsFacade.putUserCerts(project.getName(), newMember.

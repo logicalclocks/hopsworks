@@ -29,8 +29,8 @@ public class ClustersController {
    @PostConstruct
    public void init() {
       logger.info("init ClustersController");
-      clusters = new ArrayList<ClusterInfo>();
-//      loadClusters();
+      clusters = new ArrayList<>();
+      loadClusters();
    }
 
    public List<ClusterInfo> getClusters() {

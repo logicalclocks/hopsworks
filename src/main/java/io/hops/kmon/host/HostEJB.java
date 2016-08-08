@@ -8,6 +8,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import io.hops.kmon.struct.Status;
+import javax.persistence.NonUniqueResultException;
 
 /**
  *
@@ -36,7 +37,7 @@ public class HostEJB implements Serializable{
         }
     }
 
-    public Host findByHostId(String hostId) throws Exception {
+    public Host findByHostId(String hostId) {
         TypedQuery<Host> query = em.createNamedQuery("Host.findBy-HostId", Host.class).setParameter("hostId", hostId);
         List<Host> result = query.getResultList();
         if (result.isEmpty()) {
@@ -44,7 +45,7 @@ public class HostEJB implements Serializable{
         } else if (result.size() == 1) {
             return result.get(0);
         } else {
-            throw new Exception("MultipHostsFoundException");
+            throw new NonUniqueResultException("Invalid program state - MultipleHostsFoundException. HostId should return a single host.");
         }
     }
     
