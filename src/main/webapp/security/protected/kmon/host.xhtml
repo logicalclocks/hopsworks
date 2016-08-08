@@ -65,6 +65,18 @@
                             <p:column headerText="Last Heartbeat">
                                 <h:outputText value="#{host.lastHeartbeatFormatted} ago" rendered="#{not empty host.lastHeartbeatFormatted}"/>
                             </p:column>
+                            <p:column headerText="Disk Usage">
+                                <div class="CapacityUsage #{host.diskPriority}">
+                                    <div class="reading">#{host.diskUsageInfo}</div>
+                                    <div class="bar" style="width: #{host.diskUsagePercentageString};"></div>
+                                </div>
+                            </p:column> 
+                            <p:column headerText="Physical Memory">
+                                <div class="CapacityUsage #{host.memoryPriority}">
+                                    <div class="reading">#{host.memoryUsageInfo}</div>
+                                    <div class="bar" style="width: #{host.memoryUsagePercentageString};"></div>
+                                </div>
+                            </p:column> 
                             <p:column headerText="Cores"><h:outputText value="#{host.cores}" /></p:column> 
                             <p:column headerText="Load Average">
                                 <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
@@ -73,18 +85,6 @@
                                     <p:column>#{host.load15}</p:column>
                                 </p:dataTable>
                             </p:column>
-                            <p:column headerText="Disk Usage">
-                                <div class="CapacityUsage #{host.diskPriority}">
-                                    <span class="reading">#{host.diskUsageInfo}</span>
-                                    <span class="bar" style="width: #{host.diskUsagePercentageString};"></span>
-                                </div>
-                            </p:column> 
-                            <p:column headerText="Physical Memory">
-                                <div class="CapacityUsage #{host.memoryPriority}">
-                                    <span class="reading">#{host.memoryUsageInfo}</span>
-                                    <span class="bar" style="width: #{host.memoryUsagePercentageString};"></span>
-                                </div>
-                            </p:column> 
                         </p:dataTable> 
                     </p:panel> 
 
