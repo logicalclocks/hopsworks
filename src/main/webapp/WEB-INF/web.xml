@@ -81,6 +81,15 @@
   </security-constraint>
   <security-constraint>
     <web-resource-collection>
+      <web-resource-name>Monitor Management</web-resource-name>
+      <url-pattern>/security/protected/kmon/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>HOPS_ADMIN</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
       <web-resource-name>Platfrom Audit</web-resource-name>
       <url-pattern>/security/protected/audit/*</url-pattern>
     </web-resource-collection>
