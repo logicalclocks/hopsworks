@@ -34,14 +34,14 @@ public class AlertEJB {
     public List<Alert> find(Date fromDate, Date toDate, Severity severity) {
         TypedQuery<Alert> query = em.createNamedQuery("Alerts.findBy-Severity", Alert.class)
                 .setParameter("fromdate", fromDate).setParameter("todate", toDate)
-                .setParameter("severity", severity);
+                .setParameter("severity", severity.toString());
         return query.getResultList();
     }
     
     public List<Alert> find(Date fromDate, Date toDate, Provider provider) {
         TypedQuery<Alert> query = em.createNamedQuery("Alerts.findBy-Provider", Alert.class)
                 .setParameter("fromdate", fromDate).setParameter("todate", toDate)
-                .setParameter("provider", provider);
+                .setParameter("provider", provider.toString());
         return query.getResultList();
     }
     
