@@ -4,9 +4,6 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
-import io.hops.bbc.Consents;
-import io.hops.kmon.host.Host;
-import io.hops.kmon.host.HostEJB;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -26,14 +23,11 @@ import io.hops.kmon.utils.FormatUtils;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import se.kth.kthfsdashboard.user.AbstractFacade;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -44,13 +38,7 @@ public class WebCommunication {
 
   private static final Logger logger = Logger.getLogger(WebCommunication.class.getName());
 
-//  @PersistenceContext(unitName = "kthfsPU")
-//  private EntityManager em;
-  @EJB
-  private HostEJB hostEJB;
-
   private static boolean DISABLE_CERTIFICATE_VALIDATION = true;
-  private static String USERNAME = "kagent@hops.io";
   private static String PROTOCOL = "https";
   private static int PORT = 8090;
   private static String NOT_AVAILABLE = "Not available.";
@@ -72,6 +60,22 @@ public class WebCommunication {
     return null;
   }
 
+  /**
+   * 
+   * @param operation  start | stop | restart
+   * @param hostAddress
+   * @param agentPassword
+   * @param cluster
+   * @param service
+   * @param role
+   * @return 
+   */
+  public String roleOp(String operation, String hostAddress, String agentPassword, String cluster, String service, String role) {
+    String url = createUrl(operation, hostAddress, cluster, service, role);
+    return fetchContent(url, agentPassword);
+  }  
+  
+  
   public String getConfig(String hostAddress, String agentPassword, String cluster, String service, String role) {
     String url = createUrl("config", hostAddress, cluster, service, role);
     return fetchContent(url, agentPassword);
@@ -192,7 +196,7 @@ public class WebCommunication {
     WebResource webResource = client.resource(url);
 
     MultivaluedMap params = new MultivaluedMapImpl();
-    params.add("username", USERNAME);
+    params.add("username", Settings.AGENT_EMAIL);
     params.add("password", agentPassword);
     ClientResponse response = webResource.queryParams(params)
             .header("Accept-Encoding", "gzip,deflate")
@@ -209,7 +213,7 @@ public class WebCommunication {
     WebResource webResource = client.resource(url);
 
     MultivaluedMap params = new MultivaluedMapImpl();
-    params.add("username", USERNAME);
+    params.add("username", Settings.AGENT_EMAIL);
     params.add("password", agentPassword);
     ClientResponse response = webResource.queryParams(params)
             .header("Accept-Encoding", "gzip,deflate")

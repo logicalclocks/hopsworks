@@ -7,12 +7,12 @@ package se.kth.bbc.security.ua;
 
 import se.kth.hopsworks.controller.MaintenanceController;
 import se.kth.hopsworks.message.controller.MessageController;
-import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import java.io.Serializable;
+import se.kth.hopsworks.util.Settings;
 
 
 @ManagedBean(name="maintenance")
@@ -56,7 +56,7 @@ public class MaintenanceBean implements Serializable {
         setMessage(message);
 
         if (status == 1) {
-            messageController.sendToMany(userFacade.findAllUsers(), userFacade.findByEmail("admin@kth.se"), 
+            messageController.sendToMany(userFacade.findAllUsers(), userFacade.findByEmail(Settings.SITE_EMAIL), 
                     "Administration Message", message, "");
         }
     }

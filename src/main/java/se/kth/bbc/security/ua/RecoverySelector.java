@@ -11,6 +11,7 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -179,7 +180,7 @@ public class RecoverySelector implements Serializable {
         String random = SecurityUtils.getRandomPassword(passwordLength);
         um.updateSecret(people.getUid(), random);
         String message = UserAccountsEmailMessages.buildTempResetMessage(random);
-        email.sendEmail(people.getEmail(),
+        email.sendEmail(people.getEmail(),RecipientType.TO, 
                 UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
         am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
@@ -261,7 +262,7 @@ public class RecoverySelector implements Serializable {
           am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
               AccountsAuditActions.SUCCESS.name(), "Account bloecked due to many false attempts.", people);
 
-          email.sendEmail(people.getEmail(),
+          email.sendEmail(people.getEmail(), RecipientType.TO, 
                   UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                   UserAccountsEmailMessages.accountBlockedMessage());
         } catch (MessagingException ex1) {
@@ -322,7 +323,7 @@ public class RecoverySelector implements Serializable {
         people.getYubikey().setStatus(PeopleAccountStatus.LOST_YUBIKEY.
                 getValue());
         um.updatePeople(people);
-        email.sendEmail(people.getEmail(),
+        email.sendEmail(people.getEmail(), RecipientType.TO, 
                 UserAccountsEmailMessages.DEVICE_LOST_SUBJECT, message);
 
         am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
@@ -339,7 +340,7 @@ public class RecoverySelector implements Serializable {
               AccountsAuditActions.SUCCESS.name(), "Account bloecked due to many false attempts.", people);
 
           try {
-            email.sendEmail(people.getEmail(),
+            email.sendEmail(people.getEmail(),RecipientType.TO, 
                     UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                     UserAccountsEmailMessages.accountBlockedMessage());
           } catch (MessagingException ex1) {

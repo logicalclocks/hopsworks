@@ -17,6 +17,7 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.HeuristicMixedException;
@@ -303,7 +304,7 @@ public class PeopleAdministration implements Serializable {
             userManager.deleteUserRequest(user1);
 
             // update the user request table
-                emailBean.sendEmail(user1.getEmail(),
+                emailBean.sendEmail(user1.getEmail(), RecipientType.TO, 
                     UserAccountsEmailMessages.ACCOUNT_REJECT,
                     UserAccountsEmailMessages.accountRejectedMessage());
                 MessagesController.addInfoMessage(user1.getEmail() + " was rejected.");
@@ -413,7 +414,7 @@ public class PeopleAdministration implements Serializable {
 
             userTransaction.commit();
 
-            emailBean.sendEmail(user1.getEmail(),
+            emailBean.sendEmail(user1.getEmail(), RecipientType.TO, 
                 UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
                 UserAccountsEmailMessages.
                 accountActivatedMessage(user1.getEmail()));
@@ -447,7 +448,7 @@ public class PeopleAdministration implements Serializable {
             getExternalContext().getRequest();
 
         String activationKey = SecurityUtils.getRandomPassword(64);
-        emailBean.sendEmail(user.getEmail(),
+        emailBean.sendEmail(user.getEmail(),RecipientType.TO, 
             UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
             UserAccountsEmailMessages.buildMobileRequestMessage(
                 AuditUtil.getUserURL(request), user.getUsername()

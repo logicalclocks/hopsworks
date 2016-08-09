@@ -12,6 +12,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
@@ -193,7 +194,7 @@ public class YubikeyActivator implements Serializable {
                 PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
                 UserAuditActions.SUCCESS.name(), "", yubi.getUid());
 
-            emailBean.sendEmail(this.selectedYubikyUser.getEmail(),
+            emailBean.sendEmail(this.selectedYubikyUser.getEmail(), RecipientType.TO, 
                 UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
                 UserAccountsEmailMessages.
                 yubikeyAccountActivatedMessage(this.selectedYubikyUser.getEmail()));

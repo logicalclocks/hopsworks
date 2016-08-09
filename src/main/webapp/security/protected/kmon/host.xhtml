@@ -107,38 +107,6 @@
                     </p:panel>                     
                 </h:form>                                
 
-                <p:panel header="Control commands" rendered="false">  
-                    <div class="commands">
-
-                        <h:form id="form_commands">
-
-                            <p:dataTable id="hosts" var="command" value="#{hostController.commands}">
-                                <p:column headerText="namenode">
-                                    <p:commandLink id="cmd1" actionListener="#{hostController.doCommand}" ajax="true">
-                                        <h:outputText value="#{command}" />
-                                        <f:param name="cluster" value="#{hostController.cluster}" />
-                                        <f:param name="role" value="namenode" />
-                                        <f:param name="hostid" value="#{hostController.host.hostId}" />
-                                        <f:param name="command" value="#{command}" />
-                                    </p:commandLink> 
-                                </p:column>   
-                                <p:column headerText="datanode">
-                                    <p:commandLink id="cmd2" actionListener="#{hostController.doCommand}" ajax="true">
-                                        <h:outputText value="#{command}" />
-                                        <f:param name="hostid" value="#{hostController.host.hostId}" />
-                                        <f:param name="cluster" value="#{hostController.cluster}" />
-                                        <f:param name="role" value="datanode" />
-                                        <f:param name="command" value="#{command}" />
-
-                                    </p:commandLink> 
-                                </p:column>  
-                            </p:dataTable>
-
-                            <p:messages id="messages" showDetail="true" autoUpdate="true"/>  
-                        </h:form>
-                    </div>
-                </p:panel>
-
                 <p:spacer width="1" height="40" />
 
                 <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  

@@ -123,6 +123,7 @@ public class MessageController {
    * <p>
    * @param recipients list of the receivers
    * @param from the sender
+   * @param subject
    * @param msg the message text
    * @param requestPath requestPath if the message is a request this will
    * contain the path
@@ -142,7 +143,7 @@ public class MessageController {
     }
     for (Users u : recipients) {
       Message newMsg
-              = new Message(from, u, recipients, now, msg, true, false);
+              = new Message(from, u, now, msg, true, false); //  recipients, 
       newMsg.setPath(requestPath);
       newMsg.setSubject(subject);
       messageFacade.save(newMsg);

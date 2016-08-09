@@ -72,7 +72,8 @@
                                     <f:param name="service" value="#{roleController.service}"/>                              
                                     <f:param name="hostid" value="#{roleController.hostId}"/>
                                 </p:commandLink>
-                                <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{urlController.roleStatus}" ajax="false">
+                                <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" 
+                                                 action="#{urlController.roleStatus}" ajax="false">
                                     <f:param name="cluster" value="#{roleController.cluster}"/>
                                     <f:param name="role" value="#{roleController.role}"/>
                                     <f:param name="service" value="#{roleController.service}"/>                             
@@ -89,7 +90,7 @@
 
                             <p:toolbarGroup align="right">  
                                 <p:menuButton value="Actions">  
-                                    <p:menuitem id="restart_role" value="Restart" action="#{hostController.doCommand}" 
+                                    <p:menuitem id="restart_role" value="Restart" action="#{hostController.doCommand()}" 
                                                 process="@this"
                                                 disabled="#{roleController.disableStop()}" ajax ="true" 
                                                 update=":form_running:commandsinfo"
@@ -100,23 +101,19 @@
                                         <f:param name="service" value="#{roleController.service}"/>                                  
                                         <f:param name="command" value="restart" />
                                     </p:menuitem>
-                                    <p:menuitem id="start_role" value="Start" action="#{hostController.doCommand}" process="@this"
-                                                disabled="#{roleController.disableStart()}" ajax ="true" update=":form_running:commandsinfo"
-                                                oncomplete="dlgAction.show()">
+                                    <p:menuitem id="start_role" value="Start" action="#{communicationController.roleStart()}" process="@this"
+                                                disabled="#{roleController.disableStart()}" ajax ="false">
                                         <f:param name="hostid" value="#{roleController.hostId}" />
                                         <f:param name="cluster" value="#{roleController.cluster}" />
                                         <f:param name="role" value="#{roleController.role}" />
                                         <f:param name="service" value="#{roleController.service}"/>                                   
-                                        <f:param name="command" value="start" />
                                     </p:menuitem>
-                                    <p:menuitem id="stop_role" value="Stop" action="#{hostController.doCommand}" process="@this"
-                                                disabled="#{roleController.disableStop()}" ajax ="true" update=":form_running:commandsinfo"
-                                                oncomplete="dlgAction.show()">
+                                    <p:menuitem id="stop_role" value="Stop" action="#{communicationController.roleStop()}" process="@this"
+                                                disabled="#{roleController.disableStop()}" ajax ="false">
                                         <f:param name="hostid" value="#{roleController.hostId}" />
                                         <f:param name="cluster" value="#{roleController.cluster}" />
                                         <f:param name="role" value="#{roleController.role}" />
                                         <f:param name="service" value="#{roleController.service}"/>                                  
-                                        <f:param name="command" value="stop" />
                                     </p:menuitem>
                                 </p:menuButton> 
                                 <p:tooltip for="start_role" rendered="#{roleController.disableStart()}" 
@@ -212,45 +209,6 @@
 
                 <p:spacer width="1" height="20" />
 
-                <p:outputPanel rendered="#{not empty graphInfoController.getGroups(roleController.service, roleController.role)}">
-
-                    <h:form id="formdate" style="text-align: center">  
-                        <h:panelGrid columns="10"> 
-                            <p:selectOneButton id ="periods" value="#{graphController.period}">  
-                                <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
-                                <f:param name="hostid" value="#{graphController.hostId}"/>            
-                                <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
-                            </p:selectOneButton>
-                            <h:outputText value="or from" />
-                            <p:calendar title="from" value="#{graphController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
-                            <h:outputText value=" to " />
-                            <p:calendar title="to" value="#{graphController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
-                            <h:outputText value=" in " />
-                            <p:selectOneMenu id="cols" value="#{settingsController.numOfGraphColumns}" >  
-                                <f:selectItems var="n" value="#{graphController.columns}" />  
-                            </p:selectOneMenu>
-                            <h:outputText value=" columns " />
-                            <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
-                                <f:param name="hostid" value="#{graphController.hostId}"/>                 
-                            </p:commandButton>
-                            <p:commandButton value="Edit" id="editcharts" ajax="false" action="#{urlController.redirectToEditGraphs()}" icon="ui-icon-gear">
-                                <f:param name="target" value="#{graphController.getTarget(roleController.service, roleController.role)}"/>
-                            </p:commandButton> 
-                            <p:tooltip for="editcharts" value="Edit Graphs"/>                            
-                        </h:panelGrid>
-                    </h:form> 
-
-                    <h:form id="graphs">
-                        <ui:repeat value="#{graphInfoController.getGroups(roleController.service, roleController.role)}" var="group">                        
-                            <p:toolbar>
-                                <p:toolbarGroup align="left"><p:outputLabel value="#{group}"/></p:toolbarGroup>
-                            </p:toolbar>
-                            <p:dataGrid  var="id" value="#{graphInfoController.getGraphIds(roleController.service, roleController.role, group)}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                                <p:graphicImage value="#{graphController.getRoleGraphUrl(roleController.service, roleController.role, id)}"/>
-                            </p:dataGrid>
-                        </ui:repeat>    
-                    </h:form>         
-                </p:outputPanel>     
 
             </p:outputPanel>          
 
