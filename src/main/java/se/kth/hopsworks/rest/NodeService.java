@@ -12,7 +12,6 @@ import se.kth.hopsworks.workflows.NodeFacade;
 import se.kth.hopsworks.workflows.NodePK;
 import se.kth.hopsworks.workflows.Workflow;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.TransactionAttribute;
@@ -30,11 +29,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Logger;
-import se.kth.hopsworks.workflows.nodes.*;
 import static com.google.common.base.CaseFormat.*;
 
 @RequestScoped
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class NodeService {
     private final static Logger logger = Logger.getLogger(NodeService.class.
