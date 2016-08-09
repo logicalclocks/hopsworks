@@ -6,10 +6,6 @@ import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.user.model.UserAccountStatus;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
 @Stateless
 public class UserStatusValidator {
 

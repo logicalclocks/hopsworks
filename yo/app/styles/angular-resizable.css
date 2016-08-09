@@ -92,7 +92,7 @@
     padding: 10px;
     border: 1px solid transparent; 
     height: 70%; 
-    max-height: 95%; 
+    max-height: 90%; 
     min-height: 20%;
     z-index: 2;
 }

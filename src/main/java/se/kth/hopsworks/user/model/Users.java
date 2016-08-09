@@ -79,7 +79,10 @@ import se.kth.bbc.security.ua.model.Yubikey;
   @NamedQuery(name = "Users.findByMobile",
           query = "SELECT u FROM Users u WHERE u.mobile = :mobile"),
   @NamedQuery(name = "Users.findByStatus",
-          query = "SELECT u FROM Users u WHERE u.status = :status")})
+          query = "SELECT u FROM Users u WHERE u.status = :status"),
+  @NamedQuery(name = "Users.findByTwoFactor",
+          query
+          = "SELECT u FROM Users u WHERE u.twoFactor = :twoFactor")})
 public class Users implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -163,6 +166,10 @@ public class Users implements Serializable {
   @Basic(optional = false)
   @Column(name = "max_num_projects")
   private Integer maxNumProjects;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "two_factor")
+  private boolean twoFactor;
 
   @JoinTable(name = "hopsworks.people_group",
           joinColumns = {
@@ -181,17 +188,16 @@ public class Users implements Serializable {
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "uid")
   private Organization organization;
-        
+
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "uid")
   private Yubikey yubikey;
-      
-      
+
   public Users() {
   }
-  
-   public Users(Integer uid, String username, String password, Date activated,
-          int falseLogin, int status, int isonline, int maxNumProjects ) {
+
+  public Users(Integer uid, String username, String password, Date activated,
+          int falseLogin, int status, int isonline, int maxNumProjects) {
     this.uid = uid;
     this.username = username;
     this.password = password;
@@ -201,7 +207,6 @@ public class Users implements Serializable {
     this.status = status;
     this.maxNumProjects = maxNumProjects;
   }
-   
 
   public Users(Integer uid) {
     this.uid = uid;
@@ -443,7 +448,16 @@ public class Users implements Serializable {
   public Integer getMaxNumProjects() {
     return maxNumProjects;
   }
-  
+
+  @XmlTransient
+  @JsonIgnore
+  public boolean getTwoFactor() {
+    return twoFactor;
+  }
+
+  public void setTwoFactor(boolean twoFactor) {
+    this.twoFactor = twoFactor;
+  }
 
   @Override
   public int hashCode() {
@@ -465,7 +479,6 @@ public class Users implements Serializable {
     }
     return true;
   }
-  
 
   @Override
   public String toString() {
@@ -473,6 +486,7 @@ public class Users implements Serializable {
   }
 
   public Users asUser() {
-    return new Users(uid, username, password, activated, falseLogin, status, isonline, maxNumProjects);
+    return new Users(uid, username, password, activated, falseLogin, status,
+            isonline, maxNumProjects);
   }
 }

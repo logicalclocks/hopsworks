@@ -3,10 +3,7 @@ package se.kth.hopsworks.users;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.hopsworks.user.model.Users;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
+
 @XmlRootElement
 public class UserDTO {
 
@@ -21,6 +18,7 @@ public class UserDTO {
   private String chosenPassword;
   private String repeatedPassword;
   private boolean ToS;
+  private boolean twoFactor;
   private String orgName;
   private String dep;
   private String street;
@@ -49,6 +47,7 @@ public class UserDTO {
       this.country = user.getAddress().getCountry();
     }
     this.maxNumProjects = user.getMaxNumProjects();
+    this.twoFactor = user.getTwoFactor();
   }
 
   public String getEmail() {
@@ -137,6 +136,14 @@ public class UserDTO {
 
   public void setToS(boolean ToS) {
     this.ToS = ToS;
+  }
+
+  public boolean isTwoFactor() {
+    return twoFactor;
+  }
+
+  public void setTwoFactor(boolean twoFactor) {
+    this.twoFactor = twoFactor;
   }
 
   public String getOrgName() {
