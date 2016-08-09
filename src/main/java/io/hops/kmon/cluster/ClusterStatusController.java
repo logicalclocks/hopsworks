@@ -92,6 +92,7 @@ public class ClusterStatusController {
     clusterInfo.setTotalMemoryCapacity(roleEjb.totalMemoryCapacity(cluster));
     clusterInfo.setTotalDiskCapacity(roleEjb.totalDiskCapacity(cluster));
     clusterInfo.addRoles(roleEjb.findRoleHost(cluster));
+    found = true;
   }
 
   public ClusterInfo getClusterInfo() {

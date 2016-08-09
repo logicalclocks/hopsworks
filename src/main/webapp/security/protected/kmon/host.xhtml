@@ -47,11 +47,6 @@
                                 <h:outputText value="#{hostController.host.hostId} (#{hostController.host.hostname})"/>
                                 <f:param name="hostid" value="#{hostController.hostId}"/>   
                             </p:commandLink>
-
-                            <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{hostController.gotoHost}" ajax="false">
-                                <f:param name="hostid" value="#{hostController.hostId}"/>                            
-                            </p:commandButton>  
-
                         </p:toolbarGroup>  
 
                     </p:toolbar>  
@@ -70,6 +65,18 @@
                             <p:column headerText="Last Heartbeat">
                                 <h:outputText value="#{host.lastHeartbeatFormatted} ago" rendered="#{not empty host.lastHeartbeatFormatted}"/>
                             </p:column>
+                            <p:column headerText="Disk Usage">
+                                <div class="CapacityUsage #{host.diskPriority}">
+                                    <div class="reading">#{host.diskUsageInfo}</div>
+                                    <div class="bar" style="width: #{host.diskUsagePercentageString};"></div>
+                                </div>
+                            </p:column> 
+                            <p:column headerText="Physical Memory">
+                                <div class="CapacityUsage #{host.memoryPriority}">
+                                    <div class="reading">#{host.memoryUsageInfo}</div>
+                                    <div class="bar" style="width: #{host.memoryUsagePercentageString};"></div>
+                                </div>
+                            </p:column> 
                             <p:column headerText="Cores"><h:outputText value="#{host.cores}" /></p:column> 
                             <p:column headerText="Load Average">
                                 <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
@@ -78,18 +85,6 @@
                                     <p:column>#{host.load15}</p:column>
                                 </p:dataTable>
                             </p:column>
-                            <p:column headerText="Disk Usage">
-                                <div class="CapacityUsage #{host.diskInfo.priority}">
-                                    <span class="reading">#{host.diskInfo.usageInfo}</span>
-                                    <span class="bar" style="width: #{host.diskInfo.usagePercentageString};"></span>
-                                </div>
-                            </p:column> 
-                            <p:column headerText="Physical Memory">
-                                <div class="CapacityUsage #{host.memoryInfo.priority}">
-                                    <span class="reading">#{host.memoryInfo.usageInfo}</span>
-                                    <span class="bar" style="width: #{host.memoryInfo.usagePercentageString};"></span>
-                                </div>
-                            </p:column> 
                         </p:dataTable> 
                     </p:panel> 
 
@@ -175,9 +170,9 @@
                 </p:accordionPanel>         
 
                 <p:spacer width="1" height="20" />
-
+<!--
                 <h:form>
-                    <!--<p:growl id="growl" life="2000" />-->
+                    <p:growl id="growl" life="2000" />
                     <p:panelGrid>  
                         <p:row>  
                             <p:column>
@@ -193,48 +188,8 @@
                         </p:row>
                     </p:panelGrid>
                 </h:form>
-                <p:spacer width="1" height="20" />
+                <p:spacer width="1" height="20" />-->
 
-                <p:outputPanel rendered="#{not empty graphInfoController.getGroups('host')}">                
-
-                    <h:form id="formdate" style="text-align: center">  
-                        <h:panelGrid columns="10"> 
-                            <p:selectOneButton id ="periods" value="#{graphController.period}">  
-                                <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
-                                <f:param name="hostid" value="#{hostController.hostId}"/>
-                                <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
-                            </p:selectOneButton>
-                            <h:outputText value="or from" />
-                            <p:calendar title="from" value="#{graphController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
-                            <h:outputText value=" to " />
-                            <p:calendar title="to" value="#{graphController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
-                            <h:outputText value=" in " />
-                            <p:selectOneMenu id="cols" value="#{settingsController.numOfGraphColumns}" >  
-                                <f:selectItems var="n" value="#{graphController.columns}" />  
-                            </p:selectOneMenu>
-                            <h:outputText value=" columns " />
-                            <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
-                                <f:param name="hostid" value="#{hostController.hostId}"/>
-                            </p:commandButton> 
-                            <p:commandButton value="Edit" id="editcharts" ajax="false" action="#{urlController.redirectToEditGraphs()}" icon="ui-icon-gear">
-                                <f:param name="target" value="#{graphController.getTarget('HOST')}"/>
-                            </p:commandButton> 
-                            <p:tooltip for="editcharts" value="Edit Graphs"/>
-                        </h:panelGrid>
-                    </h:form>   
-
-                    <h:form id="graphs">
-                        <ui:repeat value="#{graphInfoController.getGroups('HOST')}" var="group">                        
-                            <p:toolbar>
-                                <p:toolbarGroup align="left"><p:outputLabel value="#{group}"/></p:toolbarGroup>
-                            </p:toolbar>
-                            <p:dataGrid  var="g" value="#{graphInfoController.getGraphIds('host', group)}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                                <p:graphicImage value="#{graphController.getGraphUrl('host', g)}"/>
-                            </p:dataGrid>
-                        </ui:repeat>
-                    </h:form>      
-
-                </p:outputPanel>
             </p:outputPanel>    
 
         </ui:define>

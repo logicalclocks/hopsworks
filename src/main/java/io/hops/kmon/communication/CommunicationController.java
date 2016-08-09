@@ -107,7 +107,7 @@ public class CommunicationController {
   public String mySqlClusterConfig() throws Exception {
     // Finds hostId of mgmserver
     // Role=mgmserver , Service=MySQLCluster, Cluster=cluster
-    String mgmserverRole = "mgmserver";
+    String mgmserverRole = "ndb_mgmd";
     Host h = findHostByRole(cluster, service, mgmserverRole);
     String ip = h.getPublicOrPrivateIp();
     String agentPassword = h.getAgentPassword();

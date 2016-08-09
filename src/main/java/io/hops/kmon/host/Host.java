@@ -237,4 +237,57 @@ public class Host implements Serializable {
     }
     return Health.Bad;
   }
+  
+  
+  public Health getDiskHealth() {
+    if (usagePercentage(diskUsed, diskCapacity) > 75) {
+      return Health.Bad;
+    }
+    return Health.Good;
+  }  
+  public Health getMemoryHealth() {
+    if (usagePercentage(memoryUsed, memoryCapacity) > 85) {
+      return Health.Bad;
+    }
+    return Health.Good;
+  }  
+  
+  public double usagePercentage(double used, double capacity) {
+    return (used / capacity) * 100d;
+  }  
+  
+  public String getDiskPriority() {
+    if (usagePercentage(diskUsed, diskCapacity) > 75) {
+      return "priorityHigh";
+    } else if (usagePercentage(diskUsed, diskCapacity) > 25) {
+      return "priorityMed";
+    }
+    return "priorityLow";
+  }
+  public String getMemoryPriority() {
+    if (usagePercentage(memoryUsed, memoryUsed) > 75) {
+      return "priorityHigh";
+    } else if (usagePercentage(memoryUsed, memoryUsed) > 25) {
+      return "priorityMed";
+    }
+    return "priorityLow";
+  }
+
+  public String getDiskUsagePercentageString() {
+
+    return String.format("%1.1f", usagePercentage(diskUsed, diskCapacity)) + "%";
+  }
+  public String getMemoryUsagePercentageString() {
+
+    return String.format("%1.1f", usagePercentage(memoryUsed, memoryCapacity)) + "%";
+  }
+
+  public String getDiskUsageInfo() {
+    return FormatUtils.storage(diskUsed) + " / " + FormatUtils.storage(diskCapacity);
+  }  
+  
+  public String getMemoryUsageInfo() {
+    return FormatUtils.storage(memoryUsed) + " / " + FormatUtils.storage(memoryCapacity);
+  }  
+  
 }

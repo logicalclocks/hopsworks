@@ -12,7 +12,6 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
-import javax.ws.rs.core.Response.Status.Family;
 import io.hops.kmon.command.Command;
 import io.hops.kmon.command.CommandEJB;
 import io.hops.kmon.communication.WebCommunication;
