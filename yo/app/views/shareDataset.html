@@ -36,7 +36,7 @@
 
                                         <ui-select-match placeholder="Select a project to share with">{{$select.selected.name}}</ui-select-match>
 
-                                        <ui-select-choices repeat="project.id as project in shareDatasetCtrl.projects | filter: $select.search">
+                                        <ui-select-choices repeat="project.id as project in shareDatasetCtrl.projects  | filter: omitCurrentProject | filter: $select.search">
                                             <div ng-bind-html="project.name | highlight: $select.search"></div>
                                             <small>
                                                 Owner: {{project.owner.fname}} {{project.owner.lname}}
