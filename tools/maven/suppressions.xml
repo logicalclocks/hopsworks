@@ -4,7 +4,7 @@
 		"http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
 
 <suppressions>
-		<suppress checks="LineLength" files="LaunchLogDialog.java"/>
-    <suppress checks="Indentation" files="LaunchLogDialog.java"/>
-    <suppress checks="Regexp" files="KaramelServiceApplication.java"/>
+<!--    <suppress checks="LineLength" files="MyFile.java"/>
+    <suppress checks="Indentation" files="MyFile.java"/>
+    <suppress checks="Regexp" files="MyFile.java"/> -->
 </suppressions>
