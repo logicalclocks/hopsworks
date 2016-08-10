@@ -102,6 +102,12 @@ public class ProjectsManagementController {
           DistributedFileSystemOps dfso) throws IOException {
     projectController.setHdfsSpaceQuotaInMBs(projectname, quotaInMBs, dfso);
   }
+  
+  public void setHdfsNumFilesQuota(String projectname, long quotaInMBs,
+          DistributedFileSystemOps dfso) throws IOException {
+//    projectController.setHdfsSpaceQuotaInMBs(projectname, quotaInMBs, dfso);
+  }
+  
 
   public List<ProjectsManagement> getAllProjects() {
     return projectsManagementFacade.findAll();

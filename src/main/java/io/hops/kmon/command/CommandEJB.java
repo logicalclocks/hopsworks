@@ -21,60 +21,60 @@ public class CommandEJB {
 
     public List<Command> findAll() {
 
-        TypedQuery<Command> query = em.createNamedQuery("Commands.find", Command.class);
+        TypedQuery<Command> query = em.createNamedQuery("Command.find", Command.class);
         return query.getResultList();
     }
     
     public List<Command> findRecentByCluster(String cluster) {
 
         TypedQuery<Command> query = 
-                em.createNamedQuery("Commands.findRecentByCluster", Command.class)
+                em.createNamedQuery("Command.findRecentByCluster", Command.class)
                 .setParameter("cluster", cluster)                
-                .setParameter("status", Command.commandStatus.Running);;
+                .setParameter("status", Command.CommandStatus.Running);;
         return query.getResultList();
     }
 
     public List<Command> findRunningByCluster(String cluster) {
 
         TypedQuery<Command> query = 
-                em.createNamedQuery("Commands.findRunningByCluster", Command.class)
+                em.createNamedQuery("Command.findRunningByCluster", Command.class)
                 .setParameter("cluster", cluster)
-                .setParameter("status", Command.commandStatus.Running);
+                .setParameter("status", Command.CommandStatus.Running);
         return query.getResultList();
     }
     
     public List<Command> findRecentByClusterService(String cluster, String service) {
 
         TypedQuery<Command> query = 
-                em.createNamedQuery("Commands.findRecentByCluster-Service", Command.class)
+                em.createNamedQuery("Command.findRecentByCluster-Service", Command.class)
                 .setParameter("cluster", cluster).setParameter("service", service)                
-                .setParameter("status", Command.commandStatus.Running);
+                .setParameter("status", Command.CommandStatus.Running);
         return query.getResultList();
     }
 
     public List<Command> findRunningByClusterService(String cluster, String service) {
 
         TypedQuery<Command> query = 
-                em.createNamedQuery("Commands.findRunningByCluster-Service", Command.class)
+                em.createNamedQuery("Command.findRunningByCluster-Service", Command.class)
                 .setParameter("cluster", cluster).setParameter("service", service)
-                .setParameter("status", Command.commandStatus.Running);
+                .setParameter("status", Command.CommandStatus.Running);
         return query.getResultList();
     }    
     
     public List<Command> findRecentByClusterServiceRoleHostId(String cluster, String service, String role, String hostId) {
 
         TypedQuery<Command> query = 
-                em.createNamedQuery("Commands.findRecentByCluster-Service-Role-HostId", Command.class)
+                em.createNamedQuery("Command.findRecentByCluster-Service-Role-HostId", Command.class)
                 .setParameter("cluster", cluster).setParameter("service", service)
                 .setParameter("role", role).setParameter("hostId", hostId)                
-                .setParameter("status", Command.commandStatus.Running);
+                .setParameter("status", Command.CommandStatus.Running);
         return query.getResultList();
     }
     
     public List<Command> findLatestByClusterServiceRoleHostId(String cluster, String service, String role, String hostId) {
 
         TypedQuery<Command> query = 
-                em.createNamedQuery("Commands.findByCluster-Service-Role-HostId", Command.class)
+                em.createNamedQuery("Command.findByCluster-Service-Role-HostId", Command.class)
                 .setParameter("cluster", cluster).setParameter("service", service)
                 .setParameter("role", role).setParameter("hostId", hostId);
         return query.setMaxResults(1).getResultList();

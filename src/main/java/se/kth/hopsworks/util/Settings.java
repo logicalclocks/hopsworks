@@ -22,6 +22,8 @@ public class Settings {
   public void init() {
   }
 
+  public static String AGENT_EMAIL  = "kagent@hops.io";
+  public static final String SITE_EMAIL = "admin@kth.se";
   /**
    * Global Variables taken from the DB
    */

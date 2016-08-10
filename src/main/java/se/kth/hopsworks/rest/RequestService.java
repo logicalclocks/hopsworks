@@ -6,6 +6,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.POST;
@@ -171,7 +172,7 @@ public class RequestService {
     // to, from, msg, requested path
     messageBean.send(to, from, subject, preview, message, path);
     try {
-      emailBean.sendEmail(proj.getOwner().getEmail(),
+      emailBean.sendEmail(proj.getOwner().getEmail(),RecipientType.TO, 
               "Access request for dataset "
               + ds.getInode().getInodePK().getName(), msg);
     } catch (MessagingException ex) {
@@ -236,7 +237,7 @@ public class RequestService {
     // to, from, msg, requested path
     messageBean.send(to, from, subject, preview, message, path);
     try {
-      emailBean.sendEmail(project.getOwner().getEmail(),
+      emailBean.sendEmail(project.getOwner().getEmail(), RecipientType.TO, 
               "Join request for project "
               + project.getName(), msg);
     } catch (MessagingException ex) {

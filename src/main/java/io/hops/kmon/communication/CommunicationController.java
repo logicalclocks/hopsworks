@@ -125,6 +125,28 @@ public class CommunicationController {
     }
   }
 
+  public String roleStart() {
+    return roleOperation("startRole");
+  }
+  public String roleRetart() {
+    return roleOperation("restartRole");
+  }
+  public String roleStop() {
+    return roleOperation("stopRole");
+  }
+  
+  private String roleOperation(String operation) {
+    try {
+      Host h = findHostById(hostId);
+      String ip = h.getPublicOrPrivateIp();
+      String agentPassword = h.getAgentPassword();
+      return web.roleOp(operation, ip, agentPassword, cluster, service, role);
+    } catch (Exception ex) {
+      return ex.getMessage();
+    }
+  }  
+  
+  
   public String getAgentLog(int lines) {
     try {
       Host h = findHostById(hostId);

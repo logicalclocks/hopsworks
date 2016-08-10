@@ -32,7 +32,7 @@ public class RoleController {
   private String service;
   @ManagedProperty("#{param.cluster}")
   private String cluster;
-  private List<InstanceFullInfo> instanceInfoList;
+  private List<InstanceFullInfo> instanceInfoList = new ArrayList<>();
   private String health;
   private boolean renderWebUi;
   private boolean found;
@@ -47,8 +47,8 @@ public class RoleController {
 
   public void loadRoles() {
 
+    instanceInfoList.clear();
     logger.info("init RoleController");
-    instanceInfoList = new ArrayList<>();
     try {
       RoleHostInfo roleHost = roleEjb.findRoleHost(cluster, service, role, hostId);
       String ip = roleHost.getHost().getPublicOrPrivateIp();

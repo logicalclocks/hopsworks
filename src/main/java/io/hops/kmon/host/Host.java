@@ -265,9 +265,9 @@ public class Host implements Serializable {
     return "priorityLow";
   }
   public String getMemoryPriority() {
-    if (usagePercentage(memoryUsed, memoryUsed) > 75) {
+    if (usagePercentage(memoryUsed, memoryCapacity) > 75) {
       return "priorityHigh";
-    } else if (usagePercentage(memoryUsed, memoryUsed) > 25) {
+    } else if (usagePercentage(memoryUsed, memoryCapacity) > 25) {
       return "priorityMed";
     }
     return "priorityLow";

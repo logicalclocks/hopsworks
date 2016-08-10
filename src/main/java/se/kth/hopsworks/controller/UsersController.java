@@ -12,6 +12,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
@@ -121,7 +122,7 @@ public class UsersController {
 
     try {
       // Notify user about the request
-      emailBean.sendEmail(newUser.getEmail(),
+      emailBean.sendEmail(newUser.getEmail(), RecipientType.TO, 
               UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
               UserAccountsEmailMessages.buildMobileRequestMessage(
                       AuditUtil.getUserURL(req), user.getUsername()
@@ -214,7 +215,7 @@ public class UsersController {
 
     try {
       // Notify user about the request
-      emailBean.sendEmail(newUser.getEmail(),
+      emailBean.sendEmail(newUser.getEmail(),RecipientType.TO, 
               UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
               UserAccountsEmailMessages.buildYubikeyRequestMessage(
                       AuditUtil.getUserURL(req), user.getUsername()
@@ -271,7 +272,7 @@ public class UsersController {
         try {
           String message = UserAccountsEmailMessages.buildTempResetMessage(
                   randomPassword);
-          emailBean.sendEmail(email,
+          emailBean.sendEmail(email,RecipientType.TO, 
                   UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
           user.setPassword(DigestUtils.sha256Hex(randomPassword));
           //user.setStatus(PeopleAccountStatus.ACCOUNT_PENDING.getValue());
@@ -380,7 +381,7 @@ public class UsersController {
       if (count > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         user.setStatus(UserAccountStatus.ACCOUNT_BLOCKED.getValue());
 
-        emailBean.sendEmail(user.getEmail(),
+        emailBean.sendEmail(user.getEmail(), RecipientType.TO, 
                 UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                 UserAccountsEmailMessages.accountBlockedMessage());
 
