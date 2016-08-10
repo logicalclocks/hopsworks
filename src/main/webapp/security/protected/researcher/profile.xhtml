@@ -23,7 +23,7 @@
         </ui:insert>
       </c:if>
 
-      <c:if test="#{roleEnforcementPoint.anyAuthorizedResearcherRole and roleEnforcementPoint.admin}">
+      <c:if test="#{roleEnforcementPoint.admin}">
      
       </c:if>
 
@@ -403,9 +403,7 @@
 
         <div align="left" style="padding-top: 20px;">
           <p:commandLink type="submit" value="Back to main page" action='adminIndex' rendered="#{roleEnforcementPoint.admin}" />
-          <p:commandLink type="submit" value="Back to main page" action='home' rendered="#{roleEnforcementPoint.anyAuthorizedResearcherRole and not roleEnforcementPoint.admin}"/>
           <p:commandLink type="submit" value="Back to main page" action='adminAuditIndex' rendered="#{roleEnforcementPoint.onlyAuditorRole}" />
-
         </div>
 
       </div>
