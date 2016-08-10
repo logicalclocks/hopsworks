@@ -67,7 +67,7 @@ describe 'edges' do
         context "with existing source and target" do
           it "should create a new edge" do
             post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges", valid_params
-            expect_json(errorMsg: -> (value){ expect(value).to be_nil})
+            expect_json(errorMsg: ->(value){ expect(value).to be_nil})
             expect_json_types(id: :string, workflowId: :int)
             expect_status(200)
           end
@@ -77,7 +77,7 @@ describe 'edges' do
             params = valid_params
             params[:sourceId] = random_id
             post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges", params
-            expect_json(errorMsg: -> (value){ expect(value).not_to be_empty})
+            expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
             expect_status(400)
           end
         end
@@ -86,7 +86,7 @@ describe 'edges' do
             params = valid_params
             params[:targetId] = random_id
             post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges", params
-            expect_json(errorMsg: -> (value){ expect(value).not_to be_empty})
+            expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
             expect_status(400)
           end
         end
@@ -94,7 +94,7 @@ describe 'edges' do
       context "with invalid params" do
         it "should fail" do
           post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges", invalid_params
-          expect_json(errorMsg: -> (value){ expect(value).not_to be_empty})
+          expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
           expect_status(400)
         end
       end
@@ -159,7 +159,7 @@ describe 'edges' do
       context "with valid params" do
         it "should update a edge" do
           put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}", valid_params
-          expect_json(errorMsg: -> (value){ expect(value).to be_nil})
+          expect_json(errorMsg: ->(value){ expect(value).to be_nil})
           expect_json_types(id: :string, workflowId: :int)
           expect_json(id: edge[:id])
           expect_json(type: valid_params[:type])
@@ -177,7 +177,7 @@ describe 'edges' do
       context "with invalid params" do
         it "should fail" do
           put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}", invalid_params
-          expect_json(errorMsg: -> (value){ expect(value).not_to be_empty})
+          expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
           expect_status(400)
         end
       end

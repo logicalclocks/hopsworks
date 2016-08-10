@@ -18,9 +18,6 @@ describe 'projects' do
         post "/hopsworks/api/project", {projectName: "project_#{Time.now.to_i}", description:"", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
         expect_json(successMessage: "Project created successfully.")
-        expect_json(errorMsg: ->(value){ expect(value).to be_empty})
-        expect_json_keys(:data)
-        expect(JSON.parse(json_body[:data])['id']).to be_kind_of(Integer)
         expect_status(201)
       end
 
