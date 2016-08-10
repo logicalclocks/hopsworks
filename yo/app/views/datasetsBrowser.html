@@ -117,7 +117,16 @@
                           <td>
                             <div class="dropdown position-fixed" id="menu-{{ $index}}">
                               <ul class="dropdown-menu dropdown-amore" role="menu">
-
+                                <li>
+                                  <a class="pointer"
+                                     role="menuitem"
+                                     tabindex="5"
+                                     ng-click="datasetsCtrl.previewFile(file.name)">
+                                    <span><i class="fa fa-trash"></i>
+                                      Preview</span>
+                                  </a>
+                                </li>
+                                <li class="divider"></li>
                                 <li>
                                   <a class="pointer"
                                      role="menuitem"

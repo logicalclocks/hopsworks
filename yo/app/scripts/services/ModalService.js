@@ -368,6 +368,39 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              /**
+               * Open a modal to preview the file contents.
+               * @param {type} size
+               * @param {type} location
+               * @returns {$modal@call;open.result}
+               */
+              filePreview: function (size, fileName, content) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/filePreview.html',
+                  controller: 'DatasetsCtrl as datasetsCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    fileName: function () {
+                      return fileName;
+                    },
+                    content: function () {
+                      return content;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
               upload: function (size, projectId, path, templateId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/fileUpload.html',

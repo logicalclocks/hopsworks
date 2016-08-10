@@ -19,7 +19,7 @@ angular.module('hopsWorksApp')
             self.fileDetail; //The details about the currently selected file.
             self.sharedPath; //The details about the currently selected file.
             self.routeParamArray = [];
-
+            self.fileContent;
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
             $scope.isPublic = true;
@@ -343,6 +343,20 @@ This will make all its files unavailable to other projects unless you share it e
               return clippedPath;
             };
 
+            self.filePreview = function (fileName) {
+              //Retrieve the preview of the file and display it with the Modal
+              dataSetService.filePreview(fileName).then(
+                                function (success) {
+                                  self.fileContent = success.data.content;
+                                  ModalService.filePreview('lg', fileName, self.fileContent).then(
+                                    function (success) {
+                                    });
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                        });
+              
+            };
+            
             self.move = function (inodeId, name) {
               ModalService.selectDir('lg', "/[^]*/",
                       "problem selecting file").then(
@@ -543,7 +557,7 @@ This will make all its files unavailable to other projects unless you share it e
             };
 
             self.deselect = function () {
-              self.selected = null
+              self.selected = null;
               self.fileDetail = null;
               self.sharedPath = null;
             };
