@@ -4,7 +4,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.global = global;
-            self.projectId = projectId;
+            self.projectId = parseInt(projectId);
             self.msg = msg;
             self.selectedProject;
             self.projects = [];
@@ -13,14 +13,24 @@ angular.module('hopsWorksApp')
               if (global) {
                 ProjectService.getAll().$promise.then(
                         function (success) {
-                          self.projects = success;
+                          var j=0;
+                          for(var i=0;i<success.length;i++){
+                              if(success[i].id !== self.projectId){
+                                  self.projects[j++] =success[i];
+                              }
+                          }
                         }, function (error) {
                   growl.error(error.data.errorMsg, {title: 'Could not get list of Projects', ttl: 5000, referenceId: 21});
                 });
               } else {
                 ProjectService.query().$promise.then(
                         function (success) {
-                          self.projects = success;
+                          var j=0;
+                          for(var i=0;i<success.length;i++){
+                              if(success[i].id !== self.projectId){
+                                  self.projects[j++] =success[i];
+                              }
+                          }
                         }, function (error) {
                   growl.error(error.data.errorMsg, {title: 'Could not get list of Projects', ttl: 5000, referenceId: 21});
                 });

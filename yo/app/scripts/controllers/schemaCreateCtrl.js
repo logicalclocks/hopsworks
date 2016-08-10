@@ -7,11 +7,8 @@ angular.module('hopsWorksApp')
             self.schemaName;
             self.content;
             self.version;
-            
-            
             self.message ="";
             self.validSchema = "valid";
-            
             
             self.validateSchema = function () {
                 self.validSchema = "valid";
@@ -45,11 +42,8 @@ angular.module('hopsWorksApp')
                           self.message = "schema is valid";
                           self.validSchema="";
                       }, function (error) {
-                 self.message = "schema is invalid";
+                          self.message = error.data.errorMsg;;//   "schema is invalid";
               });
-              
-              
-              
             };
             
             self.createSchema = function () {
@@ -82,7 +76,8 @@ angular.module('hopsWorksApp')
                       function (success) {
                           $modalInstance.close(success);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to create the schema', ttl: 5000});
+                          self.message = error.data.errorMsg;
+                          self.validSchema="invalid";
               });      
             };
             
