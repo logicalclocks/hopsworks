@@ -3,216 +3,291 @@ package io.hops.kmon.alert;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.*;
-import io.hops.kmon.utils.FormatUtils;
+import java.math.BigInteger;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
 @Entity
-@Table(name = "hopsworks.Alerts")
+@Table(name = "hopsworks.alerts")
 @NamedQueries({
-   @NamedQuery(name = "Alerts.findAll", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate ORDER BY a.alertTime DESC"),
-   @NamedQuery(name = "Alerts.findBy-Severity", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate AND a.severity = :severity ORDER BY a.alertTime DESC"),
-   @NamedQuery(name = "Alerts.findBy-Provider", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate AND a.provider = :provider ORDER BY a.alertTime DESC"),
-   @NamedQuery(name = "Alerts.findBy-Provider-Severity", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate AND a.severity = :severity AND a.provider = :provider ORDER BY a.alertTime DESC"),
+  @NamedQuery(name = "Alerts.findAll",
+          query
+          = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND "
+                  + "a.alertTime <= :todate ORDER BY a.alertTime DESC"),
+  @NamedQuery(name = "Alerts.findBy-Severity",
+          query
+          = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND "
+                  + "a.alertTime <= :todate AND "
+                  + "a.severity = :severity ORDER BY a.alertTime DESC"),
+  @NamedQuery(name = "Alerts.findBy-Provider",
+          query
+          = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND "
+                  + "a.alertTime <= :todate AND "
+                  + "a.provider = :provider ORDER BY a.alertTime DESC"),
+  @NamedQuery(name = "Alerts.findBy-Provider-Severity",
+          query
+          = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND "
+                  + "a.alertTime <= :todate AND a.severity = :severity AND "
+                  + "a.provider = :provider ORDER BY a.alertTime DESC"),
 
-   
-   @NamedQuery(name = "Alerts.removeAll", query = "DELETE FROM Alert a")   
+  @NamedQuery(name = "Alerts.removeAll",
+          query = "DELETE FROM Alert a")
 })
 public class Alert implements Serializable {
 
-   public enum Severity {
-      FAILURE, WARNING, OK
-   }
-   
-   public enum Provider {
-      Collectd, Agent
-   }   
-   
-   @Id
-   @GeneratedValue(strategy = GenerationType.SEQUENCE)
-   private Long id;
-   @Column(nullable = false, length = 1024)
-   private String message;
-   @Column(length = 256)
-   private String hostId;
-   @Temporal(javax.persistence.TemporalType.TIMESTAMP)
-   private Date alertTime;
-   private long agentTime;
-   private Provider provider;   
-   @Column(length = 128)
-   private String plugin;
-   @Column(length = 128)
-   private String pluginInstance;
-   @Column(length = 128)
-   private String type;
-   @Column(length = 128)
-   private String typeInstance;
+  private static final long serialVersionUID = 1L;
+  
+  public enum Severity {
+    FAILURE,
+    WARNING,
+    OK
+  }
 
-   @Column(length = 128)
-   private String dataSource;   
-   
-   @Column(length = 32)
-   private String CurrentValue;
-   @Column(length = 32)
-   private String WarningMin;
-   @Column(length = 32)
-   private String WarningMax;   
-   @Column(length = 32)
-   private String FailureMin;
-   @Column(length = 32)
-   private String FailureMax; 
-   
-   private Severity severity;
+  public enum Provider {
+    Collectd,
+    Agent
+  }
 
-   public Alert() {
-   }
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Basic(optional = false)
+  @Column(name = "id")
+  private Long id;
+  @Size(max = 32)
+  @Column(name = "current_value")
+  private String currentValue;
+  @Size(max = 32)
+  @Column(name = "failure_max")
+  private String failureMax;
+  @Size(max = 32)
+  @Column(name = "failure_min")
+  private String failureMin;
+  @Size(max = 32)
+  @Column(name = "warning_max")
+  private String warningMax;
+  @Size(max = 32)
+  @Column(name = "warning_min")
+  private String warningMin;
+  @Column(name = "agent_time")
+  private BigInteger agentTime;
+  @Column(name = "alert_time")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date alertTime;
+  @Size(max = 128)
+  @Column(name = "data_source")
+  private String dataSource;
+  @Size(max = 256)
+  @Column(name = "hostid")
+  private String hostid;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 1024)
+  @Column(name = "message")
+  private String message;
+  @Size(max = 128)
+  @Column(name = "plugin")
+  private String plugin;
+  @Size(max = 128)
+  @Column(name = "plugin_instance")
+  private String pluginInstance;
+  @Column(name = "provider")
+  private String provider;
+  @Column(name = "severity")
+  private String severity;
+  @Size(max = 128)
+  @Column(name = "type")
+  private String type;
+  @Size(max = 128)
+  @Column(name = "type_instance")
+  private String typeInstance;
 
-   public Alert(String hostId, String message, String plugin, String pluginInstance, String type, String typeInstance) {
-      this.hostId = hostId;
-      this.message = message;
-      this.plugin = plugin;
-      this.pluginInstance = pluginInstance;
-      this.type = type;
-      this.typeInstance = typeInstance;
-   }
+  public Alert() {
+  }
 
-   public Long getId() {
-      return id;
-   }
-   
-   public Provider getProvider() {
-      return provider;
-   }
+  public Alert(String hostId, String message, String plugin,
+          String pluginInstance, String type, String typeInstance) {
+    this.hostid = hostId;
+    this.message = message;
+    this.plugin = plugin;
+    this.pluginInstance = pluginInstance;
+    this.type = type;
+    this.typeInstance = typeInstance;
+  }
 
-   public void setProvider(Provider provider) {
-      this.provider = provider;
-   }
-   
-   public String getMessage() {
-      return message;
-   }
+  public Alert(Long id) {
+    this.id = id;
+  }
 
-   public void setMessage(String message) {
-      this.message = message;
-   }
+  public Alert(Long id, String message) {
+    this.id = id;
+    this.message = message;
+  }
 
-   public String getHostId() {
-      return hostId;
-   }
+  public Long getId() {
+    return id;
+  }
 
-   public void setHostId(String hostId) {
-      this.hostId = hostId;
-   }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-   public Date getAlertTime() {
-      return alertTime;
-   }
+  public String getCurrentValue() {
+    return currentValue;
+  }
 
-   public void setAlertTime(Date alertTime) {
-      this.alertTime = alertTime;
-   }
+  public void setCurrentValue(String currentValue) {
+    this.currentValue = currentValue;
+  }
 
-   public long getAgentTime() {
-      return agentTime;
-   }
+  public String getFailureMax() {
+    return failureMax;
+  }
 
-   public void setAgentTime(long agentTime) {
-      this.agentTime = agentTime;
-   }
+  public void setFailureMax(String failureMax) {
+    this.failureMax = failureMax;
+  }
 
-   public String getPlugin() {
-      return plugin;
-   }
+  public String getFailureMin() {
+    return failureMin;
+  }
 
-   public void setPlugin(String plugin) {
-      this.plugin = plugin;
-   }
+  public void setFailureMin(String failureMin) {
+    this.failureMin = failureMin;
+  }
 
-   public String getPluginInstance() {
-      return pluginInstance;
-   }
+  public String getWarningMax() {
+    return warningMax;
+  }
 
-   public void setPluginInstance(String pluginInstance) {
-      this.pluginInstance = pluginInstance;
-   }
+  public void setWarningMax(String warningMax) {
+    this.warningMax = warningMax;
+  }
 
-   public String getType() {
-      return type;
-   }
+  public String getWarningMin() {
+    return warningMin;
+  }
 
-   public void setType(String type) {
-      this.type = type;
-   }
+  public void setWarningMin(String warningMin) {
+    this.warningMin = warningMin;
+  }
 
-   public String getTypeInstance() {
-      return typeInstance;
-   }
+  public BigInteger getAgentTime() {
+    return agentTime;
+  }
 
-   public void setTypeInstance(String typeInstance) {
-      this.typeInstance = typeInstance;
-   }
+  public void setAgentTime(BigInteger agentTime) {
+    this.agentTime = agentTime;
+  }
 
-   public String getDataSource() {
-      return dataSource;
-   }
+  public Date getAlertTime() {
+    return alertTime;
+  }
 
-   public void setDataSource(String dataSource) {
-      this.dataSource = dataSource;
-   }
+  public void setAlertTime(Date alertTime) {
+    this.alertTime = alertTime;
+  }
 
-   public String getCurrentValue() {
-      return CurrentValue;
-   }
+  public String getDataSource() {
+    return dataSource;
+  }
 
-   public void setCurrentValue(String CurrentValue) {
-      this.CurrentValue = CurrentValue;
-   }
+  public void setDataSource(String dataSource) {
+    this.dataSource = dataSource;
+  }
 
-   public String getWarningMin() {
-      return WarningMin;
-   }
+  public String getHostid() {
+    return hostid;
+  }
 
-   public void setWarningMin(String WarningMin) {
-      this.WarningMin = WarningMin;
-   }
+  public void setHostid(String hostid) {
+    this.hostid = hostid;
+  }
 
-   public String getWarningMax() {
-      return WarningMax;
-   }
+  public String getMessage() {
+    return message;
+  }
 
-   public void setWarningMax(String WarningMax) {
-      this.WarningMax = WarningMax;
-   }
+  public void setMessage(String message) {
+    this.message = message;
+  }
 
-   public String getFailureMin() {
-      return FailureMin;
-   }
+  public String getPlugin() {
+    return plugin;
+  }
 
-   public void setFailureMin(String FailureMin) {
-      this.FailureMin = FailureMin;
-   }
+  public void setPlugin(String plugin) {
+    this.plugin = plugin;
+  }
 
-   public String getFailureMax() {
-      return FailureMax;
-   }
+  public String getPluginInstance() {
+    return pluginInstance;
+  }
 
-   public void setFailureMax(String FailureMax) {
-      this.FailureMax = FailureMax;
-   }
+  public void setPluginInstance(String pluginInstance) {
+    this.pluginInstance = pluginInstance;
+  }
 
-   public Severity getSeverity() {
-      return severity;
-   }
+  public String getProvider() {
+    return provider;
+  }
 
-   public void setSeverity(Severity severity) {
-      this.severity = severity;
-   }
-   
-   public String getAlertTimeShort() {
-      return FormatUtils.date(alertTime);
-   }
+  public void setProvider(String provider) {
+    this.provider = provider;
+  }
 
+  public String getSeverity() {
+    return severity;
+  }
+
+  public void setSeverity(String severity) {
+    this.severity = severity;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  public String getTypeInstance() {
+    return typeInstance;
+  }
+
+  public void setTypeInstance(String typeInstance) {
+    this.typeInstance = typeInstance;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 0;
+    hash += (id != null ? id.hashCode() : 0);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object object) {
+    // TODO: Warning - this method won't work in the case the id fields are not set
+    if (!(object instanceof Alert)) {
+      return false;
+    }
+    Alert other = (Alert) object;
+    if ((this.id == null && other.id != null) ||
+            (this.id != null && !this.id.equals(other.id))) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "io.hops.kmon.cluster.Alerts[ id=" + id + " ]";
+  }
 
 }

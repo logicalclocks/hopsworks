@@ -266,11 +266,11 @@ public class AgentResource {
       JsonObject json = Json.createReader(stream).readObject();
       Alert alert = new Alert();
       alert.setAlertTime(new Date());
-      alert.setProvider(Alert.Provider.valueOf(json.getString("Provider")));
-      alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")));
-      alert.setAgentTime(json.getJsonNumber("Time").longValue());
+      alert.setProvider(Alert.Provider.valueOf(json.getString("Provider")).toString());
+      alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")).toString());
+      alert.setAgentTime(json.getJsonNumber("Time").bigIntegerValue());
       alert.setMessage(json.getString("Message"));
-      alert.setHostId(json.getString("Host"));
+      alert.setHostid(json.getString("Host"));
       alert.setPlugin(json.getString("Plugin"));
       if (json.containsKey("PluginInstance")) {
         alert.setPluginInstance(json.getString("PluginInstance"));
