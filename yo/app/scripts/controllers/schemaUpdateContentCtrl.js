@@ -10,7 +10,7 @@ angular.module('hopsWorksApp')
                 self.content_empty = 1;
                 self.message ="";
                 self.validSchema = "invalid";
-           
+
                 self.init = function () {
 
                     KafkaService.getSchemaContent(self.projectId, schemaName, self.schemaVersion).then(

@@ -1,6 +1,5 @@
 package se.kth.hopsworks.rest;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.hops.kafka.AclDTO;
 import io.hops.kafka.AclUserDTO;
 import io.hops.kafka.TopicDTO;

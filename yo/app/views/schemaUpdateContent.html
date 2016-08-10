@@ -22,9 +22,9 @@
             </div>
             <div class="col-md-12">
                 <label class="control-label">Content</label><br>
-                <div class="col-sm-12">
+                <div class="col-sm-12" style="overflow-y: auto">
                     <!--<pretty-json json="{{jsonObj}}" id = "prettyJson" contenteditable="true"  ng-model="schemaUpdateContentCtrl.contents"></pretty-json>-->
-                    <pretty-json json="jsonObj" id="myPrettyJson" contenteditable="true" ></pretty-json>
+                    <pre pretty-json="jsonObj" id="myPrettyJson" edition="true"></pre>
                 </div>
             </div>
             <div ng-if="schemaUpdateContentCtrl.content_empty=== -1" style="color: red">{{"Content should not be empty"}}</div>
