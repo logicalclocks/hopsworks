@@ -100,6 +100,8 @@ public class FlinkYarnRunnerBuilder {
         this.jobArgs.addAll(Arrays.asList(jobArgs));
         return this;
     }
+    
+    //@Override
     public void setAppJarPath(String appJarPath){
         this.appJarPath = appJarPath;
     }
@@ -276,6 +278,7 @@ public class FlinkYarnRunnerBuilder {
      * deployed on YARN.
      * @param project
      * @param hadoopDir
+     * @param jobUser
      * @param flinkUser
      * @param flinkDir
      * @param nameNodeIpPort
@@ -286,9 +289,11 @@ public class FlinkYarnRunnerBuilder {
             String jobUser, String hadoopDir, final String flinkDir, 
             final String nameNodeIpPort) throws IOException {
               
-        //Set Jar Path
         //Create the YarnRunner builder for Flink, proceed with setting values
         YarnRunner.Builder builder = new YarnRunner.Builder(Settings.FLINK_AM_MAIN);
+        //Set Jar Path
+        builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
+            "$PWD:$PWD/"+Settings.FLINK_DEFAULT_CONF_FILE + ":$PWD/"+Settings.FLINK_LOCRSC_FLINK_JAR);
         String stagingPath = File.separator + "Projects" + File.separator + project
             + File.separator
             + Settings.PROJECT_STAGING_DIR + File.separator
@@ -324,7 +329,7 @@ public class FlinkYarnRunnerBuilder {
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.FLINK_JAR_PATH, "hdfs://"+nameNodeIpPort+
                 "/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, "");
-        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, flinkUser);
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, jobUser);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_HOME_DIR, "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/");
                
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DETACHED, String.valueOf(detached));

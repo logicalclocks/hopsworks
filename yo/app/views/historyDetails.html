@@ -1,0 +1,131 @@
+<!-- A dialog presenting job details that are stored in the database. -->
+
+<div class="modal-header">
+  <button class="close" ng-click="historyDetailCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">History details - {{historyDetailCtrl.job.yarnAppResult.id}}</h2>
+</div>
+<div class="modal-body">
+
+  <accordion close-others="false">
+    <accordion-group heading="Job Details" ng-click="historyDetailCtrl.getDetails();">
+        <div>
+          <div class="row">
+            <div class="text-right col-md-4">Application Id</div>
+            <div  class="col-md-8">
+              {{historyDetailCtrl.details.id}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="text-right col-md-4">Application name</div>
+            <div class="col-md-8">
+              {{historyDetailCtrl.details.name}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="text-right col-md-4">Queue name</div>
+            <div class="col-md-8">
+              {{historyDetailCtrl.details.queueName}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="text-right col-md-4">Application Severity</div>
+            <div class="col-md-8">
+            <span
+                ng-if="historyDetailCtrl.details.severity == 'NONE'"
+                style="color: #3090C7 ">
+                {{historyDetailCtrl.details.severity}}
+            </span>
+            <span
+                ng-if="historyDetailCtrl.details.severity == 'LOW'"
+                style="color: #41A317 ">
+                {{historyDetailCtrl.details.severity}}
+            </span>
+            <span
+                ng-if="historyDetailCtrl.details.severity == 'MODERATE'"
+                style="color: #43C6DB ">
+                {{historyDetailCtrl.details.severity}}
+            </span>
+            <span
+                ng-if="historyDetailCtrl.details.severity == 'CRITICAL'"
+                style="color: #FFA62F ">
+                {{historyDetailCtrl.details.severity}}
+            </span>
+            <span
+                ng-if="historyDetailCtrl.details.severity == 'SEVERE'"
+                style="color: #C11B17 ">
+                {{historyDetailCtrl.details.severity}}
+            </span>     
+            </div>
+          </div>
+        </div>
+    </accordion-group>
+    <accordion-group heading="Heuristic Results" ng-click="historyDetailCtrl.getDetails();">    
+      <table class="table chrome-table">
+        <thead>
+          <tr>
+            <th style="width: 21%">
+              Heuristic Name
+            </th>
+            <th style="width: 15%">
+              Severity
+            </th>
+            <th style="width: 10%">
+              Score
+            </th>
+            <th style="width: 22%">
+              Name
+            </th>
+            <th style="width: 22%">
+              Value
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat-start="heuristic in historyDetailCtrl.details.yarnAppHeuristicResults">
+            <td rowspan="{{heuristic.yarnAppHeuristicResultDetails.length+1}}">{{heuristic.heuristicName}}</td>
+            <td rowspan="{{heuristic.yarnAppHeuristicResultDetails.length+1}}">
+                <span
+                    ng-if="heuristic.severity == 'NONE'"
+                    style="color: #3090C7 ">
+                    {{heuristic.severity}}
+                </span>
+                <span
+                    ng-if="heuristic.severity == 'LOW'"
+                    style="color: #41A317 ">
+                    {{heuristic.severity}}
+                </span>
+                <span
+                    ng-if="heuristic.severity == 'MODERATE'"
+                    style="color: #43C6DB ">
+                    {{heuristic.severity}}
+                </span>
+                <span
+                    ng-if="heuristic.severity == 'CRITICAL'"
+                    style="color: #FFA62F ">
+                    {{heuristic.severity}}
+                </span>
+                <span
+                    ng-if="heuristic.severity == 'SEVERE'"
+                    style="color: #C11B17 ">
+                    {{heuristic.severity}}
+                </span>     
+            </td>
+            <td rowspan="{{heuristic.yarnAppHeuristicResultDetails.length+1}}">
+              {{heuristic.score}}
+            </td>
+          </tr>
+<!--            <tr ng-repeat="(key, value) in heuristic.yarnAppHeuristicResultDetails">
+                {{value.name}}
+            </tr>-->
+            
+          <tr ng-repeat-end ng-repeat="(key, value) in heuristic.yarnAppHeuristicResultDetails">
+            <td>{{value.name}}</td>
+            <td>{{value.value}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </accordion-group>
+  </accordion>
+</div>
+

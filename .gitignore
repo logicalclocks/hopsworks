@@ -97,10 +97,12 @@ node_modules
 *.ipr
 *.iws
 
-###########glassfish##############
-src/main/setup/glassfish-resources.xml
-
 ## Test Files
 test/Gemfile.lock
 test/.env
 test/vendor
+
+###########glassfish##############
+src/main/setup/glassfish-resources.xml
+*/glassfish-resources.xml
+

@@ -23,7 +23,7 @@
 
     <h:body>
 
-        <c:if test="#{roleEnforcementPoint.SYSAdmin}">
+        <c:if test="#{roleEnforcementPoint.isAuditorRole()}">
         <ui:insert name="adminTitleBar">
           <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
         </ui:insert>

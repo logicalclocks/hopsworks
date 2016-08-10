@@ -55,8 +55,13 @@ describe "session" do
       email = "#{random_id}@email.com"
       create_validated_user(email: email)
       create_session(email, "Pass123")
+<<<<<<< HEAD
       expect_json(successMessage: ->(value){ expect(value).to be_nil})
       expect_json(errorMsg: ->(value){ expect(value).to include("Authentication failed")})
+=======
+      expect_json(successMessage: -> (value){ expect(value).to be_nil})
+      expect_json(errorMsg: -> (value){ expect(value).to include("Authentication failed")})
+>>>>>>> dfd0864b44525fc362551d64b23b23c81601167b
       expect_status(401)
     end
 
@@ -65,8 +70,13 @@ describe "session" do
       register_user(email: email)
       create_role(User.find_by(email: email))
       create_session(email, "Pass123")
+<<<<<<< HEAD
       expect_json(successMessage: ->(value){ expect(value).to be_nil})
       expect_json(errorMsg: ->(value){ expect(value).to include("Authentication failed")})
+=======
+      expect_json(successMessage: -> (value){ expect(value).to be_nil})
+      expect_json(errorMsg: -> (value){ expect(value).to include("Authentication failed")})
+>>>>>>> dfd0864b44525fc362551d64b23b23c81601167b
       expect_status(401)
     end
 
@@ -75,8 +85,13 @@ describe "session" do
       create_validated_user(email: email)
       create_role(User.find_by(email: email))
       create_session(email, "Pass123")
+<<<<<<< HEAD
       expect_json(successMessage: ->(value){ expect(value).to be_nil})
       expect_json(errorMsg: ->(value){ expect(value).to include("Authentication failed")})
+=======
+      expect_json(successMessage: -> (value){ expect(value).to be_nil})
+      expect_json(errorMsg: -> (value){ expect(value).to include("Authentication failed")})
+>>>>>>> dfd0864b44525fc362551d64b23b23c81601167b
       expect_status(401)
     end
 
@@ -87,8 +102,13 @@ describe "session" do
       user.status = 4
       user.save
       create_session(email, "Pass123")
+<<<<<<< HEAD
       expect_json(successMessage: ->(value){ expect(value).to be_nil})
       expect_json(errorMsg: ->(value){ expect(value).to include("No valid role found for this user")})
+=======
+      expect_json(successMessage: -> (value){ expect(value).to be_nil})
+      expect_json(errorMsg: -> (value){ expect(value).to include("No valid role found for this user")})
+>>>>>>> dfd0864b44525fc362551d64b23b23c81601167b
       expect_status(401)
     end
   end

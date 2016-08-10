@@ -7,11 +7,50 @@ angular.module('hopsWorksApp')
             self.schemaName;
             self.content;
             self.version;
-            self.schemaName_empty = 1;
-            self.content_empty = 1;
-            self.wrong_values=1;
+            self.message ="";
+            self.validSchema = "valid";
+            
+            self.validateSchema = function () {
+                self.validSchema = "valid";
+                
+               self.schemaName_empty = 1;
+               self.content_empty = 1;
+               self.wrong_values=1;
+                
+                if(!self.schemaName){
+                  self.schemaName_empty = -1;
+                  self.wrong_values = -1;
+              }
+              
+              if(!self.content){
+                  self.content_empty = -1;
+                  self.wrong_values = -1;
+              }
+              
+              if(self.wrong_values === -1){
+                  return;
+              }
+                  
+                var schemaDetail ={};
+                schemaDetail.name=self.schemaName;
+                schemaDetail.contents =self.content;
+                //schemaDetail.version =self.version;
+                schemaDetail.versions =[];
+                  
+              KafkaService.validateSchema(self.projectId, schemaDetail).then(
+                      function (success) {
+                          self.message = "schema is valid";
+                          self.validSchema="";
+                      }, function (error) {
+                          self.message = error.data.errorMsg;;//   "schema is invalid";
+              });
+            };
             
             self.createSchema = function () {
+                
+               self.schemaName_empty = 1;
+               self.content_empty = 1;
+               self.wrong_values=1;
               
               if(!self.schemaName){
                   self.schemaName_empty = -1;
@@ -37,7 +76,8 @@ angular.module('hopsWorksApp')
                       function (success) {
                           $modalInstance.close(success);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to create the schema', ttl: 5000});
+                          self.message = error.data.errorMsg;
+                          self.validSchema="invalid";
               });      
             };
             

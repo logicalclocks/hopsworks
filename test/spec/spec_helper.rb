@@ -20,6 +20,7 @@ Dir[File.join(File.dirname(__FILE__), 'helpers', '**', '*.rb')].each { |f| requi
 RSpec.configure do |config|
   config.include SessionHelper
   config.include ProjectHelper
+  config.include WorkflowHelper
   config.include FactoryHelper
   config.before(:suite) do
     #clean_oozie
@@ -30,6 +31,17 @@ end
 
 Airborne.configure do |config|
   config.base_url = "http://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+  config.include WorkflowHelper
+  config.include FactoryHelper
+  # config.before(:suite) do
+  #   clean_oozie
+  #   clean_database
+  # end
+  # config.after(:all) { clean_database }
+end
+
+Airborne.configure do |config|
+  config.base_url = 'http://bbc1.sics.se:14007'
   config.headers = { content_type: 'application/json' }
 end
 

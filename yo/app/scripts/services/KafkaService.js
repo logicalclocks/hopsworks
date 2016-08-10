@@ -48,6 +48,18 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/kafka/topic/defaultValues');
               },
               
+              validateSchema: function (projectId, schemaDetails){
+                  var req = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/kafka/schema/validate',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: schemaDetails
+                };
+                return $http(req);
+              },
+              
               /**
                * Create a new schema for topics in the given project, of the given type. 
                * @param {type} projectId

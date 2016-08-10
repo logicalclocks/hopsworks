@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.hopsworks.user.model.Users;
 
 @Entity
-@Table(name = "consents_audit")
+@Table(name = "hopsworks.consents_audit")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "ConsentsAudit.findAll",

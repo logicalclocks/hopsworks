@@ -25,7 +25,6 @@ import javax.ws.rs.core.Response;
 import org.apache.hadoop.security.AccessControlException;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
@@ -56,8 +55,6 @@ public class UploadService {
 
   @EJB
   private NoCacheResponse noCacheResponse;
-  @EJB
-  private FileOperations fileOps;
   @EJB
   private InodeFacade inodes;
   @EJB
@@ -138,15 +135,20 @@ public class UploadService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Not a valid path!");
     }
-
+    DistributedFileSystemOps dfso = null;
     //check if the parent directory exists. If it doesn't create it first
-    if (!fileOps.isDir(File.separator + pathArray[0])) {
-      try {
-        fileOps.mkDir(File.separator + pathArray[0]);
-      } catch (IOException e) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(),
-                "Upload directory could not be created in the file system");
+    try {
+      dfso = dfs.getDfsOps();
+      if (!dfso.isDir(File.separator + pathArray[0])) {
+        dfso.mkdir(File.separator + pathArray[0]);
+      }
+    } catch (IOException e) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Upload directory could not be created in the file system");
+    } finally {
+      if (dfso != null) {
+        dfso.close();
       }
     }
 
@@ -186,12 +188,16 @@ public class UploadService {
       //TODO: *** WARNING ***
       //Check permissions before creating file
       if (this.username != null) {
+        DistributedFileSystemOps udfso = null;
         try {
-          dfs.getDfsOps(username).touchz(new org.apache.hadoop.fs.Path(this.path
+          udfso = dfs.getDfsOps(username);
+          udfso.touchz(new org.apache.hadoop.fs.Path(this.path
                   + fileName));
         } catch (AccessControlException ex) {
           throw new AccessControlException(
                   "Permission denied: You can not upload to this folder. ");
+        } finally {
+          udfso.close();
         }
       }
     }
@@ -271,6 +277,7 @@ public class UploadService {
     }
 
     if (finished) {
+      DistributedFileSystemOps dfsOps = null;
       try {
         String fileContent = null;
 
@@ -299,7 +306,7 @@ public class UploadService {
         }
 
         this.path = Utils.ensurePathEndsInSlash(this.path);
-        DistributedFileSystemOps dfsOps;
+
         if (this.username != null) {
           dfsOps = dfs.getDfsOps(username);
         } else { // to accommodate previous implimentations  
@@ -311,7 +318,7 @@ public class UploadService {
                 + fileName);
         org.apache.hadoop.fs.Path location = new org.apache.hadoop.fs.Path(
                 this.path + fileName);
-        dfsOps.setPermission(location, dfsOps.getParentPermission(location)); 
+        dfsOps.setPermission(location, dfsOps.getParentPermission(location));
         logger.log(Level.INFO, "Copied to HDFS");
 
         if (templateid != 0 && templateid != -1) {
@@ -343,6 +350,10 @@ public class UploadService {
         json.setErrorMsg("Failed to write to HDFS");
         return noCacheResponse.getNoCacheResponseBuilder(
                 Response.Status.BAD_REQUEST).entity(json).build();
+      } finally {
+        if (dfsOps != null) {
+          dfsOps.close();
+        }
       }
     }
 

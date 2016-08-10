@@ -14,13 +14,13 @@ public class EmailBean {
   private Session mailSession;
 
   @Asynchronous
-  public void sendEmail(String to, String subject, String body) throws
+  public void sendEmail(String to, Message.RecipientType recipientType, String subject, String body) throws
       MessagingException, SendFailedException {
 
     MimeMessage message = new MimeMessage(mailSession);
     message.setFrom(new InternetAddress(mailSession.getProperty("mail.from")));
     InternetAddress[] address = {new InternetAddress(to)};
-    message.setRecipients(Message.RecipientType.TO, address);
+    message.setRecipients(recipientType, address);
     message.setSubject(subject);
     message.setContent(body, "text/html");
 

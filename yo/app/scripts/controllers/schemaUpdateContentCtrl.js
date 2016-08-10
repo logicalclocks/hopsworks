@@ -8,6 +8,8 @@ angular.module('hopsWorksApp')
                 self.contents;
                 self.schemaVersion = schemaVersion;
                 self.content_empty = 1;
+                self.message ="";
+                self.validSchema = "invalid";
 
                 self.init = function () {
 
@@ -20,7 +22,38 @@ angular.module('hopsWorksApp')
                 };
 
                 self.init();
+                
+                self.validateSchema = function () {
+                   
+                    self.validSchema = "invalid";
+                    
+                    var ugly = document.getElementById('myPrettyJson');
+                    self.contents = ugly.textContent;
+                    
+                    if(!self.contents){
+                        self.content_empty = -1;
+                        self.wrong_values = -1;
+                    }
 
+                    if(self.wrong_values === -1){
+                        return;
+                    }
+
+                    var schemaDetail ={};
+                    schemaDetail.name=self.schemaName;
+                    schemaDetail.contents =self.contents;
+                    //schemaDetail.version =self.version;
+                    schemaDetail.versions =[];
+
+                    KafkaService.validateSchema(self.projectId, schemaDetail).then(
+                            function (success) {
+                                self.message = "schema is valid";
+                                self.validSchema="";
+                            }, function (error) {
+                                self.message = error.data.errorMsg;
+                    });
+                 };
+                
                 self.createSchema = function () {
                     
                     var ugly = document.getElementById('myPrettyJson');
@@ -35,7 +68,8 @@ angular.module('hopsWorksApp')
                             function (success) {
                                 $modalInstance.close(success);
                             }, function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Failed to update the schema', ttl: 5000});
+                                 self.message = error.data.errorMsg;
+                                 self.validSchema="invalid";
                     });
                 };
 

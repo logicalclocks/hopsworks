@@ -10,10 +10,11 @@ import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
-import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.controller.LocalResourceDTO;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.Settings;
 
@@ -21,20 +22,21 @@ import se.kth.hopsworks.util.Settings;
  *
  * @author stig
  */
-public class AdamJob extends YarnJob {
-  
+public class AdamJob extends SparkJob {
+
   private static final Logger logger = Logger.getLogger(AdamJob.class.getName());
-  
+
   private final AdamJobConfiguration jobconfig;
   private final String sparkDir;
   private final String adamJarPath;
   private final String adamUser; //must be glassfish
-  
+
   public AdamJob(JobDescription job,
           AsynchronousJobExecutor services, Users user, String hadoopDir,
           String sparkDir, String adamUser, String jobUser,
           String nameNodeIpPort, String adamJarPath, String kafkaAddress) {
-    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, kafkaAddress);
+    super(job, services, user, hadoopDir, sparkDir, nameNodeIpPort, adamUser,
+            jobUser, kafkaAddress);
     if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain a AdamJobConfiguration object. Received: "
@@ -45,9 +47,10 @@ public class AdamJob extends YarnJob {
     this.adamJarPath = adamJarPath;
     this.adamUser = adamUser;
   }
-  
+
   @Override
-  protected void runJob() {
+  protected void runJob(DistributedFileSystemOps udfso,
+          DistributedFileSystemOps dfso) {
     //Try to start the AM
     boolean proceed = startApplicationMaster();
     //If success: monitor running job
@@ -59,8 +62,8 @@ public class AdamJob extends YarnJob {
     if (!proceed) {
       return;
     }
-    copyLogs();
-    makeOutputAvailable();
+    copyLogs(udfso);
+    makeOutputAvailable(dfso);
     updateState(getFinalState());
   }
 
@@ -68,12 +71,12 @@ public class AdamJob extends YarnJob {
    * For all the output files that were created, create an Inode for them and
    * create entries in the DB.
    */
-  private void makeOutputAvailable() {
+  private void makeOutputAvailable(DistributedFileSystemOps dfso) {
     for (AdamArgumentDTO arg : jobconfig.getSelectedCommand().getArguments()) {
       if (arg.isOutputPath() && !(arg.getValue() == null || arg.getValue().
               isEmpty())) {
         try {
-          if (services.getFileOperations().exists(arg.getValue())) {
+          if (dfso.exists(arg.getValue())) {
             services.getJobOutputFileFacade().create(getExecution(), Utils.
                     getFileName(arg.getValue()), arg.getValue());
           }
@@ -83,12 +86,12 @@ public class AdamJob extends YarnJob {
         }
       }
     }
-    
+
     for (AdamOptionDTO opt : jobconfig.getSelectedCommand().getOptions()) {
       if (opt.isOutputPath() && opt.getValue() != null && !opt.getValue().
               isEmpty()) {
         try {
-          if (services.getFileOperations().exists(opt.getValue())) {
+          if (dfso.exists(opt.getValue())) {
             services.getJobOutputFileFacade().create(getExecution(), Utils.
                     getFileName(opt.getValue()), opt.getValue());
           }
@@ -99,9 +102,9 @@ public class AdamJob extends YarnJob {
       }
     }
   }
-  
+
   @Override
-  protected boolean setupJob() {
+  protected boolean setupJob(DistributedFileSystemOps dfso) {
     //Get to starting the job
     List<String> missingArgs = checkIfRequiredPresent(jobconfig); //thows an IllegalArgumentException if not ok.
     if (!missingArgs.isEmpty()) {
@@ -115,47 +118,71 @@ public class AdamJob extends YarnJob {
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled ADAM Job");
     }
-    SparkYarnRunnerBuilder builder = new SparkYarnRunnerBuilder(
-            adamJarPath, Settings.ADAM_MAINCLASS);
-    //Set some ADAM-specific property values   
-    builder.addSystemProperty("spark.serializer",
-            "org.apache.spark.serializer.KryoSerializer");
-    builder.addSystemProperty("spark.kryo.registrator",
-            "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
-    builder.addSystemProperty("spark.kryoserializer.buffer", "4m");
-    builder.addSystemProperty("spark.kryo.referenceTracking", "true");
-    builder.setExecutorMemoryGB(1);
-    
-    builder.addAllJobArgs(constructArgs(jobconfig));
 
+    runnerbuilder = new SparkYarnRunnerBuilder(
+            adamJarPath, Settings.ADAM_MAINCLASS);
+    super.setupJob(dfso);
+    //Set some ADAM-specific property values   
+    runnerbuilder.addSystemProperty("spark.serializer",
+            "org.apache.spark.serializer.KryoSerializer");
+    runnerbuilder.addSystemProperty("spark.kryo.registrator",
+            "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
+    runnerbuilder.addSystemProperty("spark.kryoserializer.buffer", "4m");
+    runnerbuilder.addSystemProperty("spark.kryo.referenceTracking", "true");
+
+//    builder.setExecutorCores(jobconfig.getExecutorCores());
+//    builder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
+//    builder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
+//    if(jobconfig.isDynamicExecutors()){
+//      builder.setDynamicExecutors(jobconfig.isDynamicExecutors());
+//      builder.setNumberOfExecutorsMin(jobconfig.getSelectedMinExecutors());
+//      builder.setNumberOfExecutorsMax(jobconfig.getSelectedMaxExecutors());
+//      builder.setNumberOfExecutorsInit(jobconfig.getNumberOfExecutorsInit());
+//    }
+//    //Set Yarn running options
+//    builder.setDriverMemoryMB(jobconfig.getAmMemory());
+//    builder.setDriverCores(jobconfig.getAmVCores());
+//    builder.setDriverQueue(jobconfig.getAmQueue());
+//    builder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
+//    
+    runnerbuilder.addAllJobArgs(constructArgs(jobconfig));
+//
+//    builder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+//    //Set project specific resources
+//    builder.addExtraFiles(projectLocalResources);
+//    if(jobSystemProperties != null && !jobSystemProperties.isEmpty()){
+//      for(Map.Entry<String,String> jobSystemProperty: jobSystemProperties.entrySet()){
+//        builder.addSystemProperty(jobSystemProperty.getKey(), jobSystemProperty.getValue());
+//      }
+//    }
     //Add ADAM jar to local resources
-    builder.addExtraFile(new LocalResourceDTO(adamJarPath.substring(adamJarPath.
-            lastIndexOf("/")+1), adamJarPath,
+    runnerbuilder.addExtraFile(new LocalResourceDTO(adamJarPath.substring(
+            adamJarPath.
+            lastIndexOf("/") + 1), adamJarPath,
             LocalResourceVisibility.PUBLIC.toString(),
             LocalResourceType.FILE.toString(), null));
     //Set the job name
-    builder.setJobName(jobconfig.getAppName());
-    
+    runnerbuilder.setJobName(jobconfig.getAppName());
+
     try {
-      runner = builder.getYarnRunner(jobDescription.getProject().getName(),
-              adamUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
+      runner = runnerbuilder.
+              getYarnRunner(jobDescription.getProject().getName(),
+                      adamUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
     } catch (IOException e) {
       logger.log(Level.SEVERE,
               "Failed to create YarnRunner.", e);
       writeToLogs(new IOException("Failed to start Yarn client.", e));
       return false;
     }
-    
+
     String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
             jobDescription.
             getProject().
             getName())
-            + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
-            + File.separator + "stdout.log";
+            + Settings.ADAM_DEFAULT_OUTPUT_PATH;
     String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
             jobDescription.getProject().getName())
-            + Settings.ADAM_DEFAULT_OUTPUT_PATH + getExecution().getId()
-            + File.separator + "stderr.log";
+            + Settings.ADAM_DEFAULT_OUTPUT_PATH;
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
     return true;
@@ -170,7 +197,7 @@ public class AdamJob extends YarnJob {
   private List<String> checkIfRequiredPresent(AdamJobConfiguration ajc) throws
           IllegalArgumentException {
     List<String> missing = new ArrayList<>();
-    
+
     for (AdamArgumentDTO arg : ajc.getSelectedCommand().getArguments()) {
       if (arg.isRequired() && (arg.getValue() == null || arg.getValue().
               isEmpty())) {
@@ -180,7 +207,7 @@ public class AdamJob extends YarnJob {
     }
     return missing;
   }
-  
+
   private List<String> constructArgs(AdamJobConfiguration ajc) {
     List<String> adamargs = new ArrayList<>();
     //First: add command
@@ -213,7 +240,7 @@ public class AdamJob extends YarnJob {
   private void addAllAdamJarsToLocalResourcesAndClasspath(
           SparkYarnRunnerBuilder builder) {
     //Add all to local resources and to classpath
-    List<String> jars = services.getFileOperations().getChildNames(
+    List<String> jars = this.services.getFsService().getChildNames(
             Settings.ADAM_DEFAULT_HDFS_REPO);
     for (String jarname : jars) {
       String sourcePath = "hdfs://" + Settings.ADAM_DEFAULT_HDFS_REPO + jarname;
@@ -222,10 +249,10 @@ public class AdamJob extends YarnJob {
               LocalResourceType.FILE.toString(), null));
     }
   }
-  
+
   @Override
   protected void cleanup() {
     //Nothing to be done, really.
   }
-  
+
 }

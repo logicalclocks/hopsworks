@@ -65,7 +65,7 @@ public class YarnRunner {
   private static final Logger logger = Logger.getLogger(YarnRunner.class.getName());
   public static final String APPID_PLACEHOLDER = "$APPID";
   private static final String APPID_REGEX = "\\$APPID";
-  private static final String KEY_CLASSPATH = "CLASSPATH";
+  public static final String KEY_CLASSPATH = "CLASSPATH";
   private static final String LOCAL_LOG_DIR_PLACEHOLDER = "<LOG_DIR>";
 
   private YarnClient yarnClient;
@@ -276,9 +276,8 @@ public class YarnRunner {
         yarnClient.close();
         
     //Clean up some
-    removeAllNecessary();
+    //removeAllNecessary();
     yarnClient = null;
-    conf = null;
     appId = null;
     appContext = null;
 
@@ -446,7 +445,7 @@ public class YarnRunner {
 
   private void setUpClassPath(Map<String, String> env) {
     // Add AppMaster.jar location to classpath
-    StringBuilder classPathEnv = new StringBuilder().append("./*");
+    StringBuilder classPathEnv = new StringBuilder();
     for (String c : conf.getStrings(
         YarnConfiguration.YARN_APPLICATION_CLASSPATH,
         YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH)) {
@@ -520,7 +519,7 @@ public class YarnRunner {
     return amCommands;
   }
 
-  private void removeAllNecessary() throws IOException {
+  protected void removeAllNecessary() throws IOException {
     FileSystem fs = FileSystem.get(conf);
     for (String s : filesToRemove) {
       if (s.startsWith("hdfs:") && fs.exists(new Path(s))) {
@@ -529,7 +528,8 @@ public class YarnRunner {
       } else {
         Files.deleteIfExists(Paths.get(s));
       }
-    } 
+    }
+    conf = null;
     fs.close();
   }
 
@@ -813,6 +813,10 @@ public class YarnRunner {
       }
       return this;
     }
+    
+    public void addFilesToRemove(String path){
+        filesToRemove.add(path);
+    }
 
     /**
      * Sets the path to which to write the Application Master's stdout.
@@ -900,7 +904,11 @@ public class YarnRunner {
     }
 
     public Builder addToAppMasterEnvironment(String key, String value) {
-      amEnvironment.put(key, value);
+      if(amEnvironment.containsKey(key)){
+        amEnvironment.put(key, amEnvironment.get(key)+":"+value);
+      } else {
+        amEnvironment.put(key, value);
+      }
       return this;
     }
 

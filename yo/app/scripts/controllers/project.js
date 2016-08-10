@@ -27,8 +27,8 @@ angular.module('hopsWorksApp')
             self.endpoint = '...';
 
             // We could instead implement a service to get all the available types but this will do it for now
-//        self.projectTypes = ['JOBS', 'ZEPPELIN', 'BIOBANKING', 'CHARON'];
-            self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
+//              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
+              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
             $scope.activeService = "home";
 
             self.alreadyChoosenServices = [];
@@ -245,6 +245,11 @@ angular.module('hopsWorksApp')
               }
             };
 
+            self.goToWorklows = function () {
+               self.goToUrl('workflows');
+            };
+
+	      
             self.goToSsh = function () {
               self.goToUrl('ssh');
             };
@@ -272,6 +277,10 @@ angular.module('hopsWorksApp')
             self.goToMetadataDesigner = function () {
               self.goToUrl('metadata');
             };
+            
+            self.goToHistory = function () {
+                $location.path('history/' + self.pId + '/history');
+            };
 
             /**
              * Checks if the file has been accepted before opening.
@@ -281,13 +290,13 @@ angular.module('hopsWorksApp')
 
               if (dataset.status === true) {
                 UtilsService.setDatasetName(dataset.name);
-                $location.path($location.path() + '/' + dataset.name);
+                $location.path($location.path() + '/' + dataset.name + '/');
               } else {
                 ModalService.confirmShare('sm', 'Confirm', 'Do you want to accept this dataset, and add it to this project?')
                         .then(function (success) {
                           DataSetService(self.pId).acceptDataset(dataset.id).then(
                                   function (success) {
-                                    $location.path($location.path() + '/' + dataset.name);
+                                    $location.path($location.path() + '/' + dataset.name + '/');
                                   }, function (error) {
                             growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
                           });
@@ -298,6 +307,7 @@ angular.module('hopsWorksApp')
                                       $location.path($location.path() + '/');
                                       growl.success("Success: " + success.data.successMessage, {title: 'Success', ttl: 5000});
                                     }, function (error) {
+
                               growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
                             });
                           }
@@ -333,7 +343,10 @@ angular.module('hopsWorksApp')
             self.showKafka = function () {
               return showService("Kafka");
             };
-
+	      
+            self.showWorkflows = function () {
+              return showService("Workflows");
+            };
 
             self.getRole = function () {
               UserService.getRole(self.pId).then(
@@ -353,7 +366,6 @@ angular.module('hopsWorksApp')
               }
               return false;
             };
-
 
             self.hdfsUsage = function () {
               return convertSize(self.projectFile.hdfsUsageInBytes);

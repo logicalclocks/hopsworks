@@ -37,6 +37,12 @@
   margin-left: 0;
 }
 
+.form-actions {
+    margin: 20px 0 0;
+    padding: 10px;
+    background-color: #eee;
+}
+
 .c-checkbox.c-checkbox-rounded span, .c-checkbox.c-radio-rounded span, .c-radio span, .c-radio.c-checkbox-rounded span, .c-radio.c-radio-rounded span {
   border-radius: 500px;
 }

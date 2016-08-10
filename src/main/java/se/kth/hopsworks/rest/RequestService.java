@@ -3,9 +3,10 @@ package se.kth.hopsworks.rest;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.RequestScoped;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.POST;
@@ -37,7 +38,7 @@ import se.kth.hopsworks.users.UserFacade;
 @Path("/request")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
+@Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class RequestService {
 
@@ -171,7 +172,7 @@ public class RequestService {
     // to, from, msg, requested path
     messageBean.send(to, from, subject, preview, message, path);
     try {
-      emailBean.sendEmail(proj.getOwner().getEmail(),
+      emailBean.sendEmail(proj.getOwner().getEmail(),RecipientType.TO, 
               "Access request for dataset "
               + ds.getInode().getInodePK().getName(), msg);
     } catch (MessagingException ex) {
@@ -236,7 +237,7 @@ public class RequestService {
     // to, from, msg, requested path
     messageBean.send(to, from, subject, preview, message, path);
     try {
-      emailBean.sendEmail(project.getOwner().getEmail(),
+      emailBean.sendEmail(project.getOwner().getEmail(), RecipientType.TO, 
               "Join request for project "
               + project.getName(), msg);
     } catch (MessagingException ex) {

@@ -11,7 +11,6 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
 import se.kth.bbc.activity.ActivityFacade;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
@@ -41,8 +40,6 @@ public class DatasetController {
   @EJB
   private InodeFacade inodes;
   @EJB
-  private FileOperations fileOps;
-  @EJB
   private TemplateFacade templates;
   @EJB
   private DatasetFacade datasetFacade;
@@ -52,8 +49,6 @@ public class DatasetController {
   private InodeBasicMetadataFacade inodeBasicMetaFacade;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private DistributedFsService dfsSingleton;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -71,6 +66,8 @@ public class DatasetController {
    * @param searchable Defines whether the dataset can be indexed or not (i.e.
    * whether it can be visible in the search results or not)
    * @param globallyVisible
+   * @param dfso
+   * @param udfso
    * @throws NullPointerException If any of the given parameters is null.
    * @throws IllegalArgumentException If the given DataSetDTO contains invalid
    * folder names, or the folder already exists.
@@ -79,7 +76,8 @@ public class DatasetController {
    */
   public void createDataset(Users user, Project project, String dataSetName,
           String datasetDescription, int templateId, boolean searchable,
-          boolean globallyVisible)
+          boolean globallyVisible, DistributedFileSystemOps dfso,
+          DistributedFileSystemOps udfso)
           throws IOException {
     //Parameter checking.
     if (user == null) {
@@ -118,11 +116,11 @@ public class DatasetController {
             : FsAction.READ_EXECUTE);
     FsPermission fsPermission = new FsPermission(FsAction.ALL,
             group, global, globallyVisible);
-    success = createFolder(dsPath, templateId, username, fsPermission);
-
+    success = createFolder(dsPath, templateId, username, fsPermission, dfso,
+            udfso);
     if (success) {
       //set the dataset meta enabled. Support 3 level indexing
-      this.fileOps.setMetaEnabled(dsPath);
+      dfso.setMetaEnabled(dsPath);
       try {
 
         ds = inodes.findByParentAndName(parent, dataSetName);
@@ -135,12 +133,12 @@ public class DatasetController {
         datasetFacade.persistDataset(newDS);
         activityFacade.persistActivity(ActivityFacade.NEW_DATA + dataSetName, project, user);
         // creates a dataset and adds user as owner.
-        hdfsUsersBean.addDatasetUsersGroups(user, project, newDS);
+        hdfsUsersBean.addDatasetUsersGroups(user, project, newDS, dfso);
       } catch (Exception e) {
         IOException failed = new IOException("Failed to create dataset at path "
                 + dsPath + ".", e);
         try {
-          fileOps.rmRecursive(dsPath);//if dataset persist fails rm ds folder.
+          dfso.rm(new Path(dsPath), true);//if dataset persist fails rm ds folder.
           throw failed;
         } catch (IOException ex) {
           throw new IOException(
@@ -169,6 +167,8 @@ public class DatasetController {
    * created directory.
    * @param description The description of the directory
    * @param searchable Defines if the directory can be searched upon
+   * @param dfso
+   * @param udfso
    * @throws java.io.IOException If something goes wrong upon the creation of
    * the directory.
    * @throws IllegalArgumentException If:
@@ -184,7 +184,8 @@ public class DatasetController {
    */
   public void createSubDirectory(Users user, Project project, String datasetName,
           String dsRelativePath, int templateId, String description,
-          boolean searchable) throws IOException {
+          boolean searchable, DistributedFileSystemOps dfso,
+          DistributedFileSystemOps udfso) throws IOException {
 
     //Preliminary
     while (dsRelativePath.startsWith("/")) {
@@ -242,7 +243,8 @@ public class DatasetController {
 
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     //Now actually create the folder
-    boolean success = this.createFolder(fullPath, templateId, username, null);
+    boolean success = this.createFolder(fullPath, templateId, username, null,
+            dfso, udfso);
 
     //if the folder was created successfully, persist basic metadata to it -
     //description and searchable attribute
@@ -265,15 +267,16 @@ public class DatasetController {
    * @param path
    * @param user
    * @param project
+   * @param udfso
    * @return
    * @throws java.io.IOException
    */
-  public boolean deleteDataset(String path, Users user, Project project) throws
+  public boolean deleteDataset(String path, Users user, Project project,
+          DistributedFileSystemOps udfso) throws
           IOException {
     boolean success;
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
     Path location = new Path(path);
-    success = dfsSingleton.getDfsOps(username).rm(location, true);
+    success = udfso.rm(location, true);
     return success;
   }
 
@@ -286,13 +289,15 @@ public class DatasetController {
    * @param user
    * @param project
    * @param pemission
+   * @param udfso
    * @throws IOException
    */
   public void changePermission(String path, Users user, Project project,
-          FsPermission pemission) throws IOException {
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+          FsPermission pemission, DistributedFileSystemOps udfso) throws
+          IOException {
+  
     Path location = new Path(path);
-    dfsSingleton.getDfsOps(username).setPermission(location, pemission);
+    udfso.setPermission(location, pemission);
   }
 
   /**
@@ -307,19 +312,20 @@ public class DatasetController {
    * @throws IOException
    */
   private boolean createFolder(String path, int template, String username,
-          FsPermission fsPermission) throws IOException {
+          FsPermission fsPermission, DistributedFileSystemOps dfso,
+          DistributedFileSystemOps udfso) throws IOException {
     boolean success = false;
     Path location = new Path(path);
     DistributedFileSystemOps dfs;
     if (fsPermission == null) {
-      fsPermission = dfsSingleton.getDfsOps().getParentPermission(location);
+      fsPermission = dfso.getParentPermission(location);
     }
     try {
       //create the folder in the file system
       if (username == null) {
-        dfs = dfsSingleton.getDfsOps();
+        dfs = dfso;
       } else {
-        dfs = dfsSingleton.getDfsOps(username);
+        dfs = udfso;
       }
       success = dfs.mkdir(location, fsPermission);
       if (success) {

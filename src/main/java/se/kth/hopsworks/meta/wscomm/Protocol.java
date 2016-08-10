@@ -142,7 +142,7 @@ public class Protocol {
     }
     //update metadata
     Metadata metadata = (Metadata) message.parseSchema().get(0);
-    Inode inode = this.utils.updateMetadata(composite, metadata);
+    Inode inode = this.utils.updateMetadata(composite, metadata.getMetadataPK().getId(), metadata.getData());
 
     return this.InodeMutation(inode, message);
 
@@ -169,7 +169,7 @@ public class Protocol {
     }
     //delete metadata
     Metadata metadata = (Metadata) message.parseSchema().get(0);
-    Inode inode = this.utils.removeMetadata(composite, metadata);
+    Inode inode = this.utils.removeMetadata(composite, metadata.getMetadataPK().getId(), metadata.getData());
 
     return this.InodeMutation(inode, message);
 

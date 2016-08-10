@@ -29,7 +29,22 @@
       <groupId>de.hu-berlin.wbi.cuneiform</groupId>
       <artifactId>cuneiform-core</artifactId>
       <version>2.0.0-SNAPSHOT</version>
+  </dependency>
+  <dependencies> 
+    <!-- CDI bug. Zeppelin-interpreter includes org.sonatype.guice.**
+    which has CDI annotated beans, causing deployment of hopsworks to fail. Because Zeppelin-interpreter
+    is a 3rd party jar, Glassfish won't exclude from scanning beans/paths we put in beans.xml 
+    -->
+    <dependency> 
+      <groupId>org.sonatype.sisu</groupId>
+      <artifactId>sisu-inject-bean</artifactId>
+      <version>2.6.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.sonatype.sisu</groupId>
+      <artifactId>sisu-inject-plexus</artifactId>
+      <version>2.6.0</version>
+    </dependency> 
     <dependency>
       <groupId>com.google.zxing</groupId>
       <artifactId>javase</artifactId>
@@ -118,13 +133,19 @@
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
-      <version>3.4.5</version>
+      <version>3.4.7</version>
       <exclusions>
         <exclusion>
           <groupId>org.jboss.netty</groupId>
           <artifactId>netty</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.apache.avro/avro -->
+    <dependency>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro</artifactId>
+        <version>1.7.7</version>
     </dependency>
 
     <!--end of io.hops -->
@@ -136,24 +157,18 @@
     <!--Zeppelin dependencies -->
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
-      <artifactId>zeppelin</artifactId>
-      <version>0.6.0-incubating-SNAPSHOT</version>
-      <type>pom</type>     
-    </dependency>
-    <dependency>
-      <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-interpreter</artifactId>
-      <version>0.6.0-incubating-SNAPSHOT</version>      
+      <version>0.6.1-SNAPSHOT</version>  
     </dependency>
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-zengine</artifactId>
-      <version>0.6.0-incubating-SNAPSHOT</version>      
+      <version>0.6.1-SNAPSHOT</version>      
     </dependency>
     <dependency>		
       <groupId>org.apache.zeppelin</groupId>		
       <artifactId>zeppelin-web</artifactId>		
-      <version>0.6.0-incubating-SNAPSHOT</version>      
+      <version>0.6.1-SNAPSHOT</version>      
       <type>war</type>		
     </dependency> 
     <!-- Apache Shiro -->
@@ -186,6 +201,32 @@
       <groupId>org.elasticsearch</groupId>
       <artifactId>elasticsearch</artifactId>
       <version>2.1.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.oozie</groupId>
+      <artifactId>oozie-client</artifactId>
+      <version>4.2.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.oozie</groupId>
+          <artifactId>oozie-hadoop-auth</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <version>1.9.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
@@ -254,21 +295,6 @@
         </configuration>
       </plugin>
 
-      <!--
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-war-plugin</artifactId>
-              <version>2.3</version>
-              <configuration>
-                <failOnMissingWebXml>false</failOnMissingWebXml>
-                <webResources>
-                  <resource>
-                    <directory>yo/dist</directory>
-                  </resource>
-                </webResources>
-              </configuration>
-            </plugin>
-      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
