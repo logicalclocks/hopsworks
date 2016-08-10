@@ -99,7 +99,7 @@ angular.module('hopsWorksApp')
                   return $http.delete('/api/project/' + id + '/dataset/' + fileName);
                 },
                 filePreview: function (fileName) {
-                  return $http.get('/api/project/' + id + '/dataset/preview/' + fileName);
+                  return $http.get('/api/project/' + id + '/dataset/filePreview/' + fileName);
                 },
                 move: function (srcInodeId, fullPath) {
                   

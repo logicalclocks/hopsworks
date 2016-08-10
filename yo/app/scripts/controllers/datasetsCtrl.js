@@ -344,11 +344,14 @@ This will make all its files unavailable to other projects unless you share it e
             };
 
             self.filePreview = function (fileName) {
+              var previewPathArray = self.pathArray.slice(0);
+              previewPathArray.push(fileName);
+              var filePath = getPath(previewPathArray);
               //Retrieve the preview of the file and display it with the Modal
-              dataSetService.filePreview(fileName).then(
+              dataSetService.filePreview(filePath).then(
                                 function (success) {
-                                  self.fileContent = success.data.content;
-                                  ModalService.filePreview('lg', fileName, self.fileContent).then(
+                                  self.fileContent = success.data.successMessage;
+                                  ModalService.filePreview('lg', filePath, self.fileContent).then(
                                     function (success) {
                                     });
                                 }, function (error) {

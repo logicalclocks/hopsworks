@@ -675,6 +675,67 @@ public class DataSetService {
   }
 
   @GET
+  @Path("filePreview/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response filePreview(@PathParam("path") String path,
+          @Context SecurityContext sc) throws
+          AppException, AccessControlException {
+    byte[] content = null;
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    if (path == null) {
+      path = "";
+    }
+    path = getFullPath(path);
+    DistributedFileSystemOps udfso = null;
+    DistributedFileSystemOps dfso = null;
+    FSDataInputStream is = null;
+    
+    try {
+      dfso = dfs.getDfsOps();
+      udfso = dfs.getDfsOps(username);
+      boolean exists = dfso.exists(path);
+
+      //check if the path is a file only if it exists
+      if (!exists || dfso.isDir(path)) {
+        throw new IOException("The file does not exist");
+      }
+      //tests if the user have permission to access this path
+      is = udfso.open(path);
+      //File content
+      content = new byte[1024];
+      is.read(content);    
+      
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You can not view the file ");
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "File does not exist: " + path);
+    } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException ex) {
+          logger.log(Level.SEVERE, "Error while closing stream.", ex);
+        }
+      }
+      if (udfso != null) {
+        udfso.close();
+      }
+      if (dfso != null) {
+        dfso.close();
+      }
+    }
+    JsonResponse json = new JsonResponse();
+    json.setSuccessMessage(Arrays.toString(content));
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
+  
+  @GET
   @Path("isDir/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
@@ -909,7 +970,7 @@ public class DataSetService {
 
   private String getFullPath(String path) throws AppException {
     //Strip leading slashes.
-    while (path.startsWith("/")) {
+      while (path.startsWith("/")) {
       path = path.substring(1);
     }
 
