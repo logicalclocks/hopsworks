@@ -129,7 +129,7 @@
                 <!-- Progress Dialog -->
                 <p:dialog styleClass="ProgressDialog" modal="true" widgetVar="dlgAction" header="Latest Operation" draggable="false" closable="true" resizable="false"
                           onShow="poll.start()" onHide="poll.stop()">  
-                    <!--<p:graphicImage library="images" name="ajaxloadingbar.gif" />--> 
+                    <p:graphicImage library="images" name="ajaxloadingbar.gif" /> 
                     <h:form id="form_running">       
                         <p:poll widgetVar="poll" interval="1" autoStart="false" update=":second_toolbar :Instance :form_running:commandsinfo" async="true" partialSubmit="true" process="@none"/>
                         <p:outputPanel id="commandsinfo">

@@ -28,8 +28,12 @@ import java.nio.charset.StandardCharsets;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.mail.MessagingException;
 import javax.persistence.NoResultException;
 import javax.ws.rs.POST;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.SecurityContext;
+import se.kth.hopsworks.rest.AppException;
 
 /**
  *
@@ -254,7 +258,8 @@ public class AgentResource {
   @POST
   @Path("/alert")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response alert(@Context HttpServletRequest req, String jsonString) {
+  public Response alert(@Context SecurityContext sc, @Context HttpServletRequest req, 
+          @Context HttpHeaders httpHeaders, String jsonString) {
     // TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
     try {
       InputStream stream = new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8));
@@ -280,7 +285,7 @@ public class AgentResource {
         alert.setDataSource(json.getString("DataSource"));
       }
       if (json.containsKey("CurrentValue")) {
-        alert.setCurrentValue(json.getString("CurrentValue"));
+        alert.setCurrentValue(Boolean.toString(json.getBoolean("CurrentValue")));
       }
       if (json.containsKey("WarningMin")) {
         alert.setWarningMin(json.getString("WarningMin"));

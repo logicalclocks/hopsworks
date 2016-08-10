@@ -47,6 +47,7 @@ public class RoleController {
 
   public void loadRoles() {
 
+    instanceInfoList.clear();
     logger.info("init RoleController");
     try {
       RoleHostInfo roleHost = roleEjb.findRoleHost(cluster, service, role, hostId);

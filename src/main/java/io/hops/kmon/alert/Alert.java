@@ -10,7 +10,7 @@ import io.hops.kmon.utils.FormatUtils;
  * @author Hamidreza Afzali <afzali@kth.se>
  */
 @Entity
-@Table(name = "Alerts")
+@Table(name = "hopsworks.Alerts")
 @NamedQueries({
    @NamedQuery(name = "Alerts.findAll", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate ORDER BY a.alertTime DESC"),
    @NamedQuery(name = "Alerts.findBy-Severity", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate AND a.severity = :severity ORDER BY a.alertTime DESC"),
