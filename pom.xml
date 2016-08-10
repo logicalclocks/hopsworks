@@ -136,6 +136,12 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.apache.avro/avro -->
+    <dependency>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro</artifactId>
+        <version>1.7.7</version>
+    </dependency>
 
     <!--end of io.hops -->
     <dependency>

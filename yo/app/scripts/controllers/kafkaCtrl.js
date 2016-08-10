@@ -269,7 +269,6 @@ angular.module('hopsWorksApp')
                           growl.success(success.data.successMessage, {title: 'New acl added for the topic: '+topicName, ttl: 2000});
                           self.getAclsForTopic(topicName);
                       }, function (error) {
-                //The user changed their mind.
                 growl.error(error.data.errorMsg, {title: 'adding acl', ttl: 5000});
               });
             };
@@ -285,11 +284,10 @@ angular.module('hopsWorksApp')
             };
             
             self.shareTopic = function(topicName) {
-              ModalService.selectProject('lg', true, "/[^]*/",
+              ModalService.selectProject('lg', true, self.projectId,
                       "Select a Project to share the topic with.").then(
                       function (success) {
                         var destProj = success.projectId;
-                        if(destProj!==self.projectId){
                         KafkaService.shareTopic(self.projectId, topicName, destProj).then(
                                 function (success) {
                                   self.topicIsSharedTo(topicName);
@@ -298,9 +296,6 @@ angular.module('hopsWorksApp')
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
 
-                        }else{
-                            growl.info(success.name+" is owner of topic.", {title:success.getname+"Topic not shared", ttl:500});
-                        }
                       }, function (error) {
                 //The user changed their mind.
               });

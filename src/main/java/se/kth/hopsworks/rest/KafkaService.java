@@ -1,6 +1,5 @@
 package se.kth.hopsworks.rest;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.hops.kafka.AclDTO;
 import io.hops.kafka.AclUserDTO;
 import io.hops.kafka.TopicDTO;
@@ -40,7 +39,8 @@ import javax.persistence.EntityExistsException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.PUT;
-import org.apache.avro.Schema;
+//import org.apache.avro.Schema;
+import org.apache.avro.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -448,7 +448,7 @@ public class KafkaService {
     @Path("/schema/validate")
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-    public Response getValidateSchemaForTopics(SchemaDTO schemaData,
+    public Response ValidateSchemaForTopics(SchemaDTO schemaData,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
         JsonResponse json = new JsonResponse();
@@ -457,22 +457,21 @@ public class KafkaService {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Incomplete request!");
         }
+        switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
 
-        String schemaContent = schemaData.getContents();
-        try {
-            JSONObject jsonObject = new JSONObject(schemaContent);
-        } catch (JSONException ex) {
-            try {
-                JSONArray jsonArray = new JSONArray(schemaContent);
-            } catch (JSONException ex1) {
+            case INVALID:
                 json.setErrorMsg("schema is invalid");
                 return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(
                         json).build();
-            }
+            case INCOMPATIBLE:
+                json.setErrorMsg("schema is not backward compatible");
+                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(
+                        json).build();
+            default:
+                json.setSuccessMessage("schema is valid");
+                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                        json).build();
         }
-        json.setSuccessMessage("schema is valid");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-                json).build();
     }
     
     @POST
@@ -490,25 +489,23 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        String schemaContent = schemaData.getContents();
+        //String schemaContent = schemaData.getContents();
+        switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
 
-        //validate the schema again
-        try {
-            JSONObject jsonObject = new JSONObject(schemaContent);
-        } catch (JSONException ex) {
-            try {
-                JSONArray jsonArray = new JSONArray(schemaContent);
-            } catch (JSONException ex1) {
-                 json.setErrorMsg("schema is valid");
+            case INVALID:
+                json.setErrorMsg("schema is invalid");
                 return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(
                         json).build();
-            }
+            case INCOMPATIBLE:
+                json.setErrorMsg("schema is not backward compatible");
+                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(
+                        json).build();
+            default:
+                kafkaFacade.addSchemaForTopics(schemaData);
+                
+                json.setSuccessMessage("Schema for Topic created/updated successfuly");
+                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
         }
-
-        kafkaFacade.addSchemaForTopics(schemaData);
-       
-        json.setSuccessMessage("Schema for Topic created/updated successfuly");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
     }
 
     //when do we need this api? It's used when the KafKa clients want to access
