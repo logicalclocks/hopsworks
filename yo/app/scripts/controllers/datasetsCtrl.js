@@ -347,19 +347,12 @@ This will make all its files unavailable to other projects unless you share it e
               previewPathArray.push(fileName);
               var filePath = getPath(previewPathArray);
               
-              ModalService.filePreview('lg', filePath, self.projectId).then(
+              ModalService.filePreview('lg', fileName, filePath, self.projectId).then(
                       function (success) {
                         
                       }, function (error) {
               });
-//              //Retrieve the preview of the file and display it with the Modal
-//              dataSetService.filePreview(filePath).then(
-//                                function (success) {
-//                                  
-//                                }, function (error) {
-//                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-//                        });
-              
+      
             };
             
             self.move = function (inodeId, name) {

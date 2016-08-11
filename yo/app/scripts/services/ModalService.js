@@ -374,7 +374,7 @@ angular.module('hopsWorksApp')
                * @param {type} location
                * @returns {$modal@call;open.result}
                */
-              filePreview: function (size, filePath, projectId) {
+              filePreview: function (size, fileName, filePath, projectId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/filePreview.html',
                   controller: 'FilePreviewCtrl as filePreviewCtrl',
@@ -391,6 +391,9 @@ angular.module('hopsWorksApp')
                                   return $q.reject(err);
                                 });
                       }],
+                    fileName: function () {
+                      return fileName;
+                    },
                     filePath: function () {
                       return filePath;
                     },

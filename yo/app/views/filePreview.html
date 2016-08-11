@@ -1,20 +1,11 @@
 <div class="modal-header">
-  <button class="close" ng-click="filePreviewCtrl.close()" data-dismiss="modal" aria-hidden="true"
-          type="button">&times;</button>
-  <h2 class="modal-title">File Preview</h2>
+  <button class="close" ng-click="filePreviewCtrl.close()" data-dismiss="modal" aria-hidden="true" type="button">&times;</button>
+  <h2 class="modal-title">File Preview - {{filePreviewCtrl.fileName}}</h2>
 </div>
 <div growl reference="21" class="pull-right"></div>
-<div class="modal-body">
 
-    <div class="view-info">
-      <div class="col-md-12">
-        Test
-        {{filePreviewCtrl.fileContents}}
-      </div>
-        
-    </div>
-    <hr />
-    <div class="modal-footer pull-left" style="padding-bottom: 1px; padding-left: 1px" >
-      <button class="btn btn-default" type="button" ng-click="filePreviewCtrl.close()">Close</button>
-    </div>
+<div class="modal-body">
+  <textarea>
+    {{filePreviewCtrl.fileContents}}
+  </textarea>
 </div>

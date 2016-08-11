@@ -713,7 +713,7 @@ public class DataSetService {
         String line;
         line = br.readLine();
         while (line != null && count < maxLines) {
-          sb.append(line);
+          sb.append(line).append("\n");
           // be sure to read the next line otherwise you'll get an infinite loop
           line = br.readLine();
           count++;

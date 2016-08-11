@@ -1,9 +1,10 @@
 angular.module('hopsWorksApp')
-        .controller('FilePreviewCtrl', ['$modalInstance', 'DataSetService', 'growl', 'filePath', 'projectId',
-          function ($modalInstance, DataSetService, growl, filePath, projectId) {
+        .controller('FilePreviewCtrl', ['$modalInstance', 'DataSetService', 'growl', 'fileName', 'filePath', 'projectId',
+          function ($modalInstance, DataSetService, growl, fileName, filePath, projectId) {
             var self = this;
 
             self.filePath = filePath;
+            self.fileName = fileName;
             self.projectId = projectId;
             self.fileContents = [];
            
