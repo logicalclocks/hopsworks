@@ -12,6 +12,8 @@ import io.hops.kmon.host.Host;
 import io.hops.kmon.host.HostEJB;
 import io.hops.kmon.role.RoleEJB;
 import io.hops.kmon.struct.NodesTableItem;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 
 /**
  *
@@ -125,16 +127,30 @@ public class CommunicationController {
     }
   }
 
-  public String roleStart() {
-    return roleOperation("startRole");
-  }
-  public String roleRetart() {
-    return roleOperation("restartRole");
-  }
-  public String roleStop() {
-    return roleOperation("stopRole");
+  private void uiMsg(String res) {
+    FacesContext context = FacesContext.getCurrentInstance();
+    FacesMessage msg = null;
+    if (res.contains("Error")) {
+        msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, res, "There was a problem when executing the operation.");
+    } else {
+        msg = new FacesMessage(FacesMessage.SEVERITY_INFO, res, "Successfully executed the operation.");
+    }
+    context.addMessage(null, msg);
   }
   
+  public void roleStart() {
+    uiMsg(roleOperation("startRole"));
+
+  }
+
+  public void roleRetart() {
+    uiMsg(roleOperation("restartRole"));
+  }
+
+  public void roleStop() {
+    uiMsg(roleOperation("stopRole"));
+  }
+
   private String roleOperation(String operation) {
     try {
       Host h = findHostById(hostId);
@@ -144,9 +160,8 @@ public class CommunicationController {
     } catch (Exception ex) {
       return ex.getMessage();
     }
-  }  
-  
-  
+  }
+
   public String getAgentLog(int lines) {
     try {
       Host h = findHostById(hostId);
