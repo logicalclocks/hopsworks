@@ -197,13 +197,14 @@ public class AgentResource {
       for (int i = 0; i < roles.size(); i++) {
         JsonObject s = roles.getJsonObject(i);
 
-        if (!s.containsKey("cluster") || !s.containsKey("cluster") || !s.containsKey("cluster")) {
+        if (!s.containsKey("cluster") || !s.containsKey("service") || !s.containsKey("role")) {
           logger.warning("Badly formed JSON object describing a service.");
           continue;
         }
         String cluster = s.getString("cluster");
         String roleName = s.getString("role");
         String service = s.getString("service");
+        logger.log(Level.INFO, "Processing role: {0}/{1}/{2}", new Object[]{cluster, service, roleName});
 
         Role role = roleEjb.find(hostId, cluster, service, roleName);
         if (role == null) {
@@ -270,7 +271,7 @@ public class AgentResource {
       alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")).toString());
       alert.setAgentTime(json.getJsonNumber("Time").bigIntegerValue());
       alert.setMessage(json.getString("Message"));
-      alert.setHostid(json.getString("Host"));
+      alert.setHostid(json.getString("host-id"));
       alert.setPlugin(json.getString("Plugin"));
       if (json.containsKey("PluginInstance")) {
         alert.setPluginInstance(json.getString("PluginInstance"));
