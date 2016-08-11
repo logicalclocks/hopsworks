@@ -96,7 +96,6 @@ a:focus {
 
 .modal-content {
   background-color: #fafafa;
-  word-wrap: break-word;
 }
 
 .modal-dialog {
@@ -170,6 +169,10 @@ a:focus {
   margin-top: -6px;
   padding-top: 11px;
   width: 38px;
+}
+
+div.content {
+  white-space: pre-wrap;
 }
 
 div.scroll {
