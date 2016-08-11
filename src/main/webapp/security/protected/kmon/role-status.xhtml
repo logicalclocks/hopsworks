@@ -102,14 +102,14 @@
                                         <f:param name="command" value="restart" />
                                     </p:menuitem>
                                     <p:menuitem id="start_role" value="Start" action="#{communicationController.roleStart()}" process="@this"
-                                                disabled="#{roleController.disableStart()}" ajax ="false">
+                                                disabled="#{roleController.disableStart()}" ajax ="true" update="@all">
                                         <f:param name="hostid" value="#{roleController.hostId}" />
                                         <f:param name="cluster" value="#{roleController.cluster}" />
                                         <f:param name="role" value="#{roleController.role}" />
                                         <f:param name="service" value="#{roleController.service}"/>                                   
                                     </p:menuitem>
                                     <p:menuitem id="stop_role" value="Stop" action="#{communicationController.roleStop()}" process="@this"
-                                                disabled="#{roleController.disableStop()}" ajax ="false">
+                                                disabled="#{roleController.disableStop()}" ajax ="false" update="@form">
                                         <f:param name="hostid" value="#{roleController.hostId}" />
                                         <f:param name="cluster" value="#{roleController.cluster}" />
                                         <f:param name="role" value="#{roleController.role}" />

@@ -1,5 +1,6 @@
 package io.hops.kmon.role;
 
+import io.hops.kmon.rest.resources.AgentResource;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -7,6 +8,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import io.hops.kmon.struct.RoleHostInfo;
+import java.util.logging.Logger;
 import javax.persistence.NonUniqueResultException;
 
 /**
@@ -16,6 +18,9 @@ import javax.persistence.NonUniqueResultException;
 @Stateless
 public class RoleEJB {
 
+
+  final static Logger logger = Logger.getLogger(RoleEJB.class.getName());
+  
    @PersistenceContext(unitName = "kthfsPU")
    private EntityManager em;
 
