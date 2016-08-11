@@ -379,7 +379,7 @@ public class UsersController {
 
       // block the user account if more than allowed false logins
       if (count > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
-        user.setStatus(UserAccountStatus.ACCOUNT_BLOCKED.getValue());
+        user.setStatus(PeopleAccountStatus.BLOCKED_ACCOUNT.getValue());
 
         emailBean.sendEmail(user.getEmail(), RecipientType.TO, 
                 UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,

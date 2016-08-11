@@ -20,6 +20,7 @@ describe 'edges' do
       end
       it "should fail" do
         get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges"
+        expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
     end
@@ -55,6 +56,7 @@ describe 'edges' do
       context "with valid params" do
         it "should fail" do
           post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges", valid_params
+          expect_json(errorMsg: "Client not authorized for this invocation")
           expect_status(401)
         end
       end
@@ -110,6 +112,7 @@ describe 'edges' do
       end
       it "should fail" do
         get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}"
+        expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
     end
@@ -148,6 +151,7 @@ describe 'edges' do
       context "with valid params" do
         it "should fail" do
           put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}", valid_params
+          expect_json(errorMsg: "Client not authorized for this invocation")
           expect_status(401)
         end
       end
@@ -194,6 +198,7 @@ describe 'edges' do
       end
       it "should fail" do
         delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}"
+        expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
     end

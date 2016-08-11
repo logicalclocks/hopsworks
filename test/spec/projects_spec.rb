@@ -6,7 +6,8 @@ describe 'projects' do
       end
       it "should fail" do
         post "/hopsworks/api/project", {projectName: "project_#{Time.now.to_i}", description:"", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
-        expect_status(500)
+        expect_json(errorMsg: "Client not authorized for this invocation")
+        expect_status(401)
       end
     end
 
