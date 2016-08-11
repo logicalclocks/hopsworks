@@ -1,9 +1,11 @@
 package se.kth.hopsworks.rest;
 
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -681,7 +683,6 @@ public class DataSetService {
   public Response filePreview(@PathParam("path") String path,
           @Context SecurityContext sc) throws
           AppException, AccessControlException {
-    byte[] content = null;
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     if (path == null) {
@@ -691,7 +692,7 @@ public class DataSetService {
     DistributedFileSystemOps udfso = null;
     DistributedFileSystemOps dfso = null;
     FSDataInputStream is = null;
-    
+    StringBuilder sb = null;
     try {
       dfso = dfs.getDfsOps();
       udfso = dfs.getDfsOps(username);
@@ -704,8 +705,23 @@ public class DataSetService {
       //tests if the user have permission to access this path
       is = udfso.open(path);
       //File content
-      content = new byte[1024];
-      is.read(content);    
+      BufferedReader br = new BufferedReader(new InputStreamReader(is));
+      short maxLines = 100;
+      short count = 0;
+      sb = new StringBuilder();
+      try {
+        String line;
+        line = br.readLine();
+        while (line != null && count < maxLines) {
+          sb.append(line);
+          // be sure to read the next line otherwise you'll get an infinite loop
+          line = br.readLine();
+          count++;
+        }
+      } finally {
+        // you should close out the BufferedReader
+        br.close();
+      }  
       
     } catch (AccessControlException ex) {
       throw new AccessControlException(
@@ -730,7 +746,9 @@ public class DataSetService {
       }
     }
     JsonResponse json = new JsonResponse();
-    json.setSuccessMessage(Arrays.toString(content));
+    if(sb!= null){
+      json.setSuccessMessage(sb.toString());
+    }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }

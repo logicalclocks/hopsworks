@@ -374,10 +374,10 @@ angular.module('hopsWorksApp')
                * @param {type} location
                * @returns {$modal@call;open.result}
                */
-              filePreview: function (size, fileName, content) {
+              filePreview: function (size, filePath, projectId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/filePreview.html',
-                  controller: 'DatasetsCtrl as datasetsCtrl',
+                  controller: 'FilePreviewCtrl as filePreviewCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',
@@ -391,11 +391,11 @@ angular.module('hopsWorksApp')
                                   return $q.reject(err);
                                 });
                       }],
-                    fileName: function () {
-                      return fileName;
+                    filePath: function () {
+                      return filePath;
                     },
-                    content: function () {
-                      return content;
+                    projectId: function () {
+                      return projectId;
                     }
                   }
                 });

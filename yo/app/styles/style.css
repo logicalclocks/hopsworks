@@ -96,6 +96,7 @@ a:focus {
 
 .modal-content {
   background-color: #fafafa;
+  word-wrap: break-word;
 }
 
 .modal-dialog {

@@ -1,22 +1,20 @@
 <div class="modal-header">
-  <button class="close" ng-click="DatasetsCtrl.close()" data-dismiss="modal" aria-hidden="true"
+  <button class="close" ng-click="filePreviewCtrl.close()" data-dismiss="modal" aria-hidden="true"
           type="button">&times;</button>
   <h2 class="modal-title">File Preview</h2>
 </div>
-<!--<div growl reference="21" class="pull-right"></div>-->
+<div growl reference="21" class="pull-right"></div>
 <div class="modal-body">
 
-  <form role="form" name="filePreviewForm"  novalidate class="form-validate">                                                                                                                              
     <div class="view-info">
       <div class="col-md-12">
-        sadfasdf
-        <h3>{{datasetsCtrl.fileContent}}</h3>
+        Test
+        {{filePreviewCtrl.fileContents}}
       </div>
         
     </div>
     <hr />
     <div class="modal-footer pull-left" style="padding-bottom: 1px; padding-left: 1px" >
-      <button class="btn btn-default" type="button" ng-click="DatasetsCtrl.close()">Close</button>
+      <button class="btn btn-default" type="button" ng-click="filePreviewCtrl.close()">Close</button>
     </div>
-  </form>
 </div>
