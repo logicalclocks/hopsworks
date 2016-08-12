@@ -5,7 +5,7 @@
 <div growl reference="23" class="pull-right"></div>
 
 <div class="modal-body content" ng-show="filePreviewCtrl.fileType === 'image'">
-  <img class="image-modal" src="data:image/png;base64,{{filePreviewCtrl.fileContents}}" alt="Waiting for image download...">
+  <img class="img-responsive" src="data:image/png;base64,{{filePreviewCtrl.fileContents}}" alt="Waiting for image download...">
 </div>
 
 <div class="modal-body filepreview" ng-show="filePreviewCtrl.fileType === 'text'">

@@ -191,11 +191,6 @@ div.scroll > ul > li > textarea {
   padding: 10px;
 }
 
-.image-modal {
-        height: 100%;
-        width: 100%;
-        object-fit: contain;
-}
 .chrome-table {
   /* Ensures that tables in a dialog box are presented correctly in Chrome*/
   table-layout: fixed;
