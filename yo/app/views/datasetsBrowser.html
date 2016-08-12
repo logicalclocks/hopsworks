@@ -121,6 +121,7 @@
                                   <a class="pointer"
                                      role="menuitem"
                                      tabindex="5"
+                                     ng-hide="file.dir"
                                      ng-click="datasetsCtrl.filePreview(file.name)"
                                      data-toggle="tooltip" title="Click to display a preview of a text file."
                                     >
@@ -128,7 +129,7 @@
                                       Preview</span>
                                   </a>
                                 </li>
-                                <li class="divider"></li>
+                                <li ng-hide="file.dir" class="divider"></li>
                                 <li>
                                   <a class="pointer"
                                      role="menuitem"
