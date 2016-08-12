@@ -70,6 +70,7 @@ import se.kth.hopsworks.meta.exception.DatabaseException;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.util.Settings;
+import se.kth.hopsworks.util.Utils;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -706,9 +707,13 @@ public class DataSetService {
       //tests if the user have permission to access this path
       is = udfso.open(path);
       
+      //Get file type first. If it is not a known image type, display its 
+      //binary contents instead
+              
       //If it is an image smaller than 10MB download it
       //otherwise thrown an error
-      if (path.endsWith(".png")) {
+      String fileType = path.substring(path.lastIndexOf(".")).replace(".","").toUpperCase();
+      if(Utils.isInEnum(fileType, FilePreviewImageTypes.class)) {
         int imageSize = (int) udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getLen();
         if (udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getLen()
                 < 10000000) {
@@ -724,7 +729,6 @@ public class DataSetService {
               "Image is too big to display, please download it instead: " + path);
         }
       } else {
-
         //File content
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
         short maxLines = 100;
