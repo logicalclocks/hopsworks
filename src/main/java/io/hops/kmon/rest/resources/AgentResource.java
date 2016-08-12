@@ -204,7 +204,6 @@ public class AgentResource {
         String cluster = s.getString("cluster");
         String roleName = s.getString("role");
         String service = s.getString("service");
-        logger.log(Level.INFO, "Processing role: {0}/{1}/{2}", new Object[]{cluster, service, roleName});
 
         Role role = roleEjb.find(hostId, cluster, service, roleName);
         if (role == null) {

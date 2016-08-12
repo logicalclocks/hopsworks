@@ -165,7 +165,6 @@ public class RoleEJB {
       if (s.size() > 0) {
          role.setId(s.get(0).getId());
          em.merge(role);
-         logger.info("Saving: " + role.toString());
       } else {
          em.persist(role);
       }
