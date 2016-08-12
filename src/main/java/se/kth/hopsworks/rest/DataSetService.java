@@ -1,9 +1,11 @@
 package se.kth.hopsworks.rest;
 
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,6 +31,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -64,10 +67,10 @@ import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
-import se.kth.hopsworks.meta.wscomm.Utils;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.util.Settings;
+import se.kth.hopsworks.util.Utils;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -675,6 +678,107 @@ public class DataSetService {
   }
 
   @GET
+  @Path("filePreview/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response filePreview(@PathParam("path") String path,
+          @Context SecurityContext sc) throws
+          AppException, AccessControlException {
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    if (path == null) {
+      path = "";
+    }
+    path = getFullPath(path);
+    DistributedFileSystemOps udfso = null;
+    DistributedFileSystemOps dfso = null;
+    FSDataInputStream is = null;
+    
+    JsonResponse json = new JsonResponse();
+    try {
+      dfso = dfs.getDfsOps();
+      udfso = dfs.getDfsOps(username);
+      boolean exists = dfso.exists(path);
+
+      //check if the path is a file only if it exists
+      if (!exists || dfso.isDir(path)) {
+        throw new IOException("The file does not exist");
+      }
+      //tests if the user have permission to access this path
+      is = udfso.open(path);
+      
+      //Get file type first. If it is not a known image type, display its 
+      //binary contents instead
+              
+      //If it is an image smaller than 10MB download it
+      //otherwise thrown an error
+      String fileType = path.substring(path.lastIndexOf(".")).replace(".","").toUpperCase();
+      if(Utils.isInEnum(fileType, FilePreviewImageTypes.class)) {
+        int imageSize = (int) udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getLen();
+        if (udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getLen()
+                < 10000000) {
+               //Read the image in bytes and convert it to base64 so that is 
+               //rendered properly in the front-end
+                byte[] imageInBytes = new byte[imageSize];
+                is.readFully(imageInBytes);
+                String base64Image = new Base64().encodeAsString(imageInBytes);
+                json.setSuccessMessage(base64Image);
+                json.setStatus("image");
+        } else {
+           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Image is too big to display, please download it instead: " + path);
+        }
+      } else {
+        //File content
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        short maxLines = 100;
+        short count = 0;
+        StringBuilder sb = new StringBuilder();
+        try {
+          String line;
+          line = br.readLine();
+          while (line != null && count < maxLines) {
+            sb.append(line).append("\n");
+            // be sure to read the next line otherwise you'll get an infinite loop
+            line = br.readLine();
+            count++;
+          }
+          json.setSuccessMessage(sb.toString());
+          json.setStatus("text");
+        } finally {
+          // you should close out the BufferedReader
+          br.close();
+        }
+      }
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You can not view the file ");
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "File does not exist: " + path);
+    } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException ex) {
+          logger.log(Level.SEVERE, "Error while closing stream.", ex);
+        }
+      }
+      if (udfso != null) {
+        udfso.close();
+      }
+      if (dfso != null) {
+        dfso.close();
+      }
+    }
+    
+   
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
+  
+  @GET
   @Path("isDir/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
@@ -870,7 +974,7 @@ public class DataSetService {
     this.uploader.setIsTemplate(false);
     return this.uploader;
   }
-
+  
   @POST
   @Path("/attachTemplate")
   @Produces(MediaType.APPLICATION_JSON)
@@ -909,7 +1013,7 @@ public class DataSetService {
 
   private String getFullPath(String path) throws AppException {
     //Strip leading slashes.
-    while (path.startsWith("/")) {
+      while (path.startsWith("/")) {
       path = path.substring(1);
     }
 

@@ -52,7 +52,7 @@
             <span class="glyphicon glyphicon-globe pull-right" style="margin-right: 1px;"></span>
             <div ng-show="homeCtrl.showPublicDatasets" ng-repeat="dataset in homeCtrl.publicDatasets">
               <div>
-                <button style="padding-bottom: 2px; padding-top: 2px; papdding-left: 0px; padding-right: 0px;" 
+                <button style="padding-bottom: 2px; padding-top: 2px; padding-left: 0px; padding-right: 0px;" 
                         uib-popover="Add this public dataset to one of your projects."
                         type="button" class="btn btn-default btn-block" ng-click="homeCtrl.addPublicDatasetModal(dataset.inodeId, dataset.name, dataset.description);">
                   <span>{{dataset.name}}</span>
