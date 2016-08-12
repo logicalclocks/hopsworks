@@ -31,6 +31,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -66,7 +67,6 @@ import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
-import se.kth.hopsworks.meta.wscomm.Utils;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.util.Settings;
@@ -692,7 +692,8 @@ public class DataSetService {
     DistributedFileSystemOps udfso = null;
     DistributedFileSystemOps dfso = null;
     FSDataInputStream is = null;
-    StringBuilder sb = null;
+    
+    JsonResponse json = new JsonResponse();
     try {
       dfso = dfs.getDfsOps();
       udfso = dfs.getDfsOps(username);
@@ -704,25 +705,47 @@ public class DataSetService {
       }
       //tests if the user have permission to access this path
       is = udfso.open(path);
-      //File content
-      BufferedReader br = new BufferedReader(new InputStreamReader(is));
-      short maxLines = 100;
-      short count = 0;
-      sb = new StringBuilder();
-      try {
-        String line;
-        line = br.readLine();
-        while (line != null && count < maxLines) {
-          sb.append(line).append("\n");
-          // be sure to read the next line otherwise you'll get an infinite loop
-          line = br.readLine();
-          count++;
-        }
-      } finally {
-        // you should close out the BufferedReader
-        br.close();
-      }  
       
+      //If it is an image smaller than 10MB download it
+      //otherwise thrown an error
+      if (path.endsWith(".png")) {
+        int imageSize = (int) udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getLen();
+        if (udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getLen()
+                < 10000000) {
+               //Read the image in bytes and convert it to base64 so that is 
+               //rendered properly in the front-end
+                byte[] imageInBytes = new byte[imageSize];
+                is.readFully(imageInBytes);
+                String base64Image = new Base64().encodeAsString(imageInBytes);
+                json.setSuccessMessage(base64Image);
+                json.setStatus("image");
+        } else {
+           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Image is too big to display, please download it instead: " + path);
+        }
+      } else {
+
+        //File content
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        short maxLines = 100;
+        short count = 0;
+        StringBuilder sb = new StringBuilder();
+        try {
+          String line;
+          line = br.readLine();
+          while (line != null && count < maxLines) {
+            sb.append(line).append("\n");
+            // be sure to read the next line otherwise you'll get an infinite loop
+            line = br.readLine();
+            count++;
+          }
+          json.setSuccessMessage(sb.toString());
+          json.setStatus("text");
+        } finally {
+          // you should close out the BufferedReader
+          br.close();
+        }
+      }
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not view the file ");
@@ -745,10 +768,8 @@ public class DataSetService {
         dfso.close();
       }
     }
-    JsonResponse json = new JsonResponse();
-    if(sb!= null){
-      json.setSuccessMessage(sb.toString());
-    }
+    
+   
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
