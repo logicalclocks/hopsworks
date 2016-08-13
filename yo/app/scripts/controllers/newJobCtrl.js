@@ -611,10 +611,12 @@ angular.module('hopsWorksApp')
                         self.localResources = stored.localResources;
                         self.phase = stored.phase;
                         self.runConfig = stored.runConfig;
-                        self.runConfig.schedule = null;
-                        self.sliderOptions.from = self.runConfig.minExecutors;
-                        self.sliderOptions.to = self.runConfig.maxExecutors;
-                        self.sliderValue = self.runConfig.selectedMinExecutors + ";" +self.runConfig.selectedMaxExecutors;
+                        if(self.runConfig){
+                            self.runConfig.schedule = null;
+                            self.sliderOptions.from = self.runConfig.minExecutors;
+                            self.sliderOptions.to = self.runConfig.maxExecutors;
+                            self.sliderValue = self.runConfig.selectedMinExecutors + ";" +self.runConfig.selectedMaxExecutors;
+                        }    
                         if (self.jobtype === 1) {
                             self.sparkState = stored.sparkState;
                         } else if (self.jobtype === 2) {

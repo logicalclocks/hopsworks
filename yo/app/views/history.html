@@ -43,7 +43,7 @@
                         </li>               
                     </ul>
                 </div>
-                <div class="input-group-btn search-panel pull-left" style="width: 10%; margin-left: 10px">
+                <div class="input-group-btn search-panel pull-left" style="width: 10%; margin-left: 10px" ng-hide="!fisrtFormSelected">
                     <li ng-repeat="choice in searchChoices" ng-if="choice.searchName == searchName">                                     
                     <button type="button" style="width: 100%;"
                             class="btn btn-default dropdown-toggle"

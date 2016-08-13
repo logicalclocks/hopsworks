@@ -13,7 +13,6 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import org.apache.camel.component.file.FileOperations;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
@@ -31,7 +30,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
   @EJB
   private InodeFacade inodeFacade;
   @EJB
-  private FileOperations fileOperations;
+  private DistributedFsService fileOperations;
   @EJB
   private ProjectFacade projectFacade;
 
@@ -133,7 +132,8 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
     DistributedFileSystemOps dfso = null;
     if (arguments.startsWith("hdfs://")) {
       try {
-        blocks = dfso.getFileBlocks(arguments);
+          dfso = fileOperations.getDfsOps();
+          blocks = dfso.getFileBlocks(arguments);
       } catch (IOException ex) {
         Logger.getLogger(JobsHistoryFacade.class.getName()).log(Level.SEVERE,
                 "Failed to find file at HDFS.", ex);
@@ -223,7 +223,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
       TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithVeryHighSimilarityFilter", JobsHistory.class);
       q.setParameter("jobType", jobDetails.getJobType());
       q.setParameter("className", jobDetails.getClassName());
-      q.setParameter("inodeName", jobDetails.getSelectedJar());
+      q.setParameter("jarFile", jobDetails.getSelectedJar());
       q.setParameter("arguments", jobDetails.getInputArgs());
       q.setParameter("inputBlocksInHdfs", checkArguments(jobDetails.getInputArgs()));
       q.setParameter("projectName", projectName);
@@ -238,7 +238,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
       TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithVeryHighSimilarity", JobsHistory.class);
       q.setParameter("jobType", jobDetails.getJobType());
       q.setParameter("className", jobDetails.getClassName());
-      q.setParameter("inodeName", jobDetails.getSelectedJar());
+      q.setParameter("jarFile", jobDetails.getSelectedJar());
       q.setParameter("arguments", jobDetails.getInputArgs());
       q.setParameter("inputBlocksInHdfs", checkArguments(jobDetails. getInputArgs()));
       q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
@@ -254,7 +254,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
       TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithHighSimilarityFilter", JobsHistory.class);
       q.setParameter("jobType", jobDetails.getJobType());
       q.setParameter("className", jobDetails.getClassName());
-      q.setParameter("inodeName", jobDetails.getSelectedJar());
+      q.setParameter("jarFile", jobDetails.getSelectedJar());
       q.setParameter("arguments", jobDetails.getInputArgs());
       q.setParameter("projectName", projectName);
       q.setParameter("jobName", jobDetails.getJobName());
@@ -267,7 +267,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
       TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithHighSimilarity", JobsHistory.class);
       q.setParameter("jobType", jobDetails.getJobType());
       q.setParameter("className", jobDetails.getClassName());
-      q.setParameter("inodeName", jobDetails.getSelectedJar());
+      q.setParameter("jarFile", jobDetails.getSelectedJar());
       q.setParameter("arguments", jobDetails.getInputArgs());
       q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
 
@@ -282,7 +282,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
       TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithMediumSimilarityFilter", JobsHistory.class);
       q.setParameter("jobType", jobDetails.getJobType());
       q.setParameter("className", jobDetails.getClassName());
-      q.setParameter("inodeName", jobDetails.getSelectedJar());
+      q.setParameter("jarFile", jobDetails.getSelectedJar());
       q.setParameter("projectName", projectName);
       q.setParameter("jobName", jobDetails.getJobName());
       q.setParameter("userEmail", userEmail);
@@ -293,7 +293,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
       TypedQuery<JobsHistory> q = em.createNamedQuery("JobsHistory.findWithMediumSimilarity", JobsHistory.class);
       q.setParameter("jobType", jobDetails.getJobType());
       q.setParameter("className", jobDetails.getClassName());
-      q.setParameter("inodeName", jobDetails.getSelectedJar());
+      q.setParameter("jarFile", jobDetails.getSelectedJar());
       q.setParameter("finalStatus", JobFinalStatus.SUCCEEDED);
 
       return q.getResultList();

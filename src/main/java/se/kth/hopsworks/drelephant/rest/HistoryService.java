@@ -7,6 +7,9 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import static java.util.Collections.list;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +35,7 @@ import org.json.JSONObject;
 import se.kth.bbc.jobs.jobhistory.ConfigDetailsDTO;
 import se.kth.bbc.jobs.jobhistory.JobDetailDTO;
 import se.kth.bbc.jobs.jobhistory.JobHeuristicDTO;
+import se.kth.bbc.jobs.jobhistory.JobHeuristicDetailsComparator;
 import se.kth.bbc.jobs.jobhistory.JobHeuristicDetailsDTO;
 import se.kth.bbc.jobs.jobhistory.JobProposedConfigurationDTO;
 import se.kth.bbc.jobs.jobhistory.JobsHistory;
@@ -46,7 +50,6 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.hdfsUsers.HdfsUsersFacade;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.JobService;
@@ -79,6 +82,7 @@ public class HistoryService {
   private static final String EXECUTOR_LOAD_BALANCE_CLASS = "com.linkedin.drelephant.spark.heuristics.ExecutorLoadHeuristic";
   
   private List<JobHeuristicDetailsDTO> resultsForAnalysis = new ArrayList<>();
+  private JobHeuristicDetailsComparator comparator = new JobHeuristicDetailsComparator();
   
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -253,7 +257,7 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
             
             jobsHistoryResult.addJobHeuristicDetails(jhD);
             resultsForAnalysis.add(jhD);
-            
+        
         }
         
         defaultAnalysis(jobsHistoryResult);
@@ -396,30 +400,23 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         long executionDuration = 0;
         boolean premium = false;
         
-        Iterator<JobHeuristicDetailsDTO> it = resultsForAnalysis.iterator();
-        
-        // Get the maximum execution time of all results
-        while(it.hasNext()) {
-         JobHeuristicDetailsDTO obj = it.next();
-         if(obj.getExecutionTime() > executionDuration)
-             executionDuration = obj.getExecutionTime();
-        }
+        Collections.sort(resultsForAnalysis, comparator);
         
         Iterator<JobHeuristicDetailsDTO> itr = resultsForAnalysis.iterator();
         
         while(itr.hasNext()) {
          JobHeuristicDetailsDTO obj = itr.next();
          
-         if(obj.getTotalSeverity().equals("LOW") && (obj.getExecutionTime() < executionDuration) &&
-                 (obj.getAmMemory()> defaultAmMemory || obj.getAmVcores() > defaultAmVcores ||
-                  obj.getNumberOfExecutors() > defaultNumOfExecutors || obj.getExecutorMemory() > defaultExecutorsMemory)){
+         if(obj.getTotalSeverity().equals("LOW") && (obj.getAmMemory()> defaultAmMemory || 
+                  obj.getAmVcores() > defaultAmVcores || obj.getNumberOfExecutors() > defaultNumOfExecutors || 
+                  obj.getExecutorMemory() > defaultExecutorsMemory)){
              defaultAmMemory = obj.getAmMemory();
              defaultAmVcores = obj.getAmVcores();
              defaultExecutorsMemory = obj.getExecutorMemory();
              defaultNumOfExecutors = obj.getNumberOfExecutors();
              executionDuration = obj.getExecutionTime();
              premium = true;
-             
+             break; 
          }
         }
          
@@ -443,7 +440,7 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         
             jobsHistoryResult.addProposal(proposal);
         }
-        }
+    }
     
     /**
      * A converter of Milliseconds (MS) to HH:MM:SS
