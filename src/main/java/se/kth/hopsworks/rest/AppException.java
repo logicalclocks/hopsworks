@@ -1,10 +1,6 @@
 package se.kth.hopsworks.rest;
 
-/**
- *
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
+
 public class AppException extends Exception {
 
   /**

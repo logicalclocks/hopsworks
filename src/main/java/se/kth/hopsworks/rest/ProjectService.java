@@ -8,9 +8,9 @@ import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -35,7 +35,6 @@ import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.hopsworks.certificates.UserCerts;
 import se.kth.hopsworks.certificates.UserCertsFacade;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.DatasetController;
@@ -47,6 +46,8 @@ import se.kth.hopsworks.controller.UsersController;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
@@ -56,7 +57,7 @@ import se.kth.hopsworks.util.Settings;
 @Path("/project")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
+@Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectService {
 
@@ -79,7 +80,7 @@ public class ProjectService {
   @Inject
   private BiobankingService biobanking;
   @Inject
-  private CharonService charon;
+  private WorkflowService workflowService;
 
   @EJB
   private ActivityFacade activityFacade;
@@ -102,7 +103,9 @@ public class ProjectService {
   private UserCertsFacade certificateBean;
   @EJB
   private Settings settings;
-
+  @EJB
+  private DistributedFsService dfs;
+  
   private final static Logger logger = Logger.getLogger(ProjectService.class.
     getName());
 
@@ -261,17 +264,6 @@ public class ProjectService {
         //             + json.getErrorMsg());
         //   }
         // }
-        // if (s.compareToIgnoreCase(ProjectServiceEnum.CHARON.toString()) == 0) {
-        //   try {
-        //     projectController.createProjectCharonFolder(project);
-        //   } catch (ProjectInternalFoldersFailedException ex) {
-        //     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-        //             null, ex);
-        //     json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
-        //             + " 'consents' \n "
-        //             + json.getErrorMsg());
-        //   }
-        // }
         projectServices.add(se);
       } catch (IllegalArgumentException iex) {
         logger.log(Level.SEVERE,
@@ -289,7 +281,6 @@ public class ProjectService {
         updated = true;
       }
     }
-
     if (!updated) {
       json.setSuccessMessage("Nothing to update.");
     }
@@ -317,11 +308,18 @@ public class ProjectService {
     List<ProjectServiceEnum> projectServices = new ArrayList<>();
     List<ProjectTeam> projectMembers = new ArrayList<>();
     projectServices.add(ProjectServiceEnum.JOBS);
-
+    DistributedFileSystemOps dfso = null;
+    DistributedFileSystemOps udfso = null;
+    try{
+      dfso = dfs.getDfsOps();
+      Users user = userManager.getUserByEmail(owner);
     try {
       //save the project
-      project = projectController.createProject(projectDTO, owner);
-      Users user = userManager.getUserByEmail(owner);
+      project = projectController.createProject(projectDTO, owner, dfso);
+      if (user != null) {
+        username = hdfsUsersBean.getHdfsUserName(project, user);
+        udfso = dfs.getDfsOps(username);
+      }
       if (user == null | project == null) {
         logger.
           log(Level.SEVERE, "Problem finding the user {} or project",
@@ -330,7 +328,7 @@ public class ProjectService {
           ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
       }
       //Severe: java.io.FileNotFoundException: /tmp/tempstores/demo_admin000__meb10000__kstore.jks (No such file or directory)
-      LocalhostServices.createUserCertificates(settings.getHopsworksDir(),
+      LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(),
         project.getName(), user.getUsername());
       certificateBean.putUserCerts(project.getName(), user.getUsername());
     } catch (IOException ex) {
@@ -348,9 +346,10 @@ public class ProjectService {
     }
     if (project != null) {
       try {
-        hdfsUsersBean.addProjectFolderOwner(project);
-        projectController.createProjectLogResources(owner, project);
-        projectController.addExampleJarToExampleProject(owner, project);
+        hdfsUsersBean.addProjectFolderOwner(project, dfso);
+        projectController.createProjectLogResources(owner, project, dfso, udfso);
+        projectController.addExampleJarToExampleProject(owner, project, dfso,
+                udfso);
         // if (projectServices.contains(ProjectServiceEnum.BIOBANKING)) {
         //   projectController.createProjectConsentFolder(owner, project);
         // }
@@ -359,7 +358,7 @@ public class ProjectService {
         // }
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
-          projectController.removeByID(project.getId(), owner, true);
+          projectController.removeByID(project.getId(), owner, true, udfso);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             "Could not create project resources");
         } catch (IOException e) {
@@ -368,7 +367,7 @@ public class ProjectService {
         }
       } catch (IOException ex) {
         try {
-          projectController.removeByID(project.getId(), owner, true);
+          projectController.removeByID(project.getId(), owner, true, udfso);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             "Could not add project folder owner in HDFS");
         } catch (IOException e) {
@@ -387,6 +386,14 @@ public class ProjectService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
       entity(project).build();
+    }finally{
+      if(dfso!=null){
+        dfso.close();
+      }
+      if (udfso != null) {
+        udfso.close();
+      }
+    }
   }
 
   @POST
@@ -417,10 +424,19 @@ public class ProjectService {
           + json.getErrorMsg());
       }
     }
+    DistributedFileSystemOps dfso = null;
+    DistributedFileSystemOps udfso = null;
+    try{
+      dfso = dfs.getDfsOps();
+      
     try {
       //save the project
-      project = projectController.createProject(projectDTO, owner);
+      project = projectController.createProject(projectDTO, owner, dfso);
       Users user = userManager.getUserByEmail(owner);
+      if (user != null) {
+        String username = hdfsUsersBean.getHdfsUserName(project, user);
+        udfso = dfs.getDfsOps(username);
+      }
       if (user == null | project == null) {
         logger.
           log(Level.SEVERE, "Problem finding the user {} or project",
@@ -428,8 +444,7 @@ public class ProjectService {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
       }
-      LocalhostServices.createUserCertificates(settings.getHopsworksDir(),
-        project.getName(), user.getUsername());
+      LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(), project.getName(), user.getUsername());
 //      try {
 //        UserCerts uc = certificateBean.findUserCert(project.getName(), user.getUsername());
 //      } catch (javax.persistence.NoResultException ex) {
@@ -450,8 +465,8 @@ public class ProjectService {
     }
     if (project != null) {
       try {
-        hdfsUsersBean.addProjectFolderOwner(project);
-        projectController.createProjectLogResources(owner, project);
+        hdfsUsersBean.addProjectFolderOwner(project, dfso);
+        projectController.createProjectLogResources(owner, project, dfso, udfso);
         // if (projectServices.contains(ProjectServiceEnum.BIOBANKING)) {
         //   projectController.createProjectConsentFolder(owner, project);
         // }
@@ -460,7 +475,7 @@ public class ProjectService {
         // }
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
-          projectController.removeByID(project.getId(), owner, true);
+          projectController.removeByID(project.getId(), owner, true, udfso);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             "Could not create project resources");
         } catch (IOException e) {
@@ -469,7 +484,7 @@ public class ProjectService {
         }
       } catch (IOException ex) {
         try {
-          projectController.removeByID(project.getId(), owner, true);
+          projectController.removeByID(project.getId(), owner, true, udfso);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             "Could not add project folder owner in HDFS");
         } catch (IOException e) {
@@ -496,6 +511,13 @@ public class ProjectService {
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
       entity(json).build();
+    }finally{
+      if(dfso!=null){
+        dfso.close();
+      }
+      if(udfso!=null)
+        udfso.close();
+    }
   }
 
   @POST
@@ -508,11 +530,20 @@ public class ProjectService {
     @Context HttpServletRequest req) throws AppException,
     AccessControlException {
 
-    String user = sc.getUserPrincipal().getName();
+    String owner = sc.getUserPrincipal().getName();
     JsonResponse json = new JsonResponse();
     boolean success = true;
+    DistributedFileSystemOps udfso=null;
     try {
-      success = projectController.removeByID(id, user, true);
+      Users user = userManager.getUserByEmail(owner);
+      Project project = projectFacade.find(id);
+      if (project == null) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                ResponseMessages.PROJECT_NOT_FOUND);
+      }
+      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      udfso = dfs.getDfsOps(username);
+      success = projectController.removeByID(id, owner, true, udfso);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
         "Permission denied: You don't have delete permission to one or all files in this folder.");
@@ -521,6 +552,8 @@ public class ProjectService {
         ResponseMessages.PROJECT_FOLDER_NOT_REMOVED, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
         ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
+    } finally {
+      udfso.close();
     }
     if (success) {
       json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);
@@ -544,16 +577,27 @@ public class ProjectService {
     @PathParam("id") Integer id,
     @Context SecurityContext sc,
     @Context HttpServletRequest req) throws AppException {
-    String user = sc.getUserPrincipal().getName();
+    String owner = sc.getUserPrincipal().getName();
     JsonResponse json = new JsonResponse();
     boolean success = true;
+    DistributedFileSystemOps udfso=null;
     try {
-      success = projectController.removeByID(id, user, false);
+      Users user = userManager.getUserByEmail(owner);
+      Project project = projectFacade.find(id);
+      if (project == null) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                ResponseMessages.PROJECT_NOT_FOUND);
+      }
+      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      udfso = dfs.getDfsOps(username);
+      success = projectController.removeByID(id, owner, false, udfso);
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
         ResponseMessages.PROJECT_FOLDER_NOT_REMOVED, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
         ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
+    } finally {
+      udfso.close();
     }
     json.setStatus("OK");
     if (success) {
@@ -614,14 +658,6 @@ public class ProjectService {
     AppException {
     Project project = projectController.findProjectById(projectId);
     return this.biobanking.setProject(project);
-  }
-
-  @Path("{projectId}/charon")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public CharonService charon(@PathParam("projectId") Integer projectId) throws
-    AppException {
-    Project project = projectController.findProjectById(projectId);
-    return this.charon.setProject(project);
   }
 
   @GET
@@ -746,4 +782,17 @@ public class ProjectService {
 
     return this.kafka;
   }
+  
+	@Path("{id}/workflows")
+  	@AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  	public WorkflowService workflows(@PathParam("id") Integer id) throws
+          AppException {
+    	Project project = projectController.findProjectById(id);
+    	if (project == null) {
+      	throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+    	}
+    	this.workflowService.setProject(project);
+    	return workflowService;
+  }  
 }

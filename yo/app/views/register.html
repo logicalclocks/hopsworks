@@ -56,7 +56,7 @@
                   <label class="text-muted">Phone Number</label>
                   <input name="phone_number" placeholder="Phone" autocomplete="on"
                          ng-model="regCtrl.newUser.telephoneNum"
-                         ng-pattern="/[+, ,-,0-9]*$/"
+                         ng-pattern="/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/"
                          class="form-control "
                          type="text">
                   <span ng-show="registerForm.phone_number.$dirty &amp;&amp; registerForm.phone_number.$error.pattern"
@@ -231,21 +231,31 @@
             <hr>-->
             </div>
             <div class="row">
-              <div class="checkbox c-checkbox pull-left col-md-6">
-                <label>
-                  <input required="" name="user_agreed" ng-model="regCtrl.newUser.ToS"
-                         type="checkbox">
-                  <span class="fa fa-check"></span>I agree with the <a href=""
-                                                                       data-target="#tosModal"
-                                                                       data-toggle="modal">terms</a>
-                </label>
+              <div class="col-md-6">
+                <div class="checkbox c-checkbox pull-left">
+                  <label>
+                    <input required="" name="user_agreed" ng-model="regCtrl.newUser.ToS"
+                           type="checkbox">
+                    <span class="fa fa-check"></span>I agree with the <a href=""
+                                                                         data-target="#tosModal"
+                                                                         data-toggle="modal">terms</a>
+                  </label>
 
-                <div ng-show="(registerForm.$submitted || registerForm.user_agreed.$dirty) &amp;&amp; registerForm.user_agreed.$error.required"
-                     class="text-danger ng-hide">You must agree to the terms
+                  <div ng-show="(registerForm.$submitted || registerForm.user_agreed.$dirty) &amp;&amp; registerForm.user_agreed.$error.required"
+                       class="text-danger ng-hide">You must agree to the terms
+                  </div>
                 </div>
-
               </div>
-            </div>
+              <div class="col-md-6">
+                <div class="checkbox c-checkbox" ng-if="regCtrl.otp === 'true'">
+                  <label>
+                  <input name="2FactorAuth" ng-model="regCtrl.newUser.twoFactor"
+                           type="checkbox">
+                  <span class="fa fa-check"></span>Enable Two Factor Authentication.
+                  </label>
+                </div>
+              </div>
+              </div>
             <div class="row">
 
               <div class="col-md-12">

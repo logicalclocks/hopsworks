@@ -48,39 +48,6 @@
     </div>
     </accordion-group>
     <accordion-group heading="Configuration">    
-      <!-- Cuneiform configuration -->
-      <div ng-show="jobDetailCtrl.job.runConfig.type == 'cuneiformJobConfiguration'">
-        <div>
-          <div ng-show="jobDetailCtrl.job.runConfig.wf.inputParams.length > 0">
-            <strong>Input parameters <i class="fa fa-info-circle" tooltip="The unbound input parameters to the selected workflow. They have been bound to the given value for this job." style="margin-left: 10px"></i></strong>
-          </div>
-          <div ng-repeat="param in jobDetailCtrl.job.runConfig.wf.inputParams" class="row">
-            <div class="text-right col-md-4">{{param.name}}</div>
-            <div class="col-md-8"> {{param.value}}</div>
-          </div>
-          <div>
-            <strong>Configuration parameters</strong>
-          </div>
-          <div class="row">
-            <div class="text-right col-md-4">Application master memory (MB) <i class="fa fa-info-circle" tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
-            <div  class="col-md-8">
-              {{jobDetailCtrl.job.runConfig.amMemory}}
-            </div>
-          </div>
-          <div class="row">
-            <div class="text-right col-md-4">Application master vcores <i class="fa fa-info-circle" tooltip="The number of cores that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
-            <div class="col-md-8">
-              {{jobDetailCtrl.job.runConfig.amVCores}}
-            </div>
-          </div>
-          <div class="row">
-            <div class="text-right col-md-4">ResourceManager queue <i class="fa fa-info-circle" tooltip="The queue in the ResourceManager in which this application should be submitted." style="margin-left: 10px"></i></div>
-            <div class="col-md-8">
-              {{jobDetailCtrl.job.runConfig.amQueue}}
-            </div>
-          </div>
-        </div>
-      </div>
       <!-- Spark configuration -->
       <div ng-show="jobDetailCtrl.job.runConfig.type == 'sparkJobConfiguration'">
         <div class="row">

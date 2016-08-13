@@ -2,6 +2,7 @@ package se.kth.hopsworks.rest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -15,6 +16,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.commons.codec.binary.Base64;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ResponseMessages;
@@ -32,7 +34,9 @@ import se.kth.hopsworks.users.UserProjectDTO;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserService {
-  private final static Logger logger = Logger.getLogger(UserService.class.getName());
+
+  private final static Logger logger = Logger.getLogger(UserService.class.
+          getName());
 
   @EJB
   private UserFacade userBean;
@@ -48,7 +52,7 @@ public class UserService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.ALL})
   public Response findAllByUser(@Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+          @Context HttpServletRequest req) {
 
     List<Users> users = userBean.findAllUsers();
     List<UserCardDTO> userCardDTOs = new ArrayList<>();
@@ -59,90 +63,148 @@ public class UserService {
     }
 
     GenericEntity<List<UserCardDTO>> userCards
-        = new GenericEntity<List<UserCardDTO>>(userCardDTOs) {
+            = new GenericEntity<List<UserCardDTO>>(userCardDTOs) {
     };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        userCards).build();
+            userCards).build();
   }
 
   @GET
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getUserProfile(@Context SecurityContext sc) throws
-      AppException {
+          AppException {
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
 
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          ResponseMessages.USER_WAS_NOT_FOUND);
+              ResponseMessages.USER_WAS_NOT_FOUND);
     }
 
     UserDTO userDTO = new UserDTO(user);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        userDTO).build();
+            userDTO).build();
   }
 
   @POST
   @Path("updateProfile")
   @Produces(MediaType.APPLICATION_JSON)
   public Response updateProfile(@FormParam("firstName") String firstName,
-      @FormParam("lastName") String lastName,
-      @FormParam("telephoneNum") String telephoneNum,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+          @FormParam("lastName") String lastName,
+          @FormParam("telephoneNum") String telephoneNum,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
 
     UserDTO userDTO = userController.updateProfile(sc.getUserPrincipal().
-        getName(), firstName, lastName, telephoneNum, req);
+            getName(), firstName, lastName, telephoneNum, req);
 
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PROFILE_UPDATED);
     json.setData(userDTO);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        userDTO).build();
+            userDTO).build();
   }
 
   @POST
   @Path("changeLoginCredentials")
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeLoginCredentials(
-      @FormParam("oldPassword") String oldPassword,
-      @FormParam("newPassword") String newPassword,
-      @FormParam("confirmedPassword") String confirmedPassword,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+          @FormParam("oldPassword") String oldPassword,
+          @FormParam("newPassword") String newPassword,
+          @FormParam("confirmedPassword") String confirmedPassword,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
 
     userController.changePassword(sc.getUserPrincipal().getName(), oldPassword,
-        newPassword, confirmedPassword, req);
+            newPassword, confirmedPassword, req);
 
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        json).build();
+            json).build();
   }
 
   @POST
   @Path("changeSecurityQA")
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeSecurityQA(@FormParam("oldPassword") String oldPassword,
-      @FormParam("securityQuestion") String securityQuestion,
-      @FormParam("securityAnswer") String securityAnswer,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+          @FormParam("securityQuestion") String securityQuestion,
+          @FormParam("securityAnswer") String securityAnswer,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
     userController.changeSecQA(sc.getUserPrincipal().getName(), oldPassword,
-        securityQuestion, securityAnswer, req);
+            securityQuestion, securityAnswer, req);
 
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.SEC_QA_CHANGED);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        json).build();
+            json).build();
+  }
+
+  @POST
+  @Path("changeTwoFactor")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response changeTwoFactor(@FormParam("password") String password,
+          @FormParam("twoFactor") boolean twoFactor,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
+
+    byte[] qrCode;
+    JsonResponse json = new JsonResponse();
+    if (user.getTwoFactor() == twoFactor) {
+      json.setSuccessMessage("No change made.");
+      json.setStatus("OK");
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(json).build();
+    }
+
+    qrCode = userController.changeTwoFactor(user, password, req);
+    if (qrCode != null) {
+      json.setQRCode(new String(Base64.encodeBase64(qrCode)));
+    } else {
+      json.setSuccessMessage("Tow factor authentication disabled.");
+    }
+    json.setStatus("OK");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(json).build();
+  }
+
+  @POST
+  @Path("getQRCode")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getQRCode(@FormParam("password") String password,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
+    if (user == null) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              ResponseMessages.USER_WAS_NOT_FOUND);
+    }
+    if (password == null || password.isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Password requierd.");
+    }
+    byte[] qrCode;
+    JsonResponse json = new JsonResponse();
+    qrCode = userController.getQRCode(user, password);
+    if (qrCode != null) {
+      json.setQRCode(new String(Base64.encodeBase64(qrCode)));
+    } else {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Two factor disabled.");
+    }
+    json.setStatus("OK");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(json).build();
   }
 
   @POST
@@ -151,12 +213,14 @@ public class UserService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response addSshkey(SshKeyDTO sshkey,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
     int id = user.getUid();
-    SshKeyDTO dto = userController.addSshKey(id, sshkey.getName(), sshkey.getPublicKey());
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(dto).build();
+    SshKeyDTO dto = userController.addSshKey(id, sshkey.getName(), sshkey.
+            getPublicKey());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            dto).build();
   }
 
   @POST
@@ -164,8 +228,8 @@ public class UserService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response removeSshkey(@FormParam("name") String name,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
     int id = user.getUid();
@@ -173,7 +237,7 @@ public class UserService {
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.SSH_KEY_REMOVED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        json).build();
+            json).build();
   }
 
   @GET
@@ -181,15 +245,16 @@ public class UserService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response getSshkeys(@Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws AppException {
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
     int id = user.getUid();
     List<SshKeyDTO> sshKeys = userController.getSshKeys(id);
 
     GenericEntity<List<SshKeyDTO>> sshKeyViews
-        = new GenericEntity<List<SshKeyDTO>>(sshKeys) {
+            = new GenericEntity<List<SshKeyDTO>>(sshKeys) {
     };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(sshKeyViews).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            sshKeyViews).build();
 
   }
 
@@ -197,8 +262,8 @@ public class UserService {
   @Path("getRole")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getRole(@FormParam("projectId") int projectId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
     String email = sc.getUserPrincipal().getName();
 
     UserProjectDTO userDTO = new UserProjectDTO();
@@ -208,15 +273,16 @@ public class UserService {
     List<ProjectTeam> list = projectController.findProjectTeamById(projectId);
 
     for (ProjectTeam pt : list) {
-      logger.info(pt.getProjectTeamPK().getTeamMember() + " (" + pt.getProjectTeamPK().getProjectId()
-      + ") -  " + pt.getTeamRole());
+      logger.log(Level.INFO, "{0} ({1}) -  {2}", new Object[]{pt.
+        getProjectTeamPK().getTeamMember(),
+        pt.getProjectTeamPK().getProjectId(), pt.getTeamRole()});
       if (pt.getProjectTeamPK().getTeamMember().compareToIgnoreCase(email) == 0) {
         userDTO.setRole(pt.getTeamRole());
       }
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        userDTO).build();
+            userDTO).build();
   }
 
 }

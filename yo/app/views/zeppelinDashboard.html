@@ -4,147 +4,192 @@
          class="toggled"
          ng-controller="ZeppelinCtrl as zeppelinCtrl">
         <div class="overlay"></div>
-        <section>  
-            <div ng-include="'navProject.html'"></div>
-            <div ng-show="mainCtrl.searchReturned !== ''">
-                <div id="projectSearchResults">
-                    <div ng-include="'views/searchResult.html'"></div>
-                </div>
-            </div>
-            <div class="content-wrapper" ng-show="mainCtrl.searchReturned === ''">                      
-                <div growl reference="10" class="pull-right" ></div>
-                <h3>
-                    <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
-                        <button class="btn btn-success" ng-click="zeppelinCtrl.createNewNote()" dropdown-toggle type="button" id="newNotebook" aria-haspopup="true" aria-expanded="true">
-                            Create New Notebook
-                        </button>
-                    </div>
-                    <ul class="nav navbar-nav pull-right" style="margin-right:30px;  margin-top:-10px;">
-                      <li class="pull-left" 
-                          ng-class="{'connected-space':zeppelinCtrl.connectedStatus, 'disconnected-space':!zeppelinCtrl.connectedStatus}">
-                        <hamburger-toggle state="zeppelinCtrl.tgState" class="hamburger-toggle" ng-click="zeppelinCtrl.deselect()">
-                        </hamburger-toggle>
-                      </li>
-                      <li class="server-status">
-                          <span class="fa fa-circle" ng-class="{'server-connected':zeppelinCtrl.connectedStatus, 'server-disconnected':!zeppelinCtrl.connectedStatus}"></span>  
-                          <span ng-show="zeppelinCtrl.connectedStatus">Connected</span>
-                          <span ng-show="!zeppelinCtrl.connectedStatus">Disconnected</span>
-                      </li>
-                    </ul>
-                    
-                </h3>
-                <div ng-init="(iscollapsed$index) = true; zeppelinCtrl.tgState = true;"
-                     class="ds-content col-lg-12" ng-class="{'sidenav-open': zeppelinCtrl.tgState}" style="margin-top: 5px;">
-                    <div class="row row-no-margin-left" style="margin-top: 15px;">
-                        <div class="col-lg-12">
-                            <div class="file-box"
-                                 context-menu
-                                 data-target="menu-{{ $index}}">
-                                <div  class="file" ng-click="zeppelinCtrl.openZeppelin()">
-                                    <div class="icon" style="text-align: center;">
-                                        <img width="100" src="images/zepLogo.png"/>
-                                    </div>
-                                    <div class="file-name" >
-                                        <div style="text-align: center; color: #337ab7">
-                                            Goto Zeppelin
-                                        </div>                                                
-                                    </div>
-                                </div>
-                            </div>
-                            <div ng-repeat="note in zeppelinCtrl.notes track by $index">
-                                <div ng-click="zeppelinCtrl.openNote(note)"
-                                     class="file-box"
-                                     context-menu>
-                                    <div class="file" ng-class="">
-                                        <a>
-                                            <span class="corner"></span>
-                                            <div class="icon">
-                                                <i class="fa fa-file-code-o"></i>
-                                            </div>
-                                            <div class="file-name">
-                                                <div style="text-align: center;">
-                                                    {{note.name | limitTo: 18 || 'Note ' + note.id}}{{note.name.length > 18 ? '...' : ''}}
-                                                </div>                                                
-                                            </div>
-                                        </a>
-                                    </div>
-                                </div>  
-                                <div class="dropdown position-fixed" id="menu-{{$index}}">
-                                    <ul class="dropdown-menu dropdown-amore">
-                                        <li ng-show="projectCtrl.role === 'Data owner'">
-                                            <a class="pointer"
-                                               role="menuitem"
-                                               tabindex="1"
-                                               ng-click="zeppelinCtrl.deleteNote(note)">
-                                                <span><i class="fa fa-trash"></i>
-                                                    Remove Notebook</span>
-                                            </a>
-                                        </li>                                                 
-                                    </ul>
-                                </div>
-                            </div> 
-                             <!--end repeat--> 
+        <div ng-include="'navProject.html'"></div>
+        <div>
+          <section>  
 
-                            <div class="file-box"
-                                 context-menu
-                                 data-target="menu-{{ $index}}">
-                                <div  class="file" ng-click="zeppelinCtrl.createNewNote()">
-                                    <div class="icon">
-                                        <i class="glyphicon glyphicon-plus"></i>
-                                    </div>
-                                    <div class="file-name">
-                                        <div style="text-align: center; color: green;">
-                                            Create New Notebook
-                                        </div>                                                
-                                    </div>
-                                </div>
-                            </div>                                 
+              <div ng-show="mainCtrl.searchReturned !== ''">
+                  <div id="projectSearchResults">
+                      <div ng-include="'views/searchResult.html'"></div>
+                  </div>
+              </div>
+
+              <div ng-if="zeppelinCtrl.loading" class="loadingwrap">
+
+                <div class="loading-content">
+                  <div class="loader"></div>
+                  {{zeppelinCtrl.loadingText}}
+                </div>
+              </div> 
+                <div class="content-wrapper" ng-show="mainCtrl.searchReturned === ''">                      
+                    <div growl reference="10" class="pull-right" ></div>
+                    <h3>
+                        <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
+                            <button class="btn btn-success" ng-click="zeppelinCtrl.createNewNote()" dropdown-toggle type="button" id="newNotebook" aria-haspopup="true" aria-expanded="true">
+                                Create New Notebook
+                            </button>
                         </div>
-                    </div>
-                </div>
-            </div> <!--content wrapper -->
+                        <ul class="nav navbar-nav pull-right" style="margin-right:30px;  margin-top:-10px;">
+                          <li class="pull-left" 
+                              ng-class="{'connected-space':zeppelinCtrl.connectedStatus, 'disconnected-space':!zeppelinCtrl.connectedStatus}">
+                            <hamburger-toggle state="zeppelinCtrl.tgState" class="hamburger-toggle" ng-click="zeppelinCtrl.deselect()">
+                            </hamburger-toggle>
+                          </li>
+                          <li class="server-status">
+                              <span class="fa fa-circle" ng-class="{'server-connected':zeppelinCtrl.connectedStatus, 'server-disconnected':!zeppelinCtrl.connectedStatus}"></span>  
+                              <span ng-show="zeppelinCtrl.connectedStatus">Connected</span>
+                              <span ng-show="!zeppelinCtrl.connectedStatus">Disconnected</span>
+                          </li>
+                        </ul>
 
-            <div flex=""></div>
-            </md-content>
-            <div class="ds-sidenav" ng-class="{open: zeppelinCtrl.tgState}">
-                <div class="ibox float-e-margins" style="margin-bottom: -25px; height: 95%;">
-                    <div class="file-manager">
-                        <div>
-                            <md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">
-                                <md-tabs md-dynamic-height md-border-bottom>
-                                    <md-tab label="Interpreters">
-                                        <div ng-show="zeppelinCtrl.interpreters === null">
-                                            <br>
-                                            <div class="file" style="text-align: center;">  
-                                                No interpreter found.
-                                            </div>           
+                    </h3>
+                    <div ng-init="(iscollapsed$index) = true; zeppelinCtrl.tgState = true;"
+                         class="ds-content col-lg-12" ng-class="{'sidenav-open': zeppelinCtrl.tgState}" style="margin-top: 5px;">
+                        <div class="row row-no-margin-left" style="margin-top: 15px;">
+                            <div class="col-lg-12">
+                                <div class="file-box"
+                                     context-menu
+                                     data-target="menu-{{ $index}}">
+                                    <div  class="file" ng-click="zeppelinCtrl.openZeppelin()">
+                                        <div class="icon" style="text-align: center;">
+                                            <img width="100" src="images/zepLogo.png"/>
                                         </div>
-                                        <md-content>
-                                            <table class="table table-hover" style="width: 100%">
-                                                <tr ng-repeat="interpreter in zeppelinCtrl.interpreters track by $index"
-                                                    ng-show="zeppelinCtrl.display(interpreter.interpreter.group)">
-                                                    <td><span>{{interpreter.interpreter.group}} Interpreter </span></td>
-                                                    <td class="text-muted">{{interpreter.statusMsg}}</td>
-                                                    <td style="text-align: right">                                      
-                                                        <button ng-click="zeppelinCtrl.stopInterpreter(interpreter)"
-                                                                type="button" class="btn btn-danger btn-sm" 
-                                                                ng-disabled="interpreter.interpreter.notRunning">
-                                                            <span class="glyphicon glyphicon-off" ></span></button>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                            <p style="line-height: 1.02; margin-top: 10px"><span class="glyphicon glyphicon-info-sign" >
+                                        <div class="file-name" >
+                                            <div style="text-align: center; color: #337ab7">
+                                                Goto Zeppelin
+                                            </div>                                                
+                                        </div>
+                                    </div>
+                                </div>
+                                <div ng-repeat="note in zeppelinCtrl.notes track by $index">
+                                    <div ng-click="zeppelinCtrl.openNote(note)"
+                                         class="file-box"
+                                         context-menu>
+                                        <div class="file" ng-class="">
+                                            <a>
+                                                <span class="corner"></span>
+                                                <div class="icon">
+                                                    <i class="fa fa-file-code-o"></i>
+                                                </div>
+                                                <div class="file-name">
+                                                    <div style="text-align: center;">
+                                                        {{note.name | limitTo: 18 || 'Note ' + note.id}}{{note.name.length > 18 ? '...' : ''}}
+                                                    </div>                                                
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>  
+                                    <div class="dropdown position-fixed" id="menu-{{$index}}">
+                                        <ul class="dropdown-menu dropdown-amore">
+                                            <li ng-show="projectCtrl.role === 'Data owner'">
+                                                <a class="pointer"
+                                                   role="menuitem"
+                                                   tabindex="1"
+                                                   ng-click="zeppelinCtrl.deleteNote(note)">
+                                                    <span><i class="fa fa-trash"></i>
+                                                        Remove Notebook</span>
+                                                </a>
+                                            </li>                                                 
+                                        </ul>
+                                    </div>
+                                </div> 
+                                 <!--end repeat--> 
 
-                                                </span>  Running a paragraph in a notebook will automatically start the necessary interpreters for that job.  </p>
-                                        </md-content>
-                                    </md-tab>
-                                </md-tabs>
-                            </md-content>
+                                <div class="file-box"
+                                     context-menu
+                                     data-target="menu-{{ $index}}">
+                                    <div  class="file" ng-click="zeppelinCtrl.createNewNote()">
+                                        <div class="icon">
+                                            <i class="glyphicon glyphicon-plus"></i>
+                                        </div>
+                                        <div class="file-name">
+                                            <div style="text-align: center; color: green;">
+                                                Create New Notebook
+                                            </div>                                                
+                                        </div>
+                                    </div>
+                                </div>                                 
+                            </div>
+                        </div>
+                    </div>
+                </div> <!--content wrapper -->
+
+                <div class="ds-sidenav" ng-class="{open: zeppelinCtrl.tgState}">
+                    <div class="ibox float-e-margins" style="margin-bottom: -25px; height: 95%;">
+                        <div class="file-manager">
+                            <div>
+                                <md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">
+                                    <md-tabs md-dynamic-height md-border-bottom>
+                                        <md-tab label="Interpreters">
+                                            <div ng-show="zeppelinCtrl.interpreters === null">
+                                                <br>
+                                                <div class="file" style="text-align: center;">  
+                                                    No interpreter found.
+                                                </div>           
+                                            </div>
+                                            <md-content>
+                                                <table class="table table-hover" style="width: 100%">
+                                                    <tbody ng-repeat="interpreter in zeppelinCtrl.interpreters track by $index"
+                                                        ng-show="zeppelinCtrl.display(interpreter.interpreter.group)">
+                                                        <tr>
+                                                          <td><span>{{interpreter.interpreter.group}} Interpreter </span></td>
+                                                          <td class="text-muted">{{interpreter.statusMsg}}</td>
+                                                          <td style="text-align: right">                                      
+                                                              <button ng-if="interpreter.interpreter.sessions.length === 0"
+                                                                      ng-click="zeppelinCtrl.stopInterpreter(interpreter)"
+                                                                      type="button" class="btn btn-danger btn-sm" 
+                                                                      ng-disabled="interpreter.interpreter.notRunning">
+                                                                  <span class="glyphicon glyphicon-off" ></span></button>
+                                                              <button name="livy-button" ng-if="interpreter.interpreter.group === 'livy' && interpreter.interpreter.sessions.length > 0" 
+                                                                      data-toggle="collapse"
+                                                                      data-target="#sessions"
+                                                                      ng-click="zeppelinCtrl.collapse=!zeppelinCtrl.collapse ; zeppelinCtrl.selectInterpreter(interpreter)"
+                                                                      type="button" class="btn btn-sm" 
+                                                                      ng-disabled="interpreter.interpreter.notRunning">
+                                                                  <span class="glyphicon" ng-class="{'glyphicon glyphicon-menu-right': !zeppelinCtrl.collapse, 'glyphicon glyphicon-menu-down': zeppelinCtrl.collapse}" ></span>
+                                                              </button>                                      
+                                                          </td>
+                                                        </tr>
+
+                                                        <tr ng-if="interpreter.interpreter.group === 'livy' && interpreter.interpreter.sessions.length > 0"
+                                                            ng-hide="zeppelinCtrl.collapse"
+                                                            ng-repeat="session in interpreter.interpreter.sessions">
+                                                          <td style=" border-bottom: 1px solid #e6e6e6; text-align: right;">
+                                                            {{session.owner + " : livy-session-" + session.id}}
+                                                          </td>
+                                                          <td style=" border-bottom: 1px solid #e6e6e6; text-align: right;">
+                                                            <button ng-click="zeppelinCtrl.stopLivySession(interpreter, session.id)"
+                                                                    type="button" class="btn btn-danger btn-sm" 
+                                                                    ng-disabled="interpreter.interpreter.notRunning">
+                                                                <span class="glyphicon glyphicon-off" ></span>
+                                                            </button>
+                                                          </td>
+                                                        </tr>                                                   
+                                                    </tbody>                     
+                                                </table>
+                                                <p style="line-height: 1.02; margin-top: 10px"><span class="glyphicon glyphicon-info-sign" >
+
+                                                    </span>  Running a paragraph in a notebook will automatically start the necessary interpreters for that job.  </p>
+                                            </md-content>
+                                        </md-tab>
+                                       <md-tab label="Advanced">
+                                         <md-content>
+                                            <div class="row" style="padding-top: 20px;">
+                                              <label class="col-lg-6" style="font-weight: 500;"> Restart zeppelin </label>
+                                             <button ng-click="zeppelinCtrl.clearCache()" type="button" class="col-lg-2 btn btn-danger btn-sm">
+                                                <span class="glyphicon glyphicon-repeat" ></span>
+                                             </button>
+                                            </div>
+                                         </md-content>
+                                       </md-tab>
+                                    </md-tabs>
+                                </md-content>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+          </section>
+        </div>
     </div>
 </div>
 </div>

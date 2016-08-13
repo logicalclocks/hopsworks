@@ -20,8 +20,10 @@ angular.module('hopsWorksApp')
                       function (success) {
 
                         self.ui = success.data;
-                        var iframe = document.getElementById('ui_iframe');
-                        iframe.src = self.ui;
+                        if(self.ui!==""){
+                          var iframe = document.getElementById('ui_iframe');
+                          iframe.src = self.ui;
+                        }
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
               });
@@ -37,7 +39,9 @@ angular.module('hopsWorksApp')
 
                         self.ui = success.data;
                         var iframe = document.getElementById('ui_iframe');
-                        iframe.src = self.ui;
+                        if(iframe!==null){
+                          iframe.src = self.ui;
+                        }
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
               });
@@ -50,7 +54,9 @@ angular.module('hopsWorksApp')
 
             self.refresh = function () {
               var ifram = document.getElementById('ui_iframe');
-              ifram.contentWindow.location.reload();
+              if(ifram!==null){
+                ifram.contentWindow.location.reload();
+              }
             };
             /**
              * Close the modal dialog.
@@ -68,7 +74,7 @@ angular.module('hopsWorksApp')
             });
 
             self.poller = $interval(function () {
-              if(ui!==""){
+              if(self.ui!==""){
                 $interval.cancel(self.poller);
                 return;
               }

@@ -20,6 +20,9 @@ public class InodeTableComposite implements Serializable, EntityIntf {
   }
 
   public InodeTableComposite(int tableid, int inodePid, String inodeName) {
+    if (inodeName == null) {
+      throw new NullPointerException("inodeName");
+    }
     this.tableid = tableid;
     this.inodePid = inodePid;
     this.inodeName = inodeName;

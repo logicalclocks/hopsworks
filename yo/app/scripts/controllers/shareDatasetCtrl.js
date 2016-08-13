@@ -7,8 +7,8 @@ angular.module('hopsWorksApp')
             self.datasets = [];
             self.projects = [];
             self.dataSet = {'name': dsName, 'description': "", 'projectId': "", 'editable':false};
-            var pId = $routeParams.projectID;
-            var dataSetService = DataSetService(pId);
+            self.pId = $routeParams.projectID;
+            var dataSetService = DataSetService(self.pId);
 
             ProjectService.getAll().$promise.then(
                 function (success) {
@@ -36,5 +36,10 @@ angular.module('hopsWorksApp')
                     self.dataSet.editable = false;
                 }
 
+            };
+            
+            $scope.omitCurrentProject = function (project) {
+              var id = parseInt(self.pId);
+              return project.id !== id;
             };
         }]);

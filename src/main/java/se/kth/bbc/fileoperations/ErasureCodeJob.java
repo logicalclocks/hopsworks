@@ -7,21 +7,21 @@ import javax.ws.rs.NotFoundException;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.user.model.Users;
 
 /**
  *
- * @author vangelis
  */
 public class ErasureCodeJob extends HopsJob {
 
   private static final Logger logger = Logger.getLogger(ErasureCodeJob.class.
           getName());
-  
   private ErasureCodeJobConfiguration jobConfig;
 
-  public ErasureCodeJob(JobDescription job, AsynchronousJobExecutor services, Users user, 
-      String hadoopDir, String nameNodeIpPort) {
+  public ErasureCodeJob(JobDescription job, AsynchronousJobExecutor services,
+          Users user,
+          String hadoopDir, String nameNodeIpPort) {
 
     super(job, services, user, hadoopDir, nameNodeIpPort);
 
@@ -35,7 +35,7 @@ public class ErasureCodeJob extends HopsJob {
   }
 
   @Override
-  protected boolean setupJob() {
+  protected boolean setupJob(DistributedFileSystemOps dfso) {
     if (jobConfig.getAppName() == null || jobConfig.getAppName().isEmpty()) {
       jobConfig.setAppName("Untitled Erasure coding Job");
     }
@@ -44,24 +44,21 @@ public class ErasureCodeJob extends HopsJob {
   }
 
   @Override
-  protected void runJob() {
-
+  protected void runJob(DistributedFileSystemOps udfso,
+          DistributedFileSystemOps dfso) {
     boolean jobSucceeded = false;
-
     try {
       //do compress the file
-      jobSucceeded = this.services.getFileOperations().compress(this.jobConfig.
+      jobSucceeded = dfso.compress(this.jobConfig.
               getFilePath());
     } catch (IOException | NotFoundException e) {
       jobSucceeded = false;
     }
-    
-    if(jobSucceeded){
+    if (jobSucceeded) {
       //TODO: push a message to the messaging service
       logger.log(Level.INFO, "File compression was successful");
       return;
     }
-    
     //push message to the messaging service
     logger.log(Level.INFO, "File compression was not successful");
   }

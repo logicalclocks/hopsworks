@@ -56,7 +56,8 @@ public class MaintenanceBean implements Serializable {
         setMessage(message);
 
         if (status == 1) {
-            messageController.sendToMany(userFacade.findAllUsers(), userFacade.findByEmail("admin@kth.se"), "Administration Message", message, "");
+            messageController.sendToMany(userFacade.findAllUsers(), userFacade.findByEmail("admin@kth.se"), 
+                    "Administration Message", message, "");
         }
     }
 

@@ -1,5 +1,6 @@
 package se.kth.hopsworks.rest;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.hops.kafka.AclDTO;
 import io.hops.kafka.AclUserDTO;
 import io.hops.kafka.TopicDTO;
@@ -33,9 +34,16 @@ import io.hops.kafka.PartitionDetailsDTO;
 import io.hops.kafka.SchemaDTO;
 import io.hops.kafka.SharedProjectDTO;
 import io.hops.kafka.TopicDefaultValueDTO;
+import java.util.logging.Level;
+import javax.json.JsonObject;
+import javax.persistence.EntityExistsException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.PUT;
+import org.apache.avro.Schema;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import se.kth.hopsworks.util.Settings;
 
 @RequestScoped
@@ -328,7 +336,13 @@ public class KafkaService {
 
         try {
             kafkaFacade.addAclsToTopic(topicName, projectId, aclDto);
-        } catch (Exception e) {
+        } catch(EntityExistsException ex){
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "This ACL definition already existes in database.");
+        }catch (IllegalArgumentException ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Wrong imput values");
+        }catch (Exception ex) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Problem adding ACL to topic.");
         }
@@ -354,6 +368,9 @@ public class KafkaService {
 
         try {
             kafkaFacade.removeAclsFromTopic(topicName, aclId);
+        }catch (IllegalArgumentException ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Wrong imput values");
         } catch (Exception e) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "Topic acl not found in database");
@@ -408,19 +425,30 @@ public class KafkaService {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Incomplete request!");
         }
-
-        kafkaFacade.updateTopicAcl(projectId, topicName, Integer.parseInt(aclId), aclDto);
-
+        
+        try {
+             kafkaFacade.updateTopicAcl(projectId, topicName, Integer.parseInt(aclId), aclDto);
+        } catch(EntityExistsException ex){
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "This ACL definition already existes in database.");
+        }catch (IllegalArgumentException ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Wrong imput values");
+        }catch (Exception ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Problem adding ACL to topic.");
+        }
+        
         json.setSuccessMessage("TopicAcl updated successfuly");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
     }
     
+    //validate the new schema
     @POST
-    @Path("/schema/add")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/schema/validate")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-    public Response addTopicSchema(SchemaDTO schamaData,
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+    public Response getValidateSchemaForTopics(SchemaDTO schemaData,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException, Exception {
         JsonResponse json = new JsonResponse();
@@ -430,8 +458,55 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        kafkaFacade.addSchemaForTopics(schamaData);
+        String schemaContent = schemaData.getContents();
+        try {
+            JSONObject jsonObject = new JSONObject(schemaContent);
+        } catch (JSONException ex) {
+            try {
+                JSONArray jsonArray = new JSONArray(schemaContent);
+            } catch (JSONException ex1) {
+                json.setErrorMsg("schema is invalid");
+                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(
+                        json).build();
+            }
+        }
+        json.setSuccessMessage("schema is valid");
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                json).build();
+    }
+    
+    @POST
+    @Path("/schema/add")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response addTopicSchema(SchemaDTO schemaData,
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException, Exception {
+        JsonResponse json = new JsonResponse();
 
+        if (projectId == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Incomplete request!");
+        }
+
+        String schemaContent = schemaData.getContents();
+
+        //validate the schema again
+        try {
+            JSONObject jsonObject = new JSONObject(schemaContent);
+        } catch (JSONException ex) {
+            try {
+                JSONArray jsonArray = new JSONArray(schemaContent);
+            } catch (JSONException ex1) {
+                 json.setErrorMsg("schema is valid");
+                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(
+                        json).build();
+            }
+        }
+
+        kafkaFacade.addSchemaForTopics(schemaData);
+       
         json.setSuccessMessage("Schema for Topic created/updated successfuly");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
     }

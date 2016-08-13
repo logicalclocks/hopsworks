@@ -13,9 +13,9 @@ angular.module('hopsWorksApp')
 
             self.projectMembers = [];
             self.projectTeam = [];
+//            self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
             self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
-//            self.projectTypes = ['JOBS', 'ZEPPELIN', 'BIOBANKING', 'CHARON', 'SSH']; 
-
+//            self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
             self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
             self.projectName = '';
             self.projectDesc = '';
@@ -115,7 +115,8 @@ angular.module('hopsWorksApp')
                         }
                         $modalInstance.close($scope.newProject);
                       }, function (error) {
-                self.working = false;
+                          self.working = false;
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
               }
               );
             };

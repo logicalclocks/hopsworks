@@ -13,6 +13,7 @@
 
     <h:head>
       <title><ui:insert name="title">Admin Panel</ui:insert></title>
+      <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
@@ -44,21 +45,23 @@
 
             </p:column>
 
+            
+
             <p:column>
-              <h:commandLink  action="adminAuditIndex">
-                <p:graphicImage id="audit" 
-                                value="/resources/images/users/audit.png" 
+              <h:commandLink  action="monitoring">
+
+                <p:graphicImage id="monitoring"
+                                value="/resources/images/users/monitoring.png"
                                 width="100"
                                 height="100"
-                                title="Audit Management"
-                                >
+                                title="Monitoring and Control"
+                >
                 </p:graphicImage>
               </h:commandLink>
               <br></br>
-              <p:outputLabel style="text-align: left"  value="Audit Management"></p:outputLabel>
-
+              <p:outputLabel style="text-align: left"  value="Monitoring and Control"></p:outputLabel>
             </p:column>
-
+ 
             <p:column>
               <h:commandLink  action="consentMgmt">
                 <p:graphicImage id="consent" 
@@ -152,7 +155,22 @@
               <p:outputLabel style="text-align: left"  value="Site Maintenance"></p:outputLabel>
             </p:column>
 
-          </h:panelGrid>
+            
+            <p:column>
+              <h:commandLink  action="adminAuditIndex">
+                <p:graphicImage id="audit" 
+                                value="/resources/images/users/audit.png" 
+                                width="100"
+                                height="100"
+                                title="Audit Management"
+                                >
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Audit Management"></p:outputLabel>
+
+            </p:column>
+         </h:panelGrid>
         </h:form>
       </div>
       <p:dialog draggable="false" resizable="false" styleClass="requestPopup" 

@@ -2,6 +2,7 @@ package se.kth.rest.application.config;
 
 import org.glassfish.jersey.server.ResourceConfig;
 
+
 @javax.ws.rs.ApplicationPath("api")
 public class ApplicationConfig extends ResourceConfig {
 
@@ -16,7 +17,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.AuthExceptionMapper.class);
     register(se.kth.hopsworks.rest.AgentService.class);
     register(se.kth.hopsworks.rest.AuthService.class);
-    register(se.kth.hopsworks.rest.CuneiformService.class);
     register(se.kth.hopsworks.rest.DataSetService.class);
     register(se.kth.hopsworks.rest.ExecutionService.class);
     register(se.kth.hopsworks.rest.JobService.class);
@@ -47,12 +47,19 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.BannerService.class);
     register(io.hops.hdfs.EndpointService.class);
     register(se.kth.hopsworks.rest.LocalFsService.class);
-    register(se.kth.hopsworks.rest.CharonService.class);
     register(se.kth.hopsworks.rest.KafkaService.class);
     // register resources and features
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     //register(org.glassfish.jersey.filter.LoggingFilter.class);
 
+    register(se.kth.hopsworks.rest.WorkflowService.class);
+    register(se.kth.hopsworks.rest.NodeService.class);
+    register(se.kth.hopsworks.rest.EdgeService.class);
+    register(se.kth.hopsworks.rest.WorkflowExecutionService.class);
+
+    // KMON REST Apis
+    register(io.hops.kmon.rest.resources.AgentResource.class);
+    
     // Enable Tracing support.
     //property(ServerProperties.TRACING, "OFF");
   }

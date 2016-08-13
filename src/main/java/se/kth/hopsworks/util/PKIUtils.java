@@ -12,16 +12,14 @@ import org.apache.commons.io.FileUtils;
 
 public class PKIUtils {
 
-  final static String PASSWORD = "adminpw";
-
   final static Logger logger = Logger.getLogger(PKIUtils.class.getName());
 
-  public static String signWithServerCertificate(String csr) throws IOException, InterruptedException {
+  public static String signWithServerCertificate(String csr, String intermediateCaDir, String hopsMasterPassword) throws IOException, InterruptedException {
     File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".csr");
     FileUtils.writeStringToFile(csrFile, csr);
 
     if (verifyCSR(csrFile)) {
-      return signCSR(csrFile);
+      return signCSR(csrFile, intermediateCaDir, hopsMasterPassword);
     }
     return null;
   }
@@ -37,7 +35,11 @@ public class PKIUtils {
     cmds.add(csr.getAbsolutePath());
     cmds.add("-noout");
     cmds.add("-verify");
-
+    StringBuilder sb = new StringBuilder("/usr/bin/openssl ");
+    for (String s : cmds) {
+      sb.append(s).append(" ");
+    }
+    logger.info(sb.toString());
     Process process = new ProcessBuilder(cmds).directory(new File("/usr/bin/")).
             redirectErrorStream(true).start();
     BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -59,7 +61,7 @@ public class PKIUtils {
     return false;
   }
 
-  private static String signCSR(File csr) throws IOException, InterruptedException {
+  private static String signCSR(File csr, String intermediateCaDir, String hopsMasterPassword) throws IOException, InterruptedException {
 
     File generatedCertFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".cert.pem");
 
@@ -68,11 +70,12 @@ public class PKIUtils {
 
     cmds.add("openssl");
     cmds.add("ca");
+//    cmds.add("-policy policy_loose");
     cmds.add("-batch");
     cmds.add("-config");
-    cmds.add(Settings.CA_DIR + "openssl.cnf");
+    cmds.add(intermediateCaDir + "/openssl-intermediate.cnf");
     cmds.add("-passin");
-    cmds.add("pass:" + PASSWORD);
+    cmds.add("pass:" + hopsMasterPassword);
     cmds.add("-extensions");
     cmds.add("usr_cert");
     cmds.add("-days");
@@ -84,6 +87,11 @@ public class PKIUtils {
     cmds.add(csr.getAbsolutePath());
     cmds.add("-out");
     cmds.add(generatedCertFile.getAbsolutePath());
+    StringBuilder sb = new StringBuilder("/usr/bin/");
+    for (String s : cmds) {
+      sb.append(s).append(" ");
+    }
+    logger.info(sb.toString());
 
     Process process = new ProcessBuilder(cmds).directory(new File("/usr/bin/")).
             redirectErrorStream(true).start();
@@ -94,8 +102,9 @@ public class PKIUtils {
       logger.info(line);
     }
     process.waitFor();
-    if (process.exitValue() != 0) {
-      throw new RuntimeException("Failed to sign certificate.");
+    int exitValue = process.exitValue();
+    if (exitValue != 0) {
+      throw new RuntimeException("Failed to sign certificate. Exit value: " + exitValue);
     }
     logger.info("Signed certificate.");
     return FileUtils.readFileToString(generatedCertFile);

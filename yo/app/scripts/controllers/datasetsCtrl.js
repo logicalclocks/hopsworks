@@ -565,18 +565,6 @@ This will make all its files unavailable to other projects unless you share it e
             }
             ;
 
-            self.close = function () {
-              $mdSidenav('right').close()
-                      .then(function () {
-                        $log.debug("Closed metadata designer (right)");
-                      });
-
-              $mdSidenav('left').close()
-                      .then(function () {
-                        $log.debug("Closed metadata designer (left)");
-                      });
-            };
-
           }]);
 
 /**

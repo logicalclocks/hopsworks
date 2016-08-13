@@ -1,0 +1,47 @@
+<div ng-controller="ProjectCtrl as projectCtrl">
+    <div ng-controller="MainCtrl as mainCtrl">
+        <div ng-include="'nav.html'"></div>
+        <div id="wrapper" class="toggled">
+            <div class="overlay"></div>
+            <div ng-controller="MetadataCtrl as metadataCtrl">
+                <div ng-controller="DatasetsCtrl as datasetsCtrl">
+                    <div ng-controller="WorkflowExecutionCtrl as workflowExecutionCtrl">
+                        <div ng-include="'navProject.html'"></div>
+                        <div class="content-wrapper">
+                          <h3>
+                              <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
+                                  <button class="btn btn-sm btn-info" ng-click="workflowExecutionCtrl.goToExecutions(workflowExecutionCtrl.getWorkflowId())" dropdown-toggle="" type="button" aria-haspopup="true" aria-expanded="true">
+                                      Back
+                                  </button>
+                              </div>
+                          </h3>
+                        </div>
+
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Started At</th>
+                                <th>Ended At</th>
+                                <th>Updated At</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="job in workflowJobCtrl.jobs">
+                                <td><a ng-click="workflowJobCtrl.goToShow(job.id)" >{{job.id}}</a></td>
+                                <td>{{job.status}}</td>
+                                <td>{{job.createdAt}}</td>
+                                <td>{{job.startedAt}}</td>
+                                <td>{{job.endedAt}}</td>
+                                <td>{{job.updatedAt}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

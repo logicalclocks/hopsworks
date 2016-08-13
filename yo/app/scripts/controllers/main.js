@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MainCtrl', ['$interval','$cookies', '$location','$scope', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService','ProjectService','growl','MessageService','$routeParams',
-          function ($interval, $cookies, $location, $scope, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl, MessageService, $routeParams) {
+        .controller('MainCtrl', ['$interval','$cookies', '$location','$scope', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService','ProjectService','growl','MessageService','$routeParams', '$window',
+          function ($interval, $cookies, $location, $scope, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl, MessageService, $routeParams, $window) {
 
             var self = this;
             self.email = $cookies['email'];
@@ -20,6 +20,27 @@ angular.module('hopsWorksApp')
             }
             else {
               self.searchType = "global";
+            }
+            
+            self.isAdmin = false;
+            self.checkedAdmin = false;
+
+
+            self.checkIfAdmin = function () {
+              if (self.checkedAdmin === false) {
+              AuthService.isAdmin().then(
+                      function (success) {
+                        self.isAdmin = true;
+                      }, function (error) {
+                        self.isAdmin = false;
+              });
+                 self.checkedAdmin = true;
+              } 
+              return self.isAdmin;
+            }
+            
+            self.goToAdminPage = function () {
+              $window.location.href = '/hopsworks/security/protected/admin/adminIndex.xhtml';
             }
 
             self.getEmailHash = function(email) {
@@ -234,7 +255,7 @@ angular.module('hopsWorksApp')
                                     growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                                 });
                     } else if (self.searchType === "datasetCentric") {
-                        elasticService.datasetSearch(UtilsService.getDatasetName(), self.searchTerm)
+                        elasticService.datasetSearch($routeParams.projectID, UtilsService.getDatasetName(), self.searchTerm)
                                 .then(function (response) {
 
                                     var searchHits = response.data;

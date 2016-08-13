@@ -93,10 +93,11 @@
           </li>
           <li class="dropdown">
             <a class="dropdown-toggle" style="padding:7px 10px 8px 10px; text-decoration:none;" data-toggle="dropdown"  aria-expanded="false" id="navbarProfile">
-              <img src="https://gravatar.com/avatar/{{mainCtrl.emailHash}}?d=mm" style="height: 35px; margin-right: 10px;border: 2px solid white;" class="profile-image img-circle">
+              <img src="https://gravatar.com/avatar/{{mainCtrl.emailHash}}?d=retro&s=50" style="height: 35px; margin-right: 10px;border: 0.5px solid gray;" class="profile-image img-circle">
               {{mainCtrl.email}} <b class="caret"></b>
             </a>
             <ul class="dropdown-menu">
+              <li ng-show="mainCtrl.checkIfAdmin()"><a ng-click="mainCtrl.goToAdminPage()"><i class="fa fa-user-secret"></i>Admin</a></li>
               <li><a ng-click="mainCtrl.profileModal()"><i class="fa fa-cog"></i> Account</a></li>
               <!--<li><a ng-click="mainCtrl.sshKeysModal()"><i class="fa fa-key"></i> Ssh Keys</a></li>-->
               <li><a href="#/" ng-click="mainCtrl.logout()"><i class="fa fa-sign-out"></i> Sign out</a></li>

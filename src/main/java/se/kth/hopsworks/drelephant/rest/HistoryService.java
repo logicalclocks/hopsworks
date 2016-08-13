@@ -46,6 +46,8 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfsUsers.HdfsUsersFacade;
+import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.JobService;
 import se.kth.hopsworks.rest.JsonResponse;
@@ -96,7 +98,9 @@ public class HistoryService {
   private YarnAppHeuristicResultDetailsFacade yarnAppHeuristicResultDetailsFacade;
   @EJB
   private Settings settings;
- 
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
+  
   
   @GET
   @Path("all/{projectId}")
@@ -105,10 +109,12 @@ public class HistoryService {
     public Response getAllProjects(@PathParam("projectId") int projectId,   
         @Context SecurityContext sc,
         @Context HttpServletRequest req) throws AppException{
-        
+   
     Project returnProject = projectFacade.find(projectId);
-    List<YarnAppResultDTO> appResultsToReturn = new ArrayList<>();    
-    List<YarnAppResult> appResults = yarnAppResultFacade.findByUsername(returnProject.getName() + "__meb10000");
+    List<YarnAppResultDTO> appResultsToReturn = new ArrayList<>();
+    List<YarnAppResult> appResults = yarnAppResultFacade.findByUsername(
+            hdfsUsersBean.getHdfsUserName(returnProject,
+                    returnProject.getOwner()));
     
     Iterator<YarnAppResult> itr = appResults.iterator();
     while(itr.hasNext()){

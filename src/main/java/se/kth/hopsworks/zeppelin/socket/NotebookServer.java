@@ -19,7 +19,6 @@ package se.kth.hopsworks.zeppelin.socket;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,15 +50,16 @@ import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 import org.apache.zeppelin.interpreter.remote.RemoteAngularObjectRegistry;
 import org.apache.zeppelin.interpreter.remote.RemoteInterpreterProcessListener;
+import org.apache.zeppelin.interpreter.thrift.InterpreterCompletion;
 import org.apache.zeppelin.notebook.JobListenerFactory;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Notebook;
+import org.apache.zeppelin.notebook.NotebookAuthorization;
 import org.apache.zeppelin.notebook.Paragraph;
 import org.apache.zeppelin.notebook.ParagraphJobListener;
 import org.apache.zeppelin.scheduler.Job;
 import org.apache.zeppelin.scheduler.Job.Status;
 import org.apache.zeppelin.user.AuthenticationInfo;
-import org.apache.zeppelin.search.SearchService;
 import org.quartz.SchedulerException;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
@@ -71,6 +71,8 @@ import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 import se.kth.hopsworks.zeppelin.socket.Message.OP;
+import se.kth.hopsworks.zeppelin.util.SecurityUtils;
+import se.kth.hopsworks.zeppelin.util.TicketContainer;
 
 /**
  * Zeppelin websocket service.
@@ -80,8 +82,8 @@ import se.kth.hopsworks.zeppelin.socket.Message.OP;
         configurator = ZeppelinEndpointConfig.class)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class NotebookServer implements
-    SearchService,
-    JobListenerFactory, AngularObjectRegistryListener,  RemoteInterpreterProcessListener{
+        JobListenerFactory, AngularObjectRegistryListener,
+        RemoteInterpreterProcessListener {
 
   private static final Logger LOG = Logger.getLogger(NotebookServer.class.
           getName());
@@ -148,15 +150,31 @@ public class NotebookServer implements
       LOG.log(Level.INFO, "RECEIVE TICKET << {0}", messagereceived.ticket);
       LOG.log(Level.INFO, "RECEIVE ROLES << {0}", messagereceived.roles);
 
+      String ticket = TicketContainer.instance.getTicket(
+              messagereceived.principal);
+      if (ticket != null && !ticket.equals(messagereceived.ticket)) {
+        try {
+          session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE,
+                  "Invalid ticket " + messagereceived.ticket + " != "
+                  + ticket));
+        } catch (IOException ex) {
+          LOG.log(Level.SEVERE, null, ex);
+        }
+        LOG.log(Level.INFO, "Invalid ticket {0} != {1}", new Object[]{
+          messagereceived.ticket,
+          ticket});
+      }
+      AuthenticationInfo subject = new AuthenticationInfo(
+              messagereceived.principal);
       /**
        * Lets be elegant here
        */
       switch (messagereceived.op) {
         case LIST_NOTES:
-          unicastNoteList(conn);
+          unicastNoteList(conn, subject);
           break;
         case RELOAD_NOTES_FROM_REPO:
-          broadcastReloadedNoteList();
+          broadcastReloadedNoteList(subject);
           break;
         case GET_HOME_NOTE:
           sendHomeNote(conn, notebook);
@@ -276,6 +294,19 @@ public class NotebookServer implements
     }
   }
 
+  public void closeConnection() {
+    try {
+      if (this.session.isOpen()) {
+        this.session.getBasicRemote().sendText("Restarting zeppelin.");
+        this.session.close(new CloseReason(
+                CloseReason.CloseCodes.SERVICE_RESTART,
+                "Restarting zeppelin."));
+      }
+    } catch (IOException ex) {
+      LOG.log(Level.SEVERE, null, ex);
+    }
+  }
+
   private void removeNote(String noteId) {
     synchronized (noteSocketMap) {
       noteSocketMap.remove(noteId);
@@ -330,7 +361,9 @@ public class NotebookServer implements
       LOG.log(Level.INFO, "SEND >> {0}", m.op);
       for (Session conn : socketLists) {
         try {
-          conn.getBasicRemote().sendText(serializeMessage(m));
+          if (conn.isOpen()) {
+            conn.getBasicRemote().sendText(serializeMessage(m));
+          }
         } catch (IOException ex) {
           LOG.log(Level.SEVERE, "Unable to send message " + m, ex);
         }
@@ -350,7 +383,9 @@ public class NotebookServer implements
           continue;
         }
         try {
-          conn.getBasicRemote().sendText(serializeMessage(m));
+          if (conn.isOpen()) {
+            conn.getBasicRemote().sendText(serializeMessage(m));
+          }
         } catch (IOException ex) {
           LOG.log(Level.SEVERE, "Unable to send message " + m, ex);
         }
@@ -363,7 +398,7 @@ public class NotebookServer implements
     for (Session conn : connectedSockets) {
       try {
         if (conn.getUserProperties().get("projectID").equals(
-                this.project.getId())) {
+                this.project.getId()) && conn.isOpen()) {
           conn.getBasicRemote().sendText(serializeMessage(m));
         }
       } catch (IOException ex) {
@@ -380,7 +415,8 @@ public class NotebookServer implements
     }
   }
 
-  public List<Map<String, String>> generateNotebooksInfo(boolean needsReload) {
+  public List<Map<String, String>> generateNotebooksInfo(boolean needsReload,
+          AuthenticationInfo subject) {
     Notebook notebook = notebook();
 
     ZeppelinConfiguration conf = notebook.getConf();
@@ -391,7 +427,7 @@ public class NotebookServer implements
 
     if (needsReload) {
       try {
-        notebook.reloadAllNotes();
+        notebook.reloadAllNotes(subject);
       } catch (IOException e) {
         LOG.severe("Fail to reload notes from repository");
       }
@@ -419,18 +455,18 @@ public class NotebookServer implements
     broadcast(note.id(), new Message(OP.NOTE).put("note", note));
   }
 
-  public void broadcastNoteList() {
-    List<Map<String, String>> notesInfo = generateNotebooksInfo(false);
+  public void broadcastNoteList(AuthenticationInfo subject) {
+    List<Map<String, String>> notesInfo = generateNotebooksInfo(false, subject);
     broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
   }
 
-  public void unicastNoteList(Session conn) {
-    List<Map<String, String>> notesInfo = generateNotebooksInfo(false);
+  public void unicastNoteList(Session conn, AuthenticationInfo subject) {
+    List<Map<String, String>> notesInfo = generateNotebooksInfo(false, subject);
     unicast(new Message(OP.NOTES_INFO).put("notes", notesInfo), conn);
   }
 
-  public void broadcastReloadedNoteList() {
-    List<Map<String, String>> notesInfo = generateNotebooksInfo(true);
+  public void broadcastReloadedNoteList(AuthenticationInfo subject) {
+    List<Map<String, String>> notesInfo = generateNotebooksInfo(true, subject);
     broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
   }
 
@@ -457,7 +493,7 @@ public class NotebookServer implements
     }
 
     Note note = notebook.getNote(noteId);
-    if (note != null) {
+    if (note != null && conn.isOpen()) {
       if (this.userRole == null) {
         permissionError(conn, "read", this.userRole, AllowedRoles.DATA_OWNER
                 + ", " + AllowedRoles.DATA_SCIENTIST);
@@ -479,7 +515,7 @@ public class NotebookServer implements
       note = notebook.getNote(noteId);
     }
 
-    if (note != null) {
+    if (note != null && conn.isOpen()) {
       if (this.userRole == null) {
         permissionError(conn, "read", this.userRole, AllowedRoles.DATA_OWNER
                 + ", " + AllowedRoles.DATA_SCIENTIST);
@@ -523,9 +559,10 @@ public class NotebookServer implements
         notebook.refreshCron(note.id());
       }
 
-      note.persist();
+      AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+      note.persist(subject);
       broadcastNote(note);
-      broadcastNoteList();
+      broadcastNoteList(subject);
     }
   }
 
@@ -546,7 +583,8 @@ public class NotebookServer implements
 
   private void createNote(Session conn, Notebook notebook, Message message)
           throws IOException {
-    Note note = notebook.createNote();
+    AuthenticationInfo subject = new AuthenticationInfo(message.principal);
+    Note note = notebook.createNote(subject);
     note.addParagraph(); // it's an empty note. so add one paragraph
     if (message != null) {
       String noteName = (String) message.get("name");
@@ -556,11 +594,11 @@ public class NotebookServer implements
       note.setName(noteName);
     }
 
-    note.persist();
+    note.persist(subject);
     addConnectionToNote(note.id(), conn);
     conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NEW_NOTE).
             put("note", note)));
-    broadcastNoteList();
+    broadcastNoteList(subject);
   }
 
   private void removeNote(Session conn, Notebook notebook, Message fromMessage)
@@ -576,9 +614,10 @@ public class NotebookServer implements
       return;
     }
 
-    notebook.removeNote(noteId);
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    notebook.removeNote(noteId, subject);
     removeNote(noteId);
-    broadcastNoteList();
+    broadcastNoteList(subject);
   }
 
   private void updateParagraph(Session conn, Notebook notebook,
@@ -595,7 +634,9 @@ public class NotebookServer implements
             .get("config");
     String noteId = getOpenNoteId(conn);
     final Note note = notebook.getNote(noteId);
-
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
     if (this.userRole == null) {
       permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
               + ", " + AllowedRoles.DATA_SCIENTIST);
@@ -607,7 +648,7 @@ public class NotebookServer implements
     p.setConfig(config);
     p.setTitle((String) fromMessage.get("title"));
     p.setText((String) fromMessage.get("paragraph"));
-    note.persist();
+    note.persist(subject);
     broadcast(note.id(), new Message(OP.PARAGRAPH).put("paragraph", p));
   }
 
@@ -615,11 +656,13 @@ public class NotebookServer implements
           throws IOException, CloneNotSupportedException {
     String noteId = getOpenNoteId(conn);
     String name = (String) fromMessage.get("name");
-    Note newNote = notebook.cloneNote(noteId, name);
+    Note newNote = notebook.cloneNote(noteId, name, new AuthenticationInfo(
+            fromMessage.principal));
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
     addConnectionToNote(newNote.id(), conn);
     conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NEW_NOTE).
             put("note", newNote)));
-    broadcastNoteList();
+    broadcastNoteList(subject);
   }
 
   protected Note importNote(Session conn, Notebook notebook, Message fromMessage)
@@ -628,10 +671,11 @@ public class NotebookServer implements
     if (fromMessage != null) {
       String noteName = (String) ((Map) fromMessage.get("notebook")).get("name");
       String noteJson = gson.toJson(fromMessage.get("notebook"));
-      note = notebook.importNote(noteJson, noteName);
-      note.persist();
+      AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+      note = notebook.importNote(noteJson, noteName, subject);
+      note.persist(subject);
       broadcastNote(note);
-      broadcastNoteList();
+      broadcastNoteList(subject);
     }
     return note;
   }
@@ -646,7 +690,10 @@ public class NotebookServer implements
     }
     String noteId = getOpenNoteId(conn);
     final Note note = notebook.getNote(noteId);
-
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
+            getPrincipal());
     if (!this.userRole.equals(AllowedRoles.DATA_OWNER)) {
       permissionError(conn, "remove", this.userRole, AllowedRoles.DATA_OWNER);
       return;
@@ -657,7 +704,7 @@ public class NotebookServer implements
      */
     if (!note.isLastParagraph(paragraphId)) {
       note.removeParagraph(paragraphId);
-      note.persist();
+      note.persist(subject);
       broadcastNote(note);
     }
   }
@@ -692,7 +739,8 @@ public class NotebookServer implements
     }
 
     final Note note = notebook.getNote(getOpenNoteId(conn));
-    List<String> candidates = note.completion(paragraphId, buffer, cursor);
+    List<InterpreterCompletion> candidates = note.
+            completion(paragraphId, buffer, cursor);
     resp.put("completions", candidates);
     conn.getBasicRemote().sendText(serializeMessage(resp));
   }
@@ -975,6 +1023,10 @@ public class NotebookServer implements
             .toString());
     String noteId = getOpenNoteId(conn);
     final Note note = notebook.getNote(noteId);
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
+            getPrincipal());
     if (this.userRole == null) {
       permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
               + ", " + AllowedRoles.DATA_SCIENTIST);
@@ -982,7 +1034,7 @@ public class NotebookServer implements
     }
 
     note.moveParagraph(paragraphId, newIndex);
-    note.persist();
+    note.persist(subject);
     broadcastNote(note);
   }
 
@@ -993,6 +1045,10 @@ public class NotebookServer implements
             toString());
     String noteId = getOpenNoteId(conn);
     final Note note = notebook.getNote(noteId);
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
+            getPrincipal());
     if (this.userRole == null) {
       permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
               + ", " + AllowedRoles.DATA_SCIENTIST);
@@ -1000,7 +1056,7 @@ public class NotebookServer implements
     }
 
     note.insertParagraph(index);
-    note.persist();
+    note.persist(subject);
     broadcastNote(note);
   }
 
@@ -1062,7 +1118,8 @@ public class NotebookServer implements
       note.addParagraph();
     }
 
-    note.persist();
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    note.persist(subject);
     try {
       note.run(paragraphId);
     } catch (Exception ex) {
@@ -1076,10 +1133,10 @@ public class NotebookServer implements
     }
   }
 
-
   private void sendAllConfigurations(Session conn,
           Notebook notebook) throws IOException {
     ZeppelinConfiguration conf = notebook.getConf();
+
     Map<String, String> configurations = conf.dumpConfigurations(conf,
             new ZeppelinConfiguration.ConfigurationKeyPredicate() {
       @Override
@@ -1099,42 +1156,8 @@ public class NotebookServer implements
           Message fromMessage) throws IOException {
     String noteId = (String) fromMessage.get("noteId");
     String commitMessage = (String) fromMessage.get("commitMessage");
-    notebook.checkpointNote(noteId, commitMessage);
-  }
-  
-  @Override
-  public List<Map<String, String>> query(String string) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void updateIndexDoc(Note note) throws IOException {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void addIndexDocs(Collection<Note> clctn) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void addIndexDoc(Note note) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void deleteIndexDocs(Note note) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void deleteIndexDoc(Note note, Paragraph prgrph) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void close() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    notebook.checkpointNote(noteId, commitMessage, subject);
   }
 
   /**
@@ -1208,9 +1231,10 @@ public class NotebookServer implements
       if (job.isTerminated()) {
         LOG.log(Level.INFO, "Job {0} is finished", job.getId());
         try {
-          note.persist();
+          //TODO(khalid): may change interface for JobListener and pass subject from interpreter
+          note.persist(null);
         } catch (IOException e) {
-          e.printStackTrace();
+          LOG.log(Level.SEVERE, e.toString(), e);
         }
       }
       notebookServer.broadcastNote(note);
@@ -1315,7 +1339,8 @@ public class NotebookServer implements
                   new Message(OP.ANGULAR_OBJECT_UPDATE)
                   .put("angularObject", object)
                   .put("interpreterGroupId", interpreterGroupId)
-                  .put("noteId", note.id()));
+                  .put("noteId", note.id())
+                  .put("paragraphId", object.getParagraphId()));
         }
       }
     }

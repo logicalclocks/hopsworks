@@ -9,9 +9,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -44,7 +44,6 @@ import static org.elasticsearch.index.query.QueryBuilders.hasParentQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
-import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import org.elasticsearch.search.SearchHit;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
@@ -54,48 +53,7 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
 /**
@@ -105,7 +63,7 @@ import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 @Path("/elastic")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
+@Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ElasticService {
 
@@ -290,6 +248,7 @@ public class ElasticService {
   /**
    * Searches for content inside a specific dataset. Hits 'dataset' index
    * <p/>
+   * @param projectId
    * @param datasetName
    * @param searchTerm
    * @param sc
@@ -298,10 +257,11 @@ public class ElasticService {
    * @throws AppException
    */
   @GET
-  @Path("datasetsearch/{datasetName}/{searchTerm}")
+  @Path("datasetsearch/{projectId}/{datasetName}/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response datasetSearch(
+          @PathParam("projectId") Integer projectId,
           @PathParam("datasetName") String datasetName,
           @PathParam("searchTerm") String searchTerm,
           @Context SecurityContext sc,
@@ -325,8 +285,17 @@ public class ElasticService {
               getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
     }
 
-    Dataset dataset = datasetFacade.findByName(datasetName);
-    final int projectId = dataset.getProjectId().getId();
+    String dsName = datasetName;
+    Project project;
+    if(datasetName.contains(Settings.SHARED_FILE_SEPARATOR)){
+        String[] sharedDS = datasetName.split(Settings.SHARED_FILE_SEPARATOR);
+        dsName = sharedDS[1];
+        project = projectFacade.findByName(sharedDS[0]);
+    }else{
+        project = projectFacade.find(projectId);
+    }
+    
+    Dataset dataset = datasetFacade.findByNameAndProjectId(project, dsName);
     final int datasetId = dataset.getIdForInode();
     
     //hit the indices - execute the queries
@@ -335,7 +304,7 @@ public class ElasticService {
     srb = srb.setQuery(this.datasetSearchQuery(datasetId, searchTerm));
     //FIXME: https://github.com/elastic/elasticsearch/issues/14999 
     //srb = srb.addHighlightedField("name");
-    srb = srb.setRouting(String.valueOf(projectId));
+    srb = srb.setRouting(String.valueOf(project.getId()));
     
     logger.log(Level.INFO, "Dataset Elastic query is: {0}", srb.toString());
     ListenableActionFuture<SearchResponse> futureResponse = srb.execute();
