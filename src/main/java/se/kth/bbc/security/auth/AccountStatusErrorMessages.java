@@ -17,6 +17,8 @@ public class AccountStatusErrorMessages {
 
   public final static String DEACTIVATED_ACCOUNT
           = "This account has been deactivated.";
+  public final static String LOST_DEVICE
+          = "This account has registered a lost device.";
 
   public final static String INCORRECT_PIN = "PIN must be 6 charachters.";
 

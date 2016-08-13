@@ -24,12 +24,10 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
 @RequestScoped
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class EdgeService {
     private final static Logger logger = Logger.getLogger(EdgeService.class.

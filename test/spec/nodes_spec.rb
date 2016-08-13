@@ -20,6 +20,7 @@ describe 'nodes' do
       end
       it "should fail" do
         get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes"
+        expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
     end
@@ -53,6 +54,7 @@ describe 'nodes' do
       context "with valid params" do
         it "should fail" do
           post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes", valid_params
+          expect_json(errorMsg: "Client not authorized for this invocation")
           expect_status(401)
         end
       end
@@ -64,7 +66,7 @@ describe 'nodes' do
       context "with valid params" do
         it "should create a new node" do
           post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes", valid_params
-          expect_json(errorMsg: -> (value){ expect(value).to be_nil})
+          expect_json(errorMsg: ->(value){ expect(value).to be_nil})
           expect_json_types(id: :string, workflowId: :int, type: :string, data: :object)
           expect_status(200)
         end
@@ -72,13 +74,13 @@ describe 'nodes' do
         it "should not be nil externalId" do
           post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes", valid_params
           expect_status(200)
-          expect_json(externalId: -> (value){ expect(value).to_not be_nil})
+          expect_json(externalId: ->(value){ expect(value).to_not be_nil})
         end
       end
       context "with invalid params" do
         it "should fail" do
           post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes", invalid_params
-          expect_json(errorMsg: -> (value){ expect(value).not_to be_empty})
+          expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
           expect_status(400)
         end
       end
@@ -94,6 +96,7 @@ describe 'nodes' do
       end
       it "should fail" do
         get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}"
+        expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
     end
@@ -134,6 +137,7 @@ describe 'nodes' do
       context "with valid params" do
         it "should fail" do
           put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}", valid_params
+          expect_json(errorMsg: "Client not authorized for this invocation")
           expect_status(401)
         end
       end
@@ -145,7 +149,7 @@ describe 'nodes' do
       context "with valid params" do
         it "should update a node" do
           put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}", valid_params
-          expect_json(errorMsg: -> (value){ expect(value).to be_nil})
+          expect_json(errorMsg: ->(value){ expect(value).to be_nil})
           expect_json_types(id: :string, workflowId: :int, type: :string, data: :object)
           expect_json(id: node[:id])
           expect_json(data: valid_params[:data])
@@ -156,7 +160,7 @@ describe 'nodes' do
           params = valid_params
           put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}", params
           expect_status(200)
-          expect_json(externalId: -> (value){ expect(value).to_not be_nil})
+          expect_json(externalId: ->(value){ expect(value).to_not be_nil})
         end
 
         it "should fail trying to update unexitising node" do
@@ -171,7 +175,7 @@ describe 'nodes' do
       context "with invalid params" do
         it "should fail" do
           put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}", invalid_params
-          expect_json(errorMsg: -> (value){ expect(value).not_to be_empty})
+          expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
           expect_status(400)
         end
       end
@@ -188,6 +192,7 @@ describe 'nodes' do
       end
       it "should fail" do
         delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}"
+        expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
     end

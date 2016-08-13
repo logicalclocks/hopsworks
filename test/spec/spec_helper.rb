@@ -1,17 +1,17 @@
 require 'airborne'
-require 'byebug'
+#require 'byebug'
 require 'active_record'
 
 require 'dotenv'
 Dotenv.load
 
 ActiveRecord::Base.establish_connection ({
-  :adapter => "mysql2",
-  :host => "bbc1.sics.se",
-  :port => "13007",
+  :adapter => "jdbcmysql",
+  :host => ENV['DB_HOST'],
+  :port => ENV['DB_PORT'],
+  :database => "hopsworks",
   :username => "kthfs",
-  :password => "kthfs",
-  :database => "hopsworks"})
+  :password => "kthfs"})
 
 Dir[File.join(File.dirname(__FILE__), 'factories', '**', '*.rb')].each { |f| require f }
 
@@ -22,16 +22,20 @@ RSpec.configure do |config|
   config.include ProjectHelper
   config.include WorkflowHelper
   config.include FactoryHelper
+  config.before(:suite) do
+    #clean_oozie
+    #clean_database
+  end
+  #config.after(:all) { clean_database }
+end
+
+Airborne.configure do |config|
+  config.base_url = "http://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
   # config.before(:suite) do
   #   clean_oozie
   #   clean_database
   # end
   # config.after(:all) { clean_database }
-end
-
-Airborne.configure do |config|
-  config.base_url = 'http://bbc1.sics.se:14007'
-  config.headers = { content_type: 'application/json' }
 end
 
 def clean_oozie
@@ -44,9 +48,9 @@ def clean_oozie
 end
 
 def clean_database
+  require 'net/ssh'
+  require 'net/ssh/shell'
   if ENV['RSPEC_SSH'] && ENV['RSPEC_SSH']=="true"
-    require 'net/ssh'
-    require 'net/ssh/shell'
     Net::SSH::start(ENV['RSPEC_SSH_HOST'], 'root') do |ssh|
       ssh.shell do |sh|
         puts "Remote Database Cleaning begining"
@@ -65,6 +69,14 @@ def clean_database
       end
     end
   else
-    #implement data cleaning for non vagrant ssh solution
+    puts "Vagrant Database Cleaning begining"
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"DROP DATABASE IF EXISTS oozie\" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"DROP DATABASE IF EXISTS hopsworks\" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1\" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"CREATE DATABASE IF NOT EXISTS oozie CHARACTER SET latin1\" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo cat /srv/glassfish/tables.sql | sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo cat /srv/glassfish/rows.sql | sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
+    # sh.execute("vagrant ssh -c 'sudo cat /srv/oozie/oozie.sql | sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh --database=oozie' ")
+    puts "Vagrant Database Cleaning finished"
   end
 end
