@@ -50,15 +50,6 @@
       <!--Navigation Bar - End-->
 
 
-<!--         <p:outputPanel rendered="#{not roleController.found}" >
-            <p:spacer width="1" height="50" />             
-            <p:panel header="Error" style="width: 300px; margin: 0 auto;">
-               <p align="center"> Role not found!</p>   
-            </p:panel>
-         </p:outputPanel>      -->
-
-
-         <!--<p:outputPanel rendered="#{roleController.found}">-->  
       <p:outputPanel rendered="true">
         <!-- Second Toolbar-->
         <p:outputPanel id="second_toolbar" rendered="true">       
@@ -73,13 +64,6 @@
                   <f:param name="service" value="#{roleController.service}"/>                              
                   <f:param name="hostid" value="#{roleController.hostId}"/>
                 </p:commandLink>
-                <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" 
-                                 action="#{urlController.roleStatus}" ajax="false">
-                  <f:param name="cluster" value="#{roleController.cluster}"/>
-                  <f:param name="role" value="#{roleController.role}"/>
-                  <f:param name="service" value="#{roleController.service}"/>                             
-                  <f:param name="hostid" value="#{roleController.hostId}"/>                          
-                </p:commandButton>  
                 <p:commandButton value="Action History" icon="ui-icon-circle-triangle-e"
                                  action="#{urlController.roleActionHistory}" ajax="false">
                   <f:param name="cluster" value="#{roleController.cluster}"/>
@@ -90,10 +74,10 @@
               </p:toolbarGroup>  
 
 
-              <p:toolbarGroup align="right">  
-                <p:menuButton value="Actions">  
+              <p:toolbarGroup align="center">  
+                <p:menuButton value="Start/Stop">  
                   <p:menuitem id="restart_role" value="Restart" action="#{communicationController.roleRestart()}" 
-                              process="@this"
+                              process="@this" icon="ui-icon-refresh"
                               disabled="#{roleController.disableStop()}" ajax ="true" update="@all">
                     <f:param name="hostid" value="#{roleController.hostId}" />
                     <f:param name="cluster" value="#{roleController.cluster}" />
@@ -102,14 +86,14 @@
                     <f:param name="command" value="restart" />
                   </p:menuitem>
                   <p:menuitem id="start_role" value="Start" action="#{communicationController.roleStart()}" process="@this"
-                              disabled="#{roleController.disableStart()}" ajax ="true" update="@all">
+                              icon="ui-icon-play" disabled="#{roleController.disableStart()}" ajax ="true" update="@all">
                     <f:param name="hostid" value="#{roleController.hostId}" />
                     <f:param name="cluster" value="#{roleController.cluster}" />
                     <f:param name="role" value="#{roleController.role}" />
                     <f:param name="service" value="#{roleController.service}"/>                                   
                   </p:menuitem>
                   <p:menuitem id="stop_role" value="Stop" action="#{communicationController.roleStop()}" process="@this"
-                              disabled="#{roleController.disableStop()}" ajax ="true" update="@all">
+                              icon="ui-icon-stop" disabled="#{roleController.disableStop()}" ajax ="true" update="@all">
                     <f:param name="hostid" value="#{roleController.hostId}" />
                     <f:param name="cluster" value="#{roleController.cluster}" />
                     <f:param name="role" value="#{roleController.role}" />
