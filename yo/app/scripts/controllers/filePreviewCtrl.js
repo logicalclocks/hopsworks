@@ -6,7 +6,7 @@ angular.module('hopsWorksApp')
             self.filePath = filePath;
             self.fileName = fileName;
             self.projectId = projectId;
-            self.fileContents = [];
+            self.fileContents;
             self.fileType;
             self.init = function () {
               var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
