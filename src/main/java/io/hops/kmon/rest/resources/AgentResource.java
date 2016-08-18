@@ -28,12 +28,9 @@ import java.nio.charset.StandardCharsets;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
-import javax.mail.MessagingException;
-import javax.persistence.NoResultException;
 import javax.ws.rs.POST;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.hopsworks.rest.AppException;
 
 /**
  *
@@ -103,66 +100,8 @@ public class AgentResource {
 //        }
 //        return Response.ok(jsonArray).build();
 //    }
-//    @PUT
-//    @Path("/register")
-//    @Consumes(MediaType.APPLICATION_JSON)
-//    public Response register(@Context HttpServletRequest req, String jsonString) {
-//        try {
-//            JSONObject json = new JSONObject(jsonString);
-//            String hostId = json.getString("host-id");
-//            Host host = hostEJB.findByHostId(hostId);
-//            boolean toRegister = false;
-//            if (host == null) {
-//                logger.log(Level.INFO, "Registering host with id {0}: unknown host id.", hostId);
-//                host = new Host();
-//                host.setHostId(hostId);
-//                toRegister = true;
-//                if (json.has("hostname") == false) {
-//                    host.setHostname("vagrant");
-//                } else {
-//                    host.setHostname(json.getString("hostname"));                    
-//                }
-//                host.setCores (h.getCores());
-//            } else {
-//                if (host.isRegistered()) {
-//                    logger.log(Level.INFO, "Re-registering host with id {0}: already registered.", hostId);
-////                    return Response.status(Response.Status.NOT_FOUND).build();
-//                }
-//                host.setHostname(json.getString("hostname"));
-//            }
-//            String certificate = "no certificate";
-//            if (json.has("csr")) {
-//                String csr = json.getString("csr");
-//                certificate = PKIUtils.signWithServerCertificate(csr);
-//            }
-//
-//            host.setRegistered(true);
-//            host.setLastHeartbeat((new Date()).getTime());
-//            if (json.has("public-ip")) {
-//                host.setPublicIp(json.getString("public-ip"));
-//            }
-//            if (json.has("private-ip")) {
-//                host.setPrivateIp(json.getString("private-ip"));
-//            }
-//            if (json.has("disk-capacity")) {
-//                host.setDiskCapacity(json.getLong("disk-capacity"));
-//            }
-//            if (json.has("memory-capacity")) {
-//                host.setMemoryCapacity(json.getLong("memory-capacity"));
-//            }
-//            if (json.has("cores")) {
-//                host.setCores(json.getInt("cores"));
-//            }
-//            hostEJB.storeHost(host, toRegister);
-//            roleEjb.deleteRolesByHostId(hostId);
-//            logger.log(Level.INFO, "Host with id {0} registered successfully.", hostId);
-//            return Response.ok(certificate).build();
-//        } catch (Exception ex) {
-//            logger.log(Level.SEVERE, "Exception: {0}", ex);
-//            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-//        }
-//    }
-  @PUT
+
+  @POST
   @Path("/heartbeat")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response heartbeat(@Context HttpServletRequest req, String jsonHb) {
