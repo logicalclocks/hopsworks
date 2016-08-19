@@ -143,7 +143,7 @@ public class CommunicationController {
 
   }
 
-  public void roleRetart() {
+  public void roleRestart() {
     uiMsg(roleOperation("restartRole"));
   }
 

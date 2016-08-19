@@ -30,9 +30,9 @@ public class ZookeeprTopicCleanerTimer {
 
     private final static Logger LOGGER = Logger.getLogger(KafkaFacade.class.getName());
 
-    public final int connectionTimeout = 30 * 1000;// 30 seconds
+    public final int connectionTimeout = 90 * 1000;// 30 seconds
 
-    public int sessionTimeoutMs = 30 * 1000;//30 seconds
+    public int sessionTimeoutMs = 0 * 1000;//30 seconds
 
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
@@ -49,7 +49,9 @@ public class ZookeeprTopicCleanerTimer {
     
     ZooKeeper zk = null;
 
-    @Schedule(persistent = false, second = "*/10", minute = "*", hour = "*")
+//    @Schedule(persistent = false, second = "*/10", minute = "*", hour = "*")
+    // Run once per minute
+    @Schedule(persistent = false, minute = "*", hour = "*")
     public void execute(Timer timer) {
 
         Set<String> zkTopics = new HashSet<>();

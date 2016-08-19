@@ -21,7 +21,8 @@ module SessionHelper
     user[:securityAnswer]   = params[:security_answer] ? params[:security_answer] : "example_answer"
     user[:ToS]              = params[:tos] ? params[:tos] :  true
     user[:authType]         = params[:auth_type] ? params[:auth_type] : "Mobile"
-
+    user[:twoFactor]        = params[:twoFactor] ? params[:twoFactor] : false
+    
     post "/hopsworks/api/auth/register", user
   end
 
@@ -31,6 +32,20 @@ module SessionHelper
     user = User.find_by(email: params[:email])
     key = user.username + user.validation_key
     get "/hopsworks/security/validate_account.xhtml", {params: {key: key}}
+  end
+  
+  def set_two_factor(value)
+    variables = Variables.find_by(id: "twofactor_auth")
+    variables.value = value
+    variables.save
+    variables
+  end
+  
+  def set_two_factor_exclud(value)
+    variables = Variables.find_by(id: "twofactor-excluded-groups")
+    variables.value = value
+    variables.save
+    variables
   end
 
   def reset_session
@@ -53,12 +68,65 @@ module SessionHelper
     PeopleGroup.create(uid: user.uid, gid: group.gid)
   end
 
+  def create_agent_role(user)
+    group = BbcGroup.find_by(group_name: "AGENT")
+    PeopleGroup.create(uid: user.uid, gid: group.gid)
+  end
+  
   def create_user(params={})
     params[:email] = "#{random_id}@email.com" unless params[:email]
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
     user.status = 4
+    user.save
+    user
+  end
+  
+  def create_2factor_user(params={})
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+    params[:twoFactor] = 1
+    create_validated_user(params)
+    user = User.find_by(email: params[:email])
+    create_role(user)
+    user
+  end
+  
+  def create_2factor_user_agent(params={})
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+    params[:twoFactor] = 1
+    create_validated_user(params)
+    user = User.find_by(email: params[:email])
+    create_agent_role(user)
+    user
+  end
+  
+  def create_blocked_user(params={})
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+    create_validated_user(params)
+    user = User.find_by(email: params[:email])
+    create_role(user)
+    user.status = 6
+    user.save
+    user
+  end
+  
+  def create_deactivated_user(params={})
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+     create_validated_user(params)
+    user = User.find_by(email: params[:email])
+    create_role(user)
+    user.status = 5
+    user.save
+    user
+  end
+  
+  def create_lostdevice_user(params={})
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+     create_validated_user(params)
+    user = User.find_by(email: params[:email])
+    create_role(user)
+    user.status = 7
     user.save
     user
   end

@@ -14,17 +14,17 @@ var mainModule = angular.module('hopsWorksApp')
                     self.filename = file.name;
                     self.parentId = file.parentId;
                     self.templateId = templateId;
-                    
+
                     self.templates = [];
                     self.selectedTemplate;
                     self.noTemplates = false;
-                    
+
                     var dataSetService = DataSetService($routeParams.projectID);
 
                     dataSetService.fetchTemplatesForInode(self.fileId)
                             .then(function (response) {
                               self.templates = response.data;
-                              
+
                               if(self.templates.length === 0){
                                 self.noTemplates = true;
                               }

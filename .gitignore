@@ -100,7 +100,10 @@ node_modules
 ## Test Files
 test/Gemfile.lock
 test/.env
+test/vendor
+test/.env
 
 ###########glassfish##############
 src/main/setup/glassfish-resources.xml
 */glassfish-resources.xml
+

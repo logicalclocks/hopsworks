@@ -86,18 +86,13 @@
                             rows="10" rowsPerPageTemplate="10, 25,50,100"
                             styleClass="AlertsTable">
                   <p:column selectionMode="multiple" style="width:2%" />
-                  <p:column headerText="Date"><h:outputText value="#{alert.alertTimeShort}"/></p:column>
+                  <p:column headerText="Date"><h:outputText value="#{alert.alertTime}"/></p:column>
                   <p:column headerText="Severity"><h:outputText value="#{alert.severity}" styleClass="AlertSeverity_#{alert.severity}"/></p:column>  
                   <p:column headerText="Provider"><h:outputText value="#{alert.provider}"/></p:column>                  
                   <p:column headerText="Plugin"><h:outputText value="#{alert.plugin}" /></p:column>  
                   <p:column headerText="Type"><h:outputText value="#{alert.type}" /></p:column>  
                   <p:column headerText="Type Instance"><h:outputText value="#{alert.typeInstance}" /></p:column>
-                  <p:column headerText="Host Id">
-<!--                     <p:commandLink id="gotohost" action="#{urlController.host()}" ajax="false">-->
-                     <h:outputText value="#{alert.hostId}"/>
-                     <!--<f:param name="hostid" value="#{alert.hostId}"/>-->
-                     <!--</p:commandLink>--> 
-                  </p:column>                  
+                  <p:column headerText="Host Id"><h:outputText value="#{alert.hostid}"/></p:column>                  
                   <p:column headerText="Message"><h:outputText value="#{alert.message}" /></p:column>  
                   <f:facet name="footer" >   
                      <p:commandButton id="deleteSelectedAlerts" value="Delete Selected Alerts" icon="ui-icon-trash"  
@@ -117,3 +112,4 @@
    </ui:composition>
 
 </html>
+

@@ -111,7 +111,7 @@ public class AuthService {
     Variables varExclude = settings.findById("twofactor-excluded-groups");
     String twoFactorMode = (varTwoFactor != null ? varTwoFactor.getValue() : "");
     String excludes = (varExclude != null ? varExclude.getValue() : null);
-    String[] groups = (excludes != null ? excludes.split(";") : null);
+    String[] groups = (excludes != null && !excludes.isEmpty() ? excludes.split(";") : null);
     if (!isInGroup(user, groups)) {
       if ((twoFactorMode.equals("mandatory") || (twoFactorMode.equals("true")
               && user.getTwoFactor()))) {
@@ -309,6 +309,9 @@ public class AuthService {
     }
     BbcGroup group;
     for (String groupName : groups) {
+      if (groupName.isEmpty()) {
+        continue;
+      }
       group = bbcGroupFacade.findByGroupName(groupName);
       if (userGroups.contains(group)) {
         return true;
