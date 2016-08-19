@@ -1,4 +1,4 @@
-package io.hops.kmon.rest.resources;
+package se.kth.hopsworks.rest;
 
 import io.hops.kmon.alert.Alert;
 import io.hops.kmon.alert.AlertEJB;
@@ -104,7 +104,8 @@ public class AgentResource {
   @POST
   @Path("/heartbeat")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response heartbeat(@Context HttpServletRequest req, String jsonHb) {
+  public Response heartbeat(@Context SecurityContext sc, @Context HttpServletRequest req, 
+          @Context HttpHeaders httpHeaders,  String jsonHb) {
     try {
 
       InputStream stream = new ByteArrayInputStream(jsonHb.getBytes(StandardCharsets.UTF_8));

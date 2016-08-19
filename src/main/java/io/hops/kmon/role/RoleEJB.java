@@ -1,6 +1,6 @@
 package io.hops.kmon.role;
 
-import io.hops.kmon.rest.resources.AgentResource;
+import se.kth.hopsworks.rest.AgentResource;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
