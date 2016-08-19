@@ -52,6 +52,7 @@ import se.kth.bbc.project.fb.InodeView;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.DatasetController;
+import se.kth.hopsworks.controller.FilePreviewDTO;
 import se.kth.hopsworks.controller.FileTemplateDTO;
 import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.controller.ResponseMessages;
@@ -710,29 +711,39 @@ public class DataSetService {
       //Get file type first. If it is not a known image type, display its 
       //binary contents instead
               
+      
+      //Set the default file type
+      String fileType = "txt";
+      //Check if file contains a valid image extension 
+      if(path.contains(".")){
+        fileType = path.substring(path.lastIndexOf(".")).replace(".", "").
+                toUpperCase();
+      }
       //If it is an image smaller than 10MB download it
       //otherwise thrown an error
-      String fileType = path.substring(path.lastIndexOf(".")).replace(".","").toUpperCase();
-      if(Utils.isInEnum(fileType, FilePreviewImageTypes.class)) {
-        int imageSize = (int) udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getLen();
+      if (Utils.isInEnum(fileType, FilePreviewImageTypes.class)) {
+        int imageSize = (int) udfso.getFileStatus(new org.apache.hadoop.fs.Path(
+                path)).getLen();
         if (udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getLen()
-                < 10000000) {
-               //Read the image in bytes and convert it to base64 so that is 
-               //rendered properly in the front-end
-                byte[] imageInBytes = new byte[imageSize];
-                is.readFully(imageInBytes);
-                String base64Image = new Base64().encodeAsString(imageInBytes);
-                json.setSuccessMessage(base64Image);
-                json.setStatus("image");
+                < settings.getFilePreviewImageSize()) {
+          //Read the image in bytes and convert it to base64 so that is 
+          //rendered properly in the front-end
+          byte[] imageInBytes = new byte[imageSize];
+          is.readFully(imageInBytes);
+          String base64Image = new Base64().encodeAsString(imageInBytes);
+          FilePreviewDTO filePreviewDTO = new FilePreviewDTO(
+                  fileType.toLowerCase(), base64Image);
+          json.setData(filePreviewDTO);
         } else {
-           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Image is too big to display, please download it instead: " + path);
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  "Image at " + path
+                  + " is too big to display, please download it by double-clicking it instead");
         }
       } else {
         //File content
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        short maxLines = 100;
-        short count = 0;
+        int maxLines = settings.getFilePreviewTxtSize();
+        int count = 0;
         StringBuilder sb = new StringBuilder();
         try {
           String line;
@@ -743,8 +754,9 @@ public class DataSetService {
             line = br.readLine();
             count++;
           }
-          json.setSuccessMessage(sb.toString());
-          json.setStatus("text");
+          FilePreviewDTO filePreviewDTO = new FilePreviewDTO(fileType, sb.
+                  toString());
+          json.setData(filePreviewDTO);
         } finally {
           // you should close out the BufferedReader
           br.close();
@@ -772,7 +784,7 @@ public class DataSetService {
         dfso.close();
       }
     }
-    
+
    
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
