@@ -81,8 +81,10 @@ import se.kth.bbc.security.ua.model.Yubikey;
   @NamedQuery(name = "Users.findByStatus",
           query = "SELECT u FROM Users u WHERE u.status = :status"),
   @NamedQuery(name = "Users.findByTwoFactor",
-          query
-          = "SELECT u FROM Users u WHERE u.twoFactor = :twoFactor")})
+          query = "SELECT u FROM Users u WHERE u.twoFactor = :twoFactor"),
+  @NamedQuery(name = "Users.findByShibboleth",
+          query = "SELECT u FROM Users u WHERE u.shibbolethId = :shibbolethId")
+})
 public class Users implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -170,6 +172,9 @@ public class Users implements Serializable {
   @NotNull
   @Column(name = "two_factor")
   private boolean twoFactor;
+  @Size(max = 255)
+  @Column(name = "shibboleth_id")
+  private String shibbolethId;
 
   @JoinTable(name = "hopsworks.people_group",
           joinColumns = {
@@ -480,6 +485,14 @@ public class Users implements Serializable {
     return true;
   }
 
+  public String getShibbolethId() {
+    return shibbolethId;
+  }
+
+  public void setShibbolethId(String shibbolethId) {
+    this.shibbolethId = shibbolethId;
+  }
+  
   @Override
   public String toString() {
     return "se.kth.hopsworks.model.Users[ uid=" + uid + " ]";

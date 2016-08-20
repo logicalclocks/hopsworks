@@ -85,7 +85,7 @@
               <input id="login_inputOTP" class="form-control" type="password" required
                      ng-model="loginCtrl.user.otp"
                      autocomplete="off"
-                     placeholder="Enter code"
+                     placeholder="Enter code" autofocus
                      name="otp_password">
             </div>
             <button class="btn btn-block btn-primary mt-lg" type="submit" data-ng-disabled="loginCtrl.working">Verify</button>
@@ -105,3 +105,10 @@
     </div>
   </div>
 </div>
+
+
+<div class="container" ng-if="loginCtrl.shibbolethNewAccount">
+
+  
+    
+  </div>

@@ -1,9 +1,9 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ZeppelinCtrl', ['$scope', '$routeParams','$route',
-          'growl', 'ModalService', 'ZeppelinService',
-          function ($scope, $routeParams, $route, growl, ModalService, ZeppelinService) {
+        .controller('ZeppelinCtrl', ['$scope', '$routeParams', '$route',
+          'growl', 'ModalService', 'ProjectService', 'ZeppelinService',
+          function ($scope, $routeParams, $route, growl, ModalService, ProjectService, ZeppelinService) {
 
             var self = this;
             self.interpretersRefreshing = false;
@@ -17,6 +17,10 @@ angular.module('hopsWorksApp')
             self.loadingText = "";
             $scope.tgState = true;
             self.selectedInterpreter;
+
+            $scope.clusterUtilization;
+            $scope.utilizationType;
+
             var projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
 
@@ -25,12 +29,12 @@ angular.module('hopsWorksApp')
               refresh();
               getNotesInProject();
             };
-            
+
             var startLoading = function (lable) {
               self.loading = true;
               self.loadingText = lable;
             };
-            
+
             var stopLoading = function () {
               self.loading = false;
               self.loadingText = "";
@@ -44,14 +48,14 @@ angular.module('hopsWorksApp')
               var interpreter;
               ZeppelinService.interpreters().then(function (success) {
                 for (var k in success.data.body) {
-                  interpreter = {interpreter: success.data.body[k], 
+                  interpreter = {interpreter: success.data.body[k],
                     statusMsg: statusMsgs[(success.data.body[k].notRunning ? 0 : 1)]};
                   self.interpreters.push(interpreter);
                 }
                 stopLoading();
               }, function (error) {
-                growl.warning(error.data.errorMsg + " Try reloading the page.", 
-                {title: 'Error', ttl: 5000, referenceId: 10});
+                growl.warning(error.data.errorMsg + " Try reloading the page.",
+                        {title: 'Error', ttl: 5000, referenceId: 10});
                 stopLoading();
               });
             };
@@ -59,7 +63,7 @@ angular.module('hopsWorksApp')
             var getNotesInProject = function (loading) {
               self.notesRefreshing = true;
               if (loading) {
-                 startLoading(loading);
+                startLoading(loading);
               }
               ZeppelinService.notebooks().then(function (success) {
                 self.notes = success.data.body;
@@ -67,8 +71,8 @@ angular.module('hopsWorksApp')
                 stopLoading();
               }, function (error) {
                 self.notesRefreshing = false;
-                growl.warning(error.data.errorMsg + " Try reloading the page.", 
-                {title: 'Error', ttl: 5000, referenceId: 10});
+                growl.warning(error.data.errorMsg + " Try reloading the page.",
+                        {title: 'Error', ttl: 5000, referenceId: 10});
                 stopLoading();
               });
             };
@@ -82,9 +86,9 @@ angular.module('hopsWorksApp')
 //                return true;
               if (group.indexOf("angular") > -1)
                 return true;
-              if (group.indexOf("livy") > -1) 
+              if (group.indexOf("livy") > -1)
                 return true;
-              if (group.indexOf("md") > -1) 
+              if (group.indexOf("md") > -1)
                 return true;
               return false;
             };
@@ -103,25 +107,26 @@ angular.module('hopsWorksApp')
                 self.interpretersRefreshing = false;
               }, function (error) {
                 self.interpretersRefreshing = false;
-                console.log('refresh-->',error);
+                console.log('refresh-->', error);
               });
             };
 
             var init = function () {
               startLoading("Connecting to zeppelin...");
-              ZeppelinService.websocket().sendNewEvent({principal: 'anonymous', 
-                ticket:'anonymous', op: 'LIST_NOTES'});
+              ZeppelinService.websocket().sendNewEvent({principal: 'anonymous',
+                ticket: 'anonymous', op: 'LIST_NOTES'});
               self.connectedStatus = ZeppelinService.websocket().isConnected();
               $scope.tgState = true;
+              self.refreshClusterUtilization();
             };
-            
+
             var load = function () {
               self.connectedStatus = ZeppelinService.websocket().isConnected();
               getInterpreterStatus("Loading interpreters...");
               getNotesInProject("Loading notebooks...");
               $scope.tgState = true;
             };
-            
+
             init();
 
             self.stopInterpreter = function (interpreter) {
@@ -140,20 +145,20 @@ angular.module('hopsWorksApp')
                         });
               }
             };
-            
+
             self.stopLivySession = function (interpreter, sessionId) {
-                self.transition = true;
-                interpreter.statusMsg = statusMsgs[2];
-                ZeppelinService.stopLivySession(interpreter.interpreter.id, sessionId)
-                        .then(function (success) {
-                          interpreter.interpreter = success.data.body;
-                          interpreter.statusMsg = statusMsgs[(success.data.body.notRunning ? 0 : 1)];
-                          self.transition = false;
-                        }, function (error) {
-                          getInterpreterStatus();
-                          self.transition = false;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
-                        });
+              self.transition = true;
+              interpreter.statusMsg = statusMsgs[2];
+              ZeppelinService.stopLivySession(interpreter.interpreter.id, sessionId)
+                      .then(function (success) {
+                        interpreter.interpreter = success.data.body;
+                        interpreter.statusMsg = statusMsgs[(success.data.body.notRunning ? 0 : 1)];
+                        self.transition = false;
+                      }, function (error) {
+                        getInterpreterStatus();
+                        self.transition = false;
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+                      });
             };
 
             self.refreshInterpreters = function () {
@@ -162,6 +167,7 @@ angular.module('hopsWorksApp')
 
             self.refreshDashboard = function () {
               getNotesInProject();
+              self.refreshClusterUtilization();
             };
             self.openNote = function (note) {
               window.open(getLocationBase() + "/zeppelin/#/notebook/" + note.id);
@@ -171,6 +177,26 @@ angular.module('hopsWorksApp')
               window.open(getLocationBase() + "/zeppelin");
             };
 
+            self.refreshClusterUtilization = function () {
+              ProjectService.uberPrice().$promise.then(
+                function (success) {
+                  var price = success.price;
+                  price = (1.0 - Math.ceil(parseFloat(price).toFixed(4) * 100.0 / 1.67 * 100) / 100);
+                  self.clusterUtilization = price;
+                  if (price < 0.25) {
+                    $scope.utilizationType = 'success';
+                  } else if (price < 0.50) {
+                    $scope.utilizationType = 'info';
+                  } else if (price < 0.75) {
+                    $scope.utilizationType = 'warning';
+                  } else {
+                    $scope.utilizationType = 'danger';
+                  }
+                 }, function (error) {
+                     self.clusterUtilization = 0.0;
+                });
+            };
+
             self.createNewNote = function () {
               var noteName;
               ModalService.noteName('md', '', '', '').then(
@@ -178,30 +204,30 @@ angular.module('hopsWorksApp')
                         noteName = success.val;
                         ZeppelinService.createNotebook(noteName).then(function (success) {
                           self.notes.push(success.data.body);
-                          growl.success("Notebook created successfully.", 
-                          {title: 'Success', ttl: 5000, referenceId: 10});
+                          growl.success("Notebook created successfully.",
+                                  {title: 'Success', ttl: 5000, referenceId: 10});
                         }, function (error) {
-                          growl.error(error.data.errorMsg, 
-                          {title: 'Error', ttl: 5000, referenceId: 10});
+                          growl.error(error.data.errorMsg,
+                                  {title: 'Error', ttl: 5000, referenceId: 10});
                         });
                       },
                       function (error) {
                       });
 
             };
-            
+
             self.clearCache = function () {
               startLoading("Restarting zeppelin...");
-              ZeppelinService.restart().then( function (success) {
-                  //stopLoading();
-                  $route.reload();
-                }, function (error) {
-                  stopLoading();
-                  growl.info(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});                  
-                });
+              ZeppelinService.restart().then(function (success) {
+                //stopLoading();
+                $route.reload();
+              }, function (error) {
+                stopLoading();
+                growl.info(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+              });
             };
-            
-            self.selectInterpreter = function(interpreter) {
+
+            self.selectInterpreter = function (interpreter) {
               self.selectedInterpreter = interpreter;
               console.log(interpreter);
             };
@@ -221,9 +247,9 @@ angular.module('hopsWorksApp')
               } else if (op === 'NOTES_INFO') {
                 load();
                 console.log('NOTES_INFO', data);
-              } 
+              }
             });
-            
+
             ZeppelinService.websocket().ws.onOpen(function () {
               console.log('Websocket created');
             });
@@ -235,7 +261,7 @@ angular.module('hopsWorksApp')
 
             ZeppelinService.websocket().ws.onClose(function (event) {
               self.connectedStatus = false;
-              console.log('close message: ', event);              
+              console.log('close message: ', event);
               //close code should be 1012 (service restart) but chrome shows 
               //closed abnormally (1006) this might cause problem when the socket 
               //is closed but not restarted 
@@ -243,6 +269,6 @@ angular.module('hopsWorksApp')
                 startLoading("Restarting zeppelin...");
                 $route.reload();
               }
-            });                          
+            });
 
           }]);

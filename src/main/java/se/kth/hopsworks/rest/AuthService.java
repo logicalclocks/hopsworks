@@ -320,4 +320,45 @@ public class AuthService {
     return false;
   }
 
+  @POST
+  @Path("shibboleth")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response shibbolethRegister(@Context SecurityContext sc, @Context HttpServletRequest req,
+          @Context HttpHeaders httpHeaders)
+          throws AppException, MessagingException {
+
+//    https://wiki.shibboleth.net/confluence/display/SHIB2/Java+EE+Container-Managed+Authentication
+//  Extract the user email from this shibboleth attribute 'urn:mace:dir:attribute-def:mail'
+//    req.getServletContext().log("email: " + sc.getUserPrincipal().getName());
+
+//email
+//Description
+//LBNL email address
+//Attribute name
+//SAML2: urn:oid:0.9.2342.19200300.100.1.3 
+//SAML1: urn:mace:dir:attribute-def:mail
+
+
+
+    String username = getAttr(req, "eduPersonPrincipalName");
+    String email = getAttr(req, "email");
+    
+    req.getServletContext().log("SESSIONID@login: " + req.getSession().getId());
+    req.getServletContext().log("SecurityContext: " + sc.getUserPrincipal());
+    req.getServletContext().log("SecurityContext in user role: " + sc.isUserInRole("HOPS_USER"));
+    req.getServletContext().log("SecurityContext in sysadmin role: " + sc.isUserInRole("HOPS_ADMIN"));
+    JsonResponse json = new JsonResponse();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  }
+
+
+  private String getAttr(HttpServletRequest req, String attr) {
+    Object res = req.getAttribute(attr);
+    if (res == null) {
+      return "";
+    }
+    return (String) res;
+
+  }
+
 }

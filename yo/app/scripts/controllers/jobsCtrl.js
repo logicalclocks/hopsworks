@@ -198,7 +198,7 @@ angular.module('hopsWorksApp')
             self.runJob = function (job, index) {
               var jobId = job.id;
 
-              ProjectService.uberPrice({id: self.projectId}).$promise.then(
+              ProjectService.uberPrice().$promise.then(
                       function (success) {
                         var price = success.price;
                         price = Math.ceil(parseFloat(price).toFixed(4) * 100.0 / 1.67 * 100) / 100;

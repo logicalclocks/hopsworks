@@ -8,6 +8,7 @@ angular.module('hopsWorksApp')
 
             self.announcement = "";
             self.secondFactorRequired = false;
+            self.shibbolethNewAccount = false;
 
             self.showAnnouncement = function () {
               if (self.announcement === "") {
@@ -44,6 +45,11 @@ angular.module('hopsWorksApp')
                         self.working = false;
                         self.secondFactorRequired = false;
                         $cookies.email = self.user.email;
+                        
+                        if (success.shibbolethNewAccount === true) {
+                          self.shibbolethNewAccount = true;
+                        }
+                        
                         $location.path('/');
                       }, function (error) {
                         self.working = false;

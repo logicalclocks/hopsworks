@@ -692,11 +692,10 @@ public class ProjectService {
   }
 
   @GET
-  @Path("{id}/price")
+  @Path("price")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response getCurrentPrice(
-          @PathParam("id") Integer id,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
@@ -705,6 +704,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             price).build();
   }
+
 
   @GET
   @Path("getPublicDatasets")
