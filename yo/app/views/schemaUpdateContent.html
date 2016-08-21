@@ -8,7 +8,7 @@
 <div class="modal-body">
     
 
-    <form role="form" name="pickProjectForm" id="misganu"
+    <form role="form" name="updateSchemaForm" id="schemaUpdate"
           ng-submit="schemaUpdateContentCtrl.createSchema()" novalidate
           class="form-validate">                                                                                                                              
         <div class="view-info">
@@ -22,11 +22,12 @@
             </div>
             <div class="col-md-12">
                 <label class="control-label">Content</label><br>
-                <div class="col-sm-12">
+                <div class="col-sm-12" style="overflow-y: auto">
                     <!--<pretty-json json="{{jsonObj}}" id = "prettyJson" contenteditable="true"  ng-model="schemaUpdateContentCtrl.contents"></pretty-json>-->
-                    <pretty-json json="jsonObj" id="myPrettyJson" contenteditable="true" ></pretty-json>
+                    <pre pretty-json="jsonObj" id="myPrettyJson" edition="true"></pre>
                 </div>
             </div>
+            <div ng-if="schemaUpdateContentCtrl.content_empty=== -1" style="color: red">{{"Content should not be empty"}}</div>
         </div>
         <div ng-if="schemaUpdateContentCtrl.message" style="color: red">{{schemaUpdateContentCtrl.message}}</div>
         <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">

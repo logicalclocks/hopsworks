@@ -4,7 +4,6 @@
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/hopsworks</jta-data-source>
     <class>se.kth.bbc.activity.ActivityDetail</class>
-    <class>se.kth.bbc.activity.UsersGroups</class>
     <class>se.kth.bbc.jobs.jobhistory.JobInputFile</class>
     <class>se.kth.bbc.jobs.jobhistory.ExecutionsInputfiles</class>
     <class>se.kth.bbc.jobs.jobhistory.JobOutputFile</class>

@@ -171,6 +171,10 @@ a:focus {
   width: 38px;
 }
 
+p.filepreview {
+  white-space: pre-wrap;
+}
+
 div.scroll {
   border: 1px solid transparent;
   border-radius: 4px;

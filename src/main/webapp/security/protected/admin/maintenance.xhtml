@@ -49,7 +49,7 @@
                             </p:column>
 
                             <p:column id="bannerMsgColumn" headerText="Banner Message">
-                                <h:inputText binding="#{message}" id="bannerMsg" value="#{maintenance.message}" />
+                                <h:inputText binding="#{message}" id="bannerMsg" value="#{maintenance.message}" style="display:block;width:405px"/>
                             </p:column>
                             <p:column id="bannerActionColumn" headerText="Action">
                                 <h:commandButton value="Update" action="#{maintenance.update(status.value, message.value)}" />

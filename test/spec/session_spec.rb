@@ -9,6 +9,15 @@ describe "session" do
       expect_json_types(sessionID: :string, status: :string)
       expect_status(200)
     end
+    
+    it "should work for two factor excluded user" do
+      email = "#{random_id}@email.com"
+      create_2factor_user_agent(email: email)
+      set_two_factor("true")
+      set_two_factor_exclud( "AGENT")
+      create_session(email, "Pass123")
+      expect_status(200)
+    end
 
     it 'should fail with invalid params' do
       user = create_user
@@ -16,6 +25,44 @@ describe "session" do
       expect_json_types(errorMsg: :string)
       expect_status(401)
     end
+    
+    it "should fail to login with blocked account (status 6)" do
+      email = "#{random_id}@email.com"
+      create_blocked_user(email: email)
+      create_session(email, "Pass123")
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: "This account has been blocked.")
+      expect_status(401)
+    end
+    
+    it "should fail to login with deactivated account (status 5)" do
+      email = "#{random_id}@email.com"
+      create_deactivated_user(email: email)
+      create_session(email, "Pass123")
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: "This account has been deactivated.")
+      expect_status(401)
+    end
+    
+    it "should fail to login with lost device (status 7 or 8)" do
+      email = "#{random_id}@email.com"
+      create_lostdevice_user(email: email)
+      create_session(email, "Pass123")
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: "This account has registered a lost device.")
+      expect_status(401)
+    end
+    
+    it "should fail to login without two factor" do
+      email = "#{random_id}@email.com"
+      create_2factor_user(email: email)
+      set_two_factor("true")
+      create_session(email, "Pass123")
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: "Second factor required.")
+      expect_status(400)
+    end
+    
   end
 
   describe "register" do
@@ -24,9 +71,9 @@ describe "session" do
       first_name = "name"
       last_name = "last"
       password = "Pass123"
-      post "/hopsworks/api/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile"}
-      expect_json(errorMsg: -> (value){ expect(value).to be_empty})
-      expect_json(successMessage: -> (value){ expect(value).to include("We registered your account request")})
+      post "/hopsworks/api/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile", twoFactor: false}
+      expect_json(errorMsg: ->(value){ expect(value).to be_empty})
+      expect_json(successMessage: ->(value){ expect(value).to include("We registered your account request")})
       expect_status(200)
     end
 
@@ -37,8 +84,8 @@ describe "session" do
       password = "Pass123"
       register_user(email: email)
       post "/hopsworks/api/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile"}
-      expect_json(successMessage: -> (value){ expect(value).to be_nil})
-      expect_json(errorMsg: -> (value){ expect(value).to include("There is an existing account")})
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: ->(value){ expect(value).to include("There is an existing account")})
       expect_status(400)
     end
 
@@ -55,28 +102,18 @@ describe "session" do
       email = "#{random_id}@email.com"
       create_validated_user(email: email)
       create_session(email, "Pass123")
-      expect_json(successMessage: -> (value){ expect(value).to be_nil})
-      expect_json(errorMsg: -> (value){ expect(value).to include("Authentication failed")})
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: ->(value){ expect(value).to include("No valid role found for this user")})
       expect_status(401)
     end
 
-    it "should fail to signup with role and status 2" do
+    it "should fail to signup with role and new account (status 1)" do
       email = "#{random_id}@email.com"
       register_user(email: email)
       create_role(User.find_by(email: email))
       create_session(email, "Pass123")
-      expect_json(successMessage: -> (value){ expect(value).to be_nil})
-      expect_json(errorMsg: -> (value){ expect(value).to include("Authentication failed")})
-      expect_status(401)
-    end
-
-    it "should fail to signup with role and status 3" do
-      email = "#{random_id}@email.com"
-      create_validated_user(email: email)
-      create_role(User.find_by(email: email))
-      create_session(email, "Pass123")
-      expect_json(successMessage: -> (value){ expect(value).to be_nil})
-      expect_json(errorMsg: -> (value){ expect(value).to include("Authentication failed")})
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: "This account has not been activated.")
       expect_status(401)
     end
 
@@ -87,8 +124,8 @@ describe "session" do
       user.status = 4
       user.save
       create_session(email, "Pass123")
-      expect_json(successMessage: -> (value){ expect(value).to be_nil})
-      expect_json(errorMsg: -> (value){ expect(value).to include("No valid role found for this user")})
+      expect_json(successMessage: ->(value){ expect(value).to be_nil})
+      expect_json(errorMsg: ->(value){ expect(value).to include("No valid role found for this user")})
       expect_status(401)
     end
   end

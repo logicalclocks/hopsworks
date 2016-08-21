@@ -1,4 +1,4 @@
-package io.hops.kmon.rest.resources;
+package se.kth.hopsworks.rest;
 
 import io.hops.kmon.alert.Alert;
 import io.hops.kmon.alert.AlertEJB;
@@ -28,8 +28,9 @@ import java.nio.charset.StandardCharsets;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
-import javax.persistence.NoResultException;
 import javax.ws.rs.POST;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.SecurityContext;
 
 /**
  *
@@ -99,69 +100,12 @@ public class AgentResource {
 //        }
 //        return Response.ok(jsonArray).build();
 //    }
-//    @PUT
-//    @Path("/register")
-//    @Consumes(MediaType.APPLICATION_JSON)
-//    public Response register(@Context HttpServletRequest req, String jsonString) {
-//        try {
-//            JSONObject json = new JSONObject(jsonString);
-//            String hostId = json.getString("host-id");
-//            Host host = hostEJB.findByHostId(hostId);
-//            boolean toRegister = false;
-//            if (host == null) {
-//                logger.log(Level.INFO, "Registering host with id {0}: unknown host id.", hostId);
-//                host = new Host();
-//                host.setHostId(hostId);
-//                toRegister = true;
-//                if (json.has("hostname") == false) {
-//                    host.setHostname("vagrant");
-//                } else {
-//                    host.setHostname(json.getString("hostname"));                    
-//                }
-//                host.setCores (h.getCores());
-//            } else {
-//                if (host.isRegistered()) {
-//                    logger.log(Level.INFO, "Re-registering host with id {0}: already registered.", hostId);
-////                    return Response.status(Response.Status.NOT_FOUND).build();
-//                }
-//                host.setHostname(json.getString("hostname"));
-//            }
-//            String certificate = "no certificate";
-//            if (json.has("csr")) {
-//                String csr = json.getString("csr");
-//                certificate = PKIUtils.signWithServerCertificate(csr);
-//            }
-//
-//            host.setRegistered(true);
-//            host.setLastHeartbeat((new Date()).getTime());
-//            if (json.has("public-ip")) {
-//                host.setPublicIp(json.getString("public-ip"));
-//            }
-//            if (json.has("private-ip")) {
-//                host.setPrivateIp(json.getString("private-ip"));
-//            }
-//            if (json.has("disk-capacity")) {
-//                host.setDiskCapacity(json.getLong("disk-capacity"));
-//            }
-//            if (json.has("memory-capacity")) {
-//                host.setMemoryCapacity(json.getLong("memory-capacity"));
-//            }
-//            if (json.has("cores")) {
-//                host.setCores(json.getInt("cores"));
-//            }
-//            hostEJB.storeHost(host, toRegister);
-//            roleEjb.deleteRolesByHostId(hostId);
-//            logger.log(Level.INFO, "Host with id {0} registered successfully.", hostId);
-//            return Response.ok(certificate).build();
-//        } catch (Exception ex) {
-//            logger.log(Level.SEVERE, "Exception: {0}", ex);
-//            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-//        }
-//    }
-  @PUT
+
+  @POST
   @Path("/heartbeat")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response heartbeat(@Context HttpServletRequest req, String jsonHb) {
+  public Response heartbeat(@Context SecurityContext sc, @Context HttpServletRequest req, 
+          @Context HttpHeaders httpHeaders,  String jsonHb) {
     try {
 
       InputStream stream = new ByteArrayInputStream(jsonHb.getBytes(StandardCharsets.UTF_8));
@@ -193,7 +137,7 @@ public class AgentResource {
       for (int i = 0; i < roles.size(); i++) {
         JsonObject s = roles.getJsonObject(i);
 
-        if (!s.containsKey("cluster") || !s.containsKey("cluster") || !s.containsKey("cluster")) {
+        if (!s.containsKey("cluster") || !s.containsKey("service") || !s.containsKey("role")) {
           logger.warning("Badly formed JSON object describing a service.");
           continue;
         }
@@ -254,18 +198,19 @@ public class AgentResource {
   @POST
   @Path("/alert")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response alert(@Context HttpServletRequest req, String jsonString) {
+  public Response alert(@Context SecurityContext sc, @Context HttpServletRequest req, 
+          @Context HttpHeaders httpHeaders, String jsonString) {
     // TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
     try {
       InputStream stream = new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8));
       JsonObject json = Json.createReader(stream).readObject();
       Alert alert = new Alert();
       alert.setAlertTime(new Date());
-      alert.setProvider(Alert.Provider.valueOf(json.getString("Provider")));
-      alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")));
-      alert.setAgentTime(json.getJsonNumber("Time").longValue());
+      alert.setProvider(Alert.Provider.valueOf(json.getString("Provider")).toString());
+      alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")).toString());
+      alert.setAgentTime(json.getJsonNumber("Time").bigIntegerValue());
       alert.setMessage(json.getString("Message"));
-      alert.setHostId(json.getString("Host"));
+      alert.setHostid(json.getString("host-id"));
       alert.setPlugin(json.getString("Plugin"));
       if (json.containsKey("PluginInstance")) {
         alert.setPluginInstance(json.getString("PluginInstance"));
@@ -280,7 +225,7 @@ public class AgentResource {
         alert.setDataSource(json.getString("DataSource"));
       }
       if (json.containsKey("CurrentValue")) {
-        alert.setCurrentValue(json.getString("CurrentValue"));
+        alert.setCurrentValue(Boolean.toString(json.getBoolean("CurrentValue")));
       }
       if (json.containsKey("WarningMin")) {
         alert.setWarningMin(json.getString("WarningMin"));

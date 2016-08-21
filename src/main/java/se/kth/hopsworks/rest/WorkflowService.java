@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 @RequestScoped
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class WorkflowService {
     private final static Logger logger = Logger.getLogger(WorkflowService.class.

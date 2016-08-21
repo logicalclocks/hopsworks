@@ -8,10 +8,9 @@ angular.module('hopsWorksApp')
                 self.contents;
                 self.schemaVersion = schemaVersion;
                 self.content_empty = 1;
-
                 self.message ="";
                 self.validSchema = "invalid";
-           
+
                 self.init = function () {
 
                     KafkaService.getSchemaContent(self.projectId, schemaName, self.schemaVersion).then(
@@ -25,7 +24,7 @@ angular.module('hopsWorksApp')
                 self.init();
                 
                 self.validateSchema = function () {
-                    
+                   
                     self.validSchema = "invalid";
                     
                     var ugly = document.getElementById('myPrettyJson');
@@ -51,7 +50,7 @@ angular.module('hopsWorksApp')
                                 self.message = "schema is valid";
                                 self.validSchema="";
                             }, function (error) {
-                       self.message = "schema is invalid";
+                                self.message = error.data.errorMsg;
                     });
                  };
                 
@@ -69,7 +68,8 @@ angular.module('hopsWorksApp')
                             function (success) {
                                 $modalInstance.close(success);
                             }, function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Failed to update the schema', ttl: 5000});
+                                 self.message = error.data.errorMsg;
+                                 self.validSchema="invalid";
                     });
                 };
 

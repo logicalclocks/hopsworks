@@ -154,8 +154,7 @@ public class ProjectsManagementBean {
       projectsManagementController.enableProject(row.getProjectname());
     }
     projectsManagementController.changeYarnQuota(row.getProjectname(), row.getYarnQuotaRemaining());
-    projectsManagementController.setHdfsSpaceQuota(row.getProjectname(),
-            this.hdfsquota, dfso);
+    projectsManagementController.setHdfsSpaceQuota(row.getProjectname(), this.hdfsquota, dfso);
   }
 
   public void onRowCancel(RowEditEvent event) {

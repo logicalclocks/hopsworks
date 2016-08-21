@@ -7,6 +7,7 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -171,7 +172,7 @@ public class ResetPassword implements Serializable {
       
       auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORDCHANGE.name(), AccountsAuditActions.SUCCESS.name(),"Temporary Password Sent.", people);
       // sned the new password to the user email
-      emailBean.sendEmail(people.getEmail(),
+      emailBean.sendEmail(people.getEmail(),RecipientType.TO, 
               UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
 
     } catch (RollbackException | HeuristicMixedException |
@@ -217,7 +218,7 @@ public class ResetPassword implements Serializable {
 
       // Send email    
       String message = UserAccountsEmailMessages.buildResetMessage();
-      emailBean.sendEmail(people.getEmail(),
+      emailBean.sendEmail(people.getEmail(),RecipientType.TO, 
               UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
       auditManager.registerAccountChange(people,
@@ -312,7 +313,7 @@ public class ResetPassword implements Serializable {
 
         // send email    
         String message = UserAccountsEmailMessages.buildSecResetMessage();
-        emailBean.sendEmail(people.getEmail(),
+        emailBean.sendEmail(people.getEmail(),RecipientType.TO, 
                 UserAccountsEmailMessages.ACCOUNT_PROFILE_UPDATE, message);
 
         auditManager.registerAccountChange(people,
@@ -396,7 +397,7 @@ public class ResetPassword implements Serializable {
                 PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue());
         // send email    
         String message = UserAccountsEmailMessages.buildSecResetMessage();
-        emailBean.sendEmail(people.getEmail(),
+        emailBean.sendEmail(people.getEmail(),RecipientType.TO, 
                 UserAccountsEmailMessages.ACCOUNT_DEACTIVATED, message);
 
         auditManager.registerAccountChange(people,
@@ -478,7 +479,7 @@ public class ResetPassword implements Serializable {
 
         // send email    
         String message = UserAccountsEmailMessages.buildResetMessage();
-        emailBean.sendEmail(people.getEmail(),
+        emailBean.sendEmail(people.getEmail(),RecipientType.TO, 
                 UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT, message);
 
         auditManager.registerAccountChange(people,

@@ -12,6 +12,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.lims.ClientSessionState;
@@ -377,7 +378,7 @@ public class AdminProfileAdministration implements Serializable {
             getExternalContext().getRequest();
 
         String activationKey = SecurityUtils.getRandomPassword(64);
-        emailBean.sendEmail(editingUser.getEmail(),
+        emailBean.sendEmail(editingUser.getEmail(), RecipientType.TO,
             UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
             UserAccountsEmailMessages.buildMobileRequestMessage(
                 AuditUtil.getUserURL(request), user.getUsername()

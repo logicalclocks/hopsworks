@@ -12,6 +12,8 @@ import io.hops.kmon.host.Host;
 import io.hops.kmon.host.HostEJB;
 import io.hops.kmon.role.RoleEJB;
 import io.hops.kmon.struct.NodesTableItem;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 
 /**
  *
@@ -120,6 +122,41 @@ public class CommunicationController {
       String ip = h.getPublicOrPrivateIp();
       String agentPassword = h.getAgentPassword();
       return web.getRoleLog(ip, agentPassword, cluster, service, role, lines);
+    } catch (Exception ex) {
+      return ex.getMessage();
+    }
+  }
+
+  private void uiMsg(String res) {
+    FacesContext context = FacesContext.getCurrentInstance();
+    FacesMessage msg = null;
+    if (res.contains("Error")) {
+        msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, res, "There was a problem when executing the operation.");
+    } else {
+        msg = new FacesMessage(FacesMessage.SEVERITY_INFO, res, "Successfully executed the operation.");
+    }
+    context.addMessage(null, msg);
+  }
+  
+  public void roleStart() {
+    uiMsg(roleOperation("startRole"));
+
+  }
+
+  public void roleRestart() {
+    uiMsg(roleOperation("restartRole"));
+  }
+
+  public void roleStop() {
+    uiMsg(roleOperation("stopRole"));
+  }
+
+  private String roleOperation(String operation) {
+    try {
+      Host h = findHostById(hostId);
+      String ip = h.getPublicOrPrivateIp();
+      String agentPassword = h.getAgentPassword();
+      return web.roleOp(operation, ip, agentPassword, cluster, service, role);
     } catch (Exception ex) {
       return ex.getMessage();
     }
