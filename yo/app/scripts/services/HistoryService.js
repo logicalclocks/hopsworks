@@ -21,6 +21,14 @@ angular.module('hopsWorksApp')
               getDetailsForJob: function (jobId) {
                 return $http.get('/api/history/details/jobs/' + jobId);
               },
+              
+              /**
+               * Get the configuration details of a job - history page
+               * @returns {unresolved} The configuratio attributes for a particular job
+               */
+              getConfigurationForJob: function (jobId) {
+                return $http.get('/api/history/config/jobs/' + jobId);
+              },
        
               /**
                * POST request with the arguments of a job durin the configuration phase

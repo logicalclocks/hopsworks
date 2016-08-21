@@ -8,7 +8,6 @@ import java.util.logging.Logger;
 import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.jobhistory.Execution;
-import se.kth.bbc.jobs.jobhistory.ExecutionsInputfiles;
 import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
@@ -44,7 +43,6 @@ public abstract class HopsJob {
   private static final Logger logger = Logger.getLogger(HopsJob.class.getName());
   private Execution execution;
   private JobsHistory jobHistory;
-  private ExecutionsInputfiles execInputFiles;
   private boolean initialized = false;
 
   //Service provider providing access to facades
@@ -161,21 +159,9 @@ public abstract class HopsJob {
     this.execution = upd;
   }
 
-  protected final void updateJobHistoryApp(long executiontime) {
-
-    ExecutionsInputfiles execIF = services.getExecutionInputfilesFacade().
-            findExecutionInputFileByExecutionId(execution.getId());
-    if (execIF != null) {
-      int JobId = execution.getJob().getId();
-      int inodePid = execIF.getExecutionsInputfilesPK().getInodePid();
-      String inodeName = execIF.getExecutionsInputfilesPK().getName();
-      services.getJobsHistoryFacade().updateJobHistory(JobId, inodePid,
-              inodeName, execution, executiontime);
-    } else {
-      logger.log(Level.WARNING,
-              "No entry found in ExecutionInputfiles table for id:{0}",
-              execution.getId());
-    }
+  protected final void updateJobHistoryApp(long executiontime){
+      
+    services.getJobsHistoryFacade().updateJobHistory(execution, executiontime);
   }
 
   /**
