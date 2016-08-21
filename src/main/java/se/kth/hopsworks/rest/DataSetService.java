@@ -36,6 +36,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
+import org.codehaus.jackson.map.ObjectMapper;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.ErasureCodeJob;
 import se.kth.bbc.fileoperations.ErasureCodeJobConfiguration;
@@ -713,15 +714,15 @@ public class DataSetService {
               
       
       //Set the default file type
-      String fileType = "txt";
+      String fileExtension = "txt";
       //Check if file contains a valid image extension 
       if(path.contains(".")){
-        fileType = path.substring(path.lastIndexOf(".")).replace(".", "").
+        fileExtension = path.substring(path.lastIndexOf(".")).replace(".", "").
                 toUpperCase();
       }
       //If it is an image smaller than 10MB download it
       //otherwise thrown an error
-      if (Utils.isInEnum(fileType, FilePreviewImageTypes.class)) {
+      if (Utils.isInEnum(fileExtension, FilePreviewImageTypes.class)) {
         int imageSize = (int) udfso.getFileStatus(new org.apache.hadoop.fs.Path(
                 path)).getLen();
         if (udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getLen()
@@ -731,9 +732,11 @@ public class DataSetService {
           byte[] imageInBytes = new byte[imageSize];
           is.readFully(imageInBytes);
           String base64Image = new Base64().encodeAsString(imageInBytes);
-          FilePreviewDTO filePreviewDTO = new FilePreviewDTO(
-                  fileType.toLowerCase(), base64Image);
+          FilePreviewDTO filePreviewDTO = new FilePreviewDTO("image",
+                  fileExtension.toLowerCase(), base64Image);
+          
           json.setData(filePreviewDTO);
+            
         } else {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                   "Image at " + path
@@ -748,14 +751,20 @@ public class DataSetService {
         try {
           String line;
           line = br.readLine();
+          
           while (line != null && count < maxLines) {
-            sb.append(line).append("\n");
+            sb.append("\n").append(line);
             // be sure to read the next line otherwise you'll get an infinite loop
             line = br.readLine();
             count++;
           }
-          FilePreviewDTO filePreviewDTO = new FilePreviewDTO(fileType, sb.
-                  toString());
+          //Remove first new line character
+          if(count > 0){
+            sb.replace(0, 1, "");
+          }
+         
+          FilePreviewDTO filePreviewDTO = new FilePreviewDTO("text", fileExtension.
+                  toLowerCase(), sb.toString());
           json.setData(filePreviewDTO);
         } finally {
           // you should close out the BufferedReader

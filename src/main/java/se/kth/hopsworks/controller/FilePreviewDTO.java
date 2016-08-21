@@ -9,23 +9,25 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class FilePreviewDTO {
 
-  private String fileType;
+  private String type;
   private String content;
+  private String extension;
 
   public FilePreviewDTO() {
   }
 
-  public FilePreviewDTO(String fileType, String content) {
-    this.fileType = fileType;
+  public FilePreviewDTO(String type, String extension, String content) {
+    this.type = type;
+    this.extension = extension;
     this.content = content;
   }
 
-  public String getFileType() {
-    return fileType;
+  public String getType() {
+    return type;
   }
 
-  public void setFileType(String fileType) {
-    this.fileType = fileType;
+  public void setType(String type) {
+    this.type = type;
   }
 
   public String getContent() {
@@ -36,10 +38,25 @@ public class FilePreviewDTO {
     this.content = content;
   }
 
+  public String getExtension() {
+    return extension;
+  }
+
+  public void setExtension(String extension) {
+    this.extension = extension;
+  }
+
   @Override
+  /**
+   * Formats a JSON to be displayed by the browser.
+   */
   public String toString() {
-    return "FilePreviewDTO{" + "fileType=" + fileType + ", content=" + content
-            + '}';
+    return "{\"filePreviewDTO\":[{\"type\":\"" + type
+            + "\", \"extension\":\"" + extension
+            + "\", \"content\":\"" + content.replace("\\", "\\\\'").
+            replace("\"", "\\\"").replace("\n", "\\n").
+            replace("\r", "\\r").replace("\t", "\\t")
+            + "\"}]}";
   }
 
 }
