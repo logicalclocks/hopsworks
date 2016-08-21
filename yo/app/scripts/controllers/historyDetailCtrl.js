@@ -8,6 +8,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.details;
+            self.config;
             this.job = job;
 
             /**
@@ -24,6 +25,14 @@ angular.module('hopsWorksApp')
                     var str = success.data.data;
                     self.details= JSON.parse(str);
                 });
+            };
+            
+            self.getConfiguration = function () {
+            HistoryService.getConfigurationForJob(job.yarnAppResult.id).then(
+                function (success) {
+                    console.log(success.data);
+                    self.config = success.data;
+                });  
             };
 
           }]);

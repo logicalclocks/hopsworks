@@ -124,7 +124,12 @@ angular.module('hopsWorksApp')
                   "isOpen": false,
                   "visible": true,
                   "value": "",
-                  "title": "Configure and create"}
+                  "title": "Configure and create"},
+                "accordion6" : {//Contains the pre-configuration and proposals for auto-configuration
+                   "isOpen": false,
+                   "visible": true,
+                   "value": "",
+                   "title": "Pre-Configuration"}
               };
               StorageService.store(self.projectId + "_newjob", state);
               $location.path('project/' + self.projectId + '/newjob');
