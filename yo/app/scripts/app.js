@@ -30,7 +30,8 @@ angular.module('hopsWorksApp', [
   'smart-table',
   'ngPrettyJson',
   'angularAwesomeSlider',
-  'angularResizable'
+  'angularResizable',
+  'ng-showdown'
 ])
     .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider',
       function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider) {

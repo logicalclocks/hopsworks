@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('FilePreviewCtrl', ['$modalInstance', 'DataSetService', 'growl', 'fileName', 'filePath', 'projectId',
-          function ($modalInstance, DataSetService, growl, fileName, filePath, projectId) {
+        .controller('FilePreviewCtrl', ['$modalInstance', '$showdown','DataSetService', 'growl', 'fileName', 'filePath', 'projectId',
+          function ($modalInstance, $showdown, DataSetService, growl, fileName, filePath, projectId) {
             var self = this;
 
             self.filePath = filePath;
@@ -14,6 +14,8 @@ angular.module('hopsWorksApp')
               var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
               dataSetService.filePreview(filePath).then(
                       function (success) {
+                        //var htmlMD = $showdown.makeHtml("# Markdown directive *It works!*");
+                        //console.log(htmlMD);
                         var escaped = success.data.data
 //                                .replace(/\\/g, '\\\\')
 //                                .replace(/\"/g, '\\"')
@@ -29,7 +31,7 @@ angular.module('hopsWorksApp')
                         console.log(self.fileDetails.filePreviewDTO[0].content);
 
                         self.type = self.fileDetails.filePreviewDTO[0].type;
-                        self.content = self.fileDetails.filePreviewDTO[0].content;
+                        self.content = htmlMD;//self.fileDetails.filePreviewDTO[0].content;
                         self.extension = self.fileDetails.filePreviewDTO[0].extension;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Could not get file contents', ttl: 5000, referenceId: 23});
