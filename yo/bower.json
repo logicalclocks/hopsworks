@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "dependencies": {
     "angular": "1.3.16",
-    "showdown": "1.1.0",
     "bootstrap": "3.3.4",
     "angular-material": "0.8.3",
     "ng-flow": "~2",

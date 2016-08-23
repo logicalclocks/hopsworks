@@ -48,14 +48,12 @@
 
 
               <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px;">
-                <div class="row rg-row-top row-no-margin-left"  resizable r-directions="['bottom']" style="margin-top: 15px;">
+              <div class="col-lg-12">
+                <div class="row rg-row-top row-no-margin-left"  resizable r-directions="['bottom']" style="margin-top: 15px; ">
 
-                  <div class="col-lg-12">
-
-
-                    <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, publicDs: datasetsCtrl.isPublic} | orderBy: 'name'">
+                  <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, publicDs: datasetsCtrl.isPublic} | orderBy: 'name'">
                       <div ng-dblclick="projectCtrl.browseDataset(dataset)"
-                           ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset); "
+                           ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset.path.substring(dataset.path.lastIndexOf('/')).replace('/','')+'/README.md', false);"
                            ng-init="(iscollapsed$index) = true"
                            class="file-box"
                            context-menu
@@ -191,14 +189,19 @@
                       </div>
                     </div>                  
                   </div>
-                <div class="rg-bottom"></div>
+                <div class="row rg-bottom" style="margin-left:0.5%; background: #eee; ">
+                  
                 </div>
-                <h3>asdfasd </h3>
-                <p markdown-to-html="#Markdown directive
-                  *It works!*"></p>
-                 <div class="row rg-row-bottom" style="overflow-y: auto;">
+                <div class="row rg-row-bottom" style="overflow-y: auto; ">
+                  asdfasdfasdfasd
+                  <br>
+                  <!-- README.md is displayed here -->
+                  <span>{{datasetsCtrl.readme}}</span>
+                </div>
+                
               </div>
-            </div> <!--content wrapper -->
+              </div>
+             </div><!--content wrapper -->
           </div>
           <div flex=""></div>
         </md-content>
