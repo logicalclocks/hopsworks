@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class JobProposedConfigurationDTO implements Serializable{
     
     private String configType = "";
+    private String message = "";
     private int amMemory;
     private int amVcores;
     private int numOfExecutors;
@@ -17,9 +18,10 @@ public class JobProposedConfigurationDTO implements Serializable{
     
     public JobProposedConfigurationDTO(){}
     
-    public JobProposedConfigurationDTO(String configType, int amMemory, int amVcores, int numOfExecutors, 
+    public JobProposedConfigurationDTO(String configType, String message, int amMemory, int amVcores, int numOfExecutors, 
                                        int executorCores, int executorMemory){
         this.configType = configType;
+        this.message = message;
         this.amMemory = amMemory;
         this.amVcores = amVcores;
         this.numOfExecutors = numOfExecutors;
@@ -123,6 +125,20 @@ public class JobProposedConfigurationDTO implements Serializable{
      */
     public void setEstimatedExecutionTime(String estimatedExecutionTime) {
         this.estimatedExecutionTime = estimatedExecutionTime;
+    }
+
+    /**
+     * @return the message
+     */
+    public String getMessage() {
+        return message;
+    }
+
+    /**
+     * @param message the message to set
+     */
+    public void setMessage(String message) {
+        this.message = message;
     }
     
     

@@ -7,7 +7,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class YarnAppResultDTO implements Serializable{
     
     private YarnAppResult yarnAppResult;
-    private long executionDuration;
+    private long totalExecutionDuration, runningTime;
+    private String ownerFullName;
 
     public YarnAppResultDTO(){}
     
@@ -15,9 +16,10 @@ public class YarnAppResultDTO implements Serializable{
         this.yarnAppResult = yarnAppResult;
     }
     
-    public YarnAppResultDTO(YarnAppResult yarnAppResult, long executionDuration){
+    public YarnAppResultDTO(YarnAppResult yarnAppResult, long totalExecutionDuration, long runningTime){
         this.yarnAppResult = yarnAppResult;
-        this.executionDuration = executionDuration;
+        this.totalExecutionDuration = totalExecutionDuration;
+        this.runningTime = runningTime;
     }
     
     /**
@@ -35,19 +37,45 @@ public class YarnAppResultDTO implements Serializable{
     }
 
     /**
-     * @return the executionDuration
+     * @return the totalExecutionDuration
      */
-    public long getExecutionDuration() {
-        return executionDuration;
+    public long getTotalExecutionDuration() {
+        return totalExecutionDuration;
     }
 
     /**
-     * @param executionDuration the executionDuration to set
+     * @param totalExecutionDuration the totalExecutionDuration to set
      */
-    public void setExecutionDuration(long executionDuration) {
-        this.executionDuration = executionDuration;
+    public void setTotalExecutionDuration(long totalExecutionDuration) {
+        this.totalExecutionDuration = totalExecutionDuration;
     }
-    
-    
+
+    /**
+     * @return the runningTime
+     */
+    public long getRunningTime() {
+        return runningTime;
+    }
+
+    /**
+     * @param runningTime the runningTime to set
+     */
+    public void setRunningTime(long runningTime) {
+        this.runningTime = runningTime;
+    }
+
+    /**
+     * @return the ownerFullName
+     */
+    public String getOwnerFullName() {
+        return ownerFullName;
+    }
+
+    /**
+     * @param ownerFullName the ownerFullName to set
+     */
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
+    }
     
 }

@@ -62,7 +62,9 @@ public class Settings {
   private static final String VARIABLE_DRELEPHANT_PORT = "drelephant_port";
   private static final String VARIABLE_YARN_WEB_UI_IP = "yarn_ui_ip";
   private static final String VARIABLE_YARN_WEB_UI_PORT = "yarn_ui_port";
-  
+  private static final String VARIABLE_FILE_PREVIEW_IMAGE_SIZE = "file_preview_image_size";
+  private static final String VARIABLE_FILE_PREVIEW_TXT_SIZE = "file_preview_txt_size";
+
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
   
   private static final String VARIABLE_KAFKA_NUM_PARTITIONS = "kafka_num_partitions";
@@ -167,6 +169,8 @@ public class Settings {
       HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA_MBs);
       MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
       HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD, HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD);
+      FILE_PREVIEW_IMAGE_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_IMAGE_SIZE, 10000000);
+      FILE_PREVIEW_TXT_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_TXT_SIZE, 100);
       cached = true;
     }
   }
@@ -745,10 +749,30 @@ public class Settings {
   public static final String KAFKA_BROKERADDR_ENV_VAR = "kafka.brokeraddress";
 //  public static final String KAFKA_K_CERTIFICATE_ENV_VAR = "kafka.key.certificate";
 //  public static final String KAFKA_T_CERTIFICATE_ENV_VAR = "kafka.trusted.certificate";
-//  
+  public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;  
+  public static int FILE_PREVIEW_TXT_SIZE = 100; 
+  
   // QUOTA
   public static final float DEFAULT_YARN_PRICE = 1.0f;
 
+  /**
+   * Returns the maximum image size in bytes that can be previewed in the 
+   * browser.
+   * @return 
+   */
+  public synchronized int getFilePreviewImageSize() {
+    checkCache();
+    return FILE_PREVIEW_IMAGE_SIZE;
+  }
+  /**
+   * Returns the maximum number of lines of the file that can be previewed in the 
+   * browser.
+   * @return 
+   */
+  public synchronized int getFilePreviewTxtSize() {
+    checkCache();
+    return FILE_PREVIEW_TXT_SIZE;
+  }
   
   //Project creation: default datasets
   public static enum DefaultDataset {

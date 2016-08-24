@@ -22,7 +22,6 @@ import javax.ws.rs.core.SecurityContext;
 import org.slf4j.LoggerFactory;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
-import se.kth.bbc.jobs.jobhistory.ExecutionInputfilesFacade;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
@@ -58,8 +57,6 @@ public class ExecutionService {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private ExecutionController executionController;
-  @EJB
-  private ExecutionInputfilesFacade execInputFilesFacade;
 
   private JobDescription job;
 

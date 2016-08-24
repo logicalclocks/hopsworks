@@ -7,6 +7,9 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import static java.util.Collections.list;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -29,8 +32,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.json.JSONObject;
+import se.kth.bbc.jobs.jobhistory.ConfigDetailsDTO;
 import se.kth.bbc.jobs.jobhistory.JobDetailDTO;
 import se.kth.bbc.jobs.jobhistory.JobHeuristicDTO;
+import se.kth.bbc.jobs.jobhistory.JobHeuristicDetailsComparator;
 import se.kth.bbc.jobs.jobhistory.JobHeuristicDetailsDTO;
 import se.kth.bbc.jobs.jobhistory.JobProposedConfigurationDTO;
 import se.kth.bbc.jobs.jobhistory.JobsHistory;
@@ -45,7 +50,6 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.hdfsUsers.HdfsUsersFacade;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.JobService;
@@ -78,6 +82,7 @@ public class HistoryService {
   private static final String EXECUTOR_LOAD_BALANCE_CLASS = "com.linkedin.drelephant.spark.heuristics.ExecutorLoadHeuristic";
   
   private List<JobHeuristicDetailsDTO> resultsForAnalysis = new ArrayList<>();
+  private JobHeuristicDetailsComparator comparator = new JobHeuristicDetailsComparator();
   
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -121,7 +126,8 @@ public class HistoryService {
         
         JobsHistory jh = jobsHistoryFacade.findByAppId(it.getId());
         if(jh != null){
-            YarnAppResultDTO appToAdd  = new YarnAppResultDTO(it, jh.getExecutionDuration());
+            YarnAppResultDTO appToAdd  = new YarnAppResultDTO(it, jh.getExecutionDuration(), it.getFinishTime()-it.getStartTime());
+            appToAdd.setOwnerFullName(returnProject.getOwner().getFname() + " " + returnProject.getOwner().getLname());
             appResultsToReturn.add(appToAdd);
         }
     }
@@ -146,6 +152,41 @@ public class HistoryService {
 
         JsonResponse json = getJobDetailsFromDrElephant(jobId); 
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  }
+  
+  @GET
+  @Path("config/jobs/{jobId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getConfig(@PathParam("jobId") String jobId,
+    @Context SecurityContext sc,
+    @Context HttpServletRequest req,
+    @HeaderParam("Access-Control-Request-Headers") String requestH) throws AppException{
+      
+    JobsHistory jh = jobsHistoryFacade.findByAppId(jobId);
+    
+    int yarnAppHeuristicIdMemory = yarnAppHeuristicResultsFacade.searchByIdAndClass(jobId, MEMORY_HEURISTIC_CLASS);
+    
+    ConfigDetailsDTO configDTO = new ConfigDetailsDTO(jobId);
+    
+            configDTO.setTotalDriverMemory(yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdMemory, TOTAL_DRIVE_MEMORY));
+            String totalExMemory = yarnAppHeuristicResultDetailsFacade.searchByIdAndName(yarnAppHeuristicIdMemory, TOTAL_EXECUTOR_MEMORY);
+            String[] splitTotalExMemory = splitExecutorMemory(totalExMemory);
+            
+            configDTO.setAmMemory(jh.getAmMemory());
+            configDTO.setAmVcores(jh.getAmVcores());
+            
+            configDTO.setTotalExecutorMemory(splitTotalExMemory[0]);
+            configDTO.setExecutorMemory(convertGBtoMB(splitTotalExMemory[1]));
+            configDTO.setNumberOfExecutors(Integer.parseInt(splitTotalExMemory[2]));
+            
+            configDTO.setClassName(jh.getClassName());
+            configDTO.setJarFile(jh.getJarFile());
+            configDTO.setArguments(jh.getArguments());
+            configDTO.setBlocksInHdfs(jh.getInputBlocksInHdfs());
+            
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        configDTO).build();
     }
 
   
@@ -216,11 +257,10 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
             
             jobsHistoryResult.addJobHeuristicDetails(jhD);
             resultsForAnalysis.add(jhD);
-            
+        
         }
         
         defaultAnalysis(jobsHistoryResult);
-        mediumAnalysis(jobsHistoryResult);
         premiumAnalysis(jobsHistoryResult);
         
         GenericEntity<JobHeuristicDTO> jobsHistory = new GenericEntity<JobHeuristicDTO>(jobsHistoryResult){};
@@ -323,8 +363,8 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         while(itr.hasNext()) {
             JobHeuristicDetailsDTO obj = itr.next();
          
-            if(obj.getTotalSeverity().equals("LOW") && obj.getAmMemory()<= defaultAmMemory && obj.getAmVcores() <= defaultAmVcores &&
-               obj.getNumberOfExecutors()<= defaultNumOfExecutors && obj.getExecutorMemory()<= defaultExecutorsMemory){
+            if(obj.getTotalSeverity().equals("LOW") && ((obj.getAmMemory()* obj.getAmVcores() <= defaultAmMemory * defaultAmVcores) &&
+               (obj.getNumberOfExecutors() * obj.getExecutorMemory()<= defaultNumOfExecutors * defaultExecutorsMemory))){
                 defaultAmMemory = obj.getAmMemory();
                 defaultAmVcores = obj.getAmVcores();
                 defaultNumOfExecutors = obj.getNumberOfExecutors();
@@ -332,7 +372,7 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
                 executionDuration = obj.getExecutionTime();
             }
         }
-        JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Minimum", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
+        JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Minimal", "[Minimum resources]", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
                                     defaultExecutorCores, defaultExecutorsMemory);
         
         if (executionDuration == 0){
@@ -345,43 +385,6 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         jobsHistoryResult.addProposal(proposal);        
     }
     
-    /**
-     * The medium analysis tries to find an average of resources required for an application.
-     * It operates if the number of the results for analysis are more than 3.
-     * @param jobsHistoryResult 
-     */
-        private void mediumAnalysis(JobHeuristicDTO jobsHistoryResult){
-            int counter = 0;
-            int defaultAmMemory = 0;
-            int defaultAmVcores = 0;
-            int defaultNumOfExecutors = 0;
-            int defaultExecutorsMemory = 0;
-            int defaultExecutorCores = 1;
-        
-            int size = resultsForAnalysis.size();
-            Iterator<JobHeuristicDetailsDTO> itr = resultsForAnalysis.iterator();
-        
-            // The analysis takes places if and only if the results for analysis are more than 3.
-            while(itr.hasNext() && size >= 3) {
-                JobHeuristicDetailsDTO obj = itr.next();
-         
-                if(obj.getTotalSeverity().equals("LOW")){
-                    defaultAmMemory += obj.getAmMemory();
-                    defaultAmVcores += obj.getAmVcores();
-                    defaultNumOfExecutors += obj.getNumberOfExecutors();
-                    defaultExecutorsMemory += obj.getExecutorMemory();
-                    counter++;
-                }
-            }
-        
-            if(size >= 3){
-                JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Medium", average(defaultAmMemory,counter), defaultAmVcores/counter, defaultNumOfExecutors/counter,
-                                    defaultExecutorCores, average(defaultExecutorsMemory,counter));
-        
-                proposal.setEstimatedExecutionTime("Unpredictable");
-                jobsHistoryResult.addProposal(proposal);
-        }
-    }
     
     /**
      * The premium analysis takes into account the minimum execution duration of an application and
@@ -397,20 +400,23 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         long executionDuration = 0;
         boolean premium = false;
         
+        Collections.sort(resultsForAnalysis, comparator);
+        
         Iterator<JobHeuristicDetailsDTO> itr = resultsForAnalysis.iterator();
         
         while(itr.hasNext()) {
          JobHeuristicDetailsDTO obj = itr.next();
          
-         if(obj.getTotalSeverity().equals("LOW") && (obj.getExecutionTime() < executionDuration || executionDuration == 0) &&
-                 (obj.getAmMemory()> defaultAmMemory || obj.getAmVcores() > defaultAmVcores ||
-                  obj.getNumberOfExecutors() > defaultNumOfExecutors || obj.getExecutorMemory()> defaultExecutorsMemory)){
+         if(obj.getTotalSeverity().equals("LOW") && (obj.getAmMemory()> defaultAmMemory || 
+                  obj.getAmVcores() > defaultAmVcores || obj.getNumberOfExecutors() > defaultNumOfExecutors || 
+                  obj.getExecutorMemory() > defaultExecutorsMemory)){
              defaultAmMemory = obj.getAmMemory();
              defaultAmVcores = obj.getAmVcores();
              defaultExecutorsMemory = obj.getExecutorMemory();
              defaultNumOfExecutors = obj.getNumberOfExecutors();
              executionDuration = obj.getExecutionTime();
              premium = true;
+             break; 
          }
         }
          
@@ -419,19 +425,22 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
          // The system checks the number of blocks for the input file.
          // Then proposed a configuration with the same number of executors as the number of the blocks.
          if(blocks != 0){
+             if(defaultNumOfExecutors != blocks){
+                 executionDuration = 0;
+             }
              defaultNumOfExecutors = blocks;
              premium = true;
          }
          
         if(premium){ 
-            JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Premium", defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
+            JobProposedConfigurationDTO proposal = new JobProposedConfigurationDTO("Fast", "[Maximim Resources]",defaultAmMemory, defaultAmVcores, defaultNumOfExecutors,
                                     defaultExecutorCores, defaultExecutorsMemory);
         
             proposal.setEstimatedExecutionTime(convertMsToTime(executionDuration));
         
             jobsHistoryResult.addProposal(proposal);
         }
-        }
+    }
     
     /**
      * A converter of Milliseconds (MS) to HH:MM:SS
