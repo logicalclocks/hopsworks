@@ -2,6 +2,7 @@ package se.kth.hopsworks.rest;
 
 import java.net.SocketException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
 import java.util.Collection;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -60,6 +61,8 @@ public class AuthService {
   @EJB
   private BbcGroupFacade bbcGroupFacade;
 
+    
+  
   @GET
   @Path("session")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -95,6 +98,7 @@ public class AuthService {
             isUserInRole("HOPS_USER"));
     req.getServletContext().log("SecurityContext in sysadmin role: " + sc.
             isUserInRole("HOPS_ADMIN"));
+ 
     JsonResponse json = new JsonResponse();
     if (email == null || email.isEmpty()) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
@@ -339,9 +343,37 @@ public class AuthService {
 //SAML1: urn:mace:dir:attribute-def:mail
 
 
+   
+//    req.get
 
-    String username = getAttr(req, "eduPersonPrincipalName");
-    String email = getAttr(req, "email");
+//    Object username = req.getAttribute("eduPersonPrincipalName");
+    Object username = req.getAttribute("email");
+    if (username != null) {
+        String emailUser = (String) username;
+        
+        // check ip of apache server
+        String userIpAddress = req.getHeader("X-Forwarded-For");
+        
+        if (userIpAddress.compareToIgnoreCase(settings.getApacheIp()) == 0) {
+
+            // Request came from Shibboleth - we can now register the user if the user
+            // has not yet been created.
+        String shibbolethLoginUrl = settings.getShibbolethLoginUrl();
+        String shibbolethLogoutUrl = settings.getShibbolethLogoutUrl();
+          
+        }
+    }
+//    Principal shibboleth = sc.getUserPrincipal();
+//    if (shibboleth != null) {
+//      String shibbolethEmail = shibboleth.getName();
+//      // TODO - register shibboleth
+//    }
+    
+
+
+
+//    String username = getAttr(req, "eduPersonPrincipalName");
+//    String email = getAttr(req, "email");
     
     req.getServletContext().log("SESSIONID@login: " + req.getSession().getId());
     req.getServletContext().log("SecurityContext: " + sc.getUserPrincipal());

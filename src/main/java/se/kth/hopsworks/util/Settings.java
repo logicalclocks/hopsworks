@@ -30,6 +30,7 @@ public class Settings {
   private static final String VARIABLE_LIVY_IP = "livy_ip";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
+  private static final String VARIABLE_APACHE_IP = "apache_ip";
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP = "spark_history_server_ip";
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
   private static final String VARIABLE_SPARK_USER = "spark_user";
@@ -147,6 +148,7 @@ public class Settings {
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
+      APACHE_IP = setIpVar(VARIABLE_APACHE_IP, APACHE_IP);
       SPARK_HISTORY_SERVER_IP = setIpVar(VARIABLE_SPARK_HISTORY_SERVER_IP, SPARK_HISTORY_SERVER_IP);	
       ZK_IP = setIpVar(VARIABLE_ZK_IP, ZK_IP);
       ZK_USER = setVar(VARIABLE_ZK_USER, ZK_USER);
@@ -175,6 +177,28 @@ public class Settings {
     }
   }
 
+  
+  private final String SHIBBOLETH_LOGIN_URL = "/Shibboleth.sso/Login";
+  private final String SHIBBOLETH_LOGOUT_URL = "/Shibboleth.sso/Logout";  
+  
+
+  private static String APACHE_IP = "10.0.2.15";
+
+  public synchronized String getApacheIp() {
+      checkCache();
+      return APACHE_IP;
+  }
+    
+  public synchronized String getShibbolethLoginUrl() {
+      checkCache();
+      return "http://" + APACHE_IP + SHIBBOLETH_LOGIN_URL;
+  }
+  
+  public synchronized String getShibbolethLogoutUrl() {
+      checkCache();
+      return "http://" + APACHE_IP + SHIBBOLETH_LOGOUT_URL;
+  }
+  
 
 
   private static String GLASSFISH_DIR = "/srv/glassfish";
@@ -564,6 +588,7 @@ public class Settings {
   
   // Oozie
   private String OOZIE_IP = "127.0.0.1";
+  
 
   public synchronized String getOozieIp() {
     checkCache();
