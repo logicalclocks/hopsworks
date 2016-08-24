@@ -327,7 +327,7 @@ public class AuthService {
   @POST
   @Path("shibboleth")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response shibbolethRegister(@Context SecurityContext sc, @Context HttpServletRequest req,
+  public Response registerShibboleth(@Context SecurityContext sc, @Context HttpServletRequest req,
           @Context HttpHeaders httpHeaders)
           throws AppException, MessagingException {
 

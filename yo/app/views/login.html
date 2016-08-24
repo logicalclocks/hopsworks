@@ -7,7 +7,7 @@
     </div>
   </div>
 </div>
-<div class="container" ng-if="!loginCtrl.secondFactorRequired">
+<div class="container" ng-if="!loginCtrl.secondFactorRequired && !loginCtrl.shibbolethNewAccount">
   <div class="row">
     <div class="center-block" style="width: 320px;">
       <div class="panel">
@@ -109,6 +109,10 @@
 
 <div class="container" ng-if="loginCtrl.shibbolethNewAccount">
 
+          <form name="shibbolethLoginForm" ng-submit="loginCtrl.registerShibboleth()" role="form">
+            <div class="shib-form-group">
+            <button class="btn btn-block btn-primary mt-lg" type="submit">Register</button>
+          </form>  
   
     
 </div>

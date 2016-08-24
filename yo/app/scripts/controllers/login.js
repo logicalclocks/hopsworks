@@ -37,6 +37,22 @@ angular.module('hopsWorksApp')
             self.user = {email: '', password: '', otp: ''};
             self.emailHash = md5.createHash(self.user.email || '');
             getAnnouncement();
+
+            
+            self.registerShibboleth = function () {
+              AuthService.registerShibboleth(self.user).then(
+             function (success) {
+                        self.working = false;
+                        self.secondFactorRequired = false;
+                        $cookies.email = self.user.email;
+                        $location.path('/');
+                      }, function (error) {
+                        self.working = false;
+                        self.errorMessage = error.data.errorMsg;
+                        growl.error(error.data.errorMsg, {title: 'Cannot Login at this moment. Does your Internet work?', ttl: 4000});
+              });                      
+                      
+              };     
             
             self.login = function () {
               self.working = true;

@@ -25,6 +25,19 @@ angular.module('hopsWorksApp')
               recover: function (user) {
                 return $http.post('/api/auth/recoverPassword', TransformRequest.jQueryStyle(user));
               },
+
+              registerShibboleth: function (user) {
+
+                var regReq = {
+                  method: 'POST',
+                  url: '/api/auth/shibboleth',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: user
+                };
+                return $http(regReq);
+              },
               register: function (user) {
 
                 var regReq = {
