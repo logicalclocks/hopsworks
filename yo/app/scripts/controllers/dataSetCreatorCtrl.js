@@ -12,12 +12,12 @@ angular.module('hopsWorksApp')
           function ($cookies, $modalInstance, DataSetService, MetadataActionService, $routeParams, growl, path) {
 
             var self = this;
-
+            self.path = path;
             self.working = false;
             self.datasets = [];
             self.selectedTemplate = {};
             self.temps = [{'temp': "temp"}];
-            self.dataSet = {'name': "", 'description': "", 'template': "", 'searchable': true};
+            self.dataSet = {'name': "", 'description': "", 'template': "", 'searchable': true, 'readme': true};
             var pId = $routeParams.projectID;
             var dataSetService = DataSetService(pId);
 
