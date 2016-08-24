@@ -20,7 +20,7 @@ angular.module('hopsWorksApp')
             self.fileDetail; //The details about the currently selected file.
             self.sharedPath; //The details about the currently selected file.
             self.routeParamArray = [];
-            self.readme = null;
+            $scope.readme = null;
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
             $scope.isPublic = true;
@@ -359,13 +359,10 @@ This will make all its files unavailable to other projects unless you share it e
               if (fileName.endsWith("README.md") && !preview) {
                 dataSetService.filePreview(filePath).then(
                         function (success) {
-                          console.log("data:" + success.data.data);
-                          var fileDetails = JSON.parse(success.data.data);
-                          var content = fileDetails.filePreviewDTO[0].content;
-                          self.readme =  $showdown.makeHtml(content);
-                          console.log(self.readme);
+                            var fileDetails = JSON.parse(success.data.data);
+                            var content = fileDetails.filePreviewDTO[0].content;
+                            $scope.readme = $showdown.makeHtml(content);
                         }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Could not get file contents', ttl: 5000, referenceId: 23});
                 });
               } else {
                 ModalService.filePreview('lg', fileName, filePath, self.projectId).then(
@@ -573,14 +570,14 @@ This will make all its files unavailable to other projects unless you share it e
             self.select = function (selectedIndex, file) {
               self.selected = selectedIndex;
               self.fileDetail = file;
-              self.readme = null;
+              $scope.readme = null;
             };
 
             self.deselect = function () {
               self.selected = null;
               self.fileDetail = null;
               self.sharedPath = null;
-              self.readme = null;
+              $scope.readme = null;
             };
 
             self.toggleLeft = buildToggler('left');

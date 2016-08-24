@@ -704,6 +704,11 @@ public class DataSetService {
 
       //check if the path is a file only if it exists
       if (!exists || dfso.isDir(path)) {
+        //Return an appropriate response if looking for README
+        if (path.endsWith("README.md")) {
+          return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).
+                  entity(json).build();
+        }
         throw new IOException("The file does not exist");
       }
       //tests if the user have permission to access this path
