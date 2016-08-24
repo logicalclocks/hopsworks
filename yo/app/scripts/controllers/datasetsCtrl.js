@@ -577,7 +577,7 @@ This will make all its files unavailable to other projects unless you share it e
               self.selected = null;
               self.fileDetail = null;
               self.sharedPath = null;
-              $scope.readme = null;
+              //$scope.readme = null;
             };
 
             self.toggleLeft = buildToggler('left');

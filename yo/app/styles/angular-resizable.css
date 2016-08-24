@@ -65,17 +65,9 @@
   left: 0;
   margin-bottom: -14px;
   z-index: 3;
-  
-}
-.rg-bottom-datasets {
-  cursor: row-resize;
-  width: 100%;
-  bottom: 0;
-  left: 0;
-  margin-bottom: -14px;
-  z-index: 3;
   background: #eee;
 }
+
 .rg-left {
   cursor: col-resize;
   height: 100%;

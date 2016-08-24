@@ -7,8 +7,8 @@
 
     <div ng-controller="MetadataCtrl as metadataCtrl">
 
-      <div class="overlay"></div>
-      <section style="height: 100%" layout="row" flex="">
+      <div class="overlay" ></div>
+      <section layout="row" flex="">
 
         <md-content flex="" layout-padding="">
           <div ng-include="'navProject.html'"></div>
@@ -47,9 +47,9 @@
               <h3></h3>
 
 
-              <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px;">
+              <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px;" >
 
-                <div class="row rg-row-top row-no-margin-left"  resizable r-directions="['bottom']" style="margin-top: 15px; ">
+                <div class="row row-no-margin-left" style="margin-top: 15px;">
                   <div class="col-lg-12">
                     <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, publicDs: datasetsCtrl.isPublic} | orderBy: 'name'">
                       <div ng-dblclick="projectCtrl.browseDataset(dataset)"
@@ -188,17 +188,19 @@
                         </div>
                       </div>
                     </div>    
-                    <div class="row rg-bottom" style="margin-left:0.5%; background: #eee; ">
-
-
-                    </div>
-                    <div class="row rg-row-bottom" style="overflow-y: auto;">
-                    <!-- README.md is displayed here -->
-                    <div ng-bind-html="readme"></div>
-                  </div>
+                    
+                    
                   </div>
                   
                 </div>
+                <div class="row rg-row-bottom row-no-margin-left"  resizable r-directions="['bottom']"></div>
+                <div class="row row-no-margin-left" style="margin-right: 15px;">
+                  <div class="col-lg-12" style="overflow-y: auto;">
+                    <!-- README.md is displayed here -->
+                    
+                    <div ng-bind-html="readme" style="overflow-y: auto;"></div>
+                  </div>
+                  </div>
               </div>
             </div><!--content wrapper -->
           </div>
