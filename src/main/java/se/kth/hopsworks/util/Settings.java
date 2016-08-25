@@ -727,6 +727,14 @@ public class Settings {
   public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;  
   public static int FILE_PREVIEW_TXT_SIZE = 100; 
   
+  public static String README_TEMPLATE =  "*This is an auto-generated README.md"
+          + " file for your Dataset!*\n"
+          + "To replace it, go into your DataSet and edit the README.md file.\n"
+          + "\n" + "*%s* DataSet\n" + "===\n" + "\n"
+          + "## Description\n" + "```\n" + "%s\n"
+          + "``` \n" + "## Template\n" + "```\n" + "%s\n" + "```\n"
+          + "### Searchable: ```%s```";
+  
   // QUOTA
   public static final float DEFAULT_YARN_PRICE = 1.0f;
 

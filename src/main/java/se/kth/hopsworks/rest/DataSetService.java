@@ -389,9 +389,27 @@ public class DataSetService {
       if (username != null) {
         udfso = dfs.getDfsOps(username);
       }
-      datasetController.createDataset(user, project, dataSet.getName(), dataSet.
-              getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
-              false, dfso, udfso);
+      if (dataSet.isGenerateReadme()) {
+        String templateName = "No template is attached to this dataset"; 
+        if(dataSet.getTemplate() > 0){
+          templateName = template.getTemplate(dataSet.getTemplate()).getName();
+        }
+        
+        //Generate README.md for the dataset if the user requested it
+        String readmeFile = String.format(Settings.README_TEMPLATE, dataSet.
+                getName(), dataSet.getDescription(), templateName,
+                dataSet.isSearchable());
+        datasetController.createDataset(user, project, dataSet.getName(),
+                dataSet.
+                getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
+                false, dfso, udfso);
+      } else {
+        datasetController.createDataset(user, project, dataSet.getName(),
+                dataSet.
+                getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
+                false, dfso, udfso);
+      }
+      
     } catch (NullPointerException c) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), c.
               getLocalizedMessage());

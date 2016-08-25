@@ -17,7 +17,7 @@ angular.module('hopsWorksApp')
             self.datasets = [];
             self.selectedTemplate = {};
             self.temps = [{'temp': "temp"}];
-            self.dataSet = {'name': "", 'description': "", 'template': "", 'searchable': true, 'readme': true};
+            self.dataSet = {'name': "", 'description': "", 'template': "", 'searchable': true, 'generateReadme': true};
             var pId = $routeParams.projectID;
             var dataSetService = DataSetService(pId);
 

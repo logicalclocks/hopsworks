@@ -503,6 +503,21 @@ public class HdfsUsersController {
         return project.getName() + USER_NAME_DELIMITER + ds.getInode().getInodePK().
                 getName();
     }
+    
+     /**
+     * If the dataset is shared with this project we will get a group name that
+     * does not exist.
+     * <p>
+     * @param project
+     * @param dataSetName
+     * @return
+     */
+    public String getHdfsGroupName(Project project, String dataSetName) {
+        if (project == null || dataSetName == null) {
+            return null;
+        }
+        return project.getName() + USER_NAME_DELIMITER + dataSetName;
+    }
 
     /**
      * This will return a group name for the dataset Warning if the dataset is

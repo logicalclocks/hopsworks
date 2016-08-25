@@ -1,11 +1,14 @@
 package se.kth.hopsworks.controller;
 
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.validation.ValidationException;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -49,6 +52,51 @@ public class DatasetController {
   private InodeBasicMetadataFacade inodeBasicMetaFacade;
   @EJB
   private HdfsUsersController hdfsUsersBean;
+
+  /**
+   * Wrapper method for creating a Dataset with a README.md file.
+   * 
+   * @param user
+   * @param project
+   * @param dataSetName
+   * @param datasetDescription
+   * @param templateId
+   * @param searchable
+   * @param readMe
+   * @param globallyVisible
+   * @param dfso
+   * @param udfso
+   * @throws IOException 
+   */
+  public void createDataset(Users user, Project project, String dataSetName,
+          String datasetDescription, int templateId, boolean searchable,
+          String readMe, boolean globallyVisible,
+          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
+          throws IOException {
+    //First create the Dataset
+    createDataset(user, project, dataSetName, datasetDescription,
+            templateId, searchable, globallyVisible, dfso, udfso);
+
+//    //Persist README.md to hdfs
+//    String readMeFilePath = "/Projects/" + project.getName() + "/" + dataSetName
+//            + "/README.md";
+//    FSDataOutputStream fsOut = null;
+//    try {
+//      fsOut = udfso.create(readMeFilePath);
+//      fsOut.writeUTF(readMe);
+//      fsOut.flush();
+//      Path readmMePath = new Path(readMeFilePath);
+//      
+////      udfso.setOwner(readmMePath, hdfsUsersBean.
+////              getHdfsUserName(project, user), hdfsUsersBean.getHdfsGroupName(
+////              project, dataSetName));
+////      udfso.setPermission(readmMePath, udfso.getParentPermission(readmMePath));
+//    } finally {
+//      if (fsOut != null){
+//        fsOut.close();
+//      }
+//    }
+  }
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -134,6 +182,39 @@ public class DatasetController {
         activityFacade.persistActivity(ActivityFacade.NEW_DATA + dataSetName, project, user);
         // creates a dataset and adds user as owner.
         hdfsUsersBean.addDatasetUsersGroups(user, project, newDS, dfso);
+        //Persist README.md to hdfs
+        String readMeFilePath = "/Projects/" + project.getName() + "/" + dataSetName+"/";
+        String readmeFile = String.format(Settings.README_TEMPLATE, 
+                  dataSetName, datasetDescription, 
+                  "No template is attached to this dataset",
+                false);
+        File file = new File("/tmp" + readMeFilePath + "README.md");
+
+        file.getParentFile().mkdirs();
+        file.createNewFile();
+        PrintWriter writer = new PrintWriter(file);
+        writer.print(readmeFile);
+        writer.flush();
+        writer.close();
+
+        udfso.copyToHDFSFromLocal(false, file.getAbsolutePath(),readMeFilePath);
+
+        
+//        FSDataOutputStream fsOut = null;
+//        try {
+//          String readmeFile = String.format(Settings.README_TEMPLATE, 
+//                  dataSetName, datasetDescription, 
+//                  "No template is attached to this dataset",
+//                false);
+//          fsOut = udfso.create(readMeFilePath);
+//          fsOut.writeBytes(readmeFile);
+//          fsOut.flush();
+//        } finally {
+//          if (fsOut != null){
+//            fsOut.close();
+//          }
+//        }
+      
       } catch (Exception e) {
         IOException failed = new IOException("Failed to create dataset at path "
                 + dsPath + ".", e);

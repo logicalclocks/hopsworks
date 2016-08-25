@@ -221,6 +221,10 @@ public class ProjectController {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
         boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
                 || ds.equals(Settings.DefaultDataset.LOGS));
+        //Generate README.md for the dataset if the user requested it
+        String readmeFile = String.format(Settings.README_TEMPLATE, ds.
+                getName(), ds.getDescription(), "No template is attached to this dataset",
+                false);
         datasetController.createDataset(user, project, ds.getName(), ds.
                 getDescription(), -1, false, globallyVisible, dfso, udfso);
       }
@@ -844,8 +848,13 @@ public class ProjectController {
 
     Users user = userBean.getUserByEmail(username);
     try {
+      String readmeFile = String.format(Settings.README_TEMPLATE, "TestJob",
+              "jar file to calculate pi", 
+              "No template is attached to this dataset",
+                false);
       datasetController.createDataset(user, project, "TestJob",
-              "jar file to calculate pi", -1, false, true, dfso, udfso);
+              "jar file to calculate pi", -1, false, readmeFile, 
+              true, dfso, udfso);
     } catch (IOException ex) {
       Logger.getLogger(ProjectController.class.getName()).
               log(Level.SEVERE, null, ex);
