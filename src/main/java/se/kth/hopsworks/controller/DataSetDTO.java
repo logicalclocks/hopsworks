@@ -20,6 +20,7 @@ public class DataSetDTO {
   private String description;
   private boolean isPublic;
   private boolean searchable;
+  private boolean generateReadme;
   private boolean editable;
   private int template;
   private Integer projectId;
@@ -32,11 +33,12 @@ public class DataSetDTO {
   }
 
   public DataSetDTO(String name, String description, boolean searchable,
-          int template) {
+          int template, boolean generateReadme) {
     this.name = name;
     this.description = description;
     this.searchable = searchable;
     this.template = template;
+    this.generateReadme = generateReadme;
   }
 
   public DataSetDTO(Dataset ds, Project project, List<String> sharedWith) {
@@ -158,11 +160,19 @@ public class DataSetDTO {
     this.isPublic = isPublic;
   }
 
-  
+  public boolean isGenerateReadme() {
+    return generateReadme;
+  }
+
+  public void setGenerateReadme(boolean generateReadme) {
+    this.generateReadme = generateReadme;
+  }
+
   @Override
   public String toString() {
     return "DataSetDTO{" + "name=" + name + ", description=" + description
-            + ", searchable=" + searchable + ", template=" + this.template + '}';
+            + ", searchable=" + searchable + ", generateReadme="
+            + generateReadme + ", template=" + this.template + '}';
   }
 
 }

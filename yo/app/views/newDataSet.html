@@ -45,29 +45,37 @@
           </div>
 
           <div class="row">
-            <div class="col-md-8">
-              <label style="margin-top:20px;" for="dataSetName" class="control-label">Templates</label>
-              <ui-select ng-model="datasetCreatorCtrl.selectedTemplate" theme="select2"
-                         on-select="" style="min-width: 300px;">
+            <div class="col-md-12">
+              <div class="row">
+                <label style="margin-top:20px; margin-top: 15px;
+                        margin-right: 15px;
+                        margin-bottom: 15px;
+                        margin-left: 15px;" for="dataSetName" class="control-label">Templates</label>
+                <ui-select ng-model="datasetCreatorCtrl.selectedTemplate" theme="select2"
+                           on-select="" style="min-width: 300px;">
 
-                <ui-select-match placeholder="Add a template...">{{$select.selected.name}}</ui-select-match>
+                  <ui-select-match placeholder="Add a template...">{{$select.selected.name}}</ui-select-match>
 
-                <ui-select-choices repeat="template in datasetCreatorCtrl.templates | filter: $select.search">
-                  <small>
-                    <span ng-bind-html="'' + template.name | highlight: $select.search"></span>
-                  </small>
-                </ui-select-choices>
-
-              </ui-select>
-            </div>
-            <div class="col-md-4">
-              <md-checkbox style="margin-top:45px;" class="md-primary"
-                           ng-model="datasetCreatorCtrl.dataSet.searchable">
-                Searchable
-              </md-checkbox>
+                  <ui-select-choices repeat="template in datasetCreatorCtrl.templates | filter: $select.search">
+                    <small>
+                      <span ng-bind-html="'' + template.name | highlight: $select.search"></span>
+                    </small>
+                  </ui-select-choices>
+                </ui-select>
+              </div>
+              <div class="row">
+                <md-checkbox class="md-primary"
+                             ng-model="datasetCreatorCtrl.dataSet.searchable">
+                  Searchable
+                </md-checkbox>
+                <md-checkbox  class="md-primary"
+                              ng-model="datasetCreatorCtrl.dataSet.generateReadme"
+                              ng-hide="datasetCreatorCtrl.path.length>0">
+                  Generate README.md
+                </md-checkbox>
+              </div>
             </div>
           </div>
-
         </div>
 
       </fieldset>

@@ -42,7 +42,8 @@
     "angular-smart-table": "2.1.7",
     "ng-prettyjson": "^0.2.0",
     "angular-awesome-slider": "^2.4.4",
-    "angular-resizable": "^1.2.0"
+    "angular-resizable": "^1.2.0",
+    "ng-showdown": "^1.1.0"
   },
   "devDependencies": {
     "angular-mocks": "1.3.16"
@@ -50,6 +51,7 @@
   "appPath": "app",
   "moduleName": "hopsWorksApp",
   "resolutions": {
-    "angular": "1.3.x"
+    "angular": "1.3.x",
+    "showdown": "1.x"
   }
 }

@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('FilePreviewCtrl', ['$modalInstance', 'DataSetService', 'growl', 'fileName', 'filePath', 'projectId',
-          function ($modalInstance, DataSetService, growl, fileName, filePath, projectId) {
+        .controller('FilePreviewCtrl', ['$modalInstance', '$showdown','DataSetService', 'growl', 'fileName', 'filePath', 'projectId',
+          function ($modalInstance, $showdown, DataSetService, growl, fileName, filePath, projectId) {
             var self = this;
 
             self.filePath = filePath;
@@ -14,7 +14,6 @@ angular.module('hopsWorksApp')
               var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
               dataSetService.filePreview(filePath).then(
                       function (success) {
-                        var escaped = success.data.data
 //                                .replace(/\\/g, '\\\\')
 //                                .replace(/\"/g, '\\"')
 //                                .replace(/\//g, '\\/')
@@ -23,9 +22,7 @@ angular.module('hopsWorksApp')
 //                                .replace(/\n/g, '\\n')
 //                                .replace(/\r/g, '\\r')
 //                                .replace(/\t/g, '\\t')
-;
-                        console.log("escaped:"+escaped);
-                        self.fileDetails = JSON.parse(escaped);
+                        self.fileDetails = JSON.parse(success.data.data);
                         console.log(self.fileDetails.filePreviewDTO[0].content);
 
                         self.type = self.fileDetails.filePreviewDTO[0].type;
