@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,6 +34,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
@@ -389,25 +391,31 @@ public class DataSetService {
       if (username != null) {
         udfso = dfs.getDfsOps(username);
       }
+      datasetController.createDataset(user, project, dataSet.getName(),
+              dataSet.
+              getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
+              false, dfso, udfso);
+      
+      //Generate README.md for the dataset if the user requested it
       if (dataSet.isGenerateReadme()) {
-        String templateName = "No template is attached to this dataset"; 
-        if(dataSet.getTemplate() > 0){
+        String templateName = "No template is attached to this dataset";
+        if (dataSet.getTemplate() > 0) {
           templateName = template.getTemplate(dataSet.getTemplate()).getName();
         }
         
-        //Generate README.md for the dataset if the user requested it
-        String readmeFile = String.format(Settings.README_TEMPLATE, dataSet.
-                getName(), dataSet.getDescription(), templateName,
-                dataSet.isSearchable());
-        datasetController.createDataset(user, project, dataSet.getName(),
-                dataSet.
-                getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
-                false, dfso, udfso);
-      } else {
-        datasetController.createDataset(user, project, dataSet.getName(),
-                dataSet.
-                getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
-                false, dfso, udfso);
+        //Persist README.md to hdfs
+        if (udfso != null) {
+          String readmeFile = String.format(Settings.README_TEMPLATE, dataSet.
+                  getName(), dataSet.getDescription(), templateName,
+                  dataSet.isSearchable());
+          String readMeFilePath = "/Projects/" + project.getName() + "/"
+                  + dataSet.getName() + "/README.md";;
+
+          try (FSDataOutputStream fsOut = udfso.create(readMeFilePath)) {
+            fsOut.writeBytes(readmeFile);
+            fsOut.flush();
+          }
+        }
       }
       
     } catch (NullPointerException c) {

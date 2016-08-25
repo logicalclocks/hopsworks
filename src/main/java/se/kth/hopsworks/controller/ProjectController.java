@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import io.hops.bbc.ProjectPaymentAction;
 import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
+import java.io.PrintWriter;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import org.apache.hadoop.fs.Path;
@@ -221,10 +222,6 @@ public class ProjectController {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
         boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
                 || ds.equals(Settings.DefaultDataset.LOGS));
-        //Generate README.md for the dataset if the user requested it
-        String readmeFile = String.format(Settings.README_TEMPLATE, ds.
-                getName(), ds.getDescription(), "No template is attached to this dataset",
-                false);
         datasetController.createDataset(user, project, ds.getName(), ds.
                 getDescription(), -1, false, globallyVisible, dfso, udfso);
       }
@@ -848,21 +845,13 @@ public class ProjectController {
 
     Users user = userBean.getUserByEmail(username);
     try {
-      String readmeFile = String.format(Settings.README_TEMPLATE, "TestJob",
-              "jar file to calculate pi", 
-              "No template is attached to this dataset",
-                false);
       datasetController.createDataset(user, project, "TestJob",
-              "jar file to calculate pi", -1, false, readmeFile, 
-              true, dfso, udfso);
+              "jar file to calculate pi", -1, false, true, dfso, udfso);
     } catch (IOException ex) {
       Logger.getLogger(ProjectController.class.getName()).
               log(Level.SEVERE, null, ex);
     }
     try {
-      String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
-      HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorFacade.
-              findEndpoint();
       File file = new File(settings.getSparkDir() + "/lib/spark-examples-"
               + Settings.SPARK_VERSION + "-hadoop" + Settings.HOPS_VERSION
               + ".jar");

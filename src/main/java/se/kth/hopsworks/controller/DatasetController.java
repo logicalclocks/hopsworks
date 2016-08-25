@@ -53,30 +53,6 @@ public class DatasetController {
   @EJB
   private HdfsUsersController hdfsUsersBean;
 
-  /**
-   * Wrapper method for creating a Dataset with a README.md file.
-   * 
-   * @param user
-   * @param project
-   * @param dataSetName
-   * @param datasetDescription
-   * @param templateId
-   * @param searchable
-   * @param readMe
-   * @param globallyVisible
-   * @param dfso
-   * @param udfso
-   * @throws IOException 
-   */
-  public void createDataset(Users user, Project project, String dataSetName,
-          String datasetDescription, int templateId, boolean searchable,
-          String readMe, boolean globallyVisible,
-          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
-          throws IOException {
-    //First create the Dataset
-    createDataset(user, project, dataSetName, datasetDescription,
-            templateId, searchable, globallyVisible, dfso, udfso);
-
 //    //Persist README.md to hdfs
 //    String readMeFilePath = "/Projects/" + project.getName() + "/" + dataSetName
 //            + "/README.md";
@@ -96,7 +72,7 @@ public class DatasetController {
 //        fsOut.close();
 //      }
 //    }
-  }
+  
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -183,37 +159,24 @@ public class DatasetController {
         // creates a dataset and adds user as owner.
         hdfsUsersBean.addDatasetUsersGroups(user, project, newDS, dfso);
         //Persist README.md to hdfs
-        String readMeFilePath = "/Projects/" + project.getName() + "/" + dataSetName+"/";
-        String readmeFile = String.format(Settings.README_TEMPLATE, 
-                  dataSetName, datasetDescription, 
-                  "No template is attached to this dataset",
-                false);
-        File file = new File("/tmp" + readMeFilePath + "README.md");
-
-        file.getParentFile().mkdirs();
-        file.createNewFile();
-        PrintWriter writer = new PrintWriter(file);
-        writer.print(readmeFile);
-        writer.flush();
-        writer.close();
-
-        udfso.copyToHDFSFromLocal(false, file.getAbsolutePath(),readMeFilePath);
-
-        
-//        FSDataOutputStream fsOut = null;
-//        try {
-//          String readmeFile = String.format(Settings.README_TEMPLATE, 
+//        String readMeFilePath = "/Projects/" + project.getName() + "/" + dataSetName+"/";
+//        String readmeFile = String.format(Settings.README_TEMPLATE, 
 //                  dataSetName, datasetDescription, 
 //                  "No template is attached to this dataset",
 //                false);
-//          fsOut = udfso.create(readMeFilePath);
-//          fsOut.writeBytes(readmeFile);
-//          fsOut.flush();
-//        } finally {
-//          if (fsOut != null){
-//            fsOut.close();
-//          }
-//        }
+//        File file = new File("/tmp" + readMeFilePath + "README.md");
+//
+//        file.getParentFile().mkdirs();
+//        file.createNewFile();
+//        PrintWriter writer = new PrintWriter(file);
+//        writer.print(readmeFile);
+//        writer.flush();
+//        writer.close();
+//
+//        udfso.copyToHDFSFromLocal(false, file.getAbsolutePath(),readMeFilePath);
+
+        
+//      
       
       } catch (Exception e) {
         IOException failed = new IOException("Failed to create dataset at path "

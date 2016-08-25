@@ -363,6 +363,7 @@ This will make all its files unavailable to other projects unless you share it e
                             var content = fileDetails.filePreviewDTO[0].content;
                             $scope.readme = $showdown.makeHtml(content);
                         }, function (error) {
+                          $scope.readme = null;
                 });
               } else {
                 ModalService.filePreview('lg', fileName, filePath, self.projectId).then(
@@ -570,7 +571,7 @@ This will make all its files unavailable to other projects unless you share it e
             self.select = function (selectedIndex, file) {
               self.selected = selectedIndex;
               self.fileDetail = file;
-              $scope.readme = null;
+//              $scope.readme = null;
             };
 
             self.deselect = function () {

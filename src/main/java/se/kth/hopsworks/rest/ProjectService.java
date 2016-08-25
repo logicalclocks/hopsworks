@@ -25,6 +25,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.security.AccessControlException;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.quota.YarnRunningPrice;
@@ -352,6 +353,34 @@ public class ProjectService {
                   udfso);
           projectController.addExampleJarToExampleProject(owner, project, dfso,
                   udfso);
+          //Persist README.md to hdfs for Default Datasets
+          if (udfso != null) {
+            String readmeFile, readMeFilePath;
+            for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
+              //Generate README.md for the Default Datasets
+              readmeFile = String.format(Settings.README_TEMPLATE,
+                      ds.getName(), ds.getDescription(),
+                      "No template is attached to this dataset", false);
+              readMeFilePath = "/Projects/" + project.getName() + "/"
+                      + ds.getName() + "/README.md";;
+
+              try (FSDataOutputStream fsOut = udfso.create(readMeFilePath)) {
+                fsOut.writeBytes(readmeFile);
+                fsOut.flush();
+              }
+            }
+            //TestJob dataset
+            readMeFilePath = "/Projects/" + project.getName()
+                    + "/TestJob/README.md";
+            readmeFile = String.format(Settings.README_TEMPLATE,
+                    "TestJob", "jar file to calculate pi",
+                    "No template is attached to this dataset", false);
+
+            try (FSDataOutputStream fsOut = udfso.create(readMeFilePath)) {
+              fsOut.writeBytes(readmeFile);
+              fsOut.flush();
+            }
+          }
           // if (projectServices.contains(ProjectServiceEnum.BIOBANKING)) {
           //   projectController.createProjectConsentFolder(owner, project);
           // }
@@ -472,6 +501,23 @@ public class ProjectService {
           hdfsUsersBean.addProjectFolderOwner(project, dfso);
           projectController.createProjectLogResources(owner, project, dfso,
                   udfso);
+          //Persist README.md to hdfs for Default Datasets
+          if (udfso != null) {
+            String readmeFile, readMeFilePath;
+            for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
+              //Generate README.md for the Default Datasets
+              readmeFile = String.format(Settings.README_TEMPLATE,
+                      ds.getName(), ds.getDescription(),
+                      "No template is attached to this dataset", false);
+              readMeFilePath = "/Projects/" + project.getName() + "/"
+                      + ds.getName() + "/README.md";
+
+              try (FSDataOutputStream fsOut = udfso.create(readMeFilePath)) {
+                fsOut.writeBytes(readmeFile);
+                fsOut.flush();
+              }
+            }
+          }
           // if (projectServices.contains(ProjectServiceEnum.BIOBANKING)) {
           //   projectController.createProjectConsentFolder(owner, project);
           // }
