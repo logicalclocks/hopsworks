@@ -3,9 +3,10 @@
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
           'DataSetService', '$routeParams','$route', 'ModalService', 'growl', '$location',
-          'MetadataHelperService',
+          'MetadataHelperService', '$showdown',
           function ($scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, $routeParams,
-                  $route, ModalService, growl, $location, MetadataHelperService) {
+                  $route, ModalService, growl, $location, MetadataHelperService,
+                  $showdown) {
 
             var self = this;
             self.working = false;
@@ -19,6 +20,7 @@ angular.module('hopsWorksApp')
             self.fileDetail; //The details about the currently selected file.
             self.sharedPath; //The details about the currently selected file.
             self.routeParamArray = [];
+            $scope.readme = null;
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
             $scope.isPublic = true;
@@ -342,18 +344,36 @@ This will make all its files unavailable to other projects unless you share it e
               return clippedPath;
             };
 
-            self.filePreview = function (fileName) {
+            /**
+             * Preview the requested file in a Modal. If the file is README.md
+             * and the preview flag is false, preview the file in datasets.
+             * @param {type} fileName
+             * @param {type} preview
+             * @returns {undefined}
+             */
+            self.filePreview = function (fileName, preview) {
               var previewPathArray = self.pathArray.slice(0);
               previewPathArray.push(fileName);
               var filePath = getPath(previewPathArray);
-              
-              ModalService.filePreview('lg', fileName, filePath, self.projectId).then(
-                      function (success) {
-                        
-                      }, function (error) {
-              });
-      
+              //If filename is README.md then try fetching it without the modal
+              if (fileName.endsWith("README.md") && !preview) {
+                dataSetService.filePreview(filePath).then(
+                        function (success) {
+                            var fileDetails = JSON.parse(success.data.data);
+                            var content = fileDetails.filePreviewDTO[0].content;
+                            $scope.readme = $showdown.makeHtml(content);
+                        }, function (error) {
+                          $scope.readme = null;
+                });
+              } else {
+                ModalService.filePreview('lg', fileName, filePath, self.projectId).then(
+                        function (success) {
+
+                        }, function (error) {
+                });
+              }
             };
+           
             
             self.move = function (inodeId, name) {
               ModalService.selectDir('lg', "/[^]*/",
@@ -551,13 +571,14 @@ This will make all its files unavailable to other projects unless you share it e
             self.select = function (selectedIndex, file) {
               self.selected = selectedIndex;
               self.fileDetail = file;
-
+//              $scope.readme = null;
             };
 
             self.deselect = function () {
               self.selected = null;
               self.fileDetail = null;
               self.sharedPath = null;
+              //$scope.readme = null;
             };
 
             self.toggleLeft = buildToggler('left');

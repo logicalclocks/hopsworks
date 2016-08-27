@@ -5,7 +5,7 @@
   transition: none !important;
 }
 
-.rg-right, .rg-left, .rg-top, .rg-bottom {
+.rg-right, .rg-left, .rg-top, .rg-bottom, .rg-bottom-datasets {
   display: block;
   width: 14px;
   height: 14px;
@@ -18,7 +18,7 @@
   user-select: none;
   background: transparent;
 }
-.rg-right span, .rg-left span, .rg-top span, .rg-bottom span {
+.rg-right span, .rg-left span, .rg-top span, .rg-bottom span, .rg-bottom-datasets span {
   position: absolute;
   box-sizing: border-box;
   display: block;
@@ -34,7 +34,7 @@
   width: 7px;
 }
 
-.rg-top span, .rg-bottom span {
+.rg-top span, .rg-bottom span, rg-bottom-datasets span {
   border-width: 1px 0;
   left: 50%;
   margin: 3.5px 0 0 -10px;
@@ -65,6 +65,7 @@
   left: 0;
   margin-bottom: -14px;
   z-index: 3;
+  background: #eee;
 }
 
 .rg-left {

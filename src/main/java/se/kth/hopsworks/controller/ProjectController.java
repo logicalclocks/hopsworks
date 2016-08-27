@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import io.hops.bbc.ProjectPaymentAction;
 import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
+import java.io.PrintWriter;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import org.apache.hadoop.fs.Path;
@@ -851,9 +852,6 @@ public class ProjectController {
               log(Level.SEVERE, null, ex);
     }
     try {
-      String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
-      HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorFacade.
-              findEndpoint();
       File file = new File(settings.getSparkDir() + "/lib/spark-examples-"
               + Settings.SPARK_VERSION + "-hadoop" + Settings.HOPS_VERSION
               + ".jar");
