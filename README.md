@@ -1,3 +1,19 @@
+# Hopsworks
+
+[![Join the chat at https://gitter.im/hopshadoop/hopsworks](https://badges.gitter.im/hopshadoop/services.png)](https://gitter.im/hopshadoop/hopsworks)
+
+<a href=""><img src="http://www.hops.io/sites/default/files/hops-50x50.png" align="left" hspace="10" vspace="6"></a>
+
+**Hopsworks** is the UI for Hops, a new distribution of Apache Hadoop with scalable, highly available, customizable metadata. Hopsworks lowers the barrier to entry for users getting started with Hadoop by providing graphical access to services such as Spark, Flink, Kafka, HDFS, and YARN. Hopsworks provides self-service Hadoop by introducing two new abstractions: projects and datasets. Users manage membership of projects, which scope access to datasets. Datasets are again managed by users who can safely share them between projects or keep them private within a project. Hopsworks takes the administrator out of the loop for managing data and access to data.
+
+## Information
+
+<ul>
+<li><a href="https://twitter.com/hopshadoop">Follow our Twitter account.</a></li>
+<li><a href="https://groups.google.com/forum/#!forum/hopshadoop">Join our developer mailing list.</a></li>
+<li><a href="https://cloud17.sics.se/jenkins/view/develop/">Checkout the current build status.</a></li>
+</ul>
+
 # HopsWorks
 HopsWorks Big data Management Platform
 
