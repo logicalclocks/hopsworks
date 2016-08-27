@@ -27,11 +27,13 @@ import se.kth.bbc.jobs.adam.AdamJobConfiguration;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
+import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.project.Project;
 import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -55,6 +57,8 @@ public class AdamService {
   private ActivityFacade activityFacade;
   @EJB
   private JobController jobController;
+  @EJB
+  private Settings settings;
 
   AdamService setProject(Project project) {
     this.project = project;
@@ -80,7 +84,7 @@ public class AdamService {
             JobType.ADAM);
     GenericEntity<List<JobDescription>> jobList
             = new GenericEntity<List<JobDescription>>(jobs) {
-            };
+    };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(jobList).build();
   }
@@ -88,7 +92,7 @@ public class AdamService {
   /**
    * Get a list of the available Adam commands. This returns a list of command
    * names.
-   * <p/>
+   *
    * @param sc
    * @param req
    * @return
@@ -112,7 +116,7 @@ public class AdamService {
 
   /**
    * Returns a AdamJobConfiguration for the selected command.
-   * <p/>
+   *
    * @param commandName
    * @param sc
    * @param req
@@ -128,12 +132,16 @@ public class AdamService {
     AdamCommandDTO selected = new AdamCommandDTO(AdamCommand.getFromCommand(
             commandName));
     AdamJobConfiguration config = new AdamJobConfiguration(selected);
+    //Set the HistoryServerIP to AdamJobConfiguration
+    ((SparkJobConfiguration) config).setHistoryServerIp(settings.
+            getSparkHistoryServerIp());
+
     return Response.ok(config).build();
   }
 
   /**
    * Create a new Job definition. If successful, the job is returned.
-   * <p/>
+   *
    * @param config The configuration from which to create a Job.
    * @param sc
    * @param req
@@ -162,7 +170,8 @@ public class AdamService {
         config.setAppName("Untitled ADAM job");
       }
       JobDescription created = jobController.createJob(user, project, config);
-      activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
+      activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.
+              getName(), project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(created).build();
     }

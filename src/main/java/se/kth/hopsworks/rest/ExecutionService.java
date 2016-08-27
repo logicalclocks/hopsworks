@@ -9,7 +9,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
+import javax.ws.rs.GET;   
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -19,11 +19,13 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.slf4j.LoggerFactory;
 import se.kth.bbc.jobs.jobhistory.Execution;
 import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
+import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.hopsworks.controller.ExecutionController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
@@ -37,8 +39,11 @@ import se.kth.hopsworks.users.UserFacade;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExecutionService {
 
-  private static final Logger logger = Logger.getLogger(ExecutionService.class.
+ private static final Logger logger = Logger.getLogger(ExecutionService.class.
           getName());
+  
+ private static final org.slf4j.Logger debugger = LoggerFactory.getLogger(ExecutionController.class);
+
 
   @EJB
   private ExecutionFacade executionFacade;
@@ -101,6 +106,12 @@ public class ExecutionService {
               "You are not authorized for this invocation.");
     }
     try {
+      //Set sessionId to JobConfiguration so that is used by Kafka
+      if(job.getJobConfig() instanceof SparkJobConfiguration){
+        ((SparkJobConfiguration)job.getJobConfig()).setSessionId(
+          req.getSession().getId());
+      }
+        
       Execution exec = executionController.start(job, user);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(exec).build();

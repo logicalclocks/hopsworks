@@ -277,8 +277,15 @@ module.exports = function (grunt) {
             expand: true,
             flatten: true,
             cwd: '<%= yeoman.bower %>',
-            src: '**/*.{png,jpg,jpeg,gif}',
+            src: '*/*.{png,jpg,jpeg,gif}',
             dest: '<%= yeoman.dist %>/styles'
+          }, {// <-- this will copy some unnecessary images to the styles folder 
+            // but is needed to copy images used by vendros .css. 
+            expand: true,
+            flatten: true,
+            cwd: '<%= yeoman.bower %>',
+            src: '**/img/*.{png,jpg,jpeg,gif}',
+            dest: '<%= yeoman.dist %>/img'
           }
         ]
       }
@@ -323,7 +330,7 @@ module.exports = function (grunt) {
       }
     },
     // Replace Google CDN references
-    cdnify: {
+   cdnify: {
       dist: {
         html: ['<%= yeoman.dist %>/*.html']
       }

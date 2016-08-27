@@ -1,117 +1,127 @@
 <div growl></div>
 
-<div class="modal-header">
-  <button class="close"
-          ng-click="projectCtrl.close()"
-          data-dismiss="modal"
-          aria-hidden="true"
-          type="button">&times;</button>
-  <h2 class="modal-title">Project settings</h2>
-</div>
+<div ng-controller="ProjectCtrl as projectCtrl">
+  <div class="modal-header">
+    <button class="close"
+            ng-click="projectCtrl.close()"
+            data-dismiss="modal"
+            aria-hidden="true"
+            type="button">&times;</button>
+    <h2 class="modal-title">Project settings</h2>
+  </div>
 
 
-<form role="form" name="projectForm" ng-submit="projectCtrl.saveProject()" novalidate class="form-validate">
-  <div class="modal-body" id="testmodal">
-  
-    <div class="row">
+  <form role="form" name="projectForm" ng-submit="projectCtrl.saveProject()" novalidate class="form-validate">
+    <div class="modal-body" id="testmodal">
 
-      <div class="col-md-8">
-        <fieldset>
-          <div class="control-group col-md-offset-1">
-            <label for="projectname" style="color: black;">Name</label>
-            <md-input-container>
-              <input name="project_name"
-                     type="text"
-                     id="projectname"
-                     ng-model="projectCtrl.currentProject.projectName"
-                     required
-                     disabled>
-            </md-input-container>
-         
-            <p></p>
+      <div class="row">
 
-            <label for="projectname" class="control-label">Description</label>
+        <div class="col-md-7">
+          <fieldset>
+            <div class="control-group col-md-offset-1">
+              <label for="projectname" style="color: black;">Name</label>
+              <md-input-container>
+                <input name="project_name"
+                       type="text"
+                       id="projectname"
+                       ng-model="projectCtrl.currentProject.projectName"
+                       required
+                       disabled>
+              </md-input-container>
 
-            <div class="controls">
-              <textarea class="form-control" style="resize:none;"
-                        ng-model="projectCtrl.currentProject.description"
-                        rows="3">
-              </textarea>
-            </div>
-          </div>
-        </fieldset>
-      </div>
+              <p></p>
 
-      <div class="col-md-4">
-       
-       <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Status</h3>
+              <label for="projectname" class="control-label">Description</label>
 
-      <div class="row" style="margin-top: 10px; margin-left:5px; margin-bottom:0px">
-        <fieldset>
-         <span style="margin-top: 40px; margin-left:40px; margin-bottom:0px">
-           {{projectCtrl.hdfsQuota()}} free space
-          </span>          
-        </fieldset>
-      </div>
-      <div class="row" style="margin-top: 10px; margin-left:5px; margin-bottom:0px">
-        <fieldset>
-         <span style="margin-top: 40px; margin-left:40px; margin-bottom:0px">
-           {{projectCtrl.yarnQuota()}} CPU min left
-          </span>          
-        </fieldset>    
-      </div>
-       
-       <h3 ng-hide="projectCtrl.selectionProjectTypes.length" 
-           style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Services</h3>
-
-        <fieldset>
-          <div class="control-group col-md-offset-2">
-            <md-checkbox class="md-primary"
-                         ng-repeat="projectType in projectCtrl.projectTypes"
-                         ng-click="projectCtrl.exists(projectType)">
-              {{ projectType}}
-
-            </md-checkbox>
-          </div>
-        </fieldset>
-
-<!--        <fieldset>
-         <span style="margin-top: 40px; margin-left:40px; margin-bottom:0px">
-            {{projectCtrl.currentProject.ethicalStatus}}
-          </span>          
-        </fieldset>-->
-      </div>
-      
-      <div class="col-md-8" style="margin-top: 10px; margin-bottom:10px">
-        <fieldset>        
-          <div class="control-group col-md-offset-1">
-            <label for="projectname" style="color: black;">Data Retention Period</label>
-            <div class='input-group date col-md-6' id='schedulePicker'>
-                  <input id="dpInput" type="text" ng-model="projectCtrl.currentProject.retentionPeriod" data-format="yyyy-MM-dd" class="form-control">
-                  <span class="input-group-addon">
-                    <span class="glyphicon glyphicon-calendar"></span>
-                  </span>
-                </div>
+              <div class="controls">
+                <textarea class="form-control" style="resize:none;"
+                          ng-model="projectCtrl.currentProject.description"
+                          rows="3">
+                </textarea>
               </div>
-              <script type="text/javascript">
-                                $(function () {
-                                $('#schedulePicker').datetimepicker({
-                                  format: 'YYYY-MM-DD'
-                                }).on('dp.change',function(e) {
-                                    $('#dpInput').trigger('input');
-                                });
-                                });</script>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="col-md-5">
+
+          <h3 style="margin-top: 40px; margin-left:10px; margin-bottom:0px">Status</h3>
+
+          <div class="row" style="margin-top: 10px; margin-left:5px; margin-bottom:0px">
+            <fieldset>
+              <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                {{projectSettingsCtrl.hdfsUsage()}} of {{projectSettingsCtrl.hdfsQuota()}} used
+              </span>          
+            </fieldset>
+          </div>
+          <div class="row" style="margin-top: 10px; margin-left:5px; margin-bottom:0px">
+            <fieldset>
+              <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                {{projectSettingsCtrl.hdfsNsCount()}} files of {{projectSettingsCtrl.hdfsNsQuota()}} used
+              </span>          
+            </fieldset>
+          </div>
+          <div class="row" style="margin-top: 10px; margin-left:5px; margin-bottom:0px">
+            <fieldset>
+              <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                {{projectSettingsCtrl.yarnQuota()}} CPU 
+              </span>          
+            </fieldset>    
+          </div>
+
+<!--          <h3 ng-hide="projectCtrl.allServicesSelected()" 
+              style="margin-top: 40px; margin-left:10px; margin-bottom:0px">Services</h3>-->
+
+          <fieldset>
+            <div class="control-group col-md-offset-2">
+              <md-checkbox class="md-primary"
+                           ng-repeat="projectType in projectCtrl.projectTypes"
+                           ng-click="projectCtrl.exists(projectType)">
+                {{ projectType}}
+
+              </md-checkbox>
+            </div>
+          </fieldset>
+
+          <!--        <fieldset>
+                   <span style="margin-top: 40px; margin-left:40px; margin-bottom:0px">
+                      {{projectCtrl.currentProject.ethicalStatus}}
+                    </span>          
+                  </fieldset>-->
+        </div>
+
+        <div class="col-md-8" style="margin-top: 10px; margin-bottom:10px">
+          <fieldset>        
+            <div class="control-group col-md-offset-1">
+              <label for="projectname" style="color: black;">Data Retention Period</label>
+              <div class='input-group date col-md-6' id='schedulePicker'>
+                <input id="dpInput" type="text" ng-model="projectCtrl.currentProject.retentionPeriod" data-format="yyyy-MM-dd" class="form-control">
+                <span class="input-group-addon">
+                  <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+              </div>
+            </div>
+            <script type="text/javascript">
+                  $(function () {
+                    $('#schedulePicker').datetimepicker({
+                      format: 'YYYY-MM-DD'
+                    }).on('dp.change', function (e) {
+                      $('#dpInput').trigger('input');
+                    });
+                  });</script>
           </fieldset>
           <br/>
-          </div>
+        </div>
       </div>
-    
-  <div class="modal-footer">
-    <button class="btn btn-default" type="button" ng-click="projectCtrl.close()">Cancel</button>
-    <button class="btn btn-primary" type="submit" 
-              ng-disabled="projectCtrl.working">
-        <i ng-if="projectCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
-        Save
-    </button>
-  </div>
-</form>
+
+      <div class="modal-footer">
+        <button class="btn btn-default" type="button" ng-click="projectCtrl.close()">Cancel</button>
+        <button class="btn btn-primary" type="submit" 
+                ng-disabled="projectCtrl.working">
+          <i ng-if="projectCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+          Save
+        </button>
+      </div>
+  </form>
+
+</div>

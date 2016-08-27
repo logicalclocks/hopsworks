@@ -4,9 +4,9 @@ import se.kth.bbc.security.ua.Maintenance;
 import se.kth.hopsworks.controller.MaintenanceController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -15,9 +15,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.hopsworks.util.Settings;
 
 @Path("/banner")
-@RequestScoped
+@Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class BannerService {
 
@@ -26,6 +27,8 @@ public class BannerService {
 
     @EJB
     private MaintenanceController maintenanceController;
+    @EJB
+    private Settings settings;
     @EJB
     private NoCacheResponse noCacheResponse;
 
@@ -37,7 +40,7 @@ public class BannerService {
             @Context HttpServletRequest req) throws AppException {
 
         Maintenance maintenance = maintenanceController.getMaintenance();
-
+        maintenance.setOtp(settings.getTwoFactorAuth());
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 maintenance).build();
     }

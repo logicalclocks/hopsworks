@@ -11,6 +11,7 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -50,7 +51,7 @@ public class RecoverySelector implements Serializable {
   private String tmpCode;
   private String passwd;
 
-  private final int passwordLength = AuthenticationConstants.PASSWORD_LENGTH;
+  private final int passwordLength = AuthenticationConstants.PASSWORD_MIN_LENGTH;
 
   private int qrEnabled = -1;
 
@@ -144,7 +145,7 @@ public class RecoverySelector implements Serializable {
     }
 
     // Check the status to see if user is not blocked or deactivate
-    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.BLOCKED_ACCOUNT.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
 
@@ -154,7 +155,7 @@ public class RecoverySelector implements Serializable {
       return "";
     }
 
-    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
       am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
@@ -162,7 +163,7 @@ public class RecoverySelector implements Serializable {
       return "";
     }
 
-    if (people.getMode() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+    if (people.getMode() == PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.USER_NOT_FOUND);
       am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
@@ -179,7 +180,7 @@ public class RecoverySelector implements Serializable {
         String random = SecurityUtils.getRandomPassword(passwordLength);
         um.updateSecret(people.getUid(), random);
         String message = UserAccountsEmailMessages.buildTempResetMessage(random);
-        email.sendEmail(people.getEmail(),
+        email.sendEmail(people.getEmail(),RecipientType.TO, 
                 UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
         am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
@@ -219,13 +220,13 @@ public class RecoverySelector implements Serializable {
     }
 
     // Check the status to see if user is not blocked or deactivate
-    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.BLOCKED_ACCOUNT.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
       return "";
     }
 
-    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
       return "";
@@ -256,12 +257,12 @@ public class RecoverySelector implements Serializable {
       um.increaseLockNum(people.getUid(), val + 1);
       if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         um.changeAccountStatus(people.getUid(), "",
-                PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
+                PeopleAccountStatus.BLOCKED_ACCOUNT.getValue());
         try {
           am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
               AccountsAuditActions.SUCCESS.name(), "Account bloecked due to many false attempts.", people);
 
-          email.sendEmail(people.getEmail(),
+          email.sendEmail(people.getEmail(), RecipientType.TO, 
                   UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                   UserAccountsEmailMessages.accountBlockedMessage());
         } catch (MessagingException ex1) {
@@ -294,7 +295,7 @@ public class RecoverySelector implements Serializable {
       return "";
     }
 
-    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.BLOCKED_ACCOUNT.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
       am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
@@ -302,7 +303,7 @@ public class RecoverySelector implements Serializable {
       return "";
     }
 
-    if (people.getMode() != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
+    if (people.getMode() != PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.USER_NOT_FOUND);
 
@@ -317,12 +318,12 @@ public class RecoverySelector implements Serializable {
 
         String message = UserAccountsEmailMessages.buildYubikeyResetMessage();
         people.
-                setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.
+                setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.
                         getValue());
-        people.getYubikey().setStatus(PeopleAccountStatus.YUBIKEY_LOST.
+        people.getYubikey().setStatus(PeopleAccountStatus.LOST_YUBIKEY.
                 getValue());
         um.updatePeople(people);
-        email.sendEmail(people.getEmail(),
+        email.sendEmail(people.getEmail(), RecipientType.TO, 
                 UserAccountsEmailMessages.DEVICE_LOST_SUBJECT, message);
 
         am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
@@ -334,12 +335,12 @@ public class RecoverySelector implements Serializable {
         um.increaseLockNum(people.getUid(), val + 1);
         if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
           um.changeAccountStatus(people.getUid(), "",
-                  PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
+                  PeopleAccountStatus.BLOCKED_ACCOUNT.getValue());
            am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
               AccountsAuditActions.SUCCESS.name(), "Account bloecked due to many false attempts.", people);
 
           try {
-            email.sendEmail(people.getEmail(),
+            email.sendEmail(people.getEmail(),RecipientType.TO, 
                     UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                     UserAccountsEmailMessages.accountBlockedMessage());
           } catch (MessagingException ex1) {
@@ -368,9 +369,12 @@ public class RecoverySelector implements Serializable {
   public String returnMenu() {
 
     FacesContext ctx = FacesContext.getCurrentInstance();
-    HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
+    HttpSession sess = null;
+    if (ctx != null) {
+      sess = (HttpSession) ctx.getExternalContext().getSession(false);
+    }
 
-    if (null != sess) {
+    if (sess != null) {
       sess.invalidate();
     }
     qrCode = null;

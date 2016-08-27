@@ -17,13 +17,13 @@
 
     <h:body>
 
-      <c:if test="#{roleEnforcementPoint.SYSAdmin}">
+      <c:if test="#{roleEnforcementPoint.admin}">
         <ui:insert name="adminTitleBar">
           <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
         </ui:insert>
       </c:if>
 
-      <c:if test="#{roleEnforcementPoint.anyAuthorizedResearcherRole and roleEnforcementPoint.SYSAdmin}">
+      <c:if test="#{roleEnforcementPoint.admin}">
      
       </c:if>
 
@@ -81,7 +81,7 @@
 
           <p:panelGrid columns="2" styleClass="PersonalIfo">
             <p:column>
-              <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Current BiobankCloud Roles" /></h3> 
+              <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Current HopsWorks Roles" /></h3> 
             </p:column>
 
             <p:column>
@@ -402,10 +402,8 @@
         </h:form>
 
         <div align="left" style="padding-top: 20px;">
-          <p:commandLink type="submit" value="Back to main page" action='adminIndex' rendered="#{roleEnforcementPoint.SYSAdmin}" />
-          <p:commandLink type="submit" value="Back to main page" action='home' rendered="#{roleEnforcementPoint.anyAuthorizedResearcherRole and not roleEnforcementPoint.SYSAdmin}"/>
+          <p:commandLink type="submit" value="Back to main page" action='adminIndex' rendered="#{roleEnforcementPoint.admin}" />
           <p:commandLink type="submit" value="Back to main page" action='adminAuditIndex' rendered="#{roleEnforcementPoint.onlyAuditorRole}" />
-
         </div>
 
       </div>

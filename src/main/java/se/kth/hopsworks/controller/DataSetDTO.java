@@ -18,7 +18,9 @@ public class DataSetDTO {
   private Integer inodeId;
   private String name;
   private String description;
+  private boolean isPublic;
   private boolean searchable;
+  private boolean generateReadme;
   private boolean editable;
   private int template;
   private Integer projectId;
@@ -31,11 +33,12 @@ public class DataSetDTO {
   }
 
   public DataSetDTO(String name, String description, boolean searchable,
-          int template) {
+          int template, boolean generateReadme) {
     this.name = name;
     this.description = description;
     this.searchable = searchable;
     this.template = template;
+    this.generateReadme = generateReadme;
   }
 
   public DataSetDTO(Dataset ds, Project project, List<String> sharedWith) {
@@ -45,6 +48,7 @@ public class DataSetDTO {
     this.projectName = project.getName();
     this.sharedWith = sharedWith;
     this.projectTeam = new ArrayList<>();
+    this.isPublic = ds.isPublicDs();
     //this have to be done because project team contains too much info.
     for (ProjectTeam member : project.getProjectTeamCollection()) {
       projectTeam.add(new UserCardDTO(member.getUser().getFname(), member.
@@ -148,10 +152,27 @@ public class DataSetDTO {
     this.projectTeam = projectTeam;
   }
 
+  public boolean isIsPublic() {
+    return isPublic;
+  }
+
+  public void setIsPublic(boolean isPublic) {
+    this.isPublic = isPublic;
+  }
+
+  public boolean isGenerateReadme() {
+    return generateReadme;
+  }
+
+  public void setGenerateReadme(boolean generateReadme) {
+    this.generateReadme = generateReadme;
+  }
+
   @Override
   public String toString() {
     return "DataSetDTO{" + "name=" + name + ", description=" + description
-            + ", searchable=" + searchable + ", template=" + this.template + '}';
+            + ", searchable=" + searchable + ", generateReadme="
+            + generateReadme + ", template=" + this.template + '}';
   }
 
 }

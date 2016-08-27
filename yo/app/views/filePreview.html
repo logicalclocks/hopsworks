@@ -1,0 +1,12 @@
+<div class="modal-header">
+  <button class="close" ng-click="filePreviewCtrl.close()" data-dismiss="modal" aria-hidden="true" type="button">&times;</button>
+  <h2 class="modal-title">File Preview - {{filePreviewCtrl.fileName}}</h2>
+</div>
+<div growl reference="23" class="pull-right"></div>
+
+<div class="modal-body content" ng-show="filePreviewCtrl.type === 'image'">
+  <img class="img-responsive" src="data:image/{{filePreviewCtrl.extension}};base64,{{filePreviewCtrl.content}}" alt="Waiting for image download...">
+</div>
+<div class="modal-body " ng-show="filePreviewCtrl.type === 'text'">
+  <p class="filepreview">{{filePreviewCtrl.content}}</p>
+</div>

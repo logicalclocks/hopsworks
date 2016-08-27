@@ -3,9 +3,10 @@ package se.kth.hopsworks.rest;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.RequestScoped;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.POST;
@@ -35,9 +36,9 @@ import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 
 @Path("/request")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
+@Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class RequestService {
 
@@ -151,7 +152,7 @@ public class RequestService {
             + " wants access to a dataset in a project you own. \n\n"
             + "Dataset name: " + ds.getInode().getInodePK().getName() + "\n"
             + "Project name: " + proj.getName() + "\n"
-            + "Atached messag: " + requestDTO.getMessage() + "\n"
+            + "Atached message: " + requestDTO.getMessage() + "\n"
             + "After loging in to hopsworks go to : /project/" + proj.getId()
             + "/datasets "
             + " if you want to share this dataset. \n";
@@ -171,7 +172,7 @@ public class RequestService {
     // to, from, msg, requested path
     messageBean.send(to, from, subject, preview, message, path);
     try {
-      emailBean.sendEmail(proj.getOwner().getEmail(),
+      emailBean.sendEmail(proj.getOwner().getEmail(),RecipientType.TO, 
               "Access request for dataset "
               + ds.getInode().getInodePK().getName(), msg);
     } catch (MessagingException ex) {
@@ -219,7 +220,7 @@ public class RequestService {
             + user.getFname() + " " + user.getLname()
             + " wants to join a project you own. \n\n"
             + "Project name: " + project.getName() + "\n"
-            + "Atached messag: " + requestDTO.getMessage() + "\n"
+            + "Atached message: " + requestDTO.getMessage() + "\n"
             + "After loging in to hopsworks go to : /project" + project.getId()
             + " and go to members tab "
             + "if you want to add this person as a member in your project. \n";
@@ -236,7 +237,7 @@ public class RequestService {
     // to, from, msg, requested path
     messageBean.send(to, from, subject, preview, message, path);
     try {
-      emailBean.sendEmail(project.getOwner().getEmail(),
+      emailBean.sendEmail(project.getOwner().getEmail(), RecipientType.TO, 
               "Join request for project "
               + project.getName(), msg);
     } catch (MessagingException ex) {

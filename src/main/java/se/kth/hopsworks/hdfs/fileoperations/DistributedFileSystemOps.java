@@ -11,6 +11,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -19,12 +21,15 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.lims.Utils;
+import se.kth.hopsworks.util.Settings;
 
 public class DistributedFileSystemOps {
 
   private static final Logger logger = Logger.getLogger(
           DistributedFileSystemOps.class.getName());
-  
+
+  private static final long MB = 1024l * 1024l;
+
   private final DistributedFileSystem dfs;
   private Configuration conf;
   private String hadoopConfDir;
@@ -37,6 +42,7 @@ public class DistributedFileSystemOps {
    */
   public DistributedFileSystemOps(UserGroupInformation ugi, Configuration conf) {
     this.dfs = getDfs(ugi, conf);
+    this.conf = conf;
   }
 
   private DistributedFileSystem getDfs(UserGroupInformation ugi,
@@ -67,10 +73,8 @@ public class DistributedFileSystemOps {
     try (BufferedReader br = new BufferedReader(new InputStreamReader(dfs.
             open(file)));) {
       String line;
-      line = br.readLine();
-      while (line != null) {
+      while ((line = br.readLine()) != null) {
         out.append(line).append("\n");
-        line = br.readLine();
       }
       return out.toString();
     }
@@ -85,17 +89,7 @@ public class DistributedFileSystemOps {
    */
   public String cat(String file) throws IOException {
     Path path = new Path(file);
-    StringBuilder out = new StringBuilder();
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(dfs.
-            open(path)));) {
-      String line;
-      line = br.readLine();
-      while (line != null) {
-        out.append(line).append("\n");
-        line = br.readLine();
-      }
-      return out.toString();
-    }
+    return cat(path);
   }
 
   /**
@@ -110,6 +104,19 @@ public class DistributedFileSystemOps {
   public boolean mkdir(Path location, FsPermission filePermission) throws
           IOException {
     return dfs.mkdir(location, filePermission);
+  }
+  
+    /**
+   * Create a new folder on the given path only if the parent folders exist
+   * <p/>
+   * @param path
+   * @return True if successful.
+   * @throws java.io.IOException
+   */
+  public boolean mkdir(String path) throws
+          IOException {
+    Path location = new Path(path);
+    return dfs.mkdir(location, FsPermission.getDefault());
   }
 
   /**
@@ -133,7 +140,30 @@ public class DistributedFileSystemOps {
    * @throws java.io.IOException
    */
   public void touchz(Path location) throws IOException {
-    dfs.create(location);
+    dfs.create(location).close();
+  }
+
+  /**
+   * List the statuses of the files/directories in the given path if the path
+   * is a directory.
+   *
+   * @param location
+   * @return FileStatus[]
+   * @throws IOException
+   */
+  public FileStatus[] listStatus(Path location) throws IOException {
+    return dfs.listStatus(location);
+  }
+
+  /**
+   * Returns the status information about the file.
+   *
+   * @param location
+   * @return
+   * @throws IOException
+   */
+  public FileStatus getFileStatus(Path location) throws IOException {
+    return dfs.getFileStatus(location);
   }
 
   /**
@@ -146,7 +176,9 @@ public class DistributedFileSystemOps {
    * @throws IOException
    */
   public boolean rm(Path location, boolean recursive) throws IOException {
-    logger.log(Level.INFO, "dfs.toString() ----------- Deletenig as {0}", dfs.toString());
+    logger.log(Level.INFO, "Deletenig {0} as {1}", new Object[]{location.
+      toString(),
+      dfs.toString()});
     if (dfs.exists(location)) {
       return dfs.delete(location, recursive);
     }
@@ -165,6 +197,23 @@ public class DistributedFileSystemOps {
   public void copyFromLocal(boolean deleteSource, Path source, Path destination)
           throws IOException {
     dfs.copyFromLocalFile(deleteSource, source, destination);
+  }
+  
+  /**
+   * Copy from HDFS to the local file system.
+   * <p/>
+   * @param hdfsPath
+   * @param localPath
+   * @throws IOException
+   */
+  public void copyToLocal(String hdfsPath, String localPath) throws IOException {
+    if (!hdfsPath.startsWith("hdfs:")) {
+      hdfsPath = "hdfs://" + hdfsPath;
+    }
+    if (!localPath.startsWith("file:")) {
+      localPath = "file://" + localPath;
+    }
+    dfs.copyToLocalFile(new Path(hdfsPath), new Path(localPath));
   }
 
   /**
@@ -188,6 +237,7 @@ public class DistributedFileSystemOps {
     Path srcp = new Path(src);
     copyFromLocal(deleteSource, srcp, destp);
   }
+
   /**
    * Move a file in HDFS from one path to another.
    * <p/>
@@ -267,6 +317,24 @@ public class DistributedFileSystemOps {
   }
 
   /**
+   * Creates a file and all parent dirs that does not exist and returns
+   * an FSDataOutputStream
+   *
+   * @param path
+   * @return FSDataOutputStream
+   * @throws IOException
+   */
+  public FSDataOutputStream create(String path) throws IOException {
+    Path dstPath = new Path(path);
+    String dirs = Utils.getDirectoryPart(path);
+    Path dirsPath = new Path(dirs);
+    if (!exists(dirs)) {
+      dfs.mkdirs(dirsPath);
+    }
+    return dfs.create(dstPath);
+  }
+
+  /**
    * Set permission for path.
    * <p>
    * @param path
@@ -291,20 +359,61 @@ public class DistributedFileSystemOps {
     dfs.setOwner(path, username, groupname);
   }
 
-  //Set quota in GB
-  public void setQuota(Path src, long diskspaceQuota) throws
+  /**
+   *
+   * @param src Path to directory we are setting the quota for
+   * @param diskspaceQuotaInMB hdfs quota size for disk space
+   * @throws IOException
+   */
+  public void setHdfsSpaceQuotaInMBs(Path src, long diskspaceQuotaInMB) throws
           IOException {
-    dfs.setQuota(src, HdfsConstants.QUOTA_DONT_SET, 1073741824 * diskspaceQuota);
+    setHdfsQuota(src, HdfsConstants.QUOTA_DONT_SET, diskspaceQuotaInMB);
   }
 
-  //Get quota in GB
-  public long getQuota(Path path) throws IOException {
-    return dfs.getContentSummary(path).getSpaceQuota() / 1073741824;
+  /**
+   *
+   * @param src
+   * @param numberOfFiles
+   * @param diskspaceQuotaInMB
+   * @throws IOException
+   */
+  public void setHdfsQuota(Path src, long numberOfFiles, long diskspaceQuotaInMB)
+          throws
+          IOException {
+    dfs.setQuota(src, numberOfFiles, DistributedFileSystemOps.MB
+            * diskspaceQuotaInMB);
   }
 
-  //Get used disk space in GB
-  public long getUsedQuota(Path path) throws IOException {
-    return dfs.getContentSummary(path).getSpaceConsumed() / 1073741824;
+  /**
+   *
+   * @param path
+   * @return hdfs quota size in GB
+   * @throws IOException
+   */
+  public long getHdfsSpaceQuotaInMbs(Path path) throws IOException {
+    return dfs.getContentSummary(path).getSpaceQuota()
+            / DistributedFileSystemOps.MB;
+  }
+
+  /**
+   *
+   * @param path
+   * @return the number of files allowed to be created
+   * @throws IOException
+   */
+  public long getHdfsNumFilesQuota(Path path) throws IOException {
+    return dfs.getContentSummary(path).getQuota();
+  }
+
+  /**
+   *
+   * @param path
+   * @return number of bytes stored in this subtree in bytes
+   * @throws IOException
+   */
+  public long getUsedQuotaInMbs(Path path) throws IOException {
+    return dfs.getContentSummary(path).getSpaceConsumed()
+            / DistributedFileSystemOps.MB;
   }
 
   public FSDataInputStream open(Path location) throws IOException {
@@ -336,12 +445,12 @@ public class DistributedFileSystemOps {
     Path location = new Path(p);
     //add the erasure coding configuration file
     File erasureCodingConfFile
-            = new File(hadoopConfDir, "erasure-coding-site.xml");
+            = new File(hadoopConfDir, Settings.ERASURE_CODING_CONFIG);
     if (!erasureCodingConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               erasureCodingConfFile);
       throw new IllegalStateException(
-              "No erasure coding conf file: erasure-coding-site.xml");
+              "No erasure coding conf file: " + Settings.ERASURE_CODING_CONFIG);
     }
 
     this.conf.addResource(new Path(erasureCodingConfFile.getAbsolutePath()));
@@ -376,6 +485,10 @@ public class DistributedFileSystemOps {
    */
   public FsPermission getParentPermission(Path path) throws IOException {
     Path location = new Path(path.toUri());
+    if (dfs.exists(location)) {
+      location = location.getParent();
+      return dfs.getFileStatus(location).getPermission();
+    }
     while (!dfs.exists(location)) {
       location = location.getParent();
     }
@@ -396,6 +509,39 @@ public class DistributedFileSystemOps {
       logger.log(Level.SEVERE, null, ex);
       return false;
     }
+  }
+  
+  /**
+   * Marks a file/folder in location as metadata enabled
+   * <p/>
+   * @param location
+   * @throws IOException
+   */
+  public void setMetaEnabled(String location) throws IOException {
+    Path path = new Path(location);
+    this.dfs.setMetaEnabled(path,true);
+  }
+
+  /**
+   * Returns the number of blocks of a file in the given path.
+   * The path has to resolve to a file.
+   * <p/>
+   * @param location
+   * @return
+   * @throws IOException
+   */
+  public String getFileBlocks(String location) throws IOException {
+    Path path = new Path(location);
+    if (this.dfs.isFile(path)) {
+      FileStatus filestatus = this.dfs.getFileStatus(path);
+      //get the size of the file in bytes
+      long filesize = filestatus.getLen();
+      long noOfBlocks = (long) Math.ceil(filesize / filestatus.getBlockSize());
+      logger.log(Level.INFO, "File: {0}, Num of blocks: {1}", new Object[]{path,
+        noOfBlocks});
+      return "" + noOfBlocks;
+    }
+    return "-1";
   }
 
   /**

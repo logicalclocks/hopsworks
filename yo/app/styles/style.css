@@ -106,6 +106,10 @@ a:focus {
   min-width: 900px;
 }
 
+.modal-xlg {
+  min-width: 1200px;
+}
+
 /* Project list in home */
 .pager {
   background-color: #2e353d;
@@ -165,6 +169,10 @@ a:focus {
   margin-top: -6px;
   padding-top: 11px;
   width: 38px;
+}
+
+p.filepreview {
+  white-space: pre-wrap;
 }
 
 div.scroll {
@@ -251,15 +259,15 @@ div.scroll > ul > li > textarea {
 }
 
 .row-centered {
-    text-align:center;
+  text-align:center;
 }
 .col-centered {
-    display:inline-block;
-    float:none;
-    /* reset the text-align */
-    text-align:left;
-    /* inline-block space fix */
-    margin-right:-4px;
+  display:inline-block;
+  float:none;
+  /* reset the text-align */
+  text-align:left;
+  /* inline-block space fix */
+  margin-right:-4px;
 }
 
 .disabled {
@@ -269,15 +277,157 @@ div.scroll > ul > li > textarea {
 }
 
 .vtop {
-    display: inline-block;
-    vertical-align: top;
-    float: none;
-	font-size: 12px;
+  display: inline-block;
+  vertical-align: top;
+  float: none;
+  font-size: 12px;
 }
 
 .vbottom {
-	line-height: 1.2;
-    display: inline-block;
-    vertical-align: bottom;
-	font-size: 14px;
+  line-height: 1.2;
+  display: inline-block;
+  vertical-align: bottom;
+  font-size: 14px;
+}
+
+#gettingStaredSection .btn-default { 
+  color: #FFFFFF; 
+  background-color: #4CAE4C; 
+  border-color: #2E353D; 
+} 
+
+#gettingStaredSection .btn-default:hover, 
+#gettingStaredSection .btn-default:focus, 
+#gettingStaredSection .btn-default:active, 
+#gettingStaredSection .btn-default.active, 
+.open .dropdown-toggle.btn-default { 
+  color: #FFFFFF; 
+  background-color: #3A853A; 
+  border-color: #2E353D; 
+} 
+
+#gettingStaredSection .btn-default:active, 
+#gettingStaredSection .btn-default.active, 
+.open .dropdown-toggle.btn-default { 
+  background-image: none; 
+} 
+
+#gettingStaredSection .btn-default.disabled, 
+#gettingStaredSection .btn-default[disabled], 
+fieldset[disabled] .btn-default, 
+#gettingStaredSection .btn-default.disabled:hover, 
+#gettingStaredSection .btn-default[disabled]:hover, 
+fieldset[disabled] .btn-default:hover, 
+#gettingStaredSection .btn-default.disabled:focus, 
+#gettingStaredSection .btn-default[disabled]:focus, 
+fieldset[disabled] .btn-default:focus, 
+#gettingStaredSection .btn-default.disabled:active, 
+#gettingStaredSection .btn-default[disabled]:active, 
+fieldset[disabled] .btn-default:active, 
+#gettingStaredSection .btn-default.disabled.active, 
+#gettingStaredSection .btn-default[disabled].active, 
+fieldset[disabled] .btn-default.active { 
+  background-color: #4CAE4C; 
+  border-color: #2E353D; 
+} 
+
+#gettingStaredSection .btn-default .badge { 
+  color: #4CAE4C; 
+  background-color: #FFFFFF; 
+}
+
+#tourColumn .btn-danger { 
+  color: #FFFFFF; 
+  background-color: #BD1B1B; 
+  border-color: #2E353D; 
+} 
+
+#tourColumn .btn-danger:hover, 
+#tourColumn .btn-danger:focus, 
+#tourColumn .btn-danger:active, 
+#tourColumn .btn-danger.active, 
+#tourColumn .open .dropdown-toggle.btn-danger { 
+  color: #FFFFFF; 
+  background-color: #7A242C; 
+  border-color: #2E353D; 
+} 
+
+#tourColumn .btn-danger:active, 
+#tourColumn .btn-danger.active, 
+#tourColumn .open .dropdown-toggle.btn-danger { 
+  background-image: none; 
+} 
+
+#tourColumn .btn-danger.disabled, 
+#tourColumn .btn-danger[disabled], 
+fieldset[disabled] #tourColumn .btn-danger, 
+#tourColumn .btn-danger.disabled:hover, 
+#tourColumn .btn-danger[disabled]:hover, 
+fieldset[disabled] #tourColumn .btn-danger:hover, 
+#tourColumn .btn-danger.disabled:focus, 
+#tourColumn .btn-danger[disabled]:focus, 
+fieldset[disabled] #tourColumn .btn-danger:focus, 
+#tourColumn .btn-danger.disabled:active, 
+#tourColumn .btn-danger[disabled]:active, 
+fieldset[disabled] #tourColumn .btn-danger:active, 
+#tourColumn .btn-danger.disabled.active, 
+#tourColumn .btn-danger[disabled].active, 
+fieldset[disabled] #tourColumn .btn-danger.active { 
+  background-color: #BD1B1B; 
+  border-color: #2E353D; 
+} 
+
+#tourColumn .btn-danger .badge { 
+  color: #BD1B1B; 
+  background-color: #FFFFFF; 
+}
+
+#gettingStaredSection{
+
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display:         flex;
+}
+
+.selectedTopicEven {
+  background-color: #f0efd8; 
+}
+.selectedTopicOdd {
+  background-color: #e8eae9; 
+}
+
+.top-buffer { margin-top:5px; }
+
+.kafka-table {
+    border-collapse: separate;
+    border-spacing: 0 1em;
+}
+
+.server-status {
+  font-size: 14px;
+  margin-top: 6px;
+}
+.server-connected {
+  color: #00CC00;
+}
+
+.server-disconnected {
+  color: rgba(240, 48, 0, 1);
+  font-size: 12px !important;
+  font-weight: bold !important;
+}
+
+.connected-space {
+  margin-top: -10px;  
+  margin-right: 40px;
+}
+
+.disconnected-space {
+  margin-top: -10px;  
+  margin-right: 25px;
+}
+
+div.cust .jslider div.jslider-bg i{
+  background:url(../img/jslider.png) repeat
 }

@@ -19,7 +19,13 @@ angular.module('hopsWorksApp')
                 return $http.post('/api/user/newProject', newProject);
               },
               getRole: function (projectId) {
-                return $http.post('/api/user/getRole', "projectId="+projectId);
+                return $http.post('/api/user/getRole', "projectId=" + projectId);
+              },
+              changeTwoFactor: function (newCredentials) {
+                return $http.post('/api/user/changeTwoFactor', TransformRequest.jQueryStyle(newCredentials));
+              },
+              getQR: function (pwd) {
+                return $http.post('/api/user/getQRCode', "password=" + pwd);
               },
               addSshKey: function (sshKey) {
               //addSshKey: function (name, sshKey) {

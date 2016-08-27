@@ -20,13 +20,17 @@ import java.io.PrintWriter;
  */
 public class ConfigFileGenerator {
 
-  public static final String TEMPLATE_ROOT = "io" + File.separator + "hops";
+  public static final String TEMPLATE_ROOT = File.separator + "io" + File.separator + "hops";
+  public static final String LOG4J_TEMPLATE
+      = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator + "log4j_template.properties";
   public static final String ZEPPELIN_CONFIG_TEMPLATE
       = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator + "zeppelin_site_template.xml";
   public static final String ZEPPELIN_ENV_TEMPLATE
       = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator + "zeppelin_env_template.sh";
   public static final String INTERPRETER_TEMPLATE
       = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator + "interpreter_template.json";
+  public static final String HIVE_SITE_TEMPLATE
+      = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator + "hive_site_template.xml";
   /**
    * @param filePath
    * @param pairs

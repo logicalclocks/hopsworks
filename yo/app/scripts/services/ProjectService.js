@@ -10,12 +10,17 @@ angular.module('hopsWorksApp')
                 method: "POST",
                 headers: {'Content-Type': 'application/json; charset=UTF-8'}
               },
+              "example": {
+                'method': 'POST',
+                 url: '/api/project/starterProject'
+              },
               "delete": {
-                method: 'DELETE'
+                url: '/api/project/:id/delete',  
+                method: 'POST'
               },
               "remove": {
                 url: '/api/project/:id/remove',
-                method: 'DELETE'
+                method: 'POST'
               },
               "update": {
                 method: "PUT",
@@ -30,14 +35,32 @@ angular.module('hopsWorksApp')
                 'method': 'GET',
                 isArray: true
               },
+              "getQuotas":{
+               url: '/api/project/:id/quotas',
+               'method': 'GET'
+                      },
+              "uberPrice":{
+               url: '/api/project/:id/price',
+               'method': 'GET'
+                      },
               "getProjectInfo": {
                 url: '/api/project/getProjectInfo/:projectName',
                 'method': 'GET'
               },
+              "getPublicDatasets": {
+                url: '/api/project/getPublicDatasets',
+                'method': 'GET',
+                isArray: true           
+              },
               "getDatasetInfo": {
                 url: '/api/project/getDatasetInfo/:inodeId',
                 'method': 'GET'                  
+              },
+              "importPublicDataset": {
+                url: '/api/project/:id/importPublicDataset/:projectName/:inodeId',
+                'method': 'GET'                  
               }
+              
             }
             );
           }]);

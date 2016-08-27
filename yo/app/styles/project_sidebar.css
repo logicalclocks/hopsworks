@@ -16,7 +16,7 @@
 }
 
 #sidebar-wrapper {
-  z-index: 10;
+  z-index: 12;
   left: 200px;
   width: 0;
   height: 100%;
@@ -142,6 +142,9 @@
   text-decoration: none;
   background-color: transparent;
 }
+
+
+
 
 .sidebar-nav li:nth-child(2) a:active,
 .sidebar-nav li:nth-child(2) a:focus,

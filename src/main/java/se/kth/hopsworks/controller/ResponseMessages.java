@@ -1,9 +1,5 @@
 package se.kth.hopsworks.controller;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
 public class ResponseMessages {
 
   //response for validation error
@@ -36,7 +32,7 @@ public class ResponseMessages {
   public final static String PASSWORD_TOO_LONG = "Password too long.";
   public final static String PASSWORD_INCORRECT = "Password incorrect";
   public final static String PASSWORD_PATTERN_NOT_CORRECT
-          = "Password should including one uppercase letter,\n"
+          = "Password should include one uppercase letter,\n"
           + "one special character and/or alphanumeric characters.";
   public final static String INCORRECT_PASSWORD
           = "The password is incorrect. Please try again";
@@ -45,7 +41,7 @@ public class ResponseMessages {
   public final static String TOS_NOT_AGREED
           = "You must agree to our terms of use.";
 
-  //success response 
+  //success response
   public final static String CREATED_ACCOUNT
           = "You have successfully created an account,\n"
           + "but you might need to wait until your account has been approved \n"
@@ -86,7 +82,7 @@ public class ResponseMessages {
   public final static String FOLDER_NAME_NOT_SET
           = "Name cannot be empty.";
   public final static String FOLDER_NAME_TOO_LONG
-          = "Name cannot be longer than 24 characters.";
+          = "Name cannot be longer than 88 characters.";
   public final static String FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
           = "Name cannot contain any of the characters ";
   public final static String FOLDER_NAME_ENDS_WITH_DOT
@@ -105,10 +101,6 @@ public class ResponseMessages {
           = " The selected user is not a team member in this project.";
   public final static String ROLE_NOT_SET = "Role cannot be empty.";
   public final static String CONSENT_ALREADY_EXISTS = "Duplicate error. There is already a consent form in the Project with the same name";
-  
-  public final static String CHARON_SITE_ALREADY_EXISTS = "Duplicate error. This site is already registered in the Project.";
-  public final static String CHARON_BAD_SITE = "Bad site name.";
-  public final static String CHARON_SHARE_ALREADY_EXISTS = "Duplicate error. This shared path is already registered in the Project.";
 
   //project success messages
   public final static String PROJECT_CREATED = "Project created successfully.";
@@ -121,7 +113,7 @@ public class ResponseMessages {
   public final static String PROJECT_REMOVED
           = "The project and all related files were removed successfully.";
   public final static String PROJECT_REMOVED_NOT_FOLDER
-          = "The project was removed successfully. But datasets are priserved.";
+          = "The project was removed successfully. But its datasets have not been deleted.";
   public final static String PROJECT_MEMBER_REMOVED
           = "Member removed successfully";
   public final static String PROJECT_MEMBERS_ADDED
@@ -138,9 +130,13 @@ public class ResponseMessages {
   public final static String DATASET_REMOVED_FROM_HDFS
           = "DataSet removed from hdfs.";
   public final static String SHARED_DATASET_REMOVED
-          = "The shared dataset is removed from this project.";
+          = "The shared dataset has been removed from this project.";
   public final static String DATASET_NOT_FOUND
           = "DataSet not found.";
+  public final static String DATASET_ALREADY_PUBLIC
+          = "DataSet is already public.";
+  public final static String DATASET_NOT_PUBLIC
+          = "DataSet is not public.";
 
   //Metadata
   public final static String TEMPLATE_INODEID_EMPTY
@@ -150,11 +146,26 @@ public class ResponseMessages {
   public final static String UPLOAD_PATH_NOT_SPECIFIED
           = "The path to upload the template was not specified";
   public final static String ELASTIC_SERVER_NOT_FOUND
-          = "Problem when reaching the elastic server";
+          = "Problem when reaching the Elasticsearch server";
   public final static String ELASTIC_INDEX_NOT_FOUND
-          = "Elastic indices do not exist";
+          = "Elasticsearch indices do not exist";
   public final static String ELASTIC_TYPE_NOT_FOUND
-          = "Elastic type does not exist";
+          = "Elasticsearch type does not exist";
   public final static String ELASTIC_SERVER_NOT_AVAILABLE
-          = "Elasticsearch Server is either down or misconfigured.";
+          = "The Elasticsearch Server is either down or misconfigured.";
+
+  //Workflow
+  public final static String WORKFLOW_NOT_FOUND
+          = "Workflow not found.";
+  public final static String NODE_NOT_FOUND
+          = "Node not found.";
+  public final static String EDGE_NOT_FOUND
+          = "Edge not found.";
+  public final static String WOKFLOW_EXECUTION_NOT_FOUND
+        = "Execution not found.";
+  public final static String WOKFLOW_JOB_NOT_FOUND
+        = "Job not found.";
+  
+  public final static String JOB_DETAILS
+          = "Details for a job";
 }

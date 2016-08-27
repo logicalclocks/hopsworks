@@ -22,8 +22,16 @@ angular.module('hopsWorksApp', [
   'ngMaterial',
   'ngMessages',
   'as.sortable',
+  'ngHamburger',
+  'ngclipboard',
   'isteven-multi-select',
-  'angularUtils.directives.dirPagination'
+  'angularUtils.directives.dirPagination',
+  'angular-tour',
+  'smart-table',
+  'ngPrettyJson',
+  'angularAwesomeSlider',
+  'angularResizable',
+  'ng-showdown'
 ])
     .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider',
       function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider) {
@@ -170,28 +178,133 @@ angular.module('hopsWorksApp', [
               }
             })
 
-            .when('/project/:projectID/datasets/:datasetName', {
-              templateUrl: 'views/datasetsBrowser.html',
-              controller: 'ProjectCtrl as projectCtrl',
-              resolve: {
-                auth: ['$q', '$location', 'AuthService', '$cookies',
-                  function ($q, $location, AuthService, $cookies) {
-                    return AuthService.session().then(
-                        function (success) {
-                          $cookies.email = success.data.data.value;
-                        },
-                        function (err) {
-                          delete $cookies.email;
-                          delete $cookies.projectID;
-                          $location.path('/login');
-                          $location.replace();
-                          return $q.reject(err);
-                        });
-                  }]
-              }
+            .when('/project/:projectID/workflows', {
+                templateUrl: 'views/workflows.html',
+                controller: 'WorkflowCtrl as workflowCtrl',
+                resolve: {
+                    auth: ['$q', '$location', 'AuthService', '$cookies',
+                        function ($q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                function (success) {
+                                    $cookies.email = success.data.data.value;
+                                },
+                                function (err) {
+                                    delete $cookies.email;
+                                    delete $cookies.projectID;
+                                    $location.path('/login');
+                                    $location.replace();
+                                    return $q.reject(err);
+                                });
+                        }]
+                }
             })
-            .when('/project/:projectID/cuneiform', {
-              templateUrl: 'views/cuneiform.html',
+            .when('/project/:projectID/workflows/:workflowID', {
+                templateUrl: 'views/workflow.html',
+                controller: 'WorkflowCtrl as workflowCtrl',
+                resolve: {
+                    auth: ['$q', '$location', 'AuthService', '$cookies',
+                        function ($q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                function (success) {
+                                    $cookies.email = success.data.data.value;
+                                },
+                                function (err) {
+                                    delete $cookies.email;
+                                    delete $cookies.projectID;
+                                    $location.path('/login');
+                                    $location.replace();
+                                    return $q.reject(err);
+                                });
+                        }]
+                }
+            })
+
+            .when('/project/:projectID/workflows/:workflowID/executions', {
+                templateUrl: 'views/workflowExecutions.html',
+                controller: 'WorkflowExecutionCtrl as workflowExecutionCtrl',
+                resolve: {
+                    auth: ['$q', '$location', 'AuthService', '$cookies',
+                        function ($q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                function (success) {
+                                    $cookies.email = success.data.data.value;
+                                },
+                                function (err) {
+                                    delete $cookies.email;
+                                    delete $cookies.projectID;
+                                    $location.path('/login');
+                                    $location.replace();
+                                    return $q.reject(err);
+                                });
+                        }]
+                }
+            })
+
+            .when('/project/:projectID/workflows/:workflowID/executions/:executionID', {
+                templateUrl: 'views/workflowExecution.html',
+                controller: 'WorkflowExecutionCtrl as workflowExecutionCtrl',
+                resolve: {
+                    auth: ['$q', '$location', 'AuthService', '$cookies',
+                        function ($q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                function (success) {
+                                    $cookies.email = success.data.data.value;
+                                },
+                                function (err) {
+                                    delete $cookies.email;
+                                    delete $cookies.projectID;
+                                    $location.path('/login');
+                                    $location.replace();
+                                    return $q.reject(err);
+                                });
+                        }]
+                }
+            })
+
+            .when('/project/:projectID/workflows/:workflowID/executions/:executionID/jobs', {
+                templateUrl: 'views/workflowJobs.html',
+                controller: 'WorkflowJobCtrl as workflowJobCtrl',
+                resolve: {
+                    auth: ['$q', '$location', 'AuthService', '$cookies',
+                        function ($q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                function (success) {
+                                    $cookies.email = success.data.data.value;
+                                },
+                                function (err) {
+                                    delete $cookies.email;
+                                    delete $cookies.projectID;
+                                    $location.path('/login');
+                                    $location.replace();
+                                    return $q.reject(err);
+                                });
+                        }]
+                }
+            })
+
+            .when('/project/:projectID/workflows/:workflowID/executions/:executionID/jobs/:jobID', {
+                templateUrl: 'views/workflowJob.html',
+                controller: 'WorkflowJobCtrl as workflowJobCtrl',
+                resolve: {
+                    auth: ['$q', '$location', 'AuthService', '$cookies',
+                        function ($q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                function (success) {
+                                    $cookies.email = success.data.data.value;
+                                },
+                                function (err) {
+                                    delete $cookies.email;
+                                    delete $cookies.projectID;
+                                    $location.path('/login');
+                                    $location.replace();
+                                    return $q.reject(err);
+                                });
+                        }]
+                }
+            })
+
+            .when('/project/:projectID/datasets/:datasetName/:fileName*?', { 
+              templateUrl: 'views/datasetsBrowser.html',
               controller: 'ProjectCtrl as projectCtrl',
               resolve: {
                 auth: ['$q', '$location', 'AuthService', '$cookies',
@@ -330,8 +443,8 @@ angular.module('hopsWorksApp', [
                   }]
               }
             })
-            .when('/project/:projectID/charon', {
-              templateUrl: 'views/charon.html',
+            .when('/project/:projectID/kafka', {
+              templateUrl: 'views/kafka.html',
               controller: 'ProjectCtrl as projectCtrl',
               resolve: {
                 auth: ['$q', '$location', 'AuthService', '$cookies',
@@ -372,6 +485,26 @@ angular.module('hopsWorksApp', [
             })
             .when('/project/:projectID/zeppelin', {
               templateUrl: 'views/zeppelinDashboard.html',
+              controller: 'ProjectCtrl as projectCtrl',
+              resolve: {
+                auth: ['$q', '$location', 'AuthService', '$cookies',
+                  function ($q, $location, AuthService, $cookies) {
+                    return AuthService.session().then(
+                        function (success) {
+                          $cookies.email = success.data.data.value;
+                        },
+                        function (err) {
+                          delete $cookies.email;
+                          delete $cookies.projectID;
+                          $location.path('/login');
+                          $location.replace();
+                          return $q.reject(err);
+                        });
+                  }]
+              }
+            })
+            .when('/history/:projectID/history', {
+              templateUrl: 'views/history.html',
               controller: 'ProjectCtrl as projectCtrl',
               resolve: {
                 auth: ['$q', '$location', 'AuthService', '$cookies',

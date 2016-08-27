@@ -37,6 +37,12 @@
   margin-left: 0;
 }
 
+.form-actions {
+    margin: 20px 0 0;
+    padding: 10px;
+    background-color: #eee;
+}
+
 .c-checkbox.c-checkbox-rounded span, .c-checkbox.c-radio-rounded span, .c-radio span, .c-radio.c-checkbox-rounded span, .c-radio.c-radio-rounded span {
   border-radius: 500px;
 }
@@ -142,9 +148,9 @@ textarea.form-control {
   font-family: inherit;
   line-height: 0;
   font-size: 16px;
-  color: #929292;
-  margin: -23px -23px 23px;
-  padding: 27px 23px 22px;
+  color: #2B2B20;
+  margin: -23px -23px 5px;
+  padding: 35px 23px 22px;
   font-weight: 400;
   background-color: #fafbfc;
   border-bottom: 1px solid #cfdbe2;

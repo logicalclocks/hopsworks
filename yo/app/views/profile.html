@@ -22,7 +22,7 @@
               <input name="first_name" placeholder="First Name" autocomplete="off"
                      ng-model="profileCtrl.user.firstName" required class="form-control "
                      type="text">
-              <span ng-show="(profileForm.$submitted || profileForm.first_name.$dirty) & amp; & amp; profileForm.first_name.$error.required"
+              <span ng-show="(profileForm.$submitted || profileForm.first_name.$dirty) && profileForm.first_name.$error.required"
                     class="text-danger ng-hide">This field is required</span>
             </div>
           </div>
@@ -32,7 +32,7 @@
               <input name="last_name" placeholder="Last Name" autocomplete="off"
                      ng-model="profileCtrl.user.lastName" required class="form-control "
                      type="text">
-              <span ng-show="(profileForm.$submitted || profileForm.last_name.$dirty) & amp; & amp; profileForm.last_name.$error.required"
+              <span ng-show="(profileForm.$submitted || profileForm.last_name.$dirty) && profileForm.last_name.$error.required"
                     class="text-danger ng-hide">This field is required</span>
             </div>
           </div>
@@ -41,36 +41,35 @@
           <label class="text-muted">Phone Number</label>
           <input name="phone_number" placeholder="Phone" autocomplete="on"
                  ng-model="profileCtrl.user.telephoneNum"
-                 ng-pattern="/^[+ 0]?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
+                 ng-pattern="/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/"
                  class="form-control "
                  type="text">
-          <span ng-show="profileForm.phone_number.$dirty & amp; & amp; profileForm.phone_number.$error.pattern"
+          <span ng-show="profileForm.phone_number.$dirty && profileForm.phone_number.$error.pattern"
                 class="text-danger ng-hide">Phone number should be in (+00-000-000000) format.</span>
         </div>
 
         <div class="form-group has-feedback">
-          <label class="text-muted">Number of Projects Allowed: </label>{{profileCtrl.user.maxNumProjects}}
+          <label class="text-muted">Number of Projects Allowed: </label>&nbsp;&nbsp;{{profileCtrl.user.maxNumProjects}}
         </div>
 
 
-        <div class="row">
+        <div class="row form-actions">
           <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
-            <button type="submit" class="btn btn-block btn-primary mt-lg"
+            <button type="submit" class="btn btn-block btn-primary"
                     ng-disabled="profileForm.$pristine || profileCtrl.working">Save
               <i ng-if="profileCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
             </button>
           </div>
           <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
-            <input type="button" class="btn btn-block btn-primary mt-lg" ng-click="profileCtrl.reset()"
+            <input type="button" class="btn btn-block btn-primary" ng-click="profileCtrl.reset()"
                    value="Reset" ng-disabled="profileForm.$pristine"/>
           </div>
-
         </div>
       </form>
     </div>
     <div class="col-xs-3 col-sm-3 col-md-3 ">
       <img class="img-thumbnail"
-           ng-src="https://www.gravatar.com/avatar/{{ profileCtrl.emailHash + '?s=300&d=mm'}}"/>
+           ng-src="https://www.gravatar.com/avatar/{{profileCtrl.emailHash}}?d=retro&s=200"/>
     </div>
   </div>
   <form method="post"
@@ -88,9 +87,9 @@
              class="form-control"
              type="email" ng-disabled="true">
       <span class="fa fa-envelope form-control-feedback text-muted"></span>
-      <span ng-show="(credentialsForm.$submitted || credentialsForm.user_email.$dirty) & amp; & amp; credentialsForm.user_email.$error.required"
+      <span ng-show="(credentialsForm.$submitted || credentialsForm.user_email.$dirty) && credentialsForm.user_email.$error.required"
             class="text-danger ng-hide">This field is required</span>
-      <span ng-show="credentialsForm.user_email.$dirty & amp; & amp; credentialsForm.user_email.$error.email"
+      <span ng-show="credentialsForm.user_email.$dirty && credentialsForm.user_email.$error.email"
             class="text-danger ng-hide">This field must be a valid email address</span>
     </div>
 
@@ -102,7 +101,7 @@
              ng-minlength="4"
              required>
       <span class="fa fa-lock form-control-feedback text-muted"></span>
-      <span ng-show="(credentialsForm.$submitted || credentialsForm.sec_answer.$dirty) & amp; & amp; credentialsForm.sec_answer.$error.required"
+      <span ng-show="(credentialsForm.$submitted || credentialsForm.user_old_password.$dirty) && credentialsForm.user_old_password.$error.required"
             class="text-danger ng-hide">You have to enter your current password.</span>
     </div>
 
@@ -132,24 +131,72 @@
     </div>
     <div class="row">
       <div class="col-xs-12 col-sm-12 col-md-12">
-        <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password.$dirty) & amp; & amp; credentialsForm.user_password.$error.required"
+        <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password.$dirty) && credentialsForm.user_password.$error.required"
               class="text-danger ng-hide">This field is required</span>
-        <span ng-show="credentialsForm.user_password.$dirty & amp; & amp; credentialsForm.user_password.$error.minlength"
+        <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.minlength"
               class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
           one special character and/or alphanumeric characters. </span>                 
-        <span ng-show="credentialsForm.user_password.$dirty & amp; & amp; credentialsForm.user_password.$error.pattern"
-              class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
-          one special character and/or alphanumeric characters. </span>
-        <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password_confirm.$dirty) & amp; & amp; credentialsForm.user_password_confirm.$invalid"
+         <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password_confirm.$dirty) && credentialsForm.user_password_confirm.$invalid"
               class="text-danger ng-hide">The two passwords you entered do not match</span>
       </div>
     </div>
-    <div class="row">
+    <div class="row form-actions">
       <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
-        <button class="btn btn-block btn-primary mt-lg" type="submit"
+        <button class="btn btn-block btn-primary" type="submit"
                 ng-disabled="credentialsForm.$invalid">
           <i ng-if="profileCtrl.credentialWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
           Save
+        </button>
+      </div>
+    </div>
+  </form>
+  <form method="post"
+        name="twoFactorForm"
+        ng-submit="profileCtrl.changeTwoFactor()"
+        class="form-validate"
+        novalidate=""
+        ng-if="profileCtrl.otp === 'true'">
+    <legend>Two Factor Authentication</legend>
+    <div class="row">
+      <div class="col-xs-6 col-sm-6 col-md-6">
+        <div class="form-group has-feedback">
+          <label class="text-muted">Password</label>
+          <input id="id-password" name="user_password"
+                 ng-model="profileCtrl.twoFactorAuth.password"
+                 ng-minlength="4"
+                 ng-required="true"
+                 class="form-control"
+                 type="password">
+          <span class="fa fa-lock form-control-feedback text-muted"></span>
+        </div>
+        <span ng-show="profileCtrl.noPassword && !twoFactorForm.user_password.$dirty"
+              class="text-danger ng-hide">Password required.</span>
+      </div>
+      <div class="col-xs-6 col-sm-6 col-md-6">
+        <div class="checkbox c-checkbox" style="margin-top: 28px;">
+          <div class="form-group has-feedback">
+            <label class=" text-muted" style="font-weight: bold;">
+          <input name="2FactorAuth" ng-model="profileCtrl.twoFactorAuth.twoFactor"
+                   type="checkbox">
+          <span class="fa fa-check"></span>Enable Two Factor Authentication.
+          </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row form-actions">
+      <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
+        <button class="btn btn-block btn-primary" type="submit"
+                ng-disabled="twoFactorForm.$invalid">
+          <i ng-if="profileCtrl.twoFactorWorking" style="margin-top: 2px" 
+             class="fa fa-spinner fa-spin pull-right" ></i>
+          Apply
+        </button>
+      </div>
+      <div class="col-xs-3 col-sm-3 col-md-3 pull-right" ng-show="profileCtrl.master.twoFactor">
+        <button class="btn btn-block btn-default" ng-click="profileCtrl.getQR()"
+                type="button">
+          Show QR-code
         </button>
       </div>
     </div>

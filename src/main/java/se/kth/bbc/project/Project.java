@@ -31,6 +31,7 @@ import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.services.ProjectServices;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.workflows.Workflow;
 
 /**
  *
@@ -80,6 +81,10 @@ public class Project implements Serializable {
           mappedBy = "projectId")
   private Collection<Dataset> datasetCollection;
 
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "project")
+  private Collection<Workflow> workflowCollection;
+
   private static final long serialVersionUID = 1L;
 
   @Id
@@ -91,7 +96,7 @@ public class Project implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 128)
+          max = 88)
   @Column(name = "projectname")
   private String name;
 
@@ -202,6 +207,7 @@ public class Project implements Serializable {
     this.retentionPeriod = retentionPeriod;
   }
 
+  @JsonIgnore
   public boolean isArchived() {
     return archived;
   }
@@ -312,6 +318,16 @@ public class Project implements Serializable {
 
   public void setDatasetCollection(Collection<Dataset> datasetCollection) {
     this.datasetCollection = datasetCollection;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<Workflow> getWorkflowCollection() {
+    return workflowCollection;
+  }
+
+  public void setWorkflowCollection(Collection<Workflow> workflowCollection) {
+    this.workflowCollection = workflowCollection;
   }
 
   @Override

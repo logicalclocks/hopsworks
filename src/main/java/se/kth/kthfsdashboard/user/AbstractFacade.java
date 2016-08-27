@@ -1,5 +1,6 @@
 package se.kth.kthfsdashboard.user;
 
+
 import java.util.List;
 import javax.persistence.EntityManager;
 
@@ -30,6 +31,7 @@ public abstract class AbstractFacade<T> {
       return;
     }
     getEntityManager().remove(getEntityManager().merge(entity));
+    getEntityManager().flush();
   }
 
   public T find(Object id) {

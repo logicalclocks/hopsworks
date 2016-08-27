@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -116,6 +118,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @param path
    * @return null if no such Inode found
    */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   private Inode getInode(String path) {
     // Get the path components
     String[] p;
@@ -146,9 +149,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return curr;
   }
 
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Inode getRootNode(String name) {
-    TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName",
-            Inode.class);
+    TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName", Inode.class);
     query.setParameter("name", name);
     try {
       return query.getSingleResult(); //Sure to give a single result because all children of same parent "null" so name is unique
@@ -174,6 +177,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @param path
    * @return Null if path does not exist.
    */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public Inode getInodeAtPath(String path) {
     return getInode(path);
   }
@@ -196,6 +200,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @param name
    * @return
    */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Inode findByParentAndName(Inode parent, String name) {
 
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey",
@@ -316,13 +321,13 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @throws IllegalArgumentException If the path does not point to a directory.
    * @throws java.io.FileNotFoundException If the path does not exist.
    */
-  public List<Inode> getChildren(String path) throws IllegalArgumentException,
+  public List<Inode> getChildren(String path) throws 
           FileNotFoundException {
     Inode parent = getInode(path);
     if (parent == null) {
-      throw new FileNotFoundException("No inode exists at " + path + ".");
+      throw new FileNotFoundException("Path not found : " + path);
     } else if (!parent.isDir()) {
-      throw new IllegalArgumentException("Path does not point to a directory.");
+      throw new FileNotFoundException("Path is not a directory.");
     }
     return getChildren(parent);
   }

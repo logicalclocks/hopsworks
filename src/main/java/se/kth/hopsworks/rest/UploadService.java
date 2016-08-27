@@ -25,7 +25,6 @@ import javax.ws.rs.core.Response;
 import org.apache.hadoop.security.AccessControlException;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
@@ -57,8 +56,6 @@ public class UploadService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private FileOperations fileOps;
-  @EJB
   private InodeFacade inodes;
   @EJB
   private StagingManager stagingManager;
@@ -74,6 +71,7 @@ public class UploadService {
   private String path;
   private String username;
   private Inode fileParent;
+  private boolean isTemplate;
   private int templateId;
 
   public UploadService() {
@@ -118,6 +116,10 @@ public class UploadService {
     this.username = username;
   }
 
+  public void setIsTemplate(boolean isTemplate) {
+    this.isTemplate = isTemplate;
+  }
+
   /**
    * Sets the path for the file to be uploaded. It does not require a project
    * name since the file to be uploaded is a template schema, irrelevant to any
@@ -133,15 +135,20 @@ public class UploadService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Not a valid path!");
     }
-
+    DistributedFileSystemOps dfso = null;
     //check if the parent directory exists. If it doesn't create it first
-    if (!fileOps.isDir(File.separator + pathArray[0])) {
-      try {
-        fileOps.mkDir(File.separator + pathArray[0]);
-      } catch (IOException e) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(),
-                "Upload directory could not be created in the file system");
+    try {
+      dfso = dfs.getDfsOps();
+      if (!dfso.isDir(File.separator + pathArray[0])) {
+        dfso.mkdir(File.separator + pathArray[0]);
+      }
+    } catch (IOException e) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Upload directory could not be created in the file system");
+    } finally {
+      if (dfso != null) {
+        dfso.close();
       }
     }
 
@@ -178,13 +185,19 @@ public class UploadService {
       }
       //test if the user have permission to create a file in the path.
       //the file will be overwriten by the uploaded 
+      //TODO: *** WARNING ***
+      //Check permissions before creating file
       if (this.username != null) {
+        DistributedFileSystemOps udfso = null;
         try {
-          dfs.getDfsOps(username).touchz(new org.apache.hadoop.fs.Path(this.path
+          udfso = dfs.getDfsOps(username);
+          udfso.touchz(new org.apache.hadoop.fs.Path(this.path
                   + fileName));
         } catch (AccessControlException ex) {
           throw new AccessControlException(
                   "Permission denied: You can not upload to this folder. ");
+        } finally {
+          udfso.close();
         }
       }
     }
@@ -264,12 +277,12 @@ public class UploadService {
     }
 
     if (finished) {
+      DistributedFileSystemOps dfsOps = null;
       try {
         String fileContent = null;
 
         //if it is about a template file check its validity
-        if ((this.path + fileName).endsWith(".json")) {
-
+        if (this.isTemplate) {
           String filePath = stagingManager.getStagingPath() + this.path
                   + fileName;
 
@@ -293,7 +306,7 @@ public class UploadService {
         }
 
         this.path = Utils.ensurePathEndsInSlash(this.path);
-        DistributedFileSystemOps dfsOps;
+
         if (this.username != null) {
           dfsOps = dfs.getDfsOps(username);
         } else { // to accommodate previous implimentations  
@@ -305,20 +318,20 @@ public class UploadService {
                 + fileName);
         org.apache.hadoop.fs.Path location = new org.apache.hadoop.fs.Path(
                 this.path + fileName);
-        dfsOps.setPermission(location, dfsOps.getParentPermission(location)); 
-       logger.log(Level.INFO, "Copied to HDFS");
+        dfsOps.setPermission(location, dfsOps.getParentPermission(location));
+        logger.log(Level.INFO, "Copied to HDFS");
 
         if (templateid != 0 && templateid != -1) {
           this.attachTemplateToInode(info, this.path + fileName);
         }
 
         //if it is about a template file persist it in the database as well
-        if ((this.path + fileName).endsWith(".json")) {
+        if (this.isTemplate) {
           //TODO. More checks needed to ensure the valid template format
           this.persistUploadedTemplate(fileContent);
         } //this is a common file being uploaded so add basic metadata to it
         //description and searchable
-        else if (!(this.path + fileName).endsWith(".json")) {
+        else {
           //find the corresponding inode
           Inode parent = this.inodes.getInodeAtPath(this.path);
           Inode file = this.inodes.findByParentAndName(parent, fileName);
@@ -337,6 +350,10 @@ public class UploadService {
         json.setErrorMsg("Failed to write to HDFS");
         return noCacheResponse.getNoCacheResponseBuilder(
                 Response.Status.BAD_REQUEST).entity(json).build();
+      } finally {
+        if (dfsOps != null) {
+          dfsOps.close();
+        }
       }
     }
 

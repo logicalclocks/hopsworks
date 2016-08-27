@@ -2,6 +2,7 @@ package se.kth.bbc.security.ua;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
@@ -10,12 +11,15 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.project.Project;
+import se.kth.bbc.security.audit.model.AccountAudit;
+import se.kth.bbc.security.audit.model.RolesAudit;
 import se.kth.bbc.security.auth.AuthenticationConstants;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.PeopleGroup;
 import se.kth.bbc.security.ua.model.PeopleGroupPK;
 import se.kth.bbc.security.ua.model.Yubikey;
+import se.kth.hopsworks.user.model.BbcGroup;
 import se.kth.hopsworks.user.model.Users;
 
 @Stateless
@@ -34,11 +38,10 @@ public class UserManager {
    * @param gidNumber
    * @return
    */
-  public boolean registerGroup(Users uid, int gidNumber) {
-    PeopleGroup p = new PeopleGroup();
-    p.setPeopleGroupPK(new PeopleGroupPK(uid.getUid(), gidNumber));
-    em.persist(p);
-    return true;
+  public void registerGroup(Users uid, int gidNumber) {
+    BbcGroup bbcGroup = em.find(BbcGroup.class, gidNumber);
+    uid.getBbcGroupCollection().add(bbcGroup);
+    em.merge(uid);
   }
 
   /**
@@ -47,7 +50,7 @@ public class UserManager {
    * @param user
    * @return
    */
-  public boolean registerAddress(Users user) {
+  public void registerAddress(Users user) {
     Address add = new Address();
     add.setUid(user);
     add.setAddress1("-");
@@ -58,101 +61,81 @@ public class UserManager {
     add.setCountry("-");
     add.setPostalcode("-");
     em.persist(add);
-    return true;
+    
   }
 
-  public boolean increaseLockNum(int id, int val) {
+  public void increaseLockNum(int id, int val) {
     Users p = (Users) em.find(Users.class, id);
     if (p != null) {
       p.setFalseLogin(val);
       em.merge(p);
     }
-    return true;
+    
   }
 
-  public boolean setOnline(int id, int val) {
+  public void setOnline(int id, int val) {
     Users p = (Users) em.find(Users.class, id);
     p.setIsonline(val);
     em.merge(p);
-    return true;
+    
   }
 
-  public boolean resetLock(int id) {
+  public void resetLock(int id) {
     Users p = (Users) em.find(Users.class, id);
     p.setFalseLogin(0);
     em.merge(p);
-    return true;
+    
   }
 
-  public boolean changeAccountStatus(int id, String note, int status) {
+  public void changeAccountStatus(int id, String note, int status) {
     Users p = (Users) em.find(Users.class, id);
     if (p != null) {
       p.setNotes(note);
       p.setStatus(status);
       em.merge(p);
     }
-    return true;
+    
   }
 
-  public boolean resetKey(int id) {
+  public void resetKey(int id) {
     Users p = (Users) em.find(Users.class, id);
     p.setValidationKey(SecurityUtils.getRandomPassword(64));
     em.merge(p);
-    return true;
+    
   }
 
-  public boolean resetPassword(Users p, String pass) {
+  public void resetPassword(Users p, String pass) {
     p.setPassword(pass);
     p.setPasswordChanged(new Timestamp(new Date().getTime()));
     em.merge(p);
-    return true;
+    
   }
 
-  public boolean resetSecQuestion(int id, SecurityQuestion question, String ans) {
+  public void resetSecQuestion(int id, SecurityQuestion question, String ans) {
     Users p = (Users) em.find(Users.class, id);
     p.setSecurityQuestion(question);
     p.setSecurityAnswer(ans);
     em.merge(p);
-    return true;
+    
   }
 
-  public boolean updateStatus(Users id, int stat) {
+  public void updateStatus(Users id, int stat) {
     id.setStatus(stat);
     em.merge(id);
-    return true;
   }
 
-  public boolean updateSecret(int id, String sec) {
+  public void updateSecret(int id, String sec) {
     Users p = (Users) em.find(Users.class, id);
     p.setSecret(sec);
     em.merge(p);
-    return true;
   }
-
-  public boolean updateGroup(int uid, int gid) {
-    TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid",
-            PeopleGroup.class);
-    query.setParameter("uid", uid);
-    PeopleGroup p = (PeopleGroup) query.getSingleResult();
-    p.setPeopleGroupPK(new PeopleGroupPK(uid, gid));
-    em.merge(p);
-    return true;
-  }
-
+  
   public List<Users> findInactivateUsers() {
     Query query = em.createNativeQuery(
             "SELECT * FROM hopsworks.users p WHERE p.active = "
-            + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
+            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
     List<Users> people = query.getResultList();
     return people;
-  }
-
-  public boolean registerYubikey(Users uid) {
-    Yubikey yk = new Yubikey();
-    yk.setUid(uid);
-    yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
-    em.persist(yk);
-    return true;
   }
 
   /**
@@ -192,13 +175,37 @@ public class UserManager {
     return (getUserByEmail(username) != null);
   }
 
-  public boolean findYubikeyUsersByStatus(int status) {
-    List existing = em.createQuery(
-            "SELECT p FROM hopsworks.users p WHERE p.status ='"
-            + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()
-            + "' AND p.mode = " + status)
-            .getResultList();
-    return (existing.size() > 0);
+  
+    
+  public List<Users> findMobileRequests() {
+    
+    TypedQuery<Users> query  = em.createQuery(
+            "SELECT p FROM Users p WHERE (p.status ="+ 
+                    PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.M_ACCOUNT_TYPE.getValue() + " )", Users.class);
+    TypedQuery<Users> query2  = em.createQuery(
+            "SELECT p FROM Users p WHERE (p.status ="+ 
+                    PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.M_ACCOUNT_TYPE.getValue() + " )", Users.class);
+    List<Users> res = query.getResultList();
+    res.addAll(query2.getResultList());
+    return res;
+  }
+    
+  
+  public  List<Users>  findYubikeyRequests() {
+    TypedQuery<Users> query = em.createQuery(
+            "SELECT p FROM Users p WHERE (p.status = "
+            + PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue() +" )", Users.class);
+    TypedQuery<Users> query2  = em.createQuery(
+            "SELECT p FROM Users p WHERE (p.status ="+ 
+                    PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
+                    + "  AND p.mode = " + PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue() + " )", Users.class);
+    List<Users> res = query.getResultList();
+    res.addAll(query2.getResultList());
+
+    return res;
   }
 
   public Yubikey findYubikey(int uid) {
@@ -209,16 +216,14 @@ public class UserManager {
 
   }
 
+  
+  /**
+   * Get all users except spam accounts.
+   * @return 
+   */
   public List<Users> findAllUsers() {
     List<Users> query = em.createQuery(
-            "SELECT p FROM Users p WHERE p.status !='"
-            + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()
-            + "' AND p.status!='"
-            + PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()
-            + "' AND p.status!='" + PeopleAccountStatus.SPAM_ACCOUNT.getValue()
-            + "' AND p.status!='" + PeopleAccountStatus.ACCOUNT_VERIFICATION.
-            getValue()
-            + "'")
+            "SELECT p FROM Users p WHERE p.status!=" + PeopleAccountStatus.SPAM_ACCOUNT.getValue(), Users.class)
             .getResultList();
 
     return query;
@@ -231,16 +236,21 @@ public class UserManager {
     return query.getResultList();
   }
 
-  public List<Users> findAllSPAMAccounts() {
-    List<Users> query = em.createQuery(
-            "SELECT p FROM Users p WHERE (p.status ='"
-            + PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()
-            + "' OR p.status ='" + PeopleAccountStatus.SPAM_ACCOUNT.
-            getValue()
-            + "')")
-            .getResultList();
+  
+  /**
+   * Get a list of accounts that are not validated or marked as spam.
+   * @return 
+   */
+  public List<Users> findSPAMAccounts() {
+     TypedQuery<Users> query = em.createQuery(
+            "SELECT p FROM Users p WHERE ( p.status = "
+            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
+            + " OR p.status = " + PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
+                    + " OR p.status = " + PeopleAccountStatus.SPAM_ACCOUNT.getValue() + " )", Users.class);
+             
 
-    return query;
+    return query.getResultList();
+      
   }
 
   public Users findByEmail(String email) {
@@ -325,18 +335,18 @@ public class UserManager {
     em.persist(user);
   }
 
-  public boolean updatePeople(Users user) {
+  public void updatePeople(Users user) {
     em.merge(user);
-    return true;
+    
   }
 
   public void updateYubikey(Yubikey yubi) {
     em.merge(yubi);
   }
 
-  public boolean updateAddress(Address add) {
+  public void updateAddress(Address add) {
     em.merge(add);
-    return true;
+    
   }
 
   /**
@@ -345,34 +355,37 @@ public class UserManager {
    * @param u
    * @return
    */
-  public boolean deleteUserRequest(Users u) {
-    boolean success = false;
-
+  public void deleteUserRequest(Users u) {
     if (u != null) {
-      TypedQuery<PeopleGroup> query = em.createNamedQuery(
-              "PeopleGroup.findByUid", PeopleGroup.class);
-      query.setParameter("uid", u.getUid());
-      List<PeopleGroup> p = query.getResultList();
+        
+      TypedQuery<RolesAudit> query4 = em.createNamedQuery(
+              "RolesAudit.findByInitiator", RolesAudit.class);
+      query4.setParameter("initiator", u);
 
-      for (PeopleGroup next : p) {
-        em.remove(p);
-      }
-
-      if (em.contains(u)) {
-        em.remove(u);
-      } else {
-
-        em.remove(em.merge(u));
-
-      }
+      List<RolesAudit> results1= query4.getResultList();
       
-      success = true;
-    }
+        for (Iterator<RolesAudit> iterator = results1.iterator(); iterator.hasNext();) {
+            RolesAudit next = iterator.next();
+            em.remove(next);
+        }
 
-    return success;
+      
+      TypedQuery<AccountAudit> query5 = em.createNamedQuery(
+              "AccountAudit.findByInitiator", AccountAudit.class);
+      query5.setParameter("initiator", u);
+       
+      List<AccountAudit> aa = query5.getResultList();
+      
+        for (Iterator<AccountAudit> iterator = aa.iterator(); iterator.hasNext();) {
+            AccountAudit next = iterator.next();
+            em.remove(next);
+        }
+      u = em.merge(u);
+      em.remove(u);
+    }
   }
 
-  public boolean registerOrg(Users uid, String org, String department) {
+  public void registerOrg(Users uid, String org, String department) {
 
     Organization organization = new Organization();
     organization.setUid(uid);
@@ -384,13 +397,13 @@ public class UserManager {
     organization.setFax(checkDefaultValue(""));
     organization.setPhone(checkDefaultValue(""));
     em.persist(organization);
-    return true;
+    
 
   }
 
-  public boolean updateOrganization(Organization org) {
+  public void updateOrganization(Organization org) {
     em.merge(org);
-    return true;
+    
   }
 
   /**
@@ -407,10 +420,11 @@ public class UserManager {
     return query.getResultList();
   }
 
-    public boolean updateMaxNumProjs(Users id, int maxNumProjs) {
+    public void updateMaxNumProjs(Users id, int maxNumProjs) {
     id.setMaxNumProjects(maxNumProjs);
     em.merge(id);
-    return true;
+    
   }
+
   
 }

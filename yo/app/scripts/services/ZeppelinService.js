@@ -1,37 +1,53 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .factory('ZeppelinService', ['$http', 'TransformRequest', function ($http, TransformRequest) {
-        return {
-            settings: function () {
+        .factory('ZeppelinService', ['$http', '$websocket', function ($http, $websocket) {
+            var websocketCalls = {};
+            websocketCalls.ws = $websocket(getZeppelinWsBaseURL());
+            websocketCalls.ws.reconnectIfNotNormalClose = true;
+
+            websocketCalls.sendNewEvent = function (data) {
+              console.log('Send >> %o, %o', data.op, data);
+              websocketCalls.ws.send(JSON.stringify(data));
+            };  
+            
+            websocketCalls.isConnected = function () {
+              return (websocketCalls.ws.socket.readyState === 1);
+            };
+
+            return {
+              websocket: function () {
+                return websocketCalls;
+              },
+              settings: function () {
                 return $http.get('/api/interpreter/setting');
-            },
-            startInterpreter: function (projectId, settingId) {
-                return $http.get('/api/interpreter/'+projectId+'/start/'+settingId);
-            },
-            stopInterpreter: function (settingId) {
-                return $http.get('/api/interpreter/stop/' + settingId);
-            },
-            notebooks: function (projectId) {
-                return $http.get('/api/notebook/'+ projectId);
-            },
-            tutorialNotebooks: function () {
-                return $http.get('/api/notebook/tutorial');
-            },
-            createNotebook: function (projectId, noteName) {
-              var regReq = {
-                    method: 'POST',
-                    url: '/api/notebook/'+ projectId + '/new',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: noteName
-                  };
-                  return $http(regReq);             
-            },
-            interpreters: function () {
+              },
+              restartInterpreter: function (settingId) {
+                return $http.put('/api/interpreter/setting/restart/' + settingId);
+              },
+              notebooks: function () {
+                return $http.get('/api/notebook/');
+              },
+              createNotebook: function (noteName) {
+                var regReq = {
+                  method: 'POST',
+                  url: '/api/notebook/new',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: noteName
+                };
+                return $http(regReq);
+              },
+              interpreters: function () {
                 return $http.get('/api/interpreter/interpretersWithStatus');
-            }
-        };
-    }]);
+              },
+              restart: function () {
+                return $http.get('/api/interpreter/restart');
+              },
+              stopLivySession: function (settingId, sessionId) {
+                return $http.delete('/api/interpreter/livy/sessions/delete/' + settingId + '/' + sessionId);
+              }
+            };
+          }]);
 

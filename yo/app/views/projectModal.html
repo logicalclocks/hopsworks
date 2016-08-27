@@ -18,11 +18,10 @@
                      ng-model="projectCreatorCtrl.projectName" tabindex="1"
                      ng-pattern="projectCreatorCtrl.regex"
                      autofocus="autofocus"
-                     ng-maxlength="24"
+                     ng-maxlength="88"
                      required
                      >
             </md-input-container>
-
             <span ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.required"
               class="text-danger ng-hide">This field is required</span>
@@ -35,7 +34,7 @@
 
             <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
                   projectForm.project_name.$error.maxlength"
-                  class="text-danger ng-hide">Project name shouldn't be longer than 24 characters.</span>
+                  class="text-danger ng-hide">Project name shouldn't be longer than 88 characters.</span>
 
             <p></p>
 
@@ -52,7 +51,7 @@
             <div class="controls">
 
               <ui-select ng-model="projectCreatorCtrl.card.selected" theme="select2"
-                         style="min-width: 300px;" tabindex="3">
+                         style="min-wsnidth: 300px;" tabindex="3">
 
                 <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
                 <ui-select-choices

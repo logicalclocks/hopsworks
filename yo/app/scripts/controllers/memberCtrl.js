@@ -20,12 +20,26 @@ angular.module('hopsWorksApp')
 
             self.newMembers = {'projectTeam': []};
             self.card = {};
+            self.myCard = {};
             self.cards = [];
 
 
             UserService.allcards().then(
                     function (success) {
                       self.cards = success.data;
+                      // remove my own 'card' from the list of members
+                      for (var i = 0, len = self.cards.length; i < len; i++) {
+                          if (self.cards[i].email === self.myCard.email) {
+                            self.cards.splice(i, 1);
+                            break;
+                          }
+                      }
+                      for (var i = 0, len = self.cards.length; i < len; i++) {
+                          if (self.cards[i].email === "agent@hops.io") {
+                            self.cards.splice(i, 1);
+                            break;
+                          }
+                      }                      
                     }, function (error) {
               self.errorMsg = error.data.msg;
             }
@@ -61,6 +75,21 @@ angular.module('hopsWorksApp')
             }
 
             getMembers();
+
+            var getCard = function () {
+              UserService.profile().then(
+                      function (success) {
+                        self.myCard.email = success.data.email;
+                        self.myCard.firstname = success.data.firstName;
+                        self.myCard.lastname = success.data.lastName;
+                      },
+                      function (error) {
+                        self.errorMsg = error.data.errorMsg;
+                      });
+            };
+
+            getCard();
+
 
             self.addNewMember = function (user, role) {
               self.newMembers.projectTeam.push(

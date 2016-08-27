@@ -7,6 +7,7 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -145,7 +146,7 @@ public class ResetPassword implements Serializable {
         mgr.increaseLockNum(people.getUid(), val + 1);
         if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
           mgr.changeAccountStatus(people.getUid(), "",
-                  PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
+                  PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue());
           return returnMenu();
         }
         return "";
@@ -161,7 +162,8 @@ public class ResetPassword implements Serializable {
       // make the account pending until it will be reset by user upon first login
       // mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
       // update the status of user to active
-      people.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVEATED.getValue());
+
+      people.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
 
       // reset the old password with a new one
       mgr.resetPassword(people, DigestUtils.sha256Hex(random_password));
@@ -170,7 +172,7 @@ public class ResetPassword implements Serializable {
       
       auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORDCHANGE.name(), AccountsAuditActions.SUCCESS.name(),"Temporary Password Sent.", people);
       // sned the new password to the user email
-      emailBean.sendEmail(people.getEmail(),
+      emailBean.sendEmail(people.getEmail(),RecipientType.TO, 
               UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
 
     } catch (RollbackException | HeuristicMixedException |
@@ -202,7 +204,7 @@ public class ResetPassword implements Serializable {
     if (people == null) {
     }
 
-    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
       MessagesController.addSecurityErrorMessage("Inactive Account");
       return "";
     }
@@ -212,13 +214,11 @@ public class ResetPassword implements Serializable {
       // Reset the old password with a new one
       mgr.resetPassword(people, DigestUtils.sha256Hex(passwd1));
 
-      mgr.
-              updateStatus(people, PeopleAccountStatus.ACCOUNT_ACTIVEATED.
-                      getValue());
+      mgr.updateStatus(people, PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
 
       // Send email    
       String message = UserAccountsEmailMessages.buildResetMessage();
-      emailBean.sendEmail(people.getEmail(),
+      emailBean.sendEmail(people.getEmail(),RecipientType.TO, 
               UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
       auditManager.registerAccountChange(people,
@@ -281,7 +281,7 @@ public class ResetPassword implements Serializable {
     }
 
     // Check the status to see if user is not blocked or deactivate
-    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.BLOCKED_ACCOUNT.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
       auditManager.registerAccountChange(people,
@@ -292,7 +292,7 @@ public class ResetPassword implements Serializable {
       return "";
     }
 
-    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
       auditManager.registerAccountChange(people,
@@ -313,7 +313,7 @@ public class ResetPassword implements Serializable {
 
         // send email    
         String message = UserAccountsEmailMessages.buildSecResetMessage();
-        emailBean.sendEmail(people.getEmail(),
+        emailBean.sendEmail(people.getEmail(),RecipientType.TO, 
                 UserAccountsEmailMessages.ACCOUNT_PROFILE_UPDATE, message);
 
         auditManager.registerAccountChange(people,
@@ -354,7 +354,7 @@ public class ResetPassword implements Serializable {
       return "";
     }
 
-    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
       return "";
@@ -384,7 +384,7 @@ public class ResetPassword implements Serializable {
                 AccountStatusErrorMessages.INCCORCT_DEACTIVATION_LENGTH);
 
         auditManager.registerAccountChange(people,
-                PeopleAccountStatus.ACCOUNT_DEACTIVATED.name(),
+                PeopleAccountStatus.DEACTIVATED_ACCOUNT.name(),
                 UserAuditActions.FAILED.name(), "",
                 people);
       }
@@ -394,14 +394,14 @@ public class ResetPassword implements Serializable {
 
         // close the account
         mgr.changeAccountStatus(people.getUid(), this.notes,
-                PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
+                PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue());
         // send email    
         String message = UserAccountsEmailMessages.buildSecResetMessage();
-        emailBean.sendEmail(people.getEmail(),
+        emailBean.sendEmail(people.getEmail(),RecipientType.TO, 
                 UserAccountsEmailMessages.ACCOUNT_DEACTIVATED, message);
 
         auditManager.registerAccountChange(people,
-                PeopleAccountStatus.ACCOUNT_DEACTIVATED.name(),
+                PeopleAccountStatus.DEACTIVATED_ACCOUNT.name(),
                 UserAuditActions.FAILED.name(), "",
                 people);
       } else {
@@ -409,7 +409,7 @@ public class ResetPassword implements Serializable {
                 AccountStatusErrorMessages.INCCORCT_PASSWORD);
 
         auditManager.registerAccountChange(people,
-                PeopleAccountStatus.ACCOUNT_DEACTIVATED.name(),
+                PeopleAccountStatus.DEACTIVATED_ACCOUNT.name(),
                 UserAuditActions.FAILED.name(), "",
                 people);
         return "";
@@ -417,7 +417,7 @@ public class ResetPassword implements Serializable {
     } catch (MessagingException ex) {
 
       auditManager.registerAccountChange(people,
-              PeopleAccountStatus.ACCOUNT_DEACTIVATED.name(),
+              PeopleAccountStatus.DEACTIVATED_ACCOUNT.name(),
               UserAuditActions.FAILED.name(), "",
               people);
     }
@@ -444,7 +444,7 @@ public class ResetPassword implements Serializable {
     }
 
     // Check the status to see if user is not blocked or deactivate
-    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.BLOCKED_ACCOUNT.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
 
@@ -454,7 +454,7 @@ public class ResetPassword implements Serializable {
       return "";
     }
 
-    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
 
@@ -479,7 +479,7 @@ public class ResetPassword implements Serializable {
 
         // send email    
         String message = UserAccountsEmailMessages.buildResetMessage();
-        emailBean.sendEmail(people.getEmail(),
+        emailBean.sendEmail(people.getEmail(),RecipientType.TO, 
                 UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT, message);
 
         auditManager.registerAccountChange(people,

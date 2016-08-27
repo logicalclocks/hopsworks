@@ -13,7 +13,6 @@ angular.module('hopsWorksApp')
 
             var currentFile = {};
             var availableTemplates = [];
-            var closeSlider = "false";
             var dirContents = "false";
 
             return {
@@ -28,8 +27,11 @@ angular.module('hopsWorksApp')
 
                 MetadataActionService.fetchTemplates($cookies['email'])
                         .then(function (data) {
-                          angular.copy(JSON.parse(data.board).templates, availableTemplates);
-                          defer.resolve(data);
+                          if (data !== null && data.status !== "ERROR" && 
+                              data.board !== null && data.board !== {}) {
+                              angular.copy(JSON.parse(data.board).templates, availableTemplates);
+                              defer.resolve(data);
+                          }
                         });
 
                 return defer.promise;
@@ -37,12 +39,7 @@ angular.module('hopsWorksApp')
               getAvailableTemplates: function () {
                 return availableTemplates;
               },
-              getCloseSlider: function(){
-                return closeSlider;
-              },
-              setCloseSlider: function(value){
-                closeSlider = value;
-              },
+
               getDirContents: function(){
                 return dirContents;
               },

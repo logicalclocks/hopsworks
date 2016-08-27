@@ -1,14 +1,18 @@
 package se.kth.hopsworks.zeppelin.rest;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
+import se.kth.hopsworks.zeppelin.util.LivyMsg;
 
 @XmlRootElement
 public class InterpreterDTO {
-  
+
   private String id;
   private String name;
   private String group;
+  private List<LivyMsg.Session> sessions;
   private boolean notRunning;
 
   public InterpreterDTO() {
@@ -19,13 +23,24 @@ public class InterpreterDTO {
     this.name = name;
     this.group = group;
     this.notRunning = notRunning;
+    sessions = new ArrayList<>();
   }
-  
+
   public InterpreterDTO(InterpreterSetting interpreter, boolean notRunning) {
     this.id = interpreter.id();
     this.name = interpreter.getName();
     this.group = interpreter.getGroup();
     this.notRunning = notRunning;
+    sessions = new ArrayList<>();
+  }
+
+  public InterpreterDTO(InterpreterSetting interpreter, boolean notRunning,
+          List<LivyMsg.Session> runningLivySessions) {
+    this.id = interpreter.id();
+    this.name = interpreter.getName();
+    this.group = interpreter.getGroup();
+    this.notRunning = notRunning;
+    sessions = runningLivySessions;
   }
 
   public String getId() {
@@ -50,6 +65,14 @@ public class InterpreterDTO {
 
   public void setGroup(String group) {
     this.group = group;
+  }
+
+  public List<LivyMsg.Session> getSessions() {
+    return sessions;
+  }
+
+  public void setSessions(List<LivyMsg.Session> sessions) {
+    this.sessions = sessions;
   }
 
   public boolean isNotRunning() {

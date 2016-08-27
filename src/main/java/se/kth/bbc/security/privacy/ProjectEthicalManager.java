@@ -12,12 +12,12 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.security.audit.AuditManager;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 
 @ManagedBean(name = "projectEthicalManager")
 @SessionScoped
@@ -27,13 +27,8 @@ public class ProjectEthicalManager implements Serializable {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-
   @EJB
   private ProjectPrivacyManager privacyManager;
-
-  @EJB
-  private FileOperations fops;
-
   @EJB
   private ProjectFacade projectController;
 
@@ -92,22 +87,22 @@ public class ProjectEthicalManager implements Serializable {
     this.sessionState = sessionState;
   }
 
-  public void showConsent(Consents consName) {
+  public void showConsent(Consents consName, DistributedFileSystemOps dfso) {
 
     try {
       Consents consent = privacyManager.getConsentById(consName.getId());
-      privacyManager.downloadPDF(consent);
+      privacyManager.downloadPDF(consent, dfso);
     } catch (ParseException | IOException ex) {
       MessagesController.addErrorMessage("Could not download the consent");
     }
 
   }
 
-  public void showConsent(String consName) {
+  public void showConsent(String consName, DistributedFileSystemOps dfso) {
 
     try {
       Consents consent = privacyManager.getConsentByName(consName);
-      privacyManager.downloadPDF(consent);
+      privacyManager.downloadPDF(consent, dfso);
     } catch (ParseException | IOException ex) {
       MessagesController.addErrorMessage("Could not download the consent");
     }

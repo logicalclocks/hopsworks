@@ -1,0 +1,17 @@
+package se.kth.hopsworks.rest;
+
+/**
+ * Common image file type handled by Datasets FilePreview functionality.
+ * <p>
+ */
+public enum FilePreviewImageTypes {
+  PNG,
+  JPG,
+  JPEG,
+  TIFF,
+  GIF,
+  EXIF,
+  BMP,
+  BPG
+
+}

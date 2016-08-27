@@ -8,6 +8,10 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 
+scripts/private_key
+
+yo/app/index.html
+yo/app/karma.conf.js
 
 ### NetBeans ###
 */nbproject/
@@ -92,3 +96,14 @@ node_modules
 ## File-based project format:
 *.ipr
 *.iws
+
+## Test Files
+test/Gemfile.lock
+test/.env
+test/vendor
+test/.env
+
+###########glassfish##############
+src/main/setup/glassfish-resources.xml
+*/glassfish-resources.xml
+
