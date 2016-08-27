@@ -303,6 +303,12 @@ public class KafkaFacade {
                     topicName + " alread marked for deletion.");
         } finally {
             zkClient.close();
+          try {
+            zkConnection.close();
+          } catch (InterruptedException ex) {
+            Logger.getLogger(KafkaFacade.class.getName()).
+                    log(Level.SEVERE, null, ex);
+          }
         }
     }
 

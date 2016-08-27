@@ -32,7 +32,7 @@ public class ZookeeprTopicCleanerTimer {
 
     public final int connectionTimeout = 90 * 1000;// 30 seconds
 
-    public int sessionTimeoutMs = 0 * 1000;//30 seconds
+    public int sessionTimeoutMs = 30 * 1000;//30 seconds
 
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
@@ -49,7 +49,6 @@ public class ZookeeprTopicCleanerTimer {
     
     ZooKeeper zk = null;
 
-//    @Schedule(persistent = false, second = "*/10", minute = "*", hour = "*")
     // Run once per minute
     @Schedule(persistent = false, minute = "*", hour = "*")
     public void execute(Timer timer) {
@@ -93,30 +92,43 @@ public class ZookeeprTopicCleanerTimer {
             zkTopics.removeAll(dbTopics);
         3. remove those topics
          */
-        if (!zkTopics.isEmpty()) {
-            zkTopics.removeAll(dbTopics);
-            for (String topicName : zkTopics) {
-                try {
-                    if (zkClient == null) {
+       if (!zkTopics.isEmpty()) {
+        zkTopics.removeAll(dbTopics);
+        for (String topicName : zkTopics) {
+          try {
+            if (zkClient == null) {
                         zkClient = new ZkClient(kafkaFacade.getIp(settings.getZkConnectStr()).getHostName(),
                                 sessionTimeoutMs, connectionTimeout, ZKStringSerializer$.MODULE$);
-                    }
-                } catch (AppException ex) {
-                    LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex.toString());
-                }
-                if (zkConnection == null) {
-                    zkConnection = new ZkConnection(settings.getZkConnectStr());
-                }
-                ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
-
-                try {
-                    AdminUtils.deleteTopic(zkUtils, topicName);
-                    LOGGER.log(Level.INFO, "{0} is removed from Zookeeper", new Object[]{topicName});
-                } catch (TopicAlreadyMarkedForDeletionException ex) {
-                    LOGGER.log(Level.INFO, "{0} is already marked for deletion", new Object[]{topicName});
-                } 
             }
+
+            if (zkConnection == null) {
+              zkConnection = new ZkConnection(settings.getZkConnectStr());
+            }
+            ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
+
+            try {
+              AdminUtils.deleteTopic(zkUtils, topicName);
+                    LOGGER.log(Level.INFO, "{0} is removed from Zookeeper", new Object[]{topicName});
+            } catch (TopicAlreadyMarkedForDeletionException ex) {
+                    LOGGER.log(Level.INFO, "{0} is already marked for deletion", new Object[]{topicName});
+            }
+          } catch (AppException ex) {
+            LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex.
+                    toString());
+          } finally {
+            if (zkClient != null) {
+              zkClient.close();
+            }
+            try {
+              if (zkConnection != null) {
+                zkConnection.close();
+              }
+            } catch (InterruptedException ex) {
+              LOGGER.log(Level.SEVERE, null, ex);
+            }
+          }
         }
+      }
     }
     
     private class ZookeeperWatcher implements Watcher{
