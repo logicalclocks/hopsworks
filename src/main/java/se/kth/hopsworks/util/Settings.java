@@ -731,9 +731,7 @@ public class Settings {
           + " file for your Dataset!*\n"
           + "To replace it, go into your DataSet and edit the README.md file.\n"
           + "\n" + "*%s* DataSet\n" + "===\n" + "\n"
-          + "## Description\n" + "```\n" + "%s\n"
-          + "``` \n" + "## Template\n" + "```\n" + "%s\n" + "```\n"
-          + "### Searchable: ```%s```";
+          + "## %s";
   
   // QUOTA
   public static final float DEFAULT_YARN_PRICE = 1.0f;
