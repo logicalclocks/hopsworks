@@ -3,6 +3,7 @@ package se.kth.bbc.jobs.flink;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.fs.Path;
@@ -61,6 +62,7 @@ public class FlinkJob extends YarnJob {
 
     @Override
     protected boolean setupJob(DistributedFileSystemOps dfso) {
+        super.setupJob(dfso);
         //Then: actually get to running.
         if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
             jobconfig.setAppName("Untitled Flink Job");
@@ -96,11 +98,23 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setJobManagerCores(jobconfig.getAmVCores());
         flinkBuilder.setJobManagerQueue(jobconfig.getAmQueue());
         flinkBuilder.setAppJarPath(jobconfig.getJarPath());
+        flinkBuilder.setSessionId(jobconfig.getjSessionId());
+        flinkBuilder.setKafkaAddress(kafkaAddress);
+        
         flinkBuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+        //Set project specific resources, i.e. Kafka certificates
+        flinkBuilder.addExtraFiles(projectLocalResources);
         if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){
             String[] jobArgs = jobconfig.getArgs().trim().split(" ");
             flinkBuilder.addAllJobArgs(jobArgs);
         } 
+        if (jobSystemProperties != null && !jobSystemProperties.isEmpty()) {
+          for (Map.Entry<String, String> jobSystemProperty : jobSystemProperties.
+                  entrySet()) {
+            flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
+                   jobSystemProperty.getValue());
+          }
+        }
         try {
             runner = flinkBuilder.
            getYarnRunner(jobDescription.getProject().getName(),

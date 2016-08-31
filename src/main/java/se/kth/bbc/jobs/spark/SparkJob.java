@@ -93,7 +93,7 @@ public class SparkJob extends YarnJob {
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
     runnerbuilder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
 
-    runnerbuilder.setSessionId(jobconfig.getSessionId());
+    runnerbuilder.setSessionId(jobconfig.getjSessionId());
     runnerbuilder.setKafkaAddress(kafkaAddress);
     
     runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));

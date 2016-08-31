@@ -116,12 +116,11 @@ public class YarnRunner {
    * @throws YarnException
    * @throws IOException Can occur upon opening and moving execution and input files.
    */
-  public YarnMonitor startAppMaster() throws YarnException, IOException {
+  public YarnMonitor startAppMaster() throws YarnException, IOException, ProgramInvocationException {
     logger.info("Starting application master.");
 
     //Get application id
     yarnClient.start();
-    //if(!isFlink){
 
         YarnClientApplication app = yarnClient.createApplication();
         GetNewApplicationResponse appResponse = app.getNewApplicationResponse();
@@ -259,15 +258,20 @@ public class YarnRunner {
                 //Copy Flink jar to local machine and pass it to the classpath
                 URL flinkURL = new File("/srv/flink/"+Settings.FLINK_LOCRSC_FLINK_JAR).toURI().toURL();
                 classpaths.add(flinkURL);
+                URL libURL = new File("/srv/flink/lib/kafka-util-0.1.jar").toURI().toURL();
+                URL libURL1 = new File("/srv/flink/lib/Flink__meb10000__kstore.jks").toURI().toURL();
+                URL libURL2= new File("/srv/flink/lib/Flink__meb10000__tstore.jks").toURI().toURL();
+                classpaths.add(libURL);
+                classpaths.add(libURL1);
+                classpaths.add(libURL2);
+                
                 PackagedProgram program = new PackagedProgram(file, classpaths, args);
                 client.setPrintStatusDuringExecution(false);
 
                 JobSubmissionResult res =  client.runDetached(program, parallelism);
                 JobID jobId = res.getJobID();
                 cluster.stopAfterJob(jobId);
-            } catch (ProgramInvocationException ex) {
-                logger.log(Level.SEVERE, "Error while Flink Client submits jobs: {0}", ex.getMessage());
-            } finally{
+            }  finally{
               //Remove local flink app jar
                FileUtils.deleteDirectory(localPathAppJarDir);
                logger.log(Level.INFO, "Deleting local flink app jar:{0}",appJarPath);
@@ -491,9 +495,19 @@ public class YarnRunner {
     //vargs.add(" -Dlog4j.configuration=file:log4j.properties");
     //vargs.add(" -Dlog.file=/srv/hadoop/logs/userlogs/jobmanager1.out") ;   
     //Add jvm options
+    if(jobType == JobType.FLINK && !javaOptions.isEmpty()){
+      amArgs+=" ";
+    }
     for (String s : javaOptions) {
       vargs.add(s);
+      if(jobType == JobType.FLINK){
+        amArgs += s+",";
+      }
     }
+    if(jobType == JobType.FLINK && !javaOptions.isEmpty()){
+      amArgs = amArgs.substring(0,amArgs.length()-1);
+    }  
+      
     // Set class name
     vargs.add(amMainClass);
     // Set params for Application Master

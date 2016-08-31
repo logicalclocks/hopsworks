@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.flink.client.program.ProgramInvocationException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -142,7 +143,7 @@ public abstract class YarnJob extends HopsJob {
       logger.log(Level.SEVERE, "Permission denied:- {0}", ex.getMessage());
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
-    } catch (YarnException | IOException e) {
+    } catch (ProgramInvocationException | YarnException | IOException e) {
       logger.log(Level.SEVERE,
               "Failed to start application master for execution "
               + getExecution()
@@ -150,7 +151,7 @@ public abstract class YarnJob extends HopsJob {
               e);
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
-    }
+    } 
   }
 
   @Override
@@ -215,17 +216,23 @@ public abstract class YarnJob extends HopsJob {
       }
 
       try {
+        String k_certName = projectService.getProject().getName() + "__"
+                + projectService.getProject().getOwner().getUsername()
+                + "__kstore.jks";
+        String t_certName = projectService.getProject().getName() + "__"
+                + projectService.getProject().getOwner().getUsername()
+                + "__tstore.jks";
+        
         kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(
-                localTmpDir + "/" + projectService.getProject().getName() + "__"
-                + projectService.getProject().getOwner().getUsername()
-                + "__kstore.jks"));
+                localTmpDir + "/" + k_certName));
         kafkaCerts.put(Settings.KAFKA_T_CERTIFICATE, new File(
-                localTmpDir + "/" + projectService.getProject().getName() + "__"
-                + projectService.getProject().getOwner().getUsername()
-                + "__tstore.jks"));
-
+                localTmpDir + "/" + t_certName));
         // if file doesnt exists, then create it
         try {
+          Files.write(kafkaCertFiles.get(Settings.KAFKA_K_CERTIFICATE), new File(
+                "/srv/flink/lib/" + k_certName));
+          Files.write(kafkaCertFiles.get(Settings.KAFKA_T_CERTIFICATE), new File(
+                "/srv/flink/lib/" + t_certName));
           for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
             if (!entry.getValue().exists()) {
               entry.getValue().createNewFile();

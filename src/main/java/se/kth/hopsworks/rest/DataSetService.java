@@ -777,6 +777,9 @@ public class DataSetService {
         //File content
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
         int maxLines = settings.getFilePreviewTxtSize();
+        if (path.endsWith("README.md")) {
+          maxLines = 1000;
+        }
         int count = 0;
         StringBuilder sb = new StringBuilder();
         try {

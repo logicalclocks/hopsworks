@@ -21,6 +21,10 @@ public class YarnJobConfiguration extends JobConfiguration {
     //Number of cores for appMaster
     private int amVCores = 1;
     private String jSessionId;
+    //Kafka properties
+    private String kStore;
+    private String tStore;
+
     //List of paths to be added to local resources
     private LocalResourceDTO[] localResources = new LocalResourceDTO[0];
     protected final static String KEY_TYPE = "type";
@@ -183,5 +187,20 @@ public class YarnJobConfiguration extends JobConfiguration {
 
     public void setjSessionId(String jSessionId) {
         this.jSessionId = jSessionId;
+    }
+    public String getkStore() {
+     return kStore;
+    }
+
+    public void setkStore(String kStore) {
+      this.kStore = kStore;
+    }
+
+    public String gettStore() {
+      return tStore;
+    }
+
+    public void settStore(String tStore) {
+      this.tStore = tStore;
     }
 }
