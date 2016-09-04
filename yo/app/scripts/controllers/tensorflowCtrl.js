@@ -167,11 +167,11 @@ angular.module('hopsWorksApp')
               ModalService.createCluster('lg', self.projectId).then(
                       function (success) {
                           growl.success(success.data.successMessage, {title: 'New topic created successfully project.', ttl: 2000});
-                          self.getAllClusters();
+                          self.getClusters();
                       }, function (error) {
                 //The user changed their mind.
               });
-              self.getAllClusters();
+              self.getClusters();
 
             };
 
@@ -181,7 +181,7 @@ angular.module('hopsWorksApp')
                       .then(function (success) {
                         TensorflowService.removeCluster(self.projectId, clusterName).then(
                                 function (success) {
-                                  self.getAllClusters();
+                                  self.getClusters();
                                 }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Failed to remove topic', ttl: 2000});
                         });
@@ -224,11 +224,11 @@ angular.module('hopsWorksApp')
 
             
             self.init = function(){
-                self.getAllClusters();
+                self.getClusters();
                 self.getAllSharedClusters();              
              };
             
-            self.init();
+//            self.init();
 
             self.showClusters = function(){
               self.showServing = -1;
@@ -238,7 +238,7 @@ angular.module('hopsWorksApp')
             self.showServing = function(){
               self.showServing = 1;
               self.showClusters = -1;
-              self.listServing();
+//              self.listServing();
             };
               
           }]);
