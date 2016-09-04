@@ -11,50 +11,51 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.projectId = $routeParams.projectID;
-            self.topics = [];
+            self.clusters = [];
+            self.serving = [];
            
             
-            self.topicDetails = {};
+            self.clusterDetails = {};
+            self.jobDetails = {};
+            self.taskDetails = {};
+            self.servingClusterDetails = {};
+            self.servingJobDetails = {};
+            self.servingTaskDetails = {};
                     
-            self.maxNumPrograms = 10;
-            self.numProgramsUsed = 0;
+            self.maxNumCpus = 10;
+            self.maxNumGpus = 10;
+            self.numCpusUsed = 0;
+            self.numGpusUsed = 0;
 
-            self.currentProgram = "";
-            self.topicName = "";
-            self.numReplicas = "";
-            self.numPartitions = "";
+            self.currentCluster = "";
+            self.currentJob = "";
+            self.currentTask = "";
+            self.clusterName = "";
             self.projectName = "";
             self.userEmail = "";
-            self.permission_type = "Allow";
-            self.operation_type = "Read";
-            self.host = "*";
-            self.role = "*";
-           // self.activeId = -1;
-            self.selectedProjectName="";
-            
-            self.users =[];
             self.project;
            
-            self.showPrograms = 1;
-            self.showLogs = -1;
+            self.showClusters = 1;
+            self.showServing = -1;
             self.logs = [];
             
-            self.getAllPrograms = function () {
-              TensorflowService.getPrograms(self.projectId).then(
+            self.getAllClusters = function () {
+              TensorflowService.getClusters(self.projectId).then(
                       function (success) {
-                        self.topics = success.data;
-                        self.numProgramsUsed = self.topics.length;
+                        self.clusters = success.data;
+                        self.numCpusUsed = self.clusters.length;
+                        self.numGpusUsed = self.clusters.length;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
             };
 
-            self.getProgramDetails = function (topicName) {
-                TensorflowService.getProgramDetails(self.projectId, topicName).then(
+            self.getClusterDetails = function (clusterName) {
+                TensorflowService.getClusterDetails(self.projectId, clusterName).then(
                         function (success) {
-                            for(var i =0;i<self.topics.length;i++){
-                              if(self.topics[i].name === topicName){
-                                  self.topics[i].partitionDetails= success.data;
+                            for(var i =0;i<self.clusters.length;i++){
+                              if(self.clusters[i].name === clusterName){
+                                  self.clusters[i].partitionDetails= success.data;
                                   return;
                               }
                           }
@@ -64,15 +65,12 @@ angular.module('hopsWorksApp')
             };
             
            
-            self.listLogs = function () {
+            self.getAllServing = function () {
                 
-                TensorflowService.getLogsForPrograms(self.projectId, self.clusterId).then(
+                TensorflowService.getServing(self.projectId).then(
                  function (success) {
-                 self.logs = success.data;
+                 self.serving = success.data;
                  var size = self.logs.length;
-//                for(var i =0; i<size;i++){
-//                    self.logVersions[i] = Math.max.apply(null, self.logs[i].versions);
-//                }
                  }, function (error) {
                  growl.error(error.data.errorMsg, {title: 'Could not get logs for cluster', ttl: 5000, referenceId: 21});
                  });
@@ -91,7 +89,7 @@ angular.module('hopsWorksApp')
                       .then(function (success) {
                           TensorflowService.deleteLogs(self.projectId, logName, self.logVersions[index]).then(
                  function (success) {
-                     self.listLogs();
+                     self.listServing();
                  }, function (error) {
                  growl.error(error.data.errorMsg, {title: 'Log is not removed', ttl: 5000, referenceId: 21});
                  });
@@ -122,7 +120,7 @@ angular.module('hopsWorksApp')
                 
                  ModalService.updateLogContent('lg', self.projectId, log.name, self.version).then(
                       function (success) {
-                         self.listLogs();
+                         self.listServing();
                       }, function (error) {
                 //The user changed their mind.
               });
@@ -132,30 +130,30 @@ angular.module('hopsWorksApp')
              * Navigate to the new job page.
              * @returns {undefined}
              */
-            self.createProgram = function () {
+            self.createCluster = function () {
 
-              if(self.topics.length >10){
-                  growl.info("Program Creation aborted", {title: 'Program limit reached', ttl: 2000});
+              if(self.clusters.length >10){
+                  growl.info("Cluster Creation aborted", {title: 'Cluster limit reached', ttl: 2000});
                   return;
               }
-              ModalService.createProgram('lg', self.projectId).then(
+              ModalService.createCluster('lg', self.projectId).then(
                       function (success) {
                           growl.success(success.data.successMessage, {title: 'New topic created successfully project.', ttl: 2000});
-                          self.getAllPrograms();
+                          self.getAllClusters();
                       }, function (error) {
                 //The user changed their mind.
               });
-              self.getAllPrograms();
+              self.getAllClusters();
 
             };
 
-            self.removeProgram = function (topicName) {
-              ModalService.confirm("sm", "Delete Program (" + topicName + ")",
+            self.removeCluster = function (clusterName) {
+              ModalService.confirm("sm", "Delete Cluster (" + clusterName + ")",
                       "Do you really want to delete this topic? This action cannot be undone.")
                       .then(function (success) {
-                        TensorflowService.removeProgram(self.projectId, topicName).then(
+                        TensorflowService.removeCluster(self.projectId, clusterName).then(
                                 function (success) {
-                                  self.getAllPrograms();
+                                  self.getAllClusters();
                                 }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Failed to remove topic', ttl: 5000});
                         });
@@ -166,21 +164,21 @@ angular.module('hopsWorksApp')
 
             
             self.init = function(){
-                self.getAllPrograms();
-                self.getAllSharedPrograms();              
+                self.getAllClusters();
+                self.getAllSharedClusters();              
              };
             
             self.init();
 
-            self.showProgram = function(){
-              self.showLogs = -1;
-              self.showPrograms = 1;
+            self.showClusters = function(){
+              self.showServing = -1;
+              self.showClusters = 1;
             };
             
-            self.showLog = function(){
-              self.showLogs = 1;
-              self.showPrograms = -1;
-              self.listLogs();
+            self.showServing = function(){
+              self.showServing = 1;
+              self.showClusters = -1;
+              self.listServing();
             };
               
           }]);

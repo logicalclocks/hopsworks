@@ -19,20 +19,20 @@
               <div class="row">
 
                 <ul class="nav nav-tabs">
-                  <li ng-class="{'active' : tensorflowCtrl.showTopics === 1}"><a ng-click="tensorflowCtrl.showTopic()">Clusters</a></li>
-                  <li ng-class="{'active' : tensorflowCtrl.showLogs === 1}"><a ng-click="tensorflowCtrl.showSchema()">Logs</a></li>
+                  <li ng-class="{'active' : tensorflowCtrl.showClusters === 1}"><a ng-click="tensorflowCtrl.showClusters()">Clusters</a></li>
+                  <li ng-class="{'active' : tensorflowCtrl.showServing === 1}"><a ng-click="tensorflowCtrl.showServing()">Logs</a></li>
                 </ul>                
 
               </div>
               <div class="row"><br></div>
-              <div  ng-show="tensorflowCtrl.showTopics === 1">
+              <div  ng-show="tensorflowCtrl.showClusters === 1">
                 <div class="col-sm-11">
-                  <span class="text-muted" ng-show="tensorflowCtrl.maxNumTopics - tensorflowCtrl.numTopicsUsed > 0">     {{tensorflowCtrl.numTopicsUsed}} of {{tensorflowCtrl.maxNumTopics}} topics in use</span>
-                  <span style="color: red;" class="text" ng-show="tensorflowCtrl.maxNumTopics - tensorflowCtrl.numTopicsUsed <= 0">    All available {{tensorflowCtrl.maxNumTopics}} topics are in use.</span>
+                  <span class="text-muted" ng-show="tensorflowCtrl.maxNumCpus - tensorflowCtrl.numGpusUsed > 0">     {{tensorflowCtrl.numGpusUsed}} of {{tensorflowCtrl.maxNumCpus}} topics in use</span>
+                  <span style="color: red;" class="text" ng-show="tensorflowCtrl.maxNumCpus - tensorflowCtrl.numGpusUsed <= 0">    All available {{tensorflowCtrl.maxNumCpus}} topics are in use.</span>
                 </div>
                 <br>
                 <div class="col-sm-2">
-                  <button type="button" ng-disabled="tensorflowCtrl.maxNumTopics - tensorflowCtrl.numTopicsUsed <= 0" 
+                  <button type="button" ng-disabled="tensorflowCtrl.maxNumCpus - tensorflowCtrl.numGpusUsed <= 0" 
                           ng-click="tensorflowCtrl.createTopic()" class="btn btn-default btn-success control-label">
                     New Topic<i style="margin-left: 10px" class="glyphicon glyphicon-plus"></i> 
                   </button>
@@ -40,7 +40,7 @@
                 </div>
               </div>
 
-              <div ng-show="tensorflowCtrl.showLogs === 1">
+              <div ng-show="tensorflowCtrl.showServing === 1">
                 <br>
                 <div class="col-sm-2">
                   <button type="button"  
@@ -53,7 +53,7 @@
             </div>
           </form>
 
-          <div ng-show="tensorflowCtrl.showTopics === 1">
+          <div ng-show="tensorflowCtrl.showClusters === 1">
             <br>
             <table st-table="rowCollection" class="table table-striped" ng-show="tensorflowCtrl.topics.length > 0">
               <thead>
@@ -244,7 +244,7 @@
 
 
           </div>      
-          <div ng-show="tensorflowCtrl.showLogs == 1">
+          <div ng-show="tensorflowCtrl.showServing == 1">
             <br>
             <table st-table="rowCollection" class="table table-striped" ng-show="tensorflowCtrl.schemas.length > 0">
               <thead>

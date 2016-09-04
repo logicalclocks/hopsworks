@@ -4,58 +4,36 @@
  */
 angular.module('hopsWorksApp')
 
-        .factory('KafkaService', ['$http', function ($http) {
+        .factory('TensorflowService', ['$http', function ($http) {
             var service = {
               /**
-               * Get all the topics defined in the project with given id.
+               * Get all the tf clusters defined in the project with given id.
                * @param {int} projectId
-               * @returns {unresolved} A list of topic objects.
+               * @returns {unresolved} A list of cluster objects.
                */
-              getTopics: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/kafka/topics');
+              getClusters: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/clusters');
               },
+
               /**
-               * Get all the topics defined in the project with given id.
-               * @param {int} projectId
-               * @returns {unresolved} A list of topic objects.
-               */
-              getSharedTopics: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/kafka/sharedTopics');
-              },
-              /**
-               * Get the details of the topic with given ID, under the given project.
-               * Includes all description for the topic
+               * Get the details of the cluster with given ID, under the given project.
+               * Includes all description for the cluster
                * @param {type} projectId
-               * @param {type} topicName
-               * @returns {unresolved} A complete description of the requested topic.
+               * @param {type} clusterName
+               * @returns {unresolved} A complete description of the requested cluster.
                */
-              getTopicDetails: function (projectId, topicName) {
-                return $http.get('/api/project/' + projectId + '/kafka/details/' + topicName);
+              getClusterDetails: function (projectId, clusterName) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/details/' + clusterName);
               },
-              
-              /**
-               * Get the details of the topic with given ID, under the given project.
-               * Includes all ACLs for the topic
-               * @param {type} projectId
-               * @param {type} topicName
-               * @returns {unresolved} A complete description of the requested topic.
-               */
-              getAclsForTopic: function (projectId, topicName) {
-                return $http.get('/api/project/' + projectId + '/kafka/acls/' + topicName);
-              },
-              
-              defaultTopicValues: function (projectId){
-                return $http.get('/api/project/' + projectId + '/kafka/topic/defaultValues');
-              },
-              
-              validateSchema: function (projectId, schemaDetails){
+       
+              validateCluster: function (projectId, clusterDetails){
                   var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/kafka/schema/validate',
+                  url: '/api/project/' + projectId + '/tensorflow/cluster/validate',
                   headers: {
                     'Content-Type': 'application/json'
                   },
-                  data: schemaDetails
+                  data: clusterDetails
                 };
                 return $http(req);
               },
@@ -63,134 +41,154 @@ angular.module('hopsWorksApp')
               /**
                * Create a new schema for topics in the given project, of the given type. 
                * @param {type} projectId
-               * @param {type} schemaDetails The configuration of the newly created topic.
+               * @param {type} clusterDetails The configuration of the newly created topic.
                * @returns {undefined} The newly created topic object.
                */
-              createSchema: function (projectId, schemaDetails) {
+              createCluster: function (projectId, clusterDetails) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/kafka/schema/add',
+                  url: '/api/project/' + projectId + '/tensorflow/cluster/add',
                   headers: {
                     'Content-Type': 'application/json'
                   },
-                  data: schemaDetails
+                  data: clusterDetails
                 };
                 return $http(req);
               },
               
-              getSchemasForTopics: function (projectId){
-                return $http.get('/api/project/' + projectId + '/kafka/schemas');
-              },
-              
-              getSchemaContent: function (projectId, schemaName, schemaVersion){
-                return $http.get('/api/project/' + projectId + '/kafka/showSchema/'+schemaName+'/'+schemaVersion);
-              },
-              
-              deleteSchema: function(projectId, schemaName, schemaVersion){
-                    return $http.delete('/api/project/' + projectId + '/kafka/removeSchema/'+schemaName+'/'+schemaVersion);
-              },
-              
-              /**
-               * Create a new Topic in the given project, of the given type. 
-               * @param {type} projectId 
-               * @param {type} topicDetails The configuration of the newly created topic.
-               * @returns {undefined} The newly created topic object.
-               */
-              createTopic: function (projectId, topicDetails) {
-                var req = {
-                  method: 'POST',
-                  url: '/api/project/' + projectId + '/kafka/topic/add',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  },
-                  data: topicDetails
-                };
-                return $http(req);
-              },
-
-              aclUsers: function(projectId, topicName){
-                return $http.get('/api/project/' + projectId + '/kafka/aclUsers/topic/' + topicName);
+              deleteCluster: function(projectId, clusterName){
+                    return $http.delete('/api/project/' + projectId + '/tensorflow/removeCluster/'+clusterName);
               },
               
               /**
                * Add a new ACL rule to a Topic in the given project. 
                * @param {type} projectId 
-               * @param {type} topicName
+               * @param {type} clusterName
                * @param {type} topicAcl The ACL for the topic.
                * @returns {undefined} The newly created topic object.
                */
-              createTopicAcl: function (projectId, topicName, topicAcl) {
+              createJob: function (projectId, clusterName, job) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/kafka/topic/' + topicName + "/addAcl",
+                  url: '/api/project/' + projectId + '/tensorflow/cluster/' + clusterName + "/addJob",
                   headers: {
                     'Content-Type': 'application/json'
                   },
-                  data: topicAcl
+                  data: job
                 };
                 return $http(req);
               },
               /**
-               * Delete an ACL rule for a topic
+               * Delete a job for a cluster
                * @param {type} projectId
-               * @param {type} topicName
+               * @param {type} clusterName
+               * @param {type} jobId
                * @returns {undefined} true if success, false otheriwse
                */
-              removeTopicAcl: function (projectId, topicName, aclId) {
-                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/removeAcl/' + aclId);
+              removeJob: function (projectId, clusterName, jobId) {
+                return $http.delete('/api/project/' + projectId + '/tensorflow/cluster/' + clusterName + '/removeJob/' + jobId);
               },
               
-              updateTopicAcl: function(projectId, topicName, aclId, topicAcl){                
+              /**
+               * Delete a cluster 
+               * @param {type} projectId
+               * @param {type} clusterName
+               * @returns {undefined} true if success, false otheriwse
+               */
+              removeCluster: function (projectId, clusterName) {
+                return $http.delete('/api/project/' + projectId + '/tensorflow/cluster/' + clusterName + '/remove');
+              },
+              
+               
+              createTask: function (projectId, clusterName, jobId, task) {
                 var req = {
-                  method: 'PUT',
-                  url: '/api/project/' + projectId + '/kafka/topic/' + topicName + '/updateAcl/' + aclId,
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/tensorflow/cluster/' + clusterName + "/job/" + jobId + "/addTask",
                   headers: {
                     'Content-Type': 'application/json'
                   },
-                  data: topicAcl
+                  data: task
+                };
+                return $http(req);
+              },
+              removeTask: function (projectId, clusterName, jobId, taskId) {
+                return $http.delete('/api/project/' + projectId + '/tensorflow/cluster/' + clusterName 
+                        + '/job/' + jobId + '/removeTask/' + taskId);
+              },
+              updateTask: function(projectId, clusterName, jobId, task){                
+                var req = {
+                  method: 'PUT',
+                  url: '/api/project/' + projectId + '/tensorflow/cluster/' + clusterName + '/job/' + jobId + '/updateTask',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: task
                   };
                 return $http(req);  
               },
+              runTask: function (projectId, clusterName, jobId, taskId) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/cluster/' + clusterName 
+                        + '/job/' + jobId + '/runTask/' + taskId);
+              },
+              stopTask: function (projectId, clusterName, jobId, taskId) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/cluster/' + clusterName 
+                        + '/job/' + jobId + '/stopTask/' + taskId);
+              },
+              getTaskLogs: function (projectId, clusterName, jobId, taskId, numLines) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/cluster/' + clusterName 
+                        + '/job/' + jobId + '/taskLogs/' + taskId + '/numLines/' + numLines);
+              },              
               /**
-               * Delete a topic 
-               * @param {type} projectId
-               * @param {type} topicName
-               * @returns {undefined} true if success, false otheriwse
+               * Get all the tf serving clusters defined in the project with given id.
+               * @param {int} projectId
+               * @returns {unresolved} A list of tf serving objects.
                */
-              removeTopic: function (projectId, topicName) {
-                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/remove');
+              getServing: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/serving');
               },
-              
               /**
-               * Shares a topic with a different project.
+               * Get the details of the cluster with given ID, under the given project.
+               * Includes all description for the serving cluster
                * @param {type} projectId
-               * @param {type} topicName
-               * @param {type} destProjectId
-               * @returns {unresolved}
+               * @param {type} clusterName
+               * @returns {unresolved} A complete description of the requested cluster.
                */
-              shareTopic: function (projectId, topicName, destProjectId) {
-                return $http.get('/api/project/' + projectId + '/kafka/topic/' + topicName + "/share/" + destProjectId);
+              getServingDetails: function (projectId, clusterName) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/details/' + clusterName);
               },
-              
               /**
-               * Removes a shared topic from a project - run by the Data Owner of the project that owns the topic.
-               * @param {type} projectId
-               * @param {type} topicName
-               * @param {type} destProjectId
-               * @returns {unresolved}
+               * Create a new Serving Tf server in the given project, of the given type. 
+               * @param {type} projectId 
+               * @param {type} servingDetails The configuration of the newly created topic.
+               * @returns {undefined} The newly created tf server object.
                */
-              unshareTopic: function (projectId, topicName, destProjectId) {
-                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/unshare/' + destProjectId);
+              createServing: function (projectId, servingDetails) {
+                var req = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/tensorflow/serving/add',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: servingDetails
+                };
+                return $http(req);
               },
-              
-              unshareTopicFromProject: function (projectId, topicName) {
-                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/unshare/');
-              },
-              
-              topicIsSharedTo: function (projectId, topicName){
-                  return $http.get('/api/project/' + projectId + '/kafka/'+topicName+'/sharedwith');
-              }
-              
+              removeServing: function (projectId, servingId) {
+                return $http.delete('/api/project/' + projectId + '/tensorflow/serving/' + servingId + '/remove/');
+              },                 
+              compileServing: function (projectId, servingId) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/serving/' + servingId + '/compile');
+              },   
+              startServing: function (projectId, servingId) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/serving/' + servingId + '/start');
+              },   
+              stopServing: function (projectId, servingId) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/serving/' + servingId + '/stop');
+              },   
+              getServingLogs: function (projectId, servingId, numLines) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/serving/' + servingId  
+                        + '/readLogLines/' + numLines);
+              },                            
             };
             return service;
           }]);
