@@ -32,9 +32,9 @@
                 </div>
                 <br>
                 <div class="col-sm-2">
-                  <button type="button" ng-disabled="tensorflowCtrl.maxNumCpus - tensorflowCtrl.numGpusUsed <= 0" 
-                          ng-click="tensorflowCtrl.createTopic()" class="btn btn-default btn-success control-label">
-                    New Topic<i style="margin-left: 10px" class="glyphicon glyphicon-plus"></i> 
+                  <button type="button" ng-disabled="tensorflowCtrl.cpuQuota - tensorflowCtrl.cpusUsed <= 0 && tensorflowCtrl.gpuQuota - tensorflowCtrl.gpusUsed <= 0" 
+                          ng-click="tensorflowCtrl.createCluster()" class="btn btn-default btn-success control-label">
+                    New Cluster<i style="margin-left: 10px" class="glyphicon glyphicon-plus"></i> 
                   </button>
 
                 </div>
@@ -44,8 +44,8 @@
                 <br>
                 <div class="col-sm-2">
                   <button type="button"  
-                          ng-click="tensorflowCtrl.createSchema()" class="btn btn-default btn-success control-label">
-                    New Avro Schema<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
+                          ng-click="tensorflowCtrl.createServing()" class="btn btn-default btn-success control-label">
+                    Start Serving<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
                     </i> 
                   </button>
                 </div>
@@ -55,10 +55,10 @@
 
           <div ng-show="tensorflowCtrl.showClusters === 1">
             <br>
-            <table st-table="rowCollection" class="table table-striped" ng-show="tensorflowCtrl.topics.length > 0">
+            <table st-table="rowCollection" class="table table-striped" ng-show="tensorflowCtrl.clusters.length > 0">
               <thead>
                 <tr>
-                  <th st-sort="topicName" class="col-sm-8">Topic Name</th>
+                  <th st-sort="topicName" class="col-sm-8">Cluster Name</th>
 
                   <th class="col-sm-1">ACL</th>
                   <th class="col-sm-1">Share</th>

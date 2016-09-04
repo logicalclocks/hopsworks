@@ -11,6 +11,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.projectId = $routeParams.projectID;
+            self.resources = [];
             self.clusters = [];
             self.serving = [];
            
@@ -22,8 +23,8 @@ angular.module('hopsWorksApp')
             self.servingJobDetails = {};
             self.servingTaskDetails = {};
                     
-            self.maxNumCpus = 10;
-            self.maxNumGpus = 10;
+            self.cpuQuota = 10;
+            self.gpuQuota = 10;
             self.numCpusUsed = 0;
             self.numGpusUsed = 0;
 
@@ -39,14 +40,21 @@ angular.module('hopsWorksApp')
             self.showServing = -1;
             self.logs = [];
             
-            self.getAllClusters = function () {
+            self.getResources = function () {
+              TensorflowService.getResources(self.projectId).then(
+                      function (success) {
+                        self.resources = success.data;
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 2000});
+              });
+            };
+            
+            self.getClusters = function () {
               TensorflowService.getClusters(self.projectId).then(
                       function (success) {
                         self.clusters = success.data;
-                        self.numCpusUsed = self.clusters.length;
-                        self.numGpusUsed = self.clusters.length;
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 2000});
               });
             };
 
@@ -60,25 +68,25 @@ angular.module('hopsWorksApp')
                               }
                           }
                         }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 2000});
                });
             };
             
            
-            self.getAllServing = function () {
+            self.getServing = function () {
                 
                 TensorflowService.getServing(self.projectId).then(
                  function (success) {
                  self.serving = success.data;
                  var size = self.logs.length;
                  }, function (error) {
-                 growl.error(error.data.errorMsg, {title: 'Could not get logs for cluster', ttl: 5000, referenceId: 21});
+                 growl.error(error.data.errorMsg, {title: 'Could not get logs for cluster', ttl: 2000, referenceId: 21});
                  });
             
                 
             };
             
-            self.deleteLogs = function(cluster, index){
+            self.deleteTasksLogs = function(cluster, jobId, taskId, executionId){
                 
                 if(!self.logs[index]>0){
                   growl.info("Delete aborted", {title: 'Log version not selected', ttl: 2000});  
@@ -91,7 +99,7 @@ angular.module('hopsWorksApp')
                  function (success) {
                      self.listServing();
                  }, function (error) {
-                 growl.error(error.data.errorMsg, {title: 'Log is not removed', ttl: 5000, referenceId: 21});
+                 growl.error(error.data.errorMsg, {title: 'Log is not removed', ttl: 2000, referenceId: 21});
                  });
                 }, function (cancelled) {
                     growl.info("Delete aborted", {title: 'Info', ttl: 2000});
@@ -155,7 +163,7 @@ angular.module('hopsWorksApp')
                                 function (success) {
                                   self.getAllClusters();
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Failed to remove topic', ttl: 5000});
+                          growl.error(error.data.errorMsg, {title: 'Failed to remove topic', ttl: 2000});
                         });
                       }, function (cancelled) {
                         growl.info("Delete aborted", {title: 'Info', ttl: 2000});

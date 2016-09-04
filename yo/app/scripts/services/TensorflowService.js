@@ -7,6 +7,39 @@ angular.module('hopsWorksApp')
         .factory('TensorflowService', ['$http', function ($http) {
             var service = {
               /**
+               * Get all the tf resources in the syste
+               * @param {int} projectId
+               * @returns {unresolved} A list of cluster objects.
+               */
+              getResources: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/resources');
+              },
+              
+              allocateResources: function (projectId, resourceRequest){
+                  var req = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/tensorflow/resources/request',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: resourceRequest
+                };
+                return $http(req);
+              },
+
+              freeResources: function (projectId, resources){
+                  var req = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/tensorflow/resources/free',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: resources
+                };
+                return $http(req);
+              },
+              
+              /**
                * Get all the tf clusters defined in the project with given id.
                * @param {int} projectId
                * @returns {unresolved} A list of cluster objects.
@@ -135,8 +168,19 @@ angular.module('hopsWorksApp')
                         + '/job/' + jobId + '/stopTask/' + taskId);
               },
               getTaskLogs: function (projectId, clusterName, jobId, taskId, numLines) {
+                return getTaskExecutionLogs(projectId, clusterName, jobId, taskId, 0, numLines);
+              },              
+              getTaskExecutionLogs: function (projectId, clusterName, jobId, taskId, executionId, numLines) {
                 return $http.get('/api/project/' + projectId + '/tensorflow/cluster/' + clusterName 
-                        + '/job/' + jobId + '/taskLogs/' + taskId + '/numLines/' + numLines);
+                        + '/job/' + jobId + '/taskLogs/' + taskId + '/executionId/' + executionId + '/numLines/' + numLines);
+              },              
+              getTaskExecutions: function (projectId, clusterName, jobId, taskId) {
+                return $http.get('/api/project/' + projectId + '/tensorflow/cluster/' + clusterName 
+                        + '/job/' + jobId + '/taskExecutions/' + taskId);
+              },              
+              removeTaskLogs: function (projectId, clusterName, jobId, taskId, executionId) {
+                return $http.delete('/api/project/' + projectId + '/tensorflow/cluster/' + clusterName 
+                        + '/job/' + jobId + '/taskLogs/' + taskId + '/execId/' + executionId);
               },              
               /**
                * Get all the tf serving clusters defined in the project with given id.
