@@ -22,6 +22,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -57,6 +58,9 @@ public class TfFifoQueue implements Serializable {
   @Column(name = "submission_time")
   @Temporal(TemporalType.TIMESTAMP)
   private Date submissionTime;
+  @JoinColumn(name = "proj_user", referencedColumnName = "email")
+  @ManyToOne(optional = false)
+  private Users projUser;
   @JoinColumn(name = "cluster_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private TfClusters clusterId;
@@ -105,6 +109,14 @@ public class TfFifoQueue implements Serializable {
 
   public void setSubmissionTime(Date submissionTime) {
     this.submissionTime = submissionTime;
+  }
+
+  public Users getProjUser() {
+    return projUser;
+  }
+
+  public void setProjUser(Users projUser) {
+    this.projUser = projUser;
   }
 
   public TfClusters getClusterId() {

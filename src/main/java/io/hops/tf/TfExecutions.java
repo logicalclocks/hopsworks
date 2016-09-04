@@ -21,6 +21,8 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.project.Project;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -58,15 +60,21 @@ public class TfExecutions implements Serializable {
   @Column(name = "end_time")
   @Temporal(TemporalType.TIMESTAMP)
   private Date endTime;
-  @JoinColumn(name = "job_id", referencedColumnName = "id")
+  @JoinColumn(name = "proj_user", referencedColumnName = "email")
   @ManyToOne(optional = false)
-  private TfJobs jobId;
-  @JoinColumn(name = "cluster_id", referencedColumnName = "id")
+  private Users projUser;
+  @JoinColumn(name = "project_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
-  private TfClusters clusterId;
+  private Project projectId;
   @JoinColumn(name = "resource_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private TfResources resourceId;
+  @JoinColumn(name = "cluster_id", referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private TfClusters clusterId;
+  @JoinColumn(name = "job_id", referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private TfJobs jobId;
 
   public TfExecutions() {
   }
@@ -114,12 +122,28 @@ public class TfExecutions implements Serializable {
     this.endTime = endTime;
   }
 
-  public TfJobs getJobId() {
-    return jobId;
+  public Users getProjUser() {
+    return projUser;
   }
 
-  public void setJobId(TfJobs jobId) {
-    this.jobId = jobId;
+  public void setProjUser(Users projUser) {
+    this.projUser = projUser;
+  }
+
+  public Project getProjectId() {
+    return projectId;
+  }
+
+  public void setProjectId(Project projectId) {
+    this.projectId = projectId;
+  }
+
+  public TfResources getResourceId() {
+    return resourceId;
+  }
+
+  public void setResourceId(TfResources resourceId) {
+    this.resourceId = resourceId;
   }
 
   public TfClusters getClusterId() {
@@ -130,12 +154,12 @@ public class TfExecutions implements Serializable {
     this.clusterId = clusterId;
   }
 
-  public TfResources getResourceId() {
-    return resourceId;
+  public TfJobs getJobId() {
+    return jobId;
   }
 
-  public void setResourceId(TfResources resourceId) {
-    this.resourceId = resourceId;
+  public void setJobId(TfJobs jobId) {
+    this.jobId = jobId;
   }
 
   @Override

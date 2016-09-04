@@ -14,6 +14,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -23,6 +25,8 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.bbc.project.Project;
+import se.kth.hopsworks.user.model.Users;
 
 /**
  *
@@ -34,6 +38,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @NamedQueries({
   @NamedQuery(name = "TfClusters.findAll", query = "SELECT t FROM TfClusters t"),
   @NamedQuery(name = "TfClusters.findById", query = "SELECT t FROM TfClusters t WHERE t.id = :id"),
+  @NamedQuery(name = "TfClusters.findByProjectId", query = "SELECT t FROM TfClusters t WHERE t.projectId = :projectId"),
+  @NamedQuery(name = "TfClusters.findByOwner", query = "SELECT t FROM TfClusters t WHERE t.creator = :email"),
   @NamedQuery(name = "TfClusters.findByName", query = "SELECT t FROM TfClusters t WHERE t.name = :name")})
 public class TfClusters implements Serializable {
 
@@ -49,11 +55,17 @@ public class TfClusters implements Serializable {
   @Column(name = "name")
   private String name;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "clusterId")
+  private Collection<TfExecutions> tfExecutionsCollection;
+  @JoinColumn(name = "creator", referencedColumnName = "email")
+  @ManyToOne(optional = false)
+  private Users creator;
+  @JoinColumn(name = "project_id", referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private Project projectId;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "clusterId")
   private Collection<TfFifoQueue> tfFifoQueueCollection;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "clusterId")
   private Collection<TfJobs> tfJobsCollection;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "clusterId")
-  private Collection<TfExecutions> tfExecutionsCollection;
 
   public TfClusters() {
   }
@@ -85,6 +97,32 @@ public class TfClusters implements Serializable {
 
   @XmlTransient
   @JsonIgnore
+  public Collection<TfExecutions> getTfExecutionsCollection() {
+    return tfExecutionsCollection;
+  }
+
+  public void setTfExecutionsCollection(Collection<TfExecutions> tfExecutionsCollection) {
+    this.tfExecutionsCollection = tfExecutionsCollection;
+  }
+
+  public Users getCreator() {
+    return creator;
+  }
+
+  public void setCreator(Users creator) {
+    this.creator = creator;
+  }
+
+  public Project getProjectId() {
+    return projectId;
+  }
+
+  public void setProjectId(Project projectId) {
+    this.projectId = projectId;
+  }
+
+  @XmlTransient
+  @JsonIgnore
   public Collection<TfFifoQueue> getTfFifoQueueCollection() {
     return tfFifoQueueCollection;
   }
@@ -101,16 +139,6 @@ public class TfClusters implements Serializable {
 
   public void setTfJobsCollection(Collection<TfJobs> tfJobsCollection) {
     this.tfJobsCollection = tfJobsCollection;
-  }
-
-  @XmlTransient
-  @JsonIgnore
-  public Collection<TfExecutions> getTfExecutionsCollection() {
-    return tfExecutionsCollection;
-  }
-
-  public void setTfExecutionsCollection(Collection<TfExecutions> tfExecutionsCollection) {
-    this.tfExecutionsCollection = tfExecutionsCollection;
   }
 
   @Override
@@ -137,5 +165,5 @@ public class TfClusters implements Serializable {
   public String toString() {
     return "io.hops.tf.TfClusters[ id=" + id + " ]";
   }
-  
+
 }

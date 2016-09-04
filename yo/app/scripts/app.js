@@ -31,10 +31,15 @@ angular.module('hopsWorksApp', [
   'ngPrettyJson',
   'angularAwesomeSlider',
   'angularResizable',
-  'ng-showdown'
+  'ng-showdown',
+  'vAccordion', 
+  'ngAnimate'
 ])
-    .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider',
-      function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider) {
+    .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig',
+      function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {
+
+        // tensorflow cluster panes should expand faster than default 0.5s
+        accordionConfig.expandAnimationDuration = 0.3;
 
         // Responseinterceptor for authentication
         $httpProvider.interceptors.push('AuthInterceptorService');

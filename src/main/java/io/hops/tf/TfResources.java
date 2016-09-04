@@ -5,6 +5,7 @@
  */
 package io.hops.tf;
 
+import io.hops.kmon.host.Host;
 import java.io.Serializable;
 import java.util.Collection;
 import javax.persistence.Basic;
@@ -14,6 +15,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -65,9 +68,12 @@ public class TfResources implements Serializable {
   @Column(name = "free")
   private boolean free;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "resourceId")
-  private Collection<TfExecutions> tfExecutionsCollection;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "resourceId")
   private Collection<TfTasks> tfTasksCollection;
+  @JoinColumn(name = "host_id", referencedColumnName = "hostid")
+  @ManyToOne(optional = false)
+  private Host hostId;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "resourceId")
+  private Collection<TfExecutions> tfExecutionsCollection;
 
   public TfResources() {
   }
@@ -126,22 +132,30 @@ public class TfResources implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public Collection<TfExecutions> getTfExecutionsCollection() {
-    return tfExecutionsCollection;
-  }
-
-  public void setTfExecutionsCollection(Collection<TfExecutions> tfExecutionsCollection) {
-    this.tfExecutionsCollection = tfExecutionsCollection;
-  }
-
-  @XmlTransient
-  @JsonIgnore
   public Collection<TfTasks> getTfTasksCollection() {
     return tfTasksCollection;
   }
 
   public void setTfTasksCollection(Collection<TfTasks> tfTasksCollection) {
     this.tfTasksCollection = tfTasksCollection;
+  }
+
+  public Host getHostId() {
+    return hostId;
+  }
+
+  public void setHostId(Host hostId) {
+    this.hostId = hostId;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<TfExecutions> getTfExecutionsCollection() {
+    return tfExecutionsCollection;
+  }
+
+  public void setTfExecutionsCollection(Collection<TfExecutions> tfExecutionsCollection) {
+    this.tfExecutionsCollection = tfExecutionsCollection;
   }
 
   @Override

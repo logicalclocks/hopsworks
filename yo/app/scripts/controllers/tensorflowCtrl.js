@@ -11,8 +11,28 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.projectId = $routeParams.projectID;
+            self.closeAll = false;
+            
             self.resources = [];
-            self.clusters = [];
+            self.clusters = [
+              { "name": "cluster1",
+                "isExpanded" : true,
+                "jobs" : [ 
+                  { "name" : "params",
+                    "program" : "/path/to/prog.py",
+                    "tasks" : [
+                      { "host" : "server1",
+                        "params" : "10"
+                      },
+                      { "host" : "server2",
+                        "params" : "-f 22"
+                      }
+                    ]
+                  }
+                  ]
+              }
+            ];
+            
             self.serving = [];
            
             
@@ -169,6 +189,38 @@ angular.module('hopsWorksApp')
                         growl.info("Delete aborted", {title: 'Info', ttl: 2000});
                       });
             };
+
+            self.toggle = function (cluster, index) {
+              //reset all jobs showing flag
+              angular.forEach(self.clusters, function (temp, key) {
+                if (job.id !== temp.id) {
+                  temp.showing = false;
+                }
+              });
+
+              //handle the clicked job accordingly
+              cluster.showing = true;
+              self.hasSelectCluster = true;
+              $scope.selectedIndex = index;
+              self.currentToggledIndex = index;
+              self.currentCluster = cluster;
+            };
+            self.untoggle = function (cluster, index) {
+              //reset all jobs showing flag
+              angular.forEach(self.clusters, function (temp, key) {
+                temp.showing = false;
+              });
+
+              if (self.currentToggledIndex !== index) {
+                self.hasSelectCluster = false;
+                $scope.selectedIndex = -1;
+                self.currentToggledIndex = -1;
+              } else {
+                cluster.showing = true;
+              }
+            };
+
+
 
             
             self.init = function(){

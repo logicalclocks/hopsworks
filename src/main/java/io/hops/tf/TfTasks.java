@@ -36,12 +36,12 @@ public class TfTasks implements Serializable {
   @NotNull
   @Column(name = "id")
   private Integer id;
-  @JoinColumn(name = "job_id", referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private TfJobs jobId;
   @JoinColumn(name = "resource_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private TfResources resourceId;
+  @JoinColumn(name = "job_id", referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private TfJobs jobId;
 
   public TfTasks() {
   }
@@ -58,20 +58,20 @@ public class TfTasks implements Serializable {
     this.id = id;
   }
 
-  public TfJobs getJobId() {
-    return jobId;
-  }
-
-  public void setJobId(TfJobs jobId) {
-    this.jobId = jobId;
-  }
-
   public TfResources getResourceId() {
     return resourceId;
   }
 
   public void setResourceId(TfResources resourceId) {
     this.resourceId = resourceId;
+  }
+
+  public TfJobs getJobId() {
+    return jobId;
+  }
+
+  public void setJobId(TfJobs jobId) {
+    this.jobId = jobId;
   }
 
   @Override

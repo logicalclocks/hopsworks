@@ -74,6 +74,7 @@ module.exports = function (config) {
       'bower_components/angular-resizable/src/angular-resizable.js',
       'bower_components/showdown/dist/showdown.js',
       'bower_components/ng-showdown/dist/ng-showdown.js',
+      'bower_components/v-accordion/dist/v-accordion.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',

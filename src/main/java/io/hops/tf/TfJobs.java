@@ -36,6 +36,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @NamedQueries({
   @NamedQuery(name = "TfJobs.findAll", query = "SELECT t FROM TfJobs t"),
   @NamedQuery(name = "TfJobs.findById", query = "SELECT t FROM TfJobs t WHERE t.id = :id"),
+  @NamedQuery(name = "TfJobs.findByCluster", query = "SELECT t FROM TfJobs t WHERE t.clusterId.id = :id"),
   @NamedQuery(name = "TfJobs.findByName", query = "SELECT t FROM TfJobs t WHERE t.name = :name"),
   @NamedQuery(name = "TfJobs.findByType", query = "SELECT t FROM TfJobs t WHERE t.type = :type")})
 public class TfJobs implements Serializable {
@@ -56,13 +57,13 @@ public class TfJobs implements Serializable {
   @Size(min = 1, max = 50)
   @Column(name = "type")
   private String type;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "jobId")
+  private Collection<TfTasks> tfTasksCollection;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "jobId")
+  private Collection<TfExecutions> tfExecutionsCollection;
   @JoinColumn(name = "cluster_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private TfClusters clusterId;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "jobId")
-  private Collection<TfExecutions> tfExecutionsCollection;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "jobId")
-  private Collection<TfTasks> tfTasksCollection;
 
   public TfJobs() {
   }
@@ -101,12 +102,14 @@ public class TfJobs implements Serializable {
     this.type = type;
   }
 
-  public TfClusters getClusterId() {
-    return clusterId;
+  @XmlTransient
+  @JsonIgnore
+  public Collection<TfTasks> getTfTasksCollection() {
+    return tfTasksCollection;
   }
 
-  public void setClusterId(TfClusters clusterId) {
-    this.clusterId = clusterId;
+  public void setTfTasksCollection(Collection<TfTasks> tfTasksCollection) {
+    this.tfTasksCollection = tfTasksCollection;
   }
 
   @XmlTransient
@@ -119,14 +122,12 @@ public class TfJobs implements Serializable {
     this.tfExecutionsCollection = tfExecutionsCollection;
   }
 
-  @XmlTransient
-  @JsonIgnore
-  public Collection<TfTasks> getTfTasksCollection() {
-    return tfTasksCollection;
+  public TfClusters getClusterId() {
+    return clusterId;
   }
 
-  public void setTfTasksCollection(Collection<TfTasks> tfTasksCollection) {
-    this.tfTasksCollection = tfTasksCollection;
+  public void setClusterId(TfClusters clusterId) {
+    this.clusterId = clusterId;
   }
 
   @Override

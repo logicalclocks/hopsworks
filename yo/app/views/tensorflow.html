@@ -1,8 +1,8 @@
 <div ng-controller="MainCtrl as mainCtrl">
-<div ng-include="'nav.html'"></div>
+  <div ng-include="'nav.html'"></div>
 </div>
 <div ng-controller="TensorflowCtrl as tensorflowCtrl">
-  
+
   <div id="wrapper" class="toggled">
     <div class="overlay"></div>
 
@@ -11,6 +11,7 @@
     <section>
       <div class="content-wrapper">
         <div growl reference="10" class="pull-right" ></div>
+
 
         <div>
           <form class="form-horizontal">
@@ -28,7 +29,7 @@
               <div  ng-show="tensorflowCtrl.showClusters === 1">
                 <div class="col-sm-11">
                   <span class="text-muted" ng-show="tensorflowCtrl.maxNumCpus - tensorflowCtrl.numGpusUsed > 0">     {{tensorflowCtrl.numGpusUsed}} of {{tensorflowCtrl.maxNumCpus}} topics in use</span>
-                  <span style="color: red;" class="text" ng-show="tensorflowCtrl.maxNumCpus - tensorflowCtrl.numGpusUsed <= 0">    All available {{tensorflowCtrl.maxNumCpus}} topics are in use.</span>
+                  <span style="color: red;" class="text" ng-show="tensorflowCtrl.maxNumCpus - tensorflowCtrl.numGpusUsed <= 0">    All available {{tensorflowCtrl.maxNumCpus}} resources are in use.</span>
                 </div>
                 <br>
                 <div class="col-sm-2">
@@ -54,246 +55,54 @@
           </form>
 
           <div ng-show="tensorflowCtrl.showClusters === 1">
-            <br>
-            <table st-table="rowCollection" class="table table-striped" ng-show="tensorflowCtrl.clusters.length > 0">
-              <thead>
-                <tr>
-                  <th st-sort="topicName" class="col-sm-8">Cluster Name</th>
 
-                  <th class="col-sm-1">ACL</th>
-                  <th class="col-sm-1">Share</th>
-                  <th class="col-sm-1">Advanced</th>
-                  <th class="col-sm-1">Remove</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr st-select-row="row" st-select-mode="single" ng-repeat="row in tensorflowCtrl.topics" ng-class="{'selectedTopicOdd': row.isSelected === true}">
-                  <td class="col-sm-8">
-                    <div class="row" style="margin-left: 10px;">{{row.name}}</div>
+            <button ng-click="accordion.expandAll()">Expand all</button>
+            <button ng-click="accordion.collapseAll()">Collapse all</button>
             
-                    <br ng-show="row.isSelected">
-                    <br ng-show="row.isSelected">
-                    <table ng-if="row.isSelected" st-table="rowCollection" class="col-sm-12 tensorflow-table" ng-show="row.acls.length > 0">
-                      <thead>
-                        <tr>
-                          <th class="col-sm-2">Project</th>
-                          <th class="col-sm-2">UserEmail</th>
-                          <th class="col-sm-2">Permission Type</th>
-                          <th class="col-sm-2">Operation Type</th>
-                          <th class="col-sm-2">Host</th>
-                          <th class="col-sm-1">Role</th>
-                          <th class="col-sm-1">Remove</th>
-                          <th class="col-sm-1">Edit</th>
-                        </tr>
-                      </thead>
-                      <tr ng-repeat="acl in row.acls" class="td {padding-top: 10px; padding-bottom:10px}">
-                        <td ng-if="tensorflowCtrl.activeId === -1">{{acl.projectName}}</td>
-                        <td ng-if="tensorflowCtrl.activeId === acl.id">
-                          <ui-select style="min-width: 100px;" name="project_name" theme="select2"
-                                     ng-model="tensorflowCtrl.project"  required>
+            <v-accordion class="vAccordion--default" multiple>
 
-                            <ui-select-match placeholder="Select a project for this acl">{{$select.selected.projectName}}</ui-select-match>
-
-                            <ui-select-choices repeat="item in tensorflowCtrl.users | filter: $select.search">
-                              <div ng-bind-html="item.projectName | highlight: $select.search"></div>
-                            </ui-select-choices>
-                          </ui-select><br>
-                        </td>
-                        <!--<td ng-if="tensorflowCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="tensorflowCtrl.projectName" placeholder="project name"></td>-->
-                        <td ng-if="tensorflowCtrl.activeId === -1">{{acl.userEmail}}</td>
-                        <td  ng-if="tensorflowCtrl.activeId === acl.id">        
-                          <ui-select style="min-width: 200px;" name="project_member" theme="select2"
-                                     ng-model="tensorflowCtrl.userEmail"  required>
-
-                            <ui-select-match placeholder="Select a version">{{$select.selected}}</ui-select-match>
-
-                            <ui-select-choices repeat="item in tensorflowCtrl.project.userEmails | filter: $select.search">
-                              <div ng-bind-html="item | highlight: $select.search"></div>
-                            </ui-select-choices>
-                          </ui-select><br>
-                          </td>
-                        <!--<td ng-if="tensorflowCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="tensorflowCtrl.userEmail" placeholder="user email "></td>-->
-                        <td ng-if="tensorflowCtrl.activeId === -1">{{acl.permissionType}}</td>
-                        <td ng-if="tensorflowCtrl.activeId === acl.id">
-                          <select name="permission_type" ng-model="tensorflowCtrl.permission_type">
-                            <option value="deny">Deny</option>
-                            <option value="allow">Allow</option>
-                          </select>
-                        </td>
-                        <td ng-if="tensorflowCtrl.activeId === -1">{{acl.operationType}}</td>
-                        <td ng-if="tensorflowCtrl.activeId === acl.id">
-                          <select name="operation_type" ng-model="tensorflowCtrl.operation_type">
-                            <option value="read">read</option>
-                            <option value="write">write</option>
-                            <option value="details">details</option>
-                            <option value="*">*</option>
-                          </select>
-                        </td>
-                        <td ng-if="tensorflowCtrl.activeId === -1">{{acl.host}}</td>
-                        <td ng-if="tensorflowCtrl.activeId === acl.id">
-                          <input type="text" class="form-control" id="aclHost" ng-model="tensorflowCtrl.host" placeholder="Hostname (or * or subnet)">
-                        </td>
-                        <td ng-if="tensorflowCtrl.activeId === -1">{{acl.role}}</td>
-                        <td ng-if="tensorflowCtrl.activeId === acl.id">
-                          <select name="role_type" ng-model="tensorflowCtrl.role">
-                            <option value="Data Scientist">Data scientist</option>
-                            <option value="Data Owner">Data owner</option>
-                            <option value="*">*</option>
-                          </select>
-                        </td>
-                        <td>
-                          <button ng-if="tensorflowCtrl.activeId === -1" type="button" ng-click="tensorflowCtrl.removeAcl(row.name, acl.id)" class="btn btn-sm btn-danger">
-                            <i class="glyphicon glyphicon-remove">
-                            </i>
-                          </button>
-                          <button ng-if="tensorflowCtrl.activeId === acl.id" type="button" ng-click="tensorflowCtrl.removeAcl(row.name, acl.id)" class="btn btn-sm btn-danger">
-                            <i class="glyphicon glyphicon-remove">
-                            </i>
-                          </button>
-                        </td>
-                        <td ng-if="tensorflowCtrl.activeId === -1 || tensorflowCtrl.activeId === acl.id">
-                          <button ng-show="tensorflowCtrl.activeId === acl.id" type="button" ng-click="tensorflowCtrl.activeId = -1;tensorflowCtrl.updateAcl(row.name, acl.id)" class="btn btn-sm btn-warning">
-                            Save
-                          </button>
-                          <button ng-show="tensorflowCtrl.activeId === -1" type="button" ng-click="tensorflowCtrl.selectAcl(acl, row.name);" class="btn btn-sm btn-primary">
-                            <i class="glyphicon glyphicon-edit">
-                            </i>
-                          </button>
-                        </td>
-                        <div class="row"/>
-                    </tr>
-            </table>
-
-
-            <div ng-show="row.isSelected && row.shares.length > 0"><br></div>
-            <div ng-show="row.isSelected && row.shares.length > 0"><br></div>
-
-            </td>
-
-
-
-            <td class="col-sm-1">
-              <button type="button" 
-                      ng-click="tensorflowCtrl.addAcl(row.name)" class="btn btn-default btn-primary btn-sm"> 
-                <i style="margin-left:10px" class="glyphicon glyphicon-plus">
-                </i>
-              </button>
-            </td>
-
-            <td class="col-sm-1">
-              <button  type="button" 
-                       ng-click="tensorflowCtrl.shareTopic(row.name)" class="btn btn-default btn-success btn-sm">
-                <i style="margin-left: 10px" class="glyphicon glyphicon-share-alt">
-                </i>
-              </button>
-            </td>
-
-            <td class="col-sm-1">
-              <button type="button" ng-show="!row.isSelected" ng-click="row.isSelected = !row.isSelected;
-                      tensorflowCtrl.activeId = -1;
-                      tensorflowCtrl.getTopicDetails(row.name);
-                      tensorflowCtrl.topicIsSharedTo(row.name);
-                      tensorflowCtrl.getAclsForTopic(row.name);
-                      " class="btn btn-sm btn-primary">
-                <i style="margin-left: 10px" class="glyphicon glyphicon-expand"></i>
-              </button>
-              <button type="button" ng-show="row.isSelected" ng-click="row.isSelected = !row.isSelected;
-                      tensorflowCtrl.activeId = -1;" class="btn btn-sm btn-warning">
-                <i style="margin-left: 10px" class="glyphicon glyphicon-collapse-up"></i>
-              </button>
-            </td>
-            <td class="col-sm-1">
-              <button  type="button" ng-click="tensorflowCtrl.removeTopic(row.name)" class="btn btn-sm btn-danger">
-                <i class="glyphicon glyphicon-remove-circle">
-                </i>
-              </button>
-
-            </td>
-            </tr>
-            </tbody>
-            </table>
-            
-            <br ng-show="row.isSelected">
-            <br ng-show="row.isSelected">
-            <br ng-show="row.isSelected">
-            
-            <div ng-show="tensorflowCtrl.sharedTopics.length > 0"><br></div>
-            <table st-table="rowCollection" class="table table-striped" ng-show="tensorflowCtrl.sharedTopics.length > 0"> 
-              <thead>
-                <tr>
-                  <th class="col-sm-10">Shared Topics</th>
-                  <th class="col-sm-1">Unshare</th>
-                </tr>
-              </thead>
-              <tbody>
-              <thead>
-                <tr st-select-row="row" st-select-mode="single" ng-repeat="row in tensorflowCtrl.sharedTopics">
-
-                  <td>{{row.name}}</td>
-                  <td>
-                    <button type="button" ng-click="tensorflowCtrl.unshareTopicFromProject(row.name)" class="btn btn-sm btn-danger">
-                      <i class="glyphicon glyphicon-remove">
-                      </i>
+              <v-pane ng-repeat="cluster in tensorflowCtrl.clusters" expanded="cluster.isExpanded" control="accordion">
+                <v-pane-header>
+                  {{ ::cluster.name}} 
+                  <div class="btn-group" role="group">
+                    <button 
+                      tooltip="Delete"
+                      ng-click="tensorflowCtrl.toggle(cluster, $index); tensorflowCtrl.removeCluster(cluster.name); $event.stopPropagation();"
+                      type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
                     </button>
-                  </td>
-                </tr>
-              </thead>
-              </tbody>
+                  </div>
+                </v-pane-header>
+                <v-pane-content>
+                  <v-accordion ng-if="cluster.jobs">
+                    <v-pane ng-repeat="job in cluster.jobs"">
+                      <v-pane-header> 
+                        {{ ::job.name}}
+                      </v-pane-header>
+                      <v-pane-content>
+                        {{ ::job.program}}
+                        <v-accordion ng-if="job.tasks">
+                          <v-pane ng-repeat="task in job.tasks"">
+                            <v-pane-header> 
+                              {{ ::task.host}}
+                            </v-pane-header>
+                            <v-pane-content>
+                              {{ ::task.params}}
+                            </v-pane-content>
+                          </v-pane>
 
-            </table>
+                      </v-pane-content>
+                    </v-pane>
+                  </v-accordion>
+                </v-pane-content>
+              </v-pane> 
+            </v-accordion> 
+
 
 
           </div>      
           <div ng-show="tensorflowCtrl.showServing == 1">
             <br>
-            <table st-table="rowCollection" class="table table-striped" ng-show="tensorflowCtrl.schemas.length > 0">
-              <thead>
-                <tr>
-                  <th st-sort="schemaName" class="col-sm-4">Schema Name</th>
-                  <th class="col-sm-2">Version</th>
-                  <th class="col-sm-2">Content</th>
-                  <th class="col-sm-2">Update</th>
-                  <th class="col-sm-2">Remove</th>
-                </tr>
-              </thead>
-              <tbody>
-
-                <tr st-select-row="row" st-select-mode="single" ng-repeat="row in tensorflowCtrl.schemas track by $index">
-                  <td class="col-sm-4">
-                    <div class="row" style="margin-left: 10px;">{{row.name}}</div>
-                  </td>
-                  <td class="col-sm-2">
-              <ui-select style="min-width: 70px;" name="schema_name" theme="select2" style="margin-left: 10px"
-                         ng-model="tensorflowCtrl.schemaVersions[$index]"  required>
-
-                <ui-select-match placeholder="version">{{$select.selected}}</ui-select-match>
-
-                <ui-select-choices repeat="version in row.versions | orderBy: version:true | filter: $select.search">
-                  <div ng-bind-html="version | highlight: $select.search"></div>
-                </ui-select-choices>
-              </ui-select><br>
-              </td>
-              <td class="col-sm-2">
-                <button type="button"
-                        ng-click="tensorflowCtrl.viewSchemaContent(row.name, $index)" class="btn btn-sm btn-primary">
-                  View<i style="margin-left: 10px"></i> 
-                </button>
-              </td>
-              <td class="col-sm-2">
-                <button type="button"
-                        ng-click="tensorflowCtrl.updateSchemaContent(row)" class="btn btn-sm btn-primary">
-                  Update<i style="margin-left: 10px"></i> 
-                </button>
-              </td>
-              <td class="col-sm-2">
-                <button  type="button" ng-click="tensorflowCtrl.deleteSchema(row.name, $index)" class="btn btn-sm btn-danger">
-                  <i class="glyphicon glyphicon-remove-circle">
-                  </i>
-                </button>
-              </td>
-              </tr>                
-              </tbody>
-            </table>
+            Some stuff here
           </div>
         </div>              
     </section>
