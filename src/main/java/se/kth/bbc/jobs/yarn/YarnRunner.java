@@ -23,7 +23,6 @@ import org.apache.flink.client.program.Client;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
 import org.apache.flink.configuration.ConfigConstants;
-import org.apache.flink.runtime.yarn.FlinkYarnClusterStatus;
 import org.apache.flink.yarn.FlinkYarnCluster;
 
 
@@ -36,7 +35,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.LocalResource;
@@ -49,6 +47,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.codehaus.plexus.util.FileUtils;
+import se.kth.bbc.jobs.flink.FlinkJob;
 import se.kth.bbc.jobs.flink.FlinkYarnRunnerBuilder;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.lims.Utils;
@@ -75,6 +74,8 @@ public class YarnRunner {
   private JobType jobType;
   //The parallelism parameter of Flink
   private int parallelism;
+  
+  
   private String appJarPath;
   private String localJarPath; //Used by flink
   private final String amJarLocalName;
@@ -259,17 +260,16 @@ public class YarnRunner {
                 URL flinkURL = new File("/srv/flink/"+Settings.FLINK_LOCRSC_FLINK_JAR).toURI().toURL();
                 classpaths.add(flinkURL);
                 URL libURL = new File("/srv/flink/lib/kafka-util-0.1.jar").toURI().toURL();
-                URL libURL1 = new File("/srv/flink/lib/Flink__meb10000__kstore.jks").toURI().toURL();
-                URL libURL2= new File("/srv/flink/lib/Flink__meb10000__tstore.jks").toURI().toURL();
+                URL libURL3= new File("/srv/flink/lib/flink-connector-filesystem_2.10-1.0.3.jar").toURI().toURL();
                 classpaths.add(libURL);
-                classpaths.add(libURL1);
-                classpaths.add(libURL2);
+                classpaths.add(libURL3);
                 
                 PackagedProgram program = new PackagedProgram(file, classpaths, args);
                 client.setPrintStatusDuringExecution(false);
 
                 JobSubmissionResult res =  client.runDetached(program, parallelism);
                 JobID jobId = res.getJobID();
+                FlinkJob.jobsClusterInfo.put(appId.toString(), new FlinkJob.FlinkClusterInfo(jobId, client));
                 cluster.stopAfterJob(jobId);
             }  finally{
               //Remove local flink app jar
@@ -704,7 +704,6 @@ public class YarnRunner {
       this.amJarLocalName = amJarLocalName;
     }
 
-    //Setters
     /**
      * Sets the arguments to be passed to the Application Master.
      * <p/>

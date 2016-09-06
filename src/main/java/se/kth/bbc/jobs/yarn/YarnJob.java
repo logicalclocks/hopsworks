@@ -230,9 +230,9 @@ public abstract class YarnJob extends HopsJob {
         // if file doesnt exists, then create it
         try {
           Files.write(kafkaCertFiles.get(Settings.KAFKA_K_CERTIFICATE), new File(
-                "/srv/flink/lib/" + k_certName));
+                "/srv/glassfish/domain1/config/" + k_certName+""));
           Files.write(kafkaCertFiles.get(Settings.KAFKA_T_CERTIFICATE), new File(
-                "/srv/flink/lib/" + t_certName));
+                "/srv/glassfish/domain1/config/" + t_certName));
           for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
             if (!entry.getValue().exists()) {
               entry.getValue().createNewFile();
