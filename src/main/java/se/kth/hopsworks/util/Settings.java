@@ -726,7 +726,7 @@ public class Settings {
 //  public static final String KAFKA_T_CERTIFICATE_ENV_VAR = "kafka.trusted.certificate";
   public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;  
   public static int FILE_PREVIEW_TXT_SIZE = 100; 
-  public static int FILE_PREVIEW_TXT_SIZE_BYTES = 1024*64;
+  public static int FILE_PREVIEW_TXT_SIZE_BYTES = 1024*32;
   public static int FILE_PREVIEW_TXT_SIZE_BYTES_README = 1024*512;
   public static String README_TEMPLATE =  "*This is an auto-generated README.md"
           + " file for your Dataset!*\n"
