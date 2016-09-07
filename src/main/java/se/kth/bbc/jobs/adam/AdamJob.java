@@ -1,6 +1,5 @@
 package se.kth.bbc.jobs.adam;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -129,32 +128,9 @@ public class AdamJob extends SparkJob {
             "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
     runnerbuilder.addSystemProperty("spark.kryoserializer.buffer", "4m");
     runnerbuilder.addSystemProperty("spark.kryo.referenceTracking", "true");
-
-//    builder.setExecutorCores(jobconfig.getExecutorCores());
-//    builder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
-//    builder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
-//    if(jobconfig.isDynamicExecutors()){
-//      builder.setDynamicExecutors(jobconfig.isDynamicExecutors());
-//      builder.setNumberOfExecutorsMin(jobconfig.getSelectedMinExecutors());
-//      builder.setNumberOfExecutorsMax(jobconfig.getSelectedMaxExecutors());
-//      builder.setNumberOfExecutorsInit(jobconfig.getNumberOfExecutorsInit());
-//    }
-//    //Set Yarn running options
-//    builder.setDriverMemoryMB(jobconfig.getAmMemory());
-//    builder.setDriverCores(jobconfig.getAmVCores());
-//    builder.setDriverQueue(jobconfig.getAmQueue());
-//    builder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
-//    
+   
     runnerbuilder.addAllJobArgs(constructArgs(jobconfig));
-//
-//    builder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
-//    //Set project specific resources
-//    builder.addExtraFiles(projectLocalResources);
-//    if(jobSystemProperties != null && !jobSystemProperties.isEmpty()){
-//      for(Map.Entry<String,String> jobSystemProperty: jobSystemProperties.entrySet()){
-//        builder.addSystemProperty(jobSystemProperty.getKey(), jobSystemProperty.getValue());
-//      }
-//    }
+
     //Add ADAM jar to local resources
     runnerbuilder.addExtraFile(new LocalResourceDTO(adamJarPath.substring(
             adamJarPath.
@@ -253,6 +229,10 @@ public class AdamJob extends SparkJob {
   @Override
   protected void cleanup() {
     //Nothing to be done, really.
+  }
+  @Override
+  protected void stopJob(String appid){
+    super.stopJob(appid);
   }
 
 }

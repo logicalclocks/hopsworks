@@ -172,7 +172,8 @@ a:focus {
 }
 
 p.filepreview {
-  white-space: pre-wrap;
+  white-space: pre;
+  overflow-x:auto;
 }
 
 div.scroll {

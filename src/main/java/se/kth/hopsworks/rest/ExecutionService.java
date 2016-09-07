@@ -146,7 +146,7 @@ public class ExecutionService {
       Runtime rt = Runtime.getRuntime();
       Process pr = rt.exec("/srv/hadoop/bin/yarn application -kill "+appid);
 
-//      executionController.stop(job, user, appid);
+      executionController.stop(job, user, appid);
 
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity("Job stopped").build();

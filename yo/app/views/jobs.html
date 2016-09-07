@@ -96,7 +96,7 @@
                                  <button style="border-color: #20AD28; min-width: 64px;"
                                     ng-click="jobsCtrl.showLogs(job.id);jobsCtrl.runJob(job, $index);$event.stopPropagation();" 
                                     class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]">
-                                 <span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"/> Run</button>
+                                   <span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"></span> Run</button>
                                  <button
                                     ng-show="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]"
                                     ng-disabled="!jobsCtrl.runningInfo['' + job.id].running ||
@@ -107,7 +107,7 @@
                                     jobsCtrl.showLogs(job.id);
                                     $event.stopPropagation();"
                                     class="btn btn-danger btn-sm">
-                                    <span class="glyphicon glyphicon-stop" aria-hidden="true"/> Stop
+                                   <span class="glyphicon glyphicon-stop" aria-hidden="true"></span> Stop
                                  </button>
                               </td>
                               <td>

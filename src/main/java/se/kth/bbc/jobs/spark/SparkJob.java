@@ -140,5 +140,10 @@ public class SparkJob extends YarnJob {
       monitor = null;
     }
   }
+  
+  @Override
+  protected void stopJob(String appid){
+    super.stopJob(appid);
+  }
 
 }

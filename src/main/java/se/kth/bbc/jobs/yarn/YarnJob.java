@@ -30,6 +30,7 @@ import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobState;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServices;
@@ -215,7 +216,7 @@ public abstract class YarnJob extends HopsJob {
                 String.valueOf(projectService.getProject().getId()));
       }
 
-      try {
+      try {        
         String k_certName = projectService.getProject().getName() + "__"
                 + projectService.getProject().getOwner().getUsername()
                 + "__kstore.jks";
@@ -229,10 +230,19 @@ public abstract class YarnJob extends HopsJob {
                 localTmpDir + "/" + t_certName));
         // if file doesnt exists, then create it
         try {
-          Files.write(kafkaCertFiles.get(Settings.KAFKA_K_CERTIFICATE), new File(
-                "/srv/flink/lib/" + k_certName));
-          Files.write(kafkaCertFiles.get(Settings.KAFKA_T_CERTIFICATE), new File(
-                "/srv/flink/lib/" + t_certName));
+          //If it is a Flink job, copy the certificates into the glassfish dir
+          if (jobDescription.getJobType() == JobType.FLINK) {
+            File f_k_cert = new File("/srv/glassfish/domain1/config/"
+                    + k_certName);
+            File t_k_cert = new File("/srv/glassfish/domain1/config/"
+                    + t_certName);
+            if (!f_k_cert.exists()) {
+              Files.write(kafkaCertFiles.get(Settings.KAFKA_K_CERTIFICATE),
+                      f_k_cert);
+              Files.write(kafkaCertFiles.get(Settings.KAFKA_T_CERTIFICATE),
+                      t_k_cert);
+            }
+          }
           for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
             if (!entry.getValue().exists()) {
               entry.getValue().createNewFile();

@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.flink.api.common.JobID;
+import org.apache.flink.client.program.Client;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import se.kth.bbc.jobs.jobhistory.JobType;
@@ -88,7 +90,7 @@ public class FlinkYarnRunnerBuilder {
     private final Map<String, String> sysProps = new HashMap<>();
     private String sessionId;//used by Kafka
     private String kafkaAddress;
-
+    
     public FlinkYarnRunnerBuilder(String appJarPath, String mainClass) {
         if (appJarPath == null || appJarPath.isEmpty()) {
             throw new IllegalArgumentException(
@@ -100,7 +102,7 @@ public class FlinkYarnRunnerBuilder {
         }
         this.appJarPath = appJarPath;
     }
-
+ 
     public FlinkYarnRunnerBuilder addAllJobArgs(String[] jobArgs) {
         this.jobArgs.addAll(Arrays.asList(jobArgs));
         return this;
