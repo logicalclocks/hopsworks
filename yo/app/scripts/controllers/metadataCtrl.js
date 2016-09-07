@@ -1,10 +1,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MetadataCtrl', ['$cookies', '$modal', '$scope', '$rootScope', '$routeParams',
+        .controller('MetadataCtrl', ['$cookies', '$uibModal', '$scope', '$rootScope', '$routeParams',
           '$filter', 'DataSetService', 'ModalService', 'growl', 'MetadataActionService',
           'MetadataRestService', 'MetadataHelperService', 'ProjectService',
-          function ($cookies, $modal, $scope, $rootScope, $routeParams, $filter, DataSetService,
+          function ($cookies, $uibModal, $scope, $rootScope, $routeParams, $filter, DataSetService,
                   ModalService, growl, MetadataActionService, MetadataRestService,
                   MetadataHelperService, ProjectService) {
 
@@ -85,12 +85,6 @@ angular.module('hopsWorksApp')
                 return;
               }
               //after the project inodeid is available proceed to store metadata
-//              MetadataActionService.storeMetadata($cookies['email'],
-//                      parseInt(self.currentFile.parentId), self.currentFile.name, self.currentTableId, self.metaData)
-//                      .then(function (response) {
-////                        growl.success("Metadata saved", {title: 'Success', ttl: 1000});
-//                      });
-//              MetadataActionService.storeMetadata($cookies['email'],
               MetadataRestService.addMetadataWithSchema(
                       parseInt(self.currentFile.parentId), self.currentFile.name, self.currentTableId, self.metaData)
                       .then(function (success) {
@@ -126,12 +120,6 @@ angular.module('hopsWorksApp')
 
               var tempInput = {};
               tempInput[metadataId] = value;
-//              MetadataActionService.storeMetadata($cookies['email'],
-//                      parseInt(self.currentFile.parentId), self.currentFile.name, tableId, tempInput)
-//                      .then(function (response) {
-//                        self.metaData[metadataId] = '';
-//                        self.fetchMetadataForTemplate();
-//                      });
               MetadataRestService.addMetadataWithSchema(
                       parseInt(self.currentFile.parentId), self.currentFile.name, self.currentTableId, tempInput)
                       .then(function (success) {
@@ -185,7 +173,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.updateTemplateName = function (template) {
-              MetadataActionService.updateTemplateName($cookies['email'], template)
+              MetadataActionService.updateTemplateName($cookies.get('email'), template)
                       .then(function (response) {
                         self.editingTemplate = false;
                         self.currentTemplateID = -1;
@@ -208,7 +196,7 @@ angular.module('hopsWorksApp')
 
                 var templateName = self.extendedTemplateName;
                 //store the new template name
-                MetadataActionService.addNewTemplate($cookies['email'], self.extendedTemplateName)
+                MetadataActionService.addNewTemplate($cookies.get('email'), self.extendedTemplateName)
                         .then(function (data) {
                           var tempTemplates = JSON.parse(data.board);
 
@@ -216,12 +204,12 @@ angular.module('hopsWorksApp')
                           var newlyCreatedID = tempTemplates.templates[tempTemplates.numberOfTemplates - 1].id;
 
                           //get the contents of the template to extend
-                          MetadataActionService.fetchTemplate($cookies['email'], parseInt(self.toExtend))
+                          MetadataActionService.fetchTemplate($cookies.get('email'), parseInt(self.toExtend))
                                   .then(function (response) {
                                     var templateToExtend = JSON.parse(response.board);
 
                                     //associate existing contents with the new template
-                                    MetadataActionService.extendTemplate($cookies['email'], newlyCreatedID, templateToExtend)
+                                    MetadataActionService.extendTemplate($cookies.get('email'), newlyCreatedID, templateToExtend)
                                             .then(function (data) {
                                               self.extendedTemplateName = "";
 
@@ -258,7 +246,7 @@ angular.module('hopsWorksApp')
                 return;
               }
 
-              MetadataActionService.fetchTemplate($cookies['email'], templateId)
+              MetadataActionService.fetchTemplate($cookies.get('email'), templateId)
                       .then(function (success) {
                         /*
                          * sort the objects of the retrieved template by id.
@@ -283,7 +271,7 @@ angular.module('hopsWorksApp')
              */
             self.storeTemplate = function () {
 
-              MetadataActionService.storeTemplate($cookies['email'], self.currentTemplateID, self.currentBoard)
+              MetadataActionService.storeTemplate($cookies.get('email'), self.currentTemplateID, self.currentBoard)
                       .then(function (response) {
                         var template = JSON.parse(response.board);
                         var sortedTables = sortObject($filter, 'id', template);
@@ -306,7 +294,7 @@ angular.module('hopsWorksApp')
               var templateName = self.newTemplateName;
               if (self.checkTemplateAvailability(self.newTemplateName)) {
 
-                MetadataActionService.addNewTemplate($cookies['email'], self.newTemplateName)
+                MetadataActionService.addNewTemplate($cookies.get('email'), self.newTemplateName)
                         .then(function (data) {
                           self.newTemplateName = "";
                           //trigger a variable change (availableTemplates) in the service
@@ -358,7 +346,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.removeTemplate = function (templateId) {
-              MetadataActionService.removeTemplate($cookies['email'], templateId)
+              MetadataActionService.removeTemplate($cookies.get('email'), templateId)
                       .then(function (data) {
                         self.selectedTemplate = {};
                         self.currentTemplateID = -1;
@@ -447,7 +435,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.checkDeleteTable = function (column) {
-              MetadataActionService.isTableEmpty($cookies['email'], column.id)
+              MetadataActionService.isTableEmpty($cookies.get('email'), column.id)
                       .then(function (response) {
 
                         if (response.board !== "EMPTY") {
@@ -474,7 +462,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.deleteTable = function (column) {
-              MetadataActionService.deleteList($cookies['email'], self.currentTemplateID, column)
+              MetadataActionService.deleteList($cookies.get('email'), self.currentTemplateID, column)
                       .then(function (success) {
                         self.fetchTemplate(self.currentTemplateID);
                         growl.success("Table " + column.name + " deleted successfully.",
@@ -495,7 +483,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.checkDeleteField = function (column, card) {
-              MetadataActionService.isFieldEmpty($cookies['email'], card.id)
+              MetadataActionService.isFieldEmpty($cookies.get('email'), card.id)
                       .then(function (response) {
 
                         if (response.board !== "EMPTY") {
@@ -524,7 +512,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.deleteField = function (column, card) {
-              MetadataActionService.deleteCard($cookies['email'], self.currentTemplateID, column, card)
+              MetadataActionService.deleteCard($cookies.get('email'), self.currentTemplateID, column, card)
                       .then(function (success) {
 
                         self.fetchTemplate(self.currentTemplateID);
@@ -547,11 +535,11 @@ angular.module('hopsWorksApp')
              */
             self.storeCard = function (templateId, column, card) {
 
-              return MetadataActionService.storeCard($cookies['email'], templateId, column, card);
+              return MetadataActionService.storeCard($cookies.get('email'), templateId, column, card);
             };
 
             /**
-             * Displays the modal dialog to creating a new card
+             * Displays the uibModal dialog to creating a new card
              * 
              * @param {type} column
              * @returns {undefined}
@@ -562,7 +550,7 @@ angular.module('hopsWorksApp')
               ModalService.addNewField($scope)
                       .then(function (field) {
 
-                        MetadataActionService.storeCard($cookies['email'], self.currentTemplateID, column, field)
+                        MetadataActionService.storeCard($cookies.get('email'), self.currentTemplateID, column, field)
                                 .then(function (success) {
 //                                  growl.success("Field " + field.title 
 //                                  + " saved successfully", {title: 'Success', ttl: 1000});
@@ -575,13 +563,13 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Displays the modal dialog to creating a new table
+             * Displays the uibModal dialog to creating a new table
              * 
              * @returns {undefined}
              */
             self.addNewList = function () {
               $scope.template = self.currentTemplateID;
-              $modal.open({
+              $uibModal.open({
                 templateUrl: 'views/metadata/newListModal.html',
                 controller: 'NewlistCtrl',
                 scope: $scope
@@ -593,7 +581,7 @@ angular.module('hopsWorksApp')
                           //we need to add the new table into the mainboard object
                           self.currentBoard.columns.push(list);
 
-                          MetadataActionService.storeTemplate($cookies['email'], self.currentTemplateID, self.currentBoard)
+                          MetadataActionService.storeTemplate($cookies.get('email'), self.currentTemplateID, self.currentBoard)
                                   .then(function (response) {
                                     var template = JSON.parse(response.board);
                                     var sortedTables = sortObject($filter, 'id', template);
@@ -762,7 +750,7 @@ angular.module('hopsWorksApp')
                         self.attachedDetailedTemplateList = [];
                         var index = 0;
                         angular.forEach(self.currentFileTemplates, function (template, key) {
-                          dataSetService.fetchTemplate(template.templateId, $cookies['email'])
+                          dataSetService.fetchTemplate(template.templateId, $cookies.get('email'))
                                   .then(function (response) {
                                     index++;
                                     self.attachedDetailedTemplateList.push({templateid: template.templateId, content: response.data.successMessage});
@@ -788,7 +776,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.updateMetadataTabs = function () {
-              dataSetService.fetchTemplate(self.selectedTemplate.templateId, $cookies['email'])
+              dataSetService.fetchTemplate(self.selectedTemplate.templateId, $cookies.get('email'))
                       .then(function (response) {
                         var board = response.data.successMessage;
                         self.currentBoard = JSON.parse(board);
@@ -905,7 +893,7 @@ angular.module('hopsWorksApp')
               //console.log("SELECTED TEMPLATE " + JSON.stringify(template));
 
               //get the actual template
-              MetadataActionService.fetchTemplate($cookies['email'], template.id)
+              MetadataActionService.fetchTemplate($cookies.get('email'), template.id)
                       .then(function (response) {
                         var contents = JSON.parse(response.board);
                         self.templateContents.templateName = selectedTmptName;

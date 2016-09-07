@@ -23,7 +23,7 @@ var mainModule = angular.module('hopsWorksApp')
 
                     self.items = [];
 
-                    MetadataActionService.fetchFieldTypes($cookies['email'])
+                    MetadataActionService.fetchFieldTypes($cookies.get('email'))
                             .then(function (response) {
                               console.log(JSON.stringify(response));
                               var content = JSON.parse(response.board);
@@ -38,7 +38,7 @@ var mainModule = angular.module('hopsWorksApp')
                               });
                             });
 
-                    MetadataActionService.isFieldEmpty($cookies['email'], $scope.field.id)
+                    MetadataActionService.isFieldEmpty($cookies.get('email'), $scope.field.id)
                             .then(function (response) {
 
                               if (response.board !== "EMPTY") {

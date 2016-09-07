@@ -4,10 +4,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$rootScope', '$modalStack', '$location', '$routeParams', 'UtilsService',
+        .controller('ProjectCtrl', ['$scope', '$rootScope', '$uibModalStack', '$location', '$routeParams', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
           'UserService', 'TourService',
-          function ($scope, $rootScope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService,
+          function ($scope, $rootScope, $uibModalStack, $location, $routeParams, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService) {
 
             var self = this;
@@ -214,7 +214,7 @@ angular.module('hopsWorksApp')
                                 if (success.errorMsg) {
                                   growl.warning(success.errorMsg, {title: 'Error', ttl: 15000});
                                 }
-                                $modalStack.getTop().key.close();
+                                $uibModalStack.getTop().key.close();
                               }, function (error) {
                         self.working = false;
                         growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
@@ -223,7 +223,7 @@ angular.module('hopsWorksApp')
             };
 
             self.close = function () {
-              $modalStack.getTop().key.dismiss();
+              $uibModalStack.getTop().key.dismiss();
             };
 
             $scope.showHamburger = $location.path().indexOf("project") > -1;

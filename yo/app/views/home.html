@@ -29,23 +29,6 @@
               </button>
             </div>
           </a>
-          <a href="" ng-click="homeCtrl.showTutorials = !homeCtrl.showTutorials; homeCtrl.getTutorials();" class="list-group-item">
-            <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showTutorials, 'glyphicon-triangle-bottom':homeCtrl.showTutorials}"></span>
-            Tutorials
-            <span class="fa fa-graduation-cap pull-right" style="margin-right: -1px;"></span>
-            <div style="margin-left: 20px;" ng-show="homeCtrl.showTutorials">
-              <!--<a href="//" target="_blank">Spark on YARN</a>-->
-              Spark on YARN
-              <br>
-              Flink on YARN
-              <br>
-              Getting Started with Zeppelin
-            </div>
-          </a>
-          <!--            <div ng-show="homeCtrl.showTutorials" ng-repeat="tutorial in homeCtrl.tutorials">
-                          <a href="//https://ci.apache.org/projects/flink/flink-docs-master/setup/yarn_setup.html" target="_blank">Flink on YARN</a>
-                          <a href="tutorial.url" target="_blank">{{tutorial.description}}</a>
-                      </div>-->
           <a href="" ng-click="homeCtrl.showPublicDatasets = !homeCtrl.showPublicDatasets; homeCtrl.getPublicDatasets();" class="list-group-item">
             <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showPublicDatasets, 'glyphicon-triangle-bottom':homeCtrl.showPublicDatasets}"></span>
             Public Data Sets

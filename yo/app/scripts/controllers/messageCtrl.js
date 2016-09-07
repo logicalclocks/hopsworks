@@ -4,7 +4,7 @@ angular.module('hopsWorksApp')
         function ($scope, $cookies, $modalInstance, MessageService, RequestService, growl, md5, selected) {
 
             var self = this;
-            self.email = $cookies['email'];
+            self.email = $cookies.get('email');
             self.refreshing = false;
             self.loading = false;
             self.loadingMsg = false;

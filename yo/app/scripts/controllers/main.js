@@ -8,7 +8,7 @@ angular.module('hopsWorksApp')
           function ($interval, $cookies, $location, $scope, AuthService, UtilsService, ElasticService, md5, ModalService, ProjectService, growl, MessageService, $routeParams, $window) {
 
             var self = this;
-            self.email = $cookies['email'];
+            self.email = $cookies.get('email');
             self.emailHash = md5.createHash(self.email || '');
             var elasticService = ElasticService();
 
@@ -51,7 +51,7 @@ angular.module('hopsWorksApp')
               AuthService.logout(self.user).then(
                       function (success) {
                         $location.url('/login');
-                        delete $cookies.email;
+                        $cookies.remove("email");
                         localStorage.removeItem("SESSIONID");
                         sessionStorage.removeItem("SESSIONID");
                       }, function (error) {
@@ -207,7 +207,13 @@ angular.module('hopsWorksApp')
                     self.searchResult = [];
                     self.searchReturned = "";
 
+                      if (self.searchTerm === undefined || self.searchTerm === "" || self.searchTerm === null) {
+                        return;
+                      }
+
+
                     if (self.searchType === "global") {
+                                            
                         //triggering a global search
                         elasticService.globalSearch(self.searchTerm)
                                 .then(function (response) {

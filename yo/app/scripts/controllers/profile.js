@@ -9,7 +9,7 @@ angular.module('hopsWorksApp')
             self.credentialWorking = false;
             self.twoFactorWorking = false;
             self.noPassword = false;
-            self.otp = $cookies['otp'];
+            self.otp = $cookies.get('otp');
             self.emailHash = '';
             self.master = {};
             self.masterTwoFactor = {};
