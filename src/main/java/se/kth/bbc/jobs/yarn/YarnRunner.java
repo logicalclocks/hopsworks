@@ -496,7 +496,7 @@ public class YarnRunner {
     //vargs.add(" -Dlog.file=/srv/hadoop/logs/userlogs/jobmanager1.out") ;   
     //Add jvm options
     if(jobType == JobType.FLINK && !javaOptions.isEmpty()){
-      amArgs+=" ";
+      amArgs+=" --kafka_params \"";
     }
     for (String s : javaOptions) {
       vargs.add(s);
@@ -506,6 +506,7 @@ public class YarnRunner {
     }
     if(jobType == JobType.FLINK && !javaOptions.isEmpty()){
       amArgs = amArgs.substring(0,amArgs.length()-1);
+      amArgs+="\"";
     }  
       
     // Set class name
