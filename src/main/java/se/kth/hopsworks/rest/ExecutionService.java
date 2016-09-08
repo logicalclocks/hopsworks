@@ -143,8 +143,8 @@ public class ExecutionService {
     try {
 
       //WORKS FOR NOW BUT SHOULD EVENTUALLY GO THROUGH THE YARN CLIENT API
-      Runtime rt = Runtime.getRuntime();
-      Process pr = rt.exec("/srv/hadoop/bin/yarn application -kill "+appid);
+      //Runtime rt = Runtime.getRuntime();
+      //Process pr = rt.exec("/srv/hadoop/bin/yarn application -kill "+appid);
 
       executionController.stop(job, user, appid);
 
