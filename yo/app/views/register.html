@@ -135,12 +135,12 @@
                 <div class=" col-xs-6 col-sm-6 col-md-6 text-center">
 
                     <div class="form-group has-feedback">
-                      <label class="col-xs-6 col-sm-6 col-md-6 text-muted" tooltip="This will allow you to use your mobile QR scanner for two-factor authentication.">
+                      <label class="col-xs-6 col-sm-6 col-md-6 text-muted" uib-tooltip="This will allow you to use your mobile QR scanner for two-factor authentication.">
                         <input name="sec_type" type="radio" ng-model="regCtrl.newUser.authType"  value="Mobile" >
                         Mobile 
                       </label>
                       <label class="col-xs-6 col-sm-6 col-md-6 text-muted"
-                             tooltip="A YubiKey is a small device that you can use for two-factor authentication.
+                             uib-tooltip="A YubiKey is a small device that you can use for two-factor authentication.
                              This means the service will request proof that you have your YubiKey
                              in addition to your regular username and password.">
                         <input name="sec_type" type="radio" ng-model="regCtrl.newUser.authType" value="Yubikey">

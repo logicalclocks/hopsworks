@@ -86,16 +86,16 @@
                                       </div>
                                   </div>
           
-                                  <pagination ng-show="homeCtrl.totalPages > 1"
+                                  <uib-pagination ng-show="homeCtrl.totalPages > 1"
                                               total-items="homeCtrl.totalItems"
                                               ng-model="homeCtrl.currentPage"
                                               max-size="homeCtrl.pageSize"
-                                              class="pagination-sm"
+                                              class="uib-pagination-sm"
                                               boundary-links="true"
                                               rotate="false"
                                               style="margin-left: 170px"
                                               num-pages="homeCtrl.totalPages">
-                                  </pagination>-->
+                                  </uib-pagination>-->
 
 
         </div>
@@ -122,13 +122,13 @@
         <div class="input-group-btn search-panel pull-left"
              style="width: 83px;">
           <button type="button"
-                  class="btn btn-default dropdown-toggle"
-                  data-toggle="dropdown" id="filterByButton">
+                  class="btn btn-default uib-dropdown-toggle"
+                  data-toggle="uib-dropdown" ihhd="filterByButton">
             <span id="search_concept">Filter by</span>
             <span class="caret"></span>
           </button>
 
-          <ul class="dropdown-menu" role="menu">
+          <ul class="uib-dropdown-menu" role="menu">
             <li><a href="#its_equal"> My own</a></li>
             <li><a href="#greather_than"> Private</a></li>
             <li><a href="#less_than"> Public </a></li>
@@ -167,8 +167,8 @@
           {{ project.project.name | limitTo: 17 }}{{project.project.name.length > 17 ? '...' : ''}}
           <span ng-if="project.project.name.substr(0, 5) === 'demo_'" class="glyphicon glyphicon-play-circle pull-right" style="margin-top: 5px;"></span>
         </a>
-        <div class="dropdown position-fixed" id="menu-{{$index}}">
-          <ul class="dropdown-menu dropdown-amore">
+        <div class="uib-dropdown position-fixed" id="menu-{{$index}}">
+          <ul class="uib-dropdown-menu dropdown-amore">
             <li>
               <a class="pointer"
                  role="menuitem"

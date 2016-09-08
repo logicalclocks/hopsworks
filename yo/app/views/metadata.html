@@ -133,7 +133,7 @@
                       ng-click="metadataCtrl.toggleTemplate(template);
                                           metadataCtrl.fetchTemplate(template.id)"
                       context-menu
-                      data-target="templateMenu-{{$index}}" tooltip="{{template.name}}" style="background-color: #f5f5f5;margin-top: 3px">
+                      data-target="templateMenu-{{$index}}" uib-tooltip="{{template.name}}" style="background-color: #f5f5f5;margin-top: 3px">
                     <div class="btn-lg">
                       <!--when the user clicks on a template name a check appears
                       <i class="fa fa-check pull-left"
@@ -150,7 +150,7 @@
                         <button class="btn btn-danger pull-right"
                                 ng-click="metadataCtrl.removeTemplate(template.id);$event.stopPropagation();"
 
-                                tooltip="Delete the template"
+                                uib-tooltip="Delete the template"
                                 style="margin-top: 1px;  height: 20px;padding:2px;">
                           <i class="fa fa-times"></i>
                         </button>
@@ -162,7 +162,7 @@
                              role="menuitem"
                              tabindex="1"
                              download="template.json"
-                             tooltip="Download the template"
+                             uib-tooltip="Download the template"
                              ng-mousedown="metadataCtrl.createDownloadURL(template);"
                              ng-href="{{metadataCtrl.url}}">
                             <span><i class="fa fa-download"></i></span>
@@ -209,14 +209,14 @@
 
                       <div align="right">
                         <button class="btn btn-success pull-right" ng-click="metadataCtrl.addField(column)"
-                                data-toggle="tooltip" data-placement="bottom" title="Add card to table"
+                                data-toggle="uib-tooltip" data-placement="bottom" title="Add card to table"
                                 style="margin-top: 5px; width: 20px; height: 20px;padding:2px;">
                           <!--<i class="fa fa-plus addNewCard"></i>-->
                           <i class="fa fa-plus"></i>
                         </button>
 
                         <button class="btn btn-danger pull-right" ng-click="metadataCtrl.checkDeleteTable(column)"
-                                data-toggle="tooltip" data-placement="bottom" title="Remove table"
+                                data-toggle="uib-tooltip" data-placement="bottom" title="Remove table"
                                 style="margin-top: 5px; width: 20px; height: 20px; padding:2px;">
                           <i class="fa fa-trash-o"></i>
                         </button>
@@ -224,7 +224,7 @@
                       </div>
                       <script>
                                           $(document).ready(function () {
-                                            $('[data-toggle="tooltip"]').tooltip();
+                                            $('[data-toggle="uib-tooltip"]').uib-tooltip();
                                           });
                       </script>
                       <span editable-text="column.name"

@@ -42,7 +42,7 @@
     <div growl class="pull-right"></div>
 
     <div class="container-fluid" style="min-width: 300px">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+      <button type="button" class="navbar-toggle uib-collapsed" data-toggle="uib-collapse" data-target="#navbar">
         <span class="sr-only">Toggle navigation</span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
@@ -62,17 +62,17 @@
         </div>
       </div>
 
-      <div class="collapse navbar-collapse" id="navbar">
+      <div class="uib-collapse navbar-collapse" id="navbar">
         <ul class="nav navbar-nav navbar-right"
             style="margin-right:10px;">
-          <li ng-click="mainCtrl.getMessages()" class="dropdown">
-            <a class="dropdown-toggle" style="padding:5px 15px 0px 10px; margin-top: 13px; margin-bottom: -15px;" data-toggle="dropdown"  aria-expanded="false">
+          <li ng-click="mainCtrl.getMessages()" class="uib-dropdown">
+            <a class="uib-dropdown-toggle" style="padding:5px 15px 0px 10px; margin-top: 13px; margin-bottom: -15px;" data-toggle="uib-dropdown"  aria-expanded="false">
               <i ng-if="mainCtrl.unreadMessages" class="fa fa-envelope fa-lg" title="Unread messages">
                 <span class="badge" style="background-color: #f89406; font-family: sans-serif; z-index: 100; position: absolute; top: -10px; right: -18px">{{mainCtrl.unreadMessages}}</span>
               </i>
               <i ng-if="!mainCtrl.unreadMessages" class="fa fa-envelope-o fa-lg" title="No unread message"></i>
             </a>
-            <ul class=" dropdown-menu dropdown-messages" >
+            <ul class=" uib-dropdown-menu uib-dropdown-messages" >
               <h3 ng-if="mainCtrl.messages.length" class="text-muted"> Latest messages</h3>
               <h3 ng-if="!mainCtrl.messages.length" class="text-muted"> Inbox empty.</h3>
               <li ng-repeat="msg in mainCtrl.messages | limitTo:5">
@@ -91,12 +91,12 @@
               <a ng-click="mainCtrl.openMessageModal()" style="text-decoration:none;"> See all messages</a>
             </ul>
           </li>
-          <li class="dropdown">
-            <a class="dropdown-toggle" style="padding:7px 10px 8px 10px; text-decoration:none;" data-toggle="dropdown"  aria-expanded="false" id="navbarProfile">
+          <li class="uib-dropdown">
+            <a class="uib-dropdown-toggle" style="padding:7px 10px 8px 10px; text-decoration:none;" data-toggle="uib-dropdown"  aria-expanded="false" id="navbarProfile">
               <img src="https://gravatar.com/avatar/{{mainCtrl.emailHash}}?d=retro&s=50" style="height: 35px; margin-right: 10px;border: 0.5px solid gray;" class="profile-image img-circle">
               {{mainCtrl.email}} <b class="caret"></b>
             </a>
-            <ul class="dropdown-menu">
+            <ul class="uib-dropdown-menu">
               <li ng-show="mainCtrl.checkIfAdmin()"><a ng-click="mainCtrl.goToAdminPage()"><i class="fa fa-user-secret"></i>Admin</a></li>
               <li><a ng-click="mainCtrl.profileModal()"><i class="fa fa-cog"></i> Account</a></li>
               <!--<li><a ng-click="mainCtrl.sshKeysModal()"><i class="fa fa-key"></i> Ssh Keys</a></li>-->

@@ -79,7 +79,7 @@
                                         </div>
                                     </div>
 
-                                    <pagination ng-if="projectCtrl.totalPages > 1"
+                                    <uib-pagination ng-if="projectCtrl.totalPages > 1"
                                                 total-items="projectCtrl.totalItems"
                                                 ng-model="projectCtrl.currentPage"
                                                 max-size="projectCtrl.pageSize"
@@ -87,7 +87,7 @@
                                                 boundary-links="true"
                                                 rotate="false"
                                                 num-pages="projectCtrl.totalPages" >
-                                    </pagination>
+                                    </uib-pagination>
                                     
                                 </div>
                                 
@@ -142,7 +142,7 @@
                       <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px">
                         <div style="display: inline-block">
                           <div style="display: inline-block"><h4>No metadata template attached.</h4></div>
-                                       <span class="field-info" tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
+                                       <span class="field-info" uib-tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
                                             <i class="fa fa-exclamation-circle"></i>
                                         </span>
                         </div>
@@ -161,7 +161,7 @@
                                   <div>
                                     <label>{{field.tagName}}</label>
                                                     <span class="field-info" tooltip-placement="right"
-                                                          tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
+                                                          uib-tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
                                                               <i class="fa fa-exclamation-circle"></i>
                                                     </span>
                                     <a style="color: green;padding-left: 10px " ng-click="metadataCtrl.setVisibilityAddMetadata(table.id+'-'+field.tagName,true)" ng-hide="metadataCtrl.visibilityInfo[table.id+'-'+field.tagName]"><i class="fa fa-plus"></i></a>

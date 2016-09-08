@@ -115,15 +115,15 @@
                           <td style="width: 12%;">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
 
                           <td>
-                            <div class="dropdown position-fixed" id="menu-{{ $index}}">
-                              <ul class="dropdown-menu dropdown-amore" role="menu">
+                            <div class="uib-dropdown position-fixed" id="menu-{{ $index}}">
+                              <ul class="uib-dropdown-menu dropdown-amore" role="menu">
                                 <li>
                                   <a class="pointer"
                                      role="menuitem"
                                      tabindex="5"
                                      ng-hide="file.dir"
                                      ng-click="datasetsCtrl.filePreview(file.name, true)"
-                                     data-toggle="tooltip" title="Click to display a preview of a text file."
+                                     data-toggle="uib-tooltip" title="Click to display a preview of a text file."
                                     >
                                     <span><i class="fa fa-camera-retro" ></i>
                                       Preview</span>
@@ -290,7 +290,7 @@
                                 <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px">
                                   <div style="display: inline-block">
                                     <div style="display: inline-block"><h4>No extended metadata available.</h4></div>
-                                    <span class="field-info" tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
+                                    <span class="field-info" uib-tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
                                       <i class="fa fa-exclamation-circle"></i>
                                     </span>
                                   </div>
@@ -301,14 +301,14 @@
                                          style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
                                       <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px">
                                         <label style="font-size: 16px;">{{table.name}}</label>
-                                        <button type="button" class="btn btn-default btn-xs pull-right" style="background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" data-toggle="collapse" data-target="#metadatadiv{{$index}}"><i class="fa fa-ellipsis-v"></i></button>
+                                        <button type="button" class="btn btn-default btn-xs pull-right" style="background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" data-toggle="uib-collapse" data-target="#metadatadiv{{$index}}"><i class="fa fa-ellipsis-v"></i></button>
                                       </div>
-                                      <div id="metadatadiv{{$index}}" class="collapse in">
+                                      <div id="metadatadiv{{$index}}" class="uib-collapse in">
                                         <div ng-repeat="field in table.rest" style="padding-left: 15px;padding-top:15px;font-size: 15px;">
                                           <div class="panel panel-default">
                                             <div>
                                               <label>{{field.tagName}}</label>
-                                              <span class="field-info" tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
+                                              <span class="field-info" uib-tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
                                                 <i class="fa fa-exclamation-circle"></i>
                                               </span>  
                                               <a style="color: green;padding-left: 10px " ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, true)" ng-hide="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"><i class="fa fa-plus"></i></a>
@@ -447,7 +447,7 @@
                                 <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px">
                                   <div style="display: inline-block">
                                     <div style="display: inline-block"><h4>No metadata template attached.</h4></div>
-                                    <span class="field-info" tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
+                                    <span class="field-info" uib-tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
                                       <i class="fa fa-exclamation-circle"></i>
                                     </span>
                                   </div>
@@ -458,15 +458,15 @@
                                          style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
                                       <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px">
                                         <label style="font-size: 16px;">{{table.name}}</label>
-                                        <button type="button" class="btn btn-default btn-xs pull-right" style="background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" data-toggle="collapse" data-target="#metadatadiv{{$index}}"><i class="fa fa-ellipsis-v"></i></button>
+                                        <button type="button" class="btn btn-default btn-xs pull-right" style="background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" data-toggle="uib-collapse" data-target="#metadatadiv{{$index}}"><i class="fa fa-ellipsis-v"></i></button>
                                       </div>
-                                      <div id="metadatadiv{{$index}}" class="collapse in">
+                                      <div id="metadatadiv{{$index}}" class="uib-collapse in">
                                         <div ng-repeat="field in table.rest" style="padding-left: 15px;padding-top:15px;font-size: 15px;">
                                           <div class="panel panel-default">
                                             <div>
                                               <label>{{field.tagName}}</label>
                                               <span class="field-info" tooltip-placement="right"
-                                                    tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
+                                                    uib-tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
                                                 <i class="fa fa-exclamation-circle"></i>
                                               </span>
                                               <a style="color: green;padding-left: 10px " ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, true)" ng-hide="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"><i class="fa fa-plus"></i></a>
@@ -730,8 +730,8 @@
             </div>
 
             <div style="margin-top: 10em;">
-              <tabset justified="false">
-                <tab ng-repeat="tab in metadataCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
+              <uib-tabset justified="false">
+                <uib-tab ng-repeat="tab in metadataCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
                      disabled="tab.disabled" select="metadataCtrl.onTabSelect(tab)"
                      style="padding-left: 1em;z-index: 0;">
 
@@ -753,7 +753,7 @@
 
                               <div tabindex="2" class="col-md-1" style="padding-bottom: 0;">
                                 <span class="field-info pull-left" tooltip-placement="right"
-                                      tooltip="{{card.description}}">
+                                      uib-tooltip="{{card.description}}">
                                   <i class="fa fa-exclamation-circle"></i>
                                 </span>
                               </div>
@@ -814,8 +814,8 @@
                       </button>
                     </div>
                   </form>
-                </tab>
-              </tabset>
+                </uib-tab>
+              </uib-tabset>
             </div>
           </md-content>
         </md-sidenav>

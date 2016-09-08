@@ -34,14 +34,14 @@
             </div>
           </div>
         </div>
-        <pagination ng-show="mainCtrl.resultPages > 1"
+        <uib-pagination ng-show="mainCtrl.resultPages > 1"
                     total-items="mainCtrl.resultItems"
                     ng-model="mainCtrl.currentPage"
                     max-size="mainCtrl.pageSize"
                     items-per-page="5"
                     class="pagination-sm"
                     boundary-links="true">
-        </pagination>
+        </uib-pagination>
       </div>
     </div>
   </div>

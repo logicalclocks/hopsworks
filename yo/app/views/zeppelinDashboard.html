@@ -25,7 +25,7 @@
                     <div growl reference="10" class="pull-right" ></div>
                     <h3>
                         <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
-                            <button class="btn btn-success" ng-click="zeppelinCtrl.createNewNote()" dropdown-toggle type="button" id="newNotebook" aria-haspopup="true" aria-expanded="true">
+                            <button class="btn btn-success" ng-click="zeppelinCtrl.createNewNote()" uib-dropdown-toggle type="button" id="newNotebook" aria-haspopup="true" aria-expanded="true">
                                 Create New Notebook
                             </button>
                         </div>
@@ -79,8 +79,8 @@
                                             </a>
                                         </div>
                                     </div>  
-                                    <div class="dropdown position-fixed" id="menu-{{$index}}">
-                                        <ul class="dropdown-menu dropdown-amore">
+                                    <div class="uib-dropdown position-fixed" id="menu-{{$index}}">
+                                        <ul class="uib-dropdown-menu dropdown-amore">
                                             <li ng-show="projectCtrl.role === 'Data owner'">
                                                 <a class="pointer"
                                                    role="menuitem"

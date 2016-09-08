@@ -66,7 +66,7 @@
                   {{ ::cluster.name}} 
                   <div class="btn-group" role="group">
                     <button 
-                      tooltip="Delete"
+                      uib-tooltip="Delete"
                       ng-click="tensorflowCtrl.toggle(cluster, $index); tensorflowCtrl.removeCluster(cluster.name); $event.stopPropagation();"
                       type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
                     </button>

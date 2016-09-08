@@ -19,9 +19,9 @@
               </div>
                 <div style="float: left;width: 100%;">
                 <div class="pull-left"><i class="glyphicon glyphicon-info-sign"                  
-                         tooltip="Search using the 'Search Field' or use the drop down menu to select the Type and the second
+                         uib-tooltip="Search using the 'Search Field' or use the drop down menu to select the Type and the second
                          menu to set the Value that you search for." 
-                         tooltip-placement="bottom"
+                         uib-tooltip-placement="bottom"
                          style="margin-left: 10px"></i>
                 </div>
                 <div>
@@ -32,12 +32,12 @@
                 </div>
                 <div class="input-group-btn search-panel pull-left" style="width: 10%;">
                     <button type="button" style="width: 100%;"
-                            class="btn btn-default dropdown-toggle"
-                            data-toggle="dropdown" id="filterByButton">
+                            class="btn btn-default uib-dropdown-toggle"
+                            data-toggle="uib-dropdown" id="filterByButton">
                             <span id="search_concept">{{name}}</span>
                             <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu" role="menu">
+                    <ul class="uib-dropdown-menu" role="menu">
                         <li ng-repeat="choice in searchChoices">                            
                             <a ng-click="historyCtrl.selectFirstForm(choice.name, choice.searchName);">{{choice.name}}</a>        
                         </li>               
@@ -46,13 +46,13 @@
                 <div class="input-group-btn search-panel pull-left" style="width: 10%; margin-left: 10px" ng-hide="!fisrtFormSelected">
                     <li ng-repeat="choice in searchChoices" ng-if="choice.searchName == searchName">                                     
                     <button type="button" style="width: 100%;"
-                            class="btn btn-default dropdown-toggle"
-                            data-toggle="dropdown" id="filterByType"
+                            class="btn btn-default uib-dropdown-toggle"
+                            data-toggle="uib-dropdown" id="filterByType"
                             ng-hide="!fisrtFormSelected">
                             <span id="search_concept">{{valueType}}</span>
                             <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu" role="menu">
+                    <ul class="uib-dropdown-menu" role="menu">
                         <li ng-repeat="(key, value) in choice.values">                            
                             <a ng-click="historyCtrl.selectSecondForm(value.type, value.id);">{{value.type}}</a>        
                         </li> 
@@ -137,7 +137,7 @@
                         {{job.score}}
                     </td>-->
                     <td>
-                        <span class="field-info" tooltip="Job Details" style="padding-top: 5px;padding-left:3px">
+                        <span class="field-info" uib-tooltip="Job Details" style="padding-top: 5px;padding-left:3px">
                         <button style=""
                                 ng-click="historyCtrl.showDetails(job);"
                                 class="btn btn-info glyphicon glyphicon-list-alt">
