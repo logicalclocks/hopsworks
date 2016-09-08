@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCreatorCtrl', ['$modalInstance', '$scope', 'ProjectService', 'UserService', 'growl',
-          function ($modalInstance, $scope, ProjectService, UserService, growl) {
+        .controller('ProjectCreatorCtrl', ['$uibModalInstance', '$scope', 'ProjectService', 'UserService', 'growl',
+          function ($uibModalInstance, $scope, ProjectService, UserService, growl) {
 
             var self = this;
 
@@ -113,7 +113,7 @@ angular.module('hopsWorksApp')
                           });
 
                         }
-                        $modalInstance.close($scope.newProject);
+                        $uibModalInstance.close($scope.newProject);
                       }, function (error) {
                           self.working = false;
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
@@ -122,7 +122,7 @@ angular.module('hopsWorksApp')
             };
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
 
           }]);

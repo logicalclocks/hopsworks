@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('ViewSearchResultCtrl', ['$modalInstance', 'RequestService', 'DataSetService',  'growl', 'result', 'datatype', 'projects',
-          function ($modalInstance, RequestService, DataSetService, growl, result, datatype, projects) {
+        .controller('ViewSearchResultCtrl', ['$uibModalInstance', 'RequestService', 'DataSetService',  'growl', 'result', 'datatype', 'projects',
+          function ($uibModalInstance, RequestService, DataSetService, growl, result, datatype, projects) {
 
             var self = this;
             self.request = {'inodeId': "", 'projectId': "", 'message': ""};
@@ -17,7 +17,7 @@ angular.module('hopsWorksApp')
               self.sendRequest = function () {
                 RequestService.joinRequest(self.request).then(
                         function (success) {
-                          $modalInstance.close(success);
+                          $uibModalInstance.close(success);
                         }, function (error) {
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 21});
                 });
@@ -35,7 +35,7 @@ angular.module('hopsWorksApp')
               self.sendRequest = function () {
                 RequestService.accessRequest(self.request).then(
                         function (success) {
-                          $modalInstance.close(success);
+                          $uibModalInstance.close(success);
                         }, function (error) {
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 21});
                 });
@@ -45,7 +45,7 @@ angular.module('hopsWorksApp')
             var dataSetService = DataSetService(self.projectId); 
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
           }]);
 

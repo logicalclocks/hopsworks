@@ -1,23 +1,23 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ModalCtrl', ['$modalInstance',  'title', 'msg',
-          function ($modalInstance, title, msg) {
+        .controller('ModalCtrl', ['$uibModalInstance',  'title', 'msg',
+          function ($uibModalInstance, title, msg) {
 
             var self = this;
             self.title = title;
             self.msg = msg;
             
             self.ok = function () {
-              $modalInstance.close();
+              $uibModalInstance.close();
             };
 
             self.cancel = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
             
             self.reject = function () {
-              $modalInstance.dismiss('reject');
+              $uibModalInstance.dismiss('reject');
             };
 
           }]);

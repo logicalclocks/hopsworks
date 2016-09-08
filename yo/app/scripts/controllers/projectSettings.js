@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectSettingsCtrl', ['$modalInstance', '$scope', 'ProjectService', 'growl', 'projectId',
-          function ($modalInstance, $scope, ProjectService, growl, projectId) {
+        .controller('ProjectSettingsCtrl', ['$uibModalInstance', '$scope', 'ProjectService', 'growl', 'projectId',
+          function ($uibModalInstance, $scope, ProjectService, growl, projectId) {
 
             var self = this;
             self.projectId = projectId;
@@ -51,7 +51,7 @@ angular.module('hopsWorksApp')
             };
 
             self.ok = function () {
-              $modalInstance.close();
+              $uibModalInstance.close();
             };
 
           }]);

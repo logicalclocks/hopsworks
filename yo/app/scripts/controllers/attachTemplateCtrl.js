@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp').controller('AttachTemplateCtrl',
-        ['$routeParams', '$modalInstance', 'file', 'templateId', 'DataSetService',
-          function ($routeParams, $modalInstance, file, templateId, DataSetService) {
+        ['$routeParams', '$uibModalInstance', 'file', 'templateId', 'DataSetService',
+          function ($routeParams, $uibModalInstance, file, templateId, DataSetService) {
 
             var self = this;
 
@@ -34,7 +34,7 @@ angular.module('hopsWorksApp').controller('AttachTemplateCtrl',
             };
 
             self.close = function () {
-              $modalInstance.dismiss('cancelled');
+              $uibModalInstance.dismiss('cancelled');
             };
 
             self.skipThisStep = function(){
@@ -46,6 +46,6 @@ angular.module('hopsWorksApp').controller('AttachTemplateCtrl',
                 return false;
               }
 
-              $modalInstance.close({templateId: self.templateId});
+              $uibModalInstance.close({templateId: self.templateId});
             };
           }]);

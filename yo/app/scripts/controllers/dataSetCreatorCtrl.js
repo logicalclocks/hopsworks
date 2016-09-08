@@ -8,8 +8,8 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('DataSetCreatorCtrl', ['$cookies', '$modalInstance', 'DataSetService', 'MetadataActionService', '$routeParams', 'growl', 'path',
-          function ($cookies, $modalInstance, DataSetService, MetadataActionService, $routeParams, growl, path) {
+        .controller('DataSetCreatorCtrl', ['$cookies', '$uibModalInstance', 'DataSetService', 'MetadataActionService', '$routeParams', 'growl', 'path',
+          function ($cookies, $uibModalInstance, DataSetService, MetadataActionService, $routeParams, growl, path) {
 
             var self = this;
             self.path = path;
@@ -40,7 +40,7 @@ angular.module('hopsWorksApp')
               dataSetService.createDataSetDir(dataSet)
                       .then(function (success) {
                         self.working = false;
-                        $modalInstance.close(success);
+                        $uibModalInstance.close(success);
                       },
                       function (error) {
                         self.working = false;
@@ -53,7 +53,7 @@ angular.module('hopsWorksApp')
               dataSetService.createTopLevelDataSet(dataSet)
                       .then(function (success) {
                         self.working = false;
-                        $modalInstance.close(success);
+                        $uibModalInstance.close(success);
                       },
                       function (error) {
                         self.working = false;
@@ -62,7 +62,7 @@ angular.module('hopsWorksApp')
             };
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
 
             self.saveDataSetDir = function () {

@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('SchemaViewContentCtrl', ['$modalInstance', '$scope', 'KafkaService', 'growl', 'projectId', 'schemaName', 'schemaVersion',
-          function ($modalInstance, $scope, KafkaService, growl, projectId, schemaName, schemaVersion) {
+        .controller('SchemaViewContentCtrl', ['$uibModalInstance', '$scope', 'KafkaService', 'growl', 'projectId', 'schemaName', 'schemaVersion',
+          function ($uibModalInstance, $scope, KafkaService, growl, projectId, schemaName, schemaVersion) {
 
             var self = this;
             
@@ -27,7 +27,7 @@ angular.module('hopsWorksApp')
             self.init();            
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
           }]);
 

@@ -1,8 +1,8 @@
 'use strict'
 
 angular.module('hopsWorksApp')
-        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$modalInstance','$cookies',
-          function (UserService, $location, $scope, md5, growl, $modalInstance, $cookies) {
+        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$uibModalInstance','$cookies',
+          function (UserService, $location, $scope, md5, growl, $uibModalInstance, $cookies) {
 
             var self = this;
             self.working = false;
@@ -132,7 +132,7 @@ angular.module('hopsWorksApp')
             };
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
 
           }]);

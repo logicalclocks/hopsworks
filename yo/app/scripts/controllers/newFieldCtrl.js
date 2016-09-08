@@ -5,8 +5,8 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('NewFieldCtrl', ['$cookies', '$scope', '$modalInstance', 'MetadataActionService', '$filter',
-          function ($cookies, $scope, $modalInstance, MetadataActionService, $filter) {
+        .controller('NewFieldCtrl', ['$cookies', '$scope', '$uibModalInstance', 'MetadataActionService', '$filter',
+          function ($cookies, $scope, $uibModalInstance, MetadataActionService, $filter) {
 
             var self = this;
 
@@ -49,7 +49,7 @@ angular.module('hopsWorksApp')
 
             // Dialog service
             self.cancel = function () {
-              $modalInstance.dismiss('Canceled');
+              $uibModalInstance.dismiss('Canceled');
             };
 
             self.saveField = function () {
@@ -70,7 +70,7 @@ angular.module('hopsWorksApp')
                   fieldTypeContent = self.multiSelectItems;
               }
 
-              $modalInstance.close({
+              $uibModalInstance.close({
                 id: this.id,
                 title: this.name,
                 details: this.details,
