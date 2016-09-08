@@ -73,8 +73,6 @@ module.exports = function (config) {
       'bower_components/angular-xeditable/dist/js/xeditable.js',
       'bower_components/isteven-angular-multiselect/isteven-multi-select.js',
       'bower_components/angular-awesome-slider/dist/angular-awesome-slider.js',
-      'bower_components/chart.js/src/chart.js',
-      'bower_components/angular-chart.js/dist/angular-chart.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',
