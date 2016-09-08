@@ -115,8 +115,8 @@
                           <td style="width: 12%;">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
 
                           <td>
-                            <div class="uib-dropdown position-fixed" id="menu-{{ $index}}">
-                              <ul class="uib-dropdown-menu dropdown-amore" role="menu">
+                            <div uib-dropdown class="position-fixed" id="menu-{{ $index}}">
+                              <ul uib-dropdown-menu class="dropdown-amore" role="menu">
                                 <li>
                                   <a class="pointer"
                                      role="menuitem"

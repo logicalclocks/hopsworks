@@ -19,7 +19,7 @@
             <div>
               Every 
               <input type="number" ng-model="jobDetailCtrl.schedule.number" min="1" max="999" ng-change="jobDetailCtrl.updateNumberOfScheduleUnits()"  style="width: 50px" value="1"> 
-              <select class="uib-dropdown" ng-model="jobDetailCtrl.schedule.unit">
+              <select uib-dropdown class="dropdown" ng-model="jobDetailCtrl.schedule.unit">
                 <option value="minute">minute{{jobDetailCtrl.schedule.addition}}</option>
                 <option value="hour">hour{{jobDetailCtrl.schedule.addition}}</option>
                 <option value="day" ng-selected=>day{{jobDetailCtrl.schedule.addition}}</option>

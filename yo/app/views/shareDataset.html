@@ -15,14 +15,14 @@
                             <div class="btn-group" role="group" style="width: 21%">
 
                                     <button type="button"
-                                            class="btn btn-default uib-dropdown-toggle"
-                                            data-toggle="uib-dropdown"
+                                            uib-dropdown-toggle
+                                            class="btn btn-default"
                                             aria-haspopup="true" aria-expanded="false">
                                         <span id="search_concept">Filter by</span>
                                         <span class="caret"></span>
                                     </button>
 
-                                    <ul class="uib-dropdown-menu" role="menu" style="min-width: 115px">
+                                    <ul uib-dropdown-menu role="menu" style="min-width: 115px">
                                         <li><a > All</a></li>
                                         <li><a > Requested</a></li>
                                     </ul>
@@ -55,8 +55,8 @@
                             <div class="btn-group" role="group" style="width: 15%">
 
                                     <button type="button"
-                                            class="btn btn-default uib-dropdown-toggle"
-                                            data-toggle="uib-dropdown"
+                                            uib-dropdown-toggle
+                                            class="btn btn-default"
                                             aria-haspopup="true" aria-expanded="false">
                                         <span ng-if="!shareDatasetCtrl.dataSet.editable" id="view_concept">
                                             <span class="glyphicon glyphicon-eye-open"></span> Can view
@@ -67,7 +67,7 @@
                                         <span class="caret"></span>
                                     </button>
 
-                                    <ul class="uib-dropdown-menu" role="menu" style="min-width: 115px;">
+                                    <ul uib-dropdown-menu role="menu" style="min-width: 115px;">
                                         <li><a ng-click="shareDatasetCtrl.dataSet.editable = false">
                                             <span class="glyphicon glyphicon-eye-open"></span>
                                             Can view</a></li>

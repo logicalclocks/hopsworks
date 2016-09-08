@@ -237,25 +237,25 @@
                                     jobsCtrl.deleteJob(job.id); $event.stopPropagation();"
                                     type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
                                   </button>
-                                  <button tooltip="Job UI"
+                                  <button uib-tooltip="Job UI"
                                     type="button" class="btn btn-info glyphicon glyphicon-eye-open"
                                           ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showUI(job);
                                             $event.stopPropagation();">                                            
                                   </button>
                                   <div class="btn-group" role="group">
                                     <button type="button" 
-                                            class="btn btn-default uib-dropdown-toggle glyphicon"
+                                            uib-dropdown-toggle class="btn btn-default glyphicon"
                                             style="font-family: sans-serif;"
-                                            data-toggle="uib-dropdown">
+                                            >
                                       More
                                       <span class="caret"></span>
                                     </button>
-                                    <ul class="uib-dropdown-menu" role="menu" style="font-family: sans-serif;">
-                                      <li><a class="dropdown-item" ng-click="jobsCtrl.toggle(job, $index);
+                                    <ul uib-dropdown-menu class="dropdown-menu" style="font-family: sans-serif;">
+                                      <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
                                         jobsCtrl.showDetails(job);$event.stopPropagation();" >Job Details</a></li>
-                                      <li><a class="dropdown-item" ng-click="jobsCtrl.toggle(job, $index);
+                                      <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
                                         jobsCtrl.editAsNew(job); $event.stopPropagation();" >Edit as new</a></li>
-                                      <li><a class="dropdown-item" ng-click="jobsCtrl.toggle(job, $index);
+                                      <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
                                         jobsCtrl.showDetails(job); $event.stopPropagation();" >Schedule</a></li>
                                     </ul>
                                   </div>
@@ -300,7 +300,7 @@
                  <div class="tab-content" >
                     <div id="logs" class="tab-pane fade in active">
                        <uib-accordion
-                          close-others="true"infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
+                          close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
                           <uib-accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                             <uib-accordion-heading ng-if="item.appId !== ''">
                                 Application Id = {{item.appId}}

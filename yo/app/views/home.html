@@ -121,14 +121,12 @@
            style="background-color: #f5f5f5;">
         <div class="input-group-btn search-panel pull-left"
              style="width: 83px;">
-          <button type="button"
-                  class="btn btn-default uib-dropdown-toggle"
-                  data-toggle="uib-dropdown" ihhd="filterByButton">
+          <button type="button" class="btn btn-default" ihhd="filterByButton" uib-dropdown-toggle>
             <span id="search_concept">Filter by</span>
             <span class="caret"></span>
           </button>
 
-          <ul class="uib-dropdown-menu" role="menu">
+          <ul uib-dropdown-menu class="dropdown-menu" role="menu">
             <li><a href="#its_equal"> My own</a></li>
             <li><a href="#greather_than"> Private</a></li>
             <li><a href="#less_than"> Public </a></li>
@@ -167,8 +165,8 @@
           {{ project.project.name | limitTo: 17 }}{{project.project.name.length > 17 ? '...' : ''}}
           <span ng-if="project.project.name.substr(0, 5) === 'demo_'" class="glyphicon glyphicon-play-circle pull-right" style="margin-top: 5px;"></span>
         </a>
-        <div class="uib-dropdown position-fixed" id="menu-{{$index}}">
-          <ul class="uib-dropdown-menu dropdown-amore">
+        <div class="dropdown position-fixed" id="menu-{{$index}}">
+          <ul uib-dropdown-menu class="dropdown-amore">
             <li>
               <a class="pointer"
                  role="menuitem"

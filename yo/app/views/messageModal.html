@@ -7,15 +7,15 @@
 <div growl reference="13" class="pull-right"></div>
 <div class="row" style="margin: 0px">
     <div class="panel message-panel col-xs-4 col-sm-4 col-md-4" style="width: 29%;">
-        <a ng-click="messageCtrl.refresh()" uib-tooltip="Refresh Panel" class="pull-right" style="padding-top: 10px; padding-right: 15px; color: #c1c2c3">
+        <a ng-click="messageCtrl.refresh()" tooltip="Refresh Panel" class="pull-right" style="padding-top: 10px; padding-right: 15px; color: #c1c2c3">
             <i class="fa fa-refresh" ng-class="{'fa-spin':messageCtrl.refreshing}"></i>
         </a><br>
         <p></p>
-        <uib-tabset justified="true">
-            <uib-tab>
-                <uib-tab-heading>
+        <tabset justified="true">
+            <tab>
+                <tab-heading>
                     <em class="fa fa-fw fa-lg fa-envelope-o"></em>Messages
-                </uib-tab-heading>
+                </tab-heading>
                 <p></p>
                 <input type="text" placeholder="Filter messages" ng-model="messageCtrl.filterText" class="form-control" style="margin-left: 10px; width:200px"/>
                 <p></p>
@@ -30,7 +30,7 @@
                         <li ng-class="{'unread': msg.unread, 'highlight': messageCtrl.selectedMsg.id === msg.id}" ng-repeat="msg in messageCtrl.messages | filter: search">
                             <div class="message-preview-div">
                                 <img class="message-avatar pull-left" src="https://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(msg.from.email)}}?d=mm">
-                                <button uib-tooltip="Move to trash" class="close" ng-click="messageCtrl.moveToTrash(msg, $index)" aria-hidden="true" type="button">
+                                <button tooltip="Move to trash" class="close" ng-click="messageCtrl.moveToTrash(msg, $index)" aria-hidden="true" type="button">
                                     &times;
                                 </button>
                                 <div ng-click="messageCtrl.select(msg)">
@@ -45,14 +45,14 @@
                                 </div>
                             </div>
                         </li>
-                    </ul>
+                    </ul>h
                 </div>
 
-            </uib-tab>
-            <uib-tab>
-                <uib-tab-heading>
+            </tab>
+            <tab>
+                <tab-heading>
                     <em class="fa fa-fw fa-lg fa-trash"></em>Trash
-                </uib-tab-heading>
+                </tab-heading>
                 <p></p>
                 <input type="text" placeholder="Filter messages" ng-model="messageCtrl.filterText" class="form-control" style="margin-left: 10px; width:200px"/>
                 <p></p>
@@ -69,7 +69,7 @@
                         <li ng-class="{'unread': msg.unread, 'highlight': messageCtrl.selectedMsg.id === msg.id}" ng-repeat="msg in messageCtrl.trash | filter: search">
                             <div class="message-preview-div">
                                 <img class="message-avatar pull-left" src="https://gravatar.com/avatar/{{messageCtrl.emailMd5Hash(msg.from.email)}}?d=mm">
-                                <button uib-tooltip="Delete message" class="close" ng-click="messageCtrl.deleteMessage(msg, $index)" aria-hidden="true" type="button">
+                                <button tooltip="Delete message" class="close" ng-click="messageCtrl.deleteMessage(msg, $index)" aria-hidden="true" type="button">
                                     &times;
                                 </button>
                                 <div ng-click="messageCtrl.select(msg)">
@@ -86,8 +86,8 @@
                         </li>
                     </ul>
                 </div>
-            </uib-tab>
-        </uib-tabset>
+            </tab>
+        </tabset>
 
     </div>
     <div class="panel message-panel col-xs-8 col-sm-8 col-md-8 pull-right" style="width: 70%;">

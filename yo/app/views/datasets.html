@@ -28,10 +28,6 @@
                   </button>
                 </div>
                 <div class="col-lg-6" style="max-width: 550px; " >
-                  <!--                  <div class="ibox float-e-margins">
-                                      <div class="ibox-content" style="padding-left:0px; padding-right:0px;">
-                                        <div class="file-manager">-->
-                  <!--style="margin: 0px; font-weight: bold; color: #2e353d;"-->
                   Filter: 
                   <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined;" class="file-control active">All</a>
                   <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; datasetsCtrl.isPublic = false;" class="file-control">Shared</a>
@@ -100,8 +96,8 @@
                                                         </div>
                                                       </div>
                                                     </div>-->
-                      <div class="uib-dropdown position-fixed" id="menu-{{$index}}">
-                        <ul class="uib-dropdown-menu uib-dropdown-amore">
+                      <div uib-dropdown class="position-fixed" id="menu-{{$index}}">
+                        <ul uib-dropdown-menu class="uib-dropdown-amore">
                           <li ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === false">
                             <a class="pointer"
                                role="menuitem"
