@@ -136,7 +136,7 @@ public class ExecutionService {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
           "You are not authorized for this invocation.");
     }
-    JobDescription job = jobFacade.findById(jobId);
+    job = jobFacade.findById(jobId);
     String appid = yarnApplicationstateFacade.findByAppname(job.getName())
         .get(0)
         .getApplicationid();

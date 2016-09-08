@@ -475,8 +475,9 @@ public abstract class YarnJob extends HopsJob {
   @Override
   //DOESN'T WORK FOR NOW
   protected void stopJob(String appid) {
+    YarnClient yarnClient = null;
     try {
-      YarnClient yarnClient = new YarnClientImpl();
+      yarnClient = new YarnClientImpl();
       yarnClient.init(conf);
       yarnClient.start();
       ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
@@ -485,6 +486,14 @@ public abstract class YarnJob extends HopsJob {
       e.printStackTrace();
     } catch (IOException e) {
       e.printStackTrace();
+    } finally {
+      if(yarnClient!=null){
+        try {
+          yarnClient.close();
+        } catch (IOException ex) {
+          logger.log(Level.WARNING, "Could not close yarn client for killing yarn job");
+        }
+      }
     }
   }
 }

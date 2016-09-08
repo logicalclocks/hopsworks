@@ -235,7 +235,7 @@ public class FlinkJob extends YarnJob {
         } catch (Exception ex) {
           logger.log(Level.SEVERE, "Unable to stop flink cluster with jobID", ex);
         }
-        super.stopJob(appid);
+       //super.stopJob(appid);
     }
     
     /**
