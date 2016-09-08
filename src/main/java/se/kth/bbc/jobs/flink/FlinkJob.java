@@ -226,6 +226,8 @@ public class FlinkJob extends YarnJob {
       
         //Stop flink cluster first
         try {
+        logger.log(Level.SEVERE, "jobsClusterInfo:{0}", jobsClusterInfo);
+
         JobID jobIdToStop = jobsClusterInfo.get(appid).getJobId();
         Client flinkClusterToStop = jobsClusterInfo.get(appid).getClient();
         
@@ -233,9 +235,16 @@ public class FlinkJob extends YarnJob {
           flinkClusterToStop.cancel(jobIdToStop);
           jobsClusterInfo.remove(appid);
         } catch (Exception ex) {
-          logger.log(Level.SEVERE, "Unable to stop flink cluster with jobID", ex);
+          try {
+            logger.log(Level.SEVERE, "Unable to stop flink cluster with appID:"+appid, ex);
+            //super.stopJob(appid);
+            Runtime rt = Runtime.getRuntime();
+            Process pr = rt.exec("/srv/hadoop/bin/yarn application -kill "+appid);
+          } catch (IOException ex1) {
+            
+            logger.log(Level.SEVERE, "Unable to stop flink cluster with appID:"+appid, ex1);
+          }
         }
-       //super.stopJob(appid);
     }
     
     /**
