@@ -2,6 +2,7 @@ package se.kth.hopsworks.rest;
 
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -37,6 +38,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.security.AccessControlException;
 import org.codehaus.jackson.map.ObjectMapper;
 import se.kth.bbc.activity.ActivityFacade;
@@ -710,6 +712,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response filePreview(@PathParam("path") String path,
+          @QueryParam("mode") String mode,
           @Context SecurityContext sc) throws
           AppException, AccessControlException {
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
@@ -721,7 +724,7 @@ public class DataSetService {
     DistributedFileSystemOps udfso = null;
     DistributedFileSystemOps dfso = null;
     FSDataInputStream is = null;
-    
+
     JsonResponse json = new JsonResponse();
     try {
       dfso = dfs.getDfsOps();
@@ -732,25 +735,25 @@ public class DataSetService {
       if (!exists || dfso.isDir(path)) {
         //Return an appropriate response if looking for README
         if (path.endsWith("README.md")) {
-          return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).
+          return noCacheResponse.getNoCacheResponseBuilder(
+                  Response.Status.NOT_FOUND).
                   entity(json).build();
         }
         throw new IOException("The file does not exist");
       }
       //tests if the user have permission to access this path
       is = udfso.open(path);
-      
+
       //Get file type first. If it is not a known image type, display its 
       //binary contents instead
-              
-      
       //Set the default file type
       String fileExtension = "txt";
       //Check if file contains a valid image extension 
-      if(path.contains(".")){
+      if (path.contains(".")) {
         fileExtension = path.substring(path.lastIndexOf(".")).replace(".", "").
                 toUpperCase();
       }
+      FilePreviewDTO filePreviewDTO = null;
       //If it is an image smaller than 10MB download it
       //otherwise thrown an error
       if (Utils.isInEnum(fileExtension, FilePreviewImageTypes.class)) {
@@ -763,43 +766,51 @@ public class DataSetService {
           byte[] imageInBytes = new byte[imageSize];
           is.readFully(imageInBytes);
           String base64Image = new Base64().encodeAsString(imageInBytes);
-          FilePreviewDTO filePreviewDTO = new FilePreviewDTO("image",
+          filePreviewDTO = new FilePreviewDTO("image",
                   fileExtension.toLowerCase(), base64Image);
-          
           json.setData(filePreviewDTO);
-            
         } else {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                   "Image at " + path
                   + " is too big to display, please download it by double-clicking it instead");
         }
       } else {
-        //File content
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        int maxLines = settings.getFilePreviewTxtSize();
-        int count = 0;
-        StringBuilder sb = new StringBuilder();
+        long fileSize = udfso.getFileStatus(new org.apache.hadoop.fs.Path(
+                path)).getLen();
+        DataInputStream dis = new DataInputStream(is);
         try {
-          String line;
-          line = br.readLine();
-          
-          while (line != null && count < maxLines) {
-            sb.append("\n").append(line);
-            // be sure to read the next line otherwise you'll get an infinite loop
-            line = br.readLine();
-            count++;
+          //If file is less thatn 512KB, preview it
+          int sizeThreshold = Settings.FILE_PREVIEW_TXT_SIZE_BYTES; //in bytes
+          if (fileSize > sizeThreshold && !path.endsWith("README.md")) {
+            if (mode.equals("tail")) {
+              dis.skipBytes((int) (fileSize - sizeThreshold));
+            }
+            try {
+              byte[] headContent = new byte[sizeThreshold];
+              dis.readFully(headContent, 0, sizeThreshold);
+              //File content
+              filePreviewDTO = new FilePreviewDTO("text", fileExtension.
+                      toLowerCase(), new String(headContent));
+            } catch (IOException ex) {
+              logger.log(Level.SEVERE, ex.getMessage());
+            }
+          } else if (fileSize > sizeThreshold && path.endsWith("README.md")
+                  && fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES_README) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "README.md must be smaller than " + 
+                            Settings.FILE_PREVIEW_TXT_SIZE_BYTES_README +
+                            " to be previewd");
+          } else {
+            byte[] headContent = new byte[(int) fileSize];
+            dis.readFully(headContent, 0, (int) fileSize);
+            //File content
+            filePreviewDTO = new FilePreviewDTO("text", fileExtension.
+                    toLowerCase(), new String(headContent));
           }
-          //Remove first new line character
-          if(count > 0){
-            sb.replace(0, 1, "");
-          }
-         
-          FilePreviewDTO filePreviewDTO = new FilePreviewDTO("text", fileExtension.
-                  toLowerCase(), sb.toString());
+
           json.setData(filePreviewDTO);
         } finally {
-          // you should close out the BufferedReader
-          br.close();
+          dis.close();
         }
       }
     } catch (AccessControlException ex) {
@@ -825,11 +836,10 @@ public class DataSetService {
       }
     }
 
-   
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
-  
+
   @GET
   @Path("isDir/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)

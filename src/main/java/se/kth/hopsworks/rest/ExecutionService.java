@@ -26,10 +26,12 @@ import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
+import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 import se.kth.hopsworks.controller.ExecutionController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -57,7 +59,9 @@ public class ExecutionService {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private ExecutionController executionController;
-
+  @EJB
+  private Settings settings;
+  
   private JobDescription job;
 
   ExecutionService setJob(JobDescription job) {
@@ -107,9 +111,9 @@ public class ExecutionService {
     }
     try {
       //Set sessionId to JobConfiguration so that is used by Kafka
-      if(job.getJobConfig() instanceof SparkJobConfiguration){
-        ((SparkJobConfiguration)job.getJobConfig()).setSessionId(
-          req.getSession().getId());
+      if(job.getJobConfig() instanceof YarnJobConfiguration){
+        ((YarnJobConfiguration)job.getJobConfig()).setjSessionId(
+                req.getSession().getId());
       }
         
       Execution exec = executionController.start(job, user);
@@ -135,7 +139,7 @@ public class ExecutionService {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
           "You are not authorized for this invocation.");
     }
-    JobDescription job = jobFacade.findById(jobId);
+    job = jobFacade.findById(jobId);
     String appid = yarnApplicationstateFacade.findByAppname(job.getName())
         .get(0)
         .getApplicationid();
@@ -143,9 +147,9 @@ public class ExecutionService {
 
       //WORKS FOR NOW BUT SHOULD EVENTUALLY GO THROUGH THE YARN CLIENT API
       Runtime rt = Runtime.getRuntime();
-      Process pr = rt.exec("/srv/hadoop/bin/yarn application -kill "+appid);
+      Process pr = rt.exec(settings.getHadoopDir()+"/bin/yarn application -kill "+appid);
 
-//      executionController.stop(job, user, appid);
+      //executionController.stop(job, user, appid);
 
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity("Job stopped").build();

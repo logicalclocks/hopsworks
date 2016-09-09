@@ -63,7 +63,10 @@ public class Settings {
   private static final String VARIABLE_YARN_WEB_UI_PORT = "yarn_ui_port";
   private static final String VARIABLE_FILE_PREVIEW_IMAGE_SIZE = "file_preview_image_size";
   private static final String VARIABLE_FILE_PREVIEW_TXT_SIZE = "file_preview_txt_size";
-
+  private static final String VARIABLE_GVOD_REST_ENDPOINT = "gvod_rest_endpoint";
+  private static final String VARIABLE_PUBLIC_SEARCH_ENDPOINT = "public_search_endpoint";
+  private static final String VARIABLE_REST_PORT = "rest_port";
+  
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
   
   private static final String VARIABLE_KAFKA_NUM_PARTITIONS = "kafka_num_partitions";
@@ -81,6 +84,17 @@ public class Settings {
     return defaultValue;
   }
 
+  private String setStrVar(String varName, String defaultValue) {
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null) {
+      String val = var.getValue();
+      if (val != null && val.isEmpty() == false) {
+        return val;
+      }
+    }
+    return defaultValue;
+  }
+  
   private String setDirVar(String varName, String defaultValue) {
     Variables dirName = findById(varName);
     if (dirName != null && dirName.getValue() != null && (new File(dirName.getValue()).isDirectory())) {
@@ -169,6 +183,9 @@ public class Settings {
       HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD, HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD);
       FILE_PREVIEW_IMAGE_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_IMAGE_SIZE, 10000000);
       FILE_PREVIEW_TXT_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_TXT_SIZE, 100);
+      GVOD_REST_ENDPOINT = setStrVar(VARIABLE_GVOD_REST_ENDPOINT, GVOD_REST_ENDPOINT);
+      PUBLIC_SEARCH_ENDPOINT = setStrVar(VARIABLE_PUBLIC_SEARCH_ENDPOINT, PUBLIC_SEARCH_ENDPOINT);
+      REST_PORT = setIntVar(VARIABLE_REST_PORT, REST_PORT);
       cached = true;
     }
   }
@@ -636,7 +653,36 @@ public class Settings {
   public synchronized String getKafkaDir() {
     checkCache();
    return KAFKA_DIR;
- }
+  }
+  
+  private String GVOD_REST_ENDPOINT = "http://10.0.2.15:42000";
+  public synchronized String getGVodRestEndpoint() {
+    checkCache();
+   return GVOD_REST_ENDPOINT;
+  }
+  
+  private String PUBLIC_SEARCH_ENDPOINT = "http://10.0.2.15:8080/hopsworks/api/elastic/publicdatasets/";
+  public synchronized String getPublicSearchEndpoint() {
+    checkCache();
+   return PUBLIC_SEARCH_ENDPOINT;
+  }
+  
+  private int REST_PORT = 8080;
+  public synchronized int getRestPort() {
+    checkCache();
+   return REST_PORT;
+  }
+  
+  /**
+   * Generates the Endpoint for kafka.
+   * @return 
+   */
+  public String getRestEndpoint(){
+    String gvod_endpoint = getGVodRestEndpoint();
+    String ip = getGVodRestEndpoint().substring(0,gvod_endpoint.lastIndexOf(":"));
+    int port = getRestPort();
+    return ip+":"+port;
+  }
   
   private String HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = "adminpw";
   
@@ -722,11 +768,15 @@ public class Settings {
   public static final String KAFKA_SESSIONID_ENV_VAR = "kafka.sessionid";
   public static final String KAFKA_PROJECTID_ENV_VAR = "kafka.projectid";
   public static final String KAFKA_BROKERADDR_ENV_VAR = "kafka.brokeraddress";
+  //Used to retrieve schema by KafkaUtil
+  public static final String KAFKA_REST_ENDPOINT_ENV_VAR = "kafka.restendpoint";
+  
 //  public static final String KAFKA_K_CERTIFICATE_ENV_VAR = "kafka.key.certificate";
 //  public static final String KAFKA_T_CERTIFICATE_ENV_VAR = "kafka.trusted.certificate";
   public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;  
   public static int FILE_PREVIEW_TXT_SIZE = 100; 
-  
+  public static int FILE_PREVIEW_TXT_SIZE_BYTES = 1024*128;
+  public static int FILE_PREVIEW_TXT_SIZE_BYTES_README = 1024*512;
   public static String README_TEMPLATE =  "*This is an auto-generated README.md"
           + " file for your Dataset!*\n"
           + "To replace it, go into your DataSet and edit the README.md file.\n"

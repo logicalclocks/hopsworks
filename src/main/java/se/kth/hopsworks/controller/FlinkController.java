@@ -95,7 +95,8 @@ public class FlinkController {
                   settings.getFlinkUser(),
                   hdfsUsersBean.getHdfsUserName(job.getProject(), job.
                           getCreator()),
-                  settings.getKafkaConnectStr());
+                  settings.getKafkaConnectStr(),
+                  settings.getRestEndpoint());
         }
       });
     } catch (InterruptedException ex) {
@@ -138,7 +139,8 @@ public class FlinkController {
             hdfsLeDescriptorsFacade.getSingleEndpoint(),
             settings.getFlinkUser(),
             job.getProject().getName() + "__" + user.getUsername(),
-            settings.getKafkaConnectStr());
+            settings.getKafkaConnectStr(),
+            settings.getRestEndpoint());
 
     submitter.stopExecution(flinkJob, appid);
 

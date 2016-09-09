@@ -357,16 +357,17 @@ This will make all its files unavailable to other projects unless you share it e
               var filePath = getPath(previewPathArray);
               //If filename is README.md then try fetching it without the modal
               if (fileName.endsWith("README.md") && !preview) {
-                dataSetService.filePreview(filePath).then(
+                dataSetService.filePreview(filePath, "head").then(
                         function (success) {
                             var fileDetails = JSON.parse(success.data.data);
                             var content = fileDetails.filePreviewDTO[0].content;
                             $scope.readme = $showdown.makeHtml(content);
                         }, function (error) {
+                          //To hide README from UI
                           $scope.readme = null;
                 });
               } else {
-                ModalService.filePreview('lg', fileName, filePath, self.projectId).then(
+                ModalService.filePreview('lg', fileName, filePath, self.projectId, "head").then(
                         function (success) {
 
                         }, function (error) {

@@ -49,7 +49,7 @@ public class AsynchronousJobExecutor {
   }
 
   public void stopExecution(HopsJob job, String appid) {
-//    job.stop(appid);
+    job.stop(appid);
   }
 
   public ExecutionFacade getExecutionFacade() {

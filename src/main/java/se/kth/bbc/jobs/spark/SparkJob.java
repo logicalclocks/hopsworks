@@ -45,8 +45,9 @@ public class SparkJob extends YarnJob {
   public SparkJob(JobDescription job, AsynchronousJobExecutor services,
       Users user, final String hadoopDir,
       final String sparkDir, final String nameNodeIpPort, String sparkUser,
-      String jobUser, String kafkaAddress) {
-    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, kafkaAddress);
+      String jobUser, String kafkaAddress, String restEndpoint) {
+    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, kafkaAddress,
+            restEndpoint);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a SparkJobConfiguration object. Received: "
@@ -93,7 +94,7 @@ public class SparkJob extends YarnJob {
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
     runnerbuilder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
 
-    runnerbuilder.setSessionId(jobconfig.getSessionId());
+    runnerbuilder.setSessionId(jobconfig.getjSessionId());
     runnerbuilder.setKafkaAddress(kafkaAddress);
     
     runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
@@ -139,6 +140,11 @@ public class SparkJob extends YarnJob {
       monitor.close();
       monitor = null;
     }
+  }
+  
+  @Override
+  protected void stopJob(String appid){
+    super.stopJob(appid);
   }
 
 }

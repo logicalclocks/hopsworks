@@ -103,12 +103,18 @@ public class ExecutionController {
       IOException {
     switch (job.getJobType()) {
       case ADAM:
-      //adamController.stopJob(job, user);
+        adamController.stopJob(job, user, appid);
+        break;
       case SPARK:
-      //sparkController.stopJob(job, user, appid);
+        sparkController.stopJob(job, user, appid);
+        break;
+      case FLINK:
+        flinkController.stopJob(job, user, appid);
+        break;
       default:
         throw new IllegalArgumentException("Unsupported job type: " + job.
             getJobType());
+        
     }
   }
 }

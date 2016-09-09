@@ -195,7 +195,7 @@ public class SparkYarnRunnerBuilder {
     Properties sparkProperties = new Properties();
     InputStream is = null;
     try {
-      is = new FileInputStream("/srv/spark/" + Settings.SPARK_CONFIG_FILE);
+      is = new FileInputStream(sparkDir +"/"+ Settings.SPARK_CONFIG_FILE);
       sparkProperties.load(is);
       //For every property that is in the spark configuration file but is not
       //already set, create a java system property.

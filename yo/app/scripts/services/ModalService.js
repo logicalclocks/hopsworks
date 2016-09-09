@@ -374,8 +374,8 @@ angular.module('hopsWorksApp')
                * @param {type} location
                * @returns {$uibModal@call;open.result}
                */
-              filePreview: function (size, fileName, filePath, projectId) {
-                var modalInstance = $uibModal.open({
+              filePreview: function (size, fileName, filePath, projectId, mode) {
+                var modalInstance = $modal.open({
                   templateUrl: 'views/filePreview.html',
                   controller: 'FilePreviewCtrl as filePreviewCtrl',
                   size: size,
@@ -399,6 +399,9 @@ angular.module('hopsWorksApp')
                     },
                     projectId: function () {
                       return projectId;
+                    },
+                    mode: function () {
+                      return mode;
                     }
                   }
                 });

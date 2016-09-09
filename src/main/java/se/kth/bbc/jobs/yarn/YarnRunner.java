@@ -23,7 +23,6 @@ import org.apache.flink.client.program.Client;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
 import org.apache.flink.configuration.ConfigConstants;
-import org.apache.flink.runtime.yarn.FlinkYarnClusterStatus;
 import org.apache.flink.yarn.FlinkYarnCluster;
 
 
@@ -36,7 +35,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.LocalResource;
@@ -49,6 +47,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.codehaus.plexus.util.FileUtils;
+import se.kth.bbc.jobs.flink.FlinkJob;
 import se.kth.bbc.jobs.flink.FlinkYarnRunnerBuilder;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.lims.Utils;
@@ -75,6 +74,8 @@ public class YarnRunner {
   private JobType jobType;
   //The parallelism parameter of Flink
   private int parallelism;
+  
+  
   private String appJarPath;
   private String localJarPath; //Used by flink
   private final String amJarLocalName;
@@ -100,7 +101,7 @@ public class YarnRunner {
   private final List<String> javaOptions;
   private final List<String> filesToRemove;
   private String hadoopDir;
-  private String sparkDir;
+  private String serviceDir;
   private String nameNodeIpPort;
 
   private boolean readyToSubmit = false;
@@ -121,7 +122,6 @@ public class YarnRunner {
 
     //Get application id
     yarnClient.start();
-    //if(!isFlink){
 
         YarnClientApplication app = yarnClient.createApplication();
         GetNewApplicationResponse appResponse = app.getNewApplicationResponse();
@@ -257,16 +257,25 @@ public class YarnRunner {
             try {
                 List<URL> classpaths = new ArrayList<>();
                 //Copy Flink jar to local machine and pass it to the classpath
-                URL flinkURL = new File("/srv/flink/"+Settings.FLINK_LOCRSC_FLINK_JAR).toURI().toURL();
+                URL flinkURL = new File(serviceDir+"/"+Settings.FLINK_LOCRSC_FLINK_JAR).toURI().toURL();
                 classpaths.add(flinkURL);
+                URL libURL = new File(serviceDir+"/lib/kafka-util-0.1.jar").toURI().toURL();
+                URL libURL3= new File(serviceDir+"/lib/flink-connector-filesystem_2.10-1.0.3.jar").toURI().toURL();
+                classpaths.add(libURL);
+                classpaths.add(libURL3);
+                
                 PackagedProgram program = new PackagedProgram(file, classpaths, args);
                 client.setPrintStatusDuringExecution(false);
 
                 JobSubmissionResult res =  client.runDetached(program, parallelism);
                 JobID jobId = res.getJobID();
+                FlinkJob.jobsClusterInfo.put(appId.toString(), new FlinkJob.FlinkClusterInfo(jobId, client));
                 cluster.stopAfterJob(jobId);
-            } catch (ProgramInvocationException ex) {
-                logger.log(Level.SEVERE, "Error while Flink Client submits jobs: {0}", ex.getMessage());
+            }   catch (ProgramInvocationException ex) {
+              logger.log(Level.WARNING, "Error while submitting Flink job to cluster",ex);
+              //Kill the flink job here
+               Runtime rt = Runtime.getRuntime();
+               Process pr = rt.exec(hadoopDir+"/bin/yarn application -kill "+appId.toString());
             } finally{
               //Remove local flink app jar
                FileUtils.deleteDirectory(localPathAppJarDir);
@@ -491,9 +500,20 @@ public class YarnRunner {
     //vargs.add(" -Dlog4j.configuration=file:log4j.properties");
     //vargs.add(" -Dlog.file=/srv/hadoop/logs/userlogs/jobmanager1.out") ;   
     //Add jvm options
+    if(jobType == JobType.FLINK && !javaOptions.isEmpty()){
+      amArgs+=" -kafka_params \"";
+    }
     for (String s : javaOptions) {
       vargs.add(s);
+      if(jobType == JobType.FLINK){
+        amArgs += s+",";
+      }
     }
+    if(jobType == JobType.FLINK && !javaOptions.isEmpty()){
+      amArgs = amArgs.substring(0,amArgs.length()-1);
+      amArgs+="\"";
+    }  
+      
     // Set class name
     vargs.add(amMainClass);
     // Set params for Application Master
@@ -566,7 +586,7 @@ public class YarnRunner {
     this.javaOptions = builder.javaOptions;
     this.filesToRemove = builder.filesToRemove;
     this.hadoopDir = builder.hadoopDir;
-    this.sparkDir = builder.sparkDir;
+    this.serviceDir = builder.serviceDir;
     this.nameNodeIpPort = builder.nameNodeIpPort;
   }
 
@@ -677,7 +697,7 @@ public class YarnRunner {
     private YarnClient yarnClient;
 
     private String hadoopDir;
-    private String sparkDir;
+    private String serviceDir;
     private String nameNodeIpPort;
 
     //Constructors
@@ -690,7 +710,6 @@ public class YarnRunner {
       this.amJarLocalName = amJarLocalName;
     }
 
-    //Setters
     /**
      * Sets the arguments to be passed to the Application Master.
      * <p/>
@@ -945,17 +964,17 @@ public class YarnRunner {
      * Build the YarnRunner instance
      * <p/>
      * @param hadoopDir
-     * @param sparkDir
+     * @param serviceDir
      * @param nameNodeIpPort
      * @param jobType
      * @return
      * @throws IllegalStateException Thrown if (a) configuration is not found, (b) invalid main class name
      * @throws IOException Thrown if stdOut and/or stdErr path have not been set and temp files could not be created
      */
-    public YarnRunner build(String hadoopDir, String sparkDir, String nameNodeIpPort, JobType jobType) throws IllegalStateException, IOException {
+    public YarnRunner build(String hadoopDir, String serviceDir, String nameNodeIpPort, JobType jobType) throws IllegalStateException, IOException {
       //Set configuration
       try {
-        setConfiguration(hadoopDir, sparkDir, nameNodeIpPort);
+        setConfiguration(hadoopDir, serviceDir, nameNodeIpPort);
       } catch (IllegalStateException e) {
         throw new IllegalStateException("Failed to load configuration", e);
       }
@@ -1014,7 +1033,7 @@ public class YarnRunner {
       return new YarnRunner(this);
     }
 
-    private void setConfiguration(String hadoopDir, String sparkDir, String nameNodeIpPort)
+    private void setConfiguration(String hadoopDir, String serviceDir, String nameNodeIpPort)
         throws IllegalStateException {
       //Get the path to the Yarn configuration file from environment variables
       String yarnConfDir = System.getenv(Settings.ENV_KEY_YARN_CONF_DIR);
@@ -1030,7 +1049,7 @@ public class YarnRunner {
 
       //Get the configuration file at found path
       this.hadoopDir = hadoopDir;
-      this.sparkDir = sparkDir;
+      this.serviceDir = serviceDir;
       this.nameNodeIpPort = nameNodeIpPort;
 
       Path confPath = new Path(yarnConfDir);
