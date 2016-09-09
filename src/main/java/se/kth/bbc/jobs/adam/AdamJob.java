@@ -30,12 +30,27 @@ public class AdamJob extends SparkJob {
   private final String adamJarPath;
   private final String adamUser; //must be glassfish
 
+  /**
+   * 
+   * @param job
+   * @param services
+   * @param user
+   * @param hadoopDir
+   * @param sparkDir
+   * @param adamUser
+   * @param jobUser
+   * @param nameNodeIpPort
+   * @param adamJarPath
+   * @param kafkaAddress
+   * @param restEndpoint 
+   */
   public AdamJob(JobDescription job,
           AsynchronousJobExecutor services, Users user, String hadoopDir,
           String sparkDir, String adamUser, String jobUser,
-          String nameNodeIpPort, String adamJarPath, String kafkaAddress) {
+          String nameNodeIpPort, String adamJarPath, String kafkaAddress, 
+          String restEndpoint) {
     super(job, services, user, hadoopDir, sparkDir, nameNodeIpPort, adamUser,
-            jobUser, kafkaAddress);
+            jobUser, kafkaAddress, restEndpoint);
     if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain a AdamJobConfiguration object. Received: "

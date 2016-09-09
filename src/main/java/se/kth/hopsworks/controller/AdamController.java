@@ -93,7 +93,8 @@ public class AdamController {
                   hdfsUsersBean.getHdfsUserName(job.getProject(), job.
                           getCreator()),
                   hdfsEndpoint.getSingleEndpoint(),
-                  settings.getAdamJarHdfsPath(), settings.getKafkaConnectStr());
+                  settings.getAdamJarHdfsPath(), settings.getKafkaConnectStr(),
+                  settings.getRestEndpoint());
         }
       });
     } catch (InterruptedException ex) {
@@ -115,8 +116,8 @@ public class AdamController {
             user.asUser());
     return jh;
   }
-  
-   public void stopJob(JobDescription job, Users user, String appid) throws
+
+  public void stopJob(JobDescription job, Users user, String appid) throws
           IllegalStateException,
           IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.
@@ -127,15 +128,16 @@ public class AdamController {
     } else if (job.getJobType() != JobType.ADAM) {
       throw new IllegalArgumentException(
               "Job configuration is not a Spark job configuration.");
-    } 
+    }
 
     AdamJob adamJob = new AdamJob(job, submitter, user, settings.getHadoopDir(),
-                  settings.
-                  getSparkDir(), settings.getAdamUser(),
-                  hdfsUsersBean.getHdfsUserName(job.getProject(), job.
-                          getCreator()),
-                  hdfsEndpoint.getSingleEndpoint(),
-                  settings.getAdamJarHdfsPath(), settings.getKafkaConnectStr());
+            settings.
+            getSparkDir(), settings.getAdamUser(),
+            hdfsUsersBean.getHdfsUserName(job.getProject(), job.
+                    getCreator()),
+            hdfsEndpoint.getSingleEndpoint(),
+            settings.getAdamJarHdfsPath(), settings.getKafkaConnectStr(),
+            settings.getRestEndpoint());
 
     submitter.stopExecution(adamJob, appid);
 

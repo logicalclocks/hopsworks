@@ -53,16 +53,18 @@ public class FlinkJob extends YarnJob {
      * @param flinkConfFile
      * @param nameNodeIpPort
      * @param flinkUser
-   * @param jobUser
+     * @param jobUser
      * @param kafkaAddress
+     * @param restEndpoint
      */
     public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
             Users user, final String hadoopDir,
             final String flinkDir, final String flinkConfDir, 
             final String flinkConfFile,final String nameNodeIpPort, 
-            String flinkUser, String jobUser, String kafkaAddress) {
+            String flinkUser, String jobUser, String kafkaAddress, 
+            String restEndpoint) {
         super(job, services, user, jobUser, hadoopDir, nameNodeIpPort,
-                kafkaAddress);
+                kafkaAddress, restEndpoint);
         if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
             throw new IllegalArgumentException(
                     "JobDescription must contain a FlinkJobConfiguration object. Received: "
@@ -115,7 +117,7 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setAppJarPath(jobconfig.getJarPath());
         flinkBuilder.setSessionId(jobconfig.getjSessionId());
         flinkBuilder.setKafkaAddress(kafkaAddress);
-        
+        flinkBuilder.setRestEndpoint(restEndpoint);
         flinkBuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
         //Set project specific resources, i.e. Kafka certificates
         flinkBuilder.addExtraFiles(projectLocalResources);

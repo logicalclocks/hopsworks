@@ -96,7 +96,8 @@ public class SparkController {
                   hdfsLeDescriptorsFacade.getSingleEndpoint(),
                   settings.getSparkUser(), job.getProject().getName() + "__"
                   + user.getUsername(),
-                  settings.getKafkaConnectStr());
+                  settings.getKafkaConnectStr(),
+                  settings.getRestEndpoint());
         }
       });
     } catch (InterruptedException ex) {
@@ -138,7 +139,8 @@ public class SparkController {
             getHadoopDir(), settings.getSparkDir(),
             hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser(),
             hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
-            settings.getKafkaConnectStr());
+            settings.getKafkaConnectStr(),
+            settings.getRestEndpoint());
 
     submitter.stopExecution(sparkjob, appid);
 

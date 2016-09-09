@@ -31,6 +31,7 @@ import se.kth.hopsworks.controller.ExecutionController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -58,7 +59,9 @@ public class ExecutionService {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private ExecutionController executionController;
-
+  @EJB
+  private Settings settings;
+  
   private JobDescription job;
 
   ExecutionService setJob(JobDescription job) {
@@ -144,7 +147,7 @@ public class ExecutionService {
 
       //WORKS FOR NOW BUT SHOULD EVENTUALLY GO THROUGH THE YARN CLIENT API
       Runtime rt = Runtime.getRuntime();
-      Process pr = rt.exec("/srv/hadoop/bin/yarn application -kill "+appid);
+      Process pr = rt.exec(settings.getHadoopDir()+"/bin/yarn application -kill "+appid);
 
       //executionController.stop(job, user, appid);
 

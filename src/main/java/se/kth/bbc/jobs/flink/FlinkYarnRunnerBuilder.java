@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.flink.api.common.JobID;
-import org.apache.flink.client.program.Client;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import se.kth.bbc.jobs.jobhistory.JobType;
@@ -84,13 +82,13 @@ public class FlinkYarnRunnerBuilder {
     private Path flinkJarPath;
     private StringBuilder dynamicPropertiesEncoded;
     private boolean detached;
-    private boolean streamingMode;
+    private boolean streamingMode = true;
     private int parallelism;
     private String customName = null;  
     private final Map<String, String> sysProps = new HashMap<>();
     private String sessionId;//used by Kafka
     private String kafkaAddress;
-    
+    private String restEndpoint;
     public FlinkYarnRunnerBuilder(String appJarPath, String mainClass) {
         if (appJarPath == null || appJarPath.isEmpty()) {
             throw new IllegalArgumentException(
@@ -242,6 +240,9 @@ public class FlinkYarnRunnerBuilder {
     public void setKafkaAddress(String kafkaAddress) {
       this.kafkaAddress = kafkaAddress;
     }
+    public void setRestEndpoint(String restEndpoint) {
+      this.restEndpoint = restEndpoint;
+    }
     public void isReadyForDeployment() throws YarnDeploymentException {
         if (taskManagerCount <= 0) {
             throw new YarnDeploymentException("Taskmanager count must be positive");
@@ -348,6 +349,8 @@ public class FlinkYarnRunnerBuilder {
         }
         addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
         addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
+        addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
+        
         //Set Flink ApplicationMaster env parameters
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_APP_ID, YarnRunner.APPID_PLACEHOLDER);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_COUNT, String.valueOf(taskManagerCount));
@@ -368,7 +371,7 @@ public class FlinkYarnRunnerBuilder {
         for (String s : sysProps.keySet()) {
           String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
           builder.addJavaOption(option);
-          dynamicPropertiesEncoded.append(s).append("=").append(sysProps.get(s)).append("@@");
+          //dynamicPropertiesEncoded.append(s).append("=").append(sysProps.get(s)).append("@@");
         }
         
         if (dynamicPropertiesEncoded.length()>0) {

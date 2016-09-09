@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.flink.client.program.ProgramInvocationException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -64,6 +63,7 @@ public abstract class YarnJob extends HopsJob {
   protected Map<String, String> jobSystemProperties;
 
   protected String kafkaAddress;
+  protected String restEndpoint;
   protected final String jobUser;
 
   /**
@@ -75,12 +75,13 @@ public abstract class YarnJob extends HopsJob {
    * @param hadoopDir
    * @param nameNodeIpPort
    * @param kafkaAddress
+   * @param restEndpoint
    * @throws IllegalArgumentException If the JobDescription does not contain a
    * YarnJobConfiguration object.
    */
   public YarnJob(JobDescription job, AsynchronousJobExecutor services,
           Users user, String jobUser, String hadoopDir, String nameNodeIpPort,
-          String kafkaAddress) {
+          String kafkaAddress, String restEndpoint) {
     super(job, services, user, hadoopDir, nameNodeIpPort);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
       throw new IllegalArgumentException(
@@ -89,6 +90,7 @@ public abstract class YarnJob extends HopsJob {
     }
     logger.log(Level.INFO, "Instantiating Yarn job as user: {0}", hdfsUser);
     this.kafkaAddress = kafkaAddress;
+    this.restEndpoint = restEndpoint;
     this.jobSystemProperties = new HashMap<>();
     this.projectLocalResources = new ArrayList<>();
     this.jobUser = jobUser;
@@ -144,7 +146,7 @@ public abstract class YarnJob extends HopsJob {
       logger.log(Level.SEVERE, "Permission denied:- {0}", ex.getMessage());
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
-    } catch (ProgramInvocationException | YarnException | IOException e) {
+    } catch (YarnException | IOException e) {
       logger.log(Level.SEVERE,
               "Failed to start application master for execution "
               + getExecution()
@@ -152,7 +154,7 @@ public abstract class YarnJob extends HopsJob {
               e);
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
-    } 
+    }
   }
 
   @Override
