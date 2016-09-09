@@ -225,23 +225,31 @@ public class FlinkJob extends YarnJob {
     protected void stopJob(String appid){
       
         //Stop flink cluster first
-        try {
         logger.log(Level.SEVERE, "jobsClusterInfo:{0}", jobsClusterInfo);
-
-        JobID jobIdToStop = jobsClusterInfo.get(appid).getJobId();
-        Client flinkClusterToStop = jobsClusterInfo.get(appid).getClient();
-        
-          //flinkClusterToStop.endSession(jobIdToStop);
-          flinkClusterToStop.cancel(jobIdToStop);
-          jobsClusterInfo.remove(appid);
-        } catch (Exception ex) {
+        if(jobsClusterInfo.containsKey(appid) &&  jobsClusterInfo.get(appid).getJobId()!=null){
           try {
-            logger.log(Level.SEVERE, "Unable to stop flink cluster with appID:"+appid, ex);
-            //super.stopJob(appid);
+            JobID jobIdToStop = jobsClusterInfo.get(appid).getJobId();
+            Client flinkClusterToStop = jobsClusterInfo.get(appid).getClient();
+            
+            //flinkClusterToStop.endSession(jobIdToStop);
+            flinkClusterToStop.cancel(jobIdToStop);
+            jobsClusterInfo.remove(appid);
+          } catch (Exception ex) {
+            try {
+              logger.log(Level.SEVERE, "Unable to stop flink cluster with appID:"+appid, ex);
+              //super.stopJob(appid);
+              Runtime rt = Runtime.getRuntime();
+              Process pr = rt.exec("/srv/hadoop/bin/yarn application -kill "+appid);
+            } catch (IOException ex1) {
+
+              logger.log(Level.SEVERE, "Unable to stop flink cluster with appID:"+appid, ex1);
+            }
+            }
+        }  else {
+          try {
             Runtime rt = Runtime.getRuntime();
             Process pr = rt.exec("/srv/hadoop/bin/yarn application -kill "+appid);
           } catch (IOException ex1) {
-            
             logger.log(Level.SEVERE, "Unable to stop flink cluster with appID:"+appid, ex1);
           }
         }

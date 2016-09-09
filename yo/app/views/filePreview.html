@@ -4,13 +4,13 @@
 </div>
 <div growl reference="23" class="pull-right"></div>
 <div ng-show="filePreviewCtrl.type === 'text'">
-  <button style="border-color: #20AD28; min-width: 64px;"
+  <button style="border-color: #eee; min-width: 64px;"
           ng-click="filePreviewCtrl.fetchFile(filePreviewCtrl.modes[0])">
     <span style="color: #20AD28" class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span> Head</button>
     
-    <button style="border-color:red; min-width: 64px;"
+    <button style="border-color:#eee; min-width: 64px;"
           ng-click="filePreviewCtrl.fetchFile(filePreviewCtrl.modes[1])">
-      <span style="color: red" class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span> Tail</button>
+      <span style="color: #4285f4" class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span> Tail</button>
 </div>
 <div class="modal-body content" ng-show="filePreviewCtrl.type === 'image'">
   <img class="img-responsive" src="data:image/{{filePreviewCtrl.extension}};base64,{{filePreviewCtrl.content}}" alt="Waiting for image download...">
