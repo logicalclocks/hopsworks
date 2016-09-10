@@ -47,7 +47,9 @@
       
       <li ng-click="projectCtrl.goToTensorflow()" ng-show="projectCtrl.showTensorflow()">
         <a>
-          Tensorflow<img class="pull-right" style="margin-left:10px" height="25" src="images/tf-175x200.png"/> 
+          Tensorflow
+          <img ng-show="projectCtrl.activeService != 'tensorflow'" class="pull-right" style="margin-left:10px" height="25" src="images/tf-175x200_bw.png"/> 
+          <img ng-show="projectCtrl.activeService === 'tensorflow'" class="pull-right" style="margin-left:10px" height="25" src="images/tf-175x200.png"/> 
         </a>
       </li>
        

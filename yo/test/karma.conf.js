@@ -16,6 +16,8 @@ module.exports = function (config) {
     // list of files / patterns to load in the browser
     files: [
       // bower:js
+      'bower_components/jquery/dist/jquery.js',
+      'bower_components/bootstrap/dist/js/bootstrap.js',
       'bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/affix.js',
       'bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/alert.js',
       'bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/button.js',
@@ -41,7 +43,6 @@ module.exports = function (config) {
       'bower_components/ngclipboard/dist/ngclipboard.js',
       'bower_components/angular-utils-pagination/dirPagination.js',
       'bower_components/cytoscape/dist/cytoscape.js',
-      'bower_components/jquery/jquery.js',
       'bower_components/cytoscape-cxtmenu/cytoscape-cxtmenu.js',
       'bower_components/js.cytoscape-navigator/cytoscape-navigator.js',
       'bower_components/lodash/lodash.js',
@@ -67,7 +68,6 @@ module.exports = function (config) {
       'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
       'bower_components/moment/moment.js',
       'bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js',
-      'bower_components/bootstrap/dist/js/bootstrap.js',
       'bower_components/bootstrap-switch/dist/js/bootstrap-switch.js',
       'bower_components/angular-ui-select/dist/select.js',
       'bower_components/select2/select2.js',
@@ -77,14 +77,14 @@ module.exports = function (config) {
       'bower_components/v-accordion/dist/v-accordion.js',
       'bower_components/angular-smart-table/dist/smart-table.js',
       'bower_components/ng-context-menu/dist/ng-context-menu.js',
-      'bower_components/angular-aria/angular-aria.js',
-      'bower_components/angular-material/angular-material.js',
       'bower_components/flow.js/dist/flow.js',
       'bower_components/ng-flow/dist/ng-flow.js',
       'bower_components/angular-growl-v2/build/angular-growl.js',
       'bower_components/angular-xeditable/dist/js/xeditable.js',
       'bower_components/isteven-angular-multiselect/isteven-multi-select.js',
       'bower_components/angular-awesome-slider/dist/angular-awesome-slider.js',
+      'bower_components/angular-aria/angular-aria.js',
+      'bower_components/angular-material/angular-material.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',

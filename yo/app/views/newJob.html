@@ -19,9 +19,9 @@
             <!--<i class="fa fa-undo" uib-tooltip="Restore the previous state." style="margin-left: 10px" ng-click="newJobCtrl.undoClear()" ng-show="newJobCtrl.undoable"></i>-->
           </h2>
         </div>
-        <uib-accordion close-others="false">
-          <uib-accordion-group heading="{{newJobCtrl.uib-accordion1.title}} {{newJobCtrl.uib-accordion1.value}}" is-open="newJobCtrl.uib-accordion1.isOpen">
-            <md-input-container style="height: 50px">
+        <uib-accordion close-others="false" >
+          <uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" is-open="newJobCtrl.accordion1.isOpen">
+            <md-input-container  class="md-block">
               <label id="inputJobName" for="jobname" style="color: black;">Job name</label>
               <input name="jobname" type="text" id="jobname"
                      ng-model="newJobCtrl.jobname" ng-change="newJobCtrl.nameFilledIn()"  autofocus>
@@ -29,9 +29,9 @@
           </uib-accordion-group>
 
           <!-- Select the type of job -->
-          <uib-accordion-group heading="{{newJobCtrl.uib-accordion2.title}} {{newJobCtrl.uib-accordion2.value}}" 
-                           is-open="newJobCtrl.uib-accordion2.isOpen" 
-                           ng-show="newJobCtrl.uib-accordion2.visible">
+          <uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion2.title}} {{newJobCtrl.accordion2.value}}" 
+                           is-open="newJobCtrl.accordion2.isOpen" 
+                           ng-show="newJobCtrl.accordion2.visible">
             <div class="btn-group">
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
               <label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>
@@ -41,9 +41,9 @@
 
 
           <!-- Select the main execution file -->
-          <uib-accordion-group heading="{{newJobCtrl.uib-accordion3.title}} {{newJobCtrl.uib-accordion3.value}}" 
-                           is-open="newJobCtrl.uib-accordion3.isOpen" 
-                           ng-show="newJobCtrl.uib-accordion3.visible">
+          <uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}" 
+                           is-open="newJobCtrl.accordion3.isOpen" 
+                           ng-show="newJobCtrl.accordion3.visible">
             <!-- Adam, Spark and Flink  -->
             <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 0 || newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3">
               <span>Select...</span>
@@ -63,9 +63,9 @@
 
 
           <!-- Set up the job details -->
-          <uib-accordion-group heading="{{newJobCtrl.uib-accordion4.title}} {{newJobCtrl.uib-accordion4.value}}" 
-                           is-open="newJobCtrl.uib-accordion4.isOpen" 
-                           ng-show="newJobCtrl.uib-accordion4.visible"
+          <uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion4.title}} {{newJobCtrl.accordion4.value}}" 
+                           is-open="newJobCtrl.accordion4.isOpen" 
+                           ng-show="newJobCtrl.accordion4.visible"
                            id="chooseParametersAndArguments">
             <!-- Spark, Flink-->
             <div ng-show="newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3">
@@ -114,12 +114,12 @@
             
           </uib-accordion-group>
           <!--Pre-configuration uib-accordion visible only for Spark jobs-->
-          <uib-accordion-group heading="{{newJobCtrl.uib-accordion6.title}} {{newJobCtrl.uib-accordion6.value}}" 
-                           is-open="newJobCtrl.uib-accordion6.isOpen" 
-                           ng-show="newJobCtrl.uib-accordion6.visible && newJobCtrl.jobtype === 1"
+          <uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion6.title}} {{newJobCtrl.accordion6.value}}" 
+                           is-open="newJobCtrl.accordion6.isOpen" 
+                           ng-show="newJobCtrl.accordion6.visible && newJobCtrl.jobtype === 1"
                            id="preConfig">
         <div>      
-        <div style="float: left;width: 100%;" ng-show="newJobCtrl.jobtype === 1">
+        <div class="row" style="float: left;width: 100%;" ng-show="newJobCtrl.jobtype === 1">
                 <div style="float: left;width: 150px;">
                   <div class="btn-group" style="float: left;width: 100px; margin-bottom: 0px;margin-left: 10px;margin-top: 10px" id="buttonRefresh">
                         <button style="width: 100%;" ng-click="newJobCtrl.autoConfig(false)" title="Search for the analysis results when you set new input attributes." class="btn btn-default glyphicon glyphicon-refresh">  Search  </button>
@@ -181,7 +181,7 @@
         </div> 
         </div>      
         <!-- Creation button -->
-        <div style="float: left;width: 150px;">
+        <div class="row" style="float: left;width: 150px;">
             <button style="float: left; margin-bottom: 0px;margin-left: 10px;margin-top: 10px"
                     ng-click="newJobCtrl.createJob()" ng-show="newJobCtrl.autoConfigResult.numberOfResults>=1" class="btn btn-warning">
                 Create job
@@ -190,9 +190,9 @@
         
         </uib-accordion-group>
           <!-- Set some run configuration -->
-          <uib-accordion-group heading="{{newJobCtrl.uib-accordion5.title}} {{newJobCtrl.uib-accordion5.value}}" 
-                           is-open="newJobCtrl.uib-accordion5.isOpen" 
-                           ng-show="newJobCtrl.uib-accordion5.visible"
+          <uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}" 
+                           is-open="newJobCtrl.accordion5.isOpen" 
+                           ng-show="newJobCtrl.accordion5.visible"
                            id="moreConfigs">
               <div class="row" style="margin-top: 10px">
                 <div class="text-right col-md-4">Application master memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
@@ -371,7 +371,7 @@
             on-proceed="newJobCtrl.jobTypeSpark()"
             tourtip-offset-vertical="-13"
             tourtip-offset-horizontal="-6"
-            ng-if="newJobCtrl.uib-accordion2.visible"
+            ng-if="newJobCtrl.accordion2.visible"
             ></virtual-step>
             <virtual-step
             ng-hide="true"    
@@ -389,7 +389,7 @@
             on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples-1.6.1-hadoop2.4.0.jar')"
             tourtip-offset-vertical="-13"
             tourtip-offset-horizontal="-5"
-            ng-if="newJobCtrl.uib-accordion3.visible"
+            ng-if="newJobCtrl.accordion3.visible"
             ></virtual-step>
             <virtual-step
             ng-hide="true"    
@@ -406,7 +406,7 @@
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.chooseParameters()"
             tourtip-offset-vertical="10"
-            ng-if="newJobCtrl.uib-accordion4.visible"
+            ng-if="newJobCtrl.accordion4.visible"
             ></virtual-step>
             <virtual-step
             class="ng-scope"
@@ -418,7 +418,7 @@
             on-proceed="newJobCtrl.createJob()"
             tourtip-offset-vertical="10"
             tourtip-offset-horizontal="-10"
-            ng-if="newJobCtrl.uib-accordion5.visible"
+            ng-if="newJobCtrl.accordion5.visible"
             ></virtual-step>
     </tour>
   </div>

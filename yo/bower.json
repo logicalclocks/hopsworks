@@ -2,6 +2,7 @@
   "name": "hopsworks",
   "version": "0.0.1",
   "dependencies": {
+    "bootstrap": "^3.3.7",
     "bootstrap-sass-official": "~3.1.0",
     "angular": "~1.5.x",
     "angular-websocket": "~1.0.13",
@@ -39,13 +40,12 @@
     "v-accordion": "^1.6.0",
     "angular-smart-table": "^2.1.8",
     "ng-context-menu": "^1.0.3",
-    "angular-material": "^1.1.1",
     "ng-flow": "^2.7.4",
     "angular-growl-v2": "^0.7.9",
     "angular-xeditable": "^0.2.0",
     "isteven-angular-multiselect": "angular-multi-select#^4.0.0",
     "angular-awesome-slider": "^2.4.4",
-    "bootstrap": "^3.3.7"
+    "angular-material": "^1.1.1"
   },
   "overrides": {
     "bootstrap": {
@@ -72,7 +72,6 @@
     "angular-ui-select": "^0.19.4",
     "angular-smart-table": "^2.1.8",
     "angular-aria": "^1.4.8",
-    "angular-material": "^1.1.1",
     "angular-xeditable": "^0.2.0"
   }
 }

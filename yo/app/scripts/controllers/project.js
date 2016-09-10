@@ -75,6 +75,16 @@ angular.module('hopsWorksApp')
             };
 
 
+            self.activeTensorflow = function() {
+              if ($location.url().indexOf("") !== -1) {
+              }
+              return false;
+            };
+
+
+
+
+
             getEndpoint();
 
             var getCurrentProject = function () {

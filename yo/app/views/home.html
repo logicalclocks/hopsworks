@@ -199,7 +199,7 @@
           </ul>
         </div>
       </div>
-      <uib-pager total-items="homeCtrl.totalItemsProjects" ng-model="homeCtrl.currentPageProjects"></uib-pager>
+      <ul uib-pager total-items="homeCtrl.totalItemsProjects" ng-model="homeCtrl.currentPageProjects" ></ul>
     </div>
   </div>
   <tour class="ng-scope" step="homeCtrl.tourService.currentStep_TourOne" post-tour="closeTour()" ng-if="homeCtrl.loadedView">
