@@ -267,9 +267,9 @@ public class Settings {
   }
   private String FLINK_CONF_DIR = FLINK_DIR + "/conf";
 
-  public synchronized String getFlinkConfDir() {
-    //checkCache();
-    return FLINK_CONF_DIR;
+  public String getFlinkConfDir() {
+    String flinkDir = getFlinkDir();
+    return flinkDir + FLINK_CONF_DIR;
   }
   private String FLINK_CONF_FILE = FLINK_CONF_DIR + "/flink-conf.yaml";
  
