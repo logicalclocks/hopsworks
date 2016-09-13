@@ -262,7 +262,7 @@ public class Settings {
   private String FLINK_DIR = "/srv/flink";
 
   public synchronized String getFlinkDir() {
-    //checkCache();
+    checkCache();
     return FLINK_DIR;
   }
   private String FLINK_CONF_DIR = FLINK_DIR + "/conf";
