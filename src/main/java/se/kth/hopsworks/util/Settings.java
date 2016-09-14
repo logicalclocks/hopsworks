@@ -262,20 +262,20 @@ public class Settings {
   private String FLINK_DIR = "/srv/flink";
 
   public synchronized String getFlinkDir() {
-    //checkCache();
+    checkCache();
     return FLINK_DIR;
   }
-  private String FLINK_CONF_DIR = FLINK_DIR + "/conf";
+  private final String FLINK_CONF_DIR = FLINK_DIR + "/conf";
 
-  public synchronized String getFlinkConfDir() {
-    //checkCache();
-    return FLINK_CONF_DIR;
+  public String getFlinkConfDir() {
+    String flinkDir = getFlinkDir();
+    return flinkDir + FLINK_CONF_DIR;
   }
-  private String FLINK_CONF_FILE = FLINK_CONF_DIR + "/flink-conf.yaml";
+  private final String FLINK_CONF_FILE = FLINK_CONF_DIR + "/flink-conf.yaml";
  
-  public synchronized String getFlinkConfFile() {
-    //checkCache();
-    return FLINK_CONF_FILE;
+  public String getFlinkConfFile() {
+    String flinkDir = getFlinkDir();
+    return flinkDir + FLINK_CONF_FILE;
   }
   private String MYSQL_DIR = "/usr/local/mysql";
 

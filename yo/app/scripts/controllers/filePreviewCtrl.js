@@ -1,5 +1,5 @@
 angular.module('hopsWorksApp')
-        .controller('FilePreviewCtrl', ['$modalInstance', '$showdown','DataSetService', 'growl', 'fileName', 'filePath', 'projectId',
+        .controller('FilePreviewCtrl', ['$modalInstance', '$showdown','DataSetService', 'growl', 'fileName', 'filePath', 'projectId', 'mode',
           function ($modalInstance, $showdown, DataSetService, growl, fileName, filePath, projectId, mode) {
             var self = this;
             self.modes = ['head','tail'];
@@ -25,7 +25,6 @@ angular.module('hopsWorksApp')
 //                                .replace(/\t/g, '\\t')
                         self.mode = mode;
                         self.fileDetails = JSON.parse(success.data.data);
-                        console.log(self.fileDetails.filePreviewDTO[0].content);
 
                         self.type = self.fileDetails.filePreviewDTO[0].type;
                         self.content = self.fileDetails.filePreviewDTO[0].content;
