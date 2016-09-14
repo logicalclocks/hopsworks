@@ -1,4 +1,5 @@
 describe 'projects' do
+  after (:all){clean_projects}
   describe "#create" do
     context 'without authentication' do
       before :all do
@@ -45,7 +46,44 @@ describe 'projects' do
       end
       it "should return project list" do
         get "/hopsworks/api/project/getAll"
-        #expect_json()
+        expect_json_types :array
+        expect_status(200)
+      end
+    end
+  end
+  describe "#delete" do
+    context 'without authentication' do
+      before :all do
+        with_valid_project
+        reset_session
+      end
+      it "should fail to delete project" do
+        project = get_project
+        post "/hopsworks/api/project/#{project[:id]}/delete" 
+        expect_status(401)
+      end
+    end
+    context 'with authentication but insufficient privilege' do
+      before :all do
+        with_valid_project
+        reset_session
+      end
+      it "should fail to delete project with insufficient privilege" do
+        project = get_project
+        member = create_user
+        add_member(member[:email], "Data scientist")
+        create_session(member[:email],"Pass123")
+        post "/hopsworks/api/project/#{project[:id]}/delete"
+        expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
+        expect_status(403)
+      end
+    end
+    context 'with authentication and sufficient privilege' do
+      before :all do
+        with_valid_project
+      end
+      it "should delete project" do
+        post "/hopsworks/api/project/#{@project[:id]}/delete"
         expect_status(200)
       end
     end

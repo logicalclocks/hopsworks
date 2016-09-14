@@ -574,6 +574,8 @@
       </dependencies>
       <build>
         <plugins>
+          <!-- Doesn't work if the deployment client and the server are on different OS types. 
+           https://codehaus-cargo.atlassian.net/browse/CARGO-1335 -->
           <plugin>
             <groupId>org.codehaus.cargo</groupId>
             <artifactId>cargo-maven2-plugin</artifactId>

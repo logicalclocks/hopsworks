@@ -4,12 +4,13 @@ module SessionHelper
       user = create_user
       post "/hopsworks/api/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
       @cookies = {"SESSIONID"=> json_body[:sessionID]}
+      @user = user
     end
     Airborne.configure do |config|
       config.headers = {:cookies => @cookies, content_type: 'application/json' }
     end
   end
-
+  
   def register_user(params={})
     user = {}
     user[:email]            = params[:email] ? params[:email] : "#{random_id}@email.com"
@@ -55,6 +56,7 @@ module SessionHelper
   end
 
   def create_session(email, password)
+    reset_session
     post "/hopsworks/api/auth/login", URI.encode_www_form({ email: email, password: password}), { content_type: 'application/x-www-form-urlencoded'}
     cookies = {"SESSIONID"=> json_body[:sessionID]}
     Airborne.configure do |config|

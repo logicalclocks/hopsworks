@@ -4,7 +4,7 @@ describe 'workflows' do
   let(:valid_params){ {name: "workflow_#{short_random_id}"} }
   let(:invalid_params){ {name: nil} }
   before(:all){with_valid_project}
-
+  after (:all){clean_projects}
   describe "#index" do
     before :all do
       project_id = with_valid_project['id']
