@@ -14,9 +14,6 @@ module ProjectHelper
     with_valid_session
     with_valid_project
     post "/hopsworks/api/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: member},teamRole: role}]}
-    expect_json(successMessage: "One member added successfully")
-    expect_json(errorMsg: "")
-    expect_status(200)
   end
   
   def get_all_projects
