@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.validation.ValidationException;
+import javax.ws.rs.core.Response;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -27,6 +28,7 @@ import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.InodeBasicMetadata;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.user.model.Users;
 
@@ -102,7 +104,7 @@ public class DatasetController {
           String datasetDescription, int templateId, boolean searchable,
           boolean globallyVisible, DistributedFileSystemOps dfso,
           DistributedFileSystemOps udfso)
-          throws IOException {
+          throws IOException, AppException {
     //Parameter checking.
     if (user == null) {
       throw new NullPointerException(
@@ -117,7 +119,8 @@ public class DatasetController {
     try {
       FolderNameValidator.isValidName(dataSetName);
     } catch (ValidationException e) {
-      throw new IllegalArgumentException("Invalid folder name for DataSet.", e);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Invalid folder name for DataSet: "+e.getMessage());
     }
     //Logic
     boolean success;
