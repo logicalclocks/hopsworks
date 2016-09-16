@@ -32,6 +32,6 @@ module ProjectHelper
   def clean_projects
    with_valid_session
    get "/hopsworks/api/project/getAll"
-    json_body.map{|project| project[:id]}.each{|i| post "/hopsworks/api/project/#{i}/delete" }
-  end
-end
+      json_body.map{|project| project[:id]}.each{|i| post "/hopsworks/api/project/#{i}/delete" }
+     end
+   end

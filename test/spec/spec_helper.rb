@@ -24,18 +24,12 @@ RSpec.configure do |config|
   config.include FactoryHelper
   config.before(:suite) do
     #clean_oozie
-    #clean_database
   end
-  #config.after(:all) { clean_database }
+  config.after(:suite) { clean_test_data }
 end
 
 Airborne.configure do |config|
   config.base_url = "http://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
-  # config.before(:suite) do
-  #   clean_oozie
-  #   clean_database
-  # end
-  # config.after(:all) { clean_database }
 end
 
 def clean_oozie
@@ -47,36 +41,37 @@ def clean_oozie
   puts "Killed oozie processes"
 end
 
-def clean_database
+def clean_test_data
+  puts "Cleaning test data ..."
   require 'net/ssh'
   require 'net/ssh/shell'
   if ENV['RSPEC_SSH'] && ENV['RSPEC_SSH']=="true"
     Net::SSH::start(ENV['RSPEC_SSH_HOST'], 'root') do |ssh|
       ssh.shell do |sh|
-        puts "Remote Database Cleaning begining"
+        puts "Remote HDFS Clean-up starting"
         sh.execute("cd #{ENV['RSPEC_SSH_USER_DIR']}")
-        sh.execute("vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"DROP DATABASE IF EXISTS oozie\" ' ")
-        sh.execute("vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"DROP DATABASE IF EXISTS hopsworks\" ' ")
-        sh.execute("vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1\" ' ")
-        sh.execute("vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"CREATE DATABASE IF NOT EXISTS oozie CHARACTER SET latin1\" ' ")
-        sh.execute("vagrant ssh -c 'sudo cat /srv/glassfish/tables.sql | sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
-        sh.execute("vagrant ssh -c 'sudo cat /srv/glassfish/rows.sql | sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
-        sh.execute("vagrant ssh -c 'sudo cat /srv/oozie/oozie.sql | sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh --database=oozie' ")
+        sh.execute("vagrant ssh -c 'sudo -u glassfish /srv/hadoop/bin/hadoop fs -rm -R /Projects/project_* ' ") 
+        puts "Remote HDFS Clean-up finished"
+#        sh.execute("vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"DROP DATABASE IF EXISTS oozie\" ' ")
+#        sh.execute("vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"CREATE DATABASE IF NOT EXISTS oozie CHARACTER SET latin1\" ' ")
+#        sh.execute("vagrant ssh -c 'sudo cat /srv/oozie/oozie.sql | sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh --database=oozie' ")
         res =sh.execute("exit")
         res.on_finish do |val1, val2|
-          puts "Remote Database Cleaning finished"
+        
         end
       end
     end
   else
-    puts "Vagrant Database Cleaning begining"
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"DROP DATABASE IF EXISTS oozie\" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"DROP DATABASE IF EXISTS hopsworks\" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1\" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"CREATE DATABASE IF NOT EXISTS oozie CHARACTER SET latin1\" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo cat /srv/glassfish/tables.sql | sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo cat /srv/glassfish/rows.sql | sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
-    # sh.execute("vagrant ssh -c 'sudo cat /srv/oozie/oozie.sql | sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh --database=oozie' ")
-    puts "Vagrant Database Cleaning finished"
+    puts "Vagrant HDFS Clean-up starting"
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u glassfish /srv/hadoop/bin/hadoop fs -rm -R /Projects/project_* ' ") 
+    puts "Vagrant HDFS Clean-up finished"
+#    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"DROP DATABASE IF EXISTS oozie\" ' ")
+#    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"CREATE DATABASE IF NOT EXISTS oozie CHARACTER SET latin1\" ' ")
+#    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo cat /srv/oozie/oozie.sql | sudo /var/lib/mysql-cluster/ndb/scripts/mysql-client.sh --database=oozie' ")
   end
+  puts "DataBase Clean-up starting"
+  ActiveRecord::Base.connection.execute("DELETE FROM hopsworks.project_payments_history WHERE username LIKE \'%@email.com\' ")
+  ActiveRecord::Base.connection.execute("DELETE FROM hopsworks.account_audit ")
+  ActiveRecord::Base.connection.execute("DELETE FROM hopsworks.users WHERE fname= \'name\' ")
+  puts "DB Clean-up finished"
 end
