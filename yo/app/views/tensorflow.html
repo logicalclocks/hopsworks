@@ -58,13 +58,13 @@
 
             <button ng-click="accordion.expandAll()">Expand all</button>
             <button ng-click="accordion.collapseAll()">Collapse all</button>
-            
+
             <v-accordion class="vAccordion--default" multiple>
 
               <v-pane ng-repeat="cluster in tensorflowCtrl.clusters" expanded="cluster.isExpanded" control="accordion">
                 <v-pane-header>
                   {{ ::cluster.name}} 
-                  <div class="btn-group" role="group">
+                  <div class="btn-group pull-right" style="bottom: 10px;" role="group">
                     <button 
                       uib-tooltip="Delete"
                       ng-click="tensorflowCtrl.toggle(cluster, $index); tensorflowCtrl.removeCluster(cluster.name); $event.stopPropagation();"
@@ -80,6 +80,13 @@
                       </v-pane-header>
                       <v-pane-content>
                         {{ ::job.program}}
+                        <div class="btn-group pull-right" style="bottom: 10px;" role="group">
+                          <button 
+                            uib-tooltip="Delete"
+                            ng-click="tensorflowCtrl.toggle(cluster, $index); tensorflowCtrl.removeJob(cluster.name); $event.stopPropagation();"
+                            type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
+                          </button>
+                        </div>
                         <v-accordion ng-if="job.tasks">
                           <v-pane ng-repeat="task in job.tasks"">
                             <v-pane-header> 

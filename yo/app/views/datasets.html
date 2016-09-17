@@ -8,9 +8,9 @@
     <div ng-controller="MetadataCtrl as metadataCtrl">
 
       <div class="overlay" ></div>
-      <section layout="row" flex="">
+      <section layout="row" flex>
 
-        <md-content flex="" layout-padding="">
+        <md-content flex layout-padding>
           <div ng-include="'navProject.html'"></div>
 
           <div layout="column" layout-fill="" layout-align="top center">
@@ -46,19 +46,18 @@
                 <div class="row row-no-margin-left" style="margin-top: 15px;">
                   <div class="col-lg-12">
                     <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, publicDs: datasetsCtrl.isPublic} | orderBy: 'name'">
-                      <div ng-dblclick="projectCtrl.browseDataset(dataset)"
-                           ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset.path.substring(dataset.path.lastIndexOf('/')).replace('/', '') + '/README.md', false);"
-                           ng-init="(iscollapsed$index) = true"
+                      <div ng-init="(iscollapsed$index) = true"
                            class="file-box"
                            context-menu
                            data-target="menu-{{ $index}}">
                         <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === $index}">
                           <a>
                             <span class="corner"></span>
-                            <div class="icon">
+                            <div uib-tooltip="Click to browse to this dataset" class="icon" ng-click="projectCtrl.browseDataset(dataset)">
                               <i class="glyphicon" ng-class="{'glyphicon-folder-close': datasetsCtrl.selected === $index, 'glyphicon-folder-open' : datasetsCtrl.selected !== $index}"></i>
                             </div>
-                            <div class="file-name">
+                            <div class="file-name" uib-tooltip="Select this dataset" 
+                                 ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset.path.substring(dataset.path.lastIndexOf('/')).replace('/', '') + '/README.md', false);">
                               {{dataset.name}}                            
                               <span class="pull-right publicDS" ng-class="{'glyphicon glyphicon-globe': dataset.publicDs === true}"></span>
                               <br/>
@@ -96,6 +95,15 @@
                                                     </div>-->
                       <div uib-dropdown class="position-fixed" id="menu-{{$index}}">
                         <ul uib-dropdown-menu class="uib-dropdown-amore">
+                          <li>
+                            <a class="pointer"
+                               role="menuitem"
+                               tabindex="0"
+                               ng-click="projectCtrl.browseDataset(dataset)">
+                              <span><i class="fa fa-files-o"></i>
+                                Browse files</span>
+                            </a>
+                          </li>
                           <li ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === false">
                             <a class="pointer"
                                role="menuitem"
@@ -178,7 +186,7 @@
                           <div style="text-align: center; color: green;">
                             Create New DataSet
                           </div>
-                          <div class="row"><br></div>
+                          <div class="row"> </div>
                         </div>
                       </div>
                     </div>    
@@ -204,7 +212,7 @@
               </div>
             </div><!--content wrapper -->
           </div>
-          <div flex=""></div>
+          <div flex></div>
         </md-content>
 
 
@@ -346,8 +354,8 @@
 
         <!--<div class="col-lg-4" style="border-left: 1px dashed lightgrey; padding-left: 0px;">-->
         <div ng-show="mainCtrl.searchReturned === ''">
-          <div style="margin-top: 20px; height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
-            <div class="ibox float-e-margins" style="margin-top: 11px; margin-bottom: -25px; height: 95%;">
+          <div style="margin-top: 1px; height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
+            <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: -25px; height: 95%;">
               <div class="file-manager">
                 <div>
                   <md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">
