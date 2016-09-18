@@ -46,8 +46,7 @@
                 <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()"></hamburger-toggle>
               </div>
             </div>
-            <!--<div class="row">-->
-            <div layout="row" ng-show="datasetsCtrl.fileDetail !== null && datasetsCtrl.fileDetail.dir == false && !datasetsCtrl.isShared()">
+            <div layout="row" ng-show="datasetsCtrl.fileDetail !== null && && !datasetsCtrl.isShared()">
               <div flex="5" style="margin-bottom: 1px; margin-left: -1px; margin-top: -1px;font-size: 16px;">
                 <button style="margin-left: 1px; " class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                         data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
@@ -73,12 +72,13 @@
           <!--<div class="row row-no-margin-left" ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">-->
           <div flex ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">
             <div flex>
-              <md-content layout-padding style="margin-left: 0px; margin-top: -5px; min-width: 1450px;" layout="column" flex>
+              <md-content layout-padding style="margin-left: -80px; margin-top: -5px; min-width: 1350px;" layout="column" flex>
                 <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: 0px;">
                   <div class="table-responsive" style="overflow: hidden;">
                     <table class="table table-bordred table-hover" >
 
                       <thead>
+                      <th style="margin:0px;width:15px;" uib-tooltip="Click on the dark box to see more details for the file/folder" tooltip-placement="right"></th>
                       <th></th>
                       <th ng-click="sort('name')">Name
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'name'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
@@ -95,15 +95,16 @@
                       <tbody ng-model="datasetsCtrl.files">
 
                         <tr>
-                          <td style="padding: 0px" colspan="5">&nbsp &nbsp
-                            <a ng-click="datasetsCtrl.back()" style="font-size:30px">..</a>
+                          <td style="margin:0px;width:15px;" ng-click="datasetsCtrl.back()" ><i class="fa fa-level-up pull-right" aria-hidden="true"></i></td>
+                          <td ng-click="datasetsCtrl.back()" style="padding: 0px" colspan="5">&nbsp &nbsp
+                            <a style="font-siglyphicon-expandze:60px">..</a>
                           </td>
                           <td>
-                            <i ng-if="datasetsCtrl.working"
+<!--                            <i ng-if="datasetsCtrl.working"
                                title="Fetching files in this folder"
                                style="color: lightgrey; margin-top:3px;"
                                class="fa fa-spinner fa-spin pull-right" >
-                            </i>
+                            </i>-->
                           </td>
                         </tr>
                         <tr
@@ -112,125 +113,133 @@
                           data-target="menu-{{ $index}}"
                           ng-class="{ 'highlight': datasetsCtrl.selected === $index, 'expanded': expanded }"
                           id="table-{{ $index}}">
-                          <td>
-                            <div ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath();" >
-                              <i uib-tooltip="Select this directory" ng-show="file.dir" class="glyphicon glyphicon-folder-close" 
+                          <td style="background-color: lightgrey;" ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath();">
+                            <div uib-tooltip="Select directory metadata."  tooltip-placement="right" ng-show="file.dir">
+                              <i class="fa" ng-class="{ 'fa-square': datasetsCtrl.selected === $index, 'fa-square-o': datasetsCtrl.selected !== $index }" aria-hidden="true"></i>
+                            </div>                             
+                            <div uib-tooltip="Select file metadata."  tooltip-placement="right" ng-show="!file.dir">
+                              <i class="fa" ng-class="{ 'fa-square': datasetsCtrl.selected === $index, 'fa-square-o': datasetsCtrl.selected !== $index }" aria-hidden="true"></i>
+                            </div>                             
+                          </td>
+                          <td ng-click="datasetsCtrl.openDir(file)">
+                            <div>
+                              <i uib-tooltip="Click on folder icon to enter folder" tooltip-placement="right" ng-show="file.dir" class="glyphicon"
+                                 ng-class="{ 'glyphicon-folder-close': datasetsCtrl.selected === $index,  'glyphicon-folder-open': datasetsCtrl.selected !== $index}"
+                                 style="padding-right: 5px; color: #757575; float: left;margin-top: 4px;"></i>
+                              <i uib-tooltip="Download file" tooltip-placement="right" ng-show="!file.dir" class="glyphicon glyphicon-cloud-download" 
                                  style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
-                              <i uib-tooltip="Select this file" ng-show="!file.dir" class="glyphicon glyphicon-file" 
-                                 style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
-                              <i class="fa fa-question-circle" aria-hidden="true"></i>
                             </div>
                           </td>
-                        <td ng-click="datasetsCtrl.openDir(file)">
-                          <div>{{file.name}}</div></td>
-                        <td ng-click="datasetsCtrl.openDir(file)">{{file.owner}} 
-                        </td>
-                        <td ng-click="datasetsCtrl.openDir(file)">{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
-                        </td>
-                        <td style="width: 12%;" ng-click="datasetsCtrl.openDir(file)">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
+                          <td ng-click="datasetsCtrl.openDir(file)">
+                            <div>{{file.name}}</div></td>
+                          <td ng-click="datasetsCtrl.openDir(file)">{{file.owner}} 
+                          </td>
+                          <td ng-click="datasetsCtrl.openDir(file)">{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
+                          </td>
+                          <td style="width: 12%;" ng-click="datasetsCtrl.openDir(file)">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
 
-                        <td>
-                          <div uib-dropdown class="position-fixed" id="menu-{{ $index}}">
-                            <ul uib-dropdown-menu class="dropdown-amore" role="menu">
-                              <li>
-                                <a class="pointer"
-                                   role="menuitem"
-                                   tabindex="5"
-                                   ng-hide="file.dir"
-                                   ng-click="datasetsCtrl.filePreview(file.name, true)"
-                                   data-toggle="uib-tooltip" title="Click to display a preview of a text file."
-                                   >
-                                  <span><i class="fa fa-camera-retro" ></i>
-                                    Preview</span>
-                                </a>
-                              </li>
-                              <li ng-hide="file.dir" class="divider"></li>
-                              <li>
-                                <a class="pointer"
-                                   role="menuitem"
-                                   tabindex="5"
-                                   ng-click="datasetsCtrl.deleteFile(file.name)">
-                                  <span><i class="fa fa-trash"></i>
-                                    Remove</span>
-                                </a>
-                              </li>
-                              <li class="divider"></li>
-                              <li>
-                                <a class="pointer"
-                                   role="menuitem"
-                                   tabindex="5"
-                                   ng-click="datasetsCtrl.move(file.id, file.name)">
-                                  <span><i class="fa fa-arrows"></i>
-                                    Move</span>
-                                </a>
-                              </li>
-                              <li>
-                                <a class="pointer"
-                                   role="menuitem"
-                                   tabindex="5"
-                                   ng-click="datasetsCtrl.rename(file.id)">
-                                  <span><i class="fa fa-edit"></i>
-                                    Rename</span>
-                                </a>
-                              </li>                                  
+                          <td>
+                            <div uib-dropdown class="position-fixed" id="menu-{{ $index}}">
+                              <ul uib-dropdown-menu class="dropdown-amore" role="menu">
+                                <li>
+                                  <a class="pointer"
+                                     role="menuitem"
+                                     tabindex="5"
+                                     ng-hide="file.dir"
+                                     ng-click="datasetsCtrl.filePreview(file.name, true)"
+                                     data-toggle="uib-tooltip" title="Click to display a preview of a text file."
+                                     >
+                                    <span><i class="fa fa-camera-retro" ></i>
+                                      Preview</span>
+                                  </a>
+                                </li>
+                                <li ng-hide="file.dir" class="divider"></li>
+                                <li>
+                                  <a class="pointer"
+                                     role="menuitem"
+                                     tabindex="5"
+                                     ng-click="datasetsCtrl.deleteFile(file.name)">
+                                    <span><i class="fa fa-trash"></i>
+                                      Remove</span>
+                                  </a>
+                                </li>
+                                <li class="divider"></li>
+                                <li>
+                                  <a class="pointer"
+                                     role="menuitem"
+                                     tabindex="5"
+                                     ng-click="datasetsCtrl.move(file.id, file.name)">
+                                    <span><i class="fa fa-arrows"></i>
+                                      Move</span>
+                                  </a>
+                                </li>
+                                <li>
+                                  <a class="pointer"
+                                     role="menuitem"
+                                     tabindex="5"
+                                     ng-click="datasetsCtrl.rename(file.id)">
+                                    <span><i class="fa fa-edit"></i>
+                                      Rename</span>
+                                  </a>
+                                </li>                                  
 
-                              <li class="divider"></li>
+                                <li class="divider"></li>
 
-                              <!--                                <li>
-                                                                <a class="pointer"
-                                                                   role="menuitem"
-                                                                   tabindex="1"
-                                                                   ng-click="panel.highlight = true; datasetsCtrl.compress(file); $event.stopPropagation();">
-                                                                  <span><i class="fa fa-file-archive-o"></i>
-                                                                    Compress</span>
-                                                                </a>
-                                                              </li>-->
+                                <!--                                <li>
+                                                                  <a class="pointer"
+                                                                     role="menuitem"
+                                                                     tabindex="1"
+                                                                     ng-click="panel.highlight = true; datasetsCtrl.compress(file); $event.stopPropagation();">
+                                                                    <span><i class="fa fa-file-archive-o"></i>
+                                                                      Compress</span>
+                                                                  </a>
+                                                                </li>-->
 
-                              <li class="divider"></li>
-                              <li>
-                                <a class="pointer"
-                                   role="menuitem"
-                                   tabindex="3"
-                                   ng-click="metadataCtrl.attachTemplate(file); $event.stopPropagation();">
-                                  <span><i class="fa fa-upload"></i>
-                                    Add metadata</span>
-                                </a>
-                              </li>
+                                <li class="divider"></li>
+                                <li>
+                                  <a class="pointer"
+                                     role="menuitem"
+                                     tabindex="3"
+                                     ng-click="metadataCtrl.attachTemplate(file); $event.stopPropagation();">
+                                    <span><i class="fa fa-upload"></i>
+                                      Add metadata</span>
+                                  </a>
+                                </li>
 
-                              <li>
-                                <a class="pointer"
-                                   role="menuitem"
-                                   tabindex="4"
-                                   ng-click="metadataCtrl.detachTemplate(file); $event.stopPropagation();">
-                                  <span><i class="fa fa-download"></i>
-                                    Remove metadata</span>
-                                </a>
-                              </li>
+                                <li>
+                                  <a class="pointer"
+                                     role="menuitem"
+                                     tabindex="4"
+                                     ng-click="metadataCtrl.detachTemplate(file); $event.stopPropagation();">
+                                    <span><i class="fa fa-download"></i>
+                                      Remove metadata</span>
+                                  </a>
+                                </li>
 
 
-                            </ul>
+                              </ul>
+                            </div>
+                          </td>
+
+                          <td style="margin:0px;width:25px;">
+                            <!--                              <i ng-if="$index >= 5 && (!file.underConstruction && !datasetsCtrl.working)"
+                                                             title="This file is compressed"
+                                                             style="color: lightgrey; margin-top:3px;"
+                                                             class="glyphicon glyphicon-compressed">
+                                                          </i>-->
+                            <i ng-if="file.underConstruction && !datasetsCtrl.working"
+                               title="File under construction"
+                               style="color: lightgrey; margin-top:3px;"
+                               class="glyphicon glyphicon-transfer">
+                            </i>
+                            <i ng-if="file.dir && datasetsCtrl.working && ($index === datasetsCtrl.selected)"
+                               title="Fetching files in this dir"
+                               style="color: lightgrey; margin-top:3px;"
+                               class="fa fa-spinner fa-spin pull-right">
+                            </i>
+                          </td>
                           </div>
-                        </td>
-
-                        <td style="margin:0px;width:25px;">
-                          <!--                              <i ng-if="$index >= 5 && (!file.underConstruction && !datasetsCtrl.working)"
-                                                           title="This file is compressed"
-                                                           style="color: lightgrey; margin-top:3px;"
-                                                           class="glyphicon glyphicon-compressed">
-                                                        </i>-->
-                          <i ng-if="file.underConstruction && !datasetsCtrl.working"
-                             title="File under construction"
-                             style="color: lightgrey; margin-top:3px;"
-                             class="glyphicon glyphicon-transfer">
-                          </i>
-                          <i ng-if="file.dir && datasetsCtrl.working && ($index === datasetsCtrl.selected)"
-                             title="Fetching files in this dir"
-                             style="color: lightgrey; margin-top:3px;"
-                             class="fa fa-spinner fa-spin pull-right">
-                          </i>
-                        </td>
-                      </div>
-                      </tr>
+                        </tr>
                       </tbody>
                     </table>
                     <dir-pagination-controls
@@ -245,8 +254,8 @@
             <!--</div>-->
 
 
-            <div style="margin-top: 0px; height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
-              <div class="ibox float-e-margins" style="margin-top: 3px; margin-bottom: 0px; height: 95%;">
+            <div style="margin-top: 28px; height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
+              <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: 0px; height: 95%;">
                 <div class="file-manager">
                   <div>
                     <md-content class="md-padding" style="padding-top: 0px; min-width: 250px;">
@@ -459,7 +468,7 @@
                           <div id="board" ng-show="datasetsCtrl.selected > -1 && datasetsCtrl.selected != undefined" style="font-family: Times New Roman;">
                             <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px">
                               <div style="display: inline-block">
-                                <div style="display: inline-block"><h4>No metadata template attached.</h4></div>
+                                <div style="display: inline-block"><h4>No extended metadata.</h4></div>
                                 <span class="field-info" uib-tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
                                   <i class="fa fa-exclamation-circle"></i>
                                 </span>

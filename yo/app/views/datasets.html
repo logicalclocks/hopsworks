@@ -13,7 +13,7 @@
         <md-content flex layout-padding>
           <div ng-include="'navProject.html'"></div>
 
-          <div layout="column" layout-fill="" layout-align="top center">
+          <div layout="column" layout-fill layout-align="top center">
             <div ng-show="mainCtrl.searchReturned !== ''">
               <div id="projectSearchResults">
                 <div ng-include="'views/searchResult.html'"></div>
@@ -53,10 +53,10 @@
                         <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === $index}">
                           <a>
                             <span class="corner"></span>
-                            <div uib-tooltip="Click to browse to this dataset" class="icon" ng-click="projectCtrl.browseDataset(dataset)">
+                            <div uib-tooltip="Click on the folder icon to enter this dataset" class="icon" ng-click="projectCtrl.browseDataset(dataset)">
                               <i class="glyphicon" ng-class="{'glyphicon-folder-close': datasetsCtrl.selected === $index, 'glyphicon-folder-open' : datasetsCtrl.selected !== $index}"></i>
                             </div>
-                            <div class="file-name" uib-tooltip="Select this dataset" 
+                            <div class="file-name" uib-tooltip="Click on the bottom section to view metadata for this dataset." 
                                  ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset.path.substring(dataset.path.lastIndexOf('/')).replace('/', '') + '/README.md', false);">
                               {{dataset.name}}                            
                               <span class="pull-right publicDS" ng-class="{'glyphicon glyphicon-globe': dataset.publicDs === true}"></span>
@@ -419,7 +419,7 @@
                                                 </div>-->
                           <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px">
                             <div style="display: inline-block">
-                              <div style="display: inline-block"><h4>No metadata template attached.</h4></div>
+                              <div style="display: inline-block"><h4>No extended metadata.</h4></div>
                               <span class="field-info" uib-tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
                                 <i class="fa fa-exclamation-circle"></i>
                               </span>

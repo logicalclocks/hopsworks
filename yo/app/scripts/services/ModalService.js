@@ -92,91 +92,6 @@ angular.module('hopsWorksApp')
                 return modalInstance.result;
               },
               
-              createRepository: function (size) {
-                var modalInstance = $uibModal.open({
-                  templateUrl: 'views/newRepositoryModal.html',
-                  controller: 'CharonCtrl as charonCtrl',
-                  size: size,
-                  resolve: {
-                    auth: ['$q', '$location', 'AuthService',
-                      function ($q, $location, AuthService) {
-                        return AuthService.session().then(
-                          function (success) {
-                          },
-                          function (err) {
-                            $location.path('/login');
-                            $location.replace();
-                            return $q.reject(err);
-                          });
-                      }]
-                  }
-                });
-                return modalInstance.result;
-              },
-              importRepository: function (size) {
-                var modalInstance = $uibModal.open({
-                  templateUrl: 'views/importRepositoryModal.html',
-                  controller: 'CharonCtrl as charonCtrl',
-                  size: size,
-                  resolve: {
-                    auth: ['$q', '$location', 'AuthService',
-                      function ($q, $location, AuthService) {
-                        return AuthService.session().then(
-                          function (success) {
-                          },
-                          function (err) {
-                            $location.path('/login');
-                            $location.replace();
-                            return $q.reject(err);
-                          });
-                      }]
-                  }
-                });
-                return modalInstance.result;
-              },
-              shareRepository: function (size) {
-                var modalInstance = $uibModal.open({
-                  templateUrl: 'views/shareRepositoryModal.html',
-                  controller: 'CharonCtrl as charonCtrl',
-                  size: size,
-                  resolve: {
-                    auth: ['$q', '$location', 'AuthService',
-                      function ($q, $location, AuthService) {
-                        return AuthService.session().then(
-                          function (success) {
-                          },
-                          function (err) {
-                            $location.path('/login');
-                            $location.replace();
-                            return $q.reject(err);
-                          });
-                      }]
-                  }
-                });
-                return modalInstance.result;
-              },
-              addSite: function (size) {
-                var modalInstance = $uibModal.open({
-                  templateUrl: 'views/addSiteModal.html',
-                  controller: 'CharonCtrl as charonCtrl',
-                  size: size,
-                  resolve: {
-                    auth: ['$q', '$location', 'AuthService',
-                      function ($q, $location, AuthService) {
-                        return AuthService.session().then(
-                          function (success) {
-							
-                          },
-                          function (err) {
-                            $location.path('/login');
-                            $location.replace();
-                            return $q.reject(err);
-                          });
-                      }]
-                  }
-                });
-                return modalInstance.result;
-              },
               projectSettings: function (size, projectId) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/projectSettingsModal.html',
@@ -973,6 +888,27 @@ angular.module('hopsWorksApp')
                     val: function () {
                       return val;
                     }
+                  }
+                });
+                return modalInstance.result;
+              },
+              allocateTensorflowCluster: function (size) {
+                var modalInstance = $uibModal.open({
+                  templateUrl: 'views/tensorflowModal.html',
+                  controller: 'TensorflowCtrl as tensorflowCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                     function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                          function (success) {
+                          },
+                          function (err) {
+                            $location.path('/login');
+                            $location.replace();
+                            return $q.reject(err);
+                          });
+                      }]
                   }
                 });
                 return modalInstance.result;
