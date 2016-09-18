@@ -397,23 +397,22 @@ public class DataSetService {
       
       //Generate README.md for the dataset if the user requested it
       if (dataSet.isGenerateReadme()) {
-        String templateName = "No template is attached to this dataset";
-        if (dataSet.getTemplate() > 0) {
-          templateName = template.getTemplate(dataSet.getTemplate()).getName();
-        }
-        
         //Persist README.md to hdfs
         if (udfso != null) {
           String readmeFile = String.format(Settings.README_TEMPLATE, dataSet.
-                  getName(), dataSet.getDescription(), templateName,
-                  dataSet.isSearchable());
+                  getName(), dataSet.getDescription());
           String readMeFilePath = "/Projects/" + project.getName() + "/"
-                  + dataSet.getName() + "/README.md";;
+                  + dataSet.getName() + "/README.md";
 
           try (FSDataOutputStream fsOut = udfso.create(readMeFilePath)) {
             fsOut.writeBytes(readmeFile);
             fsOut.flush();
           }
+          FsPermission readmePerm = new FsPermission(FsAction.ALL, 
+                  FsAction.READ_EXECUTE,
+                  FsAction.NONE);
+          udfso.setPermission(new org.apache.hadoop.fs.Path(readMeFilePath), 
+                  readmePerm);
         }
       }
       
