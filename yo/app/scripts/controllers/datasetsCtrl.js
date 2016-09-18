@@ -23,6 +23,8 @@ angular.module('hopsWorksApp')
             $scope.readme = null;
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
+            self.dir_timing;
+
             $scope.isPublic = true;
             
             $scope.tgState = true;
@@ -142,28 +144,6 @@ angular.module('hopsWorksApp')
               });
             };
 
-            $scope.$on("copyFromCharonToHdfs", function (event, args) {
-              var newPathArray = self.pathArray;
-              //Convert into a path
-              var newPath = getPath(newPathArray);
-              self.working = true;
-              //Get the contents and load them
-              dataSetService.getContents(newPath).then(
-                      function (success) {
-                        //Reset the selected file
-                        self.selected = null;
-                        self.fileDetail = null;
-                        //Set the current files and path
-                        self.files = success.data;
-                        self.pathArray = newPathArray;
-                        self.working = false;
-                        console.log(success);
-                      }, function (error) {
-                self.working = false;
-                console.log("Error getting the contents of the path " + getPath(newPathArray));
-                console.log(error);
-              });
-            });
 
             /**
              * Get the contents of the directory at the path with the given path components and load it into the frontend.
@@ -183,6 +163,7 @@ angular.module('hopsWorksApp')
               //Convert into a path
               var newPath = getPath(newPathArray);
               self.working = true;
+              self.dir_timing = new Date().getTime();
               //Get the contents and load them
               dataSetService.getContents(newPath).then(
                       function (success) {
@@ -194,6 +175,8 @@ angular.module('hopsWorksApp')
                         self.pathArray = newPathArray;
                         self.working = false;
                         console.log(success);
+//                        alert('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
+                        console.log('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
                       }, function (error) {
                         if (error.data.errorMsg.indexOf("Path is not a directory.") > -1) {
                           var popped = newPathArray.pop();

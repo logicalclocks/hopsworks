@@ -27,10 +27,12 @@ angular.module('hopsWorksApp')
 
             MetadataActionService.fetchTemplates($cookies.get('email'))
                     .then(function (response) {
-                      var temps = JSON.parse(response.board);
-                      angular.forEach(temps.templates, function (value, key) {
-                        self.templates.push(value);
-                      });
+                      if (response.board != undefined && response.board !== null && response.status !== "ERROR") {
+                        var temps = JSON.parse(response.board);
+                        angular.forEach(temps.templates, function (value, key) {
+                          self.templates.push(value);
+                        });
+                      }
                     }, function (error) {
                       console.log("ERROR " + JSON.stringify(error));
                     });
@@ -42,10 +44,10 @@ angular.module('hopsWorksApp')
                         self.working = false;
                         $uibModalInstance.close(success);
                       },
-                      function (error) {
-                        self.working = false;
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                      });
+                              function (error) {
+                                self.working = false;
+                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                              });
             };
 
             var createTopLevelDataSet = function (dataSet) {
@@ -55,10 +57,10 @@ angular.module('hopsWorksApp')
                         self.working = false;
                         $uibModalInstance.close(success);
                       },
-                      function (error) {
-                        self.working = false;
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                      });
+                              function (error) {
+                                self.working = false;
+                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                              });
             };
 
             self.close = function () {
