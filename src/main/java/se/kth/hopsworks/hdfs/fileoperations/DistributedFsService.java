@@ -3,7 +3,9 @@ package se.kth.hopsworks.hdfs.fileoperations;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,6 +21,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.hdfsUsers.HdfsUsersFacade;
+import se.kth.hopsworks.hdfsUsers.model.HdfsGroups;
 import se.kth.hopsworks.util.Settings;
 
 @Stateless
@@ -34,6 +38,8 @@ public class DistributedFsService {
   private InodeFacade inodes;
   @EJB
   private UserGroupInformationService ugiService;
+  @EJB
+  private HdfsUsersFacade hdfsUsersFacade;
 
   private Configuration conf;
   private String hadoopConfDir;
@@ -108,6 +114,29 @@ public class DistributedFsService {
     try {
       ugi = UserGroupInformation.createProxyUser(username, UserGroupInformation.
               getLoginUser());
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+      return null;
+    }
+    return new DistributedFileSystemOps(ugi, conf);
+  }
+  public DistributedFileSystemOps getDfsOpsForTesting(String username) {
+    if (username == null || username.isEmpty()) {
+      throw new NullPointerException("username not set.");
+    }
+    //Get hdfs groups
+        Collection<HdfsGroups> groups = hdfsUsersFacade.findByName(username).getHdfsGroupsCollection();
+        String[] userGroups = new String[groups.size()];
+        Iterator<HdfsGroups> iter = groups.iterator();
+        int i=0;
+        while(iter.hasNext()){
+          userGroups[i] = iter.next().getName();
+          i++;
+        }
+    UserGroupInformation ugi;
+    try {
+      ugi = UserGroupInformation.createProxyUserForTesting(username, UserGroupInformation.
+              getLoginUser(), userGroups);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       return null;

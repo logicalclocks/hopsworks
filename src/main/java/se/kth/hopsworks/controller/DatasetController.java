@@ -161,26 +161,7 @@ public class DatasetController {
         activityFacade.persistActivity(ActivityFacade.NEW_DATA + dataSetName, project, user);
         // creates a dataset and adds user as owner.
         hdfsUsersBean.addDatasetUsersGroups(user, project, newDS, dfso);
-        //Persist README.md to hdfs
-//        String readMeFilePath = "/Projects/" + project.getName() + "/" + dataSetName+"/";
-//        String readmeFile = String.format(Settings.README_TEMPLATE, 
-//                  dataSetName, datasetDescription, 
-//                  "No template is attached to this dataset",
-//                false);
-//        File file = new File("/tmp" + readMeFilePath + "README.md");
-//
-//        file.getParentFile().mkdirs();
-//        file.createNewFile();
-//        PrintWriter writer = new PrintWriter(file);
-//        writer.print(readmeFile);
-//        writer.flush();
-//        writer.close();
-//
-//        udfso.copyToHDFSFromLocal(false, file.getAbsolutePath(),readMeFilePath);
-
-        
-//      
-      
+     
       } catch (Exception e) {
         IOException failed = new IOException("Failed to create dataset at path "
                 + dsPath + ".", e);

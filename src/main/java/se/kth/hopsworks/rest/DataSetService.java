@@ -1,13 +1,10 @@
 package se.kth.hopsworks.rest;
 
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,9 +35,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.security.AccessControlException;
-import org.codehaus.jackson.map.ObjectMapper;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.ErasureCodeJob;
 import se.kth.bbc.fileoperations.ErasureCodeJobConfiguration;
@@ -302,7 +297,9 @@ public class DataSetService {
                 getStatusCode(), "Error while creating directory: " + e.
                 getLocalizedMessage());
       } finally {
-        udfso.close();
+        if(udfso != null){
+          udfso.close();
+        }
       }
     }
     activityFacade.persistActivity(ActivityFacade.SHARED_DATA + dataSet.
@@ -502,7 +499,9 @@ public class DataSetService {
       if (dfso != null) {
         dfso.close();
       }
-      udfso.close();
+      if (udfso != null) {
+        udfso.close();
+      }
     }
     json.setSuccessMessage("A directory was created at " + dsPath);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -556,7 +555,9 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + filePath);
     } finally {
-      udfso.close();
+      if(udfso != null){
+        udfso.close();
+      }
     }
     if (!success) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -609,11 +610,9 @@ public class DataSetService {
 
     path = getFullPath(path);
     DistributedFileSystemOps udfso = null;
-    DistributedFileSystemOps dfso = null;
     try {
-      dfso = dfs.getDfsOps();
       udfso = dfs.getDfsOps(username);
-      boolean exists = dfso.exists(path);
+      boolean exists = udfso.exists(path);
 
       Inode sourceInode = inodes.findById(inodeId);
 
@@ -647,11 +646,7 @@ public class DataSetService {
       if (udfso != null) {
         udfso.close();
       }
-      if (dfso != null) {
-        dfso.close();
-      }
     }
-
   }
 
   @GET
@@ -668,15 +663,13 @@ public class DataSetService {
     }
     path = getFullPath(path);
     DistributedFileSystemOps udfso = null;
-    DistributedFileSystemOps dfso = null;
     FSDataInputStream is = null;
     try {
-      dfso = dfs.getDfsOps();
       udfso = dfs.getDfsOps(username);
-      boolean exists = dfso.exists(path);
+      boolean exists = udfso.exists(path);
 
       //check if the path is a file only if it exists
-      if (!exists || dfso.isDir(path)) {
+      if (!exists || udfso.isDir(path)) {
         throw new IOException("The file does not exist");
       }
       //tests if the user have permission to access this path
@@ -699,9 +692,6 @@ public class DataSetService {
       if (udfso != null) {
         udfso.close();
       }
-      if (dfso != null) {
-        dfso.close();
-      }
     }
     Response.ResponseBuilder response = Response.ok();
     return response.build();
@@ -722,17 +712,15 @@ public class DataSetService {
     }
     path = getFullPath(path);
     DistributedFileSystemOps udfso = null;
-    DistributedFileSystemOps dfso = null;
     FSDataInputStream is = null;
 
     JsonResponse json = new JsonResponse();
     try {
-      dfso = dfs.getDfsOps();
       udfso = dfs.getDfsOps(username);
-      boolean exists = dfso.exists(path);
+      boolean exists = udfso.exists(path);
 
       //check if the path is a file only if it exists
-      if (!exists || dfso.isDir(path)) {
+      if (!exists || udfso.isDir(path)) {
         //Return an appropriate response if looking for README
         if (path.endsWith("README.md")) {
           return noCacheResponse.getNoCacheResponseBuilder(
@@ -830,9 +818,6 @@ public class DataSetService {
       }
       if (udfso != null) {
         udfso.close();
-      }
-      if (dfso != null) {
-        dfso.close();
       }
     }
 
