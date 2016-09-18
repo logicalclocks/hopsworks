@@ -211,10 +211,11 @@ public class ProjectController {
    * @param dfso
    * @param udfso
    * @throws ProjectInternalFoldersFailedException
+   * @throws se.kth.hopsworks.rest.AppException
    */
   public void createProjectLogResources(String username, Project project,
           DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
-          ProjectInternalFoldersFailedException {
+          ProjectInternalFoldersFailedException, AppException {
 
     Users user = userBean.getUserByEmail(username);
 
@@ -234,7 +235,7 @@ public class ProjectController {
   public void createProjectConsentFolder(String username, Project project,
           DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
           throws
-          ProjectInternalFoldersFailedException {
+          ProjectInternalFoldersFailedException, AppException {
 
     Users user = userBean.getUserByEmail(username);
 
@@ -841,7 +842,7 @@ public class ProjectController {
   }
 
   public void addExampleJarToExampleProject(String username, Project project,
-          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) {
+          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws AppException {
 
     Users user = userBean.getUserByEmail(username);
     try {
