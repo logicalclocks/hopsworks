@@ -96,7 +96,9 @@ public class KafkaFacade {
         List<ProjectTopics> res = query.getResultList();
         List<TopicDTO> topics = new ArrayList<>();
         for (ProjectTopics pt : res) {
-            topics.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName()));
+            topics.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName(),
+            pt.getSchemaTopics().getSchemaTopicsPK().getName(),
+            pt.getSchemaTopics().getSchemaTopicsPK().getVersion()));
         }
         return topics;
     }
