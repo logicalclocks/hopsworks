@@ -89,6 +89,7 @@
                            </ul>
                         </div>
                       </th>
+                      <th>Type</th>
                       <th ng-click="sort('name')">Name
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'name'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                       <th ng-click="sort('owner')">Owner
@@ -103,7 +104,7 @@
 
                       <tbody ng-model="datasetsCtrl.files">
                         <tr>
-                          <td style="width=15px;height=15px; background-color: lightgray;">
+                          <td style="width=15px;height=15px;">
                             <div ng-click="all_selected=false; datasetsCtrl.deselect();" ng-show="all_selected">
                               <i class="fa fa-square" aria-hidden="true"></i>
                             </div>                             
@@ -128,21 +129,21 @@
                           dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:50"
                           context-menu
                           data-target="menu-{{ $index}}"
-                          ng-class="{ 'highlight': datasetsCtrl.selected === $inodes, 'expanded': expanded }"
+                          ng-class="{ 'highlight': datasetsCtrl.selected === $index, 'expanded': expanded }"
                           id="table-{{ $index}}">
-                          <td style="background-color: lightgrey;">
+                          <td ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath();" style="background-color: lightgrey;">
 
-                            <div ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath();" uib-tooltip="Select directory metadata."  tooltip-placement="right" ng-show="file.dir">
-                              <i class="fa" ng-class="{ 'fa-square': datasetsCtrl.selected === $inodes, 'fa-square-o': datasetsCtrl.selected !== $index }" aria-hidden="true"></i>
+                            <div uib-tooltip="Select directory metadata."  tooltip-placement="right" ng-show="file.dir">
+                              <i class="fa" ng-class="{ 'fa-square': datasetsCtrl.selected === $index, 'fa-square-o': datasetsCtrl.selected !== $index }" aria-hidden="true"></i>
                             </div>                             
-                            <div ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath(); " uib-tooltip="Select file metadata."  tooltip-placement="right" ng-show="!file.dir">
-                              <i class="fa" ng-class="{ 'fa-square': datasetsCtrl.selected === $inodes, 'fa-square-o': datasetsCtrl.selected !== $index }" aria-hidden="true"></i>
+                            <div  uib-tooltip="Select file metadata."  tooltip-placement="right" ng-show="!file.dir">
+                              <i class="fa" ng-class="{ 'fa-square': datasetsCtrl.selected === $index, 'fa-square-o': datasetsCtrl.selected !== $index }" aria-hidden="true"></i>
                             </div>                             
                           </td>
                           <td ng-click="datasetsCtrl.openDir(file)">
                             <div>
                               <i uib-tooltip="Click on folder icon to enter folder" tooltip-placement="right" ng-show="file.dir" class="glyphicon"
-                                 ng-class="{ 'glyphicon-folder-close': datasetsCtrl.selected === $inodes,  'glyphicon-folder-open': datasetsCtrl.selected !== $index}"
+                                 ng-class="{ 'glyphicon-folder-close': datasetsCtrl.selected === $index,  'glyphicon-folder-open': datasetsCtrl.selected !== $index}"
                                  style="padding-right: 5px; color: #757575; float: left;margin-top: 4px;"></i>
                               <i uib-tooltip="Download file" tooltip-placement="right" ng-show="!file.dir" class="glyphicon glyphicon-cloud-download" 
                                  style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>

@@ -16,7 +16,6 @@ angular.module('hopsWorksApp')
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
             self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
             self.selected = null; //The index of the selected file in the files array.
-            self.selectedList = []; //The index of the selected file in the files array.
             self.fileDetail; //The details about the currently selected file.
             self.sharedPath; //The details about the currently selected file.
             self.routeParamArray = [];
@@ -24,7 +23,10 @@ angular.module('hopsWorksApp')
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
             $scope.all_selected = false;
-            self.selected_inodes = [];
+            self.selectedFiles = {}; //Selected files
+            self.fileDetails = {}; //Details on selected files.
+            self.sharedPaths = {}; //Paths for selected files
+
 
             self.dir_timing;
 
