@@ -95,6 +95,17 @@
                       <tbody ng-model="datasetsCtrl.files">
 
                         <tr>
+                          <td>
+                          <td style="background-color: lightgrey;">
+                            <div uib-tooltip="Select all files/directories."  tooltip-placement="right" ng-show="datasetsCtrl.all_selected">
+                              <i class="fad fa-square-o" aria-hidden="true"></i>
+                            </div>                             
+                            <div uib-tooltip="Unselect files/directories."  tooltip-placement="right" ng-show="!datasetsCtrl.all_selected">
+                              <i class="fa fa-square" aria-hidden="true"></i>
+                            </div>                             
+                          </td>
+
+</td>
                           <td style="margin:0px;width:15px;" ng-click="datasetsCtrl.back()" ><i class="fa fa-level-up pull-right" aria-hidden="true"></i></td>
                           <td ng-click="datasetsCtrl.back()" style="padding: 0px" colspan="5">&nbsp &nbsp
                             <a style="font-siglyphicon-expandze:60px">..</a>

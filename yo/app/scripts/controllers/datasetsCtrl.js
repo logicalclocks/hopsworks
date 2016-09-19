@@ -23,6 +23,9 @@ angular.module('hopsWorksApp')
             $scope.readme = null;
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
+            self.all_selected = false;
+            self.selected_inodes = [];
+
             self.dir_timing;
 
             $scope.isPublic = true;
