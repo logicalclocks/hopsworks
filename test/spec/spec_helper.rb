@@ -1,6 +1,7 @@
 require 'airborne'
 #require 'byebug'
 require 'active_record'
+require 'launchy'
 
 require 'dotenv'
 Dotenv.load
@@ -22,6 +23,7 @@ RSpec.configure do |config|
   config.include ProjectHelper
   config.include WorkflowHelper
   config.include FactoryHelper
+  config.include DatasetHelper
   config.before(:suite) do
     #clean_oozie
   end
@@ -73,5 +75,15 @@ def clean_test_data
   ActiveRecord::Base.connection.execute("DELETE FROM hopsworks.project_payments_history WHERE username LIKE \'%@email.com\' ")
   ActiveRecord::Base.connection.execute("DELETE FROM hopsworks.account_audit ")
   ActiveRecord::Base.connection.execute("DELETE FROM hopsworks.users WHERE fname= \'name\' ")
+  ActiveRecord::Base.establish_connection ({
+  :adapter => "jdbcmysql",
+  :host => ENV['DB_HOST'],
+  :port => ENV['DB_PORT'],
+  :database => "hops",
+  :username => "kthfs",
+  :password => "kthfs"})
+  ActiveRecord::Base.connection.execute("DELETE FROM hops.hdfs_users WHERE name LIKE \'project\_[^_]%\' ")
+  ActiveRecord::Base.connection.execute("DELETE FROM hops.hdfs_groups WHERE name LIKE \'project\_[^_]%\' ")
   puts "DB Clean-up finished"
+  Launchy.open("#{ENV['PROJECT_DIR']}#{ENV['RSPEC_REPORT']}")
 end

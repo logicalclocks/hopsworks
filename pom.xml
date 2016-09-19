@@ -559,6 +559,13 @@
         </dependency>
         <dependency>
           <groupId>rubygems</groupId>
+          <artifactId>launchy</artifactId>
+          <version>2.4.3</version>
+          <type>gem</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>rubygems</groupId>
           <artifactId>dotenv</artifactId>
           <version>2.1.1</version>
           <type>gem</type>

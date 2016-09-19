@@ -6,7 +6,7 @@ describe 'projects' do
         reset_session
       end
       it "should fail" do
-        post "/hopsworks/api/project", {projectName: "project_#{Time.now.to_i}", description:"", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
+        post "/hopsworks/api/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -17,12 +17,53 @@ describe 'projects' do
         with_valid_session
       end
       it 'should work with valid params' do
-        post "/hopsworks/api/project", {projectName: "project_#{Time.now.to_i}", description:"", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
+        post "/hopsworks/api/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
         expect_json(successMessage: "Project created successfully.")
         expect_status(201)
       end
+      it 'should create resources and logs datasets with right permissions and owner' do
+        projectname = "project_#{Time.now.to_i}"
+        post "/hopsworks/api/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
+        expect_json(errorMsg: ->(value){ expect(value).to be_empty})
+        expect_json(successMessage: "Project created successfully.")
+        expect_status(201)
+        get "/hopsworks/api/project/getProjectInfo/#{projectname}"
+        project_id = json_body[:projectId]
+        get "/hopsworks/api/project/#{project_id}/dataset"
+        expect_status(200)
+        logs = json_body.detect { |e| e[:name] == "Logs" }
+        resources = json_body.detect { |e| e[:name] == "Resources" }
+        expect(logs[:description]).to eq ("Contains the logs for jobs that have been run through the Hopsworks platform.")
+        expect(logs[:permission]).to eq ("rwxrwxr-t")
+        expect(logs[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+        expect(resources[:description]).to eq ("Contains resources used by jobs, for example, jar files.")
+        expect(resources[:permission]).to eq ("rwxrwxr-t")
+        expect(resources[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+      end
+      it 'should fail to create a project with an existing name' do
+        with_valid_project
+        projectname = "#{@project[:projectname]}"
+        post "/hopsworks/api/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
+        expect_json(errorMsg: "Project with the same name already exists.")
+        expect_status(400)
+      end
       
+      it 'should create a project X containing a dataset Y after deleteing a project X containing a dataset Y (issue #425)' do
+        projectname = "project_#{short_random_id}"
+        project = create_project_by_name(projectname)
+        dsname = "dataset_#{short_random_id}"
+        create_dataset_by_name(project, dsname)
+        delete_project(project)
+        project = create_project_by_name(projectname)
+        create_dataset_by_name(project, dsname)
+
+        get "/hopsworks/api/project/#{project[:id]}/dataset/#{dsname}"        
+        expect_status(200)
+        get "/hopsworks/api/project/#{project[:id]}/dataset"
+        ds = json_body.detect { |d| d[:name] == dsname }
+        expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+      end
       it 'should fail with invalid params' do
         post "/hopsworks/api/project", {projectName: "project_#{Time.now.to_i}"}
         expect_status(500)
@@ -84,6 +125,7 @@ describe 'projects' do
       end
       it "should delete project" do
         post "/hopsworks/api/project/#{@project[:id]}/delete"
+        expect_json(successMessage: "The project and all related files were removed successfully.")
         expect_status(200)
       end
     end
@@ -97,7 +139,7 @@ describe 'projects' do
       it "should fail to add member" do
         project = get_project
         member = create_user[:email]
-        post "/hopsworks/api/project/#{project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: project[:id],teamMember: member},teamRole: "Data scientist"}]}
+        post "/hopsworks/api/project/#{project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: project[:id], teamMember: member},teamRole: "Data scientist"}]}
         expect_status(401)
       end
     end
@@ -112,7 +154,7 @@ describe 'projects' do
         new_member = create_user[:email]
         add_member(member[:email], "Data scientist")
         create_session(member[:email],"Pass123")
-        post "/hopsworks/api/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: new_member},teamRole: "Data scientist"}]}
+        post "/hopsworks/api/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
       end
