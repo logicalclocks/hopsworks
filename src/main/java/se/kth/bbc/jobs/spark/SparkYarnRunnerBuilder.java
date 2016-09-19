@@ -103,7 +103,7 @@ public class SparkYarnRunnerBuilder {
     //Add app jar
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_LOCRSC_APP_JAR, appJarPath, 
-            LocalResourceVisibility.PUBLIC.toString(), 
+            LocalResourceVisibility.PRIVATE.toString(), 
             LocalResourceType.FILE.toString(), null), 
             !appJarPath.startsWith("hdfs:"));
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
