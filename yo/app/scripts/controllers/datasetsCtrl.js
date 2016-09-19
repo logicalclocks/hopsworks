@@ -2,13 +2,14 @@
 
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
-          'DataSetService', '$routeParams','$route', 'ModalService', 'growl', '$location',
+          'DataSetService', '$routeParams', '$route', 'ModalService', 'growl', '$location',
           'MetadataHelperService', '$showdown',
           function ($scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, $routeParams,
                   $route, ModalService, growl, $location, MetadataHelperService,
                   $showdown) {
 
             var self = this;
+            self.itemsPerPage = 50;
             self.working = false;
             //Some variables to keep track of state.
             self.files = []; //A list of files currently displayed to the user.
@@ -24,14 +25,12 @@ angular.module('hopsWorksApp')
 
             $scope.all_selected = false;
             self.selectedFiles = {}; //Selected files
-            self.fileDetails = {}; //Details on selected files.
-            self.sharedPaths = {}; //Paths for selected files
 
 
             self.dir_timing;
 
             $scope.isPublic = true;
-            
+
             $scope.tgState = true;
 
             $scope.status = {
@@ -75,14 +74,6 @@ angular.module('hopsWorksApp')
               return false;
             };
 
-            self.selectInode = function (inode) {
-              // add to selectedList
-            };
-
-            self.selectInode = function (inode) {
-              // splice
-            };
-
             $scope.sort = function (keyname) {
               $scope.sortKey = keyname;   //set the sortKey to the param passed
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
@@ -112,7 +103,7 @@ angular.module('hopsWorksApp')
               }
               return true;
             };
-            
+
             self.sharedDatasetPath = function () {
               var top = self.pathArray[0].split("::");
               if (top.length === 1) {
@@ -124,11 +115,11 @@ angular.module('hopsWorksApp')
               self.sharedPathArray = new Array(self.pathArray.length + 1);
               self.sharedPathArray[0] = top[0];
               self.sharedPathArray[1] = top[1];
-              for (var i=1; i<pathArray.length; i++ ) {
-                self.sharedPathArray[i+1] = pathArray[i];
+              for (var i = 1; i < pathArray.length; i++) {
+                self.sharedPathArray[i + 1] = pathArray[i];
               }
               return self.sharedPathArray;
-            };            
+            };
 
 
             /*
@@ -160,7 +151,7 @@ angular.module('hopsWorksApp')
               var newPathArray;
               if (pathComponents) {
                 newPathArray = pathComponents;
-              } else if (self.routeParamArray){
+              } else if (self.routeParamArray) {
                 newPathArray = self.pathArray.concat(self.routeParamArray);
               } else {
                 newPathArray = self.pathArray;
@@ -181,26 +172,26 @@ angular.module('hopsWorksApp')
                         self.working = false;
                         console.log(success);
 //                        alert('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
-                        console.log('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
+                        console.log('Execution time: ' + (new Date().getTime() - self.dir_timing));
                       }, function (error) {
-                        if (error.data.errorMsg.indexOf("Path is not a directory.") > -1) {
-                          var popped = newPathArray.pop();
-                          console.log(popped);
-                          self.openDir({name:popped, dir:false, underConstruction:false});
-                          self.pathArray = newPathArray;
-                          self.routeParamArray = [];
-                          //growl.info(error.data.errorMsg, {title: 'Info', ttl: 2000});
-                          getDirContents();
-                        } else if (error.data.errorMsg.indexOf("Path not found :") > -1) {
-                          self.routeParamArray = [];
-                          //$route.updateParams({fileName:''});
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                          getDirContents();
-                        }
-                        self.working = false;
-                        console.log("Error getting the contents of the path " 
-                                     + getPath(newPathArray));
-                        console.log(error);
+                if (error.data.errorMsg.indexOf("Path is not a directory.") > -1) {
+                  var popped = newPathArray.pop();
+                  console.log(popped);
+                  self.openDir({name: popped, dir: false, underConstruction: false});
+                  self.pathArray = newPathArray;
+                  self.routeParamArray = [];
+                  //growl.info(error.data.errorMsg, {title: 'Info', ttl: 2000});
+                  getDirContents();
+                } else if (error.data.errorMsg.indexOf("Path not found :") > -1) {
+                  self.routeParamArray = [];
+                  //$route.updateParams({fileName:''});
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                  getDirContents();
+                }
+                self.working = false;
+                console.log("Error getting the contents of the path "
+                        + getPath(newPathArray));
+                console.log(error);
               });
             };
 
@@ -216,10 +207,10 @@ angular.module('hopsWorksApp')
               if ($routeParams.datasetName && $routeParams.fileName) {
                 //file name is set: get the contents
                 var paths = $routeParams.fileName.split("/");
-                paths.forEach(function(entry) {
+                paths.forEach(function (entry) {
                   self.routeParamArray.push(entry);
-                });               
-              } 
+                });
+              }
               getDirContents();
               $scope.tgState = true;
             };
@@ -307,8 +298,8 @@ This will make all its files available for any registered user to download and p
               );
 
             };
-            
-             self.removePublic = function (id) {
+
+            self.removePublic = function (id) {
 
               ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet private? \n\
 This will make all its files unavailable to other projects unless you share it explicitly.').then(
@@ -323,8 +314,8 @@ This will make all its files unavailable to other projects unless you share it e
 
                       }
               );
-            };           
-            
+            };
+
 
             self.parentPathArray = function () {
               var newPathArray = self.pathArray.slice(0);
@@ -347,12 +338,12 @@ This will make all its files unavailable to other projects unless you share it e
               if (fileName.endsWith("README.md") && !preview) {
                 dataSetService.filePreview(filePath, "head").then(
                         function (success) {
-                            var fileDetails = JSON.parse(success.data.data);
-                            var content = fileDetails.filePreviewDTO[0].content;
-                            $scope.readme = $showdown.makeHtml(content);
+                          var fileDetails = JSON.parse(success.data.data);
+                          var content = fileDetails.filePreviewDTO[0].content;
+                          $scope.readme = $showdown.makeHtml(content);
                         }, function (error) {
-                          //To hide README from UI
-                          $scope.readme = null;
+                  //To hide README from UI
+                  $scope.readme = null;
                 });
               } else {
                 ModalService.filePreview('lg', fileName, filePath, self.projectId, "head").then(
@@ -362,8 +353,8 @@ This will make all its files unavailable to other projects unless you share it e
                 });
               }
             };
-           
-            
+
+
             self.move = function (inodeId, name) {
               ModalService.selectDir('lg', "/[^]*/",
                       "problem selecting file").then(
@@ -557,17 +548,113 @@ This will make all its files unavailable to other projects unless you share it e
              * @param {type} file
              * @returns {undefined}
              */
-            self.select = function (selectedIndex, file) {
+            self.select = function (selectedIndex, file, event) {
+              if (event.ctrlKey) {
+                // 1. Turn off the selected file at the top of the browser.
+                // Add existing selected file (idempotent, if already added)
+                // If file already selected, deselect it.
+                if (self.fileDetail !== null) {
+                  if (self.fileDetail.name !== null) {
+                    if (self.fileDetail.name === file.name || (file.name in self.selectedFiles)) {
+                      self.deselect(selectedIndex, file, event);
+                      return;
+                    } else {
+                      self.selectedFiles[self.fileDetail.name] = self.fileDetail;
+                      self.selectedFiles[self.fileDetail.name].selectedIndex = self.selected;
+                    }
+                  }
+                }
+              } else {
+                self.selectedFiles = {};
+              }
+
               self.selected = selectedIndex;
               self.fileDetail = file;
 //              $scope.readme = null;
+//              getDirContents();
+
+            };
+
+            self.haveSelected = function (file) {
+              if (file !== undefined && self.fileDetail !== null && self.fileDetail !== undefined && file.name !== undefined &&
+                      (self.fileDetail.name === file.name || (file.name in self.selectedFiles))) {
+                return true;
+              }
+              return false;
+            };
+
+
+            self.selectAll = function () {
+              var i = 0;
+              var min = Math.min(self.itemsPerPage, self.files.length);
+              for (i = 0; i < min; i++) {
+                var f = self.files[i];
+                self.selectedFiles[f.name] = f;
+                self.selectedFiles[f.name].selectedIndex = i;
+              }
+              if (self.files.length > 0) {
+                self.selected = 0;
+                self.fileDetail = self.files[0];
+//                getDirContents();
+              }
+            };
+
+            self.deleteSelected = function () {
+
+              self.selected = null;
+              self.fileDetail = null;
+              var i = 0;
+              var names = [];
+              for(var i = 0; i < Object.keys(self.selectedFiles).length; i++) {
+                names[i] = self.selectedFiles[i].name;
+                self.deleteFile(self.selectedFiles[i].name);
+              }
+              for(var i = 0; i < names.length; i++) {
+                delete self.selectedFiles[names[i]];
+              }
+              
+              if (self.files.length > 0) {
+                self.selected = 0;
+                self.fileDetail = self.files[0];
+              }              
+            };
+            
+            
+            self.deselect = function (selectedIndex, file, event) {
+              if (event.ctrlKey) {
+                if (file.name in self.selectedFiles) {
+                  delete self.selectedFiles[file.name];
+                }
+                if (self.fileDetail !== null && file.name === self.fileDetail.name) {
+                  if (Object.keys(self.selectedFiles).length > 0) {
+                    self.selected = Object.keys(self.selectedFiles)[0].selectedIndex;
+                    self.fileDetail = Object.keys(self.selectedFiles)[0];
+                  } else {
+                    self.selectedFiles = {};
+                    self.selected = null;
+                    self.fileDetail = null;
+                    self.sharedPath = null;
+                  }
+                }
+              } else {
+                self.selectedFiles = {};
+                self.selected = null;
+                self.fileDetail = null;
+                self.sharedPath = null;
+              }
+
+              //$scope.readme = null;
+//                getDirContents();
+
+
             };
 
             self.deselect = function () {
+              self.selectedFiles = {};
               self.selected = null;
               self.fileDetail = null;
               self.sharedPath = null;
-              //$scope.readme = null;
+//              getDirContents();
             };
 
             self.toggleLeft = buildToggler('left');

@@ -81,11 +81,11 @@
                       <thead>
                       <th style="margin:0px;width:30px;height=15px;">
                          <div class="btn-group" uib-dropdown is-open="status.isopen">
-                           <button id="single-button" type="button" class="btn btn-secondary" uib-dropdown-toggle ng-disabled="disabled">
-                               All<span class="caret"></span>
+                           <button id="single-button" type="button" class="btn btn-secondary" uib-dropdown-toggle ng-disabled="self.selected === null">
+                               <span class="caret"></span>
                            </button>
                            <ul uib-dropdown-menu class="dropdown-menu" role="menu" aria-labelledby="simple-dropdown" uib-dropdown-toggle>
-                              <li role="item">Delete selected</li>
+                             <li role="item" ng-click="datasetsCtrl.deleteselected();">Delete selected</li>
                            </ul>
                         </div>
                       </th>
@@ -108,7 +108,7 @@
                             <div ng-click="all_selected=false; datasetsCtrl.deselect();" ng-show="all_selected">
                               <i class="fa fa-square" aria-hidden="true"></i>
                             </div>                             
-                            <div ng-click="all_selected=true" ng-show="!all_selected">
+                            <div ng-click="all_selected=true; datasetsCtrl.selectAll();" ng-show="!all_selected">
                               <i class="fa fa-square-o" aria-hidden="true"></i>
                             </div>                             
                           </td>
@@ -126,12 +126,12 @@
                           </td>
                         </tr>
                         <tr
-                          dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:50"
+                          dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:datasetsCtrl.itemsPerPage"
                           context-menu
                           data-target="menu-{{ $index}}"
-                          ng-class="{ 'highlight': datasetsCtrl.selected === $index, 'expanded': expanded }"
+                          ng-class="{ 'highlight': datasetsCtrl.haveSelected(file) === true}"
                           id="table-{{ $index}}">
-                          <td ng-click="datasetsCtrl.select($index, file); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath();" style="background-color: lightgrey;">
+                          <td ng-click="datasetsCtrl.select($index, file, $event); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath();" style="background-color: lightgrey;">
 
                             <div uib-tooltip="Select directory metadata."  tooltip-placement="right" ng-show="file.dir">
                               <i class="fa" ng-class="{ 'fa-square': datasetsCtrl.selected === $index, 'fa-square-o': datasetsCtrl.selected !== $index }" aria-hidden="true"></i>

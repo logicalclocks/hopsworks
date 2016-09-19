@@ -57,7 +57,7 @@
                               <i class="glyphicon" ng-class="{'glyphicon-folder-close': datasetsCtrl.selected === $index, 'glyphicon-folder-open' : datasetsCtrl.selected !== $index}"></i>
                             </div>
                             <div class="file-name" uib-tooltip="Click on the bottom section to view metadata for this dataset." 
-                                 ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset.path.substring(dataset.path.lastIndexOf('/')).replace('/', '') + '/README.md', false);">
+                                 ng-click="datasetsCtrl.select($index, dataset, $event); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset.path.substring(dataset.path.lastIndexOf('/')).replace('/', '') + '/README.md', false);">
                               {{dataset.name}}                            
                               <span class="pull-right publicDS" ng-class="{'glyphicon glyphicon-globe': dataset.publicDs === true}"></span>
                               <br/>
@@ -66,33 +66,6 @@
                           </a>
                         </div>
                       </div>  
-                      <!--                              <div ng-init="(iscollapsed$index) = true"
-                                                         class="file-box"
-                                                         context-menu
-                                                         data-target="menu-{{ $index}}">
-                                                      <div  class="file">
-                                                        <div ng-click="projectCtrl.browseDataset(dataset)">
-                                                          <a>
-                                                            <span class="corner"></span>
-                                                            <div class="icon">
-                                                              <i class="glyphicon glyphicon-folder-open"></i>
-                                                            </div>
-                                                          </a>
-                                                        </div>
-                                                        <div class="file-name">
-                                                          {{dataset.name}}
-                                                          <br/>
-                                                          <small><b>Owner: </b> {{dataset.owner}}</small>
-                                                          <br/>
-                                                          <button
-                                                            style="font-size:15px;height:28px;color:white;padding-top: 3px; margin-left: 20px; margin-top: -40px;"
-                                                            ng-click="datasetsCtrl.select($index, dataset); metadataCtrl.setMetadataTemplate(dataset)"
-                                                            class="btn btn-info">
-                                                            <i class="fa fa-search"></i>
-                                                          </button>
-                                                        </div>
-                                                      </div>
-                                                    </div>-->
                       <div uib-dropdown class="position-fixed" id="menu-{{$index}}">
                         <ul uib-dropdown-menu class="uib-dropdown-amore">
                           <li>
