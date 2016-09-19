@@ -232,8 +232,8 @@ public class AuthService {
 
     if (sc.isUserInRole("HOPS_ADMIN")) {
       return Response.ok().build();
-    }
-    return Response.noContent().build();
+    } 
+    return Response.status(Response.Status.UNAUTHORIZED).build();
   }
 
   @POST

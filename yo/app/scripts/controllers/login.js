@@ -45,6 +45,12 @@ angular.module('hopsWorksApp')
                         self.secondFactorRequired = false;
                         $cookies.email = self.user.email;
                         $location.path('/');
+                        AuthService.isAdmin().then(
+                            function (success) {
+                              $cookies.isAdmin = 1;
+                          },function (error) {
+                              $cookies.isAdmin = 0;
+                        });
                       }, function (error) {
                         self.working = false;
                         if (error.data !== undefined && 

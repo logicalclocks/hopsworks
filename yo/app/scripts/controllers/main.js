@@ -21,23 +21,7 @@ angular.module('hopsWorksApp')
             else {
               self.searchType = "global";
             }
-            
-            self.isAdmin = false;
-            self.checkedAdmin = false;
-
-
-            self.checkIfAdmin = function () {
-              if (self.checkedAdmin === false) {
-              AuthService.isAdmin().then(
-                      function (success) {
-                        self.isAdmin = true;
-                      }, function (error) {
-                        self.isAdmin = false;
-              });
-                 self.checkedAdmin = true;
-              } 
-              return self.isAdmin;
-            }
+            self.isAdmin = $cookies['isAdmin'];
             
             self.goToAdminPage = function () {
               $window.location.href = '/hopsworks/security/protected/admin/adminIndex.xhtml';
@@ -52,6 +36,7 @@ angular.module('hopsWorksApp')
                       function (success) {
                         $location.url('/login');
                         delete $cookies.email;
+                        delete $cookies.isAdmin;
                         localStorage.removeItem("SESSIONID");
                         sessionStorage.removeItem("SESSIONID");
                       }, function (error) {
@@ -160,7 +145,7 @@ angular.module('hopsWorksApp')
                 //this might be a bit to frequent for refresh rate 
                 var getUnreadCountInterval = $interval(function () {
                     getUnreadCount();
-                }, 3000);
+                }, 10000);
                 self.getMessages = function () {
                     getMessages();
                 };
