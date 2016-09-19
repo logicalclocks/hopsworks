@@ -1,3 +1,4 @@
+
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
 
@@ -46,7 +47,7 @@
                 <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()"></hamburger-toggle>
               </div>
             </div>
-            <div layout="row" ng-show="datasetsCtrl.fileDetail !== null && && !datasetsCtrl.isShared()">
+            <div layout="row" ng-show="datasetsCtrl.fileDetail !== null && !datasetsCtrl.isShared()">
               <div flex="5" style="margin-bottom: 1px; margin-left: -1px; margin-top: -1px;font-size: 16px;">
                 <button style="margin-left: 1px; " class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                         data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
@@ -72,14 +73,19 @@
           <!--<div class="row row-no-margin-left" ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">-->
           <div flex ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">
             <div flex>
-              <md-content layout-padding style="margin-left: -80px; margin-top: -5px; min-width: 1350px;" layout="column" flex>
+              <md-content layout-padding style="margin-left: -50px; margin-top: -5px; min-width: 1350px;" layout="column" flex>
                 <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: 0px;">
                   <div class="table-responsive" style="overflow: hidden;">
                     <table class="table table-bordred table-hover" >
 
                       <thead>
-                      <th style="margin:0px;width:15px;" uib-tooltip="Click on the dark box to see more details for the file/folder" tooltip-placement="right"></th>
-                      <th></th>
+                      <th style="margin:0px;width:30px;height=15px;">
+                        <span uib-dropdown>
+                        <ul uib-dropdown-menu class="dropdown-menu" role="menu" aria-labelledby="simple-dropdown" uib-dropdown-toggle>
+                          <li role="item">Delete selected</li>
+                        </ul>
+                        </span>
+                      </th>
                       <th ng-click="sort('name')">Name
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'name'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                       <th ng-click="sort('owner')">Owner
@@ -94,19 +100,18 @@
 
                       <tbody ng-model="datasetsCtrl.files">
 
+<!-- uib-tooltip="(Un)select all files/directories."  tooltip-placement="right" -->
                         <tr>
-                          <td>
-                          <td style="background-color: lightgrey;">
-                            <div uib-tooltip="Select all files/directories."  tooltip-placement="right" ng-show="datasetsCtrl.all_selected">
-                              <i class="fad fa-square-o" aria-hidden="true"></i>
-                            </div>                             
-                            <div uib-tooltip="Unselect files/directories."  tooltip-placement="right" ng-show="!datasetsCtrl.all_selected">
+                          <td style="width=15px;height=15px; background-color: lightgray;">
+                            <div ng-click="all_selected=false" ng-show="all_selected">
                               <i class="fa fa-square" aria-hidden="true"></i>
+                            </div>                             
+                            <div ng-click="all_selected=true" ng-show="!all_selected">
+                              <i class="fa fa-square-o" aria-hidden="true"></i>
                             </div>                             
                           </td>
 
-</td>
-                          <td style="margin:0px;width:15px;" ng-click="datasetsCtrl.back()" ><i class="fa fa-level-up pull-right" aria-hidden="true"></i></td>
+                          <td style="margin:0px;width:15px;" ng-click="datasetsCtrl.back()" ><i class="fa fa-level-up" aria-hidden="true"></i></td>
                           <td ng-click="datasetsCtrl.back()" style="padding: 0px" colspan="5">&nbsp &nbsp
                             <a style="font-siglyphicon-expandze:60px">..</a>
                           </td>
