@@ -16,9 +16,11 @@ angular.module('hopsWorksApp')
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
             self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
+            
+            // Details of the currently selecte file/dir
             self.selected = null; //The index of the selected file in the files array.
-            self.fileDetail; //The details about the currently selected file.
-            self.sharedPath; //The details about the currently selected file.
+            self.fileDetail = null; //The details about the currently selected file.
+            self.sharedPath = null; //The details about the currently selected file.
             self.routeParamArray = [];
             $scope.readme = null;
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
