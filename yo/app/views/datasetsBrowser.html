@@ -3,7 +3,7 @@
   <div ng-include="'nav.html'"></div>
 
 
-  <div id="wrapper"
+  <div id="wrapper" ngCloak
        class="toggled"
        ng-controller="DatasetsCtrl as datasetsCtrl">
 
@@ -80,16 +80,42 @@
 
                       <thead>
                       <th style="margin:0px;width:30px;height=15px;">
-                         <div class="btn-group" uib-dropdown is-open="status.isopen">
-                           <button id="single-button" type="button" class="btn btn-secondary" uib-dropdown-toggle ng-disabled="self.selected === null">
-                               <span class="caret"></span>
-                           </button>
-                           <ul uib-dropdown-menu class="dropdown-menu" role="menu" aria-labelledby="simple-dropdown" uib-dropdown-toggle>
-                             <li role="item" ng-click="datasetsCtrl.deleteselected();">Delete selected</li>
-                           </ul>
+
+                        <div class="md-menu-demo" ng-cloak style="height:12px;">
+                          <div class="menu-demo-container" layout-align="start center" layout="column" >
+
+                            <div class="menus"  layout-wrap layout="row" layout-fill layout-align="space-between center" style="height:12px;">
+                              <div layout="column" flex-xs="100" flex-sm="100" flex="10" layout-align="center center">
+                                <md-menu>
+                                  <md-button aria-label="Open demo menu" class="md-icon-button" ng-click="$mdOpenMenu($event)">
+                                    <md-icon md-menu-origin md-svg-icon="images/delete.svg"></md-icon>
+                                  </md-button>
+                                  <md-menu-content width="6">
+                                    <md-menu-item>
+                                      <md-button ng-click="datasetsCtrl.deleteselected();">
+                                        <md-icon md-menu-align-target md-svg-icon="images/delete.svg"></md-icon>
+                                        Delete Selected
+                                      </md-button>
+                                    </md-menu-item>
+                                  </md-menu-content>
+                                </md-menu>
+                              </div>
+                            </div>
+                          </div>
                         </div>
+
+
+<!--                        <div class="btn-group" uib-dropdown is-open="status.isopen">
+                          <button id="single-button" type="button" class="btn btn-secondary" uib-dropdown-toggle ng-disabled="self.selected === null">
+                            <span class="caret"></span>
+                          </button>
+                          <ul uib-dropdown-menu class="dropdown-menu" role="menu" aria-labelledby="simple-dropdown" uib-dropdown-toggle>
+                            <li role="item" ng-click="datasetsCtrl.deleteselected();">Delete selected</li>
+                          </ul>
+                        </div>-->
                       </th>
-                      <th>Type</th>
+                      <th ng-click="sort('dir')">Type
+                        <span class="glyphicon sort-icon" ng-show="sortKey == 'dir'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                       <th ng-click="sort('name')">Name
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'name'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                       <th ng-click="sort('owner')">Owner
@@ -105,10 +131,10 @@
                       <tbody ng-model="datasetsCtrl.files">
                         <tr>
                           <td style="width=15px;height=15px;">
-                            <div ng-click="all_selected=false; datasetsCtrl.deselect();" ng-show="all_selected">
+                            <div ng-click="all_selected = false; datasetsCtrl.deselect();" ng-show="all_selected">
                               <i class="fa fa-square" aria-hidden="true"></i>
                             </div>                             
-                            <div ng-click="all_selected=true; datasetsCtrl.selectAll();" ng-show="!all_selected">
+                            <div ng-click="all_selected = true; datasetsCtrl.selectAll();" ng-show="!all_selected">
                               <i class="fa fa-square-o" aria-hidden="true"></i>
                             </div>                             
                           </td>
@@ -118,11 +144,11 @@
                             <a style="font-siglyphicon-expandze:60px">..</a>
                           </td>
                           <td>
-<!--                            <i ng-if="datasetsCtrl.working"
-                               title="Fetching files in this folder"
-                               style="color: lightgrey; margin-top:3px;"
-                               class="fa fa-spinner fa-spin pull-right" >
-                            </i>-->
+                            <!--                            <i ng-if="datasetsCtrl.working"
+                                                           title="Fetching files in this folder"
+                                                           style="color: lightgrey; margin-top:3px;"
+                                                           class="fa fa-spinner fa-spin pull-right" >
+                                                        </i>-->
                           </td>
                         </tr>
                         <tr
