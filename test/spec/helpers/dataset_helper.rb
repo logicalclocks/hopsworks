@@ -26,10 +26,10 @@ module DatasetHelper
   end
   
   def get_dataset_by_name(name)
-    Dataset.where(projectId: "#{@project[:id]}", inode_name: name)
+    Dataset.where(projectId: "#{@project[:id]}", inode_name: name).first
   end
   def get_dataset(project, name)
-    Dataset.where(projectId: "#{project[:id]}", inode_name: name)
+    Dataset.where(projectId: "#{project[:id]}", inode_name: name).first
   end
   
   def share_dataset(project1, dsname, project2)

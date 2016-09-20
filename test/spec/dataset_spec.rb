@@ -125,6 +125,46 @@ describe 'dataset' do
       end
     end
   end
+  describe "#request" do
+    context 'without authentication' do
+      before :all do
+        with_valid_project
+        with_valid_dataset
+        reset_session
+      end
+      it "should fail to send request" do
+        projectname = "project_#{short_random_id}"
+        project = create_project_by_name(projectname)
+        reset_session
+        post "/hopsworks/api/request/access", {inodeId: @dataset[:inode_id], projectId: project[:id]}
+        expect_json(errorMsg: "Client not authorized for this invocation")
+        expect_status(401)
+      end
+    end
+    context 'with authentication' do
+      before :all do
+        with_valid_project
+        with_valid_dataset
+        reset_session
+      end
+      it "should send request" do
+        projectname = "project_#{short_random_id}"
+        project = create_project_by_name(projectname)
+        post "/hopsworks/api/request/access", {inodeId: @dataset[:inode_id], projectId: project[:id]}
+        expect_json(errorMsg: "")
+        expect_json(successMessage: "Request sent successfully.")
+        expect_status(200)
+        get "/hopsworks/api/message"
+        msg = json_body.detect { |e| e[:content].include? "Dataset name: #{@dataset[:inode_name]}" }
+        expect(msg).not_to be_nil
+      end
+      it "should fail to send request to the same project" do
+        post "/hopsworks/api/request/access", {inodeId: @dataset[:inode_id], projectId: @project[:id]}
+        expect_json(errorMsg: "Project already contains dataset.")
+        expect_status(400)
+      end
+    end
+  end
   describe "#share" do
     context 'without authentication' do
       before :all do
@@ -190,10 +230,10 @@ describe 'dataset' do
         project = create_project_by_name(projectname)
         dsname = "dataset_#{short_random_id}"
         ds = create_dataset_by_name(@project, dsname)
-        request_dataset_access(ds[:inode_id], project)
+        request_dataset_access(project, ds[:inode_id])
         share_dataset(@project, dsname, project)
         datasets = get_all_datasets(project)
-        shared_ds = datasets.detect { |e| e[:name] == dsname }
+        shared_ds = datasets.detect { |e| e[:name] == "#{@project[:projectname]}::#{dsname}" }
         expect(shared_ds[:status]).to be true
       end
     end
