@@ -14,7 +14,7 @@
       <section layout="row" flex>
 
         <div ng-include="'navProject.html'"></div>
-
+f
         <div layout="column" layout-fill="" layout-align="top center">
           <div ng-show="mainCtrl.searchReturned !== ''">
             <div id="projectSearchResults">
@@ -56,7 +56,7 @@
                        >
               </div>                
               <div flex layout-align="right" style="margin-left: 10px;">
-                <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()"></hamburger-toggle>
+                <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselectAll()"></hamburger-toggle>
               </div>
             </div>
             <div layout="row" ng-show="datasetsCtrl.fileDetail !== null && !datasetsCtrl.isShared()">
@@ -150,12 +150,22 @@
                       <tbody ng-model="datasetsCtrl.files">
                         <tr>
                           <td style="width=15px;height=15px;">
-                            <div ng-click="all_selected = false; datasetsCtrl.deselect();" ng-show="all_selected">
+<!--                            <div ng-click="all_selected = false; datasetsCtrl.deselectAll();" ng-show="all_selected">
                               <i class="fa fa-square" aria-hidden="true"></i>
                             </div>                             
                             <div ng-click="all_selected = true; datasetsCtrl.selectAll();" ng-show="!all_selected">
                               <i class="fa fa-square-o" aria-hidden="true"></i>
-                            </div>                             
+                            </div>                             -->
+
+                  <md-button class="md-icon-button md-primary" aria-label="Select All" >
+                    <md-tooltip md-direction="right">
+                      Select All
+                    </md-tooltip>                    
+                    <md-icon ng-show="!all_selected" md-svg-icon="images/checkbox_false.svg" ng-click="all_selected = true; datasetsCtrl.selectAll();" ></md-icon>
+                    <md-icon ng-show="all_selected" md-svg-icon="images/checkbox_true.svg" ng-click="all_selected = false; datasetsCtrl.deselectAll();" ></md-icon>
+                  </md-button>
+
+
                           </td>
 
                           <td style="margin:0px;width:15px;" ng-click="datasetsCtrl.back()" ><i class="fa fa-level-up" aria-hidden="true"></i></td>
@@ -176,15 +186,38 @@
                           data-target="menu-{{ $index}}"
                           ng-class="{ 'highlight': datasetsCtrl.haveSelected(file) === true}"
                           id="table-{{ $index}}">
-                          <td ng-click="datasetsCtrl.select($index, file, $event); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath();" style="background-color: lightgrey;">
+                          <td>
 
-                            <div uib-tooltip="Select directory metadata."  tooltip-placement="right" ng-show="file.dir">
+<!--
+style="background-color: lightgrey;"
+
+<md-button class="md-icon-button md-primary" aria-label="Select Directory" ng-show="file.dir" >
+                    <md-tooltip md-direction="right">
+                      Select Directory
+                    </md-tooltip>                    
+                    <md-icon md-svg-icon="images/checkbox_false.svg" ng-show="datasetsCtrl.haveSelected(file) === false"></md-icon>
+                    <md-icon md-svg-icon="images/checkbox_true.svg" ng-show="datasetsCtrl.haveSelected(file) === true"></md-icon>
+ng-show="!file.dir" 
+                  </md-button>-->
+                  <md-button class="md-icon-button md-primary" aria-label="Select File" >
+                    <md-tooltip md-direction="right">
+                      Select 
+                    </md-tooltip>                    
+                    <md-icon md-svg-icon="images/checkbox_false.svg" ng-show="datasetsCtrl.haveSelected(file) === false" 
+                             ng-click="datasetsCtrl.select($index, file, $event); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath();"></md-icon>
+                    <md-icon md-svg-icon="images/checkbox_true.svg" ng-show="datasetsCtrl.haveSelected(file) === true" 
+                             ng-click="datasetsCtrl.deselect($index, file, $event);"></md-icon>
+                  </md-button>
+
+                      
+                            
+<!--                            <div uib-tooltip="Select directory metadata."  tooltip-placement="right" ng-show="file.dir">
                               <i class="fa" ng-class="{ 'fa-square': datasetsCtrl.selected === $index, 'fa-square-o': datasetsCtrl.selected !== $index }" aria-hidden="true"></i>
                             </div>                             
                             <div  uib-tooltip="Select file metadata."  tooltip-placement="right" ng-show="!file.dir">
                               <i class="fa" ng-class="{ 'fa-square': datasetsCtrl.selected === $index, 'fa-square-o': datasetsCtrl.selected !== $index }" aria-hidden="true"></i>
                             </div>
-                          </td>
+                          </td>-->
                           <td ng-click="datasetsCtrl.openDir(file)">
                             <div>
                               <i uib-tooltip="Click on folder icon to enter folder" tooltip-placement="right" ng-show="file.dir" class="glyphicon"
@@ -203,7 +236,7 @@
                           <td style="width: 12%;" ng-click="datasetsCtrl.openDir(file)">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
 
                           <td>
-                            <div uib-dropdown class="position-fixed" id="menu-{{ $index}}">
+                            <div uib-dropdown class="position-fixed" id="menu-{{ $index}}" ng-show="!datasetsCtrl.isSelectedFiles()">
                               <ul uib-dropdown-menu class="dropdown-amore" role="menu">
                                 <li>
                                   <a class="pointer"

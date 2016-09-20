@@ -16,7 +16,7 @@ angular.module('hopsWorksApp')
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
             self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
-            
+
             // Details of the currently selecte file/dir
             self.selected = null; //The index of the selected file in the files array.
             self.fileDetail = null; //The details about the currently selected file.
@@ -383,7 +383,13 @@ This will make all its files unavailable to other projects unless you share it e
 
             };
 
+
+            self.isSelectedFiles = function () {
+              return Object.keys(self.selectedFiles).length > 0;
+            };
+
             self.moveSelected = function () {
+              var fail = true;
               ModalService.selectDir('lg', "/[^]*/",
                       "problem selecting file").then(
                       function (success) {
@@ -393,22 +399,25 @@ This will make all its files unavailable to other projects unless you share it e
                         var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
                         var finalPath = relPath + "/" + name;
                         var names = [];
-                        for (var i = 0; i < Object.keys(self.selectedFiles).length; i++) {
-                          names[i] = self.selectedFiles[i].name;
-                          dataSetService.move(self.selectedFiles[i].id, finalPath).then(
+                        var i=0;
+                        for (var name in self.selectedFiles) {
+                          names[i] = name;
+                          i++;
+                        }
+
+                        for (var name in self.selectedFiles) {
+                          dataSetService.move(self.selectedFiles[name].id, finalPath).then(
                                   function (success) {
-//                                  self.openDir(relPath);
-                                    getDirContents();
-                                    growl.success(success.data.successMessage, {title: 'Moved successfully. Opened dest dir: ' + relPath, ttl: 2000});
+                                    if (name === names[names.length - 1]) {
+                                      getDirContents();
+                                      for (var i = 0; i < names.length; i++) {
+                                        delete self.selectedFiles[names[i]];
+                                      }
+                                      self.all_selected = false;
+                                    }
                                   }, function (error) {
-                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                           });
-
                         }
-                        for (var i = 0; i < names.length; i++) {
-                          delete self.selectedFiles[names[i]];
-                        }
-
                       }, function (error) {
                 //The user changed their mind.
               });
@@ -609,7 +618,9 @@ This will make all its files unavailable to other projects unless you share it e
             };
 
             self.haveSelected = function (file) {
-              if (file !== undefined && file.name !== undefined &&
+
+              if (file !== undefined && file.name !== undefined && self.fileDetail !== null &&
+                      self.fileDetail !== undefined &&
                       (self.fileDetail.name === file.name || (file.name in self.selectedFiles))) {
                 return true;
               }
@@ -639,13 +650,14 @@ This will make all its files unavailable to other projects unless you share it e
               self.fileDetail = null;
               var i = 0;
               var names = [];
-              for (var i = 0; i < Object.keys(self.selectedFiles).length; i++) {
-                names[i] = self.selectedFiles[i].name;
-                self.deleteFile(self.selectedFiles[i].name);
+              for (var name in self.selectedFiles) {
+                names[i] = name;
+                self.deleteFile(name);
               }
               for (var i = 0; i < names.length; i++) {
                 delete self.selectedFiles[names[i]];
               }
+              self.all_selected = false;
 
 //              if (self.files.length > 0) {
 //                self.selected = 0;
@@ -683,7 +695,7 @@ This will make all its files unavailable to other projects unless you share it e
 
             };
 
-            self.deselect = function () {
+            self.deselectAll = function () {
               self.selectedFiles = {};
               self.selected = null;
               self.fileDetail = null;
