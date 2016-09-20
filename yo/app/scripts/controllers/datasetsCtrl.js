@@ -381,6 +381,37 @@ This will make all its files unavailable to other projects unless you share it e
 
             };
 
+            self.moveSelected = function () {
+              ModalService.selectDir('lg', "/[^]*/",
+                      "problem selecting file").then(
+                      function (success) {
+                        var destPath = success;
+                        // Get the relative path of this DataSet, relative to the project home directory
+                        // replace only first occurrence 
+                        var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
+                        var finalPath = relPath + "/" + name;
+                        var names = [];
+                        for (var i = 0; i < Object.keys(self.selectedFiles).length; i++) {
+                          names[i] = self.selectedFiles[i].name;
+                          dataSetService.move(self.selectedFiles[i].id, finalPath).then(
+                                  function (success) {
+//                                  self.openDir(relPath);
+                                    getDirContents();
+                                    growl.success(success.data.successMessage, {title: 'Moved successfully. Opened dest dir: ' + relPath, ttl: 2000});
+                                  }, function (error) {
+                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                          });
+
+                        }
+                        for (var i = 0; i < names.length; i++) {
+                          delete self.selectedFiles[names[i]];
+                        }
+
+                      }, function (error) {
+                //The user changed their mind.
+              });
+
+            };
 
             self.rename = function (inodeId) {
 
@@ -592,11 +623,12 @@ This will make all its files unavailable to other projects unless you share it e
                 self.selectedFiles[f.name] = f;
                 self.selectedFiles[f.name].selectedIndex = i;
               }
-              if (self.files.length > 0) {
-                self.selected = 0;
-                self.fileDetail = self.files[0];
-//                getDirContents();
-              }
+//              if (self.files.length > 0) {
+//                self.selected = 0;
+//                self.fileDetail = self.files[0];
+//              }
+              self.selected = null;
+              self.fileDetail = null;
             };
 
             self.deleteSelected = function () {
@@ -605,21 +637,21 @@ This will make all its files unavailable to other projects unless you share it e
               self.fileDetail = null;
               var i = 0;
               var names = [];
-              for(var i = 0; i < Object.keys(self.selectedFiles).length; i++) {
+              for (var i = 0; i < Object.keys(self.selectedFiles).length; i++) {
                 names[i] = self.selectedFiles[i].name;
                 self.deleteFile(self.selectedFiles[i].name);
               }
-              for(var i = 0; i < names.length; i++) {
+              for (var i = 0; i < names.length; i++) {
                 delete self.selectedFiles[names[i]];
               }
-              
-              if (self.files.length > 0) {
-                self.selected = 0;
-                self.fileDetail = self.files[0];
-              }              
+
+//              if (self.files.length > 0) {
+//                self.selected = 0;
+//                self.fileDetail = self.files[0];
+//              }              
             };
-            
-            
+
+
             self.deselect = function (selectedIndex, file, event) {
               if (event.ctrlKey) {
                 if (file.name in self.selectedFiles) {
