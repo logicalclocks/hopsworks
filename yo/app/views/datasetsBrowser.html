@@ -27,8 +27,20 @@
             <!--<div class="row">-->
             <div layout="row">
               <div flex="15">
-                <button type="button" class="btn btn-sm btn-success" ng-click="datasetsCtrl.newDataSetModal()">New Folder</button>
-                <button type="button" class="btn btn-sm btn-success" ng-click="datasetsCtrl.uploadFile()">Upload File(s)</button>
+<!--                <button type="button" class="btn btn-sm btn-success" ng-click="datasetsCtrl.newDataSetModal()">New Folder</button>
+                <button type="button" class="btn btn-sm btn-success" ng-click="datasetsCtrl.uploadFile()">Upload File(s)</button>-->
+                  <md-button class="md-icon-button md-primary" aria-label="New Folder" ng-click="datasetsCtrl.newDataSetModal()" >
+                    <md-tooltip md-direction="bottom">
+                      Create New Folder
+                    </md-tooltip>                                        
+                    <md-icon md-svg-icon="images/folder_new.svg"></md-icon>
+                  </md-button>
+                  <md-button class="md-icon-button md-primary md-button browser newfolder" aria-label="Upload File" ng-click="datasetsCtrl.uploadFile()" >
+                    <md-tooltip md-direction="bottom">
+                      Upload file(s)
+                    </md-tooltip>                                                            
+                    <md-icon md-svg-icon="images/cloud_upload.svg"></md-icon>
+                  </md-button>
               </div>
               <div flex="65" style="margin-top: 10px;">
                 <a ng-click="datasetsCtrl.goToDataSetsDir()">DataSets</a>
@@ -171,7 +183,7 @@
                             </div>                             
                             <div  uib-tooltip="Select file metadata."  tooltip-placement="right" ng-show="!file.dir">
                               <i class="fa" ng-class="{ 'fa-square': datasetsCtrl.selected === $index, 'fa-square-o': datasetsCtrl.selected !== $index }" aria-hidden="true"></i>
-                            </div>                             
+                            </div>
                           </td>
                           <td ng-click="datasetsCtrl.openDir(file)">
                             <div>

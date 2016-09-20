@@ -609,7 +609,7 @@ This will make all its files unavailable to other projects unless you share it e
             };
 
             self.haveSelected = function (file) {
-              if (file !== undefined && self.fileDetail !== null && self.fileDetail !== undefined && file.name !== undefined &&
+              if (file !== undefined && file.name !== undefined &&
                       (self.fileDetail.name === file.name || (file.name in self.selectedFiles))) {
                 return true;
               }
@@ -625,12 +625,12 @@ This will make all its files unavailable to other projects unless you share it e
                 self.selectedFiles[f.name] = f;
                 self.selectedFiles[f.name].selectedIndex = i;
               }
-//              if (self.files.length > 0) {
-//                self.selected = 0;
-//                self.fileDetail = self.files[0];
-//              }
-              self.selected = null;
-              self.fileDetail = null;
+              if (self.files.length > 0) {
+                self.selected = 0;
+                self.fileDetail = self.files[0];
+              }
+//              self.selected = null;
+//              self.fileDetail = null;
             };
 
             self.deleteSelected = function () {

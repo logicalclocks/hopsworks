@@ -23,9 +23,15 @@
             <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
               <h3>
                 <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
-                  <button class="btn btn-sm btn-success" ng-click="datasetsCtrl.newDataSetModal()" uib-dropdown-toggle type="button" id="newDataSet" aria-haspopup="true" aria-expanded="true">
-                    Create New DataSet
-                  </button>
+                  <!--                  <button class="btn btn-sm btn-success" ng-click="datasetsCtrl.newDataSetModal()" uib-dropdown-toggle type="button" id="newDataSet" aria-haspopup="true" aria-expanded="true">
+                                      Create New DataSet
+                                    </button>-->
+                  <md-button class="md-icon-button md-primary" aria-label="New Folder" ng-click="datasetsCtrl.newDataSetModal()" >
+                    <md-tooltip md-direction="right">
+                      Create New Dataset
+                    </md-tooltip>                    
+                    <md-icon md-svg-icon="images/folder_new.svg"></md-icon>
+                  </md-button>
                 </div>
                 <div class="col-lg-6" style="max-width: 550px; " >
                   Filter: 
@@ -163,23 +169,23 @@
                         </div>
                       </div>
                     </div>    
-                    
-                    
+
+
                   </div>
-                  
+
                 </div>
                 <div class="row rg-row-bottom row-no-margin-left"  resizable r-directions="['bottom']" ></div>
-                <div class="row row-no-margin-left" style="margin-right: 15px; margin-top: 25px;" ng-show="readme!== null">
+                <div class="row row-no-margin-left" style="margin-right: 15px; margin-top: 25px;" ng-show="readme !== null">
                   <div class="col-lg-12" >
-                  <div class="col-lg-12" style="overflow-y: auto; border-style: solid; border-width: 1px; border-radius: 10px; border-color:#eee;">
-                    <!-- README.md is displayed here -->
-                    <div class="row" style="background: #eee; font-size:20px; font-weight: bold;">
-                      &nbsp;<i class="fa fa-book"></i>&nbsp; README.md</div>
+                    <div class="col-lg-12" style="overflow-y: auto; border-style: solid; border-width: 1px; border-radius: 10px; border-color:#eee;">
+                      <!-- README.md is displayed here -->
+                      <div class="row" style="background: #eee; font-size:20px; font-weight: bold;">
+                        &nbsp;<i class="fa fa-book"></i>&nbsp; README.md</div>
                       <div class="col-lg-12" >
                         <div class ="row" ng-bind-html="readme" style="overflow-y: auto; ">
                         </div>
                       </div>
-                  </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -237,8 +243,8 @@
 
               <uib-tabset justified="false">
                 <uib-tab ng-repeat="tab in metadataCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
-                     disabled="tab.disabled" select="metadataCtrl.onTabSelect(tab)"
-                     style="padding-left: 1em;">
+                         disabled="tab.disabled" select="metadataCtrl.onTabSelect(tab)"
+                         style="padding-left: 1em;">
 
                   <form name="{{tab.title}}{{$index}}" ng-submit="metadataCtrl.submitMetadata(metadataCtrl.metaData)"
                         style="padding:0em 1em 50em 1em;">

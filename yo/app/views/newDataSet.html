@@ -37,9 +37,9 @@
 
           <p></p>
 
-          <label for="dataSetName" class="control-label">Description</label>
+          <label for="description">Description</label>
 
-          <div class="controls">
+          <div class="controls" id="description">
             <textarea class="form-control" style="resize:none;" ng-model="datasetCreatorCtrl.dataSet.description"
                       rows="3"></textarea>
           </div>
@@ -50,11 +50,11 @@
                 <label style="margin-top:20px; margin-top: 15px;
                         margin-right: 15px;
                         margin-bottom: 15px;
-                        margin-left: 15px;" for="dataSetName" class="control-label">Templates</label>
+                        margin-left: 15px;" >Templates</label>
                 <ui-select ng-model="datasetCreatorCtrl.selectedTemplate" theme="select2"
                            on-select="" style="min-width: 300px;">
 
-                  <ui-select-match placeholder="Add a template...">{{$select.selected.name}}</ui-select-match>
+                  <ui-select-match id="template" placeholder="Add a template...">{{$select.selected.name}}</ui-select-match>
 
                   <ui-select-choices repeat="template in datasetCreatorCtrl.templates | filter: $select.search">
                     <small>

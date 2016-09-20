@@ -442,3 +442,8 @@ div.cust .jslider div.jslider-bg i{
   margin-left:20px;
 }
 .strong { font-weight: bold; }
+
+
+.md-button.browser.newfolder {
+  color: darkslategray;
+}
