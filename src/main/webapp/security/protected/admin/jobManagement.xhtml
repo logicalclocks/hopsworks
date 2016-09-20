@@ -43,7 +43,7 @@
                              filteredValue="#{jobAdministration.filteredJobs}" 
                              widgetVar="jobsTable"
                              emptyMessage="No jobs found with given criteria"
-                             rowKey="#{job.id}"
+                             rowKey="#{job.applicationid}"
                              style="table-layout: fixed" 
                              scrollable="false"
                              rows="25"
@@ -51,12 +51,23 @@
                              paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
                              rowsPerPageTemplate="10,25,50,100,250">
                   >
-                  <p:column id="idColumn" filterBy="#{job.id}" headerText="Id" >
-                    <h:outputText value="#{job.id}" />
+                  <p:column id="idColumn" filterBy="#{job.applicationid}" headerText="Id" >
+                    <h:outputText value="#{job.applicationid}" />
                   </p:column>
-
-                  <p:column id="nameColumn" filterBy="#{job.name}" headerText="Name" >
-                    <h:outputText value="#{job.name}" />
+                  <p:column id="nameColumn" filterBy="#{job.appname}" headerText="Name" >
+                    <h:outputText value="#{job.appname}" />
+                  </p:column>
+                  <p:column id="userColumn" filterBy="#{job.appuser}" headerText="User" >
+                    <h:outputText value="#{job.appuser}" />
+                  </p:column>
+                  <p:column id="mstateColumn" filterBy="#{job.appsmstate}" headerText="State" >
+                    <h:outputText value="#{job.appsmstate}"/>
+                  </p:column>
+                  <p:column id="actionJobColumn" headerText="Stop" >                                                 
+                    <p:commandLink  action="#{jobAdministration.killJob(job.applicationid)}" update="@form" styleClass="fa fa-ban" value=""/>
+                  </p:column>                  
+                   <p:column id="statusColumn" headerText="Status" >
+                     <h:outputText value="#{jobAdministration.getError(job.applicationid)}" />
                   </p:column>
                 </p:dataTable>                                            
               </h:form>   
