@@ -606,6 +606,10 @@ This will make all its files unavailable to other projects unless you share it e
               getDirContents(newPathArray);
             };
 
+            self.menustyle = {
+                "opacity" : 0.2
+            };
+  
             /**
              * Select an inode; updates details panel.
              * @param {type} selectedIndex
@@ -636,7 +640,7 @@ This will make all its files unavailable to other projects unless you share it e
               self.fileDetail = file;
 //              $scope.readme = null;
 //              getDirContents();
-
+              self.menustyle.opacity = 1.0;
             };
 
             $scope.haveSelected = function (file) {
@@ -665,6 +669,7 @@ This will make all its files unavailable to other projects unless you share it e
 //              }
               self.selected = null;
               self.fileDetail = null;
+              self.menustyle.opacity = 1;
             };
             
             //TODO: Move files to hdfs trash folder
@@ -733,7 +738,7 @@ This will make all its files unavailable to other projects unless you share it e
 
               //$scope.readme = null;
 //                getDirContents();
-
+              self.menustyle.opacity = 0.2;
 
             };
 
@@ -742,6 +747,7 @@ This will make all its files unavailable to other projects unless you share it e
               self.selected = null;
               self.fileDetail = null;
               self.sharedPath = null;
+              self.menustyle.opacity = 0.2;
 //              getDirContents();
             };
 
