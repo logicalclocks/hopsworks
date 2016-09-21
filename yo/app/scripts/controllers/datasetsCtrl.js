@@ -64,7 +64,7 @@ angular.module('hopsWorksApp')
                 return self.pathArray.length - 1;
               }
               return displayPathLen;
-            }
+            };
 
             self.cutBreadcrumbLen = function () {
               if (self.pathArray === undefined || self.pathArray === null) {
@@ -99,7 +99,7 @@ angular.module('hopsWorksApp')
             });
 
 
-            self.filesNotSelected = function () {
+            $scope.filesNotSelected = function () {
               if ((self.selected !== null && self.selected !== undefined) || self.isSelectedFiles()) {
                 return false;
               }
@@ -397,39 +397,48 @@ This will make all its files unavailable to other projects unless you share it e
             };
 
             self.moveSelected = function () {
-              var fail = true;
-              ModalService.selectDir('lg', "/[^]*/",
-                      "problem selecting file").then(
-                      function (success) {
-                        var destPath = success;
-                        // Get the relative path of this DataSet, relative to the project home directory
-                        // replace only first occurrence 
-                        var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
-                        var finalPath = relPath + "/" + name;
-                        var names = [];
-                        var i = 0;
-                        for (var name in self.selectedFiles) {
-                          names[i] = name;
-                          i++;
-                        }
+              //Check if we are to move one file or many
+              if (Object.keys(self.selectedFiles).length === 0 && self.selectedFiles.constructor === Object) {
+                if (self.fileDetail !== null && self.fileDetail !== undefined) {
+                  self.move(self.fileDetail.id, self.fileDetail.name);
+                }
+              } else if (Object.keys(self.selectedFiles).length !== 0 && self.selectedFiles.constructor === Object) {
 
-                        for (var name in self.selectedFiles) {
-                          dataSetService.move(self.selectedFiles[name].id, finalPath).then(
-                                  function (success) {
-                                    if (name === names[names.length - 1]) {
-                                      getDirContents();
-                                      for (var i = 0; i < names.length; i++) {
-                                        delete self.selectedFiles[names[i]];
+                ModalService.selectDir('lg', "/[^]*/",
+                        "problem selecting file").then(
+                        function (success) {
+                          var destPath = success;
+                          // Get the relative path of this DataSet, relative to the project home directory
+                          // replace only first occurrence 
+                          var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
+                          //var finalPath = relPath + "/" + name;
+                          var names = [];
+                          var i = 0;
+                          //Check if have have multiple files 
+                          for (var name in self.selectedFiles) {
+                            names[i] = name;
+                            i++;
+                          }
+
+                          for (var name in self.selectedFiles) {
+                            dataSetService.move(self.selectedFiles[name].id, relPath + "/" + name).then(
+                                    function (success) {
+                                      //If we moved the last file
+                                      if (name === names[names.length - 1]) {
+                                        getDirContents();
+                                        for (var i = 0; i < names.length; i++) {
+                                          delete self.selectedFiles[names[i]];
+                                        }
+                                        self.all_selected = false;
                                       }
-                                      self.all_selected = false;
-                                    }
-                                  }, function (error) {
-                          });
-                        }
-                      }, function (error) {
-                //The user changed their mind.
-              });
-
+                                    }, function (error) {
+                              growl.error(error.data.errorMsg, {title: 'File ' + name + ' was not moved', ttl: 5000, referenceId: 2});
+                            });
+                          }
+                        }, function (error) {
+                  //The user changed their mind.
+                });
+              }
             };
 
             self.rename = function (inodeId) {
@@ -625,11 +634,11 @@ This will make all its files unavailable to other projects unless you share it e
 
             };
 
-            self.haveSelected = function (file) {
+            $scope.haveSelected = function (file) {
 
-              if (file !== undefined && file.name !== undefined && self.fileDetail !== null &&
+              if (file !== undefined && file.name !== undefined && ((self.fileDetail !== null &&
                       self.fileDetail !== undefined &&
-                      (self.fileDetail.name === file.name || (file.name in self.selectedFiles))) {
+                      self.fileDetail.name === file.name ) || (file.name in self.selectedFiles))) {
                 return true;
               }
               return false;
@@ -650,6 +659,13 @@ This will make all its files unavailable to other projects unless you share it e
 //              }
               self.selected = null;
               self.fileDetail = null;
+            };
+            
+            //TODO: Move files to hdfs trash folder
+             self.trashSelected = function () {
+
+            
+               
             };
 
             self.deleteSelected = function () {
