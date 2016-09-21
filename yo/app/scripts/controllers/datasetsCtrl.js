@@ -1,3 +1,4 @@
+
 'use strict';
 
 angular.module('hopsWorksApp')
@@ -99,11 +100,15 @@ angular.module('hopsWorksApp')
             });
 
 
-            $scope.filesNotSelected = function () {
+
+           
+
+            $scope.filesSelected = function () {
+
               if ((self.selected !== null && self.selected !== undefined) || self.isSelectedFiles()) {
-                return false;
+                return true;
               }
-              return true;
+              return false;
             }
 
             self.isShared = function () {
@@ -635,10 +640,11 @@ This will make all its files unavailable to other projects unless you share it e
             };
 
             $scope.haveSelected = function (file) {
-
-              if (file !== undefined && file.name !== undefined && ((self.fileDetail !== null &&
-                      self.fileDetail !== undefined &&
-                      self.fileDetail.name === file.name ) || (file.name in self.selectedFiles))) {
+              if (file === undefined || file === null || file.name === undefined || file.name === null) {
+                return false;
+              }
+              if ((self.fileDetail !== null && self.fileDetail !== undefined && self.fileDetail.name === file.name) || 
+                      (file.name in self.selectedFiles)) {
                 return true;
               }
               return false;
