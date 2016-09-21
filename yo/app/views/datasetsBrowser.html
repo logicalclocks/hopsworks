@@ -22,15 +22,11 @@
           </div>
 
           <div class="content-wrapper" ng-show="mainCtrl.searchReturned === ''">
-            <!--<div class="col-md-2 pull-left" style="margin-top: -17px; margin-left: -25px;">-->
-            <!--<div class="row">-->
             <div layout="row">
-              <div flex="15">
-                <!--                <button type="button" class="btn btn-sm btn-success" ng-click="datasetsCtrl.newDataSetModal()">New Folder</button>
-                            <button type="button" class="btn btn-sm btn-success" ng-click="datasetsCtrl.uploadFile()">Upload File(s)</button>-->
+              <div flex="10">
                 <md-button class="md-icon-button md-primary" aria-label="New Folder" ng-click="datasetsCtrl.newDataSetModal()" >
                   <md-tooltip md-direction="bottom">
-                    Create New Folder
+                    New Folder
                   </md-tooltip>                                        
                   <md-icon md-svg-icon="images/folder_new.svg"></md-icon>
                 </md-button>
@@ -58,7 +54,7 @@
                 <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselectAll()"></hamburger-toggle>
               </div>
             </div>
-            <div layout="row" ng-show="datasetsCtrl.fileDetail !== null && !datasetsCtrl.isShared()">
+            <div layout="row" ng-enabled="datasetsCtrl.fileDetail !== null && !datasetsCtrl.isShared()">
               <div flex="5" style="margin-bottom: 1px; margin-left: -1px; margin-top: -1px;font-size: 16px;">
                 <button style="margin-left: 1px; " class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                         data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
@@ -68,7 +64,7 @@
                 <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{projectCtrl.currentProject.projectName}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
               </div>
             </div>
-            <div layout="row"  ng-show="datasetsCtrl.fileDetail !== null && datasetsCtrl.fileDetail.dir == false && datasetsCtrl.isShared()">
+            <div layout="row" ng-show="datasetsCtrl.fileDetail !== null && datasetsCtrl.fileDetail.dir == false && datasetsCtrl.isShared()">
               <div flex="10" style="margin-bottom: 1px; margin-left: -25px; margin-top: -1px;font-size: 16px;">
                 <button style="margin-left: 0px; " class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                         data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
@@ -79,69 +75,35 @@
               </div>
             </div>
           </div>
-          <!--</div>-->
 
-          <!--<div class="row row-no-margin-left" ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">-->
           <div flex ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">
             <div flex>
               <md-content layout-padding style="margin-left: -50px; margin-top: -5px; min-width: 1350px;" layout="column" flex>
                 <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: 0px;">
                   <div class="table-responsive" style="overflow: hidden;">
-                    <table class="table table-bordred table-hover" >
-
+                    <table class="table table-hover" >
                       <thead>
                       <th style="margin:0px;">
-                        <!--width:30px;height=15px;-->
-
-                        <!--                          <div class="md-menu-demo" ng-cloak style="height:12px;">
-                                                    <div class="menu-demo-container" layout-align="start center" layout="column" >
-                        
-                                                      <div class="menus"  layout-wrap layout="row" layout-fill layout-align="space-between center" style="height:12px;">-->
-                        <div flex="10" layout="row">
-                          <!--                                <md-menu>
-                                              <md-button aria-label="Open demo menu" class="md-icon-button" ng-click="$mdOpenMenu($event)">
-                                            <md-icon md-menu-origin md-svg-icon="images/delete.svg"></md-icon>
-                                            Options
-                                              </md-button>
-                                              <md-menu-content width="6">
-                                            <md-menu-item>-->
+                        <div flex="10" layout="row" layout-align="space-between center">
                           <md-list layout="row">
                             <md-list-item>
                               <md-button ng-click="datasetsCtrl.deleteSelected();" ng-show="datasetsCtrl.filesSelected() === true">
                                 <md-icon md-svg-icon="images/delete.svg"></md-icon>
                                 <md-tooltip md-direction="bottom">
-                                  Delete selected files/directories
+                                  Delete 
                                 </md-tooltip>                    
                               </md-button>
                             </md-list-item>                  
-                            <!--                                    </md-menu-item>
-                                                <md-menu-item>-->
                             <md-list-item>                                    
                               <md-button ng-click="datasetsCtrl.moveSelected();" ng-show="datasetsCtrl.filesSelected() === true">
                                 <md-icon md-svg-icon="images/folder.svg"></md-icon>
                                 <md-tooltip md-direction="right">
-                                  Move selected files/directories
+                                  Move 
                                 </md-tooltip>                    
                               </md-button>
                             </md-list-item>                  
                           </md-list>
-                          <!--                                    </md-menu-item>
-                                              </md-menu-content>
-        </md-menu>-->
                         </div>
-                        <!--                              </div>
-                                                    </div>
-                                                  </div>-->
-
-
-                        <!--                        <div class="btn-group" uib-dropdown is-open="status.isopen">
-                                        <button id="single-button" type="button" class="btn btn-secondary" uib-dropdown-toggle ng-disabled="self.selected === null">
-                                      <span class="caret"></span>
-                                        </button>
-                                        <ul uib-dropdown-menu class="dropdown-menu" role="menu" aria-labelledby="simple-dropdown" uib-dropdown-toggle>
-                                      <li role="item" ng-click="datasetsCtrl.deleteselected();">Delete selected</li>
-                                        </ul>
-                                    </div>-->
                       </th>
                       <th ng-click="sort('dir')">Type
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'dir'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
@@ -178,7 +140,11 @@
 
                       </td>
 
-                      <td style="margin:0px;width:15px;" ng-click="datasetsCtrl.back()" ><i class="fa fa-level-up" aria-hidden="true"></i></td>
+                              <td style="margin:0px;width:15px;" ng-click="datasetsCtrl.back()" ><i class="fa fa-level-up" aria-hidden="true">
+                        <md-tooltip md-direction="right">
+                          Up to parent folder
+                        </md-tooltip>                                              
+                          </i></td>
                       <td ng-click="datasetsCtrl.back()" style="padding: 0px" colspan="5">&nbsp &nbsp
                         <a style="font-siglyphicon-expandze:60px">..</a>
                       </td>
@@ -230,7 +196,7 @@
                                 </td>-->
                       <td ng-click="datasetsCtrl.openDir(file)">
                         <div>
-                          <i uib-tooltip="Click on folder icon to enter folder" tooltip-placement="right" ng-show="file.dir" class="glyphicon"
+                          <i uib-tooltip="Enter" tooltip-placement="right" ng-show="file.dir" class="glyphicon"
                              ng-class="{ 'glyphicon-folder-close': datasetsCtrl.selected === $index,  'glyphicon-folder-open': datasetsCtrl.selected !== $index}"
                              style="padding-right: 5px; color: #757575; float: left;margin-top: 4px;"></i>
                           <i uib-tooltip="Download file" tooltip-placement="right" ng-show="!file.dir" class="glyphicon glyphicon-cloud-download" 

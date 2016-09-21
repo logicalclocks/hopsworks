@@ -31,7 +31,8 @@ angular.module('hopsWorksApp', [
   'angularAwesomeSlider',
   'angularResizable',
   'ng-showdown',
-  'vAccordion'
+  'vAccordion',
+  'md.data.table'  
 ])
         .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig',
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {
