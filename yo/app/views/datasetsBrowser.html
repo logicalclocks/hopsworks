@@ -98,26 +98,26 @@ f
 
                             <div class="menus"  layout-wrap layout="row" layout-fill layout-align="space-between center" style="height:12px;">
                               <div layout="column" flex-xs="100" flex-sm="100" flex="10" layout-align="center center">
-                                <md-menu>
+<!--                                <md-menu>
                                   <md-button aria-label="Open demo menu" class="md-icon-button" ng-click="$mdOpenMenu($event)">
-                                    <!--<md-icon md-menu-origin md-svg-icon="images/delete.svg"></md-icon>-->
+                                    <md-icon md-menu-origin md-svg-icon="images/delete.svg"></md-icon>
                                     Options
                                   </md-button>
                                   <md-menu-content width="6">
-                                    <md-menu-item>
-                                      <md-button ng-click="datasetsCtrl.deleteSelected();">
+                                    <md-menu-item>-->
+                                      <md-button ng-click="datasetsCtrl.deleteSelected();" ng-disabled="datasetCtrls.filesNotSelected()">
                                         <md-icon md-menu-align-target md-svg-icon="images/delete.svg"></md-icon>
                                         Delete Selected
                                       </md-button>
-                                    </md-menu-item>
-                                    <md-menu-item>
-                                      <md-button ng-click="datasetsCtrl.moveSelected();">
+<!--                                    </md-menu-item>
+                                    <md-menu-item>-->
+                                      <md-button ng-click="datasetsCtrl.moveSelected();" ng-disabled="datasetCtrls.filesNotSelected()">
                                         <md-icon md-menu-align-target md-svg-icon="images/folder.svg"></md-icon>
                                         Move Selected
                                       </md-button>
-                                    </md-menu-item>
+<!--                                    </md-menu-item>
                                   </md-menu-content>
-                                </md-menu>
+                                </md-menu>-->
                               </div>
                             </div>
                           </div>

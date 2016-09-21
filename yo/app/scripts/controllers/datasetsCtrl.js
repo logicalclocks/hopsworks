@@ -98,6 +98,14 @@ angular.module('hopsWorksApp')
               }
             });
 
+
+            self.filesNotSelected = function () {
+              if ((self.selected !== null && self.selected !== undefined) || self.isSelectedFiles()) {
+                return false;
+              }
+              return true;
+            }
+
             self.isShared = function () {
               var top = self.pathArray[0].split("::");
               if (top.length === 1) {
@@ -399,7 +407,7 @@ This will make all its files unavailable to other projects unless you share it e
                         var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
                         var finalPath = relPath + "/" + name;
                         var names = [];
-                        var i=0;
+                        var i = 0;
                         for (var name in self.selectedFiles) {
                           names[i] = name;
                           i++;
@@ -636,12 +644,12 @@ This will make all its files unavailable to other projects unless you share it e
                 self.selectedFiles[f.name] = f;
                 self.selectedFiles[f.name].selectedIndex = i;
               }
-              if (self.files.length > 0) {
-                self.selected = 0;
-                self.fileDetail = self.files[0];
-              }
-//              self.selected = null;
-//              self.fileDetail = null;
+//              if (self.files.length > 0) {
+//                self.selected = 0;
+//                self.fileDetail = self.files[0];
+//              }
+              self.selected = null;
+              self.fileDetail = null;
             };
 
             self.deleteSelected = function () {
@@ -671,16 +679,28 @@ This will make all its files unavailable to other projects unless you share it e
                 if (file.name in self.selectedFiles) {
                   delete self.selectedFiles[file.name];
                 }
-                if (self.fileDetail !== null && file.name === self.fileDetail.name) {
-                  if (Object.keys(self.selectedFiles).length > 0) {
-                    self.selected = Object.keys(self.selectedFiles)[0].selectedIndex;
-                    self.fileDetail = Object.keys(self.selectedFiles)[0];
-                  } else {
-                    self.selectedFiles = {};
-                    self.selected = null;
-                    self.fileDetail = null;
-                    self.sharedPath = null;
+                if (self.selected === selectedIndex) {
+                  self.selected = null;
+                  self.fileDetail = null;
+                } else {
+                  var i = 0;
+                  for (var name in self.selectedFiles) {
+                    if (file.name === name) {
+                      delete self.selectedFiles[name];
+                      break;
+                    }
                   }
+//                if (self.fileDetail !== null && file.name === self.fileDetail.name) {
+//                  if (Object.keys(self.selectedFiles).length > 0) {
+//                    self.selected = Object.keys(self.selectedFiles)[0].selectedIndex;
+//                    self.fileDetail = Object.keys(self.selectedFiles)[0];
+//                  }
+//                  } else {
+//                    self.selectedFiles = {};
+//                    self.selected = null;
+//                    self.fileDetail = null;
+//                    self.sharedPath = null;
+//                  }
                 }
               } else {
                 self.selectedFiles = {};
