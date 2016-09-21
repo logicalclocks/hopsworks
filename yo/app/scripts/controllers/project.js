@@ -121,7 +121,7 @@ angular.module('hopsWorksApp')
                           self.projectTypes.splice(index, 1);
                         });
 
-                        $cookies.projectID = self.pId;
+                        $cookies.put("projectID",self.pId);
                         //set the project name under which the search is performed
                         UtilsService.setProjectName(self.currentProject.projectName);
                         self.getRole();

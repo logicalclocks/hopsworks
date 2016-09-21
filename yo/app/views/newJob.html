@@ -266,8 +266,10 @@
               <div class="text-right col-md-4">Job Type <i class="fa fa-info-circle" uib-tooltip="Choose between Streaming or Batch job." style="margin-left: 10px"></i></div>
               <div class="col-md-1">
                 <select name="flinkjobtype" 
-                        ng-options="flinkjobtype for flinkjobtype in newJobCtrl.flinkjobtype"
-                        ng-model="newJobCtrl.runConfig.flinkjobtype" class="form-control">
+                        ng-model="newJobCtrl.runConfig.flinkjobtype" 
+                        ng-init="newJobCtrl.runConfig.flinkjobtype = 'streaming'">
+                  <option value="streaming">Streaming</option>
+                  <option value="batch">Batch</option>
                 </select>
               </div>
             </div>
@@ -316,7 +318,7 @@
                       {{resource.path}}
                     </td>
                     <td>
-                      <select name="visibility" ng-model="resource.visibility" ng-init="resource.visibility = 'public'">
+                      <select name="visibility" ng-model="resource.visibility" ng-init="resource.visibility = 'private'">
                         <option value="public">Public</option>
                         <option value="private">Private</option>
                         <option value="application">Application</option>
