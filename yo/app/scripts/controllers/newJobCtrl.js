@@ -20,11 +20,11 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.tourService = TourService;
-            self.flinkjobtype = ["Streaming", "Batch"];
+            self.flinkjobtype;
             //Set services as attributes 
             self.ModalService = ModalService;
             self.growl = growl;
-
+            
             // keep the proposed configurations
             self.autoConfigResult;
 
@@ -289,6 +289,7 @@ angular.module('hopsWorksApp')
              */
             self.createJob = function () {
               self.runConfig.appName = self.jobname;
+              self.runConfig.flinkjobtype = self.flinkjobtype;
               self.runConfig.localResources = self.localResources;
               self.runConfig.selectedMinExecutors = self.sliderValue.split(";")[0];
               self.runConfig.selectedMaxExecutors = self.sliderValue.split(";")[1];
