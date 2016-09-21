@@ -33,41 +33,52 @@
             <div align="left">
               <h2>Job Administration</h2>
             </div>
-
+            <div align="left">
+              <h:outputText value="Number of Jobs:#{jobAdministration.numberOfJobs}" style="font-weight: bold" />
+            </div>
             <div class="content">
+              
               <h:form id="jobmodifyForm" >
                 <p:growl id="growl" life="2000"/>
-
+                
                 <p:dataTable id="jobdataTable" var="job" 
                              value="#{jobAdministration.allJobs}" 
-                             filteredValue="#{jobAdministration.filteredJobs}" 
+                             filteredValue="#{jobAdministration.filteredJobs}"
                              widgetVar="jobsTable"
                              emptyMessage="No jobs found with given criteria"
-                             rowKey="#{job.applicationid}"
-                             style="table-layout: fixed" 
+                             rowKey="#{job.appId}"
+                             style="table-layout: auto" 
                              scrollable="false"
                              rows="25"
                              paginator="true"
                              paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                             rowsPerPageTemplate="10,25,50,100,250">
+                             rowsPerPageTemplate="10,25,50,100,250,500">
                   >
-                  <p:column id="idColumn" filterBy="#{job.applicationid}" headerText="Id" >
-                    <h:outputText value="#{job.applicationid}" />
+                  <p:column headerText="Id" filterBy="#{job.appId}" sortBy="#{job.appId}" style="width: 17%; word-wrap: break-word;">
+                    <h:outputText value="#{job.appId}" />
                   </p:column>
-                  <p:column id="nameColumn" filterBy="#{job.appname}" headerText="Name" >
-                    <h:outputText value="#{job.appname}" />
+       
+                  <p:column id="nameColumn" filterBy="#{job.name}" sortBy="#{job.name}" headerText="Name" style="width: 15%; word-wrap: break-word;" >
+                    <h:outputText value="#{job.name}" />
                   </p:column>
-                  <p:column id="userColumn" filterBy="#{job.appuser}" headerText="User" >
-                    <h:outputText value="#{job.appuser}" />
+                  <p:column id="userColumn" filterBy="#{job.user}" sortBy="#{job.user}" headerText="User" style="width: 15%; word-wrap: break-word;">
+                    <h:outputText value="#{job.user}" />
                   </p:column>
-                  <p:column id="mstateColumn" filterBy="#{job.appsmstate}" headerText="State" >
-                    <h:outputText value="#{job.appsmstate}"/>
+                  <p:column id="starttimeColumn" filterBy="#{job.startTime}" sortBy="#{job.startTime}" style="width: 10%;" headerText="Start Time" >
+                    <h:outputText value="#{job.startTime}"/>
                   </p:column>
-                  <p:column id="actionJobColumn" headerText="Stop" >                                                 
-                    <p:commandLink  action="#{jobAdministration.killJob(job.applicationid)}" update="@form" styleClass="fa fa-ban" value=""/>
+                  <p:column id="finishtimeColumn" filterBy="#{job.finishTime}" sortBy="#{job.finishTime}" style="width: 10%;" headerText="Finish Time" >
+                    <h:outputText rendered="#{job.finishTime != null}" value="#{job.finishTime}"/>  
+                    <h:outputText rendered="#{job.finishTime == null}" value="-"/>     
+                  </p:column>
+                  <p:column id="mstateColumn" filterBy="#{job.state}" sortBy="#{job.state}" style="width: 10%;"  headerText="State"  >
+                    <h:outputText value="#{job.state}"/>
+                  </p:column>
+                  <p:column id="actionJobColumn" headerText="Action" >                                                 
+                    <p:commandButton  action="#{jobAdministration.killJob(job.appId)}" update="@form"  value="Kill"/>
                   </p:column>                  
-                   <p:column id="statusColumn" headerText="Status" >
-                     <h:outputText value="#{jobAdministration.getError(job.applicationid)}" />
+                  <p:column id="statusColumn" headerText="Status" >
+                    <h:outputText value="#{jobAdministration.getError(job.appId)}" />
                   </p:column>
                 </p:dataTable>                                            
               </h:form>   

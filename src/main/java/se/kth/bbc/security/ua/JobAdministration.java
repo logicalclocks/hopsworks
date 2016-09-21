@@ -3,31 +3,28 @@ package se.kth.bbc.security.ua;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.apache.hadoop.yarn.client.api.impl.YarnClientImpl;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import se.kth.bbc.jobs.jobhistory.YarnApplicationstate;
-import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
-import se.kth.bbc.jobs.model.description.JobDescription;
-import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.yarn.YarnRunner;
-import se.kth.hopsworks.hdfs.fileoperations.UserGroupInformationService;
-import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -41,91 +38,167 @@ public class JobAdministration implements Serializable {
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(JobAdministration.class.
           getName());
-//  @EJB
-//  private JobDescriptionFacade jobFacade;
-//  @EJB
-//  private ExecutionFacade exeFacade;
-  @EJB
-  private YarnApplicationstateFacade yarnFacade;
   @EJB
   private Settings settings;
-  @EJB
-  private UserGroupInformationService ugiService;
-  @EJB
-  private HdfsUsersController hdfsUsersBean;
 
   private Configuration conf;
+  private YarnClient client;
+  private List<YarnApplicationReport> jobs = new ArrayList<>();
 
-  private List<YarnApplicationstate> jobs;
-
-  private List<YarnApplicationstate> filteredJobs;
+  private List<YarnApplicationReport> filteredJobs = new ArrayList<>();
 
   private Map<String, String> error = new HashMap<>();
+  private boolean initial = true;
 
-  public List<YarnApplicationstate> getAllJobs() {
-    this.jobs = yarnFacade.findAll();
-    return this.jobs;
+  @PostConstruct
+  public void init() {
+    fetchJobs(filteredJobs);
   }
 
-  public void setFilteredJobs(List<YarnApplicationstate> filteredJobs) {
+  public List<YarnApplicationReport> getAllJobs() {
+    if (initial) {
+      jobs.addAll(filteredJobs);
+      initial = false;
+    } else {
+      jobs.clear();
+      fetchJobs(jobs);
+    }
+
+    return jobs;
+  }
+
+  public void setFilteredJobs(List<YarnApplicationReport> filteredJobs) {
     this.filteredJobs = filteredJobs;
   }
 
-  public List<YarnApplicationstate> getFilteredJobs() {
+  public List<YarnApplicationReport> getFilteredJobs() {
     return filteredJobs;
+  }
+
+  public String getNumberOfJobs() {
+    if (client == null) {
+      client = YarnClient.createYarnClient();
+      setConfiguration(settings.getHadoopDir());
+      client.init(conf);
+      client.start();
+    }
+    try {
+      return String.valueOf(client.getApplications().size());
+    } catch (YarnException | IOException ex) {
+      Logger.getLogger(JobAdministration.class.getName()).
+              log(Level.SEVERE, null, ex);
+    }
+    return "N/A";
   }
 
   public void killJob(final String appId) {
     error.put(appId, "Trying to kill job");
-    YarnClient client = YarnClient.createYarnClient();
-    setConfiguration(settings.getHadoopDir());
-    client.init(conf);
-    client.start();
+    if (client == null) {
+      client = YarnClient.createYarnClient();
+      setConfiguration(settings.getHadoopDir());
+      client.init(conf);
+      client.start();
+    }
     //Find applicationId and kill it
     error.put(appId, "Application was not found");
-    YarnApplicationState state = null;
+    ApplicationId appIdToKill = null;
     try {
-      for (ApplicationReport appReport : client.getApplications()) {
-        String currAppId = appReport.getApplicationId().toString();
-        if (currAppId != null && currAppId.equals(appId)) {
-          state = appReport.getYarnApplicationState();
-          if (state == YarnApplicationState.FINISHED || state
-                  == YarnApplicationState.KILLED) {
-            error.put(appId, "Job is already " + state);
+      for (YarnApplicationReport report : jobs) {
+        if (report.getAppId().equals(appId)) {
+          //Get state
+          appIdToKill = ApplicationId.newInstance(report.
+                  getClusterTimestamp(), report.getId());
+
+          ApplicationReport appReport = client.getApplicationReport(appIdToKill);
+          if (appReport.getYarnApplicationState()
+                  == YarnApplicationState.FINISHED || appReport.
+                  getYarnApplicationState() == YarnApplicationState.KILLED) {
+            error.put(appId, "Job is already " + appReport.
+                    getYarnApplicationState());
+            break;
           } else {
-            ApplicationId appIdToKill = appReport.getApplicationId();
             client.killApplication(appIdToKill);
-            state = client.getApplicationReport(appIdToKill).getYarnApplicationState();
             error.put(appId, "Job killed successfully");
             break;
           }
         }
       }
-      //Wait for the DB to be updated
-      Thread.sleep(1000);
-      jobs = yarnFacade.findAll();
-      if (filteredJobs != null) {
-        //Update filtered job
-        for (YarnApplicationstate yarnApplicationState : filteredJobs) {
-          if (yarnApplicationState.getApplicationid().equals(appId) && state
-                  != null) {
-            yarnApplicationState.setAppsmstate(state.name());
+
+      jobs.clear();
+      try {
+        //Create our custom YarnApplicationReport Pojo
+        for (ApplicationReport appReport : client.getApplications()) {
+          jobs.add(new YarnApplicationReport(appReport.getApplicationId().
+                  toString(),
+                  appReport.getName(), appReport.getUser(), appReport.
+                  getStartTime(), appReport.getFinishTime(), appReport.
+                  getApplicationId().getClusterTimestamp(),
+                  appReport.getApplicationId().getId(), appReport.
+                  getYarnApplicationState().name()));
+        }
+      } catch (YarnException | IOException ex) {
+        logger.log(Level.SEVERE, null, ex);
+      }
+      //Update filtered jobs
+      if (filteredJobs != null && appIdToKill != null) {
+        ListIterator<YarnApplicationReport> iter = filteredJobs.listIterator();
+        while (iter.hasNext()) {
+          YarnApplicationReport next = iter.next();
+          if (next.getAppId().equals(appId)) {
+            //Updated AppReport
+            ApplicationReport appReport = client.getApplicationReport(
+                    appIdToKill);
+
+            iter.set(new YarnApplicationReport(appReport.getApplicationId().
+                    toString(),
+                    appReport.getName(), appReport.getUser(), appReport.
+                    getStartTime(), appReport.getFinishTime(), appReport.
+                    getApplicationId().getClusterTimestamp(),
+                    appReport.getApplicationId().getId(), appReport.
+                    getYarnApplicationState().name()));
+            break;
           }
         }
       }
-      client.close();
-    } catch (YarnException | IOException | InterruptedException ex) {
-      logger.log(Level.SEVERE, "Error while trying to kill job with appId:"+
-              appId, ex.getMessage());
-    } finally {
+    } catch (YarnException | IOException ex) {
+      logger.log(Level.SEVERE, "Error while trying to kill job with appId:"
+              + appId, ex.getMessage());
+    }
+
+  }
+
+  private void fetchJobs(List<YarnApplicationReport> reports) {
+    if (client == null) {
+      client = YarnClient.createYarnClient();
+      setConfiguration(settings.getHadoopDir());
+      client.init(conf);
+      client.start();
+    }
+    try {
+      //Create our custom YarnApplicationReport Pojo
+      for (ApplicationReport appReport : client.getApplications()) {
+        reports.add(new YarnApplicationReport(appReport.getApplicationId().
+                toString(),
+                appReport.getName(), appReport.getUser(), appReport.
+                getStartTime(), appReport.getFinishTime(), appReport.
+                getApplicationId().getClusterTimestamp(),
+                appReport.getApplicationId().getId(), appReport.
+                getYarnApplicationState().name()));
+      }
+    } catch (YarnException | IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+    }
+  }
+
+  @PreDestroy
+  public void preDestroy() {
+    if (client != null) {
       try {
         client.close();
       } catch (IOException ex) {
-        logger.log(Level.SEVERE, "Error while trying to close yarn client",
-                ex.getMessage());
+        logger.log(Level.SEVERE, null, ex);
       }
     }
-
   }
 
   public String getError(String appId) {
@@ -204,6 +277,124 @@ public class JobAdministration implements Serializable {
     YarnRunner.Builder.addPathToConfig(conf, confFile);
     YarnRunner.Builder.addPathToConfig(conf, hadoopConf);
     YarnRunner.Builder.setDefaultConfValues(conf);
+  }
+
+  public class YarnApplicationReport {
+
+    private String appId;
+    private String name;
+    private String user;
+    private Date startTime;
+    private Date finishTime;
+    private long clusterTimestamp;
+    private int id;
+    private String state;
+
+    public YarnApplicationReport(String appId, String name, String user,
+            long startTime, long finishTime, long clusterTimestamp, int id,
+            String state) {
+      this.appId = appId;
+      this.name = name;
+      this.user = user;
+      this.startTime = new Date(startTime);
+      this.finishTime = finishTime == 0 ? null : new Date(finishTime);
+      this.clusterTimestamp = clusterTimestamp;
+      this.id = id;
+      this.state = state;
+    }
+
+    public String getAppId() {
+      return appId;
+    }
+
+    public void setAppId(String appId) {
+      this.appId = appId;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public String getUser() {
+      return user;
+    }
+
+    public void setUser(String user) {
+      this.user = user;
+    }
+
+    public Date getStartTime() {
+      return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+      this.startTime = new Date(startTime);
+    }
+
+    public Date getFinishTime() {
+      return finishTime;
+    }
+
+    public void setFinishTime(long finishTime) {
+      if (finishTime == 0) {
+        this.finishTime = null;
+      } else {
+        this.finishTime = new Date(finishTime);
+      }
+    }
+
+    public long getClusterTimestamp() {
+      return clusterTimestamp;
+    }
+
+    public void setClusterTimestamp(long clusterTimestamp) {
+      this.clusterTimestamp = clusterTimestamp;
+    }
+
+    public int getId() {
+      return id;
+    }
+
+    public void setId(int id) {
+      this.id = id;
+    }
+
+    public String getState() {
+      return state;
+    }
+
+    public void setState(String state) {
+      this.state = state;
+    }
+
+    @Override
+    public int hashCode() {
+      int hash = 5;
+      return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final YarnApplicationReport other = (YarnApplicationReport) obj;
+      if (!Objects.equals(this.appId, other.appId)) {
+        return false;
+      }
+      return true;
+    }
+
   }
 
 }
