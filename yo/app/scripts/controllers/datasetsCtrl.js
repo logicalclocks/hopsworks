@@ -109,7 +109,7 @@ angular.module('hopsWorksApp')
                 return true;
               }
               return false;
-            }
+            };
 
             self.isShared = function () {
               var top = self.pathArray[0].split("::");

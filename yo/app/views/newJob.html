@@ -267,7 +267,7 @@
               <div class="col-md-1">
                 <select name="flinkjobtype" 
                         ng-model="newJobCtrl.flinkjobtype" 
-                        ng-init="newJobCtrl.flinkjobtype = 'streaming'">
+                        ng-init="newJobCtrl.flinkjobtype = 'Streaming'">
                   <option value="Streaming">Streaming</option>
                   <option value="Batch">Batch</option>
                 </select>
@@ -346,10 +346,11 @@
                   Create job
                 </button>
               </div>
-          </uib-accordion-group>
+           </div>
+         </uib-accordion-group>
         </uib-accordion>
-        <!-- /#page-content-wrapper -->
       </div>
+         <!-- /#page-content-wrapper -->
     </section>
     <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourFour" post-tour="closeTour()" ng-if="projectCtrl.loadedView">
       <virtual-step
