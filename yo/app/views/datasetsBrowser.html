@@ -62,21 +62,21 @@
             <div layout="row"  >
               <div flex="5" style="margin-bottom: 1px; margin-left: -1px; margin-top: -1px;font-size: 16px;">
                 <button style="margin-left: 1px; " class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
-                        data-clipboard-target="#fileRef" ng-disabled="datasetsCtrl.haveSelected()"><i class="fa fa-clipboard icon-resize-small"></i>
+                        data-clipboard-target="#fileRef" ng-disabled="datasetsCtrl.isSelectedFiles() !== 1"><i class="fa fa-clipboard icon-resize-small"></i>
                 </button>
               </div>
-              <div flex style="margin-top: 5px; margin-left: -15px;"ng-show="datasetsCtrl.fileDetail !== null && !datasetsCtrl.isShared()" >
-                <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{projectCtrl.currentProject.projectName}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
+              <div flex style="margin-top: 5px; margin-left: -15px;"ng-show="datasetsCtrl.selected !== null && !datasetsCtrl.isShared()" >
+                <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{projectCtrl.currentProject.projectName}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.selected}}</span>
               </div>
             </div>
-            <div layout="row"  ng-show="datasetsCtrl.fileDetail !== null && datasetsCtrl.fileDetail.dir == false && datasetsCtrl.isShared()">
+            <div layout="row"  ng-show="datasetsCtrl.selected !== null && datasetsCtrl.isShared()">
               <div flex="10" style="margin-bottom: 1px; margin-left: -25px; margin-top: -1px;font-size: 16px;">
                 <button style="margin-left: 0px; " class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
                         data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
                 </button>        
               </div>
               <div flex>
-                <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects<span data-ng-repeat="path in datasetsCtrl.sharedPathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.fileDetail.name}}</span>
+                <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects<span data-ng-repeat="path in datasetsCtrl.sharedPathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.selected}}</span>
               </div>
             </div>
           </div>
@@ -95,7 +95,7 @@
                           <th style="margin:0px;">
                           <div flex="10" layout="row">
                             <md-menu>
-                              <md-button aria-label="Open demo menu" class="md-icon-button" ng-click="$mdOpenMenu($event)" ng-disabled="datasetsCtrl.haveSelected(" ng-style="datasetsCtrl.menustyle">
+                              <md-button aria-label="Open demo menu" class="md-icon-button" ng-click="$mdOpenMenu($event)" ng-disabled="datasetsCtrl.isSelectedFiles() < 1" ng-style="datasetsCtrl.menustyle">
                                 <md-icon md-menu-origin md-svg-icon="images/list.svg"></md-icon>
                                 Options
                               </md-button>
@@ -103,7 +103,7 @@
                                 <md-menu-item>
                                   <md-list layout="row">
                                     <md-list-item>
-                                      <md-button ng-click="datasetsCtrl.deleteSelected();" ng-show="datasetsCtrl.haveSelected()">
+                                      <md-button ng-click="datasetsCtrl.deleteSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
                                         <md-icon md-svg-icon="images/delete_forever.svg"></md-icon>
                                         <md-tooltip md-direction="right">
                                           Delete selected files/directories
@@ -115,7 +115,7 @@
                                 <md-menu-item>
                                   <md-list layout="row">
                                     <md-list-item>
-                                      <md-button ng-click="datasetsCtrl.trashSelected();" ng-show="datasetsCtrl.haveSelected()" ng-disabled="1==1">
+                                      <md-button ng-click="datasetsCtrl.trashSelected();" ng-show="datasetsCtrl.isSelectedFiles() < 0" ng-disabled="1==1">
                                         <md-icon md-svg-icon="images/delete.svg"></md-icon>
                                         <md-tooltip md-direction="right">
                                           Move to Trash
@@ -126,7 +126,7 @@
                                 </md-menu-item>
                                 <md-menu-item>
                                   <md-list-item>                                    
-                                    <md-button ng-click="datasetsCtrl.moveSelected();" ng-show="datasetsCtrl.haveSelected()">
+                                    <md-button ng-click="datasetsCtrl.moveSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
                                       <md-icon md-svg-icon="images/folder.svg"></md-icon>
                                       <md-tooltip md-direction="right">
                                         Move selected files/directories
@@ -301,7 +301,7 @@ ng-show="!file.dir"
                           <td style="width: 12%;" ng-click="datasetsCtrl.openDir(file)">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
 
                           <td>
-                            <div uib-dropdown class="position-fixed" id="menu-{{ $index}}" ng-show="!datasetsCtrl.isSelectedFiles()">
+                            <div uib-dropdown class="position-fixed" id="menu-{{ $index}}" ng-show="datasetsCtrl.isSelectedFiles() < 1">
                               <ul uib-dropdown-menu class="dropdown-amore" role="menu">
                                 <li>
                                   <a class="pointer"

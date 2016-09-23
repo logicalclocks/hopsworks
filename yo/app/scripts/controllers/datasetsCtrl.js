@@ -19,7 +19,7 @@ angular.module('hopsWorksApp')
             self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
 
             // Details of the currently selecte file/dir
-//            self.selected = null; //The index of the selected file in the files array.
+            self.selected = null; //The index of the selected file in the files array.
 //            self.fileDetail = null; //The details about the currently selected file.
             self.sharedPath = null; //The details about the currently selected file.
             self.routeParamArray = [];
@@ -387,7 +387,7 @@ This will make all its files unavailable to other projects unless you share it e
 
 
             self.isSelectedFiles = function () {
-              return Object.keys(self.selectedFiles).length > 0;
+              return Object.keys(self.selectedFiles).length;
             };
 
             self.moveSelected = function () {
@@ -611,15 +611,18 @@ This will make all its files unavailable to other projects unless you share it e
               // Add existing selected file (idempotent, if already added)
               // If file already selected, deselect it.
               if (event.ctrlKey) {
-                self.selectedFiles[file.name] = file;
-                self.selectedFiles[file.name].selectedIndex = selectedIndex;
+
               } else {
                 self.selectedFiles = {}
-                self.selectedFiles[file.name] = file;
-                self.selectedFiles[file.name].selectedIndex = selectedIndex;
               }
+              if (self.isSelectedFiles() > 0) {
+                self.selected = null;
+              } else {
+                self.selected = file.name;
+              }
+              self.selectedFiles[file.name] = file;
+              self.selectedFiles[file.name].selectedIndex = selectedIndex;
               self.menustyle.opacity = 1.0;
-
             };
 
             self.haveSelected = function (file) {
@@ -642,8 +645,9 @@ This will make all its files unavailable to other projects unless you share it e
                 self.selectedFiles[f.name].selectedIndex = i;
               }
               self.menustyle.opacity = 1;
+               self.selected = null;
             };
-            
+           
             //TODO: Move files to hdfs trash folder
              self.trashSelected = function () {
 
@@ -662,31 +666,35 @@ This will make all its files unavailable to other projects unless you share it e
                 delete self.selectedFiles[names[i]];
               }
               self.all_selected = false;
+              self.selected = null;
             };
 
 
             self.deselect = function (selectedIndex, file, event) {
-                if (file.name in self.selectedFiles) {
-                  delete self.selectedFiles[file.name];
+//              if (file.name in self.selectedFiles) {
+//                delete self.selectedFiles[file.name];
+//              }
+              var i = 0;
+              for (var name in self.selectedFiles) {
+                if (file.name !== name) {
+                  delete self.selectedFiles[name];
+                  //break;
                 }
-                  var i = 0;
-                  for (var name in self.selectedFiles) {
-                    if (file.name === name) {
-                      delete self.selectedFiles[name];
-                      break;
-                    }
-                  }
-                if(Object.keys(self.selectedFiles).length === 0 && self.selectedFiles.constructor === Object){
-                    self.menustyle.opacity = 0.2;
-
-                }
+              }
+              if (Object.keys(self.selectedFiles).length === 0 && self.selectedFiles.constructor === Object) {
+                self.menustyle.opacity = 0.2;
+                 self.selected = null;
+              } else if (Object.keys(self.selectedFiles).length === 1 && self.selectedFiles.constructor === Object) {
+                 self.menustyle.opacity = 1.0;
+                 self.selected = file.name;
+              }
+             
 
             };
 
             self.deselectAll = function () {
               self.selectedFiles = {};
               self.selected = null;
-              self.fileDetail = null;
               self.sharedPath = null;
               self.menustyle.opacity = 0.2;
             };
