@@ -115,7 +115,7 @@
                                 <md-menu-item>
                                   <md-list layout="row">
                                     <md-list-item>
-                                      <md-button ng-click="datasetsCtrl.trashSelected();" ng-show="datasetsCtrl.isSelectedFiles() < 0" ng-disabled="1==1">
+                                      <md-button ng-click="datasetsCtrl.trashSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0" ng-disabled="1==1">
                                         <md-icon md-svg-icon="images/delete.svg"></md-icon>
                                         <md-tooltip md-direction="right">
                                           Move to Trash
