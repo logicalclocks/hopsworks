@@ -142,7 +142,7 @@ public class MessageController {
     String message = REPLY_SEPARATOR + dateAndWriter + msg.getContent();
     msg.setContent(message);
     
-    messageFacade.edit(msg);
+    messageFacade.save(msg);
   }
 
   /**

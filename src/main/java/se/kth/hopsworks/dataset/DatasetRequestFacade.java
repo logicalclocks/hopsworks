@@ -120,7 +120,12 @@ public class DatasetRequestFacade extends AbstractFacade<DatasetRequest> {
             "DatasetRequest.findByMessageId",
             DatasetRequest.class).setParameter(
                     "message_id", message.getId());
-    return query.getSingleResult();
+    List<DatasetRequest> results =  query.getResultList();
+    if(results != null && results.size() == 1){
+      return results.get(0);
+    } else {
+      return null;
+    }
   }
 
   public void persistDataset(DatasetRequest datasetRequest) {

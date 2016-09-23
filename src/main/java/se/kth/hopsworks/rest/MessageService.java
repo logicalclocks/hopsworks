@@ -103,6 +103,13 @@ public class MessageService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Message not found.");
     }
+    //Delete Dataset request from the database
+    if (!Strings.isNullOrEmpty(msg.getSubject())) {
+      DatasetRequest dsReq = dsReqFacade.findByMessageId(msg);
+      if(dsReq != null){
+        dsReqFacade.remove(dsReq);
+      }
+    }
     checkMsgUser(msg, user);//check if the user is the owner of the message
     msg.setUnread(false);
     msgFacade.edit(msg);
@@ -122,10 +129,11 @@ public class MessageService {
               "Message not found.");
     }
     //Delete Dataset request from the database
-    if (!Strings.isNullOrEmpty(msg.getSubject()) && msg.getSubject().equals(
-            Settings.MESSAGE_DS_REQ_SUBJECT)) {
+    if (!Strings.isNullOrEmpty(msg.getSubject())) {
       DatasetRequest dsReq = dsReqFacade.findByMessageId(msg);
-      dsReqFacade.remove(dsReq);
+      if(dsReq != null){
+        dsReqFacade.remove(dsReq);
+      }
     }
     checkMsgUser(msg, user);//check if the user is the owner of the message
     msg.setDeleted(true);
