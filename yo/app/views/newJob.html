@@ -19,8 +19,8 @@
             <!--<i class="fa fa-undo" uib-tooltip="Restore the previous state." style="margin-left: 10px" ng-click="newJobCtrl.undoClear()" ng-show="newJobCtrl.undoable"></i>-->
           </h2>
         </div>
-        <uib-accordion close-others="false" >
-          <uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" is-open="newJobCtrl.accordion1.isOpen">
+        <div uib-accordion close-others="false" >
+          <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" is-open="newJobCtrl.accordion1.isOpen">
             <div class="row">
               <md-input-container  class="md-block">
                 <label id="inputJobName" for="jobname" style="color: black;">Job name</label>
@@ -28,10 +28,10 @@
                        ng-model="newJobCtrl.jobname" ng-change="newJobCtrl.nameFilledIn()"  autofocus>
               </md-input-container>
             </div>
-          </uib-accordion-group>
+          </div>
 
           <!-- Select the type of job -->
-          <uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion2.title}} {{newJobCtrl.accordion2.value}}" 
+          <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion2.title}} {{newJobCtrl.accordion2.value}}" 
                                is-open="newJobCtrl.accordion2.isOpen" 
                                ng-show="newJobCtrl.accordion2.visible">
             <div class="row btn-group">
@@ -39,11 +39,11 @@
               <label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>
               <label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>
             </div>
-          </uib-accordion-group>
+          </div>
 
 
           <!-- Select the main execution file -->
-          <uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}" 
+          <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}" 
                                is-open="newJobCtrl.accordion3.isOpen" 
                                ng-show="newJobCtrl.accordion3.visible">
             <!-- Adam, Spark and Flink  -->
@@ -64,11 +64,11 @@
                 </td>
               </tr>
             </table>
-          </uib-accordion-group>
+          </div>
 
 
           <!-- Set up the job details -->
-          <uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion4.title}} {{newJobCtrl.accordion4.value}}" 
+          <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion4.title}} {{newJobCtrl.accordion4.value}}" 
                                is-open="newJobCtrl.accordion4.isOpen" 
                                ng-show="newJobCtrl.accordion4.visible"
                                id="chooseParametersAndArguments">
@@ -117,9 +117,9 @@
               </div>
             </div>
 
-          </uib-accordion-group>
+          </div>
           <!--Pre-configuration uib-accordion visible only for Spark jobs-->
-          <uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion6.title}} {{newJobCtrl.accordion6.value}}" 
+          <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion6.title}} {{newJobCtrl.accordion6.value}}" 
                                is-open="newJobCtrl.accordion6.isOpen" 
                                ng-show="newJobCtrl.accordion6.visible && newJobCtrl.jobtype === 1"
                                id="preConfig">
@@ -193,9 +193,9 @@
               </button>
             </div>
 
-          </uib-accordion-group>
+          </div>
           <!-- Set some run configuration -->
-          <uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}" 
+          <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}" 
                                is-open="newJobCtrl.accordion5.isOpen" 
                                ng-show="newJobCtrl.accordion5.visible"
                                id="moreConfigs">
@@ -347,8 +347,8 @@
                 </button>
               </div>
            </div>
-         </uib-accordion-group>
-        </uib-accordion>
+         </div>
+        </div>
       </div>
          <!-- /#page-content-wrapper -->
     </section>

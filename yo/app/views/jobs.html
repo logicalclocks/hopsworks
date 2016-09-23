@@ -299,15 +299,15 @@
                  </ul>
                  <div class="tab-content" >
                     <div id="logs" class="tab-pane fade in active">
-                       <uib-accordion
+                       <div uib-accordion
                           close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
-                          <uib-accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
-                            <uib-accordion-heading ng-if="item.appId !== ''">
+                          <div uib-accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                            <div uib-accordion-heading ng-if="item.appId !== ''">
                                 Application Id = {{item.appId}}
                                 <div class="pull-right">
                                    {{item.time}}
                                 </div>
-                             </uib-accordion-heading>
+                             </div>
                              <div style="overflow-y: auto">
                                 <button ng-if="item.retriableOut !== undefined && item.appId !== ''" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'out')" >
                                 Retry log
@@ -320,19 +320,19 @@
                                    <a href="#{{item.logPath}}">here!</a>
                                 </div>
                              </div>
-                          </uib-accordion-group>
-                       </uib-accordion>
+                          </div>
+                       </div>
                     </div>
                     <div id="errs" class="tab-pane fade">
-                       <uib-accordion
+                       <div uib-accordion
                           close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
-                          <uib-accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.appId}}">
-                             <uib-accordion-heading>
+                          <div uib-accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.appId}}">
+                             <div uib-accordion-heading>
                                 Application Id = {{item.appId}}
                                 <div class="pull-right">
                                    {{item.time}}
                                 </div>
-                             </uib-accordion-heading>
+                             </div>
                              <div style="overflow-y: auto">
                                 <button  ng-if="item.retriableErr !== undefined && item.appId !== ''" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'err')" >
                                 Retry log
@@ -345,8 +345,8 @@
                                    <a href="#{{item.errPath}}">here!</a>
                                 </div>
                              </div>
-                          </uib-accordion-group>
-                       </uib-accordion>
+                          </div>
+                       </div>
                     </div>
                  </div>
               </div>

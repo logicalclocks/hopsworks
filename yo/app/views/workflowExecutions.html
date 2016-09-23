@@ -62,37 +62,37 @@
 
                         <div class="tab-content" >
                           <div id="logs" class="tab-pane fade in active">
-                            <uib-accordion close-others="true">
-                              <uib-accordion-group ng-repeat="item in workflowExecutionCtrl.selectedExecutionLogs" heading="{{item.time}}">
+                            <div uib-accordion close-others="true">
+                              <div uib-accordion-group ng-repeat="item in workflowExecutionCtrl.selectedExecutionLogs" heading="{{item.time}}">
                                 <div style="overflow-y: auto">
                                   <textarea class="form-control" rows="15" placeholer="No log information available" readonly>
                                                 {{item.default}}
                                   </textarea>
                                 </div>
-                              </uib-accordion-group>
-                            </uib-accordion>
+                              </div>
+                            </div>
                           </div>
                           <div id="errors" class="tab-pane fade">
-                            <uib-accordion close-others="true">
-                              <uib-accordion-group ng-repeat="item in workflowExecutionCtrl.selectedExecutionLogs" heading="{{item.time}}">
+                            <div uib-accordion close-others="true">
+                              <div uib-accordion-group ng-repeat="item in workflowExecutionCtrl.selectedExecutionLogs" heading="{{item.time}}">
                                 <div style="overflow-y: auto">
                                   <textarea class="form-control" rows="15" placeholer="No error information available" readonly>
                                                 {{item.error}}
                                   </textarea>
                                 </div>
-                              </uib-accordion-group>
-                            </uib-accordion>
+                              </div>
+                            </div>
                           </div>
                           <div id="audits" class="tab-pane fade">
-                            <uib-accordion close-others="true">
-                              <uib-accordion-group ng-repeat="item in workflowExecutionCtrl.selectedExecutionLogs" heading="{{item.time}}">
+                            <div uib-accordion close-others="true">
+                              <div uib-accordion-group ng-repeat="item in workflowExecutionCtrl.selectedExecutionLogs" heading="{{item.time}}">
                                 <div style="overflow-y: auto">
                                   <textarea class="form-control" rows="15" placeholer="No log information available" readonly>
                                                 {{item.audit}}
                                   </textarea>
                                 </div>
-                              </uib-accordion-group>
-                            </uib-accordion>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
