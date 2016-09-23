@@ -387,7 +387,7 @@
                             class="fa fa-pencil-square-o pull-right" style="font-size: 20px;"></i>
                         </div-->
                         <!--METADATA PRESENTATION SECTION-->
-                        <div id="board" ng-show="!datasetsCtrl.selected" style="font-family: Times New Roman;">
+                        <div id="board"  style="font-family: Times New Roman;">
                           <!--                        <div class="modal-header">
                                                               <span class="modal-title"
                                                                     ng-model="columnName"><label
@@ -396,7 +396,7 @@
                                                                 <font style="font-size:16px;font-style: italic" color="green">
                                                                   <b>{{datasetsCtrl.fileDetail.name}}</b></font></span>
                                                 </div>-->
-                          <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px">
+                          <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px" ng-show="!datasetsCtrl.selected">
                             <div style="display: inline-block">
                               <div style="display: inline-block"><h4>No extended metadata.</h4></div>
                               <span class="field-info" uib-tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
@@ -404,7 +404,7 @@
                               </span>
                             </div>
                           </div>
-                          <div class="" height="80%" ng-hide="metadataCtrl.noTemplates">
+                          <div class="" height="80%" ng-hide="metadataCtrl.noTemplates" ng-show="datasetsCtrl.selected">
                             <div class="input-group-lg" align="left" style="height: 70%">
                               <div ng-repeat="table in metadataCtrl.metainfo| orderBy:'name'"
                                    style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
