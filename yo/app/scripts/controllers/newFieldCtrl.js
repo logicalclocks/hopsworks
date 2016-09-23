@@ -27,7 +27,7 @@ angular.module('hopsWorksApp')
             self.multiSelectItems = [];
             self.selectedItem = "";
 
-            MetadataActionService.fetchFieldTypes($cookies['email'])
+            MetadataActionService.fetchFieldTypes($cookies.get('email'))
                     .then(function (success) {
                       success = JSON.parse(success.board);
                       /*
