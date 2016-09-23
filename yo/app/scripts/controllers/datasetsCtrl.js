@@ -671,24 +671,30 @@ This will make all its files unavailable to other projects unless you share it e
 
 
             self.deselect = function (selectedIndex, file, event) {
-//              if (file.name in self.selectedFiles) {
-//                delete self.selectedFiles[file.name];
-//              }
               var i = 0;
-              for (var name in self.selectedFiles) {
-                if (file.name !== name) {
-                  delete self.selectedFiles[name];
-                  //break;
+              if (Object.keys(self.selectedFiles).length === 1 && self.selectedFiles.constructor === Object) {
+                for (var name in self.selectedFiles) {
+                  if (file.name === name) {
+                    delete self.selectedFiles[name];
+                    //break;
+                  }
+                }
+              } else {
+
+                for (var name in self.selectedFiles) {
+                  if (file.name !== name) {
+                    delete self.selectedFiles[name];
+                    //break;
+                  }
                 }
               }
               if (Object.keys(self.selectedFiles).length === 0 && self.selectedFiles.constructor === Object) {
                 self.menustyle.opacity = 0.2;
-                 self.selected = null;
+                self.selected = null;
               } else if (Object.keys(self.selectedFiles).length === 1 && self.selectedFiles.constructor === Object) {
-                 self.menustyle.opacity = 1.0;
-                 self.selected = file.name;
+                self.menustyle.opacity = 1.0;
+                self.selected = file.name;
               }
-             
 
             };
 

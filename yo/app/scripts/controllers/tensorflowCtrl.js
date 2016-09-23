@@ -230,14 +230,15 @@ angular.module('hopsWorksApp')
             
 //            self.init();
 
-            self.showClusters = function(){
-              self.showServing = -1;
-              self.showClusters = 1;
-            };
-            
-            self.showServing = function(){
-              self.showServing = 1;
-              self.showClusters = -1;
+          
+            self.showTab = function(serving){
+              if(serving === true){
+                self.showServing = 1;
+                self.showClusters = -1;
+            } else {
+                self.showServing = -1;
+                self.showClusters = 1;
+            }
 //              self.listServing();
             };
               

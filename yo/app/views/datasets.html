@@ -13,14 +13,14 @@
         <md-content flex layout-padding>
           <div ng-include="'navProject.html'"></div>
 
-          <div layout="column" layout-fill layout-align="top center">
+          <div layout="column" layout-fill layout-align="top center" >
             <div ng-show="mainCtrl.searchReturned !== ''">
               <div id="projectSearchResults">
                 <div ng-include="'views/searchResult.html'"></div>
               </div>
             </div>
 
-            <div class="content-wrapper" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
+            <div class="content-wrapper" style="background-color: white;" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
               <h3>
                 <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
                   <!--                  <button class="btn btn-sm btn-success" ng-click="datasetsCtrl.newDataSetModal()" uib-dropdown-toggle type="button" id="newDataSet" aria-haspopup="true" aria-expanded="true">
@@ -162,7 +162,7 @@
                           <i class="glyphicon glyphicon-plus"></i>
                         </div>
                         <div class="file-name ng-binding">
-                          <div style="text-align: center; color: green;">
+                          <div style="text-align: center; color: green; padding:8px;">
                             Create New DataSet
                           </div>
                           <div class="row"> </div>
@@ -174,7 +174,8 @@
                   </div>
 
                 </div>
-                <div class="row rg-row-bottom row-no-margin-left"  resizable r-directions="['bottom']" ></div>
+                <!--background-color: rgb(250, 251, 252);-->
+                <div class="row rg-row-bottom row-no-margin-left"  style="left:5px; width:98%;" resizable r-directions="['bottom']" ng-show="readme !== null" ></div>
                 <div class="row row-no-margin-left" style="margin-right: 15px; margin-top: 25px;" ng-show="readme !== null">
                   <div class="col-lg-12" >
                     <div class="col-lg-12" style="overflow-y: auto; border-style: solid; border-width: 1px; border-radius: 10px; border-color:#eee;">
@@ -340,7 +341,7 @@
                   <md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">
                     <md-tabs md-dynamic-height md-border-bottom>
                       <md-tab label="Details">
-                        <div ng-show="datasetsCtrl.selected === null || datasetsCtrl.selected < 0">
+                        <div ng-show="datasetsCtrl.selected === null">
                           <br>
                           <div class="file" style="text-align: center;">
                             <div class="icon">
@@ -350,24 +351,23 @@
                           </div>           
                         </div>
                         <md-content>
-                          <table id="mytable1" ng-show="datasetsCtrl.selected !== undefined && datasetsCtrl.selected > -1" class="table table-bordred table-striped" style="margin-top: 16px;">
+                          <table id="mytable1" ng-show="datasetsCtrl.selected" class="table table-bordred table-striped" style="margin-top: 16px;">
 
                             <tr style="background-color: #fafafa">
                               <td style="color:lightgrey;">Description</td>
-                              <td style="color: grey;">{{datasetsCtrl.fileDetail
-                                                    .description}}</td>
+                              <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].description}}</td>
                             </tr>
 
                             <tr style="background-color: #fafafa">
                               <td style="color:lightgrey;">Last modified</td>
-                              <td style="color: grey;">{{datasetsCtrl.fileDetail.modification| date:'short'}}</td>
+                              <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].modification| date:'short'}}</td>
                             </tr>
 
                             <tr style="background-color: #fafafa">
                               <td style="color:lightgrey;">Owner</td>
-                              <td style="color: grey;">{{datasetsCtrl.fileDetail.owner}}</td>
+                              <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].owner}}</td>
                             </tr>
-                            <tr ng-show="datasetsCtrl.fileDetail.publicDs == true" style="background-color: #fafafa">
+                            <tr ng-show="datasetsCtrl.selectedFiles[datasetsCtrl.selected].publicDs" style="background-color: #fafafa">
                               <td style="color: #ff4081;">Public</td>
                               <td style="color: #ff4081;">This DataSet is public.</td>
                             </tr>
@@ -387,7 +387,7 @@
                             class="fa fa-pencil-square-o pull-right" style="font-size: 20px;"></i>
                         </div-->
                         <!--METADATA PRESENTATION SECTION-->
-                        <div id="board" ng-show="datasetsCtrl.selected > -1 && datasetsCtrl.selected != undefined" style="font-family: Times New Roman;">
+                        <div id="board" ng-show="!datasetsCtrl.selected" style="font-family: Times New Roman;">
                           <!--                        <div class="modal-header">
                                                               <span class="modal-title"
                                                                     ng-model="columnName"><label
