@@ -146,8 +146,7 @@ public class RequestService {
             + "Project name: " + proj.getName() + "<br>"
             + "Dataset name: " + ds.getInode().getInodePK().getName() + "<br>"
             + "To be shared with my project: " + project.getName() + ".<br>"
-            + "Thank you in advance."
-            + requestDTO.getMessageContent();
+            + "Thank you in advance.";
     String preview = from.getFname() + " would like to have access to a dataset in a project you own.";
     String subject = Settings.MESSAGE_DS_REQ_SUBJECT;
     String path = "project/" + proj.getId() + "/datasets";
