@@ -1,5 +1,6 @@
 package se.kth.hopsworks.rest;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -139,24 +140,6 @@ public class RequestService {
             + "/datasets "
             + " if you want to share this dataset. \n";
 
-    Users from = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    Users to = userFacade.findByEmail(proj.getOwner().getEmail());
-    String message = "Hi " + to.getFname() + "<br>"
-            + "I would like to request access to a dataset in a project you own. <br>"
-            + "Project name: " + proj.getName() + "<br>"
-            + "Dataset name: " + ds.getInode().getInodePK().getName() + "<br>"
-            + "To be shared with my project: " + project.getName() + ".<br>"
-            + "Thank you in advance.";
-    String preview = from.getFname() + " would like to have access to a dataset in a project you own.";
-    String subject = Settings.MESSAGE_DS_REQ_SUBJECT;
-    String path = "project/" + proj.getId() + "/datasets";
-    // to, from, msg, requested path
-    Message newMsg = new Message(from, to, null, message, true, false);
-    newMsg.setPath(path);
-    newMsg.setSubject(subject);
-    newMsg.setPreview(preview);
-    messageBean.send(newMsg);
-    
     //if there is a prior request by a user in the same project with the same role
     // or the prior request is from a data owner do nothing.
     if (dsRequest != null && (dsRequest.getProjectTeam().getTeamRole().equals(
@@ -172,8 +155,33 @@ public class RequestService {
       dsRequest.setMessageContent(requestDTO.getMessageContent());
       datasetRequest.merge(dsRequest);
     } else {
-      dsRequest = new DatasetRequest(ds, projectTeam, requestDTO.getMessageContent(), newMsg);
-      datasetRequest.persistDataset(dsRequest);
+        Users from = userFacade.findByEmail(sc.getUserPrincipal().getName());
+        Users to = userFacade.findByEmail(proj.getOwner().getEmail());
+        String message = "Hi " + to.getFname() + "<br>"
+            + "I would like to request access to a dataset in a project you own. <br>"
+            + "Project name: " + proj.getName() + "<br>"
+            + "Dataset name: " + ds.getInode().getInodePK().getName() + "<br>"
+            + "To be shared with my project: " + project.getName() + ".<br>"
+            + "Thank you in advance.";
+    
+        String preview = from.getFname() + " would like to have access to a dataset in a project you own.";
+        String subject = Settings.MESSAGE_DS_REQ_SUBJECT;
+        String path = "project/" + proj.getId() + "/datasets";
+        // to, from, msg, requested path
+        Message newMsg = new Message(from, to, null, message, true, false);
+        newMsg.setPath(path);
+        newMsg.setSubject(subject);
+        newMsg.setPreview(preview);
+        messageBean.send(newMsg);
+        dsRequest = new DatasetRequest(ds, projectTeam, requestDTO.
+                getMessageContent(), newMsg);
+        try {
+          datasetRequest.persistDataset(dsRequest);
+        } catch (Exception ex) {
+          logger.log(Level.SEVERE, "Could not persist datset request:",
+                  ex.getMessage());
+          messageBean.remove(newMsg);
+        }
     }
     
     
