@@ -7,6 +7,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectTeam;
+import se.kth.hopsworks.message.Message;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 
@@ -106,6 +107,25 @@ public class DatasetRequestFacade extends AbstractFacade<DatasetRequest> {
             DatasetRequest.class).setParameter(
                     "projectTeam", projectTeam);
     return query.getResultList();
+  }
+
+  /**
+   * Finds all Requests by a project member.
+   * <p/>
+   * @param message
+   * @return
+   */
+  public DatasetRequest findByMessageId(Message message) {
+    TypedQuery<DatasetRequest> query = em.createNamedQuery(
+            "DatasetRequest.findByMessageId",
+            DatasetRequest.class).setParameter(
+                    "message_id", message.getId());
+    List<DatasetRequest> results =  query.getResultList();
+    if(results != null && results.size() == 1){
+      return results.get(0);
+    } else {
+      return null;
+    }
   }
 
   public void persistDataset(DatasetRequest datasetRequest) {
