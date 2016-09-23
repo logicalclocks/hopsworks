@@ -782,6 +782,8 @@ public class Settings {
           + "To replace it, go into your DataSet and edit the README.md file.\n"
           + "\n" + "*%s* DataSet\n" + "===\n" + "\n"
           + "## %s";
+  //Dataset request subject
+  public static String MESSAGE_DS_REQ_SUBJECT = "Dataset access request.";
   
   // QUOTA
   public static final float DEFAULT_YARN_PRICE = 1.0f;
