@@ -166,6 +166,11 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
+      <from-outcome>jobMgmt</from-outcome>
+      <to-view-id>/security/protected/admin/jobManagement.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
       <from-outcome>projectsMgmt</from-outcome>
       <to-view-id>/security/protected/admin/projectsManagement.xhtml</to-view-id>
       <redirect/>

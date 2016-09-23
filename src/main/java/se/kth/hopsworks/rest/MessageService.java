@@ -20,11 +20,15 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.elasticsearch.common.Strings;
+import se.kth.hopsworks.dataset.DatasetRequest;
+import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.message.Message;
 import se.kth.hopsworks.message.MessageFacade;
 import se.kth.hopsworks.message.controller.MessageController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
+import se.kth.hopsworks.util.Settings;
 
 @Path("/message")
 @Stateless
@@ -41,6 +45,8 @@ public class MessageService {
   @EJB
   private UserFacade userFacade;
   @EJB
+  private DatasetRequestFacade dsReqFacade;
+  @EJB
   private NoCacheResponse noCacheResponse;
 
   @GET
@@ -51,7 +57,7 @@ public class MessageService {
     List<Message> list = msgFacade.getAllMessagesTo(user);
     GenericEntity<List<Message>> msgs
             = new GenericEntity<List<Message>>(list) {
-            };
+    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             msgs).build();
@@ -66,7 +72,7 @@ public class MessageService {
     List<Message> list = msgFacade.getAllDeletedMessagesTo(user);
     GenericEntity<List<Message>> msgs
             = new GenericEntity<List<Message>>(list) {
-            };
+    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             msgs).build();
@@ -97,6 +103,13 @@ public class MessageService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Message not found.");
     }
+    //Delete Dataset request from the database
+    if (!Strings.isNullOrEmpty(msg.getSubject())) {
+      DatasetRequest dsReq = dsReqFacade.findByMessageId(msg);
+      if(dsReq != null){
+        dsReqFacade.remove(dsReq);
+      }
+    }
     checkMsgUser(msg, user);//check if the user is the owner of the message
     msg.setUnread(false);
     msgFacade.edit(msg);
@@ -115,12 +128,19 @@ public class MessageService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Message not found.");
     }
+    //Delete Dataset request from the database
+    if (!Strings.isNullOrEmpty(msg.getSubject())) {
+      DatasetRequest dsReq = dsReqFacade.findByMessageId(msg);
+      if(dsReq != null){
+        dsReqFacade.remove(dsReq);
+      }
+    }
     checkMsgUser(msg, user);//check if the user is the owner of the message
     msg.setDeleted(true);
     msgFacade.edit(msg);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
-  
+
   @PUT
   @Path("restoreFromTrash/{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -194,7 +214,8 @@ public class MessageService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               e.getMessage());
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(msg).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            msg).build();
   }
 
   private void checkMsgUser(Message msg, Users user) throws AppException {

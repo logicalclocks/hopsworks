@@ -31,9 +31,11 @@ import se.kth.hopsworks.dataset.DatasetRequest;
 import se.kth.hopsworks.dataset.DatasetRequestFacade;
 import se.kth.hopsworks.dataset.RequestDTO;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.message.Message;
 import se.kth.hopsworks.message.controller.MessageController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
+import se.kth.hopsworks.util.Settings;
 
 @Path("/request")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -122,26 +124,6 @@ public class RequestService {
     }
     DatasetRequest dsRequest = datasetRequest.findByProjectAndDataset(
             project, ds);
-    //if there is a prior request by a user in the same project with the same role
-    // or the prior request is from a data owner do nothing.
-    if (dsRequest != null && (dsRequest.getProjectTeam().getTeamRole().equals(
-            projectTeam.getTeamRole()) || dsRequest.getProjectTeam().
-            getTeamRole().equals(AllowedRoles.DATA_OWNER))) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "There is a prior request for this dataset by" + projectTeam.
-              getUser().getFname() + " " + projectTeam.getUser().getLname()
-              + "from the same project.");
-    } else if (dsRequest != null && projectTeam.getTeamRole().equals(
-            AllowedRoles.DATA_OWNER)) {
-      dsRequest.setProjectTeam(projectTeam);
-      dsRequest.setMessage(requestDTO.getMessage());
-      datasetRequest.merge(dsRequest);
-    } else {
-      dsRequest = new DatasetRequest(ds, projectTeam, requestDTO.
-              getMessage());
-      datasetRequest.persistDataset(dsRequest);
-    }
-
     //email body
     String msg = "Hi " + project.getOwner().getFname() + " " + project.
             getOwner().getLname() + ", \n\n"
@@ -149,8 +131,8 @@ public class RequestService {
             + " wants access to a dataset in a project you own. \n\n"
             + "Dataset name: " + ds.getInode().getInodePK().getName() + "\n"
             + "Project name: " + proj.getName() + "\n"
-            + "Atached message: " + requestDTO.getMessage() + "\n"
-            + "After loging in to hopsworks go to : /project/" + proj.getId()
+            + "Attached message: " + requestDTO.getMessageContent() + "\n"
+            + "After logging in to hopsworks go to : /project/" + proj.getId()
             + "/datasets "
             + " if you want to share this dataset. \n";
 
@@ -161,13 +143,37 @@ public class RequestService {
             + "Project name: " + proj.getName() + "<br>"
             + "Dataset name: " + ds.getInode().getInodePK().getName() + "<br>"
             + "To be shared with my project: " + project.getName() + ".<br>"
-            + "Thank you in advance."
-            + requestDTO.getMessage();
+            + "Thank you in advance.";
     String preview = from.getFname() + " would like to have access to a dataset in a project you own.";
-    String subject = "Dataset access request.";
+    String subject = Settings.MESSAGE_DS_REQ_SUBJECT;
     String path = "project/" + proj.getId() + "/datasets";
     // to, from, msg, requested path
-    messageBean.send(to, from, subject, preview, message, path);
+    Message newMsg = new Message(from, to, null, message, true, false);
+    newMsg.setPath(path);
+    newMsg.setSubject(subject);
+    newMsg.setPreview(preview);
+    messageBean.send(newMsg);
+    
+    //if there is a prior request by a user in the same project with the same role
+    // or the prior request is from a data owner do nothing.
+    if (dsRequest != null && (dsRequest.getProjectTeam().getTeamRole().equals(
+            projectTeam.getTeamRole()) || dsRequest.getProjectTeam().
+            getTeamRole().equals(AllowedRoles.DATA_OWNER))) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "There is a prior request for this dataset by " + projectTeam.
+              getUser().getFname() + " " + projectTeam.getUser().getLname()
+              + "from the same project.");
+    } else if (dsRequest != null && projectTeam.getTeamRole().equals(
+            AllowedRoles.DATA_OWNER)) {
+      dsRequest.setProjectTeam(projectTeam);
+      dsRequest.setMessageContent(requestDTO.getMessageContent());
+      datasetRequest.merge(dsRequest);
+    } else {
+      dsRequest = new DatasetRequest(ds, projectTeam, requestDTO.getMessageContent(), newMsg);
+      datasetRequest.persistDataset(dsRequest);
+    }
+    
+    
     try {
       emailBean.sendEmail(proj.getOwner().getEmail(),RecipientType.TO, 
               "Access request for dataset "
@@ -217,7 +223,7 @@ public class RequestService {
             + user.getFname() + " " + user.getLname()
             + " wants to join a project you own. \n\n"
             + "Project name: " + project.getName() + "\n"
-            + "Atached message: " + requestDTO.getMessage() + "\n"
+            + "Attached message: " + requestDTO.getMessageContent() + "\n"
             + "After loging in to hopsworks go to : /project" + project.getId()
             + " and go to members tab "
             + "if you want to add this person as a member in your project. \n";
@@ -227,7 +233,7 @@ public class RequestService {
     String message = "Hi " + to.getFname() + "<br>"
             + "I would like to join a project you own. <br>"
             + "Project name: " + project.getName() + "<br>"
-            + requestDTO.getMessage();
+            + requestDTO.getMessageContent();
     String preview = from.getFname() + " would like to join a project you own.";
     String subject = "Project join request.";
     String path = "project/" + project.getId();

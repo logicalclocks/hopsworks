@@ -1102,7 +1102,7 @@ public class YarnRunner {
       setDefaultConfValues(conf);
     }
 
-    private static void addPathToConfig(Configuration conf, File path) {
+    public static void addPathToConfig(Configuration conf, File path) {
       // chain-in a new classloader
       URL fileUrl = null;
       try {
@@ -1115,7 +1115,7 @@ public class YarnRunner {
       conf.setClassLoader(cl);
     }
 
-    private static void setDefaultConfValues(Configuration conf) {
+    public static void setDefaultConfValues(Configuration conf) {
       if (conf.get("fs.hdfs.impl", null) == null) {
         conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
       }

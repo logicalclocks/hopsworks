@@ -7,7 +7,7 @@ public class RequestDTO {
 
   private Integer inodeId;
   private Integer projectId;
-  private String message;
+  private String messageContent;
 
   public RequestDTO() {
   }
@@ -15,7 +15,7 @@ public class RequestDTO {
   public RequestDTO(Integer inodeId, Integer projectId, String message) {
     this.inodeId = inodeId;
     this.projectId = projectId;
-    this.message = message;
+    this.messageContent = message;
   }
 
   public Integer getInodeId() {
@@ -34,12 +34,12 @@ public class RequestDTO {
     this.projectId = projectId;
   }
 
-  public String getMessage() {
-    return message;
+  public String getMessageContent() {
+    return messageContent;
   }
 
-  public void setMessage(String message) {
-    this.message = message;
+  public void setMessageContent(String message) {
+    this.messageContent = message;
   }
 
 }

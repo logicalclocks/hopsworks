@@ -78,17 +78,11 @@ public class SparkYarnRunnerBuilder {
           final String hadoopDir, final String sparkDir, final String nameNodeIpPort)
           throws IOException {
 
-    String sparkClasspath = Settings.getSparkDefaultClasspath(sparkDir);
     String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
     
-    //TODO: include driver memory as am memory
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
 
-    //Set Spark staging directory
-//    String stagingPath = File.separator + "user" + File.separator + Utils.
-//            getYarnUser() + File.separator + Settings.SPARK_STAGING_DIR
-//            + File.separator + YarnRunner.APPID_PLACEHOLDER;
     String stagingPath = File.separator + "Projects" + File.separator + project
             + File.separator
             + Settings.PROJECT_STAGING_DIR + File.separator
@@ -114,9 +108,8 @@ public class SparkYarnRunnerBuilder {
     for (LocalResourceDTO dto : extraFiles) {
         if(dto.getName().equals(Settings.KAFKA_K_CERTIFICATE) ||
               dto.getName().equals(Settings.KAFKA_T_CERTIFICATE)){
-            //TODO: Change to true, so that certs are removed
-            //Currently a FileNotFound is thrown when trying to delete the file
-            builder.addLocalResource(dto, false);
+            //Set deletion to true so that certs are removed
+            builder.addLocalResource(dto, true);
         } else{
             builder.addLocalResource(dto, !appJarPath.startsWith("hdfs:"));
         }
@@ -129,18 +122,6 @@ public class SparkYarnRunnerBuilder {
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
     builder.addToAppMasterEnvironment("SPARK_USER", jobUser); 
-//    builder.addToAppMasterEnvironment("SPARK_USER", );
-    // TODO - Change spark user here
-//    builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
-
-      //Removed local Spark classpath
-
-//    if (classPath == null || classPath.isEmpty()) {
-//      builder.addToAppMasterEnvironment("CLASSPATH", sparkClasspath);
-//    } else {
-//      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
-//              + sparkClasspath);
-//    }
     
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));

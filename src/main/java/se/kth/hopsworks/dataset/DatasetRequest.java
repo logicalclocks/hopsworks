@@ -13,6 +13,7 @@ import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -20,6 +21,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.project.ProjectTeam;
+import se.kth.hopsworks.message.Message;
 
 @Entity
 @Table(name = "hopsworks.dataset_request")
@@ -48,7 +50,10 @@ import se.kth.bbc.project.ProjectTeam;
           = "SELECT d FROM DatasetRequest d WHERE d.requested = :requested"),
   @NamedQuery(name = "DatasetRequest.findByMessage",
           query
-          = "SELECT d FROM DatasetRequest d WHERE d.message = :message")})
+          = "SELECT d FROM DatasetRequest d WHERE d.messageContent = :message"),
+  @NamedQuery(name = "DatasetRequest.findByMessageId",
+          query
+          = "SELECT d FROM DatasetRequest d WHERE d.message.id = :message_id")})
 public class DatasetRequest implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -64,7 +69,7 @@ public class DatasetRequest implements Serializable {
   private Date requested;
   @Size(max = 2000)
   @Column(name = "message")
-  private String message;
+  private String messageContent;
   @JoinColumn(name = "dataset",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
@@ -78,6 +83,11 @@ public class DatasetRequest implements Serializable {
   @ManyToOne(optional = false)
   private ProjectTeam projectTeam;
 
+  @JoinColumn(name = "message_id",
+          referencedColumnName = "id")
+  @OneToOne
+  private Message message;
+
   public DatasetRequest() {
   }
 
@@ -90,7 +100,13 @@ public class DatasetRequest implements Serializable {
     this.requested = requested;
   }
 
-  public DatasetRequest(Dataset dataset, ProjectTeam projectTeam, String message) {
+  public DatasetRequest(Dataset dataset, ProjectTeam projectTeam, String messageContent) {
+    this.messageContent = messageContent;
+    this.dataset = dataset;
+    this.projectTeam = projectTeam;
+  }
+  public DatasetRequest(Dataset dataset, ProjectTeam projectTeam, String messageContent, Message message) {
+    this.messageContent = messageContent;
     this.message = message;
     this.dataset = dataset;
     this.projectTeam = projectTeam;
@@ -112,11 +128,19 @@ public class DatasetRequest implements Serializable {
     this.requested = requested;
   }
 
-  public String getMessage() {
+  public String getMessageContent() {
+    return messageContent;
+  }
+
+  public void setMessageContent(String message) {
+    this.messageContent = message;
+  }
+
+  public Message getMessage() {
     return message;
   }
 
-  public void setMessage(String message) {
+  public void setMessage(Message message) {
     this.message = message;
   }
 
