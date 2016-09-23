@@ -19,8 +19,8 @@ angular.module('hopsWorksApp')
             self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
 
             // Details of the currently selecte file/dir
-            self.selected = null; //The index of the selected file in the files array.
-            self.fileDetail = null; //The details about the currently selected file.
+//            self.selected = null; //The index of the selected file in the files array.
+//            self.fileDetail = null; //The details about the currently selected file.
             self.sharedPath = null; //The details about the currently selected file.
             self.routeParamArray = [];
             $scope.readme = null;
@@ -99,17 +99,6 @@ angular.module('hopsWorksApp')
               }
             });
 
-
-
-           
-
-            $scope.filesSelected = function () {
-
-              if ((self.selected !== null && self.selected !== undefined) || self.isSelectedFiles()) {
-                return true;
-              }
-              return false;
-            };
 
             self.isShared = function () {
               var top = self.pathArray[0].split("::");
@@ -617,38 +606,27 @@ This will make all its files unavailable to other projects unless you share it e
              * @returns {undefined}
              */
             self.select = function (selectedIndex, file, event) {
-              if (event.ctrlKey) {
-                // 1. Turn off the selected file at the top of the browser.
-                // Add existing selected file (idempotent, if already added)
-                // If file already selected, deselect it.
-                if (self.fileDetail !== null) {
-                  if (self.fileDetail.name !== null) {
-                    if (self.fileDetail.name === file.name || (file.name in self.selectedFiles)) {
-                      self.deselect(selectedIndex, file, event);
-                      return;
-                    } else {
-                      self.selectedFiles[self.fileDetail.name] = self.fileDetail;
-                      self.selectedFiles[self.fileDetail.name].selectedIndex = self.selected;
-                    }
-                  }
-                }
-              } else {
-                self.selectedFiles = {};
-              }
 
-              self.selected = selectedIndex;
-              self.fileDetail = file;
-//              $scope.readme = null;
-//              getDirContents();
+              // 1. Turn off the selected file at the top of the browser.
+              // Add existing selected file (idempotent, if already added)
+              // If file already selected, deselect it.
+              if (event.ctrlKey) {
+                self.selectedFiles[file.name] = file;
+                self.selectedFiles[file.name].selectedIndex = selectedIndex;
+              } else {
+                self.selectedFiles = {}
+                self.selectedFiles[file.name] = file;
+                self.selectedFiles[file.name].selectedIndex = selectedIndex;
+              }
               self.menustyle.opacity = 1.0;
+
             };
 
-            $scope.haveSelected = function (file) {
+            self.haveSelected = function (file) {
               if (file === undefined || file === null || file.name === undefined || file.name === null) {
                 return false;
               }
-              if ((self.fileDetail !== null && self.fileDetail !== undefined && self.fileDetail.name === file.name) || 
-                      (file.name in self.selectedFiles)) {
+              if (file.name in self.selectedFiles) {
                 return true;
               }
               return false;
@@ -663,12 +641,6 @@ This will make all its files unavailable to other projects unless you share it e
                 self.selectedFiles[f.name] = f;
                 self.selectedFiles[f.name].selectedIndex = i;
               }
-//              if (self.files.length > 0) {
-//                self.selected = 0;
-//                self.fileDetail = self.files[0];
-//              }
-              self.selected = null;
-              self.fileDetail = null;
               self.menustyle.opacity = 1;
             };
             
@@ -680,9 +652,6 @@ This will make all its files unavailable to other projects unless you share it e
             };
 
             self.deleteSelected = function () {
-
-              self.selected = null;
-              self.fileDetail = null;
               var i = 0;
               var names = [];
               for (var name in self.selectedFiles) {
@@ -693,23 +662,13 @@ This will make all its files unavailable to other projects unless you share it e
                 delete self.selectedFiles[names[i]];
               }
               self.all_selected = false;
-
-//              if (self.files.length > 0) {
-//                self.selected = 0;
-//                self.fileDetail = self.files[0];
-//              }              
             };
 
 
             self.deselect = function (selectedIndex, file, event) {
-              if (event.ctrlKey) {
                 if (file.name in self.selectedFiles) {
                   delete self.selectedFiles[file.name];
                 }
-                if (self.selected === selectedIndex) {
-                  self.selected = null;
-                  self.fileDetail = null;
-                } else {
                   var i = 0;
                   for (var name in self.selectedFiles) {
                     if (file.name === name) {
@@ -717,28 +676,10 @@ This will make all its files unavailable to other projects unless you share it e
                       break;
                     }
                   }
-//                if (self.fileDetail !== null && file.name === self.fileDetail.name) {
-//                  if (Object.keys(self.selectedFiles).length > 0) {
-//                    self.selected = Object.keys(self.selectedFiles)[0].selectedIndex;
-//                    self.fileDetail = Object.keys(self.selectedFiles)[0];
-//                  }
-//                  } else {
-//                    self.selectedFiles = {};
-//                    self.selected = null;
-//                    self.fileDetail = null;
-//                    self.sharedPath = null;
-//                  }
-                }
-              } else {
-                self.selectedFiles = {};
-                self.selected = null;
-                self.fileDetail = null;
-                self.sharedPath = null;
-              }
+                if(Object.keys(self.selectedFiles).length === 0 && self.selectedFiles.constructor === Object){
+                    self.menustyle.opacity = 0.2;
 
-              //$scope.readme = null;
-//                getDirContents();
-              self.menustyle.opacity = 0.2;
+                }
 
             };
 
@@ -748,7 +689,6 @@ This will make all its files unavailable to other projects unless you share it e
               self.fileDetail = null;
               self.sharedPath = null;
               self.menustyle.opacity = 0.2;
-//              getDirContents();
             };
 
             self.toggleLeft = buildToggler('left');
