@@ -21,6 +21,7 @@ angular.module('hopsWorksApp')
             self.projectMembers = [];
             self.tourService = TourService;
             self.location = $location;
+            self.cloak = true;
 
             self.role = "";
 
