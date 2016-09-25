@@ -682,7 +682,7 @@ This will make all its files unavailable to other projects unless you share it e
               } else {
 
                 for (var name in self.selectedFiles) {
-                  if (file.name !== name) {
+                  if (file.name === name) {
                     delete self.selectedFiles[name];
                     //break;
                   }
