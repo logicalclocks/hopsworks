@@ -82,7 +82,7 @@ build/Release
 
 # Dependency directory
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
-node_modules
+#node_modules
 
 ### Intellij ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
@@ -91,7 +91,13 @@ node_modules
 
 ## Directory-based project format:
 .idea/
-node_modules
+#We have our own custom grunt-usemin component we want to include
+#It handles <md-icon> and other material fixes when minimizing html/js
+!yo/node_modules/
+
+yo/node_modules/*
+!yo/node_modules/grunt-usemin/
+
 
 ## File-based project format:
 *.ipr
@@ -106,4 +112,5 @@ test/.env
 ###########glassfish##############
 src/main/setup/glassfish-resources.xml
 */glassfish-resources.xml
+
 
