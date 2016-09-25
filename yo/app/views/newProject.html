@@ -7,11 +7,11 @@
   <div growl reference="1" class="pull-right" ></div>
 
   <form role="form" name="projectForm" ng-submit="projectCreatorCtrl.createProject()" novalidate class="form-validate">
-    <div class="row">
-      <div class="col-md-8">
+    <div layout="row">
+      <div flex="66" >
         <fieldset>
 
-          <div class="control-group col-md-offset-1">
+          <div class="control-group" flex>
             <label for="projectname" style="color: black;">Name</label>
             <md-input-container style="height: 50px" class="md-block">
               <input name="project_name" type="text" id="projectname"
@@ -84,10 +84,10 @@
         </fieldset>
       </div>
 
-      <div class="col-md-4">
-        <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Services</h3>
+      <div flex="33" layout="column">
+        <h3 flex style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Services</h3>
         <fieldset class="standard">
-          <div class="control-group col-md-offset-2">
+          <div class="control-group col-md-offset-2" flex>
             <md-checkbox class="md-primary" ng-checked="true" 
                          ng-repeat="projectType in projectCreatorCtrl.projectTypes"
                          ng-click="projectCreatorCtrl.exists(projectType)" 
