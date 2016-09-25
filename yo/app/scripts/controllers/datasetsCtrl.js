@@ -1,4 +1,3 @@
-
 'use strict';
 
 angular.module('hopsWorksApp')
@@ -169,7 +168,6 @@ angular.module('hopsWorksApp')
                       function (success) {
                         //Reset the selected file
                         self.selected = null;
-                        self.fileDetail = null;
                         //Set the current files and path
                         self.files = success.data;
                         self.pathArray = newPathArray;
@@ -279,6 +277,14 @@ angular.module('hopsWorksApp')
               var removePathArray = self.pathArray.slice(0);
               removePathArray.push(fileName);
               removeInode(getPath(removePathArray));
+            };
+
+            self.deleteSelected = function () {
+              var removePathArray = self.pathArray.slice(0);
+              for(var fileName in self.selectedFiles){
+                removePathArray.push(fileName);
+                removeInode(getPath(removePathArray));
+              }
             };
 
             /**
@@ -393,8 +399,8 @@ This will make all its files unavailable to other projects unless you share it e
             self.moveSelected = function () {
               //Check if we are to move one file or many
               if (Object.keys(self.selectedFiles).length === 0 && self.selectedFiles.constructor === Object) {
-                if (self.fileDetail !== null && self.fileDetail !== undefined) {
-                  self.move(self.fileDetail.id, self.fileDetail.name);
+                if (self.selected !== null && self.selected !== undefined) {
+                  self.move(self.selected.id, self.selected.name);
                 }
               } else if (Object.keys(self.selectedFiles).length !== 0 && self.selectedFiles.constructor === Object) {
 
@@ -680,11 +686,19 @@ This will make all its files unavailable to other projects unless you share it e
                   }
                 }
               } else {
-
+                if(event.ctrlKey){
                 for (var name in self.selectedFiles) {
                   if (file.name === name) {
                     delete self.selectedFiles[name];
+                      break;
+                    }
+                  } 
+                } else {
+                  for (var name in self.selectedFiles) {
+                    if (file.name !== name) {
+                      delete self.selectedFiles[name];
                     //break;
+                    }
                   }
                 }
               }
