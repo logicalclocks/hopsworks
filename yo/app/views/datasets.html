@@ -55,15 +55,15 @@
                       <div ng-init="(iscollapsed$index) = true"
                            class="file-box"
                            context-menu
-                           data-target="menu-{{ $index}}">
-                        <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === $index}">
+                           data-target="menu-{{ dataset.name}}">
+                        <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === dataset.name}">
                           <a>
                             <span class="corner"></span>
                             <div uib-tooltip="Click on the folder icon to enter this dataset" class="icon" ng-click="projectCtrl.browseDataset(dataset)">
-                              <i class="glyphicon" ng-class="{'glyphicon-folder-close': datasetsCtrl.selected === $index, 'glyphicon-folder-open' : datasetsCtrl.selected !== $index}"></i>
+                              <i class="glyphicon" ng-class="{'glyphicon-folder-open': datasetsCtrl.selected === dataset.name, 'glyphicon-folder-close' : datasetsCtrl.selected !== dataset.name}"></i>
                             </div>
                             <div class="file-name" uib-tooltip="Click on the bottom section to view metadata for this dataset." 
-                                 ng-click="datasetsCtrl.select($index, dataset, $event); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset.path.substring(dataset.path.lastIndexOf('/')).replace('/', '') + '/README.md', false);">
+                                 ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset.path.substring(dataset.path.lastIndexOf('/')).replace('/', '') + '/README.md', false);">
                               {{dataset.name}}                            
                               <span class="pull-right publicDS" ng-class="{'glyphicon glyphicon-globe': dataset.publicDs === true}"></span>
                               <br/>
@@ -72,7 +72,7 @@
                           </a>
                         </div>
                       </div>  
-                      <div uib-dropdown class="position-fixed" id="menu-{{$index}}">
+                      <div uib-dropdown class="position-fixed" id="menu-{{dataset.name}}">
                         <ul uib-dropdown-menu class="uib-dropdown-amore">
                           <li>
                             <a class="pointer"
@@ -156,7 +156,7 @@
                          ng-show="datasetsCtrl.files.length < 20"
                          class="file-box"
                          context-menu
-                         data-target="menu-{{ $index}}">
+                         data-target="menu-{{datasetsCtrl.selected.name}}">
                       <div  class="file" ng-click="datasetsCtrl.newDataSetModal()">
                         <div class="icon">
                           <i class="glyphicon glyphicon-plus"></i>

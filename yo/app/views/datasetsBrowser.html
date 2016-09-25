@@ -301,7 +301,7 @@ ng-show="!file.dir"
                           <td style="width: 12%;" ng-click="datasetsCtrl.openDir(file)">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
 
                           <td>
-                            <div uib-dropdown class="position-fixed" id="menu-{{ $index}}" ng-show="datasetsCtrl.isSelectedFiles() < 1">
+                            <div uib-dropdown class="position-fixed" id="menu-{{ $index}}" ng-show="datasetsCtrl.isSelectedFiles() <= 1">
                               <ul uib-dropdown-menu class="dropdown-amore" role="menu">
                                 <li>
                                   <a class="pointer"
