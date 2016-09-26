@@ -89,19 +89,19 @@ public class SparkYarnRunnerBuilder {
             + YarnRunner.APPID_PLACEHOLDER;
     builder.localResourcesBasePath(stagingPath);
 
-    builder.addLocalResource(new LocalResourceDTO(
-            Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath,
-            LocalResourceVisibility.PUBLIC.toString(), 
-            LocalResourceType.FILE.toString(), null), false);
+//    builder.addLocalResource(new LocalResourceDTO(
+//            Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath,
+//            LocalResourceVisibility.PUBLIC.toString(), 
+//            LocalResourceType.FILE.toString(), null), false);
 
-    //Add app jar
+    //Add app jar  
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_LOCRSC_APP_JAR, appJarPath, 
             LocalResourceVisibility.PRIVATE.toString(), 
             LocalResourceType.FILE.toString(), null), 
             !appJarPath.startsWith("hdfs:"));
-    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
-            "$PWD:$PWD/__spark_conf__:$PWD/"+Settings.SPARK_LOCRSC_SPARK_JAR);
+//    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
+//            "$PWD:$PWD/__spark_conf__:$PWD/"+Settings.SPARK_LOCRSC_SPARK_JAR);
 
      
     //Add extra files to local resources, use filename as key

@@ -457,7 +457,7 @@ public class Settings {
 
   //Spark constants
   public static final String SPARK_STAGING_DIR = ".sparkStaging";
-  public static final String SPARK_LOCRSC_SPARK_JAR = "__spark__.jar";
+  //public static final String SPARK_LOCRSC_SPARK_JAR = "__spark__.jar";
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
   public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
