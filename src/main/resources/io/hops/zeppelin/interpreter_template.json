@@ -319,6 +319,27 @@
         "perNoteSession": false,
         "perNoteProcess": false
       }
+    },
+    "2BSMV3RNQ": {
+      "id": "2BSMV3RNQ",
+      "name": "python",
+      "group": "python",
+      "properties": {
+        "zeppelin.python": "python"
+      },
+      "interpreterGroup": [
+        {
+          "class": "org.apache.zeppelin.python.PythonInterpreter",
+          "name": "python"
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
+      }
     },    
     "2BGUXW9ZV": {
       "id": "2BGUXW9ZV",
