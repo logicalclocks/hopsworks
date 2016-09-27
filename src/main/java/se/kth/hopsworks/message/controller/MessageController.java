@@ -177,5 +177,13 @@ public class MessageController {
     }
 
   }
+  
+  /**
+   * Removes a message entity from the persistent storage.
+   * @param msg 
+   */
+  public void remove(Message msg) {
+    messageFacade.remove(msg);
+  }
 
 }
