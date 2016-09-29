@@ -11,8 +11,8 @@
                 <div class="control-group col-md-offset-1" style="margin-right: 8.33333%;">
                     <div class="form-group has-feedback">
                         <label class="text-muted control-label">Projects</label><br>
-                        <div class="btn-group btn-group" role="group" aria-label="..." style="min-width: 100%">
-                            <div class="btn-group" role="group" style="width: 21%">
+                        <div class="btn-group" role="group" aria-label="..." style="min-width: 100%">
+                            <div uib-dropdown class="btn-group" role="group" style="width: 21%">
 
                                     <button type="button"
                                             uib-dropdown-toggle
@@ -23,8 +23,8 @@
                                     </button>
 
                                     <ul uib-dropdown-menu role="menu" style="min-width: 115px">
-                                        <li><a > All</a></li>
-                                        <li><a > Requested</a></li>
+                                        <li role="menuitem"><a > All</a></li>
+                                        <li role="menuitem"><a > Requested</a></li>
                                     </ul>
 
                             </div>
@@ -52,16 +52,16 @@
                                 </div>
                             </div>
 
-                            <div class="btn-group" role="group" style="width: 15%">
+                            <div uib-dropdown class="btn-group" role="group" style="width: 15%">
 
                                     <button type="button"
                                             uib-dropdown-toggle
                                             class="btn btn-default"
                                             aria-haspopup="true" aria-expanded="false">
-                                        <span ng-if="!shareDatasetCtrl.dataSet.editable" id="view_concept">
+                                        <span role="menuitem" ng-if="!shareDatasetCtrl.dataSet.editable" id="view_concept">
                                             <span class="glyphicon glyphicon-eye-open"></span> Can view
                                         </span>
-                                        <span ng-if="shareDatasetCtrl.dataSet.editable" id="edit_concept">
+                                        <span role="menuitem" ng-if="shareDatasetCtrl.dataSet.editable" id="edit_concept">
                                             <span class="glyphicon glyphicon-edit"></span> Can edit
                                         </span>
                                         <span class="caret"></span>
