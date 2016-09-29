@@ -458,7 +458,14 @@ public class Settings {
   //Spark constants
   public static final String SPARK_STAGING_DIR = ".sparkStaging";
   //public static final String SPARK_LOCRSC_SPARK_JAR = "__spark__.jar";
+  public static final String SPARK_JARS = "spark.yarn.jars";
+  public static final String SPARK_ARCHIVE = "spark.yarn.archive";
+  // Subdirectory where Spark libraries will be placed.
+  public static final String LOCALIZED_LIB_DIR = "__spark_libs__";
+  public static final String LOCALIZED_CONF_DIR = "__spark_conf__";
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
+  // Distribution-defined classpath to add to processes
+  public static final String ENV_DIST_CLASSPATH = "SPARK_DIST_CLASSPATH";
   public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
   public static final String SPARK_CONFIG_FILE = "conf/spark-defaults.conf";

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Properties;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
+import org.apache.hadoop.yarn.api.ApplicationConstants.Environment;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.hopsworks.controller.LocalResourceDTO;
@@ -78,8 +79,9 @@ public class SparkYarnRunnerBuilder {
           final String hadoopDir, final String sparkDir, final String nameNodeIpPort)
           throws IOException {
 
-    String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
-    
+    //String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
+    //String hdfsSparkJarPath = readSparkClasses(sparkProperties);
+    String hdfsSparkJarPath = "hdfs:///user/glassfish/spark-jars.zip";
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
 
@@ -89,11 +91,13 @@ public class SparkYarnRunnerBuilder {
             + YarnRunner.APPID_PLACEHOLDER;
     builder.localResourcesBasePath(stagingPath);
 
-//    builder.addLocalResource(new LocalResourceDTO(
-//            Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath,
-//            LocalResourceVisibility.PUBLIC.toString(), 
-//            LocalResourceType.FILE.toString(), null), false);
-
+    builder.addLocalResource(new LocalResourceDTO(
+            Settings.LOCALIZED_LIB_DIR, hdfsSparkJarPath,
+            LocalResourceVisibility.PUBLIC.toString(), 
+            LocalResourceType.ARCHIVE.toString(), null), false);
+    
+    String sparkJars = Environment.PWD.$() + File.separator + Settings.LOCALIZED_LIB_DIR + File.separator + "*";
+    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, sparkJars);
     //Add app jar  
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_LOCRSC_APP_JAR, appJarPath, 
@@ -172,22 +176,22 @@ public class SparkYarnRunnerBuilder {
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
-    
+
     Properties sparkProperties = new Properties();
     InputStream is = null;
     try {
       is = new FileInputStream(sparkDir +"/"+ Settings.SPARK_CONFIG_FILE);
       sparkProperties.load(is);
-      //For every property that is in the spark configuration file but is not
-      //already set, create a java system property.
-      for (String property : sparkProperties.stringPropertyNames()) {
-        if (!jobSpecificProperties.contains(property) && sparkProperties.
-                getProperty(property) != null && !sparkProperties.getProperty(
-                property).isEmpty()) {
-          addSystemProperty(property,
-                  sparkProperties.getProperty(property).trim());
-        }
+    //For every property that is in the spark configuration file but is not
+    //already set, create a java system property.
+    for (String property : sparkProperties.stringPropertyNames()) {
+      if (!jobSpecificProperties.contains(property) && sparkProperties.
+              getProperty(property) != null && !sparkProperties.getProperty(
+              property).isEmpty()) {
+        addSystemProperty(property,
+                sparkProperties.getProperty(property).trim());
       }
+    }
     } finally {
       if (is != null) {
         is.close();
@@ -201,10 +205,9 @@ public class SparkYarnRunnerBuilder {
     
     //Add local resources to spark environment too
     builder.addCommand(new SparkSetEnvironmentCommand());
-    
-    amargs.append(" --executor-cores ").append(executorCores);
-    amargs.append(" --executor-memory ").append(executorMemory);
-    
+//    amargs.append(" --executor-cores ").append(executorCores);
+//    amargs.append(" --executor-memory ").append(executorMemory);
+//    amargs.append(" --properties-file ").append(executorMemory);
     for (String s : jobArgs) {
       amargs.append(" --arg ").append(s);
     }
@@ -428,7 +431,7 @@ public class SparkYarnRunnerBuilder {
     }
     return this;
   }
-
+  
   /**
    * Taken from Apache Spark code: Escapes a string for inclusion in a command
    * line executed by Yarn. Yarn executes commands
