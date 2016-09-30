@@ -1,6 +1,5 @@
-<div layout="row">
-  <div flex="15">
-  <div flex="60">
+<div layout="colulmn">
+  <div flex="70" style="padding:10%;">
     <div>
       <div class="widget-body">
         <div class="timeline clearfix">
@@ -45,19 +44,21 @@
       </div>
     </div>
   </div>
-  <div flex>
+  <div flex="5"></div>
+  <div flex="25">
+    
 
     <div class="panel panel-filter">
       <div class="panel-heading">
         <p>Filters</p>
         <button class="btn btn-lightgrey pull-right"
-                style="height: 42px;margin-right: -16px;margin-top: -46px;width: 70px; border-radius: 0px;"
+                style="height: 43px;margin-right: -16px;margin-top: -41px;width: 70px; border-radius: 0px;"
                 ng-click="">
           <span style="margin-left:3px;">Apply</span>
         </button>
       </div>
-      <div flex>
-        <div class="form-group"><br>
+      <div>
+        <div class="form-group" style="padding-left: 2%; padding-right: 2%"><br>
           <div>
             <label class="muted">By Date</label>
             <br>
@@ -67,30 +68,34 @@
                 <span class="glyphicon glyphicon-calendar"></span>
               </span>
             </div>
-
           </div>
           <br>
-          <div layout="column">
+          <div>
             <label class="muted">By Size</label>
             <br>
-            <p>
-            <div flex="50">
-              <label class="text-muted">from</label>
-              <br>
-              <input class="form-control" type="number" name="points" min="0" step="0.1" value="30">
+            
+            <div layout="row">
+              <div flex="45">
+                <label class="text-muted">from</label>
+                <br>
+                <input class="form-control" type="number" name="points" min="0" step="0.1" value="30">
+              </div>
+              <div flex="10"></div>
+              <div flex="45">
+                <label class="text-muted">to</label><br>
+                <input type="number" name="points" min="0" step="0.1" value="30" class="form-control"/>
+              </div>
+            <br>
             </div>
-            <div flex="50">
-              <label class="text-muted">to</label><br>
-              <input type="number" name="points" min="0" step="0.1" value="30" class="form-control"/>
-            </div>
-            <br><br>
           </div>
         </div>
       </div>
-      <br><br>
+      <br>
+      <!--<br>-->
       <div class="panel-footer">
 
       </div>
     </div>
   </div>
+  <div flex="10"></div>
 </div>
