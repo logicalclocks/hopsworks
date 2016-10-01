@@ -80,103 +80,75 @@
             </div>
           </div>
           <!--</div>-->
+          <div flex layout="column">
+          <div layout="row" style="margin-left:-35px;">
 
+            <md-button class="md-icon-button md-primary"  ng-show="!datasetsCtrl.all_selected" aria-label="Select All" ng-click="datasetsCtrl.all_selected = true; datasetsCtrl.selectAll();">
+              <md-tooltip md-direction="right">
+                Select All
+              </md-tooltip>                    
+              <md-icon md-svg-icon="images/checkbox_false.svg"></md-icon>
+            </md-button>
+            <md-button class="md-icon-button md-primary" ng-show="datasetsCtrl.all_selected" aria-label="De-Select All" ng-click="datasetsCtrl.all_selected = false; datasetsCtrl.deselectAll();">
+              <md-tooltip md-direction="right">
+                De-Select All
+              </md-tooltip>                    
+              <md-icon md-svg-icon="images/checkbox_true.svg"  ></md-icon>
+            </md-button>
+            <md-button ng-click="datasetsCtrl.deleteSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
+              <md-icon md-svg-icon="images/delete_forever.svg"></md-icon>
+              <md-tooltip md-direction="right">
+                Delete
+              </md-tooltip>                    
+            </md-button>
+
+
+            <md-button ng-click="datasetsCtrl.trashSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0" ng-disabled="1==1">
+              <md-icon md-svg-icon="images/delete.svg"></md-icon>
+              <md-tooltip md-direction="right">
+                Recycle Bin
+              </md-tooltip>                    
+            </md-button>
+
+            <md-button ng-click="datasetsCtrl.moveSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
+              <md-icon md-svg-icon="images/folder.svg"></md-icon>
+              <md-tooltip md-direction="right">
+                Move
+              </md-tooltip>                    
+            </md-button>
+          
+            
+            <md-button  ng-click="datasetsCtrl.openDir(datasetsCtrl.selectedFiles[datasetsCtrl.selected])" ng-show="datasetsCtrl.isSelectedFiles() === 1 &&
+                        !datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir">
+              <md-icon md-svg-icon="images/folder.svg"></md-icon>
+              <md-tooltip md-direction="right">
+                Download file
+              </md-tooltip>                    
+            </md-button>
+            
+             <md-button  ng-click="datasetsCtrl.filePreview(datasetsCtrl.selected, true)" ng-show="datasetsCtrl.isSelectedFiles() === 1 &&
+                        !datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir">
+              <md-icon md-svg-icon="images/folder.svg"></md-icon>
+              <md-tooltip md-direction="right">
+                Preview
+              </md-tooltip>                    
+            </md-button>
+          </div>
           <!--<div class="row row-no-margin-left" ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">-->
-          <div flex ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">
-            <div flex>
-              <md-content layout-padding style="margin-left: -50px; margin-top: -5px; min-width: 1350px;" layout="column" flex>
-                <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}" style="margin-top: 0px;">
+          <div flex ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;" ng-class="{'sidenav-open': datasetsCtrl.tgState}">
+            <!--<div flex="100">-->
+              <md-content layout-padding style="margin-left: -50px; margin-top: 6px; min-width: 1238px; margin-right: 20%;" layout="column" flex  >
+           
+
+                <div class="ds-content" ng-class="{'ds-content.sidenav-open': datasetsCtrl.tgState}">
+                                                   
                   <div class="table-responsive" style="overflow: hidden;">
                     <table class="table table-bordred table-hover" >
 
                       <thead>
-                        <tr>
-                          <th style="margin:0px;">
-                          <div flex="10" layout="row">
-                            <md-menu>
-                              <md-button aria-label="Open demo menu" class="md-icon-button" ng-click="$mdOpenMenu($event)" ng-disabled="datasetsCtrl.isSelectedFiles() < 1" ng-style="datasetsCtrl.menustyle">
-                                <md-icon md-menu-origin md-svg-icon="images/list.svg"></md-icon>
-                                Options
-                              </md-button>
-                              <md-menu-content width="3">
-                                <md-menu-item>
-                                  <md-list layout="row">
-                                    <md-list-item>
-                                      <md-button ng-click="datasetsCtrl.deleteSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
-                                        <md-icon md-svg-icon="images/delete_forever.svg"></md-icon>
-                                        <md-tooltip md-direction="right">
-                                          Delete selected files/directories
-                                        </md-tooltip>                    
-                                      </md-button>
-                                    </md-list-item>   
-                                  </md-list>
-                                </md-menu-item>
-                                <md-menu-item>
-                                  <md-list layout="row">
-                                    <md-list-item>
-                                      <md-button ng-click="datasetsCtrl.trashSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0" ng-disabled="1==1">
-                                        <md-icon md-svg-icon="images/delete.svg"></md-icon>
-                                        <md-tooltip md-direction="right">
-                                          Move to Trash
-                                        </md-tooltip>                    
-                                      </md-button>
-                                    </md-list-item>   
-                                  </md-list>
-                                </md-menu-item>
-                                <md-menu-item>
-                                  <md-list-item>                                    
-                                    <md-button ng-click="datasetsCtrl.moveSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
-                                      <md-icon md-svg-icon="images/folder.svg"></md-icon>
-                                      <md-tooltip md-direction="right">
-                                        Move selected files/directories
-                                      </md-tooltip>                    
-                                    </md-button>
-                                  </md-list-item>                  
-                                </md-menu-item>
-                              </md-menu-content>
-                            </md-menu>
-                          </div>
-<!--                      <th style="margin:0px;width:30px;height=15px;">
+                      <tr>
+                        <th style="padding-left:=20px" ng-click="datasetsCtrl.back()" ><i class="fa fa-level-up" aria-hidden="true"></i></th>
 
-                        <div class="md-menu-demo" ng-cloak style="height:12px;">
-                          <div class="menu-demo-container" layout-align="start center" layout="column" >
-
-                            <div class="menus"  layout-wrap layout="row" layout-fill layout-align="space-between center" style="height:12px;">
-                              <div layout="column" flex-xs="100" flex-sm="100" flex="10" layout-align="center center">
-                                <md-menu>
-                                  <md-button aria-label="Open demo menu" class="md-icon-button" ng-click="$mdOpenMenu($event)">
-                                    <md-icon md-menu-origin md-svg-icon="images/delete.svg"></md-icon>
-                                    Options
-                                  </md-button>
-                                  <md-menu-content width="6">
-                                    <md-menu-item>
-                                      <md-button ng-click="datasetsCtrl.deleteSelected();" ng-disabled="datasetCtrls.filesNotSelected()">
-                                        <md-icon md-menu-align-target md-svg-icon="images/delete.svg"></md-icon>
-                                        Delete Selected
-                                      </md-button>
-                                    </md-menu-item>
-                                    <md-menu-item>
-                                      <md-button ng-click="datasetsCtrl.moveSelected();" ng-disabled="datasetCtrls.filesNotSelected()">
-                                        <md-icon md-menu-align-target md-svg-icon="images/folder.svg"></md-icon>
-                                        Move Selected
-                                      </md-button>
-                                    </md-menu-item>
-                                  </md-menu-content>
-                                </md-menu>
-                              </div>
-                            </div>
-                          </div>
-                        </div>-->
-
-<!--                        <div class="btn-group" uib-dropdown is-open="status.isopen">
-                          <button id="single-button" type="button" class="btn btn-secondary" uib-dropdown-toggle ng-disabled="self.selected === null">
-                            <span class="caret"></span>
-                          </button>
-                          <ul uib-dropdown-menu class="dropdown-menu" role="menu" aria-labelledby="simple-dropdown" uib-dropdown-toggle>
-                            <li role="item" ng-click="datasetsCtrl.deleteselected();">Delete selected</li>
-                          </ul>
-                        </div>-->
-                      </th>
                       <th ng-click="sort('dir')">Type
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'dir'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                       <th ng-click="sort('name')">Name
@@ -187,49 +159,36 @@
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'modification'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                       <th ng-click="sort('size')">File size
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'size'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th></th>
-                      <th></th>
+<!--                      <th></th>
+                      <th></th>-->
                         </tr>
                       </thead>
 
                       <tbody ng-model="datasetsCtrl.files">
-                        <tr>
+<!--                        <tr>
                           <td style="width:15px;height:15px;">
-<!--                            <div ng-click="all_selected = false; datasetsCtrl.deselectAll();" ng-show="all_selected">
+                            <div ng-click="all_selected = false; datasetsCtrl.deselectAll();" ng-show="all_selected">
                               <i class="fa fa-square" aria-hidden="true"></i>
                             </div>                             
                             <div ng-click="all_selected = true; datasetsCtrl.selectAll();" ng-show="!all_selected">
                               <i class="fa fa-square-o" aria-hidden="true"></i>
-                            </div>                             -->
+                            </div>                             
 
-                      <md-button class="md-icon-button md-primary"  ng-show="!datasetsCtrl.all_selected" aria-label="Select All" ng-click="datasetsCtrl.all_selected = true; datasetsCtrl.selectAll();">
-                        <md-tooltip md-direction="right">
-                          Select All
-                        </md-tooltip>                    
-                        <md-icon md-svg-icon="images/checkbox_false.svg"></md-icon>
-                      </md-button>
-                      <md-button class="md-icon-button md-primary" ng-show="datasetsCtrl.all_selected" aria-label="De-Select All" ng-click="datasetsCtrl.all_selected = false; datasetsCtrl.deselectAll();">
-                        <md-tooltip md-direction="right">
-                          De-Select All
-                        </md-tooltip>                    
-                        <md-icon md-svg-icon="images/checkbox_true.svg"  ></md-icon>
-                      </md-button>
 
 
                           </td>
 
-                          <td style="margin:0px;width:15px;" ng-click="datasetsCtrl.back()" ><i class="fa fa-level-up" aria-hidden="true"></i></td>
                           <td ng-click="datasetsCtrl.back()" style="padding: 0px" colspan="5">&nbsp &nbsp
                             <a style="font-siglyphicon-expandze:60px">..</a>
                           </td>
                           <td>
-                            <!--                            <i ng-if="datasetsCtrl.working"
+                                                        <i ng-if="datasetsCtrl.working"
                                                            title="Fetching files in this folder"
                                                            style="color: lightgrey; margin-top:3px;"
                                                            class="fa fa-spinner fa-spin pull-right" >
-                                                        </i>-->
+                                                        </i>
                           </td>
-                        </tr>
+                        </tr>-->
                         <tr
                           dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:datasetsCtrl.itemsPerPage"
                           context-menu
@@ -299,8 +258,7 @@ ng-show="!file.dir"
                           </td>
                           <td style="width: 12%;" ng-click="datasetsCtrl.openDir(file)">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
 
-                          <td>
-                            <div uib-dropdown class="position-fixed" id="menu-{{ $index}}">
+                          <td  uib-dropdown class="position-fixed" id="menu-{{ $index}}">
                               <ul uib-dropdown-menu class="dropdown-amore" role="menu">
                                 <li ng-show="datasetsCtrl.isSelectedFiles() <= 1" ng-hide="file.dir">
                                   <a class="pointer"
@@ -395,10 +353,11 @@ ng-show="!file.dir"
 
 
                               </ul>
-                            </div>
+                            <!--</div>-->
                           </td>
 
-                          <td style="margin:0px;width:25px;">
+                          <td style="margin:0px;width:25px;" ng-if="(file.underConstruction && !datasetsCtrl.working) ||
+                             (file.dir && datasetsCtrl.working && ($index === datasetsCtrl.selected))">
                             <!--                              <i ng-if="$index >= 5 && (!file.underConstruction && !datasetsCtrl.working)"
                                                              title="This file is compressed"
                                                              style="color: lightgrey; margin-top:3px;"
@@ -426,14 +385,13 @@ ng-show="!file.dir"
                   </div>
                 </div>
               </md-content>
-            </div>
             <!--</div>-->
+          </div>
 
 
-            <div style="margin-top: 28px; height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
+            <div style="margin-top: 80px; height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
               <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: 0px; height: 95%;">
                 <div class="file-manager">
-                  <div>
                     <md-content class="md-padding" style="padding-top: 0px; min-width: 250px;">
                       <md-tabs md-dynamic-height md-border-bottom>
                         <md-tab label="Details">
@@ -936,6 +894,12 @@ ng-show="!file.dir"
                           </div>
                         </md-content>
                       </md-sidenav>
+                    </md-content>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
                       </section>        
                   </div>
                 </div>
