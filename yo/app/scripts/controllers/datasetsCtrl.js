@@ -651,7 +651,9 @@ This will make all its files unavailable to other projects unless you share it e
                 self.selectedFiles[f.name].selectedIndex = i;
               }
               self.menustyle.opacity = 1;
-               self.selected = null;
+              self.selected = null;
+              self.all_selected = true;
+
             };
            
             //TODO: Move files to hdfs trash folder
@@ -709,6 +711,7 @@ This will make all its files unavailable to other projects unless you share it e
                 self.menustyle.opacity = 1.0;
                 self.selected = file.name;
               }
+              self.all_selected = false;
 
             };
 

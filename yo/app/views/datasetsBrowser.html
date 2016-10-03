@@ -83,11 +83,17 @@
           <div flex layout="column">
           <div layout="row" style="margin-left:-35px;">
 
-            <md-button class="md-icon-button md-primary"  ng-show="!datasetsCtrl.all_selected" aria-label="Select All" ng-click="datasetsCtrl.all_selected = true; datasetsCtrl.selectAll();">
+            <md-button class="md-icon-button md-primary"  ng-show="datasetsCtrl.isSelectedFiles() === 0 && !datasetsCtrl.all_selected" aria-label="Select All" ng-click="datasetsCtrl.all_selected = true; datasetsCtrl.selectAll();">
               <md-tooltip md-direction="right">
                 Select All
               </md-tooltip>                    
               <md-icon md-svg-icon="images/checkbox_false.svg"></md-icon>
+            </md-button>
+            <md-button class="md-icon-button md-primary" ng-show="datasetsCtrl.isSelectedFiles() > 0 && !datasetsCtrl.all_selected" aria-label="De-Select All" ng-click="datasetsCtrl.all_selected = false; datasetsCtrl.deselectAll();">
+              <md-tooltip md-direction="right">
+                De-Select All
+              </md-tooltip>                    
+              <md-icon md-svg-icon="images/checkbox_intermediate.svg"  ></md-icon>
             </md-button>
             <md-button class="md-icon-button md-primary" ng-show="datasetsCtrl.all_selected" aria-label="De-Select All" ng-click="datasetsCtrl.all_selected = false; datasetsCtrl.deselectAll();">
               <md-tooltip md-direction="right">
@@ -95,7 +101,10 @@
               </md-tooltip>                    
               <md-icon md-svg-icon="images/checkbox_true.svg"  ></md-icon>
             </md-button>
-            <md-button ng-click="datasetsCtrl.deleteSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
+            
+            
+            
+            <md-button class="md-icon-button md-primary" ng-click="datasetsCtrl.deleteSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
               <md-icon md-svg-icon="images/delete_forever.svg"></md-icon>
               <md-tooltip md-direction="right">
                 Delete
@@ -103,14 +112,14 @@
             </md-button>
 
 
-            <md-button ng-click="datasetsCtrl.trashSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0" ng-disabled="1==1">
+            <md-button class="md-icon-button md-primary" ng-click="datasetsCtrl.trashSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0" ng-disabled="1==1">
               <md-icon md-svg-icon="images/delete.svg"></md-icon>
               <md-tooltip md-direction="right">
                 Recycle Bin
               </md-tooltip>                    
             </md-button>
 
-            <md-button ng-click="datasetsCtrl.moveSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
+            <md-button class="md-icon-button md-primary" ng-click="datasetsCtrl.moveSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
               <md-icon md-svg-icon="images/folder.svg"></md-icon>
               <md-tooltip md-direction="right">
                 Move
@@ -118,17 +127,17 @@
             </md-button>
           
             
-            <md-button  ng-click="datasetsCtrl.openDir(datasetsCtrl.selectedFiles[datasetsCtrl.selected])" ng-show="datasetsCtrl.isSelectedFiles() === 1 &&
+            <md-button  class="md-icon-button md-primary" ng-click="datasetsCtrl.openDir(datasetsCtrl.selectedFiles[datasetsCtrl.selected])" ng-show="datasetsCtrl.isSelectedFiles() === 1 &&
                         !datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir">
-              <md-icon md-svg-icon="images/folder.svg"></md-icon>
+              <md-icon md-svg-icon="images/download.svg"></md-icon>
               <md-tooltip md-direction="right">
                 Download file
               </md-tooltip>                    
             </md-button>
             
-             <md-button  ng-click="datasetsCtrl.filePreview(datasetsCtrl.selected, true)" ng-show="datasetsCtrl.isSelectedFiles() === 1 &&
+             <md-button class="md-icon-button md-primary" ng-click="datasetsCtrl.filePreview(datasetsCtrl.selected, true)" ng-show="datasetsCtrl.isSelectedFiles() === 1 &&
                         !datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir">
-              <md-icon md-svg-icon="images/folder.svg"></md-icon>
+              <md-icon md-svg-icon="images/preview.svg"></md-icon>
               <md-tooltip md-direction="right">
                 Preview
               </md-tooltip>                    
