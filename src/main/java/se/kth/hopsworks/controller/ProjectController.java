@@ -16,9 +16,11 @@ import javax.ws.rs.core.Response;
 import io.hops.bbc.ProjectPaymentAction;
 import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
+import java.io.FilenameFilter;
 import java.io.PrintWriter;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -853,12 +855,24 @@ public class ProjectController {
               log(Level.SEVERE, null, ex);
     }
     try {
-      File file = new File(settings.getSparkDir() + "/lib/spark-examples-"
-              + Settings.SPARK_VERSION + "-hadoop" + Settings.HOPS_VERSION
-              + ".jar");
-      udfso.copyToHDFSFromLocal(false, file.getAbsolutePath(),
+      File dir = new File(settings.getSparkExampleDir() + "/");
+      File[] file = dir.listFiles(new FilenameFilter() {
+          @Override
+          public boolean accept(File dir, String name) {
+              return name.matches("spark-examples(.*).jar");
+          }
+      });
+      if (file.length == 0) {
+        throw new IllegalStateException("No spark-examples*.jar was found in " 
+                + dir.getAbsolutePath());
+      }
+      if (file.length > 1) {
+        logger.log(Level.WARNING, "More than one spark-examples*.jar found in {0}."
+                , dir.getAbsolutePath());
+      }
+      udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(),
               File.separator + Settings.DIR_ROOT + File.separator + project.
-              getName() + "/TestJob/");
+              getName() + "/TestJob/spark-examples.jar");
 
     } catch (IOException ex) {
       Logger.getLogger(ProjectController.class.getName()).
