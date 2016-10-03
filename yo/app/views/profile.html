@@ -123,7 +123,7 @@
         <div class="form-group has-feedback">
           <label class="text-muted">Confirm Password</label>
           <input name="user_password_confirm" ng-model="profileCtrl.loginCredes.confirmedPassword"
-                 match="profileCtrl.loginCredes.newPassword"
+                 match="id-password"
                  class="form-control" type="password">
           <span class="fa fa-lock form-control-feedback text-muted"></span>
         </div>
@@ -131,12 +131,13 @@
     </div>
     <div class="row">
       <div class="col-xs-12 col-sm-12 col-md-12">
-        <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password.$dirty) && credentialsForm.user_password.$error.required"
+        <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password.$dirty) &amp;&amp; credentialsForm.user_password.$error.required"
               class="text-danger ng-hide">This field is required</span>
         <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.minlength"
-              class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
-          one special character and/or alphanumeric characters. </span>                 
-         <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password_confirm.$dirty) && credentialsForm.user_password_confirm.$invalid"
+              class="text-danger ng-hide">Your password should be at least 6 characters long.</span>   
+        <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.pattern &amp;&amp; !credentialsForm.user_password.$error.minlength"
+              class="text-danger ng-hide">Your password should contain at least one lower case letter [a-z], one upper case letter [A-Z] and one numeric character [0-9].</span>   
+        <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password_confirm.$dirty) &amp;&amp; credentialsForm.user_password_confirm.$error.pwmatch &amp;&amp; !(credentialsForm.user_password.$error.minlength || credentialsForm.user_password.$error.pattern)"
               class="text-danger ng-hide">The two passwords you entered do not match</span>
       </div>
     </div>
