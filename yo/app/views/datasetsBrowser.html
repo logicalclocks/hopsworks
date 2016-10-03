@@ -156,7 +156,12 @@
 
                       <thead>
                       <tr>
-                        <th style="padding-left:=20px" ng-click="datasetsCtrl.back()" ><i class="fa fa-level-up" aria-hidden="true"></i></th>
+                        <th style="margin-bottom: -7px;" ng-click="datasetsCtrl.back()">
+                          <md-button class="md-icon-button md-primary" aria-label="Back">  
+ 
+                            <md-icon md-svg-icon="images/back.svg" ></md-icon>
+                          </md-button>
+                        </th>
 
                       <th ng-click="sort('dir')">Type
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'dir'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
