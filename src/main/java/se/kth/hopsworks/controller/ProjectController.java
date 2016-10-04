@@ -14,9 +14,7 @@ import javax.ejb.*;
 import javax.ws.rs.core.Response;
 
 import io.hops.bbc.ProjectPaymentAction;
-import io.hops.hdfs.HdfsLeDescriptors;
-import io.hops.hdfs.HdfsLeDescriptorsFacade;
-import java.io.PrintWriter;
+import java.io.FilenameFilter;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import org.apache.hadoop.fs.Path;
@@ -54,7 +52,6 @@ import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
 import se.kth.hopsworks.user.model.SshKeys;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.SshkeysFacade;
-import se.kth.hopsworks.util.ConfigFileGenerator;
 import se.kth.hopsworks.util.LocalhostServices;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
@@ -93,8 +90,6 @@ public class ProjectController {
   private Settings settings;
   @EJB
   private ZeppelinConfigFactory zeppelinConfFactory;
-  @EJB
-  private HdfsLeDescriptorsFacade hdfsLeDescriptorFacade;
   @EJB
   private UserCertsFacade userCertsFacade;
 
@@ -849,20 +844,30 @@ public class ProjectController {
       datasetController.createDataset(user, project, "TestJob",
               "jar file to calculate pi", -1, false, true, dfso, udfso);
     } catch (IOException ex) {
-      Logger.getLogger(ProjectController.class.getName()).
-              log(Level.SEVERE, null, ex);
+      logger.log(Level.SEVERE, null, ex);
     }
     try {
-      File file = new File(settings.getSparkDir() + "/lib/spark-examples-"
-              + Settings.SPARK_VERSION + "-hadoop" + Settings.HOPS_VERSION
-              + ".jar");
-      udfso.copyToHDFSFromLocal(false, file.getAbsolutePath(),
+      File dir = new File(settings.getSparkExampleDir() + "/");
+      File[] file = dir.listFiles(new FilenameFilter() {
+          @Override
+          public boolean accept(File dir, String name) {
+              return name.matches("spark-examples(.*).jar");
+          }
+      });
+      if (file.length == 0) {
+        throw new IllegalStateException("No spark-examples*.jar was found in " 
+                + dir.getAbsolutePath());
+      }
+      if (file.length > 1) {
+        logger.log(Level.WARNING, "More than one spark-examples*.jar found in {0}."
+                , dir.getAbsolutePath());
+      }
+      udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(),
               File.separator + Settings.DIR_ROOT + File.separator + project.
-              getName() + "/TestJob/");
+              getName() + "/TestJob/spark-examples.jar");
 
     } catch (IOException ex) {
-      Logger.getLogger(ProjectController.class.getName()).
-              log(Level.SEVERE, null, ex);
+      logger.log(Level.SEVERE, null, ex);
     }
 
   }
