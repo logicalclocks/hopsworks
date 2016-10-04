@@ -532,6 +532,9 @@ public class ProjectController {
                     + " is already a member in this project.");
           }
 
+        } else {
+          failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
+                    + " is already a member in this project.");
         }
       } catch (EJBException ejb) {
         failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
@@ -745,8 +748,13 @@ public class ProjectController {
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, String owner,
           String toUpdateEmail, String newRole) throws AppException {
-    Users projOwner = userBean.getUserByEmail(owner);
+    Users projOwner = project.getOwner();
+    Users opsOwner = userBean.getUserByEmail(owner);
     Users user = userBean.getUserByEmail(toUpdateEmail);
+    if (projOwner.equals(user)) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Can not change the role of a project owner.");
+    }
     if (user == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.USER_DOES_NOT_EXIST);
@@ -770,7 +778,7 @@ public class ProjectController {
       }
 
       logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail,
-              ActivityFacade.FLAG_PROJECT, projOwner, project);
+              ActivityFacade.FLAG_PROJECT, opsOwner, project);
     }
 
   }
