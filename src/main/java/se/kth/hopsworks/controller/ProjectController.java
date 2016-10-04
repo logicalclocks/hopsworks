@@ -14,13 +14,9 @@ import javax.ejb.*;
 import javax.ws.rs.core.Response;
 
 import io.hops.bbc.ProjectPaymentAction;
-import io.hops.hdfs.HdfsLeDescriptors;
-import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import java.io.FilenameFilter;
-import java.io.PrintWriter;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -56,7 +52,6 @@ import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
 import se.kth.hopsworks.user.model.SshKeys;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.SshkeysFacade;
-import se.kth.hopsworks.util.ConfigFileGenerator;
 import se.kth.hopsworks.util.LocalhostServices;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
@@ -95,8 +90,6 @@ public class ProjectController {
   private Settings settings;
   @EJB
   private ZeppelinConfigFactory zeppelinConfFactory;
-  @EJB
-  private HdfsLeDescriptorsFacade hdfsLeDescriptorFacade;
   @EJB
   private UserCertsFacade userCertsFacade;
 
@@ -851,8 +844,7 @@ public class ProjectController {
       datasetController.createDataset(user, project, "TestJob",
               "jar file to calculate pi", -1, false, true, dfso, udfso);
     } catch (IOException ex) {
-      Logger.getLogger(ProjectController.class.getName()).
-              log(Level.SEVERE, null, ex);
+      logger.log(Level.SEVERE, null, ex);
     }
     try {
       File dir = new File(settings.getSparkExampleDir() + "/");
@@ -875,8 +867,7 @@ public class ProjectController {
               getName() + "/TestJob/spark-examples.jar");
 
     } catch (IOException ex) {
-      Logger.getLogger(ProjectController.class.getName()).
-              log(Level.SEVERE, null, ex);
+      logger.log(Level.SEVERE, null, ex);
     }
 
   }
