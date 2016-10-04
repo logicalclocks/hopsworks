@@ -38,6 +38,7 @@ public class Settings {
   private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
   private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
+  private static final String VARIABLE_SPARK_EXAMPLES_DIR = "spark_example_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
   private static final String VARIABLE_FLINK_USER = "flink_user";
   private static final String VARIABLE_NDB_DIR = "ndb_dir";
@@ -149,6 +150,7 @@ public class Settings {
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
+      SPARK_EXAMPLES_DIR = setDirVar(VARIABLE_SPARK_EXAMPLES_DIR, SPARK_EXAMPLES_DIR);
       FLINK_USER = setVar(VARIABLE_FLINK_USER, FLINK_USER);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
       ZEPPELIN_USER = setVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
@@ -218,6 +220,7 @@ public class Settings {
    * Default Directory locations
    */
   private String SPARK_DIR = "/srv/spark";
+  private String SPARK_EXAMPLES_DIR = "/lib";
   public static final String SPARK_VERSION = "1.6.1";
   public static final String HOPS_VERSION = "2.4.0";
 
@@ -243,6 +246,11 @@ public class Settings {
   public synchronized String getSparkConfDir(){
       checkCache();
       return SPARK_CONF_DIR;
+  }
+  
+  public synchronized String getSparkExampleDir(){
+      checkCache();
+      return SPARK_EXAMPLES_DIR;
   }
   
   private String SPARK_CONF_FILE = SPARK_CONF_DIR + "/spark-defaults.conf";
