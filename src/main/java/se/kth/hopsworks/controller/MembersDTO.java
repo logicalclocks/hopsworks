@@ -4,10 +4,6 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.project.ProjectTeam;
 
-/**
- *
- * @author Ermias
- */
 @XmlRootElement
 public class MembersDTO {
 

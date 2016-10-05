@@ -119,10 +119,7 @@ public class RequestService {
               "You do not have any role in this project.");
     }
     ProjectTeam projTeam = projectTeamFacade.findByPrimaryKey(proj, user);
-    if (projTeam != null && projTeam.getTeamRole().equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "You already have full access to this dataset.");
-    } else if (projTeam != null && proj.equals(project)) {
+    if (projTeam != null && proj.equals(project)) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "This dataset is already in the requesting project.");
     }
