@@ -232,6 +232,11 @@ public class Settings {
   public static final String SPARK_DRIVER_CORES_ENV = "spark.driver.cores";
   public static final String SPARK_EXECUTOR_MEMORY_ENV = "spark.executor.memory";
   public static final String SPARK_EXECUTOR_CORES_ENV = "spark.executor.cores";
+  public static final String SPARK_CACHE_FILENAMES = "spark.yarn.cache.filenames";
+  public static final String SPARK_CACHE_SIZES = "spark.yarn.cache.sizes";
+  public static final String SPARK_CACHE_TIMESTAMPS = "spark.yarn.cache.timestamps";
+  public static final String SPARK_CACHE_VISIBILITIES = "spark.yarn.cache.visibilities";
+  public static final String SPARK_CACHE_TYPES = "spark.yarn.cache.types";
   
   public synchronized String getSparkDir() {
     checkCache();
@@ -520,7 +525,7 @@ public class Settings {
   }
 
   private static String hdfsSparkJarPath(String sparkUser) {
-    return "hdfs:///user/" + sparkUser + "/spark.jar";
+    return "hdfs:///user/" + sparkUser + "/spark-jars.zip";
   }
 
   public static String getHdfsSparkJarPath(String sparkUser) {
@@ -570,7 +575,7 @@ public class Settings {
   public static final String DIR_FASTA = "fasta";
   public static final String DIR_VCF = "vcf";
   public static final String DIR_TEMPLATES = "Templates";
-  public static final String PROJECT_STAGING_DIR = "resources";
+  public static final String PROJECT_STAGING_DIR = "Resources";
 
   // Elasticsearch
   private String ELASTIC_IP = "127.0.0.1";

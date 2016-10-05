@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
@@ -133,8 +134,8 @@ public class AdamJob extends SparkJob {
       jobconfig.setAppName("Untitled ADAM Job");
     }
 
-    runnerbuilder = new SparkYarnRunnerBuilder(
-            adamJarPath, Settings.ADAM_MAINCLASS);
+    runnerbuilder = new SparkYarnRunnerBuilder(adamJarPath, 
+            Settings.ADAM_MAINCLASS, JobType.SPARK);
     super.setupJob(dfso);
     //Set some ADAM-specific property values   
     runnerbuilder.addSystemProperty("spark.serializer",
