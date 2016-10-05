@@ -83,7 +83,7 @@
                 <div class="form-group has-feedback">
                   <label class="text-muted">Confirm Password</label>
                   <input name="user_password_confirm" ng-model="regCtrl.newUser.repeatedPassword"
-                         match="regCtrl.newUser.chosenPassword"
+                         match="id-password"
                          class="form-control" type="password">
                   <span class="fa fa-lock form-control-feedback text-muted"></span>               
                 </div>
@@ -94,9 +94,10 @@
                     <span ng-show="(registerForm.$submitted || registerForm.user_password.$dirty) &amp;&amp; registerForm.user_password.$error.required"
                           class="text-danger ng-hide">This field is required</span>
                     <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.minlength"
-                          class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
-                        one special character and/or alphanumeric characters. </span>                 
-                    <span ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) &amp;&amp; registerForm.user_password_confirm.$invalid"
+                          class="text-danger ng-hide">Your password should be at least 6 characters long.</span>   
+                    <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.pattern &amp;&amp; !registerForm.user_password.$error.minlength"
+                          class="text-danger ng-hide">Your password should contain at least one lower case letter [a-z], one upper case letter [A-Z] and one numeric character [0-9].</span>   
+                    <span ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) &amp;&amp; registerForm.user_password_confirm.$error.pwmatch &amp;&amp; !(registerForm.user_password.$error.minlength || registerForm.user_password.$error.pattern)"
                           class="text-danger ng-hide">The two passwords you entered do not match</span>
                   </div>
             </div>

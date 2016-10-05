@@ -54,8 +54,7 @@
   </servlet>
   <servlet-mapping>
     <servlet-name>AppScriptServlet</servlet-name>
-    <url-pattern>/zeppelin/scripts/scripts.js</url-pattern>
-    <url-pattern>/zeppelin/scripts/app.js</url-pattern>
+    <url-pattern>/zeppelin/scripts/scripts.6efa7074fc6157f4.js</url-pattern>
   </servlet-mapping>
   <!-- declare the roles relevant for our webapp -->
   <security-role>

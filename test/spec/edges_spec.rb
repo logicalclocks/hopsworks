@@ -5,7 +5,7 @@ describe 'edges' do
   let(:valid_params){ valid_edge_params(project_id, workflow[:id]) }
   let(:invalid_params){ {targetId: "non-existing"} }
   before(:all){with_valid_project}
-
+  after (:all){clean_projects}
   describe "#index" do
     before(:all) do
       project_id = with_valid_project['id']

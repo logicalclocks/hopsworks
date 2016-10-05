@@ -38,6 +38,7 @@ public class Settings {
   private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
   private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
+  private static final String VARIABLE_SPARK_EXAMPLES_DIR = "spark_example_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
   private static final String VARIABLE_FLINK_USER = "flink_user";
   private static final String VARIABLE_NDB_DIR = "ndb_dir";
@@ -149,6 +150,7 @@ public class Settings {
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
+      SPARK_EXAMPLES_DIR = setDirVar(VARIABLE_SPARK_EXAMPLES_DIR, SPARK_EXAMPLES_DIR);
       FLINK_USER = setVar(VARIABLE_FLINK_USER, FLINK_USER);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
       ZEPPELIN_USER = setVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
@@ -218,6 +220,7 @@ public class Settings {
    * Default Directory locations
    */
   private String SPARK_DIR = "/srv/spark";
+  private String SPARK_EXAMPLES_DIR = "/lib";
   public static final String SPARK_VERSION = "1.6.1";
   public static final String HOPS_VERSION = "2.4.0";
 
@@ -232,6 +235,11 @@ public class Settings {
   public static final String SPARK_DRIVER_CORES_ENV = "spark.driver.cores";
   public static final String SPARK_EXECUTOR_MEMORY_ENV = "spark.executor.memory";
   public static final String SPARK_EXECUTOR_CORES_ENV = "spark.executor.cores";
+  public static final String SPARK_CACHE_FILENAMES = "spark.yarn.cache.filenames";
+  public static final String SPARK_CACHE_SIZES = "spark.yarn.cache.sizes";
+  public static final String SPARK_CACHE_TIMESTAMPS = "spark.yarn.cache.timestamps";
+  public static final String SPARK_CACHE_VISIBILITIES = "spark.yarn.cache.visibilities";
+  public static final String SPARK_CACHE_TYPES = "spark.yarn.cache.types";
   
   public synchronized String getSparkDir() {
     checkCache();
@@ -243,6 +251,11 @@ public class Settings {
   public synchronized String getSparkConfDir(){
       checkCache();
       return SPARK_CONF_DIR;
+  }
+  
+  public synchronized String getSparkExampleDir(){
+      checkCache();
+      return SPARK_EXAMPLES_DIR;
   }
   
   private String SPARK_CONF_FILE = SPARK_CONF_DIR + "/spark-defaults.conf";
@@ -457,8 +470,15 @@ public class Settings {
 
   //Spark constants
   public static final String SPARK_STAGING_DIR = ".sparkStaging";
-  public static final String SPARK_LOCRSC_SPARK_JAR = "__spark__.jar";
+  //public static final String SPARK_LOCRSC_SPARK_JAR = "__spark__.jar";
+  public static final String SPARK_JARS = "spark.yarn.jars";
+  public static final String SPARK_ARCHIVE = "spark.yarn.archive";
+  // Subdirectory where Spark libraries will be placed.
+  public static final String LOCALIZED_LIB_DIR = "__spark_libs__";
+  public static final String LOCALIZED_CONF_DIR = "__spark_conf__";
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
+  // Distribution-defined classpath to add to processes
+  public static final String ENV_DIST_CLASSPATH = "SPARK_DIST_CLASSPATH";
   public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
   public static final String SPARK_CONFIG_FILE = "conf/spark-defaults.conf";
@@ -513,7 +533,7 @@ public class Settings {
   }
 
   private static String hdfsSparkJarPath(String sparkUser) {
-    return "hdfs:///user/" + sparkUser + "/spark.jar";
+    return "hdfs:///user/" + sparkUser + "/spark-jars.zip";
   }
 
   public static String getHdfsSparkJarPath(String sparkUser) {
@@ -563,7 +583,7 @@ public class Settings {
   public static final String DIR_FASTA = "fasta";
   public static final String DIR_VCF = "vcf";
   public static final String DIR_TEMPLATES = "Templates";
-  public static final String PROJECT_STAGING_DIR = "resources";
+  public static final String PROJECT_STAGING_DIR = "Resources";
 
   // Elasticsearch
   private String ELASTIC_IP = "127.0.0.1";

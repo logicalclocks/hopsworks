@@ -1,12 +1,12 @@
 package se.kth.bbc.jobs.spark;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.lims.Utils;
@@ -41,6 +41,7 @@ public class SparkJob extends YarnJob {
    * @param sparkUser
    * @param jobUser
    * @param kafkaAddress
+   * @param restEndpoint
    */
   public SparkJob(JobDescription job, AsynchronousJobExecutor services,
       Users user, final String hadoopDir,
@@ -69,7 +70,8 @@ public class SparkJob extends YarnJob {
     //i.e. AdamJob
     if(runnerbuilder==null){
       runnerbuilder = new SparkYarnRunnerBuilder(
-        jobconfig.getJarPath(), jobconfig.getMainClass());
+        jobconfig.getJarPath(), jobconfig.getMainClass(),
+              JobType.SPARK);
         runnerbuilder.setJobName(jobconfig.getAppName());
       //Check if the user provided application arguments
       if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){
@@ -92,7 +94,6 @@ public class SparkJob extends YarnJob {
     runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
-    runnerbuilder.setSparkHistoryServerIp(jobconfig.getHistoryServerIp());
 
     runnerbuilder.setSessionId(jobconfig.getjSessionId());
     runnerbuilder.setKafkaAddress(kafkaAddress);

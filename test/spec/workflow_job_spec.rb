@@ -3,7 +3,7 @@ describe "Workflow Job" do
   let(:valid_email_workflow){with_valid_email_workflow(project_id)}
   let(:valid_email_execution){with_valid_email_execution(project_id, valid_email_workflow[:id])}
   let(:valid_workflow_job){with_valid_workflow_job(project_id, valid_email_workflow[:id], valid_email_execution[:id])}
-
+  after (:all){clean_projects}
   describe "#index" do
 
     context 'without authentication' do
