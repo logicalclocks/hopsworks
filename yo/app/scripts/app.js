@@ -28,11 +28,11 @@ angular.module('hopsWorksApp', [
   'angular-tour',
   'smart-table',
   'ngPrettyJson',
-  'angularAwesomeSlider',
   'angularResizable',
   'ng-showdown',
   'vAccordion',
-  'md.data.table'  
+  'md.data.table',
+  'rzModule'
 ])
         .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig',
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {

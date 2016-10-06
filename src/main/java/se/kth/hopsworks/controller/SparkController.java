@@ -80,9 +80,7 @@ public class SparkController {
     } else if (job.getJobType() != JobType.SPARK) {
       throw new IllegalArgumentException(
               "Job configuration is not a Spark job configuration.");
-    } else if (!isSparkJarAvailable()) {
-      throw new IllegalStateException("Spark is not installed on this system.");
-    }
+    } 
 
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     UserGroupInformation proxyUser = ugiService.getProxyUser(username);
