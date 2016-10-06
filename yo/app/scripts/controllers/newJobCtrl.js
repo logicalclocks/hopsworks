@@ -63,7 +63,11 @@ angular.module('hopsWorksApp')
                 options: {
                   floor: 0,
                   ceil: 500
+                },
+                getPointerColor: function(value) {
+                  return '#4b91ea';
                 }
+                
             };
             
             self.refreshSlider = function () {
