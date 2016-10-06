@@ -29,7 +29,8 @@ angular.module('hopsWorksApp')
 
             // We could instead implement a service to get all the available types but this will do it for now
 //              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
-              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
+//              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
+              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
             $scope.activeService = "home";
 
             self.alreadyChoosenServices = [];

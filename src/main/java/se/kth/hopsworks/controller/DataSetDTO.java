@@ -8,10 +8,6 @@ import se.kth.bbc.project.ProjectTeam;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.users.UserCardDTO;
 
-/**
- *
- * @author ermiasg
- */
 @XmlRootElement
 public class DataSetDTO {
 

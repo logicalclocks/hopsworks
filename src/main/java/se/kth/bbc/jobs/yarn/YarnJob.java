@@ -3,6 +3,7 @@ package se.kth.bbc.jobs.yarn;
 import java.io.File;
 import java.io.IOException;
 import com.google.common.io.Files;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -146,7 +147,7 @@ public abstract class YarnJob extends HopsJob {
       logger.log(Level.SEVERE, "Permission denied:- {0}", ex.getMessage());
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
-    } catch (YarnException | IOException e) {
+    } catch (YarnException | IOException  | URISyntaxException e) {
       logger.log(Level.SEVERE,
               "Failed to start application master for execution "
               + getExecution()

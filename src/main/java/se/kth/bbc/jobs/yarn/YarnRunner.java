@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
@@ -50,6 +51,7 @@ import org.codehaus.plexus.util.FileUtils;
 import se.kth.bbc.jobs.flink.FlinkJob;
 import se.kth.bbc.jobs.flink.FlinkYarnRunnerBuilder;
 import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.util.IoUtils;
@@ -116,8 +118,9 @@ public class YarnRunner {
    * @return The received ApplicationId identifying the application.
    * @throws YarnException
    * @throws IOException Can occur upon opening and moving execution and input files.
+   * @throws java.net.URISyntaxException
    */
-  public YarnMonitor startAppMaster() throws YarnException, IOException {
+  public YarnMonitor startAppMaster() throws YarnException, IOException, URISyntaxException {
     logger.info("Starting application master.");
 
     //Get application id
@@ -330,6 +333,9 @@ public class YarnRunner {
     for (Entry<String, String> entry : amEnvironment.entrySet()) {
       entry.setValue(entry.getValue().replaceAll(APPID_REGEX, id));
     }
+    for (ListIterator<String> i = javaOptions.listIterator(); i.hasNext();){
+      i.set(i.next().replaceAll(APPID_REGEX, id));
+    }
   }
 
   private void checkAmResourceRequest(GetNewApplicationResponse appResponse) {
@@ -351,7 +357,7 @@ public class YarnRunner {
     }
   }
 
- private Map<String, LocalResource> addAllToLocalResources(String nameNodeIpPort) throws IOException {
+ private Map<String, LocalResource> addAllToLocalResources(String nameNodeIpPort) throws IOException, URISyntaxException {
     Map<String, LocalResource> localResources = new HashMap<>();
     //If an AM jar has been specified: include that one
     if (shouldCopyAmJarToLocalResources && amJarLocalName != null
@@ -396,6 +402,8 @@ public class YarnRunner {
           scFileStat.getModificationTime(),
           entry.getValue().getPattern());
       localResources.put(key, scRsrc);
+      //Loop through local resources and add their properties as system properties
+      
     }
     //For all local resources with hdfs path: add local resource
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesOnHDFS.entrySet()) {
@@ -416,6 +424,34 @@ public class YarnRunner {
           scFileStat.getModificationTime(),
           entry.getValue().getPattern());
       localResources.put(key, scRsrc);
+      
+    }
+    //For Spark 2.0, loop through local resources and add their properties 
+    //as system properties (javaOptions)
+    if(jobType == JobType.SPARK){
+        StringBuilder uris = new StringBuilder();
+        StringBuilder timestamps = new StringBuilder();
+        StringBuilder sizes = new StringBuilder();
+        StringBuilder visibilities = new StringBuilder();
+        StringBuilder types = new StringBuilder();
+        for(Entry<String, LocalResource> entry : localResources.entrySet()){
+          Path destPath = ConverterUtils.getPathFromYarnURL(entry.getValue().
+                getResource());
+          URI sparkUri = destPath.toUri();
+          URI pathURI = new URI(sparkUri.getScheme(), sparkUri.getAuthority(),
+                sparkUri.getPath(), null, entry.getKey());
+          uris.append(pathURI.toString()).append(",");
+          timestamps.append(entry.getValue().getTimestamp()).append(",");
+          sizes.append(entry.getValue().getSize()).append(",");
+          visibilities.append(entry.getValue().getVisibility()).append(",");
+          types.append(entry.getValue().getType()).append(",");
+        }
+        //Remove the last comma (,) and add them to javaOptions
+        javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D" + Settings.SPARK_CACHE_FILENAMES + "=" + uris.substring(0,uris.length()-1)));
+        javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D" + Settings.SPARK_CACHE_TIMESTAMPS + "=" + timestamps.substring(0, timestamps.length()-1)));
+        javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D" + Settings.SPARK_CACHE_SIZES + "=" + sizes.substring(0, sizes.length()-1)));
+        javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D" + Settings.SPARK_CACHE_VISIBILITIES + "=" + visibilities.substring(0, visibilities.length()-1)));
+        javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D" + Settings.SPARK_CACHE_TYPES + "=" + types.substring(0, types.length()-1)));
     }
     return localResources;
   }

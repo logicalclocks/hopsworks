@@ -5,7 +5,7 @@ describe 'nodes' do
   let(:valid_params){ valid_node_params }
   let(:invalid_params){ {type: nil} }
   before(:all){with_valid_project}
-
+  after (:all){clean_projects}
   describe "#index" do
     before(:all) do
       project_id = with_valid_project['id']

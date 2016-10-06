@@ -69,11 +69,7 @@ public class AdamController {
     } else if (job.getJobType() != JobType.ADAM) {
       throw new IllegalArgumentException(
               "The given job does not represent an Adam job.");
-    } else if (!sparkController.isSparkJarAvailable()) {
-      //Check if all the jars are available
-      throw new IllegalStateException(
-              "Some ADAM jars are not in HDFS and could not be copied in from this host.");
-    }
+    } 
     ((AdamJobConfiguration) job.getJobConfig()).setJarPath(settings.
             getAdamJarHdfsPath());
     ((AdamJobConfiguration) job.getJobConfig()).setHistoryServerIp(settings.
