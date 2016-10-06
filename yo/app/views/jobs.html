@@ -234,7 +234,7 @@
                                   <button 
                                     uib-tooltip="Delete"
                                     ng-click="jobsCtrl.toggle(job, $index);
-                                    jobsCtrl.deleteJob(job.id); $event.stopPropagation();"
+                                    jobsCtrl.deleteJob(job.id, job.name); $event.stopPropagation();"
                                     type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
                                   </button>
                                   <button uib-tooltip="Job UI"

@@ -12,11 +12,11 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'AdamService', 'FlinkService', 'TourService', 'HistoryService',
+          'AdamService', 'FlinkService', 'TourService', 'HistoryService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,
 
-            AdamService, FlinkService, TourService, HistoryService) {
+            AdamService, FlinkService, TourService, HistoryService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -55,6 +55,7 @@ angular.module('hopsWorksApp')
 
             self.phase = 0; //The phase of creation we are in.
             self.runConfig; //Will hold the job configuration
+            self.sliderVisible = false;
             
             self.sliderOptions = {
                 min: 1,
@@ -64,6 +65,19 @@ angular.module('hopsWorksApp')
                   ceil: 500
                 }
             };
+            
+            self.refreshSlider = function () {
+                $timeout(function () {
+                    $scope.$broadcast('rzSliderForceRender');
+                });
+            };
+    
+            self.toggleSlider = function () {
+              self.sliderVisible = !self.sliderVisible;
+              if (self.sliderVisible)
+                self.refreshSlider();
+            };
+  
             self.setInitExecs = function () {
               if (self.sliderOptions.min >
                       self.runConfig.numberOfExecutorsInit) {
@@ -448,13 +462,13 @@ angular.module('hopsWorksApp')
                             //Update the min/max spark executors based on 
                             //backend configuration 
                             if (typeof runConfig !== 'undefined') {
-                              self.sliderOptions.floor = self.runConfig.
+                              self.sliderOptions.options['floor'] = self.runConfig.
                                       minExecutors;
-                              self.sliderOptions.ceil = self.runConfig.
+                              self.sliderOptions.options['ceil'] = self.runConfig.
                                       maxExecutors;
                             } else {
-                              self.sliderOptions.floor = 1;
-                              self.sliderOptions.ceil = 300;
+                              self.sliderOptions.options['floor'] = 1;
+                              self.sliderOptions.options['ceil'] = 300;
                             }
                             self.mainFileSelected(filename);
                             if (self.tourService.currentStep_TourFour > -1) {
@@ -478,12 +492,12 @@ angular.module('hopsWorksApp')
                 case "ADAM":
                     self.adamState.processparameter.value = path;
                   if(typeof runConfig != 'undefined'){
-                    self.sliderOptions.floor = self.runConfig.minExecutors;
-                    self.sliderOptions.ceil = self.runConfig.
+                    self.sliderOptions.options['floor'] = self.runConfig.minExecutors;
+                    self.sliderOptions.options['ceil'] = self.runConfig.
                             maxExecutors;
                   } else {
-                    self.sliderOptions.floor = 1;
-                    self.sliderOptions.ceil = 300;
+                    self.sliderOptions.options['floor'] = 1;
+                    self.sliderOptions.options['ceil'] = 300;
                   }
                   break;
                 case "FLINK":
@@ -611,8 +625,8 @@ angular.module('hopsWorksApp')
                         self.runConfig = stored.runConfig;
                         if(self.runConfig){
                             self.runConfig.schedule = null;
-                            self.sliderOptions.floor = self.runConfig.minExecutors;
-                            self.sliderOptions.ceil = self.runConfig.maxExecutors;
+                            self.sliderOptions.options['floor'] = self.runConfig.minExecutors;
+                            self.sliderOptions.options['ceil'] = self.runConfig.maxExecutors;
                             self.sliderOptions.min = self.runConfig.selectedMinExecutors;
                             self.sliderOptions.max = self.runConfig.selectedMaxExecutors;
                         }    
